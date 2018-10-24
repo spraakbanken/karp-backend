@@ -10,6 +10,8 @@ This in the next version of Karp backend
 - Flask
 - SQLAlchemy
 - Click
+- Elasticsearch
+- Elasticsearch DSL
 
 ### Databases
 
