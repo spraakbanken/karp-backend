@@ -16,7 +16,7 @@ db = SQLAlchemy(app)
 
 class Entry(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    value = db.Column(db.String(), nullable=False)
+    value = db.Column(db.String(30), nullable=False)
 
     def __repr__(self):
         return "<Entry(value='%s')>" % self.value
