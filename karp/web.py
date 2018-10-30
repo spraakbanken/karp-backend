@@ -49,7 +49,7 @@ def add_entry(value):
 
 @app.route("/entry/<value>", methods=['DELETE'])
 def delete_entry(value):
-    entry = Entry.query.filter(value=value).first_or_404()
+    entry = Entry.query.filter_by(value=value).first_or_404()
     db.session.delete(entry)
     db.session.commit()
     return flask.jsonify({'status': 'removed'})
@@ -57,5 +57,5 @@ def delete_entry(value):
 
 @app.route("/entry/<value>", methods=['GET'])
 def get_entry(value):
-    entry = Entry.query.filter(value=value).first_or_404()
+    entry = Entry.query.filter_by(value=value).first_or_404()
     return flask.jsonify(entry.serialize)
