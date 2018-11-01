@@ -9,6 +9,7 @@ sqlalchemy = "*"
 flask-sqlalchemy = "*"
 mysqlclient = "*"
 gunicorn = "*"
+karp = {editable = true, path = "."}
 
 [dev-packages]
 pytest = "*"

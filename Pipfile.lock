@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f054170e51f9680d75370781767030a94de175f628b70d48553e7aae379d1865"
+            "sha256": "4c1ef8d2fcd3b853612fe8656f95f89978dd591439fa2f069c184c15b64ad013"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -61,6 +61,10 @@
             ],
             "version": "==2.10"
         },
+        "karp": {
+            "editable": true,
+            "path": "."
+        },
         "markupsafe": {
             "hashes": [
                 "sha256:a6be69091dac236ea9c6bc7d012beab42010fa914c459791d627dad4910eb665"
@@ -76,10 +80,10 @@
         },
         "sqlalchemy": {
             "hashes": [
-                "sha256:c5951d9ef1d5404ed04bae5a16b60a0779087378928f997a294d1229c6ca4d3e"
+                "sha256:84412de3794acee05630e7788f25e80e81f78eb4837e7b71d0499129f660486a"
             ],
             "index": "pypi",
-            "version": "==1.2.12"
+            "version": "==1.2.13"
         },
         "werkzeug": {
             "hashes": [
