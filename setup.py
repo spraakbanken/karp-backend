@@ -7,5 +7,9 @@ setup(name='karp',
       author='Språkbanken',
       author_email='sb-info@svenska.gu.se',
       url='https://spraakbanken.gu.se',
-      packages=['karp']
-     )
+      packages=['karp'],
+      entry_points={
+          'console_scripts': [
+              'karp-cli=karp.cli:app.cli'
+          ]
+      })

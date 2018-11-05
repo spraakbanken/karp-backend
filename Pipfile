@@ -10,6 +10,7 @@ flask-sqlalchemy = "*"
 mysqlclient = "*"
 gunicorn = "*"
 karp = {editable = true, path = "."}
+click = "*"
 
 [dev-packages]
 pytest = "*"
