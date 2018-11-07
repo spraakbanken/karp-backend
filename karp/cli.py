@@ -1,7 +1,17 @@
 import json
 import click
-from karp.web import app
+import os
+from .app import create_app
 import karp.database as database
+
+user = os.environ["MARIADB_USER"]
+passwd = os.environ["MARIADB_PASSWORD"]
+dbhost = os.environ["MARIADB_HOST"]
+dbname = os.environ["MARIADB_DATABASE"]
+
+app = create_app({
+    'SQLALCHEMY_DATABASE_URI': 'mysql://%s:%s@%s/%s' % (user, passwd, dbhost, dbname)
+})
 
 
 @app.cli.command('entries')
@@ -13,7 +23,7 @@ def get_entries(size):
 
 
 @app.cli.command('add')
-@click.option('--value', default="hm", help='Value of entry to add')
+@click.argument('value')
 def add_entry(value):
     database.add_entry(value)
     click.echo("Added %s" % value)

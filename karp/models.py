@@ -1,4 +1,6 @@
-from .database import db
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 
 class Entry(db.Model):

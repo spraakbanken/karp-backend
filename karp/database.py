@@ -1,11 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-from .web import app
-
-
-db = SQLAlchemy(app)
-from .models import *
-# temporary setup of tables
-db.create_all()
+from .models import db, Entry
 
 
 def get_entries():
