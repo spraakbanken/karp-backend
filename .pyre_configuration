@@ -6,7 +6,8 @@
     "test_karp"
   ],
   "do_not_check": [
-    ".venv"
+    ".venv",
+    ".pyre"
   ],
   "search_path": [
     ".venv"
