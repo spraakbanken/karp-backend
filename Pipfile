@@ -15,6 +15,12 @@ click = "*"
 [dev-packages]
 pytest = "*"
 "pysqlcipher3" = "*"
+tox = "*"
+tox-pipenv = "*"
+coverage = "*"
+pytest-xdist = "*"
+pytest-cov = "*"
+flake8 = "*"
 
 [requires]
-python_version = "3.5"
+python_version = "3"
