@@ -1,27 +1,31 @@
 from typing import Tuple
 
-from .models import db, Entry
+from .models import db, resource_classes
 
 
-def get_entries():
-    entries = Entry.query.all()
+def get_entries(resource):
+    cls = resource_classes[resource]
+    entries = cls.query.all()
     return entries
 
 
-def add_entry(value):
-    entry = Entry(value=value)
-    db.session.add(entry)
+def add_entry(resource, entry):
+    cls = resource_classes[resource]
+    new_entry = cls(**entry)
+    db.session.add(new_entry)
     db.session.commit()
 
 
-def delete_entry(value):
-    entry = Entry.query.filter_by(value=value).first()
+def delete_entry(resource, entry_id):
+    cls = resource_classes[resource]
+    entry = cls.query.filter_by(id=entry_id).first()
     db.session.delete(entry)
     db.session.commit()
 
 
-def get_entry(value):
-    entry = Entry.query.filter_by(value=value).first()
+def get_entry(resource, entry_id):
+    cls = resource_classes[resource]
+    entry = cls.query.filter_by(id=entry_id).first()
     return entry
 
 

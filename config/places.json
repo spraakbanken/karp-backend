@@ -1,0 +1,26 @@
+{
+  "resource_id": "places",
+  "resource_name": "Platser i Sverige",
+  "fields": {
+    "name": {
+      "type": "string"
+    },
+    "municipality": {
+      "type": "link",
+      "to": "municipalities"
+    },
+    "population": {
+      "type": "number"
+    },
+    "area": {
+      "type": "number"
+    },
+    "density": {
+      "type": "number"
+    },
+    "code": {
+      "type": "string"
+    }
+  },
+  "id": "code"
+}
