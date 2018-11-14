@@ -1,15 +1,15 @@
 {
   "binary": "/usr/bin/pyre.bin",
   "source_directories": [
-    ".",
-    "karp",
-    "test_karp"
+    "src",
+    "tests"
   ],
   "do_not_check": [
     ".venv",
-    ".pyre"
+    ".pyre",
+    ".tox"
   ],
-  "search_path": [
+  "search_paths": [
     ".venv"
   ],
   "typeshed": "/usr/lib/pyre_check/typeshed/"
