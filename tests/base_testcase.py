@@ -6,7 +6,7 @@ URL = 'http://localhost:5000'
 
 class APITestBaseCase(unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self) -> None:
         app = create_app({
             'SQLALCHEMY_DATABASE_URI': 'sqlite://'
         })
