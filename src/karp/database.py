@@ -25,7 +25,7 @@ def get_entry(value):
     return entry
 
 
-def health_database_status() -> Tuple[bool,str]:
+def health_database_status() -> Tuple[bool, str]:
     is_database_working = True
     output = 'database is ok'
 
