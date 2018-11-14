@@ -4,7 +4,7 @@ Perform health checks on the server.
 Used to perform readiness and liveness probes on the server.
 """
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify    # pyre-ignore
 import karp.database as database
 
 karp_health_api = Blueprint('karp_health_api', __name__)

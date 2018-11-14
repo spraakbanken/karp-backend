@@ -1,5 +1,5 @@
-import flask
-from flask import Blueprint
+import flask                    # pyre-ignore
+from flask import Blueprint     # pyre-ignore
 import karp.database as database
 
 

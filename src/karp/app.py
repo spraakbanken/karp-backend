@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask     # pyre-ignore
 
 from .web import karp_api
 from karp.models import db
