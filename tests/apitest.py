@@ -4,7 +4,7 @@ from karp.app import create_app
 URL = 'http://localhost:5000'
 
 
-class APITestBaseCase(unittest.TestCase):
+class TestBaseCase(unittest.TestCase):
 
     def setUp(self) -> None:
         app = create_app({
