@@ -1,1 +1,1 @@
-from .health_check import karp_health_api   # noqa: F401
+from .health_api import health_api   # noqa: F401
