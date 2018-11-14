@@ -1,17 +1,9 @@
-import unittest
 import json
-from karp.app import create_app
 
-URL = 'http://localhost:5000'
+from apitest import TestBaseCase, URL
 
 
-class APITest(unittest.TestCase):
-
-    def setUp(self):
-        app = create_app({
-            'SQLALCHEMY_DATABASE_URI': 'sqlite://'
-        })
-        self.app = app.test_client()
+class APITest(TestBaseCase):
 
     def test_something(self):
         entries = [

@@ -1,15 +1,53 @@
+#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import print_function
 
-from distutils.core import setup
+from setuptools import find_packages
+from setuptools import setup
 
-setup(name='karp',
-      version='0.2',
-      description='',
-      author='Språkbanken',
-      author_email='sb-info@svenska.gu.se',
-      url='https://spraakbanken.gu.se',
-      packages=['karp'],
-      entry_points={
-          'console_scripts': [
-              'karp-cli=karp.cli:app.cli'
-          ]
-      })
+
+setup(
+    name='karp',
+    version='0.4.0',
+    license='MIT License',
+    description='',
+    author='Språkbanken',
+    author_email='sb-info@svenska.gu.se',
+    url='https://spraakbanken.gu.se',
+    packages=find_packages('src'),
+    package_dir={'': 'src'},
+    entry_points={
+        'console_scripts': [
+            'karp-cli=karp.cli:app.cli'
+        ]
+    },
+    install_requires=[
+        'flask',
+        'flask-sqlalchemy',
+        'mysqlclient',
+        'click'
+    ],
+    include_package_data=True,
+    zip_safe=False,
+    classifiers=[
+        # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: Unix',
+        'Operating System :: POSIX',
+        'Operating System :: Microsoft :: Windows',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: Implementation :: CPython',
+        # uncomment if you test on these interpreters:
+        # 'Programming Language :: Python :: Implementation :: IronPython',
+        # 'Programming Language :: Python :: Implementation :: Jython',
+        # 'Programming Language :: Python :: Implementation :: Stackless',
+        'Topic :: Utilities',
+    ],
+)

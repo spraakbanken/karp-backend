@@ -15,6 +15,9 @@ click = "*"
 [dev-packages]
 pytest = "*"
 "pysqlcipher3" = "*"
+coverage = "*"
+pytest-xdist = "*"
+pytest-cov = "*"
 
 [requires]
-python_version = "3.5"
+python_version = "3"

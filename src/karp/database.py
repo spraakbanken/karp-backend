@@ -29,7 +29,7 @@ def get_entry(resource, entry_id):
     return entry
 
 
-def health_database_status() -> Tuple[bool,str]:
+def check_database_status() -> Tuple[bool, str]:
     is_database_working = True
     output = 'database is ok'
 
