@@ -1,6 +1,6 @@
-from flask import Blueprint     # pyre-ignore
-from flask import flask_jsonify     # pyre-ignore
-from flask import request     # pyre-ignore
+from flask import Blueprint                     # pyre-ignore
+from flask import jsonify as flask_jsonify       # pyre-ignore
+from flask import request                       # pyre-ignore
 import karp.database as database
 
 
