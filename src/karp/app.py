@@ -1,8 +1,8 @@
 from flask import Flask     # pyre-ignore
 
 from .web import karp_api
-from karp.models import db
 from karp.routes import health_api
+from karp.models import db, setup_resource_classes
 
 
 def create_app(settings):
@@ -13,7 +13,8 @@ def create_app(settings):
     app.register_blueprint(health_api)
 
     db.init_app(app)
-    # temporary setup of tables
     db.create_all(app=app)
+    # if settings.get('setup_database', True):
+    #     setup_resource_classes()
 
     return app
