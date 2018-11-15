@@ -30,9 +30,10 @@ def create_resource(config):
 def import_resource(resource_id, version, data):
     setup_resource_class(resource_id, version)
     with open(data) as fp:
+        objs = []
         for line in fp:
-            obj = json.loads(line)
-            database.add_entry(resource_id, obj)
+            objs.append(json.loads(line))
+        database.add_entries(resource_id, objs)
 
 
 @app.cli.command('publish')
