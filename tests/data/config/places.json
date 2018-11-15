@@ -6,8 +6,7 @@
       "type": "string"
     },
     "municipality": {
-      "type": "link",
-      "to": "municipalities"
+      "type": "string"
     },
     "population": {
       "type": "number"

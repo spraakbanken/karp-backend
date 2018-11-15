@@ -12,7 +12,7 @@
       "type": "string"
     },
     "capital": {
-      "type": "number"
+      "type": "string"
     },  
     "area": {
       "type": "object",
@@ -58,7 +58,10 @@
         }
       }
     },
-    "kommunkod": {
+    "code": {
+      "type": "string"
+    },
+    "link": {
       "type": "string"
     }
   },
