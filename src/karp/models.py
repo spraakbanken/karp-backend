@@ -13,9 +13,11 @@ class Resource(db.Model):
     config_file = db.Column(db.Text, nullable=False)
     active = db.Column(db.Boolean, default=False)
     deleted = db.Column(db.Boolean, default=False)
-
-    # TODO skapa constraint på resource_id och active = true
-    # TODO skapa constraint på resource_id och version
+    __table_args__ = (
+        db.UniqueConstraint('resource_id', 'version', name='resource_version_unique_constraint'),
+        # TODO only one resource can be active, but several can be inactive
+        # db.UniqueConstraint('resource_id', 'active', name='resource_active_unique_constraint')
+    )
 
     def __repr__(self):
         return "<Resource(resource_id='%s', version='%s', timestamp='%s', active='%s', deleted='%s')>" % \
@@ -29,14 +31,14 @@ def create_sqlalchemy_class(config, version):
     fields = []
     for field_name, field_conf in conf_fields.items():
         field_type = field_conf["type"]
-        if field_type == 'object':
-            pass
-        elif field_type == 'array':
+        if field_type == 'array':
             pass
         elif field_type == 'link':
             pass
         else:
-            if field_type == 'number':
+            if field_type == 'object':
+                column_type = db.Text
+            elif field_type == 'number':
                 column_type = db.Integer
             elif field_type == 'string':
                 column_type = db.String(30)
@@ -96,7 +98,7 @@ def create_new_resource(config_file):
     config = json.load(open(config_file))
     resource_id = config['resource_id']
 
-    latest_resource = Resource.query.filter_by(resource_id=resource_id).order_by('version').first()
+    latest_resource = Resource.query.filter_by(resource_id=resource_id).order_by('version desc').first()
     if latest_resource:
         version = latest_resource.version + 1
     else:
