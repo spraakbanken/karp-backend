@@ -126,15 +126,12 @@ def publish_resource(resource_id, version):
     old_active = Resource.query.filter_by(resource_id=resource_id, version=version, active=True).first()
     if old_active:
         old_active.active = False
-        # db.session.update(old_active)
     resource.active = True
-    # db.session.update(resource)
     db.session.commit()
 
     config = json.loads(resource.config_file)
 
-    # this stuff doesn't matter right now since we are not modifying the state of the actual app
-    # only the CLI
+    # this stuff doesn't matter right now since we are not modifying the state of the actual app, only the CLI
     resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
 
 
