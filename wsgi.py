@@ -1,4 +1,4 @@
-from karp.app import create_app
+from karp import create_app
 import os
 
 user = os.environ["MARIADB_USER"]

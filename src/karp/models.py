@@ -5,6 +5,14 @@ import datetime
 db = SQLAlchemy()
 
 
+def init_db(app, setup_database):
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+        if setup_database:
+            setup_resource_classes()
+
+
 class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     resource_id = db.Column(db.String(30), nullable=False)
