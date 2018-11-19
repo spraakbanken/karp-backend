@@ -6,9 +6,14 @@ passwd = os.environ["MARIADB_PASSWORD"]
 dbhost = os.environ["MARIADB_HOST"]
 dbname = os.environ["MARIADB_DATABASE"]
 
-application = create_app({
-    'SQLALCHEMY_DATABASE_URI': 'mysql://%s:%s@%s/%s' % (user, passwd, dbhost, dbname)
-})
+
+class Config:
+    SQLALCHEMY_DATABASE_URI = 'mysql://%s:%s@%s/%s' % (user, passwd, dbhost, dbname)
+    SETUP_DATABASE = False
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+
+application = create_app(Config)
 
 if __name__ == "__main__":
     application.run(debug=True)

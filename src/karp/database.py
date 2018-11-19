@@ -1,6 +1,7 @@
 from typing import Tuple
 
-from .models import db, resource_classes
+from .models import resource_classes
+from karp import db
 
 
 def get_entries(resource, version=None):

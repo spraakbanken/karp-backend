@@ -1,15 +1,13 @@
 import json
-from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
 import datetime
+from karp import db
 
-db = SQLAlchemy()
 
-
-def init_db(app, setup_database):
+def init_db(app):
     db.init_app(app)
     with app.app_context():
         db.create_all()
-        if setup_database:
+        if app.config.get('SETUP_DATABASE', True):
             setup_resource_classes()
 
 
@@ -67,19 +65,25 @@ def create_sqlalchemy_class(config, version):
 
         return res
 
-    attributes = {
-        '__tablename__': resource_id + '_' + str(version),
-        'id': db.Column(db.Integer, primary_key=True),
-        'serialize': serialize
-    }
+    table_name = resource_id + '_' + str(version)
+    if table_name in class_cache:
+        return class_cache[table_name]
+    else:
+        attributes = {
+            '__tablename__': table_name,
+            'id': db.Column(db.Integer, primary_key=True),
+            'serialize': serialize
+        }
 
-    for (field_name, field_column) in fields:
-        attributes[field_name] = field_column
+        for (field_name, field_column) in fields:
+            attributes[field_name] = field_column
 
-    sqlalchemy_class = type(resource_id, (db.Model,), attributes)
-    return sqlalchemy_class
+        sqlalchemy_class = type(resource_id, (db.Model,), attributes)
+        class_cache[table_name] = sqlalchemy_class
+        return sqlalchemy_class
 
 
+class_cache = {}
 resource_classes = {}
 
 
