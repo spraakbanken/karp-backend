@@ -15,7 +15,6 @@ class TestBaseCase(unittest.TestCase):
         app = create_app(TestConfig)
         self.app_context = app.app_context()
         self.app_context.push()
-        db.create_all()
 
         self.app = app.test_client()
         with app.app_context():
