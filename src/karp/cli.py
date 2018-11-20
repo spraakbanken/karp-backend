@@ -21,7 +21,7 @@ app_config = {
 @with_appcontext
 @click.option('--config', default=None, help='')
 def create_resource(config):
-    with open(config_file) as fp:
+    with open(config) as fp:
         resource_id, version = models.create_new_resource(fp)
     click.echo(f"Created version {version} of resource {resource_id}")
 
