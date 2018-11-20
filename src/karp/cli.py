@@ -23,7 +23,10 @@ app_config = {
 def create_resource(config):
     with open(config) as fp:
         resource_id, version = models.create_new_resource(fp)
-    click.echo(f"Created version {version} of resource {resource_id}")
+    click.echo("Created version {version} of resource {resource_id}".format(
+        version=version,
+        resource_id=resource_id
+    ))
 
 
 @click.command('import')
