@@ -65,5 +65,9 @@
       "type": "string"
     }
   },
+  "sort": "name",
+  "protected": {
+    "read": true
+  },
   "id": "code"
 }
