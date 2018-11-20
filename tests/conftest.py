@@ -22,8 +22,10 @@ def app():
 @pytest.fixture
 def app_with_data(app):
     with app.app_context():
-        create_new_resource('tests/data/config/places.json')
-        create_new_resource('tests/data/config/municipalities.json')
+        with open('tests/data/config/places.json') as fp:
+            create_new_resource(fp)
+        with open('tests/data/config/municipalities.json') as fp:
+            create_new_resource(fp)
         publish_resource('places', 1)
         publish_resource('municipalities', 1)
 
