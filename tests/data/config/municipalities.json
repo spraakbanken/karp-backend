@@ -65,5 +65,9 @@
       "type": "string"
     }
   },
-  "id": "kommunkod"
+  "sort": "name",
+  "protected": {
+    "read": true
+  },
+  "id": "code"
 }
