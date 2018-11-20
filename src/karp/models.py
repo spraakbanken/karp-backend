@@ -21,6 +21,7 @@ class Resource(db.Model):
     version = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
     config_file = db.Column(db.Text, nullable=False)
+    entry_json_schema = db.Column(db.Text, nullable=False)
     active = db.Column(db.Boolean, default=False)
     deleted = db.Column(db.Boolean, default=False)
     __table_args__ = (
@@ -132,10 +133,13 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     else:
         version = 1
 
+    entry_json_schema = create_entry_json_schema(config)
+
     resource = {
         'resource_id': resource_id,
         'version': version,
-        'config_file': json.dumps(config)
+        'config_file': json.dumps(config),
+        'entry_json_schema': entry_json_schema
     }
 
     new_resource = Resource(**resource)
@@ -178,3 +182,33 @@ def delete_resource(resource_id, version):
     resource.active = False
     db.session.update(resource)
     db.session.commit()
+
+
+def create_entry_json_schema(config):
+    json_schema = {
+        '$schema': 'http://json-schema.org/draft-07/schema#',
+        'type': 'object',
+        'properties': {}
+    }
+
+    fields = config['fields']
+
+    def recursive_field(parent_schema, parent_field_name, parent_field_def):
+        if parent_field_def['type'] != 'object':
+            # TODO this will not work when we have user defined types, s.a. saldoid
+            result = {'type': parent_field_def['type']}
+        else:
+            result = {
+                'type': 'object',
+                'properties': {}
+            }
+
+            for child_field_name, child_field_def in parent_field_def['fields'].items():
+                recursive_field(result, child_field_name, child_field_def)
+
+        parent_schema['properties'][parent_field_name] = result
+
+    for field_name, field_def in fields.items():
+        recursive_field(json_schema, field_name, field_def)
+
+    return json_schema
