@@ -19,8 +19,8 @@
       "patternProperties": {
         "^.*$":  {
           "oneOf": [
-            { "$ref": "#/types/object" },
-            { "$ref": "#/types/elem" }
+            { "$ref": "#/properties/fields" },
+            { "type": "string" }
           ]
         }
       }
@@ -45,19 +45,5 @@
       "type": "string"
     }
   },
-  "required": ["resource_id", "resource_name", "fields", "sort"],
-  "types": {
-    "object": {
-      "oneOf": [
-        { "$ref": "#/types/another_object" },
-        { "$ref": "#/types/elem" }
-      ]
-    },
-    "another_object": {
-      "type": "object"
-    },
-    "elem": {
-      "type": "string"
-    }
-  }
+  "required": ["resource_id", "resource_name", "fields", "sort"]
 }
