@@ -75,6 +75,11 @@ def create_sqlalchemy_class(config, version):
             'id': db.Column(db.Integer, primary_key=True),
             'serialize': serialize
         }
+        if 'id' in config:
+            constraints = (
+                db.UniqueConstraint(config['id'], name='entry_id_unique_constraint'),
+            )
+            attributes['__table_args__'] = constraints
 
         for (field_name, field_column) in fields:
             attributes[field_name] = field_column
