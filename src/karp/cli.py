@@ -5,20 +5,23 @@ from flask.cli import with_appcontext
 
 import karp.database as database
 from . import models
+from karp import create_app
 
 user = os.environ["MARIADB_USER"]
 passwd = os.environ["MARIADB_PASSWORD"]
 dbhost = os.environ["MARIADB_HOST"]
 dbname = os.environ["MARIADB_DATABASE"]
 
-app_config = {
-    'SQLALCHEMY_DATABASE_URI': 'mysql://%s:%s@%s/%s' % (user, passwd, dbhost, dbname),
-    'setup_database': False
-}
+
+class CliConfig:
+    SQLALCHEMY_DATABASE_URI = 'mysql://%s:%s@%s/%s' % (user, passwd, dbhost, dbname)
+    setup_database = False
 
 
-@click.command('create')
-@with_appcontext
+app = create_app(CliConfig)
+
+
+@app.cli.command('create')
 @click.option('--config', default=None, help='')
 def create_resource(config):
     with open(config) as fp:
@@ -29,8 +32,7 @@ def create_resource(config):
     ))
 
 
-@click.command('import')
-@with_appcontext
+@app.cli.command('import')
 @click.option('--resource_id', default=None, help='')
 @click.option('--version', default=None, help='')
 @click.option('--data', default=None, help='')
@@ -43,7 +45,7 @@ def import_resource(resource_id, version, data):
         database.add_entries(resource_id, objs)
 
 
-@click.command('publish')
+@app.cli.command('publish')
 @with_appcontext
 @click.option('--resource_id', default=None, help='')
 @click.option('--version', default=None, help='')
