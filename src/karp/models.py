@@ -1,5 +1,8 @@
 import json
 import datetime
+
+from typing import BinaryIO, Tuple
+
 from karp import db
 
 
@@ -107,7 +110,7 @@ def setup_resource_class(resource_id, version=None):
     resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
 
 
-def create_new_resource(config_file):
+def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     config = json.load(config_file)
     resource_id = config['resource_id']
 
