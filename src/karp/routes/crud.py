@@ -4,17 +4,17 @@ from flask import request                       # pyre-ignore
 import karp.database as database
 
 
-karp_api = Blueprint('karp_api', __name__)
+crud_api = Blueprint('crud_api', __name__)
 
 
-@karp_api.route("/entries", methods=['GET'])
+@crud_api.route("/entries", methods=['GET'])
 def get_entries():
     resource = request.args.get('resource')
     entries = database.get_entries(resource)
     return flask_jsonify([entry.serialize() for entry in entries])
 
 
-@karp_api.route("/entry", methods=['POST'])
+@crud_api.route("/entry", methods=['POST'])
 def add_entry():
     """
     Example add: `curl -XPOST http://localhost:5000/entry?resource=places
@@ -26,14 +26,14 @@ def add_entry():
     return flask_jsonify({'status': 'added'}), 201
 
 
-@karp_api.route("/entry/<entry_id>", methods=['DELETE'])
+@crud_api.route("/entry/<entry_id>", methods=['DELETE'])
 def delete_entry(entry_id):
     resource = request.args.get('resource')
     database.delete_entry(resource, entry_id)
     return flask_jsonify({'status': 'removed'})
 
 
-@karp_api.route("/entry/<entry_id>", methods=['GET'])
+@crud_api.route("/entry/<entry_id>", methods=['GET'])
 def get_entry(entry_id):
     resource = request.args.get('resource')
     entry = database.get_entry(resource, entry_id)
