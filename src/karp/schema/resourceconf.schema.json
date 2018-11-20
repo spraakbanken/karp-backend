@@ -34,10 +34,10 @@
       "type": "object",
       "properties": {
         "write": {
-          "type": "string"
+          "type": "boolean"
         },
         "read": {
-          "type": "string"
+          "type": "boolean"
         }
       }
     },
