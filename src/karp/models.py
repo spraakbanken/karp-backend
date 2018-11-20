@@ -1,8 +1,8 @@
 import json
 import datetime
-
 from typing import BinaryIO, Tuple
-
+import fastjsonschema
+import pkg_resources
 from karp import db
 
 
@@ -117,6 +117,13 @@ def setup_resource_class(resource_id, version=None):
 
 def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     config = json.load(config_file)
+    try:
+        schema = pkg_resources.resource_string(__name__, 'schema/resourceconf.schema.json').decode('utf-8')
+        validate_conf = fastjsonschema.compile(json.loads(schema))
+        validate_conf(config)
+    except fastjsonschema.JsonSchemaException as e:
+        raise RuntimeError(e)
+
     resource_id = config['resource_id']
 
     latest_resource = Resource.query.filter_by(resource_id=resource_id).order_by('version desc').first()
