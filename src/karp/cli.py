@@ -1,24 +1,13 @@
 import json
 import click
-import os
 from flask.cli import with_appcontext
 
 import karp.database as database
 from . import models
 from karp import create_app
+from .config import MariaDBConfig
 
-user = os.environ["MARIADB_USER"]
-passwd = os.environ["MARIADB_PASSWORD"]
-dbhost = os.environ["MARIADB_HOST"]
-dbname = os.environ["MARIADB_DATABASE"]
-
-
-class CliConfig:
-    SQLALCHEMY_DATABASE_URI = 'mysql://%s:%s@%s/%s' % (user, passwd, dbhost, dbname)
-    setup_database = False
-
-
-app = create_app(CliConfig)
+app = create_app(MariaDBConfig)
 
 
 @app.cli.command('create')
