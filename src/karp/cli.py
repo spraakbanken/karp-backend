@@ -21,8 +21,9 @@ app_config = {
 @with_appcontext
 @click.option('--config', default=None, help='')
 def create_resource(config):
-    resource_id, version = models.create_new_resource(config)
-    click.echo('Created version %s of resource %s' % (version, resource_id))
+    with open(config_file) as fp:
+        resource_id, version = models.create_new_resource(fp)
+    click.echo(f"Created version {version} of resource {resource_id}")
 
 
 @click.command('import')

@@ -108,7 +108,7 @@ def setup_resource_class(resource_id, version=None):
 
 
 def create_new_resource(config_file):
-    config = json.load(open(config_file))
+    config = json.load(config_file)
     resource_id = config['resource_id']
 
     latest_resource = Resource.query.filter_by(resource_id=resource_id).order_by('version desc').first()
