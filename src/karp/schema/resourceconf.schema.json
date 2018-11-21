@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "http://spraakbanken.gu.se/resourceconf.schema.json",
+  "title": "Resource configuration",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "resource_id": {
+      "description": "The unique identifier for a resource",
+      "type": "string"
+    },
+    "resource_name": {
+      "description": "The name of the resource",
+      "type": "string"
+    },
+    "fields": {
+      "description": "The fields of the resource",
+      "type": "object",
+      "patternProperties": {
+        "^.*$":  {
+          "oneOf": [
+            { "$ref": "#/properties/fields" },
+            {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "required": { "type": "boolean" }
+              },
+              "required": ["type"]
+            }
+          ]
+        }
+      }
+    },
+    "sort": {
+      "description": "Default sorting order for the resource",
+      "type": "string"
+    },
+    "protected": {
+      "description": "Settings for the permissions of the corpora",
+      "type": "object",
+      "properties": {
+        "write": {
+          "type": "boolean"
+        },
+        "read": {
+          "type": "boolean"
+        }
+      }
+    },
+    "id": {
+      "type": "string"
+    }
+  },
+  "required": ["resource_id", "resource_name", "fields", "sort"]
+}

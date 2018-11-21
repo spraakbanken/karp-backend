@@ -12,6 +12,9 @@ gunicorn = "*"
 karp = {editable = true, path = "."}
 click = "*"
 
+fastjsonschema = "*"
+pytest = "*"
+
 [dev-packages]
 pytest = "*"
 "pysqlcipher3" = "*"
