@@ -42,25 +42,22 @@ def create_sqlalchemy_class(config, version):
     fields = []
     for field_name, field_conf in conf_fields.items():
         field_type = field_conf["type"]
-        if field_type == 'array':
-            pass
-        elif field_type == 'link':
-            pass
+        collection = field_conf.get("collection", False)
+
+        if field_type == 'object' or collection:
+            column_type = db.Text
+        elif field_type == 'number':
+            column_type = db.Integer
+        elif field_type == 'string':
+            column_type = db.Text
         else:
-            if field_type == 'object':
-                column_type = db.Text
-            elif field_type == 'number':
-                column_type = db.Integer
-            elif field_type == 'string':
-                column_type = db.Text
-            else:
-                raise ValueError('Not implemented yet')
+            raise ValueError('Not implemented yet')
 
-            kwargs = {
-                'nullable': field_conf.get('required', False)
-            }
+        kwargs = {
+            'nullable': field_conf.get('required', False)
+        }
 
-            fields.append((field_name, db.Column(column_type, **kwargs)))
+        fields.append((field_name, db.Column(column_type, **kwargs)))
 
     def serialize(self):
         res = {
@@ -89,6 +86,13 @@ def create_sqlalchemy_class(config, version):
 
         for (field_name, field_column) in fields:
             attributes[field_name] = field_column
+
+        def _repr(self):
+            strs = ['id=%s' % self.id]
+            for (key, _) in fields:
+                strs.append('%s=%s' % (key, getattr(self, field_name)))
+            return '<%s(' % table_name + ', '.join(strs) + ')>'
+        attributes['__repr__'] = _repr
 
         sqlalchemy_class = type(resource_id, (db.Model,), attributes)
         class_cache[table_name] = sqlalchemy_class
