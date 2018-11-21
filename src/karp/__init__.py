@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
 import karp.config
 
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 
 db = SQLAlchemy()
 
