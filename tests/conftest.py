@@ -1,11 +1,11 @@
 import pytest
 
 from karp import create_app, db
-from karp.config import BaseConfig
+from karp.config import Config
 from karp.models import create_new_resource, publish_resource
 
 
-class TestConfig(BaseConfig):
+class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     TESTING = True
 
