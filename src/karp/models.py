@@ -41,7 +41,7 @@ def create_sqlalchemy_class(config, version):
             elif field_type == 'number':
                 column_type = db.Integer
             elif field_type == 'string':
-                column_type = db.String(30)
+                column_type = db.Text
             else:
                 raise ValueError('Not implemented yet')
 
