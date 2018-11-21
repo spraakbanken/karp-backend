@@ -1,6 +1,7 @@
 from typing import Tuple
 
-from .models import db, resource_classes
+from .models import resource_classes
+from karp import db
 
 
 def get_entries(resource, version=None):
@@ -10,12 +11,16 @@ def get_entries(resource, version=None):
 
 
 def add_entry(resource, entry, version=None):
+    add_entries(resource, [entry], version=version)
+
+
+def add_entries(resource, entries, version=None):
     cls = resource_classes[resource]
 
     # TODO get schema for this resource and validate entry
-
-    new_entry = cls(**entry)
-    db.session.add(new_entry)
+    for entry in entries:
+        new_entry = cls(**entry)
+        db.session.add(new_entry)
     db.session.commit()
 
 

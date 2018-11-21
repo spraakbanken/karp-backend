@@ -1,8 +1,18 @@
 import json
-from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
 import datetime
 
-db = SQLAlchemy()
+from typing import BinaryIO, Tuple
+
+from karp import db
+
+
+def init_db(app):
+    db.init_app(app)
+    with app.app_context():
+        if not db.engine.dialect.has_table(db.engine, 'resource'):
+            Resource.__table__.create(db.engine)
+        if app.config.get('SETUP_DATABASE', True):
+            setup_resource_classes()
 
 
 class Resource(db.Model):
@@ -59,19 +69,30 @@ def create_sqlalchemy_class(config, version):
 
         return res
 
-    attributes = {
-        '__tablename__': resource_id + '_' + str(version),
-        'id': db.Column(db.Integer, primary_key=True),
-        'serialize': serialize
-    }
+    table_name = resource_id + '_' + str(version)
+    if table_name in class_cache:
+        return class_cache[table_name]
+    else:
+        attributes = {
+            '__tablename__': table_name,
+            'id': db.Column(db.Integer, primary_key=True),
+            'serialize': serialize
+        }
+        if 'id' in config:
+            constraints = (
+                db.UniqueConstraint(config['id'], name='entry_id_unique_constraint'),
+            )
+            attributes['__table_args__'] = constraints
 
-    for (field_name, field_column) in fields:
-        attributes[field_name] = field_column
+        for (field_name, field_column) in fields:
+            attributes[field_name] = field_column
 
-    sqlalchemy_class = type(resource_id, (db.Model,), attributes)
-    return sqlalchemy_class
+        sqlalchemy_class = type(resource_id, (db.Model,), attributes)
+        class_cache[table_name] = sqlalchemy_class
+        return sqlalchemy_class
 
 
+class_cache = {}
 resource_classes = {}
 
 
@@ -94,8 +115,8 @@ def setup_resource_class(resource_id, version=None):
     resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
 
 
-def create_new_resource(config_file):
-    config = json.load(open(config_file))
+def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
+    config = json.load(config_file)
     resource_id = config['resource_id']
 
     latest_resource = Resource.query.filter_by(resource_id=resource_id).order_by('version desc').first()
@@ -126,15 +147,12 @@ def publish_resource(resource_id, version):
     old_active = Resource.query.filter_by(resource_id=resource_id, version=version, active=True).first()
     if old_active:
         old_active.active = False
-        # db.session.update(old_active)
     resource.active = True
-    # db.session.update(resource)
     db.session.commit()
 
     config = json.loads(resource.config_file)
 
-    # this stuff doesn't matter right now since we are not modifying the state of the actual app
-    # only the CLI
+    # this stuff doesn't matter right now since we are not modifying the state of the actual app, only the CLI
     resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
 
 
