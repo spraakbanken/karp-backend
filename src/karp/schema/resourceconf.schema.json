@@ -20,7 +20,14 @@
         "^.*$":  {
           "oneOf": [
             { "$ref": "#/properties/fields" },
-            { "type": "string" }
+            {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string" },
+                "required": { "type": "boolean" }
+              },
+              "required": ["type"]
+            }
           ]
         }
       }

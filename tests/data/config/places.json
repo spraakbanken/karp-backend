@@ -3,10 +3,12 @@
   "resource_name": "Platser i Sverige",
   "fields": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "municipality": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "population": {
       "type": "number"
@@ -18,7 +20,8 @@
       "type": "number"
     },
     "code": {
-      "type": "string"
+      "type": "string",
+      "required": true
     }
   },
   "sort": "name",

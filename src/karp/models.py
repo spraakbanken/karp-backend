@@ -56,7 +56,9 @@ def create_sqlalchemy_class(config, version):
             else:
                 raise ValueError('Not implemented yet')
 
-            kwargs = {}  # not implemented yet
+            kwargs = {
+                'nullable': field_conf.get('required', False)
+            }
 
             fields.append((field_name, db.Column(column_type, **kwargs)))
 
@@ -139,7 +141,7 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
         'resource_id': resource_id,
         'version': version,
         'config_file': json.dumps(config),
-        'entry_json_schema': entry_json_schema
+        'entry_json_schema': json.dumps(entry_json_schema)
     }
 
     new_resource = Resource(**resource)
@@ -196,7 +198,9 @@ def create_entry_json_schema(config):
     def recursive_field(parent_schema, parent_field_name, parent_field_def):
         if parent_field_def['type'] != 'object':
             # TODO this will not work when we have user defined types, s.a. saldoid
-            result = {'type': parent_field_def['type']}
+            result = {
+                'type': parent_field_def['type']
+            }
         else:
             result = {
                 'type': 'object',
@@ -206,6 +210,10 @@ def create_entry_json_schema(config):
             for child_field_name, child_field_def in parent_field_def['fields'].items():
                 recursive_field(result, child_field_name, child_field_def)
 
+        if parent_field_def.get('required', False):
+            if 'required' not in parent_schema:
+                parent_schema['required'] = []
+            parent_schema['required'].append(parent_field_name)
         parent_schema['properties'][parent_field_name] = result
 
     for field_name, field_def in fields.items():

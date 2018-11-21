@@ -3,7 +3,8 @@
   "resource_name": "Kommuner i Sverige",
   "fields": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "state": {
       "type": "string"
@@ -41,7 +42,8 @@
               "type": "number"
             },
             "city": {
-              "type": "number"
+              "type": "number",
+              "required": true
             }
           }
         },
@@ -59,7 +61,8 @@
       }
     },
     "code": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "link": {
       "type": "string"
