@@ -42,8 +42,7 @@
               "type": "number"
             },
             "city": {
-              "type": "number",
-              "required": true
+              "type": "number"
             }
           }
         },
