@@ -60,7 +60,7 @@
       }
     },
     "code": {
-      "type": "string",
+      "type": "number",
       "required": true
     },
     "link": {

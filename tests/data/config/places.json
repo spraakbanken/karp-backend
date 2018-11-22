@@ -20,7 +20,7 @@
       "type": "number"
     },
     "code": {
-      "type": "string",
+      "type": "number",
       "required": true
     }
   },
