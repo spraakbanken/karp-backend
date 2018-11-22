@@ -1,7 +1,8 @@
 import json
 import datetime
+import fastjsonschema  # pyre-ignore
+
 from typing import BinaryIO, Tuple
-import fastjsonschema
 import pkg_resources
 from karp import db
 

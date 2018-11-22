@@ -1,6 +1,6 @@
 import json
 import click
-from flask.cli import with_appcontext
+from flask.cli import with_appcontext  # pyre-ignore
 
 import karp.database as database
 from . import models
