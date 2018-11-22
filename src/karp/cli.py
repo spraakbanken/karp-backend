@@ -31,7 +31,7 @@ def import_resource(resource_id, version, data):
         objs = []
         for line in fp:
             objs.append(json.loads(line))
-        database.add_entries(resource_id, objs)
+        database.add_entries(resource_id, version, objs)
 
 
 @app.cli.command('publish')

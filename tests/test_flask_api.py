@@ -10,21 +10,21 @@ def test_something(client_with_data):
             "population": 3,
             "area": 30000,
             "density": 5,
-            "municipality": 1
+            "municipality": [1]
         }, {
             "code": 2,
             "name": "test2",
             "population": 6,
             "area": 20000,
             "density": 5,
-            "municipality": 1
+            "municipality": [1]
         }, {
             "code": 3,
             "name": "test3",
             "population": 4,
             "area": 50000,
             "density": 5,
-            "municipality": 2
+            "municipality": [2, 3]
         }
     ]
     for entry in entries:

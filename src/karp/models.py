@@ -90,7 +90,7 @@ def create_sqlalchemy_class(config, version):
         def _repr(self):
             strs = ['id=%s' % self.id]
             for (key, _) in fields:
-                strs.append('%s=%s' % (key, getattr(self, field_name)))
+                strs.append('%s=%s' % (key, getattr(self, key)))
             return '<%s(' % table_name + ', '.join(strs) + ')>'
         attributes['__repr__'] = _repr
 
@@ -223,6 +223,13 @@ def create_entry_json_schema(config):
             if 'required' not in parent_schema:
                 parent_schema['required'] = []
             parent_schema['required'].append(parent_field_name)
+
+        if parent_field_def.get('collection', False):
+            result = {
+                'type': 'array',
+                'items': result
+            }
+
         parent_schema['properties'][parent_field_name] = result
 
     for field_name, field_def in fields.items():
