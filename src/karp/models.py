@@ -133,7 +133,7 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
     resource_id = config['resource_id']
 
-    latest_resource = Resource.query.filter_by(resource_id=resource_id).order_by('version desc').first()
+    latest_resource = Resource.query.filter_by(resource_id=resource_id).order_by(Resource.version.desc()).first()
     if latest_resource:
         version = latest_resource.version + 1
     else:
