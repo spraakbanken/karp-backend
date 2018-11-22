@@ -1,10 +1,8 @@
 import json
-import datetime
 import fastjsonschema  # pyre-ignore
-
 from typing import BinaryIO, Tuple
 import pkg_resources
-
+from sqlalchemy.sql import func
 from karp import db
 
 
@@ -21,7 +19,7 @@ class Resource(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     resource_id = db.Column(db.String(30), nullable=False)
     version = db.Column(db.Integer)
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.datetime.utcnow)
+    timestamp = db.Column(db.DateTime, nullable=False, server_default=func.now())
     config_file = db.Column(db.Text, nullable=False)
     entry_json_schema = db.Column(db.Text, nullable=False)
     active = db.Column(db.Boolean, default=False)
