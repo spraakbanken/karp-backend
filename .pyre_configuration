@@ -9,7 +9,7 @@
     ".pyre",
     ".tox"
   ],
-  "search_paths": [
+  "search_path": [
     ".venv"
   ],
   "typeshed": "/usr/lib/pyre_check/typeshed/"
