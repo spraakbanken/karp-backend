@@ -4,10 +4,28 @@ import json
 
 
 def test_something(client_with_data):
-    entries = [
-        {"name": "test1", "population": 3, "area": 30000},
-        {"name": "test2", "population": 6, "area": 20000},
-        {"name": "test3", "population": 4, "area": 50000}
+    entries = [{
+            "code": 1,
+            "name": "test1",
+            "population": 3,
+            "area": 30000,
+            "density": 5,
+            "municipality": 1
+        }, {
+            "code": 2,
+            "name": "test2",
+            "population": 6,
+            "area": 20000,
+            "density": 5,
+            "municipality": 1
+        }, {
+            "code": 3,
+            "name": "test3",
+            "population": 4,
+            "area": 50000,
+            "density": 5,
+            "municipality": 2
+        }
     ]
     for entry in entries:
         client_with_data.post('/entry?resource=places',
