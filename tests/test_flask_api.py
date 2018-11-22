@@ -5,9 +5,9 @@ import json
 
 def test_something(client_with_data):
     entries = [
-        {"name": "test1", "population": 3, "area": 30000},
-        {"name": "test2", "population": 6, "area": 20000},
-        {"name": "test3", "population": 4, "area": 50000}
+        {"name": "test1", "population": 3, "area": 30000, "municipality": str([1, 2, 3]), "code": 1},
+        {"name": "test2", "population": 6, "area": 20000, "municipality": str([1, 2, 3]), "code": 2},
+        {"name": "test3", "population": 4, "area": 50000, "municipality": str([1, 2, 3]), "code": 3}
     ]
     for entry in entries:
         client_with_data.post('/entry?resource=places',

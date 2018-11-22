@@ -53,9 +53,9 @@ def create_sqlalchemy_class(config, version):
         else:
             raise ValueError('Not implemented yet')
 
-        kwargs = {
-            'nullable': field_conf.get('required', False)
-        }
+        kwargs = {}
+        if 'required' in field_conf:
+            kwargs['nullable'] = not field_conf['required']
 
         fields.append((field_name, db.Column(column_type, **kwargs)))
 
