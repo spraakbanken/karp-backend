@@ -26,8 +26,13 @@ class Resource(db.Model):
     deleted = db.Column(db.Boolean, default=False)
     __table_args__ = (
         db.UniqueConstraint('resource_id', 'version', name='resource_version_unique_constraint'),
-        # TODO only one resource can be active, but several can be inactive
-        # db.UniqueConstraint('resource_id', 'active', name='resource_active_unique_constraint')
+        """ TODO only one resource can be active, but several can be inactive
+            here is how to do it in MariaDB, unclear whether this is possible using SQLAlchemy
+            `virtual_column` char(0) as (if(active,'', NULL)) persistent
+            and
+            UNIQUE KEY `resource_version_unique_active` (`resource_id`,`virtual_column`)
+            this works because the tuple (saldo, NULL) is not equal to (saldo, NULL)
+        """
     )
 
     def __repr__(self):
