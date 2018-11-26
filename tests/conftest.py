@@ -19,7 +19,7 @@ CONFIG_PLACES="""{
     },
     "municipality": {
       "collection": true,
-      "type": "string",
+      "type": "number",
       "required": true
     },
     "population": {
