@@ -81,6 +81,19 @@ def app_with_data_f(app_f):
     return fun
 
 
+@pytest.fixture(scope="module")
+def app_with_data(app_with_config):
+    with app.app_context():
+        with open('tests/data/places.jsonl') as fp:
+            create_new_resource(fp)
+        with open('tests/data/municipalities.jsonl') as fp:
+            create_new_resource(fp)
+        publish_resource('places', 1)
+        publish_resource('municipalities', 1)
+
+    return app
+
+
 @pytest.fixture
 def client(app_f):
     app = next(app_f())
