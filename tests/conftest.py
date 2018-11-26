@@ -44,7 +44,6 @@ CONFIG_PLACES="""{
 class TestConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     TESTING = True
-    ELASTICSEARCH_URL = ['http://localhost:9200']
 
 
 @pytest.fixture

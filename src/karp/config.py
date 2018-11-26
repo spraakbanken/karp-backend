@@ -9,7 +9,7 @@ class Config:
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    ELASTICSEARCH_URL = os.environ.get('ELASTICSEARCH_URL', 'http://localhost:9200').split(',')
+    ELASTICSEARCH_URL = os.environ['ELASTICSEARCH_URL'].split(',') if 'ELASTICSEARCH_URL' in os.environ else None
 
 
 class ProductionConfig(Config):

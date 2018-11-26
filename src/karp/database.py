@@ -51,6 +51,9 @@ def add_entries(resource_id, version, entries):
 
     db.session.commit()
 
+    if not current_app.elasticsearch:
+        return
+
     index_to_es = []
     for (db_entry, entry) in created_db_entries:
         index_to_es.append({

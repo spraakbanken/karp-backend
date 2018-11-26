@@ -167,6 +167,9 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
 
 def create_es_index(resource_id, version, config):
+    if not current_app.elasticsearch:
+        return
+
     mapping = create_es_mapping(config)
 
     body = {
