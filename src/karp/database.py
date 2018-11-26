@@ -29,21 +29,27 @@ def add_entries(resource_id, version, entries):
     except fastjsonschema.JsonSchemaDefinitionException as e:
         raise RuntimeError(e)
 
+    index_to_es = []
     for entry in entries:
         try:
             validate_entry(entry)
         except fastjsonschema.JsonSchemaException as e:
             raise RuntimeError(e)
 
-        # TODO tmp fix for collections until we have decided how to handle them
-        for field_name, field_val in entry.items():
-            if isinstance(field_val, list):
-                entry[field_name] = str(field_val)
+        entry_json = json.dumps(entry)
+        kwargs = {
+            'body': entry_json
+        }
+        id_field = json.loads(resource_def.config_file).get('id')
+        if id_field:
+            kwargs[id_field] = entry[id_field]
+        db_entry = cls(**kwargs)
+        db.session.add(db_entry)
 
-        new_entry = cls(**entry)
-        print(new_entry)
-        db.session.add(new_entry)
+        index_to_es.append(entry)
+
     db.session.commit()
+    # TODO index_to_es
 
 
 def delete_entry(resource, entry_id, version=None):

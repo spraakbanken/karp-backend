@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint                     # pyre-ignore
 from flask import jsonify as flask_jsonify       # pyre-ignore
 from flask import request                       # pyre-ignore
@@ -11,7 +12,8 @@ crud_api = Blueprint('crud_api', __name__)
 def get_entries():
     resource = request.args.get('resource')
     entries = database.get_entries(resource)
-    return flask_jsonify([entry.serialize() for entry in entries])
+    # TODO don't parse json and then serialize it again
+    return flask_jsonify([json.loads(entry.body) for entry in entries])
 
 
 @crud_api.route("/entry", methods=['POST'])
@@ -37,4 +39,5 @@ def delete_entry(entry_id):
 def get_entry(entry_id):
     resource = request.args.get('resource')
     entry = database.get_entry(resource, entry_id)
-    return flask_jsonify(entry.serialize())
+    # TODO don't parse json and then serialize it again
+    return flask_jsonify(json.loads(entry.body))

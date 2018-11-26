@@ -56,17 +56,9 @@ def create_sqlalchemy_class(config, version):
         return class_cache[table_name]
     else:
 
-        def serialize(self):
-            res = {
-                'id': self.id,
-                'body': self.body
-            }
-            return res
-
         attributes = {
             '__tablename__': table_name,
             'id': db.Column(db.Integer, primary_key=True),
-            'serialize': serialize,
             'body': db.Column(db.Text, nullable=False)
         }
 
@@ -166,6 +158,8 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     sqlalchemyclass = create_sqlalchemy_class(config, version)
 
     sqlalchemyclass.__table__.create(bind=db.engine)
+
+    # TODO create elasticsearch index of same name and generate a mapping from config
 
     return resource['resource_id'], resource['version']
 
