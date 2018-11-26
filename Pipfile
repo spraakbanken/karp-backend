@@ -13,6 +13,7 @@ karp = {editable = true, path = "."}
 click = "*"
 fastjsonschema = "*"
 pytest = "*"
+elasticsearch = "*"
 
 [dev-packages]
 pytest = "*"
