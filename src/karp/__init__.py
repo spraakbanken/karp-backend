@@ -3,16 +3,14 @@ import os
 from flask import Flask     # pyre-ignore
 from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
 
-import karp.config
 
-
-__version__ = '0.4.1'
+__version__ = '0.4.3'
 
 db = SQLAlchemy()
 
 
 # TODO handle settings correctly
-def create_app(config_class = None):
+def create_app(config_class=None):
     app = Flask(__name__)
     app.config.from_object('karp.config.DevelopmentConfig')
     if config_class:

@@ -25,7 +25,9 @@ class Resource(db.Model):
     active = db.Column(db.Boolean, default=False)
     deleted = db.Column(db.Boolean, default=False)
     __table_args__ = (
-        db.UniqueConstraint('resource_id', 'version', name='resource_version_unique_constraint'),
+        db.UniqueConstraint('resource_id',
+                            'version',
+                            name='resource_version_unique_constraint'),
         # TODO only one resource can be active, but several can be inactive
         #    here is how to do it in MariaDB, unclear whether this is possible using SQLAlchemy
         #    `virtual_column` char(0) as (if(active,'', NULL)) persistent
@@ -35,8 +37,16 @@ class Resource(db.Model):
     )
 
     def __repr__(self):
-        return "<Resource(resource_id='%s', version='%s', timestamp='%s', active='%s', deleted='%s')>" % \
-               (self.resource_id, self.version, self.timestamp, self.active, self.deleted)
+        return """<Resource(resource_id='{}',
+                            version='{}',
+                            timestamp='{}',
+                            active='{}',
+                            deleted='{}')
+                >""".format(self.resource_id,
+                            self.version,
+                            self.timestamp,
+                            self.active,
+                            self.deleted)
 
 
 def create_sqlalchemy_class(config, version):
@@ -129,7 +139,12 @@ def setup_resource_class(resource_id, version=None):
 def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     config = json.load(config_file)
     try:
-        schema = pkg_resources.resource_string(__name__, 'schema/resourceconf.schema.json').decode('utf-8')
+        schema = (
+            pkg_resources
+                .resource_string(__name__,
+                                 'schema/resourceconf.schema.json')
+                .decode('utf-8')
+        )
         validate_conf = fastjsonschema.compile(json.loads(schema))
         validate_conf(config)
     except fastjsonschema.JsonSchemaException as e:
