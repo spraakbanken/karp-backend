@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "575bcc9afdda2f9252024a7cfec4f91a59f9d3e71ad163a92ef3337271bf66aa"
+            "sha256": "a3b4087d16e374a81ae9ca6ab10724115b46c6b5a3726142d003ebc8ffc97552"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -59,6 +59,14 @@
             ],
             "index": "pypi",
             "version": "==6.3.1"
+        },
+        "elasticsearch-dsl": {
+            "hashes": [
+                "sha256:0e8a48a438cc627cf743439c7595d7939035a6608ef1d84edc71e94dde42f823",
+                "sha256:ab39e7aa9654e0ba65db6ac7586a635ddd2b216477474ba561ba86a2995c3eeb"
+            ],
+            "index": "pypi",
+            "version": "==6.3.0"
         },
         "fastjsonschema": {
             "hashes": [
@@ -193,6 +201,13 @@
             ],
             "index": "pypi",
             "version": "==4.0.1"
+        },
+        "python-dateutil": {
+            "hashes": [
+                "sha256:063df5763652e21de43de7d9e00ccf239f953a832941e37be541614732cdfc93",
+                "sha256:88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02"
+            ],
+            "version": "==2.7.5"
         },
         "requests": {
             "hashes": [
