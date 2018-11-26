@@ -1,6 +1,8 @@
+from flask import current_app
 from typing import Tuple
 import fastjsonschema  # pyre-ignore
 import json
+import elasticsearch.helpers
 
 from .models import resource_classes, Resource
 from karp import db
@@ -29,7 +31,7 @@ def add_entries(resource_id, version, entries):
     except fastjsonschema.JsonSchemaDefinitionException as e:
         raise RuntimeError(e)
 
-    index_to_es = []
+    created_db_entries = []
     for entry in entries:
         try:
             validate_entry(entry)
@@ -44,12 +46,21 @@ def add_entries(resource_id, version, entries):
         if id_field:
             kwargs[id_field] = entry[id_field]
         db_entry = cls(**kwargs)
+        created_db_entries.append((db_entry, entry))
         db.session.add(db_entry)
 
-        index_to_es.append(entry)
-
     db.session.commit()
-    # TODO index_to_es
+
+    index_to_es = []
+    for (db_entry, entry) in created_db_entries:
+        index_to_es.append({
+            '_index': resource_id + '_' + str(version),
+            '_id': db_entry.id,
+            '_type': 'entry',
+            'doc': entry
+        })
+
+    elasticsearch.helpers.bulk(current_app.elasticsearch, index_to_es)
 
 
 def delete_entry(resource, entry_id, version=None):
