@@ -4,7 +4,7 @@ from flask import Flask     # pyre-ignore
 from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
 
 
-__version__ = '0.4.3'
+__version__ = '0.4.4'
 
 db = SQLAlchemy()
 
