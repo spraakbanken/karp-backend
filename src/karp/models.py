@@ -3,6 +3,7 @@ import fastjsonschema  # pyre-ignore
 from typing import BinaryIO, Tuple
 import pkg_resources
 from sqlalchemy.sql import func
+from flask import current_app
 from karp import db
 
 
@@ -160,8 +161,25 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     sqlalchemyclass.__table__.create(bind=db.engine)
 
     # TODO create elasticsearch index of same name and generate a mapping from config
+    create_es_index(resource_id, version, config)
 
     return resource['resource_id'], resource['version']
+
+
+def create_es_index(resource_id, version, config):
+    mapping = create_es_mapping(config)
+
+    body = {
+        'settings': {
+            'number_of_shards': 1,
+            'number_of_replicas': 1
+        },
+        'mappings': {
+            'entry': mapping
+        }
+    }
+
+    current_app.elasticsearch.indices.create(index=resource_id + '_' + str(version), body=body)
 
 
 def publish_resource(resource_id, version):
@@ -236,3 +254,40 @@ def create_entry_json_schema(config):
         recursive_field(json_schema, field_name, field_def)
 
     return json_schema
+
+
+def create_es_mapping(config):
+    es_mapping = {
+        'dynamic': False,
+        'properties': {}
+    }
+
+    fields = config['fields']
+
+    def recursive_field(parent_schema, parent_field_name, parent_field_def):
+        if parent_field_def['type'] != 'object':
+            # TODO this will not work when we have user defined types, s.a. saldoid
+            # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
+            if parent_field_def['type'] == 'number':
+                mapped_type = 'long'
+            elif parent_field_def['type'] == 'string':
+                mapped_type = 'keyword'
+            else:
+                mapped_type = 'keyword'
+            result = {
+                'type': mapped_type
+            }
+        else:
+            result = {
+                'properties': {}
+            }
+
+            for child_field_name, child_field_def in parent_field_def['fields'].items():
+                recursive_field(result, child_field_name, child_field_def)
+
+        parent_schema['properties'][parent_field_name] = result
+
+    for field_name, field_def in fields.items():
+        recursive_field(es_mapping, field_name, field_def)
+
+    return es_mapping
