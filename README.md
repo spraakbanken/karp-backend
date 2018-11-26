@@ -40,3 +40,21 @@ The database setup is done automatically when running `wsgi.py`.
 - MariaDB
 - Elasticsearch
 
+## Development
+
+### Version handling
+
+Version can be bumped with [`bumpversion`](https://pypi.org/project/bumpversion/).
+
+Usage:
+- Increase patch number `a.b.X => a.b.(X+1)`: `bumpversion patch`
+- Increase minor number `a.X.c => a.(X+1).c`: `bumpversion minor`
+- Increase major number `X.b.c => (X+1).b.c`: `bumpversion major`
+- To custom version `a.b.c => X.Y.Z`: `bumpversion --new-version X.Y.Z`
+
+`bumpversion` is configured in [`.bumpversion.cfg`](.bumpversion.cfg).
+
+The version is changed in the following files:
+- [`setup.py`](setup.py)
+- [`src/karp/__init__.py`](src/karp/__init__.py)
+- [`.bumpversion.cfg`](.bumpversion.cfg)
