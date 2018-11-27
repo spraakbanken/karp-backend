@@ -4,7 +4,9 @@ info:
   title: Karp API
   version: "6.0"
   description: |
-    Karp TNG\nVery cool!
+    Karp TNG
+
+    Very cool!
   x-logo:
     url: https://spraakbanken.gu.se/karp/img/karplogogr.png
   contact:
@@ -20,25 +22,109 @@ servers:
     description: Under development
 tags:
   - name: Querying
-    description: "### Simple queries\n\nShould be simple!\n\n### Complex queries\n\nComplexer\n\n"
   - name: Editing
-    description: Needed to make changes
+  - name: History
   - name: Inflection
-    description: Work with paradigms
+  - name: Configuration
 paths:
   /query:
     get:
       tags:
         - Querying
       summary: Get lexical entries
-      description: Returns a list of entries matching the given query in the given lexicons.\n
+      description: |
+        Returns a list of entries matching the given query in the given lexicons.
       parameters:
-        - name: text
+        - name: q
+          in: query
+          required: false
+          description: |
+            The query. If missing, all entries in chosen resources will be returned.
+
+            Format:
+
+            `simple||apa` - Search in all fields for `apa`
+
+            `extended||<and/or/not>|<field>|<operator>|<value>||*`
+
+            The extended format may also be nested.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/FromPage'
+        - $ref: '#/components/parameters/SizePage'
+        - name: split_results
+          in: query
+          required: false
+          description: |
+            If `true`, splits gives `size` hits for each resource separated in output.
+
+            If `false`, return `size` hits mixed from resources.
+          schema:
+            type: boolean
+            default: true
+        - name: resources
           in: query
           required: true
-          description: The text to be analysed
+          description: A comma-separated list of resource identifiers
           schema:
-            $ref: '#/components/parameters/RefParam'
+            type: string
+        - name: sort
+          in: query
+          description: |
+            The `field` sort by. If missing, default order for each resource will be used.
+
+            <span style="color: red">Do we need sort order per resource?</span>
+
+            Format: `lemma|asc` or `pos|desc`
+          schema:
+            type: string
+        - name: lexicon_stats
+          in: query
+          description: Show the hit count per lexicon
+          schema:
+            type: boolean
+            default: true
+        - name: include_fields
+          in: query
+          description: Comma-separated list of which fields to return
+          schema:
+            type: string
+            default: 'All field are returned'
+        - name: exclude_fields
+          in: query
+          description: Comma-separated list of which fields to remove from result
+          schema:
+            type: string
+            default: 'No fields are excluded'
+        - name: format
+          in: query
+          description: Will return the result in the specified format
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - xml
+              - lmf?
+              - tsb
+            default: json
+        - name: format_query
+          in: query
+          description: |
+            Will return each entry in the specified format (encoded in JSON-field)
+
+            <span style="color: red">Why is it called format query?</span>
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - xml
+              - lmf?
+              - tsb
+            default:
+              - json
+
       responses:
         '200':
           description: A bunch of entries
@@ -53,24 +139,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeneralError'
 
-components: 
+components:
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: query
       name: secret_key
   parameters:
-    RefParam:
-      name: ref
+    FromPage:
+      name: from
       in: query
       required: false
-      description: Just here for future reference
+      description: From
       schema:
-        type: string
-        default: defaultValue
-        enum:
-          - defaultValue
-          - notDefaultValue
+        type: number
+        default: 0
+    SizePage:
+      name: size
+      in: query
+      required: false
+      description: Number of entries in page
+      schema:
+        type: number
+        default: 10
   schemas:
     GeneralError:
       type: object
@@ -82,18 +173,11 @@ components:
               type: string
               example: Some error message
     EntrySchema:
-      type: array
-      items:
-        properties:
-          build:
+      type: object
+      description: This will different for each resource
+      properties:
+        hits:
+          type: array
+          items:
             type: object
-            properties:
-              hash:
-                type: string
-                example: ece7233cc6fface3adeef4bfc5dc1e9fdfd94488
-              corpus:
-                type: object
-                properties:
-                  analysis:
-                    type: string
-                    example: byt ut
+
