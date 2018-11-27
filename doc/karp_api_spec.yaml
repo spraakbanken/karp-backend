@@ -68,7 +68,6 @@ paths:
           description: A comma-separated list of resource identifiers
           schema:
             type: array
-            style: simple
             items:
               type: string
         - name: sort
@@ -133,14 +132,113 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EntrySchema'
+                $ref: '#/components/schemas/ResultSchema'
         '500':
           description: Query failed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-
+  /{resource}/add:
+    post:
+      tags:
+        - Editing
+      summary: Add entry to resource
+      parameters:
+        - $ref: '#/components/parameters/SingleResource'
+      requestBody:
+        description: The entry object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EntrySchema'
+      responses:
+        '201':
+          description: Successful add
+        '500':
+          description: Add failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /{resource}/add_with_message:
+    post:
+      tags:
+        - Editing
+      summary: Add entry to resource
+      parameters:
+        - $ref: '#/components/parameters/SingleResource'
+      requestBody:
+        description: The entry object with a message for history purposes
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                doc:
+                  $ref: '#/components/schemas/EntrySchema'
+      responses:
+        '201':
+          description: Successful add
+        '500':
+          description: Add failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /{resource}/update/{id}:
+    post:
+      tags:
+        - Editing
+      summary: Update an existing entry in resource
+      parameters:
+        - $ref: '#/components/parameters/SingleResource'
+        - $ref: '#/components/parameters/IdParam'
+      requestBody:
+        description: The entry object with a version and a message
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                doc:
+                  $ref: '#/components/schemas/EntrySchema'
+                version:
+                  type: number
+                  description: Use latest version seen when fetching the object to edit
+      responses:
+        '200':
+          description: Successful update
+        '500':
+          description: Update failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  /{resource}/delete/{id}:
+    delete:
+      tags:
+        - Editing
+      summary: Delete entry from resource
+      parameters:
+        - $ref: '#/components/parameters/SingleResource'
+        - $ref: '#/components/parameters/IdParam'
+      responses:
+        '200':
+          description: Succesful delete
+        '500':
+          description: Delete failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -148,6 +246,20 @@ components:
       in: query
       name: secret_key
   parameters:
+    SingleResource:
+      name: resource
+      in: path
+      required: true
+      description: The resource to perform operation on
+      schema:
+        type: string
+    IdParam:
+      name: id
+      in: path
+      required: true
+      description: The id to perform operation on
+      schema:
+        type: string
     FromPage:
       name: from
       in: query
@@ -174,12 +286,28 @@ components:
             message:
               type: string
               example: Some error message
-    EntrySchema:
+    ResultSchema:
       type: object
-      description: This will different for each resource
+      description: Hit schema
       properties:
         hits:
           type: array
           items:
-            type: object
-
+            $ref: '#/components/schemas/EntrySchema'
+    EntrySchema:
+      type: object
+      description: This will different for each resource
+      properties:
+        field1:
+          type: string
+        field2:
+          type: object
+          properties:
+            subfield1:
+              type: string
+            subfield2:
+              type: number
+        field3:
+          type: array
+          items:
+            type: string
