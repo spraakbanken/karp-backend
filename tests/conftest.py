@@ -93,10 +93,12 @@ def es():
     executable = os.path.join(os.environ.get('ES_PATH') + 'bin/elasticsearch')
     data_arg = '-Epath.data=%s' % tempfile.mkdtemp()
     logs_arg = '-Epath.logs=%s' % tempfile.mkdtemp()
+    port = 9201
+    port_arg = '-Ehttp.port=%s' % port
     env_copy = os.environ.copy()
     env_copy['ES_JAVA_OPTS'] = '-Xms512m -Xmx512m'
 
-    p = subprocess.Popen([executable, data_arg, logs_arg], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen([executable, data_arg, logs_arg, port_arg], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     line = ''
     while True:
@@ -113,6 +115,6 @@ def es():
         if 'started' in line:
             break
 
-    yield 'we must yield something?'
+    yield port
 
     p.kill()
