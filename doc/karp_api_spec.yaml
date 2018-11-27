@@ -1,0 +1,183 @@
+# spec can be tested using https://editor.swagger.io/
+openapi: 3.0.2
+info: 
+  title: Karp API
+  version: "6.0"
+  description: |
+    Karp TNG
+
+    Very cool!
+  x-logo:
+    url: https://spraakbanken.gu.se/karp/img/karplogogr.png
+  contact:
+    name: Språkbanken
+    url: https://spraakbanken.gu.se/
+    email: sb@svenska.gu.se
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://karp-tng-backend-os-sample-python.os-dev.spraakbanken.gu.se/
+    description: Under development
+tags:
+  - name: Querying
+  - name: Editing
+  - name: History
+  - name: Inflection
+  - name: Configuration
+paths:
+  /query:
+    get:
+      tags:
+        - Querying
+      summary: Get lexical entries
+      description: |
+        Returns a list of entries matching the given query in the given lexicons.
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: |
+            The query. If missing, all entries in chosen resources will be returned.
+
+            Format:
+
+            `simple||apa` - Search in all fields for `apa`
+
+            `extended||<and/or/not>|<field>|<operator>|<value>||*`
+
+            The extended format may also be nested.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/FromPage'
+        - $ref: '#/components/parameters/SizePage'
+        - name: split_results
+          in: query
+          required: false
+          description: |
+            If `true`, splits gives `size` hits for each resource separated in output.
+
+            If `false`, return `size` hits mixed from resources.
+          schema:
+            type: boolean
+            default: true
+        - name: resources
+          in: query
+          required: true
+          description: A comma-separated list of resource identifiers
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: |
+            The `field` sort by. If missing, default order for each resource will be used.
+
+            <span style="color: red">Do we need sort order per resource?</span>
+
+            Format: `lemma|asc` or `pos|desc`
+          schema:
+            type: string
+        - name: lexicon_stats
+          in: query
+          description: Show the hit count per lexicon
+          schema:
+            type: boolean
+            default: true
+        - name: include_fields
+          in: query
+          description: Comma-separated list of which fields to return
+          schema:
+            type: string
+            default: 'All field are returned'
+        - name: exclude_fields
+          in: query
+          description: Comma-separated list of which fields to remove from result
+          schema:
+            type: string
+            default: 'No fields are excluded'
+        - name: format
+          in: query
+          description: Will return the result in the specified format
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - xml
+              - lmf?
+              - tsb
+            default: json
+        - name: format_query
+          in: query
+          description: |
+            Will return each entry in the specified format (encoded in JSON-field)
+
+            <span style="color: red">Why is it called format query?</span>
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - xml
+              - lmf?
+              - tsb
+            default:
+              - json
+
+      responses:
+        '200':
+          description: A bunch of entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntrySchema'
+        '500':
+          description: Query failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: query
+      name: secret_key
+  parameters:
+    FromPage:
+      name: from
+      in: query
+      required: false
+      description: From
+      schema:
+        type: number
+        default: 0
+    SizePage:
+      name: size
+      in: query
+      required: false
+      description: Number of entries in page
+      schema:
+        type: number
+        default: 10
+  schemas:
+    GeneralError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Some error message
+    EntrySchema:
+      type: object
+      description: This will different for each resource
+      properties:
+        hits:
+          type: array
+          items:
+            type: object
+
