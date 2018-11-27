@@ -1,0 +1,99 @@
+# spec can be tested using https://editor.swagger.io/
+openapi: 3.0.2
+info: 
+  title: Karp API
+  version: "6.0"
+  description: |
+    Karp TNG\nVery cool!
+  x-logo:
+    url: https://spraakbanken.gu.se/karp/img/karplogogr.png
+  contact:
+    name: Språkbanken
+    url: https://spraakbanken.gu.se/
+    email: sb@svenska.gu.se
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://karp-tng-backend-os-sample-python.os-dev.spraakbanken.gu.se/
+    description: Under development
+tags:
+  - name: Querying
+    description: "### Simple queries\n\nShould be simple!\n\n### Complex queries\n\nComplexer\n\n"
+  - name: Editing
+    description: Needed to make changes
+  - name: Inflection
+    description: Work with paradigms
+paths:
+  /query:
+    get:
+      tags:
+        - Querying
+      summary: Get lexical entries
+      description: Returns a list of entries matching the given query in the given lexicons.\n
+      parameters:
+        - name: text
+          in: query
+          required: true
+          description: The text to be analysed
+          schema:
+            $ref: '#/components/parameters/RefParam'
+      responses:
+        '200':
+          description: A bunch of entries
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EntrySchema'
+        '500':
+          description: Query failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+
+components: 
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: query
+      name: secret_key
+  parameters:
+    RefParam:
+      name: ref
+      in: query
+      required: false
+      description: Just here for future reference
+      schema:
+        type: string
+        default: defaultValue
+        enum:
+          - defaultValue
+          - notDefaultValue
+  schemas:
+    GeneralError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Some error message
+    EntrySchema:
+      type: array
+      items:
+        properties:
+          build:
+            type: object
+            properties:
+              hash:
+                type: string
+                example: ece7233cc6fface3adeef4bfc5dc1e9fdfd94488
+              corpus:
+                type: object
+                properties:
+                  analysis:
+                    type: string
+                    example: byt ut
