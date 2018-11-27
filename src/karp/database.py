@@ -60,7 +60,7 @@ def add_entries(resource_id, version, entries):
             '_index': resource_id + '_' + str(version),
             '_id': db_entry.id,
             '_type': 'entry',
-            'doc': entry
+            '_source': entry
         })
 
     elasticsearch.helpers.bulk(current_app.elasticsearch, index_to_es)
