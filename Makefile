@@ -1,4 +1,4 @@
-default: pytest
+default: tox
 
 pytest: build
 	pipenv run py.test tests
