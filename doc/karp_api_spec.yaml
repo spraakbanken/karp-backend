@@ -27,7 +27,7 @@ tags:
   - name: Inflection
   - name: Configuration
 paths:
-  /query:
+  /query/{resources}:
     get:
       tags:
         - Querying
@@ -63,11 +63,14 @@ paths:
             type: boolean
             default: true
         - name: resources
-          in: query
+          in: path
           required: true
           description: A comma-separated list of resource identifiers
           schema:
-            type: string
+            type: array
+            style: simple
+            items:
+              type: string
         - name: sort
           in: query
           description: |
@@ -122,8 +125,7 @@ paths:
               - xml
               - lmf?
               - tsb
-            default:
-              - json
+            default: json
 
       responses:
         '200':
