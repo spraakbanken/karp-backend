@@ -118,3 +118,19 @@ def es():
     yield port
 
     p.kill()
+
+
+@pytest.fixture
+def es_enabled_app(es):
+
+    class ESTestConfig(TestConfig):
+        ELASTICSEARCH_URL = 'http://localhost:%s' % es
+
+    app = create_app(ESTestConfig)
+    with app.app_context():
+        create_new_resource(io.StringIO(CONFIG_PLACES))
+        publish_resource('places', 1)
+        yield app.test_client()
+
+        db.session.remove()
+        db.drop_all()
