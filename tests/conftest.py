@@ -65,6 +65,16 @@ def app_f():
     return fun
 
 
+@pytest.fixture(scope="module")
+def app_scope_module():
+    app = create_app(TestConfig)
+    with app.app_context():
+        yield app
+
+        db.session.remove()
+        db.drop_all()
+
+
 @pytest.fixture
 def app_with_data_f(app_f):
     def fun(**kwargs):
@@ -81,17 +91,30 @@ def app_with_data_f(app_f):
     return fun
 
 
-@pytest.fixture(scope="module")
-def app_with_data(app_with_config):
+@pytest.fixture
+def app_with_data(app):
     with app.app_context():
-        with open('tests/data/places.jsonl') as fp:
+        with open('tests/data/config/places.json') as fp:
             create_new_resource(fp)
-        with open('tests/data/municipalities.jsonl') as fp:
+        with open('tests/data/config/municipalities.json') as fp:
             create_new_resource(fp)
         publish_resource('places', 1)
         publish_resource('municipalities', 1)
 
     return app
+
+
+@pytest.fixture(scope="module")
+def app_with_data_scope_module(app_scope_module):
+    with app_scope_module.app_context():
+        with open('tests/data/config/places.json') as fp:
+            create_new_resource(fp)
+        with open('tests/data/config/municipalities.json') as fp:
+            create_new_resource(fp)
+        publish_resource('places', 1)
+        publish_resource('municipalities', 1)
+
+    return app_scope_module
 
 
 @pytest.fixture
@@ -107,6 +130,11 @@ def client_with_data_f(app_with_data_f):
         return app_with_data.test_client()
 
     return fun
+
+
+@pytest.fixture(scope="module")
+def client_with_data_scope_module(app_with_data_scope_module):
+    return app_with_data_scope_module.test_client()
 
 
 @pytest.fixture
