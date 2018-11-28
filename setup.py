@@ -34,7 +34,7 @@ setup(
     classifiers=[
         # complete classifier list: http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 2 - Pre-Alpha',
-        #'Development Status ::  - Production/Stable',
+        # 'Development Status ::  - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Operating System :: Unix',

@@ -1,15 +1,18 @@
 import io
+import json
 
 import pytest  # pyre-ignore
 import os
 import subprocess
 import tempfile
-from karp import create_app, db
+from karp import create_app
+from karp.database import db
 from karp.config import Config
-from karp.models import create_new_resource, publish_resource
+from karp.resourcemgr import create_new_resource
+from karp.resourcemgr import publish_resource
 
 
-CONFIG_PLACES="""{
+CONFIG_PLACES = """{
   "resource_id": "places",
   "resource_name": "Platser i Sverige",
   "fields": {
@@ -59,14 +62,12 @@ def app():
 @pytest.fixture
 def app_with_data(app):
     with app.app_context():
-        create_new_resource(io.StringIO(CONFIG_PLACES))
+        with open('tests/data/config/places.json') as fp:
+            create_new_resource(fp)
+        with open('tests/data/config/municipalities.json') as fp:
+            create_new_resource(fp)
         publish_resource('places', 1)
-        # with open('tests/data/config/places.json') as fp:
-        #     create_new_resource(fp)
-        # with open('tests/data/config/municipalities.json') as fp:
-        #     create_new_resource(fp)
-        # publish_resource('places', 1)
-        # publish_resource('municipalities', 1)
+        publish_resource('municipalities', 1)
 
     return app
 
@@ -134,3 +135,8 @@ def es_enabled_app(es):
 
         db.session.remove()
         db.drop_all()
+
+
+@pytest.fixture
+def json_schema_config():
+    return json.loads(CONFIG_PLACES)
