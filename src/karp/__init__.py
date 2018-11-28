@@ -5,7 +5,7 @@ from flask import Flask     # pyre-ignore
 import elasticsearch
 
 
-__version__ = '0.4.6'
+__version__ = '0.4.7'
 
 
 # TODO handle settings correctly
