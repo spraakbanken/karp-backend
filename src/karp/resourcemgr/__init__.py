@@ -6,8 +6,8 @@ from typing import Tuple
 
 import fastjsonschema  # pyre-ignore
 
-from flask import current_app
-import elasticsearch.helpers
+from flask import current_app # pyre-ignore
+import elasticsearch.helpers # pyre-ignore
 
 from karp import get_resource_string
 from karp.database import Resources

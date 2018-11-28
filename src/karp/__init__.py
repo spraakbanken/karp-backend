@@ -2,7 +2,7 @@ import os
 import pkg_resources
 
 from flask import Flask     # pyre-ignore
-import elasticsearch
+import elasticsearch        # pyre-ignore
 
 
 __version__ = '0.4.7'

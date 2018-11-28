@@ -2,7 +2,7 @@ import json
 import time
 import urllib.request
 import urllib.parse
-import pytest
+import pytest # pyre-ignore
 from karp import search
 
 
