@@ -1,6 +1,5 @@
 import os
 
-
 MYSQL_FORMAT = "mysql://{user}:{passwd}@{dbhost}/{dbname}"
 
 
@@ -34,9 +33,8 @@ def get_config():
 
 
 class MariaDBConfig(Config):
-    SETUP_DATABASE = False
 
-    def __init__(self, user=None, pwd=None, host=None, dbname=None):
+    def __init__(self, user=None, pwd=None, host=None, dbname=None, setup_database=False):
         if not user:
             user = os.environ["MARIADB_USER"]
         if not pwd:
@@ -46,6 +44,7 @@ class MariaDBConfig(Config):
         if not dbname:
             dbname = os.environ["MARIADB_DATABASE"]
 
+        self.SETUP_DATABASE = setup_database
         self.SQLALCHEMY_DATABASE_URI = MYSQL_FORMAT.format(
             user=user,
             passwd=pwd,
