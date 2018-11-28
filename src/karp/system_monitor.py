@@ -1,6 +1,6 @@
 from typing import Tuple
 
-from karp import db
+from karp.database import db
 
 
 def check_database_status() -> Tuple[bool, str]:

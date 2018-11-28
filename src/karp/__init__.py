@@ -1,12 +1,9 @@
 import os
 
 from flask import Flask     # pyre-ignore
-from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
 
 
 __version__ = '0.4.6'
-
-db = SQLAlchemy()
 
 
 # TODO handle settings correctly
@@ -24,8 +21,8 @@ def create_app(config_class=None):
     app.register_blueprint(query_api)
     app.register_blueprint(documentation)
 
-    from . import models
-    models.init_db(app)
+    from .init import init_db
+    init_db(app)
 
     return app
 
