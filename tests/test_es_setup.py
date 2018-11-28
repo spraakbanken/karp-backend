@@ -46,4 +46,4 @@ def test_es_search(es_enabled_app):
     with es_enabled_app.application.app_context():
         ids = search.search('places', 1, simple_query=None, extended_query='and|population|equals|3')
         assert len(ids) == 1
-        assert ids[0] == '1'
+        assert ids[0]['population'] == 3

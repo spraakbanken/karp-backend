@@ -13,7 +13,7 @@ def search(resource_id, version, simple_query=None, extended_query=None):
 
     s = s.index(resource_id + '_' + str(version))
     response = s.execute()
-    return [result.meta.id for result in response]
+    return [result.to_dict() for result in response]
 
 
 def _map_extended_to_query(resource_id, version, extended_query):
