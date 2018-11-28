@@ -1,7 +1,8 @@
 from flask import Blueprint                     # pyre-ignore
 from flask import jsonify as flask_jsonify       # pyre-ignore
-from flask import request                       # pyre-ignore
-import karp.database as database
+from flask import request  # pyre-ignore
+
+import karp.resourcemgr as database
 
 
 crud_api = Blueprint('crud_api', __name__)
