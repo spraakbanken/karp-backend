@@ -1,12 +1,12 @@
 import json
 
-import pkg_resources
 
 from typing import BinaryIO
 from typing import Tuple
 
 import fastjsonschema  # pyre-ignore
 
+from karp import get_resource_string
 from karp.database import Resources
 from karp.database import create_sqlalchemy_class
 from karp.database import db
@@ -39,7 +39,7 @@ def setup_resource_class(resource_id, version=None):
 def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     config = json.load(config_file)
     try:
-        schema = pkg_resources.resource_string(__name__, 'schema/resourceconf.schema.json').decode('utf-8')
+        schema = get_resource_string('schema/resourceconf.schema.json')
         validate_conf = fastjsonschema.compile(json.loads(schema))
         validate_conf(config)
     except fastjsonschema.JsonSchemaException as e:
@@ -107,3 +107,36 @@ def delete_resource(resource_id, version):
     resource.active = False
     db.session.update(resource)
     db.session.commit()
+
+
+def get_entries(resource, version=None):
+    cls = resource_classes[resource]
+    entries = cls.query.all()
+    return entries
+
+
+def add_entry(resource, entry, version=None):
+    add_entries(resource, [entry], version=version)
+
+
+def add_entries(resource, entries, version=None):
+    cls = resource_classes[resource]
+
+    # TODO get schema for this resource and validate entry
+    for entry in entries:
+        new_entry = cls(**entry)
+        db.session.add(new_entry)
+    db.session.commit()
+
+
+def delete_entry(resource, entry_id, version=None):
+    cls = resource_classes[resource]
+    entry = cls.query.filter_by(id=entry_id).first()
+    db.session.delete(entry)
+    db.session.commit()
+
+
+def get_entry(resource, entry_id, version=None):
+    cls = resource_classes[resource]
+    entry = cls.query.filter_by(id=entry_id).first()
+    return entry
