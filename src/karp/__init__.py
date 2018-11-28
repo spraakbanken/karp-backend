@@ -1,4 +1,5 @@
 import os
+import pkg_resources
 
 from flask import Flask     # pyre-ignore
 
@@ -29,3 +30,7 @@ def create_app(config_class=None):
 
 def get_version() -> str:
     return __version__
+
+
+def get_resource_string(name: str) -> str:
+    return pkg_resources.resource_string(__name__, name).decode('utf-8')
