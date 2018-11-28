@@ -58,4 +58,4 @@ The version is changed in the following files:
 - [`setup.py`](setup.py)
 - [`src/karp/__init__.py`](src/karp/__init__.py)
 - [`.bumpversion.cfg`](.bumpversion.cfg)
-- [`karp_api_spec.yaml`](doc/karp_api_spec.yaml)
+- [`doc/karp_api_spec.yaml`](doc/karp_api_spec.yaml)
