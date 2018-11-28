@@ -2,17 +2,25 @@ import json
 import time
 import urllib.request
 import urllib.parse
+import pytest
 from karp import search
 
 
 def test_es_setup(es):
-    url = 'http://localhost:' + str(es)
+    if es == 'skip':
+        pytest.skip("elasticsearch disabled")
+
+    url = 'http://localhost:9201'
     f = urllib.request.urlopen(url)
     answer = json.loads(f.read().decode('utf-8'))
     assert answer['tagline'] == 'You Know, for Search'
 
 
-def test_es_search(es_enabled_app):
+def test_es_search(es, client_with_data_f):
+    client_with_data = client_with_data_f(use_elasticsearch=True)
+    if es == 'skip':
+        pytest.skip("elasticsearch disabled")
+
     entries = [{
             "code": 1,
             "name": "test1",
@@ -37,13 +45,13 @@ def test_es_search(es_enabled_app):
         }
     ]
     for entry in entries:
-        es_enabled_app.post('/entry?resource=places',
+        client_with_data.post('/entry?resource=places',
                             data=json.dumps(entry),
                             content_type='application/json')
 
     time.sleep(1)
 
-    with es_enabled_app.application.app_context():
+    with client_with_data.application.app_context():
         ids = search.search('places', 1, simple_query=None, extended_query='and|population|equals|3')
         assert len(ids) == 1
         assert ids[0]['population'] == 3

@@ -26,7 +26,7 @@ def create_app(config_class=None):
     from .init import init_db
     init_db(app)
 
-    if app.config['ELASTICSEARCH_URL']:
+    if app.config['ELASTICSEARCH_ENABLED'] and app.config['ELASTICSEARCH_URL']:
         app.elasticsearch = elasticsearch.Elasticsearch(app.config['ELASTICSEARCH_URL'])
     else:
         app.elasticsearch = None
