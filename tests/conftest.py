@@ -1,15 +1,17 @@
 import io
 
 import pytest  # pyre-ignore
-import os
-import subprocess
-import tempfile
-from karp import create_app, db
+# import os
+# import subprocess
+# import tempfile
+from karp import create_app
+from karp.database import db
 from karp.config import Config
-from karp.models import create_new_resource, publish_resource
+from karp.resourcemgr import create_new_resource
+from karp.resourcemgr import publish_resource
 
 
-CONFIG_PLACES="""{
+CONFIG_PLACES = """{
   "resource_id": "places",
   "resource_name": "Platser i Sverige",
   "fields": {
