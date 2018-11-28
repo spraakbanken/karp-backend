@@ -2,6 +2,7 @@ import os
 import pkg_resources
 
 from flask import Flask     # pyre-ignore
+import elasticsearch
 
 
 __version__ = '0.4.6'
@@ -24,6 +25,11 @@ def create_app(config_class=None):
 
     from .init import init_db
     init_db(app)
+
+    if app.config['ELASTICSEARCH_ENABLED'] and app.config['ELASTICSEARCH_URL']:
+        app.elasticsearch = elasticsearch.Elasticsearch(app.config['ELASTICSEARCH_URL'])
+    else:
+        app.elasticsearch = None
 
     return app
 

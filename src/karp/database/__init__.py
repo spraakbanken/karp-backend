@@ -44,61 +44,40 @@ class_cache = {}
 
 def create_sqlalchemy_class(config, version):
     resource_id = config['resource_id']
-
-    conf_fields = config['fields']
-    fields = []
-    for field_name, field_conf in conf_fields.items():
-        field_type = field_conf["type"]
-        collection = field_conf.get("collection", False)
-
-        if field_type == 'object' or collection:
-            column_type = db.Text
-        elif field_type == 'number':
-            column_type = db.Integer
-        elif field_type == 'string':
-            column_type = db.Text
-        else:
-            raise ValueError('Not implemented yet')
-
-        kwargs = {}
-        if 'required' in field_conf:
-            kwargs['nullable'] = not field_conf['required']
-
-        fields.append((field_name, db.Column(column_type, **kwargs)))
-
-    def serialize(self):
-        res = {
-            'id': self.id
-        }
-
-        for field, _ in fields:
-            res[field] = getattr(self, field)
-
-        return res
-
     table_name = resource_id + '_' + str(version)
     if table_name in class_cache:
         return class_cache[table_name]
     else:
+
         attributes = {
             '__tablename__': table_name,
             'id': db.Column(db.Integer, primary_key=True),
-            'serialize': serialize
+            'body': db.Column(db.Text, nullable=False)
         }
-        if 'id' in config:
-            constraints = (
-                db.UniqueConstraint(config['id'], name='entry_id_unique_constraint'),
-            )
-            attributes['__table_args__'] = constraints
 
-        for (field_name, field_column) in fields:
-            attributes[field_name] = field_column
+        if 'id' in config:
+            id_field = config['id']
+            field_type = config['fields'][id_field]['type']
+
+            if field_type == 'number':
+                column_type = db.Integer
+            elif field_type == 'string':
+                column_type = db.Text
+            else:
+                raise ValueError('Not implemented yet')
+            constraints = (
+                db.UniqueConstraint(id_field, name='entry_id_unique_constraint'),
+            )
+            attributes[id_field] = db.Column(column_type, nullable=False)
+            attributes['__table_args__'] = constraints
+        else:
+            id_field = None
 
         def _repr(self):
-            strs = ['id=%s' % self.id]
-            for (key, _) in fields:
-                strs.append('%s=%s' % (key, getattr(self, key)))
-            return '<%s(' % table_name + ', '.join(strs) + ')>'
+            if id_field:
+                return '<%s(id=%s,%s=%s)>' % (table_name, self.id, id_field, getattr(self, id_field))
+            else:
+                return '<%s(id=%s)>' % (table_name, self.id)
         attributes['__repr__'] = _repr
 
         sqlalchemy_class = type(resource_id, (db.Model,), attributes)
