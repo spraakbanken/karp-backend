@@ -1,4 +1,5 @@
 import io
+import json
 
 import pytest  # pyre-ignore
 # import os
@@ -62,14 +63,12 @@ def app():
 @pytest.fixture
 def app_with_data(app):
     with app.app_context():
-        create_new_resource(io.StringIO(CONFIG_PLACES))
+        with open('tests/data/config/places.json') as fp:
+            create_new_resource(fp)
+        with open('tests/data/config/municipalities.json') as fp:
+            create_new_resource(fp)
         publish_resource('places', 1)
-        # with open('tests/data/config/places.json') as fp:
-        #     create_new_resource(fp)
-        # with open('tests/data/config/municipalities.json') as fp:
-        #     create_new_resource(fp)
-        # publish_resource('places', 1)
-        # publish_resource('municipalities', 1)
+        publish_resource('municipalities', 1)
 
     return app
 
@@ -87,3 +86,8 @@ def client_with_data(app_with_data):
 @pytest.fixture
 def runner(app):
     return app.test_cli_runner()
+
+
+@pytest.fixture
+def json_schema_config():
+    return json.loads(CONFIG_PLACES)
