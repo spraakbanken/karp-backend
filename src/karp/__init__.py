@@ -28,3 +28,7 @@ def create_app(config_class=None):
     models.init_db(app)
 
     return app
+
+
+def get_version() -> str:
+    return __version__
