@@ -146,7 +146,7 @@ def add_entries(resource_id, version, entries):
         new_entry = cls(**entry)
         print(new_entry)
         db.session.add(new_entry)
-        db.session.commit()
+    db.session.commit()
 
 
 def delete_entry(resource, entry_id, version=None):
