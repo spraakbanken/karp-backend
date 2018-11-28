@@ -1,6 +1,5 @@
 import json
 
-
 from typing import BinaryIO
 from typing import Tuple
 
@@ -12,13 +11,19 @@ from karp.database import create_sqlalchemy_class
 from karp.database import db
 
 from karp.util.json_schema import create_entry_json_schema
-from karp.search import search
+
+from .resource import Resource  # noqa: F401
+
 
 resource_classes = {}
 
 
 def get_available_resources():
     return Resources.query.filter_by(active=True)
+
+
+def get_resource(id: str) -> Resource:
+    return Resource(resource_classes[id])
 
 
 def setup_resource_classes():

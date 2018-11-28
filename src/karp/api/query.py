@@ -10,6 +10,10 @@ from distutils.util import strtobool
 
 from flask import Blueprint, jsonify, request    # pyre-ignore
 
+from karp.resourcemgr import Resource
+from karp.resourcemgr import get_resource
+
+
 query_api = Blueprint('query_api', __name__)
 
 
@@ -20,26 +24,15 @@ def user_is_permitted(resource_id: str) -> bool:
         return True
 
 
-class Resource(object):
-    def __init__(self, resource_id: str) -> None:
-        self.protected = resource_id == 'protected'
-
-    def default_sort(self) -> str:
-        return ""
-
-    def get_fields(self) -> List[str]:
-        return []
-
-    def is_protected(self) -> bool:
-        return self.protected
 
 
-class ResourceStore(object):
-    def get_resource(self, id: str) -> Resource:
-        return Resource(id)
 
-
-resource_store = ResourceStore()
+# class ResourceStore(object):
+#     def get_resource(self, id: str) -> Resource:
+#         return Resource(id)
+#
+#
+# resource_store = ResourceStore()
 
 
 class QueryParameters(object):
@@ -218,7 +211,7 @@ def query_w_resources(resources: str):
     resources = resources.split(',')
     result = {}
     for resource_id in resources:
-        resource = resource_store.get_resource(resource_id)
+        resource = get_resource(resource_id)
         query_params = read_arguments(resource)
         print("/query got resource: {resource}".format(resource=resource_id))
         print(resource)
