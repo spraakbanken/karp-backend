@@ -1,9 +1,8 @@
 import json
 
-# import pytest
 
-
-def test_something(client_with_data):
+def test_something(client_with_data_f):
+    client_with_data = client_with_data_f()
     entries = [{
             "code": 1,
             "name": "test1",
