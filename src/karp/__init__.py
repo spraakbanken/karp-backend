@@ -4,7 +4,7 @@ import pkg_resources
 from flask import Flask     # pyre-ignore
 
 
-__version__ = '0.4.7'
+__version__ = '0.4.8'
 
 
 # TODO handle settings correctly

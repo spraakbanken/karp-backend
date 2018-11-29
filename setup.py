@@ -9,7 +9,7 @@ from setuptools import setup
 
 setup(
     name='karp',
-    version='0.4.7',
+    version='0.4.8',
     license='MIT License',
     description='',
     author='Språkbanken',
