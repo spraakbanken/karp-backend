@@ -38,7 +38,7 @@
       "type": "string"
     },
     "protected": {
-      "description": "Settings for the permissions of the corpora",
+      "description": "Settings for the permissions of the lexica",
       "type": "object",
       "properties": {
         "write": {
