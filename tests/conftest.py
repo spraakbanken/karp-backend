@@ -67,7 +67,7 @@ def app_f():
 
 @pytest.fixture(scope="module")
 def app_scope_module():
-    app = create_app(TestConfig)
+    app = create_app(ConfigTest)
     with app.app_context():
         yield app
 
