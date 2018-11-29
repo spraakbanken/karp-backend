@@ -6,8 +6,8 @@ def test_no_q(client):
     assert response.status_code == 200
 
 
-def test_protected(client):
-    response = client.get('/protected/query')
+def test_protected(client_with_data_scope_module):
+    response = client_with_data_scope_module.get('/municipalities/query')
     assert response.status == '403 FORBIDDEN'
 
 
