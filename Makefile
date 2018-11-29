@@ -11,3 +11,6 @@ build:
 
 flaske8:
 	flake8 src tests setup.py wsgi.py
+
+pyre:
+	pyre check
