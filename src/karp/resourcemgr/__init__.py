@@ -6,16 +6,13 @@ from typing import Tuple
 
 import fastjsonschema  # pyre-ignore
 
-from flask import current_app # pyre-ignore
-import elasticsearch.helpers # pyre-ignore
-
 from karp import get_resource_string
 from karp.database import Resources
 from karp.database import create_sqlalchemy_class
 from karp.database import db
 
 from karp.util.json_schema import create_entry_json_schema
-
+from karp.search import search
 
 resource_classes = {}
 
@@ -78,66 +75,9 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
     sqlalchemyclass.__table__.create(bind=db.engine)
 
-    # TODO create elasticsearch index of same name and generate a mapping from config
-    create_es_index(resource_id, version, config)
+    search.create_index(resource_id, version, config)
 
     return resource['resource_id'], resource['version']
-
-
-def create_es_index(resource_id, version, config):
-    if not current_app.elasticsearch:
-        return
-
-    mapping = create_es_mapping(config)
-
-    body = {
-        'settings': {
-            'number_of_shards': 1,
-            'number_of_replicas': 1
-        },
-        'mappings': {
-            'entry': mapping
-        }
-    }
-
-    current_app.elasticsearch.indices.create(index=resource_id + '_' + str(version), body=body)
-
-
-def create_es_mapping(config):
-    es_mapping = {
-        'dynamic': False,
-        'properties': {}
-    }
-
-    fields = config['fields']
-
-    def recursive_field(parent_schema, parent_field_name, parent_field_def):
-        if parent_field_def['type'] != 'object':
-            # TODO this will not work when we have user defined types, s.a. saldoid
-            # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
-            if parent_field_def['type'] == 'number':
-                mapped_type = 'long'
-            elif parent_field_def['type'] == 'string':
-                mapped_type = 'keyword'
-            else:
-                mapped_type = 'keyword'
-            result = {
-                'type': mapped_type
-            }
-        else:
-            result = {
-                'properties': {}
-            }
-
-            for child_field_name, child_field_def in parent_field_def['fields'].items():
-                recursive_field(result, child_field_name, child_field_def)
-
-        parent_schema['properties'][parent_field_name] = result
-
-    for field_name, field_def in fields.items():
-        recursive_field(es_mapping, field_name, field_def)
-
-    return es_mapping
 
 
 def publish_resource(resource_id, version):
@@ -214,19 +154,7 @@ def add_entries(resource_id, version, entries):
 
     db.session.commit()
 
-    if not current_app.elasticsearch:
-        return
-
-    index_to_es = []
-    for (db_entry, entry) in created_db_entries:
-        index_to_es.append({
-            '_index': resource_id + '_' + str(version),
-            '_id': db_entry.id,
-            '_type': 'entry',
-            '_source': entry
-        })
-
-    elasticsearch.helpers.bulk(current_app.elasticsearch, index_to_es)
+    search.add_entries(resource_id, version, created_db_entries)
 
 
 def delete_entry(resource, entry_id, version=None):
