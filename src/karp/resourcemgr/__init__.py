@@ -2,6 +2,7 @@ import json
 
 from typing import BinaryIO
 from typing import Tuple
+from typing import Dict
 
 import fastjsonschema  # pyre-ignore
 
@@ -12,23 +13,40 @@ from karp.database import db
 
 from karp.util.json_schema import create_entry_json_schema
 
-from .resource import Resource  # noqa: F401
+from .resource import ResourceConfig
 
 
 resource_classes = {}
+resource_config_cache: Dict = {}
 
 
 def get_available_resources():
     return Resources.query.filter_by(active=True)
 
 
-def get_resource(id: str) -> Resource:
-    return Resource(resource_classes[id])
+def get_resource(id: str):
+    return resource_classes[id]
+
+
+def get_resource_config(id: str) -> ResourceConfig:
+    resource_config = resource_config_cache[id]
+    if not resource_config:
+        resource_config = update_resource_config(id)
+    return ResourceConfig(resource_config)
+
+
+def update_resource_config(id: str) -> Dict:
+    resource = Resources.query.filter_by(resource_id=id, active=True).first()
+    if not resource:
+        raise RuntimeError()
+    resource_config_cache[id] = json.loads(resource.config_file)
+    return resource_config_cache[id]
 
 
 def setup_resource_classes():
     for resource in get_available_resources():
         config = json.loads(resource.config_file)
+        resource_config_cache[config['resource_id']] = config
         resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
 
 
@@ -36,8 +54,9 @@ def setup_resource_class(resource_id, version=None):
     if version:
         resource = Resources.query.filter_by(resource_id=resource_id, version=version).first()
     else:
-        resource = Resources.query.filter_by(resource_id=resource_id, active=True).first()
+        resource: Resources = Resources.query.filter_by(resource_id=resource_id, active=True).first()
     config = json.loads(resource.config_file)
+    resource_config_cache[resource_id] = config
     resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
 
 
@@ -94,9 +113,9 @@ def publish_resource(resource_id, version):
     db.session.commit()
 
     config = json.loads(resource.config_file)
-
+    resource_config_cache[resource_id] = config
     # this stuff doesn't matter right now since we are not modifying the state of the actual app, only the CLI
-    resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
+    resource_classes[resource_id] = create_sqlalchemy_class(config, resource.version)
 
 
 def unpublish_resource(resource_id):

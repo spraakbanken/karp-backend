@@ -9,8 +9,8 @@ from distutils.util import strtobool
 
 from flask import Blueprint, jsonify, request    # pyre-ignore
 
-from karp.resourcemgr import Resource
-from karp.resourcemgr import get_resource
+from karp.resourcemgr import ResourceConfig
+from karp.resourcemgr import get_resource_config
 
 
 query_api = Blueprint('query_api', __name__)
@@ -106,12 +106,12 @@ class DefaultQueryParameters(QueryParameters):
 
 
 class ResourceQueryParameters(QueryParameters):
-    def __init__(self, resource: Resource) -> None:
+    def __init__(self, resource: ResourceConfig) -> None:
         super().__init__()
         self.sort = resource.default_sort()
 
 
-def read_arguments(resource: Resource) -> QueryParameters:
+def read_arguments(resource: ResourceConfig) -> QueryParameters:
     params = ResourceQueryParameters(resource)
     if request.args.get('from'):
         params.from_ = int(request.args.get('from'))
@@ -166,8 +166,8 @@ def read_arguments(resource: Resource) -> QueryParameters:
 #     return jsonify({'status': 'ok'}), 200
 
 
-def user_is_authorized(resource: Resource, fields: List[str]) -> bool:
-    if resource.is_protected():
+def user_is_authorized(resource_config: ResourceConfig, fields: List[str]) -> bool:
+    if resource_config.is_protected(mode="read", fields=fields):
         return False
     else:
         return True
@@ -179,12 +179,12 @@ def query_w_resources(resources: str):
     resources = resources.split(',')
     result = {}
     for resource_id in resources:
-        resource = get_resource(resource_id)
-        query_params = read_arguments(resource)
+        resource_config = get_resource_config(resource_id)
+        query_params = read_arguments(resource_config)
         print("/query got resource: {resource}".format(resource=resource_id))
-        print(resource)
+        print(resource_config)
         print(query_params)
-        if not user_is_authorized(resource=resource,
+        if not user_is_authorized(resource_config=resource_config,
                                   fields=query_params.fields):
             return jsonify({'status': 'forbidden'}), 403
         hits: List[str] = []
