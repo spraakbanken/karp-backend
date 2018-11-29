@@ -5,7 +5,6 @@ Used to perform readiness and liveness probes on the server.
 """
 
 from typing import List, Optional, TypeVar
-from abc import abstractmethod  # noqa: F401
 from distutils.util import strtobool
 
 from flask import Blueprint, jsonify, request    # pyre-ignore
@@ -15,24 +14,6 @@ from karp.resourcemgr import get_resource
 
 
 query_api = Blueprint('query_api', __name__)
-
-
-def user_is_permitted(resource_id: str) -> bool:
-    if resource_id == "protected":
-        return False
-    else:
-        return True
-
-
-
-
-
-# class ResourceStore(object):
-#     def get_resource(self, id: str) -> Resource:
-#         return Resource(id)
-#
-#
-# resource_store = ResourceStore()
 
 
 class QueryParameters(object):
@@ -130,13 +111,6 @@ class ResourceQueryParameters(QueryParameters):
         self.sort = resource.default_sort()
 
 
-T = TypeVar('T')
-
-
-def get_or_default(key: str, default: T) -> T:
-    pass
-
-
 def read_arguments(resource: Resource) -> QueryParameters:
     params = ResourceQueryParameters(resource)
     if request.args.get('from'):
@@ -173,11 +147,6 @@ def read_arguments(resource: Resource) -> QueryParameters:
     return params
 
 
-def log_arguments() -> None:
-    print("--> Request arguments")
-    print(" from: {}".format(request.args.get('from')))
-    print(" size: {}".format(request.args.get('size')))
-
 # def do_query(resources: List[Resource]):
 #
 #
@@ -207,7 +176,6 @@ def user_is_authorized(resource: Resource, fields: List[str]) -> bool:
 @query_api.route('/<resources>/query', methods=['GET'])
 @query_api.route('/query/<resources>', methods=['GET'])
 def query_w_resources(resources: str):
-    log_arguments()
     resources = resources.split(',')
     result = {}
     for resource_id in resources:
