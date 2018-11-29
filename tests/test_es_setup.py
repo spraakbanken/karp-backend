@@ -3,7 +3,7 @@ import time
 import urllib.request
 import urllib.parse
 import pytest
-from karp import search
+from karp.search import search
 
 
 def test_es_setup(es):

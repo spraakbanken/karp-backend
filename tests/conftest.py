@@ -50,7 +50,7 @@ class ConfigTest(Config):
 
     def __init__(self, use_elasticsearch=False):
         if use_elasticsearch:
-            self.ELASTICSEARCH_URL = 'http://localhost:9201'
+            self.ELASTICSEARCH_HOST = 'http://localhost:9201'
 
 
 @pytest.fixture

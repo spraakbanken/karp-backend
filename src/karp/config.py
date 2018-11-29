@@ -8,7 +8,7 @@ class Config:
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    ELASTICSEARCH_URL = os.environ['ELASTICSEARCH_URL'].split(',') if 'ELASTICSEARCH_URL' in os.environ else None
+    ELASTICSEARCH_HOST = os.environ['ELASTICSEARCH_HOST'].split(',') if 'ELASTICSEARCH_HOST' in os.environ else None
     ELASTICSEARCH_ENABLED = os.environ.get('ELASTICSEARCH_ENABLED', '') == 'true'
 
 
