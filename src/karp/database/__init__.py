@@ -1,3 +1,5 @@
+from typing import Optional
+
 from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
 from sqlalchemy.sql import func  # pyre-ignore
 
@@ -5,7 +7,7 @@ from sqlalchemy.sql import func  # pyre-ignore
 db = SQLAlchemy()
 
 
-class Resources(db.Model):
+class ResourceDefinition(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     resource_id = db.Column(db.String(30), nullable=False)
     version = db.Column(db.Integer)
@@ -37,6 +39,27 @@ class Resources(db.Model):
                             self.timestamp,
                             self.active,
                             self.deleted)
+
+
+def get_latest_resource_definition(id: str) -> Optional[ResourceDefinition]:
+    return ResourceDefinition.query.filter_by(resource_id=id).order_by(ResourceDefinition.version.desc()).first()
+
+
+def get_resource_definition(id: str, version: id) -> Optional[ResourceDefinition]:
+    return ResourceDefinition.query.filter_by(resource_id=id, version=version).first()
+
+
+def get_active_resource_definition(id: str) -> Optional[ResourceDefinition]:
+    return ResourceDefinition.query.filter_by(resource_id=id, active=True).first()
+
+
+def get_next_resource_version(id: str) -> int:
+    latest_resource = get_latest_resource_definition(id)
+
+    if latest_resource:
+        return latest_resource.version + 1
+    else:
+        return 1
 
 
 class_cache = {}

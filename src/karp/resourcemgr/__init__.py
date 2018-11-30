@@ -3,13 +3,21 @@ import json
 from typing import BinaryIO
 from typing import Tuple
 from typing import Dict
+from typing import List
 
 import fastjsonschema  # pyre-ignore
 
+from flask import current_app  # pyre-ignore
+import elasticsearch.helpers  # pyre-ignore
+
 from karp import get_resource_string
-from karp.database import Resources
-from karp.database import create_sqlalchemy_class
+from karp.database import ResourceDefinition
+from karp.database import get_or_create_resource_model
 from karp.database import db
+from karp.database import get_latest_resource_definition
+from karp.database import get_next_resource_version
+from karp.database import get_active_resource_definition
+from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
 
@@ -20,8 +28,8 @@ resource_classes = {}
 resource_config_cache: Dict = {}
 
 
-def get_available_resources():
-    return Resources.query.filter_by(active=True)
+def get_available_resources() -> List[ResourceDefinition]:
+    return ResourceDefinition.query.filter_by(active=True)
 
 
 def get_resource(id: str):
@@ -35,12 +43,6 @@ def get_resource_config(id: str) -> ResourceConfig:
     return ResourceConfig(resource_config)
 
 
-def update_resource_config(id: str) -> Dict:
-    resource = Resources.query.filter_by(resource_id=id, active=True).first()
-    if not resource:
-        raise RuntimeError()
-    resource_config_cache[id] = json.loads(resource.config_file)
-    return resource_config_cache[id]
 
 
 def setup_resource_classes():
@@ -52,9 +54,9 @@ def setup_resource_classes():
 
 def setup_resource_class(resource_id, version=None):
     if version:
-        resource = Resources.query.filter_by(resource_id=resource_id, version=version).first()
+        resource = get_resource_definition(resource_id, version)
     else:
-        resource: Resources = Resources.query.filter_by(resource_id=resource_id, active=True).first()
+        resource = get_active_resource_definition(resource_id)
     config = json.loads(resource.config_file)
     resource_config_cache[resource_id] = config
     resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
@@ -71,16 +73,7 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
     resource_id = config['resource_id']
 
-    latest_resource = (
-        Resources.query
-                .filter_by(resource_id=resource_id)
-                .order_by(Resources.version.desc())
-                .first()
-    )
-    if latest_resource:
-        version = latest_resource.version + 1
-    else:
-        version = 1
+    version = get_next_resource_version(resource_id)
 
     entry_json_schema = create_entry_json_schema(config)
 
@@ -91,7 +84,7 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
         'entry_json_schema': json.dumps(entry_json_schema)
     }
 
-    new_resource = Resources(**resource)
+    new_resource = ResourceDefinition(**resource)
     db.session.add(new_resource)
     db.session.commit()
 
@@ -105,8 +98,8 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
 
 def publish_resource(resource_id, version):
-    resource = Resources.query.filter_by(resource_id=resource_id, version=version).first()
-    old_active = Resources.query.filter_by(resource_id=resource_id, version=version, active=True).first()
+    resource = get_resource_definition(resource_id, version)
+    old_active = get_active_resource_definition(resource_id)
     if old_active:
         old_active.active = False
     resource.active = True
@@ -119,7 +112,7 @@ def publish_resource(resource_id, version):
 
 
 def unpublish_resource(resource_id):
-    resource = Resources.query.filter_by(resource_id=resource_id, active=True).first()
+    resource = get_active_resource_definition(resource_id)
     if resource:
         resource.active = False
         db.session.update(resource)
@@ -128,7 +121,7 @@ def unpublish_resource(resource_id):
 
 
 def delete_resource(resource_id, version):
-    resource = Resources.query.filter_by(resource_id=resource_id, version=version).first()
+    resource = get_resource_definition(resource_id, version)
     resource.deleted = True
     resource.active = False
     db.session.update(resource)
@@ -142,8 +135,8 @@ def get_entries(resource, version=None):
 
 
 def add_entry(resource_id, entry):
-    # TOO add to which version?
-    resource_def = Resources.query.filter_by(resource_id=resource_id, active=True).first()
+    # TODO add to which version?
+    resource_def = get_active_resource_definition(resource_id)
     version = resource_def.version
     add_entries(resource_id, version, [entry])
 
@@ -151,7 +144,7 @@ def add_entry(resource_id, entry):
 def add_entries(resource_id, version, entries):
     cls = resource_classes[resource_id]
 
-    resource_def = Resources.query.filter_by(resource_id=resource_id, version=version).first()
+    resource_def = get_resource_definition(resource_id, version)
     try:
         schema = json.loads(resource_def.entry_json_schema)
         validate_entry = fastjsonschema.compile(schema)
