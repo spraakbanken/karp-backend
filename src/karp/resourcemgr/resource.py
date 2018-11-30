@@ -4,9 +4,11 @@ from typing import List
 from typing import Dict
 
 
-class ResourceConfig(object):
-    def __init__(self, config: Dict) -> None:
-        self.config: Dict = config
+class Resource(object):
+    def __init__(self, model: Dict, config: Dict, version: int) -> None:
+        self.model = model
+        self.config = config
+        self.version = version
 
     def __repr__(self):
         return "ResourceConfig(config={})".format(json.dumps(self.config))
@@ -29,3 +31,9 @@ class ResourceConfig(object):
             return False
         else:
             return True
+
+    def has_format_query(self, format: str) -> bool:
+        return True
+
+    def id(self) -> str:
+        return self.config['resource_id']

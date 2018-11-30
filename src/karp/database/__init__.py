@@ -65,7 +65,7 @@ def get_next_resource_version(id: str) -> int:
 class_cache = {}
 
 
-def create_sqlalchemy_class(config, version):
+def get_or_create_resource_model(config, version):
     resource_id = config['resource_id']
     table_name = resource_id + '_' + str(version)
     if table_name in class_cache:

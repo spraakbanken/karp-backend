@@ -21,35 +21,42 @@ from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
 
-from .resource import ResourceConfig
+from .resource import Resource
 
 
-resource_classes = {}
-resource_config_cache: Dict = {}
+resource_models: Dict = {}
+resource_configs: Dict = {}
+resource_versions: Dict[str, int] = {}
 
 
 def get_available_resources() -> List[ResourceDefinition]:
     return ResourceDefinition.query.filter_by(active=True)
 
 
-def get_resource(id: str):
-    return resource_classes[id]
+def get_resource(id: str) -> Resource:
+    return Resource(model=resource_models[id],
+                    config=resource_configs[id],
+                    version=resource_versions[id])
 
 
-def get_resource_config(id: str) -> ResourceConfig:
-    resource_config = resource_config_cache[id]
-    if not resource_config:
-        resource_config = update_resource_config(id)
-    return ResourceConfig(resource_config)
+def create_and_update_caches(id: str,
+                             version: int,
+                             config: Dict) -> None:
+    resource_models[id] = get_or_create_resource_model(config, version)
+    resource_versions[id] = version
+    resource_configs[id] = config
 
 
+def remove_from_caches(id: str) -> None:
+    del resource_models[id]
+    del resource_versions[id]
+    del resource_configs[id]
 
 
-def setup_resource_classes():
+def setup_resource_classes() -> None:
     for resource in get_available_resources():
         config = json.loads(resource.config_file)
-        resource_config_cache[config['resource_id']] = config
-        resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
+        create_and_update_caches(config['resource_id'], resource.version, config)
 
 
 def setup_resource_class(resource_id, version=None):
@@ -58,8 +65,7 @@ def setup_resource_class(resource_id, version=None):
     else:
         resource = get_active_resource_definition(resource_id)
     config = json.loads(resource.config_file)
-    resource_config_cache[resource_id] = config
-    resource_classes[config['resource_id']] = create_sqlalchemy_class(config, resource.version)
+    create_and_update_caches(resource_id, resource.version, config)
 
 
 def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
@@ -88,7 +94,7 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     db.session.add(new_resource)
     db.session.commit()
 
-    sqlalchemyclass = create_sqlalchemy_class(config, version)
+    sqlalchemyclass = get_or_create_resource_model(config, version)
 
     sqlalchemyclass.__table__.create(bind=db.engine)
 
@@ -106,9 +112,8 @@ def publish_resource(resource_id, version):
     db.session.commit()
 
     config = json.loads(resource.config_file)
-    resource_config_cache[resource_id] = config
     # this stuff doesn't matter right now since we are not modifying the state of the actual app, only the CLI
-    resource_classes[resource_id] = create_sqlalchemy_class(config, resource.version)
+    create_and_update_caches(resource_id, resource.version, config)
 
 
 def unpublish_resource(resource_id):
@@ -117,7 +122,7 @@ def unpublish_resource(resource_id):
         resource.active = False
         db.session.update(resource)
         db.session.commit()
-    del resource_classes[resource_id]
+    remove_from_caches(resource_id)
 
 
 def delete_resource(resource_id, version):
@@ -129,7 +134,7 @@ def delete_resource(resource_id, version):
 
 
 def get_entries(resource, version=None):
-    cls = resource_classes[resource]
+    cls = resource_models[resource]
     entries = cls.query.all()
     return entries
 
@@ -142,7 +147,7 @@ def add_entry(resource_id, entry):
 
 
 def add_entries(resource_id, version, entries):
-    cls = resource_classes[resource_id]
+    cls = resource_models[resource_id]
 
     resource_def = get_resource_definition(resource_id, version)
     try:
@@ -175,13 +180,13 @@ def add_entries(resource_id, version, entries):
 
 
 def delete_entry(resource, entry_id, version=None):
-    cls = resource_classes[resource]
+    cls = resource_models[resource]
     entry = cls.query.filter_by(id=entry_id).first()
     db.session.delete(entry)
     db.session.commit()
 
 
 def get_entry(resource, entry_id, version=None):
-    cls = resource_classes[resource]
+    cls = resource_models[resource]
     entry = cls.query.filter_by(id=entry_id).first()
     return entry
