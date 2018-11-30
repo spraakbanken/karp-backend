@@ -7,19 +7,16 @@ from typing import List
 
 import fastjsonschema  # pyre-ignore
 
-from flask import current_app  # pyre-ignore
-import elasticsearch.helpers  # pyre-ignore
-
 from karp import get_resource_string
 from karp.database import ResourceDefinition
 from karp.database import get_or_create_resource_model
 from karp.database import db
-from karp.database import get_latest_resource_definition
 from karp.database import get_next_resource_version
 from karp.database import get_active_resource_definition
 from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
+from karp.search import search
 
 from .resource import Resource
 
