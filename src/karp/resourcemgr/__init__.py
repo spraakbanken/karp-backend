@@ -95,8 +95,6 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
     sqlalchemyclass.__table__.create(bind=db.engine)
 
-    search.create_index(resource_id, version, config)
-
     return resource['resource_id'], resource['version']
 
 
@@ -128,6 +126,25 @@ def delete_resource(resource_id, version):
     resource.active = False
     db.session.update(resource)
     db.session.commit()
+
+
+def create_index(resource_id, version=None):
+    if version:
+        resource_def = get_resource_definition(resource_id, version)
+    else:
+        resource_def = get_active_resource_definition(resource_id)
+    config = json.loads(resource_def.config_file)
+    return search.create_index(resource_id, config)
+
+
+def reindex(resource_id, index_name, version=None):
+    setup_resource_class(resource_id, version=version)
+    entries = resource_models[resource_id].query.all()
+    search.add_entries(index_name, [(entry, json.loads(entry.body)) for entry in entries])
+
+
+def publish_index(resource_id, index_name):
+    search.publish_index(resource_id, index_name)
 
 
 def get_entries(resource, version=None):
@@ -173,7 +190,7 @@ def add_entries(resource_id, version, entries):
 
     db.session.commit()
 
-    search.add_entries(resource_id, version, created_db_entries)
+    search.add_entries(resource_id, created_db_entries)
 
 
 def delete_entry(resource, entry_id, version=None):

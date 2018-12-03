@@ -40,6 +40,39 @@ def import_resource(resource_id, version, data):
 def publish_resource(resource_id, version):
     resourcemgr.publish_resource(resource_id, version)
 
+
+@app.cli.command('create_index')
+@click.option('--resource_id', default=None, help='')
+@click.option('--version', default=None, help='')
+def create_index(resource_id, version):
+    index_name = resourcemgr.create_index(resource_id, version=version)
+    click.echo("Created index for resource {resource_id}".format(
+        resource_id=resource_id
+    ))
+    click.echo("New index name: {index_name}".format(
+        resource_id=resource_id,
+        index_name=index_name
+    ))
+
+
+@app.cli.command('publish_index')
+@with_appcontext
+@click.option('--resource_id', default=None, help='')
+@click.option('--index_name', default=None, help='Name of the index to ')
+def publish_index(resource_id, index_name):
+    resourcemgr.publish_index(resource_id, index_name)
+
+
+@app.cli.command('reindex')
+@click.option('--resource_id', default=None, help='')
+@click.option('--version', default=None, help='')
+def reindex(resource_id, version):
+    index_name = resourcemgr.create_index(resource_id, version=version)
+    resourcemgr.reindex(resource_id, index_name, version=version)
+    click.echo("Successfully reindexed all data to index {index_name}".format(
+        index_name=index_name
+    ))
+
 # Future stuff
 # export resource
 # list resources (with filters)

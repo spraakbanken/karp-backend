@@ -12,8 +12,7 @@ from distutils.util import strtobool
 from karp import create_app
 from karp.database import db
 from karp.config import Config
-from karp.resourcemgr import create_new_resource
-from karp.resourcemgr import publish_resource
+from karp.resourcemgr import create_new_resource, publish_resource, create_index, publish_index
 
 
 CONFIG_PLACES = """{
@@ -87,12 +86,15 @@ def app_with_data_f(app_f):
             with open('tests/data/config/places.json') as fp:
                 resource, version = create_new_resource(fp)
                 publish_resource(resource, version)
+                if kwargs.get('use_elasticsearch', False):
+                    index_name = create_index(resource, version)
+                    publish_index(resource, index_name)
             with open('tests/data/config/municipalities.json') as fp:
                 resource, version = create_new_resource(fp)
                 publish_resource(resource, version)
-            # publish_resource('places', 1)
-            # publish_resource('municipalities', 1)
-
+                if kwargs.get('use_elasticsearch', False):
+                    index_name = create_index(resource, version)
+                    publish_index(resource, index_name)
         return app
     yield fun
 

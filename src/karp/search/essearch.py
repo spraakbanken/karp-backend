@@ -1,7 +1,8 @@
 from elasticsearch import Elasticsearch
 import elasticsearch.helpers
-from elasticsearch_dsl import Q, Search
+from elasticsearch_dsl import Q, Search, MultiSearch
 from karp.search.search import SearchInterface
+from datetime import datetime
 
 
 class EsSearch(SearchInterface):
@@ -9,22 +10,9 @@ class EsSearch(SearchInterface):
     def __init__(self, host):
         self.es = Elasticsearch(hosts=host)
 
-    def search(self, resource_id, version, simple_query=None, extended_query=None):
-        s = Search(using=self.es)
-
-        if simple_query:
-            s = s.query("match", _all=simple_query)
-
-        if extended_query:
-            s = s.query(self._map_extended_to_query(resource_id, version, extended_query))
-
-        s = s.index(resource_id + '_' + str(version))
-        response = s.execute()
-        return [result.to_dict() for result in response]
-
-    def _map_extended_to_query(self, resource_id, version, extended_query):
+    def get_query(self, query):
         # Only handle simplest case, for example: 'and|baseform.search|equals|userinput'
-        [_, field, op, querystr] = extended_query.split('|')
+        [_, field, op, querystr] = query.split('|')
 
         # some TODO s
         # 1. Need to check config if the field search must be nested https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html
@@ -32,7 +20,28 @@ class EsSearch(SearchInterface):
 
         return Q("term", **{field: querystr})
 
-    def create_index(self, resource_id, version, config):
+    def search(self, resources, query=None):
+        if query['split_results']:
+            ms = MultiSearch(using=self.es)
+
+            for resource in resources:
+                s = Search(index=resource)
+                s = s.query(query['query'])
+                ms = ms.add(s)
+
+            responses = ms.execute()
+            result = {}
+            for i, response in enumerate(responses):
+                result[resources[i]] = [part_result.to_dict() for part_result in response]
+
+            return result
+        else:
+            s = Search(using=self.es, index=','.join(resources))
+            s = s.query(query['query'])
+            response = s.execute()
+            return [result.to_dict() for result in response]
+
+    def create_index(self, resource_id, config):
         mapping = self._create_es_mapping(config)
 
         body = {
@@ -45,7 +54,18 @@ class EsSearch(SearchInterface):
             }
         }
 
-        self.es.indices.create(index=resource_id + '_' + str(version), body=body)
+        date = datetime.now().strftime('%Y-%m-%d-%H%M%S')
+        index_name = resource_id + '_' + date
+        result = self.es.indices.create(index=index_name, body=body)
+        if 'error' in result:
+            raise RuntimeError('failed to create index')
+        return index_name
+
+    def publish_index(self, alias_name, index_name):
+        if self.es.indices.exists_alias(name=alias_name):
+            self.es.indices.delete_alias(name=alias_name, index='*')
+
+        self.es.indices.put_alias(name=alias_name, index=index_name)
 
     def _create_es_mapping(self, config):
         es_mapping = {
@@ -83,11 +103,11 @@ class EsSearch(SearchInterface):
 
         return es_mapping
 
-    def add_entries(self, resource_id, version, created_db_entries):
+    def add_entries(self, resource_id, created_db_entries):
         index_to_es = []
         for (db_entry, src_entry) in created_db_entries:
             index_to_es.append({
-                '_index': resource_id + '_' + str(version),
+                '_index': resource_id,
                 '_id': db_entry.id,
                 '_type': 'entry',
                 '_source': src_entry
