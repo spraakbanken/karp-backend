@@ -95,8 +95,8 @@ def app_with_data_f(app_f):
 
         return app
     yield fun
-    request = urllib.request.Request('http://localhost:9201/_all', method='DELETE')
-    response = urllib.request.urlopen(request).read()
+    # request = urllib.request.Request('http://localhost:9201/places_1,municipalities_1', method='DELETE')
+    # response = urllib.request.urlopen(request).read()
     # clean up
 
 
@@ -135,8 +135,8 @@ def client(app_f):
 
 @pytest.fixture
 def client_with_data_f(app_with_data_f):
-    request = urllib.request.Request('http://localhost:9201/_all', method='DELETE')
-    response = urllib.request.urlopen(request).read()
+    # request = urllib.request.Request('http://localhost:9201/_all', method='DELETE')
+    # response = urllib.request.urlopen(request).read()
 
     def fun(**kwargs):
         app_with_data = app_with_data_f(**kwargs)
