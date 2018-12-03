@@ -2,7 +2,7 @@ from karp.database import db
 from karp.database import ResourceDefinition
 from karp.resourcemgr import setup_resource_classes
 
-
+# TODO: Move this function to database
 def init_db(app):
     db.init_app(app)
     with app.app_context():
