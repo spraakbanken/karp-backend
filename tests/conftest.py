@@ -3,8 +3,12 @@ import json
 
 import pytest  # pyre-ignore
 import os
+import pwd
 import subprocess
 import tempfile
+import urllib
+from distutils.util import strtobool
+
 from karp import create_app
 from karp.database import db
 from karp.config import Config
@@ -81,14 +85,20 @@ def app_with_data_f(app_f):
         app = next(app_f(**kwargs))
         with app.app_context():
             with open('tests/data/config/places.json') as fp:
-                create_new_resource(fp)
+                resource, version = create_new_resource(fp)
+                publish_resource(resource, version)
             with open('tests/data/config/municipalities.json') as fp:
-                create_new_resource(fp)
-            publish_resource('places', 1)
-            publish_resource('municipalities', 1)
+                resource, version = create_new_resource(fp)
+                publish_resource(resource, version)
+            # publish_resource('places', 1)
+            # publish_resource('municipalities', 1)
 
         return app
-    return fun
+    yield fun
+    request = urllib.request.Request('http://localhost:9201/_all', method='DELETE')
+    response = urllib.request.urlopen(request).read()
+    # clean up
+
 
 
 @pytest.fixture
@@ -125,6 +135,9 @@ def client(app_f):
 
 @pytest.fixture
 def client_with_data_f(app_with_data_f):
+    request = urllib.request.Request('http://localhost:9201/_all', method='DELETE')
+    response = urllib.request.urlopen(request).read()
+
     def fun(**kwargs):
         app_with_data = app_with_data_f(**kwargs)
         return app_with_data.test_client()
@@ -143,9 +156,9 @@ def runner(app_f):
     return app.test_cli_runner()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def es():
-    if os.environ.get('ELASTICSEARCH_ENABLED') != 'true':
+    if not strtobool(os.environ.get('ELASTICSEARCH_ENABLED', 'false')):
         yield 'skip'
     else:
         if not os.environ.get('ES_PATH'):
@@ -157,7 +170,10 @@ def es():
         env_copy = os.environ.copy()
         env_copy['ES_JAVA_OPTS'] = '-Xms512m -Xmx512m'
 
-        p = subprocess.Popen([executable, data_arg, logs_arg, port_arg], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        p = subprocess.Popen([executable, data_arg, logs_arg, port_arg],
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             env=env_copy)
 
         line = ''
         while True:
