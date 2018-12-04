@@ -16,7 +16,7 @@ from karp.database import get_active_resource_definition
 from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
-from karp.search import search
+from karp.resourcemgr.index import index_mgr
 
 from .resource import Resource
 
@@ -128,25 +128,6 @@ def delete_resource(resource_id, version):
     db.session.commit()
 
 
-def create_index(resource_id, version=None):
-    if version:
-        resource_def = get_resource_definition(resource_id, version)
-    else:
-        resource_def = get_active_resource_definition(resource_id)
-    config = json.loads(resource_def.config_file)
-    return search.create_index(resource_id, config)
-
-
-def reindex(resource_id, index_name, version=None):
-    setup_resource_class(resource_id, version=version)
-    entries = resource_models[resource_id].query.all()
-    search.add_entries(index_name, [(entry, json.loads(entry.body)) for entry in entries])
-
-
-def publish_index(resource_id, index_name):
-    search.publish_index(resource_id, index_name)
-
-
 def get_entries(resource, version=None):
     cls = resource_models[resource]
     entries = cls.query.all()
@@ -190,7 +171,7 @@ def add_entries(resource_id, version, entries):
 
     db.session.commit()
 
-    search.add_entries(resource_id, created_db_entries)
+    index_mgr.add_entries(resource_id, created_db_entries)
 
 
 def delete_entry(resource, entry_id, version=None):
@@ -204,3 +185,22 @@ def get_entry(resource, entry_id, version=None):
     cls = resource_models[resource]
     entry = cls.query.filter_by(id=entry_id).first()
     return entry
+
+
+def create_index(resource_id, version=None):
+    if version:
+        resource_def = get_resource_definition(resource_id, version)
+    else:
+        resource_def = get_active_resource_definition(resource_id)
+    config = json.loads(resource_def.config_file)
+    return index_mgr.create_index(resource_id, config)
+
+
+def reindex(resource_id, index_name, version=None):
+    setup_resource_class(resource_id, version=version)
+    entries = resource_models[resource_id].query.all()
+    index_mgr.add_entries(index_name, [(entry, json.loads(entry.body)) for entry in entries])
+
+
+def publish_index(resource_id, index_name):
+    index_mgr.publish_index(resource_id, index_name)

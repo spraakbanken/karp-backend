@@ -1,18 +1,16 @@
-import io
 import json
 
 import pytest  # pyre-ignore
 import os
-import pwd
 import subprocess
 import tempfile
-import urllib
 from distutils.util import strtobool
 
 from karp import create_app
 from karp.database import db
 from karp.config import Config
-from karp.resourcemgr import create_new_resource, publish_resource, create_index, publish_index
+from karp.resourcemgr import create_new_resource, publish_resource
+import karp.resourcemgr as resourcemgr
 
 
 CONFIG_PLACES = """{
@@ -87,14 +85,14 @@ def app_with_data_f(app_f):
                 resource, version = create_new_resource(fp)
                 publish_resource(resource, version)
                 if kwargs.get('use_elasticsearch', False):
-                    index_name = create_index(resource, version)
-                    publish_index(resource, index_name)
+                    index_name = resourcemgr.create_index(resource, version)
+                    resourcemgr.publish_index(resource, index_name)
             with open('tests/data/config/municipalities.json') as fp:
                 resource, version = create_new_resource(fp)
                 publish_resource(resource, version)
                 if kwargs.get('use_elasticsearch', False):
-                    index_name = create_index(resource, version)
-                    publish_index(resource, index_name)
+                    index_name = resourcemgr.create_index(resource, version)
+                    resourcemgr.publish_index(resource, index_name)
         return app
     yield fun
 
