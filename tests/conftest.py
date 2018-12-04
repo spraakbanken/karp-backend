@@ -95,9 +95,6 @@ def app_with_data_f(app_f):
 
         return app
     yield fun
-    # request = urllib.request.Request('http://localhost:9201/places_1,municipalities_1', method='DELETE')
-    # response = urllib.request.urlopen(request).read()
-    # clean up
 
 
 
@@ -135,8 +132,6 @@ def client(app_f):
 
 @pytest.fixture
 def client_with_data_f(app_with_data_f):
-    # request = urllib.request.Request('http://localhost:9201/_all', method='DELETE')
-    # response = urllib.request.urlopen(request).read()
 
     def fun(**kwargs):
         app_with_data = app_with_data_f(**kwargs)
@@ -167,10 +162,11 @@ def es():
         data_arg = '-Epath.data=%s' % tempfile.mkdtemp()
         logs_arg = '-Epath.logs=%s' % tempfile.mkdtemp()
         port_arg = '-Ehttp.port=9201'
+        cluster_arg = '-Ecluster.name=testcluster'
         env_copy = os.environ.copy()
         env_copy['ES_JAVA_OPTS'] = '-Xms512m -Xmx512m'
 
-        p = subprocess.Popen([executable, data_arg, logs_arg, port_arg],
+        p = subprocess.Popen([executable, data_arg, logs_arg, port_arg, cluster_arg],
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE,
                              env=env_copy)
