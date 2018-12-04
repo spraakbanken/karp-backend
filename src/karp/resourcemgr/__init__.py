@@ -21,9 +21,9 @@ from karp.search import search
 from .resource import Resource
 
 
-resource_models: Dict = {}
-resource_configs: Dict = {}
-resource_versions: Dict[str, int] = {}
+resource_models = {}  # Dict
+resource_configs = {}  # Dict
+resource_versions = {}  # Dict[str, int]
 
 
 def get_available_resources() -> List[ResourceDefinition]:
