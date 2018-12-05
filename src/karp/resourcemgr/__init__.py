@@ -9,7 +9,7 @@ import fastjsonschema  # pyre-ignore
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
-from karp.database import get_or_create_resource_model
+from karp.database import get_or_create_resource_model, get_or_create_history_model
 from karp.database import db
 from karp.database import get_next_resource_version
 from karp.database import get_active_resource_definition
@@ -96,8 +96,9 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     db.session.commit()
 
     sqlalchemyclass = get_or_create_resource_model(config, version)
-
+    history_model = get_or_create_history_model(resource_id, version)
     sqlalchemyclass.__table__.create(bind=db.engine)
+    history_model.__table__.create(bind=db.engine)
 
     return resource['resource_id'], resource['version']
 

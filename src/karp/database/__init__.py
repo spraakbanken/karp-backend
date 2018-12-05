@@ -41,6 +41,28 @@ class ResourceDefinition(db.Model):
                             self.deleted)
 
 
+def get_or_create_history_model(resource_id, version):
+    resource_table_name = resource_id + '_' + str(version)
+    history_table_name = resource_table_name + '_history'
+
+    if history_table_name in class_cache:
+        return class_cache[history_table_name]
+
+    class History(db.Model):
+        __tablename__ = history_table_name
+        id = db.Column(db.Integer, primary_key=True)
+        entry_id = db.Column(db.Integer, db.ForeignKey(resource_table_name + '.id'), nullable=False)
+        user_id = db.Column(db.Text, nullable=False)
+        timestamp = db.Column(db.DateTime, nullable=False, server_default=func.now())
+        body = db.Column(db.Text)
+        op = db.Enum('ADD', 'DELETE', 'UPDATE', nullable=False)
+        version = db.Column(db.Integer, nullable=False)
+
+    class_cache[history_table_name] = History
+
+    return History
+
+
 def get_latest_resource_definition(id: str) -> Optional[ResourceDefinition]:
     return ResourceDefinition.query.filter_by(resource_id=id).order_by(ResourceDefinition.version.desc()).first()
 
