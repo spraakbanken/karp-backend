@@ -46,7 +46,7 @@ def publish_resource(resource_id, version):
 
 @app.cli.command('create_index')
 @click.option('--resource_id', default=None, help='')
-def create_index(resource_id, version):
+def create_index(resource_id):
     index_name = resourcemgr.create_index(resource_id)
     click.echo("Created index for resource {resource_id}".format(
         resource_id=resource_id
