@@ -85,13 +85,13 @@ def app_with_data_f(app_f):
                 resource, version = create_new_resource(fp)
                 publish_resource(resource, version)
                 if kwargs.get('use_elasticsearch', False):
-                    index_name = resourcemgr.create_index(resource, version)
+                    index_name = resourcemgr.create_index(resource)
                     resourcemgr.publish_index(resource, index_name)
             with open('tests/data/config/municipalities.json') as fp:
                 resource, version = create_new_resource(fp)
                 publish_resource(resource, version)
                 if kwargs.get('use_elasticsearch', False):
-                    index_name = resourcemgr.create_index(resource, version)
+                    index_name = resourcemgr.create_index(resource)
                     resourcemgr.publish_index(resource, index_name)
         return app
     yield fun

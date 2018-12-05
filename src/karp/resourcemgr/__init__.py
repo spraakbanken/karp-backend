@@ -36,6 +36,10 @@ def get_resource(id: str) -> Resource:
                     version=resource_versions[id])
 
 
+def get_all_resources()-> List[ResourceDefinition]:
+    return ResourceDefinition.query.all()
+
+
 def create_and_update_caches(id: str,
                              version: int,
                              config: Dict) -> None:
@@ -187,17 +191,14 @@ def get_entry(resource, entry_id, version=None):
     return entry
 
 
-def create_index(resource_id, version=None):
-    if version:
-        resource_def = get_resource_definition(resource_id, version)
-    else:
-        resource_def = get_active_resource_definition(resource_id)
+def create_index(resource_id):
+    resource_def = get_active_resource_definition(resource_id)
     config = json.loads(resource_def.config_file)
     return index_mgr.create_index(resource_id, config)
 
 
-def reindex(resource_id, index_name, version=None):
-    setup_resource_class(resource_id, version=version)
+def reindex(resource_id, index_name):
+    setup_resource_class(resource_id)
     entries = resource_models[resource_id].query.all()
     index_mgr.add_entries(index_name, [(entry, json.loads(entry.body)) for entry in entries])
 
