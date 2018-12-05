@@ -1,6 +1,7 @@
 import json
 import click
 from flask.cli import with_appcontext  # pyre-ignore
+from distutils.util import strtobool
 
 from karp import create_app
 from .config import MariaDBConfig
@@ -38,10 +39,70 @@ def import_resource(resource_id, version, data):
 @click.option('--resource_id', default=None, help='')
 @click.option('--version', default=None, help='')
 def publish_resource(resource_id, version):
+    index_name = resourcemgr.create_index(resource_id)
+    resourcemgr.publish_index(resource_id, index_name)
     resourcemgr.publish_resource(resource_id, version)
 
-# Future stuff
-# export resource
-# list resources (with filters)
-# delete resource
-# unpublish resource
+
+@app.cli.command('create_index')
+@click.option('--resource_id', default=None, help='')
+def create_index(resource_id):
+    index_name = resourcemgr.create_index(resource_id)
+    click.echo("Created index for resource {resource_id}".format(
+        resource_id=resource_id
+    ))
+    click.echo("New index name: {index_name}".format(
+        resource_id=resource_id,
+        index_name=index_name
+    ))
+
+
+@app.cli.command('publish_index')
+@with_appcontext
+@click.option('--resource_id', default=None, help='')
+@click.option('--index_name', default=None, help='Name of the index to ')
+def publish_index(resource_id, index_name):
+    resourcemgr.publish_index(resource_id, index_name)
+
+
+@app.cli.command('reindex')
+@click.option('--resource_id', default=None, help='')
+@click.option('--publish_index', 'publish_index_arg', default='', help='')
+def reindex(resource_id, publish_index_arg):
+    index_name = resourcemgr.create_index(resource_id)
+    resourcemgr.reindex(resource_id, index_name)
+    click.echo("Successfully reindexed all data to index {index_name}".format(
+        index_name=index_name
+    ))
+    if not publish_index_arg:
+        publish_index_arg = click.prompt('Publish new index?', default='n')
+    if strtobool(publish_index_arg):
+        resourcemgr.publish_index(resource_id, index_name)
+        click.echo('Index for {resource_id} published'.format(
+            resource_id=resource_id
+        ))
+
+
+@app.cli.command('list_resources')
+@click.option('--show_only_active/--show-all', default=False)
+def list_resources(show_only_active):
+    if show_only_active:
+        resources = resourcemgr.get_available_resources()
+    else:
+        resources = resourcemgr.get_all_resources()
+
+    click.echo('resource_id version active')
+    for resource in resources:
+        click.echo('{resource_id} {version} {active}'.format(
+            resource_id=resource.resource_id,
+            version=resource.version,
+            active='y' if resource.active else 'n'
+        ))
+
+
+def export_resource():
+    pass
+
+
+def delete_resource():
+    pass
