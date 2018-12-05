@@ -10,6 +10,9 @@ class IndexInterface:
     def add_entries(self, resource_id, created_db_entries):
         return
 
+    def delete_entry(self, resource_id, entry_id):
+        return
+
 
 class IndexModule(IndexInterface):
 
@@ -27,6 +30,9 @@ class IndexModule(IndexInterface):
 
     def add_entries(self, resource_id, created_db_entries):
         self.impl.add_entries(resource_id, created_db_entries)
+
+    def delete_entry(self, resource_id, entry_id):
+        self.impl.delete_entry(resource_id, entry_id)
 
 
 index_mgr = IndexModule()

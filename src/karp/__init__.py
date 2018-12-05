@@ -16,8 +16,8 @@ def create_app(config_class=None):
     if os.getenv('KARP_CONFIG'):
         app.config.from_object(os.getenv('KARP_CONFIG'))
 
-    from .api import health_api, crud_api, query_api, documentation
-    app.register_blueprint(crud_api)
+    from .api import health_api, edit_api, query_api, documentation
+    app.register_blueprint(edit_api)
     app.register_blueprint(health_api)
     app.register_blueprint(query_api)
     app.register_blueprint(documentation)

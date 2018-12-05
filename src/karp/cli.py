@@ -39,7 +39,8 @@ def import_resource(resource_id, version, data):
 @click.option('--resource_id', default=None, help='')
 @click.option('--version', default=None, help='')
 def publish_resource(resource_id, version):
-    index_name = resourcemgr.create_index(resource_id)
+    index_name = resourcemgr.create_index(resource_id, version)
+    resourcemgr.reindex(resource_id, index_name, version=version)
     resourcemgr.publish_index(resource_id, index_name)
     resourcemgr.publish_resource(resource_id, version)
 

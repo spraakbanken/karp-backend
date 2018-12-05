@@ -97,7 +97,8 @@ def get_or_create_resource_model(config, version):
         attributes = {
             '__tablename__': table_name,
             'id': db.Column(db.Integer, primary_key=True),
-            'body': db.Column(db.Text, nullable=False)
+            'body': db.Column(db.Text, nullable=False),
+            'deleted': db.Column(db.Boolean, default=False)
         }
 
         if 'id' in config:

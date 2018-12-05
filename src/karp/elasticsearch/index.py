@@ -82,3 +82,6 @@ class EsIndex(IndexInterface):
             })
 
         elasticsearch.helpers.bulk(self.es, index_to_es)
+
+    def delete_entry(self, resource_id, entry_id):
+        self.es.delete(index=resource_id, doc_type='entry', id=entry_id)

@@ -22,6 +22,7 @@ from .resource import Resource
 
 
 resource_models = {}  # Dict
+history_models = {}  # Dict
 resource_configs = {}  # Dict
 resource_versions = {}  # Dict[str, int]
 
@@ -44,12 +45,14 @@ def create_and_update_caches(id: str,
                              version: int,
                              config: Dict) -> None:
     resource_models[id] = get_or_create_resource_model(config, version)
+    history_models[id] = get_or_create_history_model(id, version)
     resource_versions[id] = version
     resource_configs[id] = config
 
 
 def remove_from_caches(id: str) -> None:
     del resource_models[id]
+    del history_models[id]
     del resource_versions[id]
     del resource_configs[id]
 
@@ -176,14 +179,26 @@ def add_entries(resource_id, version, entries):
 
     db.session.commit()
 
-    index_mgr.add_entries(resource_id, created_db_entries)
+    if resource_def.active:
+        index_mgr.add_entries(resource_id, created_db_entries)
 
 
-def delete_entry(resource, entry_id, version=None):
-    cls = resource_models[resource]
-    entry = cls.query.filter_by(id=entry_id).first()
-    db.session.delete(entry)
+def delete_entry(resource_id, entry_id):
+    resource_cls = resource_models[resource_id]
+    entry = resource_cls.query.filter_by(id=entry_id, deleted=False).first()
+    if not entry:
+        raise RuntimeError('no entry with id {entry_id} found'.format(entry_id=entry_id))
+    entry.deleted = True
+    history_cls = history_models[resource_id]
+    history_entry = history_cls(
+        entry_id=entry.id,
+        user_id='TODO',
+        op='DELETE',
+        version=-1
+    )
+    db.session.add(history_entry)
     db.session.commit()
+    index_mgr.delete_entry(resource_id, entry_id)
 
 
 def get_entry(resource, entry_id, version=None):
@@ -192,14 +207,17 @@ def get_entry(resource, entry_id, version=None):
     return entry
 
 
-def create_index(resource_id):
-    resource_def = get_active_resource_definition(resource_id)
+def create_index(resource_id, version=None):
+    if version:
+        resource_def = get_resource_definition(resource_id, version)
+    else:
+        resource_def = get_active_resource_definition(resource_id)
     config = json.loads(resource_def.config_file)
     return index_mgr.create_index(resource_id, config)
 
 
-def reindex(resource_id, index_name):
-    setup_resource_class(resource_id)
+def reindex(resource_id, index_name, version=None):
+    setup_resource_class(resource_id, version=version)
     entries = resource_models[resource_id].query.all()
     index_mgr.add_entries(index_name, [(entry, json.loads(entry.body)) for entry in entries])
 
