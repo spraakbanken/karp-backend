@@ -1,8 +1,10 @@
 import os
 import pkg_resources
+import json
 
 from flask import Flask     # pyre-ignore
 
+from karp.errors import KarpError
 
 __version__ = '0.4.7'
 
@@ -36,6 +38,10 @@ def create_app(config_class=None):
         from karp.resourcemgr.index import index_mgr
         search.init(SearchInterface())
         index_mgr.init(IndexInterface())
+
+    @app.errorhandler(KarpError)
+    def http_error_handler(error: KarpError):
+        return json.dumps({'error': error.message}), 400
 
     return app
 
