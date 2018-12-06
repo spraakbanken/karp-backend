@@ -18,7 +18,7 @@ from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
 from karp.resourcemgr.index import index_mgr
-from karp.errors import ResourceNotFoundError
+from karp.errors import KarpError, ResourceNotFoundError
 
 from .resource import Resource
 
@@ -165,7 +165,13 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
 
     _entry_validate_move_this(validate_entry, entry)
 
-    current_db_entry = cls.query.filter_by(id=entry_id).first()
+    current_db_entry = cls.query.filter_by(id=entry_id, deleted=False).first()
+    if not current_db_entry:
+        raise KarpError('No entry in resource {resource_id} with id {entry_id}'.format(
+            resource_id=resource_id,
+            entry_id=entry_id
+        ))
+
     entry_json = json.dumps(entry)
     current_db_entry.body = entry_json
 
