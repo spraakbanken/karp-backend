@@ -27,11 +27,11 @@ def test_something(client_with_data_f):
         }
     ]
     for entry in entries:
-        client_with_data.post('/entry?resource=places',
+        client_with_data.post('/places/add',
                               data=json.dumps(entry),
                               content_type='application/json')
 
-    response = client_with_data.get('/entries?resource=places')
+    response = client_with_data.get('places/_all')
     entries = json.loads(response.data.decode())
     assert len(entries) == 3
 

@@ -7,7 +7,7 @@ class IndexInterface:
     def publish_index(self, alias_name, index_name):
         return
 
-    def add_entries(self, resource_id, created_db_entries):
+    def add_entries(self, resource_id, entries):
         return
 
     def delete_entry(self, resource_id, entry_id):
@@ -28,8 +28,8 @@ class IndexModule(IndexInterface):
     def publish_index(self, alias_name, index_name):
         return self.impl.publish_index(alias_name, index_name)
 
-    def add_entries(self, resource_id, created_db_entries):
-        self.impl.add_entries(resource_id, created_db_entries)
+    def add_entries(self, resource_id, entries):
+        self.impl.add_entries(resource_id, entries)
 
     def delete_entry(self, resource_id, entry_id):
         self.impl.delete_entry(resource_id, entry_id)

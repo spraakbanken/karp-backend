@@ -71,14 +71,14 @@ class EsIndex(IndexInterface):
 
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
-    def add_entries(self, resource_id, created_db_entries):
+    def add_entries(self, resource_id, entries):
         index_to_es = []
-        for (db_entry, src_entry) in created_db_entries:
+        for (db_id, entry) in entries:
             index_to_es.append({
                 '_index': resource_id,
-                '_id': db_entry.id,
+                '_id': db_id,
                 '_type': 'entry',
-                '_source': src_entry
+                '_source': entry
             })
 
         elasticsearch.helpers.bulk(self.es, index_to_es)

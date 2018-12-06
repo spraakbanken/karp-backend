@@ -6,6 +6,7 @@ from typing import Dict
 from typing import List
 
 import fastjsonschema  # pyre-ignore
+import logging
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
@@ -20,6 +21,7 @@ from karp.resourcemgr.index import index_mgr
 
 from .resource import Resource
 
+_logger = logging.getLogger(__name__)
 
 resource_models = {}  # Dict
 history_models = {}  # Dict
@@ -136,51 +138,82 @@ def delete_resource(resource_id, version):
     db.session.commit()
 
 
-def get_entries(resource, version=None):
-    cls = resource_models[resource]
-    entries = cls.query.all()
-    return entries
-
-
-def add_entry(resource_id, entry):
-    # TODO add to which version?
-    resource_def = get_active_resource_definition(resource_id)
-    version = resource_def.version
-    add_entries(resource_id, version, [entry])
-
-
-def add_entries(resource_id, version, entries):
+def get_entries(resource_id):
     cls = resource_models[resource_id]
+    entries = cls.query.all()
+    return [json.loads(db_entry.body) for db_entry in entries]
 
-    resource_def = get_resource_definition(resource_id, version)
+
+def add_entry(resource_id, entry, message=None, resource_version=None):
+    add_entries(resource_id, [entry], message=message, resource_version=resource_version)
+
+
+def _entry_json_move_this(json_schema):
     try:
-        schema = json.loads(resource_def.entry_json_schema)
+        schema = json.loads(json_schema)
         validate_entry = fastjsonschema.compile(schema)
+        return validate_entry
     except fastjsonschema.JsonSchemaDefinitionException as e:
         raise RuntimeError(e)
 
+
+def _entry_validate_move_this(schema, json_obj):
+    try:
+        schema(json_obj)
+    except fastjsonschema.JsonSchemaException as e:
+        _logger.warning('Entry not valid:\n{entry}\nMessage: {message}'.format(
+            entry=json.dumps(object, indent=2),
+            message=e.message
+        ))
+
+
+def add_entries(resource_id, entries, message=None, resource_version=None):
+    if not resource_version:
+        resource_def = get_active_resource_definition(resource_id)
+        cls = resource_models[resource_id]
+        history_cls = history_models[resource_id]
+    else:
+        resource_def = get_resource_definition(resource_id, resource_version)
+        cls = get_or_create_resource_model(json.loads(resource_def.config_file), resource_version)
+        history_cls = get_or_create_history_model(resource_id, resource_version)
+    resource_conf = json.loads(resource_def.config_file)
+
+    validate_entry = _entry_json_move_this(resource_def.entry_json_schema)
+
     created_db_entries = []
     for entry in entries:
-        try:
-            validate_entry(entry)
-        except fastjsonschema.JsonSchemaException as e:
-            raise RuntimeError(e)
+        _entry_validate_move_this(validate_entry, entry)
 
         entry_json = json.dumps(entry)
         kwargs = {
             'body': entry_json
         }
-        id_field = json.loads(resource_def.config_file).get('id')
+        id_field = resource_conf.get('id')
         if id_field:
             kwargs[id_field] = entry[id_field]
         db_entry = cls(**kwargs)
-        created_db_entries.append((db_entry, entry))
+        created_db_entries.append((db_entry, entry, entry_json))
         db.session.add(db_entry)
 
     db.session.commit()
 
+    for db_entry, entry, entry_json in created_db_entries:
+        history_entry = history_cls(
+            entry_id=db_entry.id,
+            user_id='TODO',
+            body=entry_json,
+            version=-1,
+            op='ADD'
+        )
+        db.session.add(history_entry)
+    db.session.commit()
+
+    def index_entries(entry_db_map):
+        for db_entry, entry, _ in entry_db_map:
+            yield (db_entry.id, entry)
+
     if resource_def.active:
-        index_mgr.add_entries(resource_id, created_db_entries)
+        index_mgr.add_entries(resource_id, index_entries(created_db_entries))
 
 
 def delete_entry(resource_id, entry_id):
