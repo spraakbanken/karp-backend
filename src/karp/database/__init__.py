@@ -58,6 +58,10 @@ def get_or_create_history_model(resource_id, version):
         op = db.Column(db.Enum('ADD', 'DELETE', 'UPDATE'), nullable=False)
         version = db.Column(db.Integer, nullable=False)
         message = db.Column(db.Text)
+        __table_args__ = (
+            db.UniqueConstraint('entry_id',
+                                'version',
+                                name='entry_id_version_unique_constraint'),)
 
     class_cache[history_table_name] = History
 
