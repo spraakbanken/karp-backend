@@ -206,7 +206,8 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
             user_id='TODO',
             body=entry_json,
             version=-1,
-            op='ADD'
+            op='ADD',
+            message=message
         )
         db.session.add(history_entry)
     db.session.commit()

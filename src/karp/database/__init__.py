@@ -57,6 +57,7 @@ def get_or_create_history_model(resource_id, version):
         body = db.Column(db.Text)
         op = db.Column(db.Enum('ADD', 'DELETE', 'UPDATE'), nullable=False)
         version = db.Column(db.Integer, nullable=False)
+        message = db.Column(db.Text)
 
     class_cache[history_table_name] = History
 
