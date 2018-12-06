@@ -7,18 +7,6 @@ import karp.resourcemgr as resourcemgr
 
 edit_api = Blueprint('edit_api', __name__)
 
-"""
-
-    <resource>/delete/<id> DELETE
-    <resource>/add POST alt. <resource>/add_without_message POST
-        data: { object }
-    <resource>/add_with_message POST alt. <resource>/add POST
-        data: { 'doc': { object }, 'message': "" }
-    <resource>/update/<id> POST
-        data: { 'doc': ..., 'version': "", 'message': "" }
-
-"""
-
 
 @edit_api.route("/<resource_id>/add", methods=['POST'])
 def add_entry(resource_id):
@@ -49,6 +37,13 @@ def get_all_entries(resource_id):
     """
     entries = resourcemgr.get_entries(resource_id)
     return flask_jsonify(entries)
+
+
+@edit_api.route('/<resource_id>/update/<entry_id>', methods=['POST'])
+def update_entry(resource_id, entry_id):
+    data = request.get_json()
+    resourcemgr.update_entry(resource_id, entry_id, data['doc'], message=data['message'])
+    return flask_jsonify({'status': 'updated'})
 
 
 @edit_api.route("/<resource_id>/delete/<entry_id>", methods=['DELETE'])

@@ -151,6 +151,39 @@ def add_entry(resource_id, entry, message=None, resource_version=None):
     add_entries(resource_id, [entry], message=message, resource_version=resource_version)
 
 
+def update_entry(resource_id, entry_id, entry, message=None, resource_version=None):
+    if not resource_version:
+        resource_def = get_active_resource_definition(resource_id)
+        cls = resource_models[resource_id]
+        history_cls = history_models[resource_id]
+    else:
+        resource_def = get_resource_definition(resource_id, resource_version)
+        cls = get_or_create_resource_model(json.loads(resource_def.config_file), resource_version)
+        history_cls = get_or_create_history_model(resource_id, resource_version)
+
+    validate_entry = _entry_json_move_this(resource_def.entry_json_schema)
+
+    _entry_validate_move_this(validate_entry, entry)
+
+    current_db_entry = cls.query.filter_by(id=entry_id).first()
+    entry_json = json.dumps(entry)
+    current_db_entry.body = entry_json
+
+    latest_history_entry = history_cls.query.filter_by(entry_id=entry_id).order_by(history_cls.version.desc()).first()
+    history_entry = history_cls(
+        entry_id=entry_id,
+        user_id='TODO',
+        body=entry_json,
+        version=latest_history_entry.version + 1,
+        op='UPDATE',
+        message=message
+    )
+    db.session.add(history_entry)
+    db.session.commit()
+
+    index_mgr.add_entries(resource_id, [(entry_id, entry)])
+
+
 def _entry_json_move_this(json_schema):
     try:
         schema = json.loads(json_schema)
@@ -205,7 +238,7 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
             entry_id=db_entry.id,
             user_id='TODO',
             body=entry_json,
-            version=-1,
+            version=1,
             op='ADD',
             message=message
         )
