@@ -143,7 +143,7 @@ def delete_resource(resource_id, version):
 
 def get_entries(resource_id):
     cls = resource_models[resource_id]
-    entries = cls.query.all()
+    entries = cls.query.filter_by(deleted=False)
     return [json.loads(db_entry.body) for db_entry in entries]
 
 
