@@ -289,7 +289,7 @@ def create_index(resource_id, version=None):
 def reindex(resource_id, index_name, version=None):
     setup_resource_class(resource_id, version=version)
     entries = resource_models[resource_id].query.all()
-    index_mgr.add_entries(index_name, [(entry, json.loads(entry.body)) for entry in entries])
+    index_mgr.add_entries(index_name, [(entry.id, json.loads(entry.body)) for entry in entries])
 
 
 def publish_index(resource_id, index_name):
