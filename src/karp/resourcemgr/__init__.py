@@ -18,6 +18,7 @@ from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
 from karp.resourcemgr.index import index_mgr
+from karp.errors import ResourceNotFoundError
 
 from .resource import Resource
 
@@ -67,11 +68,13 @@ def setup_resource_classes() -> None:
 
 def setup_resource_class(resource_id, version=None):
     if version:
-        resource = get_resource_definition(resource_id, version)
+        resource_def = get_resource_definition(resource_id, version)
     else:
-        resource = get_active_resource_definition(resource_id)
-    config = json.loads(resource.config_file)
-    create_and_update_caches(resource_id, resource.version, config)
+        resource_def = get_active_resource_definition(resource_id)
+    if not resource_def:
+        raise ResourceNotFoundError(resource_id, version)
+    config = json.loads(resource_def.config_file)
+    create_and_update_caches(resource_id, resource_def.version, config)
 
 
 def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
