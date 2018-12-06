@@ -2,7 +2,7 @@
 class IndexInterface:
 
     def create_index(self, resource_id, config):
-        return []
+        return 'dummy'
 
     def publish_index(self, alias_name, index_name):
         return

@@ -58,7 +58,7 @@ class EsIndex(IndexInterface):
             }
         }
 
-        date = datetime.now().strftime('%Y-%m-%d-%H%M%S')
+        date = datetime.now().strftime('%Y-%m-%d-%H%M%S%f')
         index_name = resource_id + '_' + date
         result = self.es.indices.create(index=index_name, body=body)
         if 'error' in result:
