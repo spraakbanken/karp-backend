@@ -8,7 +8,7 @@ import karp.resourcemgr.entrymgr as entrymgr
 edit_api = Blueprint('edit_api', __name__)
 
 
-@edit_api.route("/<resource_id>/add", methods=['POST'])
+@edit_api.route('/<resource_id>/add', methods=['POST'])
 def add_entry(resource_id):
     """
     Example add: `curl -XPOST http://localhost:5000/entry?resource=places
@@ -19,14 +19,14 @@ def add_entry(resource_id):
     return flask_jsonify({'status': 'added', 'newID': new_id}), 201
 
 
-@edit_api.route("/<resource_id>/add_with_message", methods=['POST'])
+@edit_api.route('/<resource_id>/add_with_message', methods=['POST'])
 def add_entry_with_msg(resource_id):
     data = request.get_json()
     new_id = entrymgr.add_entry(resource_id, data['doc'], message=data['message'])
     return flask_jsonify({'status': 'added', 'newID': new_id}), 201
 
 
-@edit_api.route("/<resource_id>/_all")
+@edit_api.route('/<resource_id>/_all')
 def get_all_entries(resource_id):
     """
     TODO replace using this with /query call without a query
@@ -42,7 +42,7 @@ def update_entry(resource_id, entry_id):
     return flask_jsonify({'status': 'updated'})
 
 
-@edit_api.route("/<resource_id>/delete/<entry_id>", methods=['DELETE'])
+@edit_api.route('/<resource_id>/delete/<entry_id>', methods=['DELETE'])
 def delete_entry(resource_id, entry_id):
     entrymgr.delete_entry(resource_id, entry_id)
     return flask_jsonify({'status': 'removed'})
