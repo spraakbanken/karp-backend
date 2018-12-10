@@ -80,18 +80,14 @@ def app_with_data_f(app_f):
     def fun(**kwargs):
         app = next(app_f(**kwargs))
         with app.app_context():
-            with open('tests/data/config/places.json') as fp:
-                resource, version = resourcemgr.create_new_resource(fp)
-                resourcemgr.publish_resource(resource, version)
-                if kwargs.get('use_elasticsearch', False):
-                    index_name = resourcemgr.create_index(resource, version=version)
-                    resourcemgr.publish_index(resource, index_name)
-            with open('tests/data/config/municipalities.json') as fp:
-                resource, version = resourcemgr.create_new_resource(fp)
-                resourcemgr.publish_resource(resource, version)
-                if kwargs.get('use_elasticsearch', False):
-                    index_name = resourcemgr.create_index(resource, version=version)
-                    resourcemgr.publish_index(resource, index_name)
+            for file in ['tests/data/config/places.json', 'tests/data/config/municipalities.json']:
+                with open(file) as fp:
+                    resource, version = resourcemgr.create_new_resource(fp)
+                    resourcemgr.publish_resource(resource, version)
+                    resourcemgr.setup_resource_class(resource, version)
+                    if kwargs.get('use_elasticsearch', False):
+                        index_name = resourcemgr.create_index(resource, version=version)
+                        resourcemgr.publish_index(resource, index_name)
         return app
     yield fun
 

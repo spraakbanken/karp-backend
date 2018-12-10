@@ -10,6 +10,6 @@ class ResourceNotFoundError(KarpError):
 
     def __init__(self, resource_id, version=None):
         super().__init__('Resource not found. ID: {resource_id}, version: {version}'. format(
-            resource_id = resource_id,
-            version = version
+            resource_id=resource_id,
+            version=version
         ))
