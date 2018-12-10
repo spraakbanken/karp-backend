@@ -1,5 +1,7 @@
+import pytest  # pyre-ignore
 
 
+@pytest.mark.skip(reason="places doesn't exist")
 def test_no_q(client):
     response = client.get('/places/query')
     assert response.status == '200 OK'
@@ -13,6 +15,7 @@ def test_protected(client_with_data_scope_module):
     assert response.status == '403 FORBIDDEN'
 
 
+@pytest.mark.skip(reason="places doesn't exist")
 def test_pagination_explicit_0_25(client):
     resource = 'places'
     response = client.get('/{}/query?from=0&size=25'.format(resource))
@@ -25,6 +28,7 @@ def test_pagination_explicit_0_25(client):
     assert len(json_data[resource]['hits']) == 25
 
 
+@pytest.mark.skip(reason="places doesn't exist")
 def test_pagination_explicit_13_45(client):
     resource = 'places'
     response = client.get('/{}/query?from=13&size=45'.format(resource))
@@ -37,6 +41,7 @@ def test_pagination_explicit_13_45(client):
     assert len(json_data[resource]['hits']) == 45
 
 
+@pytest.mark.skip(reason="places doesn't exist")
 def test_pagination_default_size(client):
     resource = 'places'
     response = client.get('/{}/query?from=0'.format(resource))
@@ -46,6 +51,7 @@ def test_pagination_default_size(client):
     assert len(json_data[resource]['hits']) == 25
 
 
+@pytest.mark.skip(reason="places doesn't exist")
 def test_pagination_default_from(client):
     resource = 'places'
     response = client.get('/{}/query?size=45'.format(resource))

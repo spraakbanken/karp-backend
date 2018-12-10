@@ -36,9 +36,9 @@ def init(client, es_status_code):
         pytest.skip("elasticsearch disabled")
 
     for entry in entries:
-        client_with_data.post('/entry?resource=places',
-                            data=json.dumps(entry),
-                            content_type='application/json')
+        client_with_data.post('places/add',
+                              data=json.dumps(entry),
+                              content_type='application/json')
     return client_with_data
 
 

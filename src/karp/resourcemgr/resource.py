@@ -3,11 +3,19 @@ import json
 from typing import List
 from typing import Dict
 
+from karp.database import ResourceDefinition
+
 
 class Resource(object):
-    def __init__(self, model: Dict, config: Dict, version: int) -> None:
+    def __init__(self, model: Dict, history_model: Dict, resource_def: ResourceDefinition, version: int, config: Dict=None) -> None:
         self.model = model
-        self.config = config
+        self.history_model = history_model
+        if config:
+            self.config = config
+        else:
+            self.config = json.loads(resource_def.config)
+        self.entry_json_schema = json.loads(resource_def.entry_json_schema)
+        self.active = resource_def.active
         self.version = version
 
     def __repr__(self):

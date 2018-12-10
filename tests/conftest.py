@@ -9,7 +9,6 @@ from distutils.util import strtobool
 from karp import create_app
 from karp.database import db
 from karp.config import Config
-from karp.resourcemgr import create_new_resource, publish_resource
 import karp.resourcemgr as resourcemgr
 
 
@@ -81,32 +80,27 @@ def app_with_data_f(app_f):
     def fun(**kwargs):
         app = next(app_f(**kwargs))
         with app.app_context():
-            with open('tests/data/config/places.json') as fp:
-                resource, version = create_new_resource(fp)
-                publish_resource(resource, version)
-                if kwargs.get('use_elasticsearch', False):
-                    index_name = resourcemgr.create_index(resource)
-                    resourcemgr.publish_index(resource, index_name)
-            with open('tests/data/config/municipalities.json') as fp:
-                resource, version = create_new_resource(fp)
-                publish_resource(resource, version)
-                if kwargs.get('use_elasticsearch', False):
-                    index_name = resourcemgr.create_index(resource)
-                    resourcemgr.publish_index(resource, index_name)
+            for file in ['tests/data/config/places.json', 'tests/data/config/municipalities.json']:
+                with open(file) as fp:
+                    resource, version = resourcemgr.create_new_resource(fp)
+                    resourcemgr.publish_resource(resource, version)
+                    resourcemgr.setup_resource_class(resource, version)
+                    if kwargs.get('use_elasticsearch', False):
+                        index_name = resourcemgr.create_index(resource, version=version)
+                        resourcemgr.publish_index(resource, index_name)
         return app
     yield fun
-
 
 
 @pytest.fixture
 def app_with_data(app):
     with app.app_context():
         with open('tests/data/config/places.json') as fp:
-            create_new_resource(fp)
+            resourcemgr.create_new_resource(fp)
         with open('tests/data/config/municipalities.json') as fp:
-            create_new_resource(fp)
-        publish_resource('places', 1)
-        publish_resource('municipalities', 1)
+            resourcemgr.create_new_resource(fp)
+        resourcemgr.publish_resource('places', 1)
+        resourcemgr.publish_resource('municipalities', 1)
 
     return app
 
@@ -115,11 +109,11 @@ def app_with_data(app):
 def app_with_data_scope_module(app_scope_module):
     with app_scope_module.app_context():
         with open('tests/data/config/places.json') as fp:
-            create_new_resource(fp)
+            resourcemgr.create_new_resource(fp)
         with open('tests/data/config/municipalities.json') as fp:
-            create_new_resource(fp)
-        publish_resource('places', 1)
-        publish_resource('municipalities', 1)
+            resourcemgr.create_new_resource(fp)
+        resourcemgr.publish_resource('places', 1)
+        resourcemgr.publish_resource('municipalities', 1)
 
     return app_scope_module
 
@@ -158,7 +152,7 @@ def es():
     else:
         if not os.environ.get('ES_PATH'):
             raise RuntimeError('must set $ES_PATH to run tests that use elasticsearch')
-        executable = os.path.join(os.environ.get('ES_PATH') + 'bin/elasticsearch')
+        executable = os.path.join(os.environ.get('ES_PATH'), 'bin/elasticsearch')
         data_arg = '-Epath.data=%s' % tempfile.mkdtemp()
         logs_arg = '-Epath.logs=%s' % tempfile.mkdtemp()
         port_arg = '-Ehttp.port=9201'

@@ -6,10 +6,11 @@ from typing import Dict
 from typing import List
 
 import fastjsonschema  # pyre-ignore
+import logging
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
-from karp.database import get_or_create_resource_model
+from karp.database import get_or_create_resource_model, get_or_create_history_model
 from karp.database import db
 from karp.database import get_next_resource_version
 from karp.database import get_active_resource_definition
@@ -17,11 +18,14 @@ from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
 from karp.resourcemgr.index import index_mgr
+from karp.errors import ResourceNotFoundError
 
 from .resource import Resource
 
+_logger = logging.getLogger(__name__)
 
 resource_models = {}  # Dict
+history_models = {}  # Dict
 resource_configs = {}  # Dict
 resource_versions = {}  # Dict[str, int]
 
@@ -30,10 +34,28 @@ def get_available_resources() -> List[ResourceDefinition]:
     return ResourceDefinition.query.filter_by(active=True)
 
 
-def get_resource(id: str) -> Resource:
-    return Resource(model=resource_models[id],
-                    config=resource_configs[id],
-                    version=resource_versions[id])
+def get_resource(resource_id: str, version: int=None) -> Resource:
+    if not version:
+        resource_def = get_active_resource_definition(resource_id)
+        if not resource_def:
+            raise ResourceNotFoundError(resource_id)
+        return Resource(model=resource_models[resource_id],
+                        history_model=history_models[resource_id],
+                        resource_def=resource_def,
+                        version=resource_versions[resource_id],
+                        config=resource_configs[resource_id])
+    else:
+        resource_def = get_resource_definition(resource_id, version)
+        if not resource_def:
+            raise ResourceNotFoundError(resource_id, version=version)
+        config = json.loads(resource_def.config_file)
+        cls = get_or_create_resource_model(config, version)
+        history_cls = get_or_create_history_model(resource_id, version)
+        return Resource(model=cls,
+                        history_model=history_cls,
+                        resource_def=resource_def,
+                        version=version,
+                        config=config)
 
 
 def get_all_resources()-> List[ResourceDefinition]:
@@ -44,12 +66,14 @@ def create_and_update_caches(id: str,
                              version: int,
                              config: Dict) -> None:
     resource_models[id] = get_or_create_resource_model(config, version)
+    history_models[id] = get_or_create_history_model(id, version)
     resource_versions[id] = version
     resource_configs[id] = config
 
 
 def remove_from_caches(id: str) -> None:
     del resource_models[id]
+    del history_models[id]
     del resource_versions[id]
     del resource_configs[id]
 
@@ -62,11 +86,13 @@ def setup_resource_classes() -> None:
 
 def setup_resource_class(resource_id, version=None):
     if version:
-        resource = get_resource_definition(resource_id, version)
+        resource_def = get_resource_definition(resource_id, version)
     else:
-        resource = get_active_resource_definition(resource_id)
-    config = json.loads(resource.config_file)
-    create_and_update_caches(resource_id, resource.version, config)
+        resource_def = get_active_resource_definition(resource_id)
+    if not resource_def:
+        raise ResourceNotFoundError(resource_id, version)
+    config = json.loads(resource_def.config_file)
+    create_and_update_caches(resource_id, resource_def.version, config)
 
 
 def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
@@ -96,8 +122,9 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     db.session.commit()
 
     sqlalchemyclass = get_or_create_resource_model(config, version)
-
+    history_model = get_or_create_history_model(resource_id, version)
     sqlalchemyclass.__table__.create(bind=db.engine)
+    history_model.__table__.create(bind=db.engine)
 
     return resource['resource_id'], resource['version']
 
@@ -132,75 +159,19 @@ def delete_resource(resource_id, version):
     db.session.commit()
 
 
-def get_entries(resource, version=None):
-    cls = resource_models[resource]
-    entries = cls.query.all()
-    return entries
-
-
-def add_entry(resource_id, entry):
-    # TODO add to which version?
-    resource_def = get_active_resource_definition(resource_id)
-    version = resource_def.version
-    add_entries(resource_id, version, [entry])
-
-
-def add_entries(resource_id, version, entries):
-    cls = resource_models[resource_id]
-
-    resource_def = get_resource_definition(resource_id, version)
-    try:
-        schema = json.loads(resource_def.entry_json_schema)
-        validate_entry = fastjsonschema.compile(schema)
-    except fastjsonschema.JsonSchemaDefinitionException as e:
-        raise RuntimeError(e)
-
-    created_db_entries = []
-    for entry in entries:
-        try:
-            validate_entry(entry)
-        except fastjsonschema.JsonSchemaException as e:
-            raise RuntimeError(e)
-
-        entry_json = json.dumps(entry)
-        kwargs = {
-            'body': entry_json
-        }
-        id_field = json.loads(resource_def.config_file).get('id')
-        if id_field:
-            kwargs[id_field] = entry[id_field]
-        db_entry = cls(**kwargs)
-        created_db_entries.append((db_entry, entry))
-        db.session.add(db_entry)
-
-    db.session.commit()
-
-    index_mgr.add_entries(resource_id, created_db_entries)
-
-
-def delete_entry(resource, entry_id, version=None):
-    cls = resource_models[resource]
-    entry = cls.query.filter_by(id=entry_id).first()
-    db.session.delete(entry)
-    db.session.commit()
-
-
-def get_entry(resource, entry_id, version=None):
-    cls = resource_models[resource]
-    entry = cls.query.filter_by(id=entry_id).first()
-    return entry
-
-
-def create_index(resource_id):
-    resource_def = get_active_resource_definition(resource_id)
+def create_index(resource_id, version=None):
+    if version:
+        resource_def = get_resource_definition(resource_id, version)
+    else:
+        resource_def = get_active_resource_definition(resource_id)
     config = json.loads(resource_def.config_file)
     return index_mgr.create_index(resource_id, config)
 
 
-def reindex(resource_id, index_name):
-    setup_resource_class(resource_id)
+def reindex(resource_id, index_name, version=None):
+    setup_resource_class(resource_id, version=version)
     entries = resource_models[resource_id].query.all()
-    index_mgr.add_entries(index_name, [(entry, json.loads(entry.body)) for entry in entries])
+    index_mgr.add_entries(index_name, [(entry.id, json.loads(entry.body)) for entry in entries])
 
 
 def publish_index(resource_id, index_name):

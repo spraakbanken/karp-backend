@@ -58,7 +58,7 @@ class EsIndex(IndexInterface):
             }
         }
 
-        date = datetime.now().strftime('%Y-%m-%d-%H%M%S')
+        date = datetime.now().strftime('%Y-%m-%d-%H%M%S%f')
         index_name = resource_id + '_' + date
         result = self.es.indices.create(index=index_name, body=body)
         if 'error' in result:
@@ -71,14 +71,17 @@ class EsIndex(IndexInterface):
 
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
-    def add_entries(self, resource_id, created_db_entries):
+    def add_entries(self, resource_id, entries):
         index_to_es = []
-        for (db_entry, src_entry) in created_db_entries:
+        for (db_id, entry) in entries:
             index_to_es.append({
                 '_index': resource_id,
-                '_id': db_entry.id,
+                '_id': db_id,
                 '_type': 'entry',
-                '_source': src_entry
+                '_source': entry
             })
 
         elasticsearch.helpers.bulk(self.es, index_to_es)
+
+    def delete_entry(self, resource_id, entry_id):
+        self.es.delete(index=resource_id, doc_type='entry', id=entry_id)
