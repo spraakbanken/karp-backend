@@ -83,3 +83,4 @@ def test_update(es, client_with_data_f):
     entries = get_json(client, 'places/_all')
     assert len(entries) == 1
     assert entries[0]['id'] == entry_id
+    assert entries[0]['entry']['population'] == 5
