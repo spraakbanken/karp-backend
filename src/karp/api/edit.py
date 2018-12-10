@@ -46,3 +46,10 @@ def update_entry(resource_id, entry_id):
 def delete_entry(resource_id, entry_id):
     entrymgr.delete_entry(resource_id, entry_id)
     return flask_jsonify({'status': 'removed'})
+
+
+@edit_api.route('/<resource_id>/preview', methods=['POST'])
+def preview_entry(resource_id):
+    data = request.get_json()
+    preview = entrymgr.preview_entry(resource_id, data)
+    return flask_jsonify(preview)
