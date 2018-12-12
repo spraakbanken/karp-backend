@@ -10,6 +10,7 @@ from karp import create_app
 from karp.database import db
 from karp.config import Config
 import karp.resourcemgr as resourcemgr
+from karp.database import ResourceDefinition
 
 
 CONFIG_PLACES = """{
@@ -47,6 +48,7 @@ CONFIG_PLACES = """{
 class ConfigTest(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     TESTING = True
+    SETUP_DATABASE = False
 
     def __init__(self, use_elasticsearch=False):
         if use_elasticsearch:
@@ -58,6 +60,7 @@ def app_f():
     def fun(**kwargs):
         app = create_app(ConfigTest(**kwargs))
         with app.app_context():
+            ResourceDefinition.__table__.create(bind=db.engine)
             yield app
 
             db.session.remove()
@@ -69,6 +72,7 @@ def app_f():
 def app_scope_module():
     app = create_app(ConfigTest)
     with app.app_context():
+        ResourceDefinition.__table__.create(bind=db.engine)
         yield app
 
         db.session.remove()
