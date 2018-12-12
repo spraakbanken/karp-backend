@@ -2,7 +2,7 @@
 Builds OpenAPI spec and serves it
 """
 
-from flask import Blueprint # pyre-ignore
+from flask import Blueprint, url_for, Response  # pyre-ignore
 
 documentation = Blueprint('documentation', __name__)
 
@@ -30,16 +30,16 @@ def get_documentation():
         </style>
       </head>
       <body>
-        <redoc spec-url='/documentation/spec'></redoc>
+        <redoc spec-url='%s'></redoc>
         <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
       </body>
     </html>
-    """
+    """ % url_for('documentation.get_yaml')
     return html
 
 
-@documentation.route('/documentation/spec', methods=['GET'])
+@documentation.route('/documentation/spec.yaml', methods=['GET'])
 def get_yaml():
     with open('doc/karp_api_spec.yaml') as fp:
         spec = fp.read()
-    return spec
+    return Response(spec, mimetype='text/yaml')
