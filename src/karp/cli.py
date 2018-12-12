@@ -11,7 +11,7 @@ import karp.resourcemgr.entrymgr as entrymgr
 from karp.errors import KarpError
 
 _logger = logging.getLogger(__name__)
-app = create_app(MariaDBConfig)
+app = create_app(MariaDBConfig())
 
 
 def cli_error_handler(func):
