@@ -15,6 +15,7 @@ fastjsonschema = "*"
 pytest = "*"
 elasticsearch = "*"
 elasticsearch-dsl = "*"
+alembic = "*"
 
 [dev-packages]
 pytest = "*"
