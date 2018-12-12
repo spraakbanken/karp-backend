@@ -6,7 +6,7 @@ from flask import Flask     # pyre-ignore
 
 from karp.errors import KarpError
 
-__version__ = '0.4.8'
+__version__ = '0.5.0'
 
 
 # TODO handle settings correctly
