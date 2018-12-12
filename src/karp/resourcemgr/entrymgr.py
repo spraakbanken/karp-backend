@@ -72,7 +72,9 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
         }
         id_field = resource_conf.get('id')
         if id_field:
-            kwargs[id_field] = entry[id_field]
+            kwargs['entry_id'] = entry[id_field]
+        else:
+            kwargs['entry_id'] = 'TODO'  # generate id for resources that are missing it
         db_entry = resource.model(**kwargs)
         created_db_entries.append((db_entry, entry, entry_json))
         db.session.add(db_entry)

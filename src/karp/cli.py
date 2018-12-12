@@ -7,6 +7,7 @@ import logging
 from karp import create_app
 from .config import MariaDBConfig
 import karp.resourcemgr as resourcemgr
+import karp.resourcemgr.entrymgr as entrymgr
 from karp.errors import KarpError
 
 _logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ def import_resource(resource_id, version, data):
         objs = []
         for line in fp:
             objs.append(json.loads(line))
-        resourcemgr.add_entries(resource_id, objs, resource_version=version)
+        entrymgr.add_entries(resource_id, objs, resource_version=version)
 
 
 @app.cli.command('publish')
