@@ -95,7 +95,7 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
 
     def index_entries(entry_db_map):
         for db_entry, entry, _ in entry_db_map:
-            yield (db_entry.id, _prepare_entry(resource, entry))
+            yield (db_entry.id, _src_entry_to_index_entry(resource, entry))
 
     if resource.active:
         index_mgr.add_entries(resource_id, index_entries(created_db_entries))
@@ -125,17 +125,18 @@ def get_entry(resource, entry_id, version=None):
     return entry
 
 
-def _prepare_entry(resource, entry):
+def _src_entry_to_index_entry(resource, src_entry):
     """
-    Make a "db entry" into an "index entry". Here for future functionality.
+    Make a "src entry" into an "index entry". Here for future functionality.
     """
-    return json.dumps(entry)
+    index_entry = src_entry
+    return json.dumps(index_entry)
 
 
 def _validate_and_prepare_entry(resource, entry):
     validate_entry = _compile_schema(resource.entry_json_schema)
     _validate_entry(validate_entry, entry)
-    entry_json = _prepare_entry(resource, entry)
+    entry_json = _src_entry_to_index_entry(resource, entry)
     return entry_json
 
 
