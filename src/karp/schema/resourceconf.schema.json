@@ -4,6 +4,7 @@
   "title": "Resource configuration",
   "description": "",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "resource_id": {
       "description": "The unique identifier for a resource",
@@ -18,18 +19,24 @@
       "type": "object",
       "patternProperties": {
         "^.*$":  {
-          "oneOf": [
-            { "$ref": "#/properties/fields" },
-            {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string" },
+            "required": { "type": "boolean" },
+            "collection": { "type": "boolean" },
+            "properties": { "$ref": "#/properties/fields" },
+            "ref": {
               "type": "object",
+              "additionalProperties": false,
               "properties": {
-                "type": { "type": "string" },
-                "required": { "type": "boolean" },
-                "collection": { "type": "boolean" }
+                "resource_id": { "type": "string" },
+                "properties": { "$ref": "#/properties/fields" }
               },
-              "required": ["type"]
+              "required": ["resource_id"]
             }
-          ]
+          },
+          "required": ["type"]
         }
       }
     },
@@ -40,6 +47,7 @@
     "protected": {
       "description": "Settings for the permissions of the lexica",
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "write": {
           "type": "boolean"

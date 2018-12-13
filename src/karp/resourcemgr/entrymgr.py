@@ -6,6 +6,8 @@ from karp.errors import KarpError
 from karp.resourcemgr import get_resource
 from karp.database import db
 from karp.resourcemgr.index import index_mgr
+from .resource import Resource
+from typing import Dict
 
 _logger = logging.getLogger(__name__)
 
@@ -125,11 +127,28 @@ def get_entry(resource, entry_id, version=None):
     return entry
 
 
-def _src_entry_to_index_entry(resource, src_entry):
+def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):
     """
-    Make a "src entry" into an "index entry". Here for future functionality.
+    Make a "src entry" into an "index entry"
     """
-    index_entry = src_entry
+    index_entry = {}
+
+    # TODO src_entry needs to be rewritten using config
+    def recursive_something(_src_entry, _index_entry, fields):
+        for field_name, field_conf in fields:
+            if field_conf['virtual']:
+                pass  # evaluate value using the virtual field DSL
+            if field_conf['collection']:
+                # the transformation must apply to each item in config
+                # _src_entry[field_name] should be a list
+                pass
+            if field_conf['ref']:
+                # handle the connection to another/same resource
+                pass
+        index_entry.update(src_entry)
+
+    recursive_something(src_entry, index_entry, resource.config["fields"].items())
+
     return json.dumps(index_entry)
 
 

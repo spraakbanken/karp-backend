@@ -9,7 +9,66 @@
     "municipality": {
       "collection": true,
       "type": "number",
+      "ref": {
+        "resource_id": "municipalities",
+        "field": {
+          "collection": true,
+          "fields": {
+            "name": {
+              "type": "string"
+            },
+            "state": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "required": true
+    },
+    "larger_place": {
+      "type": "number",
+      "ref": {
+        "field": {
+          "collection": true,
+          "fields": {
+            "code": {
+              "type": "number"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "required": true
+    },
+    "smaller_places": {
+      "virtual": true,
+      "type": "object",
+      "collection": true,
+      "function": {
+        "multi_ref": {
+          "field": "larger_place",
+          "result": {
+            "type": "object",
+            "fields": {
+              "code": {
+                "type": "number"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "test": {
+            "equals": [
+              {
+                "self": "code"
+              }
+            ]
+          }
+        }
+      }
     },
     "population": {
       "type": "number"
