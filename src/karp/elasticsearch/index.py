@@ -13,6 +13,11 @@ def _create_es_mapping(config):
 
     def recursive_field(parent_schema, parent_field_name, parent_field_def):
         if parent_field_def.get('virtual', False):
+            fun = parent_field_def['function']
+            if list(fun.keys())[0] == 'multi_ref':
+                res_object = fun['multi_ref']['result']
+                recursive_field(parent_schema, parent_field_name, res_object)
+
             # TODO fix mapping for virtual, fields, get result object
             return
         if parent_field_def['type'] != 'object':
