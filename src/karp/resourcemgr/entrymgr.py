@@ -136,13 +136,13 @@ def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):
     # TODO src_entry needs to be rewritten using config
     def recursive_something(_src_entry, _index_entry, fields):
         for field_name, field_conf in fields:
-            if field_conf['virtual']:
+            if field_conf.get('virtual', False):
                 pass  # evaluate value using the virtual field DSL
-            if field_conf['collection']:
+            if field_conf.get('collection', False):
                 # the transformation must apply to each item in config
                 # _src_entry[field_name] should be a list
                 pass
-            if field_conf['ref']:
+            if field_conf.get('ref', {}):
                 # handle the connection to another/same resource
                 pass
         index_entry.update(src_entry)
@@ -172,6 +172,6 @@ def _validate_entry(schema, json_obj):
         schema(json_obj)
     except fastjsonschema.JsonSchemaException as e:
         _logger.warning('Entry not valid:\n{entry}\nMessage: {message}'.format(
-            entry=json.dumps(object, indent=2),
+            entry=json.dumps(json_obj, indent=2),
             message=e.message
         ))
