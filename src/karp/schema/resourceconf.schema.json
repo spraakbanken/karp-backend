@@ -3,6 +3,44 @@
   "$id": "http://spraakbanken.gu.se/resourceconf.schema.json",
   "title": "Resource configuration",
   "description": "",
+  "definitions": {
+    "aField": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string" },
+        "required": { "type": "boolean" },
+        "collection": { "type": "boolean" },
+        "fields": { "$ref": "#/properties/fields" },
+        "ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "resource_id": { "type": "string" },
+            "field": { "$ref": "#/definitions/aField" }
+          }
+        },
+        "virtual": { "type": "boolean" },
+        "function": { "$ref": "#/definitions/function" }
+      },
+      "required": ["type"]
+    },
+    "function": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "multi_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "field": { "type": "string" },
+            "result": { "$ref": "#/definitions/aField" },
+            "test": { "type": "object" }
+          }
+        }
+      }
+    }
+  },
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -18,25 +56,8 @@
       "description": "The fields of the resource",
       "type": "object",
       "patternProperties": {
-        "^.*$":  {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "type": { "type": "string" },
-            "required": { "type": "boolean" },
-            "collection": { "type": "boolean" },
-            "properties": { "$ref": "#/properties/fields" },
-            "ref": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "resource_id": { "type": "string" },
-                "properties": { "$ref": "#/properties/fields" }
-              },
-              "required": ["resource_id"]
-            }
-          },
-          "required": ["type"]
+        "^.*$": {
+          "$ref": "#/definitions/aField"
         }
       }
     },

@@ -13,7 +13,11 @@
         "resource_id": "municipalities",
         "field": {
           "collection": true,
+          "type": "object",
           "fields": {
+            "code": {
+              "type": "number"
+            },
             "name": {
               "type": "string"
             },
@@ -29,6 +33,7 @@
       "type": "number",
       "ref": {
         "field": {
+          "type": "object",
           "collection": true,
           "fields": {
             "code": {

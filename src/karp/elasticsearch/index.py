@@ -12,6 +12,9 @@ def _create_es_mapping(config):
     fields = config['fields']
 
     def recursive_field(parent_schema, parent_field_name, parent_field_def):
+        if parent_field_def.get('virtual', False):
+            # TODO fix mapping for virtual, fields, get result object
+            return
         if parent_field_def['type'] != 'object':
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
