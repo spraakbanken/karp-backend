@@ -144,6 +144,12 @@ def get_entry(resource, entry_id, version=None):
     return entry
 
 
+def get_entry_by_entry_id(resource: Resource, entry_id: str):
+    cls = resource.model
+    entry = cls.query.filter_by(entry_id=entry_id).first()
+    return entry
+
+
 def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):
     """
     Make a "src entry" into an "index entry"
@@ -156,15 +162,22 @@ def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):
             if field_conf.get('virtual', False):
                 pass  # evaluate value using the virtual field DSL
             if field_conf.get('collection', False):
-                # the transformation must apply to each item in config
-                # _src_entry[field_name] should be a list
-                pass
+                pass # the transformation must apply to each item in config
             if field_conf.get('ref', {}):
-                # handle the connection to another/same resource
-                pass
-        index_entry.update(src_entry)
+                ref_field = field_conf['ref']
+                if ref_field.get('resource_id'):
+                    # TODO external reference
+                    pass
+                else:
+                    ref_id = _src_entry[resource.config['id']]
+                    ref_entry = json.loads(get_entry_by_entry_id(resource, str(ref_id)).body)
+                    ref_index_entry = {}
+                    recursive_something(ref_entry, ref_index_entry, {field_name: ref_field['field']})
+                    _index_entry[field_name] = ref_index_entry
+            else:
+                _index_entry[field_name] = _src_entry[field_name]
 
-    recursive_something(src_entry, index_entry, resource.config["fields"].items())
+    recursive_something(src_entry, index_entry, resource.config['fields'].items())
 
     return json.dumps(index_entry)
 
