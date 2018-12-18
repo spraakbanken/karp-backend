@@ -129,7 +129,7 @@ def get_or_create_resource_model(config, version):
     resource_id = config['resource_id']
     table_name = resource_id + '_' + str(version)
     if table_name in class_cache:
-        return class_cache[table_name]
+        return class_cache[table_name], ()
     else:
         attributes = {
             '__tablename__': table_name,
@@ -137,6 +137,7 @@ def get_or_create_resource_model(config, version):
             'entry_id': db.Column(db.String(30), nullable=False)
         }
 
+        child_tables = []
         for field_name in config.get('referenceable', ()):
             field = config['fields'][field_name]
             if not field.get('collection'):
@@ -145,8 +146,27 @@ def get_or_create_resource_model(config, version):
                 else:
                     raise NotImplementedError()
                 attributes[field_name] = db.Column(column_type)
+            else:
+                child_table_name = table_name + '_' + field_name
+                attributes[field_name] = db.relationship(child_table_name, backref=table_name)
+                child_attributes = {
+                    '__table_name__': child_table_name,
+                    '__table_args__': (db.PrimaryKeyConstraint('entry_id', field_name),),
+                    'entry_id': db.Column(db.Integer, db.ForeignKey(table_name + '.id'))
+                }
+                if field['type'] == 'object':
+                    raise ValueError('not possible to reference lists of objects')
+                if field['type'] == 'number':
+                    child_db_column_type = db.Integer()
+                elif field['type'] == 'string':
+                    child_db_column_type = db.Text()
+                else:
+                    raise NotImplementedError()
+                child_attributes[field_name] = db.Column(child_db_column_type)
+                child_class = type(child_table_name, (db.Model,), child_attributes)
+                child_tables.append(child_class)
 
         sqlalchemy_class = type(resource_id, (db.Model, BaseEntry,), attributes)
 
         class_cache[table_name] = sqlalchemy_class
-        return sqlalchemy_class
+        return sqlalchemy_class, child_tables

@@ -49,7 +49,7 @@ def get_resource(resource_id: str, version: int=None) -> Resource:
         if not resource_def:
             raise ResourceNotFoundError(resource_id, version=version)
         config = json.loads(resource_def.config_file)
-        cls = get_or_create_resource_model(config, version)
+        cls, _ = get_or_create_resource_model(config, version)
         history_cls = get_or_create_history_model(resource_id, version)
         return Resource(model=cls,
                         history_model=history_cls,
@@ -65,7 +65,7 @@ def get_all_resources()-> List[ResourceDefinition]:
 def create_and_update_caches(id: str,
                              version: int,
                              config: Dict) -> None:
-    resource_models[id] = get_or_create_resource_model(config, version)
+    resource_models[id], _ = get_or_create_resource_model(config, version)
     history_models[id] = get_or_create_history_model(id, version)
     resource_versions[id] = version
     resource_configs[id] = config
@@ -121,9 +121,11 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     db.session.add(new_resource)
     db.session.commit()
 
-    sqlalchemyclass = get_or_create_resource_model(config, version)
+    sqlalchemyclass, child_classes = get_or_create_resource_model(config, version)
     history_model = get_or_create_history_model(resource_id, version)
     sqlalchemyclass.__table__.create(bind=db.engine)
+    for child_class in child_classes:
+        child_class.__table__.create(bind=db.engine)
     history_model.__table__.create(bind=db.engine)
 
     return resource['resource_id'], resource['version']
