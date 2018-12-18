@@ -89,6 +89,7 @@
       "required": true
     }
   },
+  "referenceable": ["code", "larger_place"],
   "sort": "name",
   "id": "code"
 }

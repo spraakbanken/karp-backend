@@ -46,11 +46,6 @@ class BaseEntry:
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text, nullable=False)
     deleted = db.Column(db.Boolean, default=False)
-    entry_id = db.Column(db.String(30), nullable=False)
-
-    @declared_attr
-    def __table_args__(cls):
-        return db.UniqueConstraint('entry_id', name='entry_id_unique_constraint'),
 
 
 class DummyEntry(db.Model, BaseEntry):
@@ -136,8 +131,22 @@ def get_or_create_resource_model(config, version):
     if table_name in class_cache:
         return class_cache[table_name]
     else:
-        class Entry(db.Model, BaseEntry):
-            __tablename__ = table_name
+        attributes = {
+            '__tablename__': table_name,
+            '__table_args__': (db.UniqueConstraint('entry_id', name='entry_id_unique_constraint'),),
+            'entry_id': db.Column(db.String(30), nullable=False)
+        }
 
-        class_cache[table_name] = Entry
-        return Entry
+        for field_name in config.get('referenceable', ()):
+            field = config['fields'][field_name]
+            if not field.get('collection'):
+                if field['type'] == 'number':
+                    column_type = db.Integer()
+                else:
+                    raise NotImplementedError()
+                attributes[field_name] = db.Column(column_type)
+
+        sqlalchemy_class = type(resource_id, (db.Model, BaseEntry,), attributes)
+
+        class_cache[table_name] = sqlalchemy_class
+        return sqlalchemy_class
