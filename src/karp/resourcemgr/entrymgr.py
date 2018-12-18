@@ -69,15 +69,7 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
         _validate_entry(validate_entry, entry)
 
         entry_json = json.dumps(entry)
-        kwargs = {
-            'body': entry_json
-        }
-        id_field = resource_conf.get('id')
-        if id_field:
-            kwargs['entry_id'] = entry[id_field]
-        else:
-            kwargs['entry_id'] = 'TODO'  # generate id for resources that are missing it
-        db_entry = resource.model(**kwargs)
+        db_entry = _src_entry_to_db_entry(entry, entry_json, resource.model, resource_conf)
         created_db_entries.append((db_entry, entry, entry_json))
         db.session.add(db_entry)
 
@@ -101,6 +93,31 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
 
     if resource.active:
         index_mgr.add_entries(resource_id, index_entries(created_db_entries))
+
+
+def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):
+    kwargs = {
+        'body': entry_json
+    }
+
+    for field_name in resource_conf.get('referenceable', ()):
+        field_val = entry.get(field_name)
+        if resource_conf['fields'][field_name].get('collection', False):
+            child_table = resource_model.child_tables[field_name]
+            for elem in field_val:
+                if field_name not in kwargs:
+                    kwargs[field_name] = []
+                kwargs[field_name].append(child_table(**{field_name: elem}))
+        else:
+            if field_val:
+                kwargs[field_name] = field_val
+    id_field = resource_conf.get('id')
+    if id_field:
+        kwargs['entry_id'] = entry[id_field]
+    else:
+        kwargs['entry_id'] = 'TODO'  # generate id for resources that are missing it
+    db_entry = resource_model(**kwargs)
+    return db_entry
 
 
 def delete_entry(resource_id, entry_id):
@@ -175,3 +192,4 @@ def _validate_entry(schema, json_obj):
             entry=json.dumps(json_obj, indent=2),
             message=e.message
         ))
+        raise ValueError()

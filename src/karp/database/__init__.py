@@ -129,7 +129,7 @@ def get_or_create_resource_model(config, version):
     resource_id = config['resource_id']
     table_name = resource_id + '_' + str(version)
     if table_name in class_cache:
-        return class_cache[table_name], ()
+        return class_cache[table_name]
     else:
         attributes = {
             '__tablename__': table_name,
@@ -137,7 +137,7 @@ def get_or_create_resource_model(config, version):
             'entry_id': db.Column(db.String(30), nullable=False)
         }
 
-        child_tables = []
+        child_tables = {}
         for field_name in config.get('referenceable', ()):
             field = config['fields'][field_name]
             if not field.get('collection'):
@@ -164,9 +164,10 @@ def get_or_create_resource_model(config, version):
                     raise NotImplementedError()
                 child_attributes[field_name] = db.Column(child_db_column_type)
                 child_class = type(child_table_name, (db.Model,), child_attributes)
-                child_tables.append(child_class)
+                child_tables[field_name] = child_class
 
         sqlalchemy_class = type(resource_id, (db.Model, BaseEntry,), attributes)
+        sqlalchemy_class.child_tables = child_tables
 
         class_cache[table_name] = sqlalchemy_class
-        return sqlalchemy_class, child_tables
+        return sqlalchemy_class

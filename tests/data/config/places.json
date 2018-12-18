@@ -44,8 +44,7 @@
             }
           }
         }
-      },
-      "required": true
+      }
     },
     "smaller_places": {
       "virtual": true,
