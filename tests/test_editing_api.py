@@ -129,3 +129,74 @@ def test_refs(es, client_with_data_f):
             assert entry['larger_place']['code'] == 1
             assert entry['larger_place']['name'] == 'test1'
             assert 'smaller_places' not in entry
+
+
+def test_external_refs(es, client_with_data_f):
+    client = init(client_with_data_f, es, [
+        {
+            'code': 1,
+            'name': 'test1',
+            'population': 10,
+            'area': 50000,
+            'density': 5,
+            'municipality': [1]
+        },
+        {
+            'code': 2,
+            'name': 'test2',
+            'population': 5,
+            'larger_place': 1,
+            'area': 50000,
+            'density': 5,
+            'municipality': [1, 2]
+        },
+        {
+            'code': 3,
+            'name': 'test2',
+            'population': 5,
+            'larger_place': 1,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2]
+        }
+    ])
+
+    client.post('municipalities/add',
+                          data=json.dumps({
+                              'code': 1,
+                              'name': 'municipality1',
+                              'state': 'state1',
+                              'region': 'region1'
+                          }),
+                          content_type='application/json')
+
+    client.post('municipalities/add',
+                          data=json.dumps({
+                              'code': 2,
+                              'name': 'municipality2',
+                              'state': 'state2',
+                              'region': 'region2'
+                          }),
+                          content_type='application/json')
+
+    # currently no connections are made on add/update, so we need to reindex to get the connections
+    with client.application.app_context():
+        import karp.resourcemgr as resourcemgr
+        for resource_id in ['places', 'municipalities']:
+            version = 1
+            index_name = resourcemgr.create_index(resource_id, version)
+            resourcemgr.reindex(resource_id, index_name, version=version)
+            resourcemgr.publish_index(resource_id, index_name)
+
+    time.sleep(1)
+    entries = get_json(client, 'municipalities/_all_indexed')
+    for entry in entries:
+        assert 'places' in entry
+        place_codes = [place['code'] for place in entry['places']]
+        assert len(place_codes) == 2
+        if entry['code'] == 1:
+            assert 1 in place_codes
+            assert 2 in place_codes
+        else:
+            assert 2 in place_codes
+            assert 3 in place_codes

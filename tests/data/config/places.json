@@ -11,6 +11,7 @@
       "type": "number",
       "ref": {
         "resource_id": "municipalities",
+        "resource_version": 1,
         "field": {
           "collection": true,
           "type": "object",

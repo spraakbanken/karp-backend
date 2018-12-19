@@ -19,9 +19,20 @@ def get_entries(resource_id):
     return [{'id': db_entry.id, 'entry': json.loads(db_entry.body)} for db_entry in entries]
 
 
-def get_entries_by_column(resource_id, filters):
-    cls = get_resource(resource_id).model
-    entries = cls.query.filter_by(**filters)
+def get_entries_by_column(resource_obj: Resource, filters):
+    config = resource_obj.config
+    cls = resource_obj.model
+    query = cls.query
+    delete = []
+    for filter_key in filters.keys():
+        if filter_key in config['referenceable'] and config['fields'][filter_key].get('collection', False):
+            child_cls = cls.child_tables[filter_key]
+            query = query.join(child_cls).filter_by(**{filter_key: filters[filter_key]})
+            delete.append(filter_key)
+    for del_key in delete:
+        del filters[del_key]
+
+    entries = query.filter_by(**filters)
     return [{'id': db_entry.id, 'entry': json.loads(db_entry.body)} for db_entry in entries]
 
 
@@ -67,7 +78,7 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
     db.session.add(history_entry)
     db.session.commit()
 
-    index_mgr.add_entries(resource_id, [(entry_id, entry)])
+    index_mgr.add_entries(resource_id, [(entry_id, _src_entry_to_index_entry(resource, entry))])
 
 
 def add_entries(resource_id, entries, message=None, resource_version=None):
@@ -167,7 +178,7 @@ def _evaluate_function(function_conf, src_entry, src_resource):
         function_conf = function_conf['multi_ref']
         target_field = function_conf['field']
         if 'resource_id' in function_conf:
-            target_resource = get_resource(function_conf['resource_id'])
+            target_resource = get_resource(function_conf['resource_id'], function_conf['resource_version'])
         else:
             target_resource = src_resource
 
@@ -180,10 +191,14 @@ def _evaluate_function(function_conf, src_entry, src_resource):
                         filters[target_field] = src_entry[arg['self']]
                     else:
                         raise NotImplementedError()
-                target_entries = get_entries_by_column(target_resource.config['resource_id'], filters)
+                target_entries = get_entries_by_column(target_resource, filters)
             elif operator == 'contains':
-                # TODO implement contains
-                raise NotImplementedError()
+                for arg in args:
+                    if 'self' in arg:
+                        filters[target_field] = src_entry[arg['self']]
+                    else:
+                        raise NotImplementedError()
+                target_entries = get_entries_by_column(target_resource, filters)
             else:
                 raise NotImplementedError()
         else:
@@ -213,17 +228,8 @@ def recursive_something(resource: Resource, _src_entry: Dict, _index_entry: Dict
         elif field_conf.get('ref', {}):
             ref_field = field_conf['ref']
             if ref_field.get('resource_id'):
-                # TODO this assumes collection, fix
-                ref_ids = _src_entry.get(field_name)
-                target_resource = get_resource(ref_field['resource_id'])
-                all_elems = []
-                for ref_id in ref_ids:
-                    ref_entry = {field_name: json.loads(get_entry_by_entry_id(target_resource, str(ref_id)).body)}
-                    ref_index_entry = {}
-                    list_of_sub_fields = (field_name, ref_field['field']),
-                    recursive_something(target_resource, ref_entry, ref_index_entry, list_of_sub_fields)
-                    all_elems.append(ref_index_entry[field_name])
-                    _index_entry[field_name] = ref_index_entry[field_name]
+                # TODO external reference
+                pass
             else:
                 # TODO this assumes non-collection, fix
                 ref_id = _src_entry.get(field_name)

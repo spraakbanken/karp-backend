@@ -17,6 +17,7 @@
           "additionalProperties": false,
           "properties": {
             "resource_id": { "type": "string" },
+            "resource_version": { "type": "number" },
             "field": { "$ref": "#/definitions/aField" }
           }
         },
@@ -33,6 +34,8 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
+            "resource_id": { "type": "string" },
+            "resource_version": { "type": "number" },
             "field": { "type": "string" },
             "result": { "$ref": "#/definitions/aField" },
             "test": { "type": "object" }

@@ -150,7 +150,7 @@ def get_or_create_resource_model(config, version):
                 child_table_name = table_name + '_' + field_name
                 attributes[field_name] = db.relationship(child_table_name, backref=table_name)
                 child_attributes = {
-                    '__table_name__': child_table_name,
+                    '__tablename__': child_table_name,
                     '__table_args__': (db.PrimaryKeyConstraint('entry_id', field_name),),
                     'entry_id': db.Column(db.Integer, db.ForeignKey(table_name + '.id'))
                 }
