@@ -84,3 +84,28 @@ def test_update(es, client_with_data_f):
     assert len(entries) == 1
     assert entries[0]['id'] == entry_id
     assert entries[0]['entry']['population'] == 5
+
+
+def test_refs(es, client_with_data_f):
+    client = init(client_with_data_f, es, [
+        {
+            'code': 1,
+            'name': 'test1',
+            'population': 10,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        },
+        {
+            'code': 2,
+            'name': 'test2',
+            'population': 5,
+            'larger_place': 1,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        }
+    ])
+
+    entries = get_json(client, 'places/_all')
+    assert len(entries) == 2

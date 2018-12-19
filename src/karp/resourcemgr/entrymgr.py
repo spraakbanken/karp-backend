@@ -160,22 +160,25 @@ def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):
     def recursive_something(_src_entry, _index_entry, fields):
         for field_name, field_conf in fields:
             if field_conf.get('virtual', False):
-                pass  # evaluate value using the virtual field DSL
-            if field_conf.get('collection', False):
-                pass # the transformation must apply to each item in config
-            if field_conf.get('ref', {}):
+                continue  # evaluate value using the virtual field DSL
+            elif field_conf['type'] == 'object':
+                _index_entry[field_name] = {}
+                recursive_something(_src_entry[field_name], _index_entry[field_name], field_conf['fields'].items())
+            elif field_conf.get('ref', {}):
                 ref_field = field_conf['ref']
                 if ref_field.get('resource_id'):
                     # TODO external reference
                     pass
                 else:
-                    ref_id = _src_entry[resource.config['id']]
-                    ref_entry = json.loads(get_entry_by_entry_id(resource, str(ref_id)).body)
-                    ref_index_entry = {}
-                    recursive_something(ref_entry, ref_index_entry, {field_name: ref_field['field']})
-                    _index_entry[field_name] = ref_index_entry
+                    ref_id = _src_entry.get(field_name)
+                    if ref_id:
+                        ref_entry = {field_name: json.loads(get_entry_by_entry_id(resource, str(ref_id)).body)}
+                        ref_index_entry = {}
+                        list_of_sub_fields = (field_name, ref_field['field']),
+                        recursive_something(ref_entry, ref_index_entry, list_of_sub_fields)
+                        _index_entry[field_name] = ref_index_entry[field_name]
             else:
-                _index_entry[field_name] = _src_entry[field_name]
+                _index_entry[field_name] = _src_entry.get(field_name)
 
     recursive_something(src_entry, index_entry, resource.config['fields'].items())
 

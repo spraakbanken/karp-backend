@@ -34,7 +34,6 @@
       "ref": {
         "field": {
           "type": "object",
-          "collection": true,
           "fields": {
             "code": {
               "type": "number"
