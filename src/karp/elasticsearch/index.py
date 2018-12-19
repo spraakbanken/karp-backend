@@ -20,6 +20,15 @@ def _create_es_mapping(config):
 
             # TODO fix mapping for virtual, fields, get result object
             return
+        if parent_field_def.get('ref') and 'resource_id' not in parent_field_def['ref']:
+            if 'field' in parent_field_def['ref']:
+                res_object = parent_field_def['ref']['field']
+            else:
+                res_object = {}
+                res_object.update(parent_field_def)
+                del res_object['ref']
+            recursive_field(parent_schema, parent_field_name, res_object)
+            return
         if parent_field_def['type'] != 'object':
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
