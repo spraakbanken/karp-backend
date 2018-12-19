@@ -1,5 +1,6 @@
 import json
 import pytest
+import time
 
 
 def get_json(client, path):
@@ -107,5 +108,12 @@ def test_refs(es, client_with_data_f):
         }
     ])
 
-    entries = get_json(client, 'places/_all')
+    time.sleep(1)
+    entries = get_json(client, 'places/_all_indexed')
     assert len(entries) == 2
+    for entry in entries:
+        if entry['code'] == 1:
+            assert 'larger_place' not in entry
+        else:
+            assert entry['larger_place']['code'] == 1
+            assert entry['larger_place']['name'] == 'test1'

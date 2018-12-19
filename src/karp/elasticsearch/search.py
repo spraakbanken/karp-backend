@@ -18,7 +18,7 @@ class EsSearch(SearchInterface):
         return Q("term", **{field: querystr})
 
     def search(self, resources, query=None):
-        if query['split_results']:
+        if query and query['split_results']:
             ms = MultiSearch(using=self.es)
 
             for resource in resources:
@@ -34,6 +34,7 @@ class EsSearch(SearchInterface):
             return result
         else:
             s = Search(using=self.es, index=','.join(resources))
-            s = s.query(query['query'])
+            if query:
+                s = s.query(query['query'])
             response = s.execute()
             return [result.to_dict() for result in response]

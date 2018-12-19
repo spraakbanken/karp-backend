@@ -35,6 +35,15 @@ def get_all_entries(resource_id):
     return flask_jsonify(entries)
 
 
+@edit_api.route('/<resource_id>/_all_indexed')
+def get_all_indexed_entries(resource_id):
+    """
+    TODO replace using this with /query call without a query
+    """
+    entries = entrymgr.get_entries_indexed(resource_id)
+    return flask_jsonify(entries)
+
+
 @edit_api.route('/<resource_id>/update/<entry_id>', methods=['POST'])
 def update_entry(resource_id, entry_id):
     data = request.get_json()

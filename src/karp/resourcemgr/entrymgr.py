@@ -6,6 +6,7 @@ from karp.errors import KarpError
 from karp.resourcemgr import get_resource
 from karp.database import db
 from karp.resourcemgr.index import index_mgr
+from karp.search import search
 from .resource import Resource
 from typing import Dict
 
@@ -16,6 +17,11 @@ def get_entries(resource_id):
     cls = get_resource(resource_id).model
     entries = cls.query.filter_by(deleted=False)
     return [{'id': db_entry.id, 'entry': json.loads(db_entry.body)} for db_entry in entries]
+
+
+def get_entries_indexed(resource_id):
+    res = search.search((resource_id,))
+    return res
 
 
 def add_entry(resource_id, entry, message=None, resource_version=None):
