@@ -19,6 +19,12 @@ def get_entries(resource_id):
     return [{'id': db_entry.id, 'entry': json.loads(db_entry.body)} for db_entry in entries]
 
 
+def get_entries_by_column(resource_id, filters):
+    cls = get_resource(resource_id).model
+    entries = cls.query.filter_by(**filters)
+    return [{'id': db_entry.id, 'entry': json.loads(db_entry.body)} for db_entry in entries]
+
+
 def get_entries_indexed(resource_id):
     res = search.search((resource_id,))
     return res
@@ -156,38 +162,77 @@ def get_entry_by_entry_id(resource: Resource, entry_id: str):
     return entry
 
 
+def _evaluate_function(function_conf, src_entry, src_resource):
+    if 'multi_ref' in function_conf:
+        function_conf = function_conf['multi_ref']
+        target_field = function_conf['field']
+        if 'resource_id' in function_conf:
+            target_resource = get_resource(function_conf['resource_id'])
+        else:
+            target_resource = src_resource
+
+        if 'test' in function_conf:
+            operator, args = list(function_conf['test'].items())[0]
+            filters = {}
+            if operator == 'equals':
+                for arg in args:
+                    if 'self' in arg:
+                        filters[target_field] = src_entry[arg['self']]
+                    else:
+                        raise NotImplementedError()
+                target_entries = get_entries_by_column(target_resource.config['resource_id'], filters)
+            elif operator == 'contains':
+                # TODO implement contains
+                raise NotImplementedError()
+            else:
+                raise NotImplementedError()
+        else:
+            raise NotImplementedError()
+
+        res = []
+        for entry in target_entries:
+            index_entry = {}
+            list_of_sub_fields = ("tmp", function_conf['result']),
+            recursive_something(target_resource, {'tmp': entry['entry']}, index_entry, list_of_sub_fields)
+            res.append(index_entry["tmp"])
+    else:
+        raise NotImplementedError()
+    return res
+
+
+def recursive_something(resource: Resource, _src_entry: Dict, _index_entry: Dict, fields):
+    for field_name, field_conf in fields:
+        if field_conf.get('virtual', False):
+            res = _evaluate_function(field_conf['function'], _src_entry, resource)
+            if res:
+                _index_entry[field_name] = res
+        elif field_conf['type'] == 'object':
+            _index_entry[field_name] = {}
+            if field_name in _src_entry:
+                recursive_something(resource, _src_entry[field_name], _index_entry[field_name], field_conf['fields'].items())
+        elif field_conf.get('ref', {}):
+            ref_field = field_conf['ref']
+            if ref_field.get('resource_id'):
+                # TODO external reference
+                pass
+            else:
+                ref_id = _src_entry.get(field_name)
+                if ref_id:
+                    ref_entry = {field_name: json.loads(get_entry_by_entry_id(resource, str(ref_id)).body)}
+                    ref_index_entry = {}
+                    list_of_sub_fields = (field_name, ref_field['field']),
+                    recursive_something(resource, ref_entry, ref_index_entry, list_of_sub_fields)
+                    _index_entry[field_name] = ref_index_entry[field_name]
+        else:
+            _index_entry[field_name] = _src_entry.get(field_name)
+
+
 def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):
     """
     Make a "src entry" into an "index entry"
     """
     index_entry = {}
-
-    # TODO src_entry needs to be rewritten using config
-    def recursive_something(_src_entry, _index_entry, fields):
-        for field_name, field_conf in fields:
-            if field_conf.get('virtual', False):
-                continue  # evaluate value using the virtual field DSL
-            elif field_conf['type'] == 'object':
-                _index_entry[field_name] = {}
-                recursive_something(_src_entry[field_name], _index_entry[field_name], field_conf['fields'].items())
-            elif field_conf.get('ref', {}):
-                ref_field = field_conf['ref']
-                if ref_field.get('resource_id'):
-                    # TODO external reference
-                    pass
-                else:
-                    ref_id = _src_entry.get(field_name)
-                    if ref_id:
-                        ref_entry = {field_name: json.loads(get_entry_by_entry_id(resource, str(ref_id)).body)}
-                        ref_index_entry = {}
-                        list_of_sub_fields = (field_name, ref_field['field']),
-                        recursive_something(ref_entry, ref_index_entry, list_of_sub_fields)
-                        _index_entry[field_name] = ref_index_entry[field_name]
-            else:
-                _index_entry[field_name] = _src_entry.get(field_name)
-
-    recursive_something(src_entry, index_entry, resource.config['fields'].items())
-
+    recursive_something(resource, src_entry, index_entry, resource.config['fields'].items())
     return json.dumps(index_entry)
 
 

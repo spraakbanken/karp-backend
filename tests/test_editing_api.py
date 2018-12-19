@@ -108,12 +108,24 @@ def test_refs(es, client_with_data_f):
         }
     ])
 
+    # currently no connections are made on add/update, so we need to reindex to get the connections
+    with client.application.app_context():
+        import karp.resourcemgr as resourcemgr
+        resource_id = 'places'
+        version = 1
+        index_name = resourcemgr.create_index(resource_id, version)
+        resourcemgr.reindex(resource_id, index_name, version=version)
+        resourcemgr.publish_index(resource_id, index_name)
+
     time.sleep(1)
     entries = get_json(client, 'places/_all_indexed')
     assert len(entries) == 2
     for entry in entries:
         if entry['code'] == 1:
             assert 'larger_place' not in entry
+            assert 'smaller_places' in entry
+            assert entry['smaller_places'][0]['code'] == 2
         else:
             assert entry['larger_place']['code'] == 1
             assert entry['larger_place']['name'] == 'test1'
+            assert 'smaller_places' not in entry
