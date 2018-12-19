@@ -17,10 +17,8 @@ def _create_es_mapping(config):
             if list(fun.keys())[0] == 'multi_ref':
                 res_object = fun['multi_ref']['result']
                 recursive_field(parent_schema, parent_field_name, res_object)
-
-            # TODO fix mapping for virtual, fields, get result object
             return
-        if parent_field_def.get('ref') and 'resource_id' not in parent_field_def['ref']:
+        if parent_field_def.get('ref'):
             if 'field' in parent_field_def['ref']:
                 res_object = parent_field_def['ref']['field']
             else:
