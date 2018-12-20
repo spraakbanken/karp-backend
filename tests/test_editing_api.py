@@ -200,3 +200,11 @@ def test_external_refs(es, client_with_data_f):
         else:
             assert 2 in place_codes
             assert 3 in place_codes
+
+    places_entries = get_json(client, 'places/_all_indexed')
+    for entry in places_entries:
+        assert 'municipality' in entry
+        assert isinstance(entry['municipality'], list)
+        if entry['code'] == 2:
+            assert {'code': 1, 'name': 'municipality1', 'state': 'state1'} in entry['municipality']
+            assert {'code': 2, 'name': 'municipality2', 'state': 'state2'} in entry['municipality']

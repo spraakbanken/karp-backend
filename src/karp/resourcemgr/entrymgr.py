@@ -228,8 +228,20 @@ def recursive_something(resource: Resource, _src_entry: Dict, _index_entry: Dict
         elif field_conf.get('ref', {}):
             ref_field = field_conf['ref']
             if ref_field.get('resource_id'):
-                # TODO external reference
-                pass
+                ref_resource = get_resource(ref_field['resource_id'], version=ref_field['resource_version'])
+                if ref_field['field'].get('collection'):
+                    ref_objs = []
+                    for ref_id in _src_entry[field_name]:
+                        ref_entry_body = get_entry_by_entry_id(ref_resource, str(ref_id))
+                        if ref_entry_body:
+                            ref_entry = {field_name: json.loads(ref_entry_body.body)}
+                            ref_index_entry = {}
+                            list_of_sub_fields = (field_name, ref_field['field']),
+                            recursive_something(resource, ref_entry, ref_index_entry, list_of_sub_fields)
+                            ref_objs.append(ref_index_entry[field_name])
+                    _index_entry[field_name] = ref_objs
+                else:
+                    raise NotImplementedError()
             else:
                 # TODO this assumes non-collection, fix
                 ref_id = _src_entry.get(field_name)
