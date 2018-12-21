@@ -52,10 +52,10 @@ class LogOpNode(OpNode):
 
 class BinLogOpNode(LogOpNode):
 
-    def __init__(self, op):
+    def __init__(self, op, left=None, right=None):
         super().__init__(op, min_arity=2, max_arity=3)
-        self.add_child(None)
-        self.add_child(None)
+        self.add_child(left)
+        self.add_child(right)
 
     def has_left(self) -> bool:
         return self.num_children() > 0
