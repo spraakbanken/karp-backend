@@ -1,5 +1,8 @@
 default: tox
 
+test:
+	pipenv run py.test tests
+	
 pytest: build
 	pipenv run py.test tests
 
