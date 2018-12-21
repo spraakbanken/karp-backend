@@ -1,3 +1,6 @@
+from typing import Tuple
+
+
 class AstNode:
     children = None
 
@@ -30,6 +33,16 @@ class AstNode:
             for child in self.children:
                 child.pprint(level)
 
+    def validate_arity(self, result):
+        if self.num_children() < self.min_arity:
+            result.append('Too few arguments to {}'.format(repr(self)))
+        if self.num_children() > self.max_arity:
+            result.append('Too many arguments to {}'.format(repr(self)))
+        if not self.children:
+            return
+
+        for child in self.children:
+            child.validate_arity(result)
 
 class OpNode(AstNode):
     op = None
@@ -344,3 +357,11 @@ class Ast:
     def pprint(self):
         print('<Ast root=')
         self.root.pprint(1)
+
+    def validate_arity(self) -> Tuple[bool, str]:
+        result = []
+        self.root.validate_arity(result)
+        if not result:
+            return True, None
+        else:
+            return False, ', '.join(result)

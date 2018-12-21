@@ -23,8 +23,8 @@ LOGICAL_OPERATORS = {
 QUERY_OPERATORS = {
     'freetext': unary_query_operator('FREETEXT'),
     'regexp': binary_query_operator('REGEXP', min_arity = 1),
-    'exists': query_operator('EXISTS', 1, 2),
-    'missing': query_operator('MISSING', 1, 2),
+    'exists': unary_query_operator('EXISTS'),
+    'missing': unary_query_operator('MISSING'),
     'equals': query_operator('EQUALS', 2, 3),
     'contains': query_operator('CONTAINS', 2, 3),
     'startswith': query_operator('STARTSWITH', 2, 3),
@@ -130,7 +130,11 @@ def parse(s: str) -> Ast:
     if rest:
         print('rest: ', rest)
     ast = Ast(tmp_node.children[0])
-    return ast
+    ok, error = ast.validate_arity()
+    if ok:
+        return ast
+    else:
+        raise ParseError(error)
 
 # class ParseResult:
 #     error: ParseError

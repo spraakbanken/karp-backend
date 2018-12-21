@@ -78,8 +78,15 @@ def test_regexp_5():
                     ast.StringNode('str.*ng')
 
                 ))
+def test_exists_1():
+    query = query_parser.parse('exists|field')
+    do_test_ast(query,
+                ast.UnaryOpNode(
+                    'EXISTS',
+                    ast.StringNode('field')
+                ))
+
 examples = [
-    'exists|field',
     'missing|field',
     'equals|field|string',
     'equals|field||string1||or||string2||',
