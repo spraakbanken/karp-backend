@@ -17,12 +17,12 @@ class ParseError(BaseException):
 LOGICAL_OPERATORS = {
     'and': binary_logical_operator('AND'),
     'or': binary_logical_operator('OR'),
-    'not': logical_operator('NOT', 1, 2),
+    'not': unary_logical_operator('NOT'),
 }
 
 QUERY_OPERATORS = {
-    'freetext': query_operator('FREETEXT', 1, 2),
-    'regexp': query_operator('REGEXP', 1, 3),
+    'freetext': unary_query_operator('FREETEXT'),
+    'regexp': binary_query_operator('REGEXP', min_arity = 1),
     'exists': query_operator('EXISTS', 1, 2),
     'missing': query_operator('MISSING', 1, 2),
     'equals': query_operator('EQUALS', 2, 3),

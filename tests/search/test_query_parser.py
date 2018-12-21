@@ -1,57 +1,84 @@
 from karp.search import query_parser
 from karp.search import basic_ast as ast
 
-def do_test_ast(x):
+
+def do_test_ast_node(x, facit):
+    assert isinstance(x, type(facit))
+    assert x.num_children() == facit.num_children()
+    for i in range(x.num_children()):
+        do_test_ast_node(x.children[i], facit.children[i])
+
+
+def do_test_ast(x, facit):
     assert isinstance(x, ast.Ast)
-
-
-def do_test_arg_node(x, arg):
-    assert isinstance(x, ast.ArgNode)
-    if isinstance(arg, int):
-        assert isinstance(x, ast.IntNode)
-    elif isinstance(arg, float):
-        assert isinstance(x, ast.FloatNode)
-    else:
-        assert isinstance(x, ast.StringNode)
-    assert x.arg == arg
-
-def do_test_op_node(x, op_name, args):
-    do_test_ast(x)
-    assert isinstance(x.root, ast.OpNode)
-    assert x.root.op == op_name
-    if isinstance(args, list):
-        assert x.root.num_children() == len(args)
-        for i, arg in enumerate(args):
-            do_test_arg_node(x.root.children[i], arg)
-    else:
-        assert x.root.num_children() == 1
-        do_test_arg_node(x.root.children[0], args)
+    do_test_ast_node(x.root, facit)
 
 
 def test_freetext_1():
     query = query_parser.parse('freetext|test')
-    do_test_op_node(query, 'FREETEXT', 'test')
+    do_test_ast(query,
+                ast.UnaryOpNode(
+                    'FREETEXT',
+                    ast.StringNode('test')))
 
 def test_freetext_2():
     query = query_parser.parse('freetext|stort hus')
-    do_test_op_node(query, 'FREETEXT', 'stort hus')
+    do_test_ast(query,
+                ast.UnaryOpNode(
+                    'FREETEXT',
+                    ast.StringNode('stort hus')))
 
 def test_regexp_1():
     query = query_parser.parse('regexp|str.*ng')
-    do_test_op_node(query, 'REGEXP', 'str.*ng')
+    do_test_ast(query,
+                ast.BinaryOpNode(
+                    'REGEXP',
+                    ast.StringNode('str.*ng')))
 
 
 def test_regexp_2():
     query = query_parser.parse('regexp|field|str.*ng')
-    do_test_op_node(query, 'REGEXP', ['field', 'str.*ng'])
+    do_test_ast(query,
+                ast.BinaryOpNode(
+                    'REGEXP',
+                    ast.StringNode('field'),
+                    ast.StringNode('str.*ng')))
 
 
 def test_regexp_3():
     query = query_parser.parse('regexp||str.*ng1||or||str.*ng2||')
+    do_test_ast(query,
+                ast.BinaryOpNode(
+                    'REGEXP',
+                    ast.BinLogOpNode('OR',
+                                     ast.StringNode('str.*ng1'),
+                                     ast.StringNode('str.*ng2'))))
+
+
+def test_regexp_4():
+    query = query_parser.parse('regexp|field||str.*ng1||or||str.*ng2||')
+    do_test_ast(query,
+                ast.BinaryOpNode(
+                    'REGEXP',
+                    ast.StringNode('field'),
+                    ast.BinLogOpNode('OR',
+                                     ast.StringNode('str.*ng1'),
+                                     ast.StringNode('str.*ng2'))
+
+                ))
+
+def test_regexp_5():
+    query = query_parser.parse('regexp||field1||or||field2||str.*ng')
+    do_test_ast(query,
+                ast.BinaryOpNode(
+                    'REGEXP',
+                    ast.BinLogOpNode('OR',
+                                     ast.StringNode('field1'),
+                                     ast.StringNode('field2')),
+                    ast.StringNode('str.*ng')
+
+                ))
 examples = [
-    'regexp||str.*ng1||or||str.*ng2||',
-    'regexp|field||str.*ng1||or||str.*ng2||',
-    'regexp||field||or||field2||str.*ng',
     'exists|field',
     'missing|field',
     'equals|field|string',

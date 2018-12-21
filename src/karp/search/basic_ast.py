@@ -41,21 +41,43 @@ class OpNode(AstNode):
     def _format_self(self):
         return '<OpNode op={}'.format(self.op)
 
-class LogOpNode(OpNode):
+class UnaryOpNode(OpNode):
 
-    def __init__(self, op, min_arity, max_arity):
-        super().__init__(op, min_arity, max_arity)
+    def __init__(self, op, child=None):
+        super().__init__(op, min_arity=1, max_arity=2)
+        if child:
+            self.add_child(child)
+
+    def has_child(self) -> bool:
+        return self.num_children() > 0
+
+    @property
+    def child(self):
+        return self.children[0]
+
+    @child.setter
+    def child(self, child):
+        if self.has_child():
+            self.children[0] = child
+        else:
+            self.add_child(child)
+
+    def __repr__(self):
+        return "{} child={}>".format(self._format_self(),
+                                     repr(self.child))
 
     def _format_self(self):
-        return '<LogOpNode op={}'.format(self.op)
+        return '<UnaryOpNode op={}'.format(self.op)
 
 
-class BinLogOpNode(LogOpNode):
+class BinaryOpNode(OpNode):
 
-    def __init__(self, op, left=None, right=None):
-        super().__init__(op, min_arity=2, max_arity=3)
-        self.add_child(left)
-        self.add_child(right)
+    def __init__(self, op, left=None, right=None, min_arity=2):
+        super().__init__(op=op, min_arity=min_arity, max_arity=3)
+        if left:
+            self.add_child(left)
+        if right:
+            self.add_child(right)
 
     def has_left(self) -> bool:
         return self.num_children() > 0
@@ -66,7 +88,10 @@ class BinLogOpNode(LogOpNode):
 
     @left.setter
     def left(self, child):
-        self.children[0] = child
+        if self.has_left():
+            self.children[0] = child
+        else:
+            self.add_child(child)
 
     def has_right(self) -> bool:
         return self.num_children() > 1
@@ -77,12 +102,142 @@ class BinLogOpNode(LogOpNode):
 
     @right.setter
     def right(self, child):
-        self.children[1] = child
+        if self.has_right():
+            self.children[1] = child
+        else:
+            if not self.has_left():
+                self.add_child(None)
+            self.add_child(child)
 
     def __repr__(self):
         return "{} left={} right={}>".format(self._format_self(),
                                              repr(self.left),
                                              repr(self.right))
+
+    def _format_self(self):
+        return '<BinaryOpNode op={}'.format(self.op)
+
+
+class TernaryOpNode(OpNode):
+
+    def __init__(self, op, first=None, second=None, third=None):
+        super().__init__(op, min_arity=3, max_arity=4)
+        if first:
+            self.add_child(first)
+        if second:
+            self.add_child(second)
+        if third:
+            self.add_child(third)
+
+    def has_first(self) -> bool:
+        return self.num_children() > 0
+
+    @property
+    def first(self):
+        return self.children[0]
+
+    @first.setter
+    def first(self, child):
+        if self.has_first():
+            self.children[0] = child
+        else:
+            self.add_child(child)
+
+    def has_second(self) -> bool:
+        return self.num_children() > 1
+
+    @property
+    def second(self):
+        return self.children[1]
+
+    @second.setter
+    def second(self, child):
+        if self.has_second():
+            self.children[1] = child
+        else:
+            if not self.has_first():
+                self.add_child(None)
+            self.add_child(child)
+
+    def has_third(self) -> bool:
+        return self.num_children() > 2
+
+    @property
+    def third(self):
+        return self.children[2]
+
+    @third.setter
+    def third(self, child):
+        if self.has_third():
+            self.children[2] = child
+        else:
+            if not self.has_first():
+                self.add_child(None)
+            if not self.has_second():
+                self.add_child(None)
+            self.add_child(child)
+
+    def __repr__(self):
+        return "{} first={} second={} third={}>".format(self._format_self(),
+                                             repr(self.first),
+                                             repr(self.second),
+                                             repr(self.third))
+
+    def _format_self(self):
+        return '<TernaryOpNode op={}'.format(self.op)
+
+
+class LogOpNode(OpNode):
+
+    def __init__(self, op, min_arity, max_arity):
+        super().__init__(op, min_arity, max_arity)
+
+    def _format_self(self):
+        return '<LogOpNode op={}'.format(self.op)
+
+
+class UnaryLogOpNode(UnaryOpNode, LogOpNode):
+
+    def __init__(self, op, child=None):
+        super().__init__(op=op, min_arity=1, max_arity=2, child=child)
+
+    def _format_self(self):
+        return '<UnaryLogOpNode op={}'.format(self.op)
+
+
+class BinLogOpNode(BinaryOpNode, LogOpNode):
+
+    def __init__(self, op, left=None, right=None):
+        super().__init__(op, left=left, right=right)
+    #     self.add_child(left)
+    #     self.add_child(right)
+    #
+    # def has_left(self) -> bool:
+    #     return self.num_children() > 0
+    #
+    # @property
+    # def left(self):
+    #     return self.children[0]
+    #
+    # @left.setter
+    # def left(self, child):
+    #     self.children[0] = child
+    #
+    # def has_right(self) -> bool:
+    #     return self.num_children() > 1
+    #
+    # @property
+    # def right(self):
+    #     return self.children[1]
+    #
+    # @right.setter
+    # def right(self, child):
+    #     self.children[1] = child
+    #
+    # def __repr__(self):
+    #     return "{} left={} right={}>".format(self._format_self(),
+    #                                          repr(self.left),
+    #                                          repr(self.right))
 
     def _format_self(self):
         return '<BinLogOpNode op={}'.format(self.op)
@@ -142,6 +297,12 @@ def binary_logical_operator(op_name):
     return result
 
 
+def unary_logical_operator(op_name):
+    def result():
+        return UnaryLogOpNode(op_name)
+    return result
+
+
 def logical_operator(op_name, min_arity, max_arity):
     def result():
         return LogOpNode(op_name, min_arity, max_arity)
@@ -151,6 +312,24 @@ def logical_operator(op_name, min_arity, max_arity):
 def query_operator(op_name, min_arity, max_arity):
     def result():
         return OpNode(op_name, min_arity, max_arity)
+    return result
+
+
+def ternary_query_operator(op_name):
+    def result():
+        return TernaryOpNode(op_name)
+    return result
+
+
+def binary_query_operator(op_name, **kwargs):
+    def result():
+        return BinaryOpNode(op_name, **kwargs)
+    return result
+
+
+def unary_query_operator(op_name):
+    def result():
+        return UnaryOpNode(op_name)
     return result
 
 
