@@ -9,7 +9,7 @@ from typing import Optional
 from typing import Dict
 from typing import TypeVar
 from typing import Callable
-from typing import ImmutableMapping
+# from typing import ImmutableMapping
 
 from distutils.util import strtobool
 import json
@@ -212,8 +212,8 @@ def read_resource_arguments(params: Dict,
 #     return jsonify({'status': 'ok'}), 200
 
 
-def user_is_authorized(resource: Resource, fields: List[str]) -> bool:
-    if resource.is_protected(mode="read", fields=fields):
+def user_is_authorized(resource: Resource, fields: List[str], mode="read") -> bool:
+    if resource.is_protected(mode=mode, fields=fields):
         return False
     else:
         return True
@@ -226,7 +226,7 @@ def get_fields(name: str, include_fields: List[str], exclude_fields: List[str]) 
     return []
 
 
-def parse_arguments(args: ImmutableMapping[str, str], resource_str: str = None) -> Dict:
+def parse_arguments(args: Dict[str, str], resource_str: str = None) -> Dict:
     params = {}
     s2l = str2list(',')
     if resource_str:
