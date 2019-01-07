@@ -3,15 +3,26 @@ import click
 from flask.cli import with_appcontext  # pyre-ignore
 from distutils.util import strtobool
 import logging
+import click
+from flask.cli import FlaskGroup
 
-from karp import create_app
 from .config import MariaDBConfig
 import karp.resourcemgr as resourcemgr
 import karp.resourcemgr.entrymgr as entrymgr
 from karp.errors import KarpError
 
+
 _logger = logging.getLogger(__name__)
-app = create_app(MariaDBConfig())
+
+
+def create_app():
+    from karp import create_app
+    return create_app(MariaDBConfig())
+
+
+@click.group(cls=FlaskGroup, create_app=create_app)
+def cli():
+    pass
 
 
 def cli_error_handler(func):
@@ -23,7 +34,7 @@ def cli_error_handler(func):
     return func_wrapper
 
 
-@app.cli.command('create')
+@cli.command('create')
 @click.option('--config', default=None, help='')
 @cli_error_handler
 def create_resource(config):
@@ -35,7 +46,7 @@ def create_resource(config):
     ))
 
 
-@app.cli.command('import')
+@cli.command('import')
 @click.option('--resource_id', default=None, help='')
 @click.option('--version', default=None, help='')
 @click.option('--data', default=None, help='')
@@ -49,7 +60,7 @@ def import_resource(resource_id, version, data):
         entrymgr.add_entries(resource_id, objs, resource_version=version)
 
 
-@app.cli.command('publish')
+@cli.command('publish')
 @with_appcontext
 @click.option('--resource_id', default=None, help='')
 @click.option('--version', default=None, help='')
@@ -61,7 +72,7 @@ def publish_resource(resource_id, version):
     resourcemgr.publish_resource(resource_id, version)
 
 
-@app.cli.command('create_index')
+@cli.command('create_index')
 @click.option('--resource_id', default=None, help='')
 @cli_error_handler
 def create_index(resource_id):
@@ -75,7 +86,7 @@ def create_index(resource_id):
     ))
 
 
-@app.cli.command('publish_index')
+@cli.command('publish_index')
 @with_appcontext
 @click.option('--resource_id', default=None, help='')
 @click.option('--index_name', default=None, help='Name of the index to ')
@@ -84,7 +95,7 @@ def publish_index(resource_id, index_name):
     resourcemgr.publish_index(resource_id, index_name)
 
 
-@app.cli.command('reindex')
+@cli.command('reindex')
 @click.option('--resource_id', default=None, help='')
 @click.option('--publish_index', 'publish_index_arg', default='', help='')
 @cli_error_handler
@@ -103,7 +114,7 @@ def reindex(resource_id, publish_index_arg):
         ))
 
 
-@app.cli.command('list_resources')
+@cli.command('list_resources')
 @click.option('--show_only_active/--show-all', default=False)
 @cli_error_handler
 def list_resources(show_only_active):
