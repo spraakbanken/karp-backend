@@ -1,6 +1,6 @@
 import elasticsearch.helpers
 from datetime import datetime
-from karp.resourcemgr.index import IndexInterface
+from karp.indexmgr.index import IndexInterface
 
 
 def _create_es_mapping(config):
@@ -100,3 +100,15 @@ class EsIndex(IndexInterface):
 
     def delete_entry(self, resource_id, entry_id):
         self.es.delete(index=resource_id, doc_type='entry', id=entry_id)
+
+    def create_empty_object(self):
+        return {}
+
+    def assign_field(self, _index_entry, field_name, part):
+        _index_entry[field_name] = part
+
+    def create_empty_list(self):
+        return []
+
+    def add_to_list_field(self, elems, elem):
+        elems.append(elem)

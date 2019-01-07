@@ -110,12 +110,12 @@ def test_refs(es, client_with_data_f):
 
     # currently no connections are made on add/update, so we need to reindex to get the connections
     with client.application.app_context():
-        import karp.resourcemgr as resourcemgr
+        import karp.indexmgr as indexmgr
         resource_id = 'places'
         version = 1
-        index_name = resourcemgr.create_index(resource_id, version)
-        resourcemgr.reindex(resource_id, index_name, version=version)
-        resourcemgr.publish_index(resource_id, index_name)
+        index_name = indexmgr.create_index(resource_id, version)
+        indexmgr.reindex(resource_id, index_name, version=version)
+        indexmgr.publish_index(resource_id, index_name)
 
     time.sleep(1)
     entries = get_json(client, 'places/_all_indexed')
@@ -181,12 +181,12 @@ def test_external_refs(es, client_with_data_f):
 
     # currently no connections are made on add/update, so we need to reindex to get the connections
     with client.application.app_context():
-        import karp.resourcemgr as resourcemgr
+        import karp.indexmgr as indexmgr
         for resource_id in ['places', 'municipalities']:
             version = 1
-            index_name = resourcemgr.create_index(resource_id, version)
-            resourcemgr.reindex(resource_id, index_name, version=version)
-            resourcemgr.publish_index(resource_id, index_name)
+            index_name = indexmgr.create_index(resource_id, version)
+            indexmgr.reindex(resource_id, index_name, version=version)
+            indexmgr.publish_index(resource_id, index_name)
 
     time.sleep(1)
     entries = get_json(client, 'municipalities/_all_indexed')

@@ -17,7 +17,6 @@ from karp.database import get_active_resource_definition
 from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
-from karp.resourcemgr.index import index_mgr
 from karp.errors import ResourceNotFoundError
 
 from .resource import Resource
@@ -159,25 +158,3 @@ def delete_resource(resource_id, version):
     resource.active = False
     db.session.update(resource)
     db.session.commit()
-
-
-def create_index(resource_id, version=None):
-    if version:
-        resource_def = get_resource_definition(resource_id, version)
-    else:
-        resource_def = get_active_resource_definition(resource_id)
-    config = json.loads(resource_def.config_file)
-    return index_mgr.create_index(resource_id, config)
-
-
-def reindex(resource_id, index_name, version=None):
-    resource_obj = get_resource(resource_id, version)
-    entries = resource_obj.model.query.all()
-    import karp.resourcemgr.entrymgr as entrymgr
-    index_mgr.add_entries(index_name,
-                          [(entry.id, entrymgr._src_entry_to_index_entry(resource_obj, json.loads(entry.body)))
-                           for entry in entries])
-
-
-def publish_index(resource_id, index_name):
-    index_mgr.publish_index(resource_id, index_name)

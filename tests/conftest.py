@@ -10,6 +10,7 @@ from karp import create_app
 from karp.database import db
 from karp.config import Config
 import karp.resourcemgr as resourcemgr
+import karp.indexmgr as indexmgr
 from karp.database import ResourceDefinition
 
 
@@ -90,8 +91,8 @@ def app_with_data_f(app_f):
                     resourcemgr.publish_resource(resource, version)
                     resourcemgr.setup_resource_class(resource, version)
                     if kwargs.get('use_elasticsearch', False):
-                        index_name = resourcemgr.create_index(resource, version=version)
-                        resourcemgr.publish_index(resource, index_name)
+                        index_name = indexmgr.create_index(resource, version=version)
+                        indexmgr.publish_index(resource, index_name)
         return app
     yield fun
 

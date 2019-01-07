@@ -2,7 +2,7 @@ from elasticsearch import Elasticsearch
 from .index import EsIndex
 from .search import EsSearch
 import karp.search.search
-from karp.resourcemgr.index import index_mgr
+from karp.indexmgr import indexer
 
 
 def init_es(host):
@@ -10,4 +10,4 @@ def init_es(host):
     index_module = EsIndex(es)
     search_module = EsSearch(es)
     karp.search.search.init(search_module)
-    index_mgr.init(index_module)
+    indexer.init(index_module)
