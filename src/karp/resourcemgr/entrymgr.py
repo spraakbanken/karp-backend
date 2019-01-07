@@ -54,7 +54,7 @@ def preview_entry(resource_id, entry, resource_version=None):
 def update_entry(resource_id, entry_id, entry, message=None, resource_version=None):
     resource = get_resource(resource_id, version=resource_version)
 
-    entry_json = _validate_and_prepare_entry(resource, entry)
+    index_entry_json = _validate_and_prepare_entry(resource, entry)
 
     current_db_entry = resource.model.query.filter_by(id=entry_id, deleted=False).first()
     if not current_db_entry:
@@ -63,14 +63,15 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
             entry_id=entry_id
         ))
 
-    current_db_entry.body = entry_json
+    db_entry_json = json.dumps(entry)
+    current_db_entry.body = db_entry_json
 
     latest_history_entry = resource.history_model.query.filter_by(entry_id=entry_id).\
         order_by(resource.history_model.version.desc()).first()
     history_entry = resource.history_model(
         entry_id=entry_id,
         user_id='TODO',
-        body=entry_json,
+        body=db_entry_json,
         version=latest_history_entry.version + 1,
         op='UPDATE',
         message=message
@@ -78,7 +79,7 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
     db.session.add(history_entry)
     db.session.commit()
 
-    index_mgr.add_entries(resource_id, [(entry_id, _src_entry_to_index_entry(resource, entry))])
+    index_mgr.add_entries(resource_id, [(entry_id, index_entry_json)])
 
 
 def add_entries(resource_id, entries, message=None, resource_version=None):
