@@ -10,14 +10,14 @@ indexer = IndexModule()
 
 def reindex(resource_id, index_name, version=None):
     resource_obj = resourcemgr.get_resource(resource_id, version=version)
-    entries = resource_obj.model.query.all()
+    entries = resource_obj.model.query.filter_by(deleted=False)
 
     def prepare_entries():
         fields = resource_obj.config['fields'].items()
         for entry in entries:
             yield (entry.id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields))
 
-    add_entries(index_name, prepare_entries())
+    add_entries(index_name, prepare_entries(), do_reindex=False)
 
 
 def create_index(resource_id, version=None):
@@ -29,12 +29,28 @@ def publish_index(alias_name, index_name):
     return indexer.impl.publish_index(alias_name, index_name)
 
 
-def add_entries(resource_id, src_entries):
-    indexer.impl.add_entries(resource_id, src_entries)
+def add_entries(resource_id, src_entries, do_reindex=True):
+    """
+    Tmp solution to changes in entries that are referred to by another entry (we don't know yet!):
+      Reindex after every change...
+    """
+    if do_reindex:
+        index_name = create_index(resource_id)
+        reindex(resource_id, index_name)
+        publish_index(resource_id, index_name)
+    else:
+        indexer.impl.add_entries(resource_id, src_entries)
 
 
 def delete_entry(resource_id, entry_id):
-    indexer.impl.delete_entry(resource_id, entry_id)
+    """
+    Tmp solution to changes in entries that are referred to by another entry (we don't know yet!):
+      Reindex after every change...
+      For delete this currently means "do nothing", since the deleted element will not be included on next reindex
+    """
+    index_name = create_index(resource_id)
+    reindex(resource_id, index_name)
+    publish_index(resource_id, index_name)
 
 
 def transform_to_index_entry(resource: resourcemgr.Resource, src_entry: Dict, fields):
@@ -54,7 +70,7 @@ def _evaluate_function(function_conf, src_entry, src_resource):
 
         if 'test' in function_conf:
             operator, args = list(function_conf['test'].items())[0]
-            filters = {}
+            filters = {'deleted': False}
             if operator == 'equals':
                 for arg in args:
                     if 'self' in arg:

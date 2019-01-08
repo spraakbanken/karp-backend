@@ -208,3 +208,50 @@ def test_external_refs(es, client_with_data_f):
         if entry['code'] == 2:
             assert {'code': 1, 'name': 'municipality1', 'state': 'state1'} in entry['municipality']
             assert {'code': 2, 'name': 'municipality2', 'state': 'state2'} in entry['municipality']
+
+
+def test_update_refs(es, client_with_data_f):
+    client = init(client_with_data_f, es, [
+        {
+            'code': 5,
+            'name': 'test1',
+            'population': 10,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        },
+        {
+            'code': 6,
+            'name': 'test2',
+            'population': 5,
+            'larger_place': 5,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        }
+    ])
+
+    # currently no connections are made on add/update, so we need to reindex to get the connections
+    with client.application.app_context():
+        import karp.indexmgr as indexmgr
+        resource_id = 'places'
+        version = 1
+        index_name = indexmgr.create_index(resource_id, version)
+        indexmgr.reindex(resource_id, index_name, version=version)
+        indexmgr.publish_index(resource_id, index_name)
+
+    time.sleep(1)
+    entries = get_json(client, 'places/_all_indexed')
+    assert len(entries) == 2
+    for entry in entries:
+        if entry['code'] == 5:
+            assert 'smaller_places' in entry
+            assert entry['smaller_places'][0]['code'] == 6
+
+    client.delete('/places/delete/2')
+
+    time.sleep(1)
+    entries = get_json(client, 'places/_all_indexed')
+    assert len(entries) == 1
+    entry = entries[0]
+    assert 'smaller_places' not in entry

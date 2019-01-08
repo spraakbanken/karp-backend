@@ -130,7 +130,7 @@ def delete_entry(resource_id, entry_id):
     )
     db.session.add(history_entry)
     db.session.commit()
-    indexmgr.delete_entry(resource_id, entry_id)
+    indexmgr.delete_entry(resource_id, entry.id)
 
 
 def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):
