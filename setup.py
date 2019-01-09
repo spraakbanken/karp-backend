@@ -20,7 +20,7 @@ setup(
     package_data={'karp': ['schema/resourceconf.schema.json']},
     entry_points={
         'console_scripts': [
-            'karp-cli=karp.cli:app.cli'
+            'karp-cli=karp.cli:cli'
         ]
     },
     install_requires=[
