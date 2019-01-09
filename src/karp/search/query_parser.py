@@ -2,7 +2,7 @@ from typing import List
 from abc import ABCMeta, abstractmethod
 
 from .basic_ast import *
-
+# from .parser import Parser
 
 
 
@@ -15,126 +15,153 @@ class ParseError(BaseException):
 
 
 LOGICAL_OPERATORS = {
-    'and': binary_logical_operator('AND'),
-    'or': binary_logical_operator('OR'),
-    'not': unary_logical_operator('NOT'),
+    'and': binary_operator('AND'),
+    'or': binary_operator('OR'),
+    'not': unary_operator('NOT'),
 }
 
 QUERY_OPERATORS = {
-    'freetext': unary_query_operator('FREETEXT'),
-    'regexp': binary_query_operator('REGEXP', min_arity = 1),
-    'exists': unary_query_operator('EXISTS'),
-    'missing': unary_query_operator('MISSING'),
-    'equals': query_operator('EQUALS', 2, 3),
-    'contains': query_operator('CONTAINS', 2, 3),
-    'startswith': query_operator('STARTSWITH', 2, 3),
-    'endswith': query_operator('ENDSWITH', 2, 3),
-    'lt': query_operator('LT', 2, 3),
-    'lte': query_operator('LTE', 2, 3),
-    'gt': query_operator('GT', 2, 3),
-    'gte': query_operator('GTE', 2, 3),
-    'range': query_operator('RANGE', 3, 4),
+    'freetext': unary_operator('FREETEXT'),
+    'regexp': binary_operator('REGEXP', min_arity = 1),
+    'exists': unary_operator('EXISTS'),
+    'missing': unary_operator('MISSING'),
+    'equals': binary_operator('EQUALS'),
+    'contains': binary_operator('CONTAINS'),
+    'startswith': binary_operator('STARTSWITH'),
+    'endswith': binary_operator('ENDSWITH'),
+    'lt': binary_operator('LT'),
+    'lte': binary_operator('LTE'),
+    'gt': binary_operator('GT'),
+    'gte': binary_operator('GTE'),
+    'range': ternary_operator('RANGE'),
 }
 
 OPERATORS = {**LOGICAL_OPERATORS, **QUERY_OPERATORS}
 
 
-def create_ast_node(s: str) -> AstNode:
-    node_creator = OPERATORS.get(s)
-    if not node_creator:
-        try:
-            int_value = int(s)
-            return IntNode(int_value)
-        except ValueError:
-            pass
+class QueryParser():
+    def create_ast_node(self, s: str) -> AstNode:
+        node_creator = OPERATORS.get(s)
+        if not node_creator:
+            try:
+                int_value = int(s)
+                return IntNode(int_value)
+            except ValueError:
+                pass
 
-        try:
-            float_value = float(s)
-            return FloatNode(float_value)
-        except ValueError:
-            pass
+            try:
+                float_value = float(s)
+                return FloatNode(float_value)
+            except ValueError:
+                pass
 
-        return StringNode(s)
+            return StringNode(s)
 
-    return node_creator()
+        return node_creator()
 
 
-def _sub_expr(node, s):
-    exprs = s.split('|')
+    def _sub_expr(self, s):
+        exprs = s.split('|')
 
-    _node = create_ast_node(exprs[0])
+        _node = self.create_ast_node(exprs[0])
 
-    if not isinstance(_node, ArgNode):
+        if not isinstance(_node, ArgNode):
+            for expr in exprs[1:]:
+                _node.add_child(self.create_ast_node(expr))
+
+        return _node
+
+
+
+    def _expr(self, s):
+        exprs = s.split('||')
+
+        if len(exprs) == 1:
+            return self._sub_expr(s)
+
+        _node = self._sub_expr(exprs[0])
+
+        nodes = []
         for expr in exprs[1:]:
-            _node.add_child(create_ast_node(expr))
+            nodes.append(self._sub_expr(expr))
 
-    node.add_child(_node)
+        i = 0
+        while i < len(nodes):
+            node = nodes[i]
+            while node.num_children() < node.min_arity:
+                i += 1
+                if i >= len(nodes):
+                    raise ParseError('Not enough nodes')
+                node_2 = nodes[i]
+                node.add_child(node_2)
+
+            _node.add_child(node)
+            i += 1
+
+        return _node
 
 
-def _expr(node, s):
-    exprs = s.split('||')
+    def _expr2(node, s):
+        exprs = s.split('||')
 
-    if len(exprs) == 1:
-        return _sub_expr(node, s)
+        if len(exprs) == 1:
+            return _sub_expr(node, s)
 
-    nodes = []
-    for expr in exprs:
-        if not expr:
-            continue
-        tmp_node = AstNode()
-        rest = _sub_expr(tmp_node, expr)
+        nodes = []
+        for expr in exprs:
+            if not expr:
+                continue
+            tmp_node = AstNode()
+            rest = _sub_expr(tmp_node, expr)
 
 
-        nodes.append(tmp_node.children[0])
+            nodes.append(tmp_node.children[0])
 
-    _node = nodes.pop()
-    _store = []
-    while nodes:
-        _tmp = nodes.pop()
-        if isinstance(_tmp, BinLogOpNode):
-            left = nodes.pop()
-            right = _node
-            _node = _tmp
-            _node.left = left
-            _node.right = right
-        elif isinstance(_tmp, LogOpNode):
-            if isinstance(_node, BinLogOpNode):
-                child = _node.left
-                _tmp.add_child(child)
-                _node.left = _tmp
-            else:
-                child = _node
+        _node = nodes.pop()
+        _store = []
+        while nodes:
+            _tmp = nodes.pop()
+            if isinstance(_tmp, BinLogOpNode):
+                left = nodes.pop()
+                right = _node
                 _node = _tmp
-                _node.add_child(child)
-        elif isinstance(_tmp, OpNode):
-            # child = _node
-            # _node = _tmp
-            # _node.add_child(child)
-            _tmp.add_child(_node)
-            _node = _tmp
-            if _node.num_children() < _node.max_arity:
-                if _store:
-                    _node.add_child(_store.pop())
-        elif isinstance(_tmp, ArgNode):
-            if isinstance(_node, ArgNode):
-                _store.append(_node)
+                _node.left = left
+                _node.right = right
+            elif isinstance(_tmp, LogOpNode):
+                if isinstance(_node, BinLogOpNode):
+                    child = _node.left
+                    _tmp.add_child(child)
+                    _node.left = _tmp
+                else:
+                    child = _node
+                    _node = _tmp
+                    _node.add_child(child)
+            elif isinstance(_tmp, OpNode):
+                # child = _node
+                # _node = _tmp
+                # _node.add_child(child)
+                _tmp.add_child(_node)
                 _node = _tmp
+                if _node.num_children() < _node.max_arity:
+                    if _store:
+                        _node.add_child(_store.pop())
+            elif isinstance(_tmp, ArgNode):
+                if isinstance(_node, ArgNode):
+                    _store.append(_node)
+                    _node = _tmp
 
-    node.add_child(_node)
+        node.add_child(_node)
 
 
-def parse(s: str) -> Ast:
-    # print('parsing "{}"'.format(s))
-    tmp_node = AstNode()
-    rest = _expr(tmp_node, s)
-    if rest:
-        print('rest: ', rest)
-    ast = Ast(tmp_node.children[0])
-    ok, error = ast.validate_arity()
-    if ok:
-        return ast
-    else:
-        raise ParseError(error)
+    def parse(self, s: str) -> Ast:
+        # print('parsing "{}"'.format(s))
+        root_node = self._expr(s)
+        ast = Ast(root_node)
+        ok, error = ast.validate_arity()
+        if ok:
+            return ast
+        else:
+            raise ParseError(error)
 
 # class ParseResult:
 #     error: ParseError

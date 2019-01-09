@@ -1,227 +1,237 @@
-from typing import Tuple
+from typing import Tuple, Iterable
 
 
+class AstException(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __repr__(self):
+        return "AstException message='{}'".format(self.message)
+
+
+class TooManyChildren(AstException):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+# Base class
 class AstNode:
+    value = None
     children = None
+    min_arity = 0
+    max_arity = 0
 
-    def __init__(self, min_arity: int = 0, max_arity: int = 20):
-        self.min_arity = min_arity
-        self.max_arity = max_arity
-        if self.max_arity > self.min_arity:
-            self.children = []
+    def __init__(self, value = None):
+        self.value = value
 
     def __repr__(self) -> str:
-        return "{} children={}>".format(self._format_self(), repr(self.children))
+        return "<{}>".format(self._format_self())
 
     def num_children(self) -> int:
-        return len(self.children) if self.children else 0
+        return sum(1 for i in self.children())
 
-    def add_child(self, child):
-        assert self.num_children() < self.max_arity
-        self.children.append(child)
+    def can_add_child(self) -> bool:
+        return False
 
-    def pprint(self, level: int):
+    def add_child(self, child) -> None:
+        raise TooManyChildren("Can't add a child to this node")
+
+    def children(self) -> Iterable:
+        if False:
+            yield AstNode('INVALID')
+
+    def pprint(self, level: int) -> None:
         print('-'*level, self._format_self())
         self._pprint_children(level+1)
         # print(' '*level, '>')
 
     def _format_self(self) -> str:
-        return '<AstNode'
+        return 'AstNode value={}'.format(self.value)
 
-    def _pprint_children(self, level: int):
-        if self.children:
-            for child in self.children:
-                child.pprint(level)
+    def _pprint_children(self, level: int) -> None:
+        for child in self.children():
+            child.pprint(level)
 
     def validate_arity(self, result):
         if self.num_children() < self.min_arity:
-            result.append('Too few arguments to {}'.format(repr(self)))
+            result.append('Too few arguments to {}'.format(self._format_self()))
         if self.num_children() > self.max_arity:
-            result.append('Too many arguments to {}'.format(repr(self)))
+            result.append('Too many arguments to {}'.format(self._format_self()))
         if not self.children:
             return
 
-        for child in self.children:
+        for child in self.children():
             child.validate_arity(result)
 
-class OpNode(AstNode):
-    op = None
+    def __eq__(self, other) -> bool:
+        if isinstance(self, type(other)):
+            return self.__dict__ == other.__dict__
+        else:
+            return NotImplemented
 
-    def __init__(self, op, min_arity, max_arity):
-        super().__init__(min_arity, max_arity)
-        self.op = op
+# Mixin classes
+class Leaf(AstNode):
+    def __init__(self, value):
+        super().__init__(value)
+
+
+class InfixOp(AstNode):
+
+    def __init__(self, value):
+        super().__init__(value)
 
     def _format_self(self):
-        return '<OpNode op={}'.format(self.op)
+        return 'InfixOp'
 
-class UnaryOpNode(OpNode):
 
-    def __init__(self, op, child=None):
-        super().__init__(op, min_arity=1, max_arity=2)
-        if child:
-            self.add_child(child)
+class NodeWithOneChild(AstNode):
+    def __init__(self, value, child0: AstNode):
+        super().__init__(value)
+        self.child0 = child0
 
-    def has_child(self) -> bool:
-        return self.num_children() > 0
+    def has_child0(self) -> bool:
+        return self.child0 != None
 
-    @property
-    def child(self):
-        return self.children[0]
+    def children(self) -> Iterable[AstNode]:
+        if self.has_child0():
+            yield self.child0
 
-    @child.setter
-    def child(self, child):
-        if self.has_child():
-            self.children[0] = child
+    def can_add_child(self) -> bool:
+        return not self.has_child0()
+
+    def add_child(self, child: AstNode) -> None:
+        if not self.has_child0():
+            self.child0 = child
         else:
-            self.add_child(child)
+            raise TooManyChildren('This node has a child.')
+
+
+class NodeWithTwoChildren(NodeWithOneChild):
+    def __init__(self, value, child0: AstNode, child1: AstNode):
+        super().__init__(value, child0)
+        self.child1 = child1
+
+    def has_child1(self) -> bool:
+        return self.child1 != None
+
+    def children(self) -> Iterable[AstNode]:
+        yield from super().children()
+
+        if self.has_child1():
+            yield self.child1
+
+    def can_add_child(self) -> bool:
+        return super().can_add_child() or not self.has_child1()
+
+    def add_child(self, child: AstNode) -> None:
+        if not self.has_child0():
+            self.child0 = child
+        elif not self.has_child1():
+            self.child1 = child
+        else:
+            raise TooManyChildren('This node has two children.')
+
+
+class NodeWithThreeChildren(NodeWithTwoChildren):
+    def __init__(self, value, child0: AstNode, child1: AstNode, child2: AstNode):
+        super().__init__(value, child0, child1)
+        self.child2 = child2
+
+    def has_child2(self) -> bool:
+        return self.child2 != None
+
+    def children(self) -> Iterable[AstNode]:
+        yield from super().children()
+
+        if self.has_child2():
+            yield self.child2
+
+    def can_add_child(self) -> bool:
+        return super().can_add_child() or not self.has_child2()
+
+    def add_child(self, child: AstNode) -> None:
+        if not self.has_child0():
+            self.child0 = child
+        elif not self.has_child1():
+            self.child1 = child
+        elif not self.has_child2():
+            self.child2 = child
+        else:
+            raise TooManyChildren('This node has three children.')
+
+
+# Real classes
+class UnaryOp(NodeWithOneChild):
+
+    def __init__(self, value, child0=None, min_arity=1):
+        super().__init__(value, child0)
+        self.min_arity = min_arity
+        self.max_arity = 2
 
     def __repr__(self):
-        return "{} child={}>".format(self._format_self(),
-                                     repr(self.child))
+        return "<{} child={}>".format(self._format_self(),
+                                     repr(self.child0))
 
     def _format_self(self):
-        return '<UnaryOpNode op={}'.format(self.op)
+        return 'UnaryOp op={}'.format(self.value)
 
 
-class BinaryOpNode(OpNode):
+class BinaryOp(NodeWithTwoChildren):
 
-    def __init__(self, op, left=None, right=None, min_arity=2):
-        super().__init__(op=op, min_arity=min_arity, max_arity=3)
-        if left:
-            self.add_child(left)
-        if right:
-            self.add_child(right)
-
-    def has_left(self) -> bool:
-        return self.num_children() > 0
-
-    @property
-    def left(self):
-        return self.children[0]
-
-    @left.setter
-    def left(self, child):
-        if self.has_left():
-            self.children[0] = child
-        else:
-            self.add_child(child)
-
-    def has_right(self) -> bool:
-        return self.num_children() > 1
-
-    @property
-    def right(self):
-        return self.children[1]
-
-    @right.setter
-    def right(self, child):
-        if self.has_right():
-            self.children[1] = child
-        else:
-            if not self.has_left():
-                self.add_child(None)
-            self.add_child(child)
+    def __init__(self, op, child0=None, child1=None, min_arity=2):
+        super().__init__(op, child0, child1)
+        self.min_arity = min_arity
+        self.max_arity = 3
 
     def __repr__(self):
         return "{} left={} right={}>".format(self._format_self(),
-                                             repr(self.left),
-                                             repr(self.right))
+                                             repr(self.child0),
+                                             repr(self.child1))
 
     def _format_self(self):
-        return '<BinaryOpNode op={}'.format(self.op)
+        return 'BinaryOp op={}'.format(self.value)
 
 
-class TernaryOpNode(OpNode):
 
-    def __init__(self, op, first=None, second=None, third=None):
-        super().__init__(op, min_arity=3, max_arity=4)
-        if first:
-            self.add_child(first)
-        if second:
-            self.add_child(second)
-        if third:
-            self.add_child(third)
+class TernaryOp(NodeWithThreeChildren):
 
-    def has_first(self) -> bool:
-        return self.num_children() > 0
-
-    @property
-    def first(self):
-        return self.children[0]
-
-    @first.setter
-    def first(self, child):
-        if self.has_first():
-            self.children[0] = child
-        else:
-            self.add_child(child)
-
-    def has_second(self) -> bool:
-        return self.num_children() > 1
-
-    @property
-    def second(self):
-        return self.children[1]
-
-    @second.setter
-    def second(self, child):
-        if self.has_second():
-            self.children[1] = child
-        else:
-            if not self.has_first():
-                self.add_child(None)
-            self.add_child(child)
-
-    def has_third(self) -> bool:
-        return self.num_children() > 2
-
-    @property
-    def third(self):
-        return self.children[2]
-
-    @third.setter
-    def third(self, child):
-        if self.has_third():
-            self.children[2] = child
-        else:
-            if not self.has_first():
-                self.add_child(None)
-            if not self.has_second():
-                self.add_child(None)
-            self.add_child(child)
+    def __init__(self, op, child0=None, child1=None, child2=None, min_arity=3):
+        super().__init__(op, child0, child1, child2)
+        self.min_arity = min_arity
+        self.max_arity = 4
 
     def __repr__(self):
-        return "{} first={} second={} third={}>".format(self._format_self(),
-                                             repr(self.first),
-                                             repr(self.second),
-                                             repr(self.third))
+        return "{} child0={} child1={} child2={}>".format(self._format_self(),
+                                             repr(self.child0),
+                                             repr(self.child1),
+                                             repr(self.child2))
 
     def _format_self(self):
         return '<TernaryOpNode op={}'.format(self.op)
 
 
-class LogOpNode(OpNode):
+# class InfixOp(AstNode):
+#
+#     def __init__(self, op, min_arity, max_arity):
+#         super().__init__(op, min_arity, max_arity)
+#
+#     def _format_self(self):
+#         return 'InfixOp op={}'.format(self.value)
 
-    def __init__(self, op, min_arity, max_arity):
-        super().__init__(op, min_arity, max_arity)
 
-    def _format_self(self):
-        return '<LogOpNode op={}'.format(self.op)
-
-
-class UnaryLogOpNode(UnaryOpNode, LogOpNode):
+class UnaryInfixOp(UnaryOp, InfixOp):
 
     def __init__(self, op, child=None):
-        super().__init__(op=op, min_arity=1, max_arity=2, child=child)
+        super().__init__(value=op, child0=child)
 
     def _format_self(self):
-        return '<UnaryLogOpNode op={}'.format(self.op)
+        return 'UnaryInfixOp op={}'.format(self.value)
 
 
-class BinLogOpNode(BinaryOpNode, LogOpNode):
+class BinaryInfixOp(BinaryOp, InfixOp):
 
-    def __init__(self, op, left=None, right=None):
-        super().__init__(op, left=left, right=right)
+    def __init__(self, op, child0=None, child1=None):
+        super().__init__(op, child0, child1)
     #     self.add_child(left)
     #     self.add_child(right)
     #
@@ -253,17 +263,16 @@ class BinLogOpNode(BinaryOpNode, LogOpNode):
     #                                          repr(self.right))
 
     def _format_self(self):
-        return '<BinLogOpNode op={}'.format(self.op)
+        return 'BinaryInfixOp op={}'.format(self.value)
 
 
 class ArgNode(AstNode):
 
     def __init__(self, arg):
-        super().__init__(min_arity=0, max_arity=0)
-        self.arg = arg
+        super().__init__(value=arg)
 
     def __repr__(self):
-        return "<ArgNode arg={}>".format(self.arg)
+        return "<ArgNode arg={}>".format(self.value)
 
     _format_self = __repr__
 
@@ -275,7 +284,7 @@ class StringNode(ArgNode):
         super().__init__(arg)
 
     def __repr__(self):
-        return "<StringNode str={}>".format(self.arg)
+        return "<StringNode str={}>".format(self.value)
 
     _format_self = __repr__
 
@@ -287,7 +296,7 @@ class IntNode(ArgNode):
         super().__init__(arg)
 
     def __repr__(self):
-        return "<IntNode value={}>".format(self.arg)
+        return "<IntNode value={}>".format(self.value)
 
     _format_self = __repr__
 
@@ -299,26 +308,26 @@ class FloatNode(ArgNode):
         super().__init__(arg)
 
     def __repr__(self):
-        return "<FloatNode value={}>".format(self.arg)
+        return "<FloatNode value={}>".format(self.value)
 
     _format_self = __repr__
 
 
-def binary_logical_operator(op_name):
+def binary_infix_operator(op_name):
     def result():
-        return BinLogOpNode(op_name)
+        return BinaryInfixOp(op_name)
     return result
 
 
-def unary_logical_operator(op_name):
+def unary_infix_operator(op_name):
     def result():
-        return UnaryLogOpNode(op_name)
+        return UnaryInfixOp(op_name)
     return result
 
 
 def logical_operator(op_name, min_arity, max_arity):
     def result():
-        return LogOpNode(op_name, min_arity, max_arity)
+        return InfixOp(op_name, min_arity, max_arity)
     return result
 
 
@@ -330,19 +339,37 @@ def query_operator(op_name, min_arity, max_arity):
 
 def ternary_query_operator(op_name):
     def result():
-        return TernaryOpNode(op_name)
+        return TernaryOp(op_name)
     return result
 
 
 def binary_query_operator(op_name, **kwargs):
     def result():
-        return BinaryOpNode(op_name, **kwargs)
+        return BinaryOp(op_name, **kwargs)
     return result
 
 
 def unary_query_operator(op_name):
     def result():
-        return UnaryOpNode(op_name)
+        return UnaryOp(op_name)
+    return result
+
+
+def ternary_operator(op_name):
+    def result():
+        return TernaryOp(op_name)
+    return result
+
+
+def binary_operator(op_name, **kwargs):
+    def result():
+        return BinaryOp(op_name, **kwargs)
+    return result
+
+
+def unary_operator(op_name):
+    def result():
+        return UnaryOp(op_name)
     return result
 
 
