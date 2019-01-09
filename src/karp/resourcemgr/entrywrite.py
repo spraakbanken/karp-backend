@@ -9,7 +9,7 @@ import karp.indexmgr as indexmgr
 from .resource import Resource
 from typing import Dict
 
-_logger = logging.getLogger(__name__)
+_logger = logging.getLogger('karp')
 
 
 def add_entry(resource_id, entry, message=None, resource_version=None):

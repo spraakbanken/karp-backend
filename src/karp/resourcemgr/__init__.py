@@ -21,7 +21,7 @@ from karp.errors import ResourceNotFoundError
 
 from .resource import Resource
 
-_logger = logging.getLogger(__name__)
+_logger = logging.getLogger('karp')
 
 resource_models = {}  # Dict
 history_models = {}  # Dict

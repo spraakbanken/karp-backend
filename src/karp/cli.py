@@ -13,7 +13,7 @@ import karp.indexmgr as indexmgr
 from karp.errors import KarpError
 
 
-_logger = logging.getLogger(__name__)
+_logger = logging.getLogger('karp')
 
 
 def create_app():

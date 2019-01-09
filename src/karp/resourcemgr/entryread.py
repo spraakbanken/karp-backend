@@ -6,8 +6,6 @@ from karp.resourcemgr import get_resource
 from karp.search import search
 from .resource import Resource
 
-_logger = logging.getLogger(__name__)
-
 
 def get_entries(resource_id):
     cls = get_resource(resource_id).model
