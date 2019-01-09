@@ -198,33 +198,5 @@ def user_is_authorized(resource: Resource, fields: List[str]) -> bool:
 @query_api.route('/<resources>/query', methods=['GET'])
 @query_api.route('/query/<resources>', methods=['GET'])
 def query_w_resources(resources: str):
-    resources = resources.split(',')
-    result = {}
-    query_params = read_general_arguments()
-    query_params.resources = resources
-    for resource_id in resources:
-        resource_result = {}
-        resource = get_resource(resource_id)
-        query_params = read_resource_arguments(query_params, resource)
-        print("/query got resource: {resource}".format(resource=resource_id))
-        print(resource)
-        print(query_params)
-        if not user_is_authorized(resource=resource,
-                                  fields=query_params.fields):
-            return jsonify({'status': 'forbidden'}), 403
-
-        hits: List[str] = []
-
-        for i in range(query_params.from_, query_params.from_ + query_params.size):
-            hits.append("{}[{}]".format(resource_id, str(i)))
-
-        resource_result['hits'] = hits
-
-        # es_result = search.search(resource_id, resource.version, simple_query="Kommun")
-        # resource_result['es'] = es_result
-        result[resource_id] = resource_result
-
-    result['query_params'] = repr(query_params)
-
-    print(result)
-    return jsonify(result), 200
+    response = search.search.search(resources.split(','))
+    return jsonify(response)

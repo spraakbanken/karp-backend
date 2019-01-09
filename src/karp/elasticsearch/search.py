@@ -37,4 +37,4 @@ class EsSearch(SearchInterface):
             if query:
                 s = s.query(query['query'])
             response = s.execute()
-            return [result.to_dict() for result in response]
+            return [{'id': result.meta.id, 'version': -1, 'entry': result.to_dict()} for result in response]
