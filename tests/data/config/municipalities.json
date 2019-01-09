@@ -65,7 +65,37 @@
     },
     "link": {
       "type": "string"
-    }
+    },
+    "places": {
+      "virtual": true,
+      "type": "object",
+      "collection": true,
+      "function": {
+        "multi_ref": {
+          "resource_id": "places",
+          "resource_version": 1,
+          "field": "municipality",
+          "result": {
+            "type": "object",
+            "fields": {
+              "code": {
+                "type": "number"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "test": {
+            "contains": [
+              {
+                "self": "code"
+              }
+            ]
+          }
+        }
+      }
+  }
   },
   "sort": "name",
   "protected": {

@@ -46,11 +46,6 @@ class BaseEntry:
     id = db.Column(db.Integer, primary_key=True)
     body = db.Column(db.Text, nullable=False)
     deleted = db.Column(db.Boolean, default=False)
-    entry_id = db.Column(db.String(30), nullable=False)
-
-    @declared_attr
-    def __table_args__(cls):
-        return db.UniqueConstraint('entry_id', name='entry_id_unique_constraint'),
 
 
 class DummyEntry(db.Model, BaseEntry):
@@ -136,8 +131,43 @@ def get_or_create_resource_model(config, version):
     if table_name in class_cache:
         return class_cache[table_name]
     else:
-        class Entry(db.Model, BaseEntry):
-            __tablename__ = table_name
+        attributes = {
+            '__tablename__': table_name,
+            '__table_args__': (db.UniqueConstraint('entry_id', name='entry_id_unique_constraint'),),
+            'entry_id': db.Column(db.String(30), nullable=False)
+        }
 
-        class_cache[table_name] = Entry
-        return Entry
+        child_tables = {}
+        for field_name in config.get('referenceable', ()):
+            field = config['fields'][field_name]
+            if not field.get('collection'):
+                if field['type'] == 'number':
+                    column_type = db.Integer()
+                else:
+                    raise NotImplementedError()
+                attributes[field_name] = db.Column(column_type)
+            else:
+                child_table_name = table_name + '_' + field_name
+                attributes[field_name] = db.relationship(child_table_name, backref=table_name)
+                child_attributes = {
+                    '__tablename__': child_table_name,
+                    '__table_args__': (db.PrimaryKeyConstraint('entry_id', field_name),),
+                    'entry_id': db.Column(db.Integer, db.ForeignKey(table_name + '.id'))
+                }
+                if field['type'] == 'object':
+                    raise ValueError('not possible to reference lists of objects')
+                if field['type'] == 'number':
+                    child_db_column_type = db.Integer()
+                elif field['type'] == 'string':
+                    child_db_column_type = db.Text()
+                else:
+                    raise NotImplementedError()
+                child_attributes[field_name] = db.Column(child_db_column_type)
+                child_class = type(child_table_name, (db.Model,), child_attributes)
+                child_tables[field_name] = child_class
+
+        sqlalchemy_class = type(resource_id, (db.Model, BaseEntry,), attributes)
+        sqlalchemy_class.child_tables = child_tables
+
+        class_cache[table_name] = sqlalchemy_class
+        return sqlalchemy_class

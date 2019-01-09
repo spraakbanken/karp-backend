@@ -17,12 +17,11 @@ from karp.database import get_active_resource_definition
 from karp.database import get_resource_definition
 
 from karp.util.json_schema import create_entry_json_schema
-from karp.resourcemgr.index import index_mgr
 from karp.errors import ResourceNotFoundError
 
 from .resource import Resource
 
-_logger = logging.getLogger(__name__)
+_logger = logging.getLogger('karp')
 
 resource_models = {}  # Dict
 history_models = {}  # Dict
@@ -124,6 +123,8 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     sqlalchemyclass = get_or_create_resource_model(config, version)
     history_model = get_or_create_history_model(resource_id, version)
     sqlalchemyclass.__table__.create(bind=db.engine)
+    for child_class in sqlalchemyclass.child_tables.values():
+        child_class.__table__.create(bind=db.engine)
     history_model.__table__.create(bind=db.engine)
 
     return resource['resource_id'], resource['version']
@@ -157,22 +158,3 @@ def delete_resource(resource_id, version):
     resource.active = False
     db.session.update(resource)
     db.session.commit()
-
-
-def create_index(resource_id, version=None):
-    if version:
-        resource_def = get_resource_definition(resource_id, version)
-    else:
-        resource_def = get_active_resource_definition(resource_id)
-    config = json.loads(resource_def.config_file)
-    return index_mgr.create_index(resource_id, config)
-
-
-def reindex(resource_id, index_name, version=None):
-    setup_resource_class(resource_id, version=version)
-    entries = resource_models[resource_id].query.all()
-    index_mgr.add_entries(index_name, [(entry.id, json.loads(entry.body)) for entry in entries])
-
-
-def publish_index(resource_id, index_name):
-    index_mgr.publish_index(resource_id, index_name)

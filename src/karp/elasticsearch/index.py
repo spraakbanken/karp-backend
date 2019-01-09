@@ -1,6 +1,6 @@
 import elasticsearch.helpers
 from datetime import datetime
-from karp.resourcemgr.index import IndexInterface
+from karp.indexmgr.index import IndexInterface
 
 
 def _create_es_mapping(config):
@@ -12,6 +12,21 @@ def _create_es_mapping(config):
     fields = config['fields']
 
     def recursive_field(parent_schema, parent_field_name, parent_field_def):
+        if parent_field_def.get('virtual', False):
+            fun = parent_field_def['function']
+            if list(fun.keys())[0] == 'multi_ref':
+                res_object = fun['multi_ref']['result']
+                recursive_field(parent_schema, parent_field_name, res_object)
+            return
+        if parent_field_def.get('ref'):
+            if 'field' in parent_field_def['ref']:
+                res_object = parent_field_def['ref']['field']
+            else:
+                res_object = {}
+                res_object.update(parent_field_def)
+                del res_object['ref']
+            recursive_field(parent_schema, parent_field_name, res_object)
+            return
         if parent_field_def['type'] != 'object':
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
@@ -85,3 +100,15 @@ class EsIndex(IndexInterface):
 
     def delete_entry(self, resource_id, entry_id):
         self.es.delete(index=resource_id, doc_type='entry', id=entry_id)
+
+    def create_empty_object(self):
+        return {}
+
+    def assign_field(self, _index_entry, field_name, part):
+        _index_entry[field_name] = part
+
+    def create_empty_list(self):
+        return []
+
+    def add_to_list_field(self, elems, elem):
+        elems.append(elem)

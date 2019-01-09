@@ -9,6 +9,9 @@ def create_entry_json_schema(config):
     fields = config['fields']
 
     def recursive_field(parent_schema, parent_field_name, parent_field_def):
+        if parent_field_def.get('virtual', False):
+            return
+
         if parent_field_def['type'] != 'object':
             # TODO this will not work when we have user defined types, s.a. saldoid
             result = {
