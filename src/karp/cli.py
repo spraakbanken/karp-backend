@@ -8,7 +8,8 @@ from flask.cli import FlaskGroup
 
 from .config import MariaDBConfig
 import karp.resourcemgr as resourcemgr
-import karp.resourcemgr.entrymgr as entrymgr
+import karp.resourcemgr.entrywrite as entrywrite
+import karp.indexmgr as indexmgr
 from karp.errors import KarpError
 
 
@@ -57,7 +58,7 @@ def import_resource(resource_id, version, data):
         objs = []
         for line in fp:
             objs.append(json.loads(line))
-        entrymgr.add_entries(resource_id, objs, resource_version=version)
+        entrywrite.add_entries(resource_id, objs, resource_version=version)
 
 
 @cli.command('publish')
@@ -66,9 +67,9 @@ def import_resource(resource_id, version, data):
 @click.option('--version', default=None, help='')
 @cli_error_handler
 def publish_resource(resource_id, version):
-    index_name = resourcemgr.create_index(resource_id, version)
-    resourcemgr.reindex(resource_id, index_name, version=version)
-    resourcemgr.publish_index(resource_id, index_name)
+    index_name = indexmgr.create_index(resource_id, version)
+    indexmgr.reindex(resource_id, index_name, version=version)
+    indexmgr.publish_index(resource_id, index_name)
     resourcemgr.publish_resource(resource_id, version)
 
 
@@ -76,7 +77,7 @@ def publish_resource(resource_id, version):
 @click.option('--resource_id', default=None, help='')
 @cli_error_handler
 def create_index(resource_id):
-    index_name = resourcemgr.create_index(resource_id)
+    index_name = indexmgr.create_index(resource_id)
     click.echo("Created index for resource {resource_id}".format(
         resource_id=resource_id
     ))
@@ -92,7 +93,7 @@ def create_index(resource_id):
 @click.option('--index_name', default=None, help='Name of the index to ')
 @cli_error_handler
 def publish_index(resource_id, index_name):
-    resourcemgr.publish_index(resource_id, index_name)
+    indexmgr.publish_index(resource_id, index_name)
 
 
 @cli.command('reindex')
@@ -100,15 +101,15 @@ def publish_index(resource_id, index_name):
 @click.option('--publish_index', 'publish_index_arg', default='', help='')
 @cli_error_handler
 def reindex(resource_id, publish_index_arg):
-    index_name = resourcemgr.create_index(resource_id)
-    resourcemgr.reindex(resource_id, index_name)
+    index_name = indexmgr.create_index(resource_id)
+    indexmgr.reindex(resource_id, index_name)
     click.echo("Successfully reindexed all data to index {index_name}".format(
         index_name=index_name
     ))
     if not publish_index_arg:
         publish_index_arg = click.prompt('Publish new index?', default='n')
     if strtobool(publish_index_arg):
-        resourcemgr.publish_index(resource_id, index_name)
+        indexmgr.publish_index(resource_id, index_name)
         click.echo('Index for {resource_id} published'.format(
             resource_id=resource_id
         ))

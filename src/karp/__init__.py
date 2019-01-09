@@ -34,10 +34,10 @@ def create_app(config_class=None):
         # TODO if an elasticsearch test runs before a non elasticsearch test this
         # is needed to reset the index and search modules
         from karp.search import SearchInterface, search
-        from karp.resourcemgr.index import IndexInterface
-        from karp.resourcemgr.index import index_mgr
+        from karp.indexmgr.index import IndexInterface
+        from karp.indexmgr import indexer
         search.init(SearchInterface())
-        index_mgr.init(IndexInterface())
+        indexer.init(IndexInterface())
 
     @app.errorhandler(KarpError)
     def http_error_handler(error: KarpError):
