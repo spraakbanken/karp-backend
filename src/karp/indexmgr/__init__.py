@@ -15,7 +15,7 @@ def reindex(resource_id, index_name, version=None):
     def prepare_entries():
         fields = resource_obj.config['fields'].items()
         for entry in entries:
-            yield (entry.id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields))
+            yield (entry.entry_id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields))
 
     add_entries(index_name, prepare_entries(), do_reindex=False)
 

@@ -10,7 +10,7 @@ from .resource import Resource
 def get_entries(resource_id):
     cls = get_resource(resource_id).model
     entries = cls.query.filter_by(deleted=False)
-    return [{'id': db_entry.id, 'entry': json.loads(db_entry.body)} for db_entry in entries]
+    return [{'id': db_entry.entry_id, 'entry': json.loads(db_entry.body)} for db_entry in entries]
 
 
 def get_entries_by_column(resource_obj: Resource, filters):
@@ -36,7 +36,7 @@ def get_entries_by_column(resource_obj: Resource, filters):
         child_cls = cls.child_tables[list(child_filters.keys())[0]]
         query = query.join(child_cls).filter_by(**child_filters)
 
-    return [{'id': db_entry.id, 'entry': json.loads(db_entry.body)} for db_entry in query]
+    return [{'id': db_entry.entry_id, 'entry': json.loads(db_entry.body)} for db_entry in query]
 
 
 def get_entries_indexed(resource_id):
@@ -44,9 +44,9 @@ def get_entries_indexed(resource_id):
     return res
 
 
-def get_entry(resource, entry_id, version=None):
-    cls = get_resource(resource, version=version).model
-    entry = cls.query.filter_by(id=entry_id).first()
+def get_entry(resource_id: str, entry_id: str, version: int=None):
+    cls = get_resource(resource_id, version=version).model
+    entry = cls.query.filter_by(entry_id=entry_id).first()
     return entry
 
 
