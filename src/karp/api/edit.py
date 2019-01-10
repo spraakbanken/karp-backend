@@ -31,7 +31,7 @@ def add_entry(resource_id):
 @edit_api.route('/<resource_id>/_all')
 def get_all_entries(resource_id):
     """
-    TODO replace using this with /query call without a query
+    TODO this one should probably be replaced by get_entry_for_editing, or a new call which fetches multiple entries by ID
     """
     entries = entryread.get_entries(resource_id)
     return flask_jsonify(entries)

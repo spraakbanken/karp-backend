@@ -200,3 +200,18 @@ def user_is_authorized(resource: Resource, fields: List[str]) -> bool:
 def query_w_resources(resources: str):
     response = search.search.search(resources.split(','))
     return jsonify(response)
+
+
+@query_api.route('/<resource_id>/<entry_id>/get_indexed', methods=['GET'])
+def get_indexed_entry(resource_id, entry_id):
+    # TODO a temporary soulution until search is done
+    from elasticsearch_dsl import Q, Search
+    s = Search(using=search.search.impl.es, index=resource_id)
+    s = s.query(Q('term', _id=entry_id))
+    response = s.execute()
+    result = {
+        'entry': response[0].to_dict(),
+        'id': response[0].meta.id,
+        'version': -1
+    }
+    return jsonify(result), 200
