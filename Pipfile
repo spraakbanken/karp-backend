@@ -16,6 +16,7 @@ pytest = "*"
 elasticsearch = "*"
 elasticsearch-dsl = "*"
 alembic = "*"
+slacker-log-handler = "*"
 
 [dev-packages]
 pytest = "*"
