@@ -84,7 +84,7 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
 
     def index_entries(entry_db_map):
         for db_entry, entry, _ in entry_db_map:
-            yield (db_entry.id, _src_entry_to_index_entry(resource, entry))
+            yield (db_entry.entry_id, _src_entry_to_index_entry(resource, entry))
 
     if resource.active:
         indexmgr.add_entries(resource_id, index_entries(created_db_entries))
@@ -130,7 +130,7 @@ def delete_entry(resource_id, entry_id):
     )
     db.session.add(history_entry)
     db.session.commit()
-    indexmgr.delete_entry(resource_id, entry.id)
+    indexmgr.delete_entry(resource_id, entry.entry_id)
 
 
 def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):

@@ -88,10 +88,10 @@ class EsIndex(IndexInterface):
 
     def add_entries(self, resource_id, entries):
         index_to_es = []
-        for (db_id, entry) in entries:
+        for (entry_id, entry) in entries:
             index_to_es.append({
                 '_index': resource_id,
-                '_id': db_id,
+                '_id': entry_id,
                 '_type': 'entry',
                 '_source': entry
             })
