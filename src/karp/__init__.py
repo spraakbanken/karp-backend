@@ -1,10 +1,11 @@
 import os
 import pkg_resources
 import json
-
+import logging  # pyre-ignore
 from flask import Flask     # pyre-ignore
 
 from karp.errors import KarpError
+import karp.util.logging.slack as slack_logging  # pyre-ignore
 
 __version__ = '0.6.0'
 
@@ -17,6 +18,8 @@ def create_app(config_class=None):
         app.config.from_object(config_class)
     if os.getenv('KARP_CONFIG'):
         app.config.from_object(os.getenv('KARP_CONFIG'))
+
+    logger = setup_logging(app)
 
     from .api import health_api, edit_api, query_api, documentation
     app.register_blueprint(edit_api)
@@ -39,11 +42,28 @@ def create_app(config_class=None):
         search.init(SearchInterface())
         indexer.init(IndexInterface())
 
-    @app.errorhandler(KarpError)
-    def http_error_handler(error: KarpError):
-        return json.dumps({'error': error.message}), 400
+    @app.errorhandler(Exception)
+    def http_error_handler(error: Exception):
+        if isinstance(error, KarpError):
+            return json.dumps({'error': error.message}), 400
+        else:
+            logger.exception('supererror')
+            return json.dumps({'error': 'unknown error'}), 400
 
     return app
+
+
+def setup_logging(app):
+    logger = logging.getLogger('karp')
+    if app.config.get('LOG_TO_SLACK'):
+        slack_handler = slack_logging.get_slack_logging_handler(app.config.get('SLACK_SECRET'))
+        logger.addHandler(slack_handler)
+    console_handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.setLevel(app.config['CONSOLE_LOG_LEVEL'])
+    logger.addHandler(console_handler)
+    return logger
 
 
 def get_version() -> str:
