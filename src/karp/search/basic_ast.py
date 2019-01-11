@@ -14,10 +14,18 @@ class TooManyChildren(AstException):
         super().__init__(message)
 
 
+class NoChild(AstException):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class ChildNotFound(AstException):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 # Base class
 class AstNode:
-    value = None
-    children = None
     min_arity = 0
     max_arity = 0
 
@@ -35,6 +43,12 @@ class AstNode:
 
     def add_child(self, child) -> None:
         raise TooManyChildren("Can't add a child to this node")
+
+    def has_child(self, child) -> bool:
+        return False
+
+    def update_child(self, old_child, new_child) -> None:
+        raise NoChild("Can't update a child since this has no child.")
 
     def children(self) -> Iterable:
         if False:
@@ -105,6 +119,18 @@ class NodeWithOneChild(AstNode):
         else:
             raise TooManyChildren('This node has a child.')
 
+    def has_child(self, child) -> bool:
+        return self.child0 is child
+
+    def update_child(self, old_child, new_child):
+        if self.child0 is old_child:
+            self.child0 = new_child
+        else:
+            raise ChildNotFound("No such child '{}'".format(old_child))
+
+    def __repr__(self) -> str:
+        return '<{} child={}>'.format(self._format_self(), repr(self.child0))
+
 
 class NodeWithTwoChildren(NodeWithOneChild):
     def __init__(self, value, child0: AstNode, child1: AstNode):
@@ -130,6 +156,20 @@ class NodeWithTwoChildren(NodeWithOneChild):
             self.child1 = child
         else:
             raise TooManyChildren('This node has two children.')
+
+    def has_child(self, child) -> bool:
+        return super().has_child(child) or self.child1 is child
+
+    def update_child(self, old_child, new_child):
+        if self.child0 is old_child:
+            self.child0 = new_child
+        elif self.child1 is old_child:
+            self.child1 = new_child
+        else:
+            raise ChildNotFound("No such child '{}'".format(old_child))
+
+    def __repr__(self) -> str:
+        return '<{} child0={} child1={}>'.format(self._format_self(), repr(self.child0), repr(self.child1))
 
 
 class NodeWithThreeChildren(NodeWithTwoChildren):
@@ -159,6 +199,21 @@ class NodeWithThreeChildren(NodeWithTwoChildren):
         else:
             raise TooManyChildren('This node has three children.')
 
+    def has_child(self, child) -> bool:
+        return super().has_child(child) or self.child2 is child
+
+    def update_child(self, old_child, new_child):
+        if self.child0 is old_child:
+            self.child0 = new_child
+        elif self.child1 is old_child:
+            self.child1 = new_child
+        elif self.child2 is old_child:
+            self.child2 = new_child
+        else:
+            raise ChildNotFound("No such child '{}'".format(old_child))
+
+    def __repr__(self) -> str:
+        return '<{} child0={} child1={} child2={}>'.format(self._format_self(), repr(self.child0), repr(self.child1), repr(self.child2))
 
 # Real classes
 class UnaryOp(NodeWithOneChild):
@@ -167,10 +222,6 @@ class UnaryOp(NodeWithOneChild):
         super().__init__(value, child0)
         self.min_arity = min_arity
         self.max_arity = 2
-
-    def __repr__(self):
-        return "<{} child={}>".format(self._format_self(),
-                                     repr(self.child0))
 
     def _format_self(self):
         return 'UnaryOp op={}'.format(self.value)
@@ -182,11 +233,6 @@ class BinaryOp(NodeWithTwoChildren):
         super().__init__(op, child0, child1)
         self.min_arity = min_arity
         self.max_arity = 3
-
-    def __repr__(self):
-        return "{} left={} right={}>".format(self._format_self(),
-                                             repr(self.child0),
-                                             repr(self.child1))
 
     def _format_self(self):
         return 'BinaryOp op={}'.format(self.value)
@@ -200,73 +246,11 @@ class TernaryOp(NodeWithThreeChildren):
         self.min_arity = min_arity
         self.max_arity = 4
 
-    def __repr__(self):
-        return "{} child0={} child1={} child2={}>".format(self._format_self(),
-                                             repr(self.child0),
-                                             repr(self.child1),
-                                             repr(self.child2))
-
     def _format_self(self):
         return '<TernaryOpNode op={}'.format(self.op)
 
 
-# class InfixOp(AstNode):
-#
-#     def __init__(self, op, min_arity, max_arity):
-#         super().__init__(op, min_arity, max_arity)
-#
-#     def _format_self(self):
-#         return 'InfixOp op={}'.format(self.value)
-
-
-class UnaryInfixOp(UnaryOp, InfixOp):
-
-    def __init__(self, op, child=None):
-        super().__init__(value=op, child0=child)
-
-    def _format_self(self):
-        return 'UnaryInfixOp op={}'.format(self.value)
-
-
-class BinaryInfixOp(BinaryOp, InfixOp):
-
-    def __init__(self, op, child0=None, child1=None):
-        super().__init__(op, child0, child1)
-    #     self.add_child(left)
-    #     self.add_child(right)
-    #
-    # def has_left(self) -> bool:
-    #     return self.num_children() > 0
-    #
-    # @property
-    # def left(self):
-    #     return self.children[0]
-    #
-    # @left.setter
-    # def left(self, child):
-    #     self.children[0] = child
-    #
-    # def has_right(self) -> bool:
-    #     return self.num_children() > 1
-    #
-    # @property
-    # def right(self):
-    #     return self.children[1]
-    #
-    # @right.setter
-    # def right(self, child):
-    #     self.children[1] = child
-    #
-    # def __repr__(self):
-    #     return "{} left={} right={}>".format(self._format_self(),
-    #                                          repr(self.left),
-    #                                          repr(self.right))
-
-    def _format_self(self):
-        return 'BinaryInfixOp op={}'.format(self.value)
-
-
-class ArgNode(AstNode):
+class ArgNode(Leaf):
 
     def __init__(self, arg):
         super().__init__(value=arg)
@@ -311,48 +295,6 @@ class FloatNode(ArgNode):
         return "<FloatNode value={}>".format(self.value)
 
     _format_self = __repr__
-
-
-def binary_infix_operator(op_name):
-    def result():
-        return BinaryInfixOp(op_name)
-    return result
-
-
-def unary_infix_operator(op_name):
-    def result():
-        return UnaryInfixOp(op_name)
-    return result
-
-
-def logical_operator(op_name, min_arity, max_arity):
-    def result():
-        return InfixOp(op_name, min_arity, max_arity)
-    return result
-
-
-def query_operator(op_name, min_arity, max_arity):
-    def result():
-        return OpNode(op_name, min_arity, max_arity)
-    return result
-
-
-def ternary_query_operator(op_name):
-    def result():
-        return TernaryOp(op_name)
-    return result
-
-
-def binary_query_operator(op_name, **kwargs):
-    def result():
-        return BinaryOp(op_name, **kwargs)
-    return result
-
-
-def unary_query_operator(op_name):
-    def result():
-        return UnaryOp(op_name)
-    return result
 
 
 def ternary_operator(op_name):
