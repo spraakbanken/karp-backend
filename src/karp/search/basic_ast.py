@@ -83,19 +83,11 @@ class AstNode:
         else:
             return NotImplemented
 
+
 # Mixin classes
 class Leaf(AstNode):
     def __init__(self, value):
         super().__init__(value)
-
-
-class InfixOp(AstNode):
-
-    def __init__(self, value):
-        super().__init__(value)
-
-    def _format_self(self):
-        return 'InfixOp'
 
 
 class NodeWithOneChild(AstNode):
