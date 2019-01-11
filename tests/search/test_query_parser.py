@@ -44,8 +44,8 @@ def test_regexp_1(parser):
                     ast.StringNode('str.*ng')))
 
 
-def test_regexp_2(qp):
-    query = qp.parse('regexp|field|str.*ng')
+def test_regexp_2(parser):
+    query = parser.parse('regexp|field|str.*ng')
     do_test_ast(query,
                 ast.BinaryOp(
                     'REGEXP',
