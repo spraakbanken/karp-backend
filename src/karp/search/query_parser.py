@@ -105,60 +105,47 @@ class QueryParser():
         curr = _node
         for expr in exprs[1:]:
             node = self._sub_expr(expr)
-            print(f">>> curr = {curr}")
-            print(f">>> node = {node}")
-          #  if min_arity_is_satisfied(node):
-        #    if curr.precedence > node.precedence:
-         #       curr.add_child(node)
-            if not node.can_add_child():
-                if curr.can_add_child():
-                    curr.add_child(node)
-                else:
-                    if len(node_stack) > 0:
-                        new_curr = node_stack.pop()
-                        if new_curr.can_add_child():
-                            new_curr.add_child(curr)
-                            if new_curr.can_add_child():
-                                new_curr.add_child(node)
-                                curr = new_curr
-                            else:
-                                raise ParseError('Too complex query')
-                        else:
-                            raise ParseError('Too complex query')
 
-                    else:
-                        raise ParseError("Can't combine '{}' and '{}'".format(curr, node))
-            else:
+            if node.can_add_child():
                 node_stack.append(curr)
                 curr = node
-            print(f"<<< curr = {curr}")
-            print(f"<<< node = {node}")
+            elif curr.can_add_child():
+                curr.add_child(node)
+            elif len(node_stack) > 0:
+                new_curr = node_stack.pop()
+                if new_curr.can_add_child():
+                    new_curr.add_child(curr)
+                    if new_curr.can_add_child():
+                        new_curr.add_child(node)
+                        curr = new_curr
+                    else:
+                        raise ParseError('Too complex query')
+                else:
+                    raise ParseError('Too complex query')
+
+            else:
+                raise ParseError("Can't combine '{}' and '{}'".format(curr, node))
 
         while len(node_stack) > 0:
             parent = node_stack.pop()
-           # while min_arity_is_satisfied(parent):
+
             while not parent.can_add_child():
-                print(f">>>--- parent = {parent}")
                 new_parent = node_stack.pop()
-#                if not min_arity_is_satisfied(new_parent):
+
                 if new_parent.can_add_child():
                     new_parent.add_child(parent)
                 else:
                     raise ParseError('Too complex query.')
                 parent = new_parent
-            print(f">>> curr = {curr}")
-            print(f">>> parent = {parent}")
             parent.add_child(curr)
             curr = parent
-            print(f"<<< curr = {curr}")
-            print(f"<<< parent = {parent}")
 
         q = queue.SimpleQueue()
         q.put(_node)
         while not q.empty():
             curr = q.get()
             for child in curr.children():
-                if child.num_children() == 0 and child.min_arity > 0:
+                if child.min_arity > 0 and child.num_children() == 0:
                     new_child = StringNode(child.value.lower())
                     curr.update_child(child, new_child)
                 else:
