@@ -24,7 +24,7 @@ def get_entry_for_editing(resource_id, entry_id):
 @edit_api.route('/<resource_id>/add', methods=['POST'])
 def add_entry(resource_id):
     data = request.get_json()
-    new_id = entrywrite.add_entry(resource_id, data['entry'], message=data['message'])
+    new_id = entrywrite.add_entry(resource_id, data['entry'], message=data.get('message', ''))
     return flask_jsonify({'status': 'added', 'newID': new_id}), 201
 
 
