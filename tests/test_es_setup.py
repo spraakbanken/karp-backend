@@ -37,7 +37,7 @@ def init(client, es_status_code):
 
     for entry in entries:
         client_with_data.post('places/add',
-                              data=json.dumps(entry),
+                              data=json.dumps({'entry': entry}),
                               content_type='application/json')
     return client_with_data
 

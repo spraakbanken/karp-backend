@@ -27,7 +27,7 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
 
     index_entry_json = _validate_and_prepare_entry(resource, entry)
 
-    current_db_entry = resource.model.query.filter_by(id=entry_id, deleted=False).first()
+    current_db_entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
     if not current_db_entry:
         raise KarpError('No entry in resource {resource_id} with id {entry_id}'.format(
             resource_id=resource_id,
@@ -37,10 +37,11 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
     db_entry_json = json.dumps(entry)
     current_db_entry.body = db_entry_json
 
-    latest_history_entry = resource.history_model.query.filter_by(entry_id=entry_id).\
+    db_id = current_db_entry.id
+    latest_history_entry = resource.history_model.query.filter_by(entry_id=db_id).\
         order_by(resource.history_model.version.desc()).first()
     history_entry = resource.history_model(
-        entry_id=entry_id,
+        entry_id=db_id,
         user_id='TODO',
         body=db_entry_json,
         version=latest_history_entry.version + 1,
@@ -117,7 +118,7 @@ def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):
 
 def delete_entry(resource_id, entry_id):
     resource = get_resource(resource_id)
-    entry = resource.model.query.filter_by(id=entry_id, deleted=False).first()
+    entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
     if not entry:
         raise RuntimeError('no entry with id {entry_id} found'.format(entry_id=entry_id))
     entry.deleted = True
