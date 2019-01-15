@@ -21,7 +21,7 @@ from karp.resourcemgr import get_resource
 
 from karp import search
 
-from karp.util.convert import str2list
+from karp import util
 
 
 query_api = Blueprint('query_api', __name__)
@@ -228,7 +228,7 @@ def get_fields(name: str, include_fields: List[str], exclude_fields: List[str]) 
 
 def parse_arguments(args: Dict[str, str], resource_str: str = None) -> Dict:
     params = {}
-    s2l = str2list(',')
+    s2l = util.convert.str2list(',')
     if resource_str:
         params['resources'] = arg_get('resources', s2l)
     else:
@@ -261,8 +261,8 @@ def query_w_resources(resources: str):
 
     for resource_id in resource_ids:
         fields = get_fields(resource_id,
-                          include_fields=arg_get('include_fields', str2list(',')),
-                          exclude_fields=arg_get('exclude_fields', str2list(',')))
+                          include_fields=arg_get('include_fields', util.convert.str2list(',')),
+                          exclude_fields=arg_get('exclude_fields', util.convert.str2list(',')))
         if not user_is_authorized(resource=resource_id,
                                   fields=fields,
                                   mode="read"):
@@ -273,33 +273,33 @@ def query_w_resources(resources: str):
 
     return jsonify(result), 200
 
-    resources = resources.split(',')
-    result = {}
-    query_params = read_general_arguments()
-    query_params.resources = resources
-    for resource_id in resources:
-        resource_result = {}
-        resource = get_resource(resource_id)
-        query_params = read_resource_arguments(query_params, resource)
-        print("/query got resource: {resource}".format(resource=resource_id))
-        print(resource)
-        print(query_params)
-        if not user_is_authorized(resource=resource,
-                                  fields=query_params.fields):
-            return jsonify({'status': 'forbidden'}), 403
-
-        hits: List[str] = []
-
-        for i in range(query_params.from_, query_params.from_ + query_params.size):
-            hits.append("{}[{}]".format(resource_id, str(i)))
-
-        resource_result['hits'] = hits
-
-        # es_result = search.search(resource_id, resource.version, simple_query="Kommun")
-        # resource_result['es'] = es_result
-        result[resource_id] = resource_result
-
-    result['query_params'] = repr(query_params)
-
-    print(result)
-    return jsonify(result), 200
+    # resources = resources.split(',')
+    # result = {}
+    # query_params = read_general_arguments()
+    # query_params.resources = resources
+    # for resource_id in resources:
+    #     resource_result = {}
+    #     resource = get_resource(resource_id)
+    #     query_params = read_resource_arguments(query_params, resource)
+    #     print("/query got resource: {resource}".format(resource=resource_id))
+    #     print(resource)
+    #     print(query_params)
+    #     if not user_is_authorized(resource=resource,
+    #                               fields=query_params.fields):
+    #         return jsonify({'status': 'forbidden'}), 403
+    #
+    #     hits: List[str] = []
+    #
+    #     for i in range(query_params.from_, query_params.from_ + query_params.size):
+    #         hits.append("{}[{}]".format(resource_id, str(i)))
+    #
+    #     resource_result['hits'] = hits
+    #
+    #     # es_result = search.search(resource_id, resource.version, simple_query="Kommun")
+    #     # resource_result['es'] = es_result
+    #     result[resource_id] = resource_result
+    #
+    # result['query_params'] = repr(query_params)
+    #
+    # print(result)
+    # return jsonify(result), 200
