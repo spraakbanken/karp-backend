@@ -3,9 +3,46 @@ import elasticsearch_dsl as es_dsl
 from karp import search
 
 
+class EsQuery(search.Query):
+    def parse_arguments(self, args, resource_str):
+        super().parse_arguments(args, resource_str)
+        self.resource_str = resource_str
+        self.query = None
+
+
 class EsSearch(search.SearchInterface):
+
     def __init__(self, es):
         self.es = es
+
+    def build_query(self, args, resource_str: str) -> EsQuery:
+        query = EsQuery()
+        query.parse_arguments(args, resource_str)
+        return query
+
+    def search_with_query(self, query: EsQuery):
+        if query.split_results:
+            ms = es_dsl.MultiSearch(using=self.es)
+
+            for resource in query.resources:
+                s = es_dsl.Search(index=resource)
+                if query.query is not None:
+                    s = s.query(query.query)
+                ms = ms.add(s)
+
+            responses = ms.execute()
+            result = {}
+            for i, response in enumerate(responses):
+                result[query.resources[i]] = [part_result.to_dict() for part_result in response]
+
+            return result
+        else:
+            s = es_dsl.Search(using=self.es, index=query.resources_str)
+            if query.query is not None:
+                s = s.query(query.query)
+            response = s.execute()
+
+            return ({'id': result.meta.id, 'version': -1, 'entry': result.to_dict()} for result in response)
 
     def get_query(self, query):
         # Only handle simplest case, for example: 'and|baseform.search|equals|userinput'

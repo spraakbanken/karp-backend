@@ -10,6 +10,7 @@ def test_no_q(client):
     assert "query_params" in json_data
 
 
+@pytest.mark.skip(reason='no protected stuff')
 def test_protected(client_with_data_scope_module):
     response = client_with_data_scope_module.get('/municipalities/query')
     assert response.status == '403 FORBIDDEN'
