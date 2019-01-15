@@ -1,9 +1,9 @@
-from elasticsearch_dsl import Q, Search, MultiSearch
-from karp.search.search import SearchInterface
+import elasticsearch_dsl as es_dsl
+
+from karp import search
 
 
-class EsSearch(SearchInterface):
-
+class EsSearch(search.SearchInterface):
     def __init__(self, es):
         self.es = es
 
@@ -15,14 +15,14 @@ class EsSearch(SearchInterface):
         # 1. Need to check config if the field search must be nested https://www.elastic.co/guide/en/elasticsearch/reference/current/nested.html
         # 2. Maybe need to map query input to another field in ES
 
-        return Q("term", **{field: querystr})
+        return es_dsl.Q("term", **{field: querystr})
 
     def search(self, resources, query=None):
         if query and query['split_results']:
-            ms = MultiSearch(using=self.es)
+            ms = es_dsl.MultiSearch(using=self.es)
 
             for resource in resources:
-                s = Search(index=resource)
+                s = es_dsl.Search(index=resource)
                 s = s.query(query['query'])
                 ms = ms.add(s)
 
@@ -33,7 +33,7 @@ class EsSearch(SearchInterface):
 
             return result
         else:
-            s = Search(using=self.es, index=','.join(resources))
+            s = es_dsl.Search(using=self.es, index=','.join(resources))
             if query:
                 s = s.query(query['query'])
             response = s.execute()
