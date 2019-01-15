@@ -198,7 +198,8 @@ def user_is_authorized(resource: Resource, fields: List[str]) -> bool:
 @query_api.route('/<resources>/query', methods=['GET'])
 @query_api.route('/query/<resources>', methods=['GET'])
 def query_w_resources(resources: str):
-    response = search.search.search(resources.split(','))
+    query = search.search.build_query(resources.split(','))
+    response = search.search.search(query)
     return jsonify(response)
 
 
