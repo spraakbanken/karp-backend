@@ -1,10 +1,10 @@
 default: tox
 
 test:
-	pipenv run py.test tests
-	
+	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests
+
 pytest: build
-	pipenv run py.test tests
+	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests
 
 tox:
 	tox
