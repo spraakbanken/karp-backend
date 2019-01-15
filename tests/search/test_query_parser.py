@@ -22,21 +22,135 @@ def do_test_ast(x, facit):
     do_test_ast_node(x.root, facit)
 
 
-def test_freetext_1(parser):
-    query = parser.parse('freetext|test')
-    do_test_ast(query,
-                ast.UnaryOp(
-                    query_parser.Operator.FREETEXT,
-                    ast.StringNode('test')))
+def test_ParseError():
+    e = query_parser.ParseError('test')
+    assert repr(e) == "ParseError message='test'"
 
-def test_freetext_2(parser):
+
+def test_SyntaxError():
+    e = query_parser.SyntaxError('test')
+    assert isinstance(e, query_parser.ParseError)
+    assert repr(e) == "SyntaxError message='test'"
+
+
+def test_missing_and_equals_karp_v5_query_language(parser):
+    # extended||and|pos|missing||and||wf|equals|blomma|äpple
+    query = parser.parse('and||missing|pos||equals|wf||or|blomma|äpple')
+    do_test_ast(query,
+                ast.BinaryOp(
+                    query_parser.Operator.AND,
+                    ast.UnaryOp(
+                        query_parser.Operator.MISSING,
+                        ast.StringNode('pos')
+                    ),
+                    ast.BinaryOp(
+                        query_parser.Operator.EQUALS,
+                        ast.StringNode('wf'),
+                        ast.BinaryOp(
+                            query_parser.Operator.OR,
+                            ast.StringNode('blomma'),
+                            ast.StringNode('äpple')
+                        )
+                    )
+                ))
+
+
+def test_freetext_karp_v5_query_1(parser):
     query = parser.parse('freetext|stort hus')
     do_test_ast(query,
                 ast.UnaryOp(
                     query_parser.Operator.FREETEXT,
-                    ast.StringNode('stort hus')))
+                    ast.StringNode('stort hus')
+                ))
 
-def test_regexp_1(parser):
+
+def test_freetext_karp_v5_simple_2(parser):
+    query = parser.parse('freetext|flicka')
+    do_test_ast(query,
+                ast.UnaryOp(
+                    query_parser.Operator.FREETEXT,
+                    ast.StringNode('flicka')
+                ))
+
+
+def test_startswith_karp_v5_extended_1(parser):
+    query = parser.parse('startswith|lemgram|dalinm--')
+    do_test_ast(query,
+                ast.BinaryOp(
+                    query_parser.Operator.STARTSWITH,
+                    ast.StringNode('lemgram'),
+                    ast.StringNode('dalinm--')
+                ))
+
+
+def test_and_equals_missing_karp_v5_extended_2(parser):
+    query = parser.parse('and||equals|wf|äta||missing|pos')
+    do_test_ast(query,
+                ast.BinaryOp(
+                    query_parser.Operator.AND,
+                    ast.BinaryOp(
+                        query_parser.Operator.EQUALS,
+                        ast.StringNode('wf'),
+                        ast.StringNode('äta')
+                    ),
+                    ast.UnaryOp(
+                        query_parser.Operator.MISSING,
+                        ast.StringNode('pos')
+                    )
+                ))
+
+
+def test_regexp_karp_v5_extended_3_and_4(parser):
+    query = parser.parse('regexp|wf|.*o.*a')
+    do_test_ast(query,
+                ast.BinaryOp(
+                    query_parser.Operator.REGEXP,
+                    ast.StringNode('wf'),
+                    ast.StringNode('.*o.*a')
+                ))
+
+
+def test_exists_karp_v5_extended_5(parser):
+    query = parser.parse('exists|sense')
+    do_test_ast(query,
+                ast.UnaryOp(
+                    query_parser.Operator.EXISTS,
+                    ast.StringNode('sense')
+                ))
+
+
+def test_and_equals_not_equals_karp_v5_extended_6(parser):
+    query = parser.parse('and||equals|wf|sitta||not||equals|wf|satt')
+    do_test_ast(query,
+                ast.BinaryOp(
+                    query_parser.Operator.AND,
+                    ast.BinaryOp(
+                        query_parser.Operator.EQUALS,
+                        ast.StringNode('wf'),
+                        ast.StringNode('sitta')
+                    ),
+                    ast.UnaryOp(
+                        query_parser.Operator.NOT,
+                        ast.BinaryOp(
+                            query_parser.Operator.EQUALS,
+                            ast.StringNode('wf'),
+                            ast.StringNode('satt')
+                        )
+                    )
+                ))
+
+
+def test_fail_no_operator(parser):
+    with pytest.raises(query_parser.SyntaxError):
+        parser.parse('freett|litet hus')
+
+
+def test_fail_too_many_operators(parser):
+    with pytest.raises(query_parser.SyntaxError):
+        parser.parse('and||exists|wordform||exists|baseform||exists|pos')
+
+
+def test_freergxp_1(parser):
     query = parser.parse('freergxp|str.*ng')
     do_test_ast(query,
                 ast.UnaryOp(
@@ -44,67 +158,64 @@ def test_regexp_1(parser):
                     ast.StringNode('str.*ng')))
 
 
-def test_regexp_2(parser):
-    query = parser.parse('regexp|field|str.*ng')
-    do_test_ast(query,
-                ast.BinaryOp(
-                    query_parser.Operator.REGEXP,
-                    ast.StringNode('field'),
-                    ast.StringNode('str.*ng')))
+def test_fail_freergxp_too_many_arguments(parser):
+    with pytest.raises(query_parser.ParseError):
+        parser.parse('freergxp|str.*ng1|str.*ng2')
 
 
-def test_regexp_3(parser):
+def test_freergxp_with_or(parser):
     query = parser.parse('freergxp||or|str.*ng1|str.*ng2')
     do_test_ast(query,
                 ast.UnaryOp(
                     query_parser.Operator.FREERGXP,
-                    ast.BinaryOp(query_parser.Operator.OR,
-                                     ast.StringNode('str.*ng1'),
-                                     ast.StringNode('str.*ng2'))))
+                    ast.BinaryOp(
+                        query_parser.Operator.OR,
+                        ast.StringNode('str.*ng1'),
+                        ast.StringNode('str.*ng2')
+                    )
+                ))
 
 
-def test_regexp_4(parser):
+def test_regexp_with_or_in_2nd_arg(parser):
     query = parser.parse('regexp|field||or|str.*ng1|str.*ng2')
     do_test_ast(query,
                 ast.BinaryOp(
                     query_parser.Operator.REGEXP,
                     ast.StringNode('field'),
-                    ast.BinaryOp(query_parser.Operator.OR,
-                                     ast.StringNode('str.*ng1'),
-                                     ast.StringNode('str.*ng2'))
-
+                    ast.BinaryOp(
+                        query_parser.Operator.OR,
+                        ast.StringNode('str.*ng1'),
+                        ast.StringNode('str.*ng2')
+                    )
                 ))
 
-def test_regexp_5(parser):
+
+def test_regexp_with_or_in_1st_arg(parser):
     query = parser.parse('regexp||or|field1|field2||str.*ng')
     do_test_ast(query,
                 ast.BinaryOp(
                     query_parser.Operator.REGEXP,
-                    ast.BinaryOp(query_parser.Operator.OR,
-                                     ast.StringNode('field1'),
-                                     ast.StringNode('field2')),
+                    ast.BinaryOp(
+                        query_parser.Operator.OR,
+                        ast.StringNode('field1'),
+                        ast.StringNode('field2')
+                    ),
                     ast.StringNode('str.*ng')
-
                 ))
 
-def test_or_1(parser):
+
+def test_exists_with_or_and_operator_names_as_arguments(parser):
     q = parser.parse('exists||or|and|or')
     do_test_ast(q,
                 ast.UnaryOp(
                     query_parser.Operator.EXISTS,
-                    ast.BinaryOp(query_parser.Operator.OR,
-                                   ast.StringNode('and'),
-                                   ast.StringNode('or'))
+                    ast.BinaryOp(
+                        query_parser.Operator.OR,
+                        ast.StringNode('and'),
+                        ast.StringNode('or')
+                    )
                 ))
 
-
-def test_exists_1(parser):
-    query = parser.parse('exists|field')
-    do_test_ast(query,
-                ast.UnaryOp(
-                    query_parser.Operator.EXISTS,
-                    ast.StringNode('field')
-                ))
 
 def test_missing_1(parser):
     query = parser.parse('missing|field')
@@ -113,6 +224,7 @@ def test_missing_1(parser):
                     query_parser.Operator.MISSING,
                     ast.StringNode('field')
                 ))
+
 
 def test_equals_1(parser):
     q = parser.parse('equals|field|string')
@@ -126,7 +238,7 @@ def test_equals_1(parser):
     )
 
 
-def test_and_1(parser):
+def test_freergxp_and_regexp(parser):
     q = parser.parse('and||freergxp|str.*ng||regexp|field|str.*ng')
     do_test_ast(q,
                 ast.BinaryOp(
@@ -143,7 +255,7 @@ def test_and_1(parser):
                 ))
 
 
-def test_and_regex_or(parser):
+def test_exists_and_regex_with_or(parser):
     q = parser.parse('and||regexp||or|wordform|baseform||s.tt.?||exists|pos')
     do_test_ast(q,
                 ast.BinaryOp(
@@ -163,7 +275,8 @@ def test_and_regex_or(parser):
                     )
                 ))
 
-def test_equals_with_or(parser):
+
+def test_equals_with_or_in_2nd_arg(parser):
     query = parser.parse('equals|field||or|string1|string2')
     do_test_ast(query,
                 ast.BinaryOp(
@@ -182,16 +295,6 @@ def test_contains(parser):
     do_test_ast(query,
                 ast.BinaryOp(
                     query_parser.Operator.CONTAINS,
-                    ast.StringNode('field'),
-                    ast.StringNode('string')
-                ))
-
-
-def test_startswith(parser):
-    query = parser.parse('startswith|field|string')
-    do_test_ast(query,
-                ast.BinaryOp(
-                    query_parser.Operator.STARTSWITH,
                     ast.StringNode('field'),
                     ast.StringNode('string')
                 ))
@@ -269,7 +372,7 @@ def test_range(parser):
                 ))
 
 
-def test_or_exists_missing(parser):
+def test_exists_or_missing(parser):
     query = parser.parse('or||exists|field||missing|field')
     do_test_ast(query,
                 ast.BinaryOp(
@@ -285,7 +388,24 @@ def test_or_exists_missing(parser):
                 ))
 
 
-def test_exists_with_or(parser):
+def test_exists_with_or_and_or_in_1st_arg(parser):
+    query = parser.parse('exists||or||or|field1|field2||field3')
+    do_test_ast(query,
+                ast.UnaryOp(
+                    query_parser.Operator.EXISTS,
+                    ast.BinaryOp(
+                        query_parser.Operator.OR,
+                        ast.BinaryOp(
+                            query_parser.Operator.OR,
+                            ast.StringNode('field1'),
+                            ast.StringNode('field2')
+                        ),
+                        ast.StringNode('field3')
+                    )
+                ))
+
+
+def test_exists_with_or_and_or_in_2nd_arg(parser):
     query = parser.parse('exists||or|field1||or|field2|field3')
     do_test_ast(query,
                 ast.UnaryOp(
@@ -338,44 +458,6 @@ def test_complex_and(parser):
                 ))
 
 
-def test_and_equals_not_equals(parser):
-    query = parser.parse('and||equals|wf|sitta||not||equals|wf|satt')
-    do_test_ast(query,
-                ast.BinaryOp(
-                    query_parser.Operator.AND,
-                    ast.BinaryOp(
-                        query_parser.Operator.EQUALS,
-                        ast.StringNode('wf'),
-                        ast.StringNode('sitta')
-                    ),
-                    ast.UnaryOp(
-                        query_parser.Operator.NOT,
-                        ast.BinaryOp(
-                            query_parser.Operator.EQUALS,
-                            ast.StringNode('wf'),
-                            ast.StringNode('satt')
-                        )
-                    )
-                ))
-
-
-def test_and_equals_missing(parser):
-    query = parser.parse('and||equals|wf|äta||missing|pos')
-    do_test_ast(query,
-                ast.BinaryOp(
-                    query_parser.Operator.AND,
-                    ast.BinaryOp(
-                        query_parser.Operator.EQUALS,
-                        ast.StringNode('wf'),
-                        ast.StringNode('äta')
-                    ),
-                    ast.UnaryOp(
-                        query_parser.Operator.MISSING,
-                        ast.StringNode('pos')
-                    )
-                ))
-
-
 def test_and_not(parser):
     query = parser.parse('and||not||equals|wf|satt||or||exists|wf||contains|wf|sitta')
     do_test_ast(query,
@@ -402,7 +484,6 @@ def test_and_not(parser):
                         )
                     )
                 ))
-
 
 
 def test_not_and(parser):

@@ -1,14 +1,19 @@
 import pytest
 
-from karp.search.basic_ast import *
+from karp.search import basic_ast as ast
+
+
+def test_AstException():
+    e = ast.AstException('test')
+    assert repr(e) == "AstException message='test'"
 
 
 def test_AstNode():
-    node = AstNode('test')
+    node = ast.AstNode('test')
     assert node.num_children() == 0
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     with pytest.raises(StopIteration):
         gen = node.children()
         next(gen)
@@ -16,12 +21,12 @@ def test_AstNode():
 
 
 def test_NodeWithOneChild():
-    node = NodeWithOneChild('one', None)
+    node = ast.NodeWithOneChild('one', None)
     assert sum(1 for i in node.children()) == 0
     assert node.can_add_child()
     assert not node.has_child0()
 
-    node.add_child(AstNode('child0'))
+    node.add_child(ast.AstNode('child0'))
 
     assert sum(1 for i in node.children()) == 1
     assert not node.can_add_child()
@@ -29,20 +34,20 @@ def test_NodeWithOneChild():
 
 
 def test_NodeWithTwoChildren():
-    node = NodeWithTwoChildren('two', None, None)
+    node = ast.NodeWithTwoChildren('two', None, None)
     assert sum(1 for i in node.children()) == 0
     assert node.can_add_child()
     assert not node.has_child0()
     assert not node.has_child1()
 
-    node.add_child(AstNode('child0'))
+    node.add_child(ast.AstNode('child0'))
 
     assert sum(1 for i in node.children()) == 1
     assert node.can_add_child()
     assert node.has_child0()
     assert not node.has_child1()
 
-    node.add_child(AstNode('child1'))
+    node.add_child(ast.AstNode('child1'))
 
     assert sum(1 for i in node.children()) == 2
     assert not node.can_add_child()
@@ -51,14 +56,14 @@ def test_NodeWithTwoChildren():
 
 
 def test_NodeWithThreeChildren():
-    node = NodeWithThreeChildren('three', None, None, None)
+    node = ast.NodeWithThreeChildren('three', None, None, None)
     assert sum(1 for i in node.children()) == 0
     assert node.can_add_child()
     assert not node.has_child0()
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child0'))
+    node.add_child(ast.AstNode('child0'))
 
     assert sum(1 for i in node.children()) == 1
     assert node.can_add_child()
@@ -66,7 +71,7 @@ def test_NodeWithThreeChildren():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child1'))
+    node.add_child(ast.AstNode('child1'))
 
     assert sum(1 for i in node.children()) == 2
     assert node.can_add_child()
@@ -74,7 +79,7 @@ def test_NodeWithThreeChildren():
     assert node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child2'))
+    node.add_child(ast.AstNode('child2'))
 
     assert sum(1 for i in node.children()) == 3
     assert not node.can_add_child()
@@ -84,41 +89,41 @@ def test_NodeWithThreeChildren():
 
 
 def test_UnaryOp_1():
-    node = UnaryOp('test')
+    node = ast.UnaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
     assert node.num_children() == sum(1 for i in node.children())
     assert not node.has_child0()
 
-    node.add_child(AstNode('child'))
+    node.add_child(ast.AstNode('child'))
 
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
 
 
 def test_UnaryOp_2():
-    node = UnaryOp('test')
+    node = ast.UnaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
     assert node.num_children() == sum(1 for i in node.children())
     assert not node.has_child0()
 
-    node.child0 = AstNode('child')
+    node.child0 = ast.AstNode('child')
 
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
 
 
 def test_BinaryOp_1():
-    node = BinaryOp('test')
+    node = ast.BinaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
@@ -126,7 +131,7 @@ def test_BinaryOp_1():
     assert not node.has_child0()
     assert not node.has_child1()
 
-    node.add_child(AstNode('child1'))
+    node.add_child(ast.AstNode('child1'))
 
     assert node.num_children() == 1
     assert node.can_add_child()
@@ -134,19 +139,19 @@ def test_BinaryOp_1():
     assert node.has_child0()
     assert not node.has_child1()
 
-    node.add_child(AstNode('child2'))
+    node.add_child(ast.AstNode('child2'))
 
     assert node.num_children() == 2
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
     assert node.has_child1()
 
 
 def test_BinaryOp_2():
-    node = BinaryOp('test')
+    node = ast.BinaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
@@ -154,7 +159,7 @@ def test_BinaryOp_2():
     assert not node.has_child0()
     assert not node.has_child1()
 
-    node.child0 = AstNode('child1')
+    node.child0 = ast.AstNode('child1')
 
     assert node.num_children() == 1
     assert node.can_add_child()
@@ -162,18 +167,18 @@ def test_BinaryOp_2():
     assert node.has_child0()
     assert not node.has_child1()
 
-    node.add_child(AstNode('child2'))
+    node.add_child(ast.AstNode('child2'))
 
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
     assert node.has_child1()
 
 
 def test_BinaryOp_3():
-    node = BinaryOp('test')
+    node = ast.BinaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
@@ -181,7 +186,7 @@ def test_BinaryOp_3():
     assert not node.has_child0()
     assert not node.has_child1()
 
-    node.add_child(AstNode('child1'))
+    node.add_child(ast.AstNode('child1'))
 
     assert node.num_children() == 1
     assert node.can_add_child()
@@ -189,18 +194,18 @@ def test_BinaryOp_3():
     assert node.has_child0()
     assert not node.has_child1()
 
-    node.child1 = AstNode('child2')
+    node.child1 = ast.AstNode('child2')
 
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
     assert node.has_child1()
 
 
 def test_BinaryOp_4():
-    node = BinaryOp('test')
+    node = ast.BinaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
@@ -208,7 +213,7 @@ def test_BinaryOp_4():
     assert not node.has_child0()
     assert not node.has_child1()
 
-    node.child0 = AstNode('child1')
+    node.child0 = ast.AstNode('child1')
 
     assert node.num_children() == 1
     assert node.can_add_child()
@@ -216,18 +221,18 @@ def test_BinaryOp_4():
     assert node.has_child0()
     assert not node.has_child1()
 
-    node.child1 = AstNode('child2')
+    node.child1 = ast.AstNode('child2')
 
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
     assert node.has_child1()
 
 
 def test_TernaryOp_1():
-    node = TernaryOp('test')
+    node = ast.TernaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
@@ -236,7 +241,7 @@ def test_TernaryOp_1():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child1'))
+    node.add_child(ast.AstNode('child1'))
 
     assert node.num_children() == 1
     assert node.can_add_child()
@@ -245,7 +250,7 @@ def test_TernaryOp_1():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child2'))
+    node.add_child(ast.AstNode('child2'))
 
     assert node.num_children() == 2
     assert node.can_add_child()
@@ -254,12 +259,12 @@ def test_TernaryOp_1():
     assert node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child3'))
+    node.add_child(ast.AstNode('child3'))
 
     assert node.num_children() == 3
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
     assert node.has_child1()
@@ -267,7 +272,7 @@ def test_TernaryOp_1():
 
 
 def test_TernaryOp_2():
-    node = TernaryOp('test')
+    node = ast.TernaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
@@ -276,7 +281,7 @@ def test_TernaryOp_2():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.child0 = AstNode('child1')
+    node.child0 = ast.AstNode('child1')
 
     assert node.num_children() == 1
     assert node.can_add_child()
@@ -285,7 +290,7 @@ def test_TernaryOp_2():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child2'))
+    node.add_child(ast.AstNode('child2'))
 
     assert node.num_children() == 2
     assert node.can_add_child()
@@ -294,12 +299,12 @@ def test_TernaryOp_2():
     assert node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child3'))
+    node.add_child(ast.AstNode('child3'))
 
     assert node.num_children() == 3
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
     assert node.has_child1()
@@ -307,7 +312,7 @@ def test_TernaryOp_2():
 
 
 def test_TernaryOp_3():
-    node = TernaryOp('test')
+    node = ast.TernaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
@@ -316,7 +321,7 @@ def test_TernaryOp_3():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child1'))
+    node.add_child(ast.AstNode('child1'))
 
     assert node.num_children() == 1
     assert node.can_add_child()
@@ -325,7 +330,7 @@ def test_TernaryOp_3():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.child1 = AstNode('child2')
+    node.child1 = ast.AstNode('child2')
 
     assert node.num_children() == 2
     assert node.can_add_child()
@@ -334,12 +339,12 @@ def test_TernaryOp_3():
     assert node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child3'))
+    node.add_child(ast.AstNode('child3'))
 
     assert node.num_children() == 3
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
     assert node.has_child1()
@@ -347,7 +352,7 @@ def test_TernaryOp_3():
 
 
 def test_TernaryOp_4():
-    node = TernaryOp('test')
+    node = ast.TernaryOp('test')
 
     assert node.num_children() == 0
     assert node.can_add_child()
@@ -356,7 +361,7 @@ def test_TernaryOp_4():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child1'))
+    node.add_child(ast.AstNode('child1'))
 
     assert node.num_children() == 1
     assert node.can_add_child()
@@ -365,7 +370,7 @@ def test_TernaryOp_4():
     assert not node.has_child1()
     assert not node.has_child2()
 
-    node.add_child(AstNode('child2'))
+    node.add_child(ast.AstNode('child2'))
 
     assert node.num_children() == 2
     assert node.can_add_child()
@@ -374,12 +379,12 @@ def test_TernaryOp_4():
     assert node.has_child1()
     assert not node.has_child2()
 
-    node.child2 = AstNode('child3')
+    node.child2 = ast.AstNode('child3')
 
     assert node.num_children() == 3
     assert not node.can_add_child()
-    with pytest.raises(TooManyChildren):
-        node.add_child(AstNode('child'))
+    with pytest.raises(ast.TooManyChildren):
+        node.add_child(ast.AstNode('child'))
     assert node.num_children() == sum(1 for i in node.children())
     assert node.has_child0()
     assert node.has_child1()

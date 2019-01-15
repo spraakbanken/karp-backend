@@ -29,7 +29,7 @@ class AstNode:
     min_arity = 0
     max_arity = 0
 
-    def __init__(self, value = None):
+    def __init__(self, value=None):
         self.value = value
 
     def __repr__(self) -> str:
@@ -96,7 +96,7 @@ class NodeWithOneChild(AstNode):
         self.child0 = child0
 
     def has_child0(self) -> bool:
-        return self.child0 != None
+        return self.child0 is not None
 
     def children(self) -> Iterable[AstNode]:
         if self.has_child0():
@@ -130,7 +130,7 @@ class NodeWithTwoChildren(NodeWithOneChild):
         self.child1 = child1
 
     def has_child1(self) -> bool:
-        return self.child1 != None
+        return self.child1 is not None
 
     def children(self) -> Iterable[AstNode]:
         yield from super().children()
@@ -170,7 +170,7 @@ class NodeWithThreeChildren(NodeWithTwoChildren):
         self.child2 = child2
 
     def has_child2(self) -> bool:
-        return self.child2 != None
+        return self.child2 is not None
 
     def children(self) -> Iterable[AstNode]:
         yield from super().children()
@@ -205,7 +205,11 @@ class NodeWithThreeChildren(NodeWithTwoChildren):
             raise ChildNotFound("No such child '{}'".format(old_child))
 
     def __repr__(self) -> str:
-        return '<{} child0={} child1={} child2={}>'.format(self._format_self(), repr(self.child0), repr(self.child1), repr(self.child2))
+        return '<{} child0={} child1={} child2={}>'.format(self._format_self(),
+                                                           repr(self.child0),
+                                                           repr(self.child1),
+                                                           repr(self.child2))
+
 
 # Real classes
 class UnaryOp(NodeWithOneChild):
@@ -228,7 +232,6 @@ class BinaryOp(NodeWithTwoChildren):
 
     def _format_self(self):
         return 'BinaryOp op={}'.format(self.value)
-
 
 
 class TernaryOp(NodeWithThreeChildren):

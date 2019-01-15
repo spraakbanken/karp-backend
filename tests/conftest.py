@@ -1,12 +1,9 @@
-import io
 import json
 
 import pytest  # pyre-ignore
 import os
-import pwd
 import subprocess
 import tempfile
-import urllib
 from distutils.util import strtobool
 
 from karp import create_app
@@ -95,7 +92,6 @@ def app_with_data_f(app_f):
 
         return app
     yield fun
-
 
 
 @pytest.fixture

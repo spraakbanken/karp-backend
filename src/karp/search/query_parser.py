@@ -1,20 +1,24 @@
-from typing import List
-import queue
+import collections
 
-from .basic_ast import *
-# from .parser import Parser
-
-
+from .basic_ast import unary_operator, binary_operator, ternary_operator
+from .basic_ast import AstNode, ArgNode, IntNode, FloatNode, StringNode
+from .basic_ast import Ast, AstException
 
 
 class ParseError(BaseException):
     def __init__(self, msg: str) -> None:
         self.msg = msg
 
+    def __repr__(self) -> str:
+        return "ParseError message='{}'".format(self.msg)
+
 
 class SyntaxError(ParseError):
     def __init__(self, msg: str):
         super().__init__(msg)
+
+    def __repr__(self) -> str:
+        return "SyntaxError message='{}'".format(self.msg)
 
 
 class Operator():
@@ -35,6 +39,7 @@ class Operator():
     GT = 'GT'
     GTE = 'GTE'
     RANGE = 'RANGE'
+
 
 OPERATORS = {
     'and': binary_operator(Operator.AND),
@@ -77,7 +82,6 @@ class QueryParser():
 
         return node_creator()
 
-
     def _sub_expr(self, s):
         exprs = s.split('|')
 
@@ -85,13 +89,14 @@ class QueryParser():
 
         if not isinstance(_node, ArgNode):
             for expr in exprs[1:]:
-                _node.add_child(self.create_ast_node(expr))
+                if _node.can_add_child():
+                    _node.add_child(self.create_ast_node(expr))
+                else:
+                    raise SyntaxError("Too many arguments to '{}'".format(_node))
         elif len(exprs) > 1:
             raise SyntaxError("Can't add '{}' to '{}'. Did you miss a '|'?".format(exprs[1:], _node))
 
         return _node
-
-
 
     def _expr(self, s):
         exprs = s.split('||')
@@ -122,9 +127,8 @@ class QueryParser():
                         raise ParseError('Too complex query')
                 else:
                     raise ParseError('Too complex query')
-
             else:
-                raise ParseError("Can't combine '{}' and '{}'".format(curr, node))
+                raise SyntaxError("Too many operators. Can't combine '{}' and '{}'".format(curr, node))
 
         while len(node_stack) > 0:
             parent = node_stack.pop()
@@ -140,27 +144,28 @@ class QueryParser():
             parent.add_child(curr)
             curr = parent
 
-        q = queue.SimpleQueue()
-        q.put(_node)
-        while not q.empty():
-            curr = q.get()
+        q = collections.deque()
+        q.append(_node)
+        while len(q) > 0:
+            curr = q.popleft()
             for child in curr.children():
                 if child.min_arity > 0 and child.num_children() == 0:
                     new_child = StringNode(child.value.lower())
                     curr.update_child(child, new_child)
                 else:
-                    q.put(child)
+                    q.append(child)
 
         return _node
-
-
-
-
 
     def parse(self, s: str) -> Ast:
         # print('parsing "{}"'.format(s))
         root_node = self._expr(s)
-        ast = Ast(root_node)
+        try:
+            ast = Ast(root_node)
+        except AstException as e:
+            raise ParseError(e.msg)
+        except ParseError as e:
+            raise e
         ok, error = ast.validate_arity()
         if ok:
             return ast
