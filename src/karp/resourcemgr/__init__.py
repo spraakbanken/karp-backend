@@ -158,3 +158,34 @@ def delete_resource(resource_id, version):
     resource.active = False
     db.session.update(resource)
     db.session.commit()
+
+
+def get_refs(resource_id, version=None):
+    """
+    Goes through all other resource configs finding resources and fields that refer to this resource
+    """
+    resource_backrefs = []
+    resource_refs = []
+
+    src_resource = get_resource(resource_id, version=version)
+
+    all_other_resources = [resource_def for resource_def in get_all_resources()
+                           if resource_def.resource_id != resource_id or resource_def.version != version]
+
+    for field_name, field in src_resource.config['fields'].items():
+        if 'ref' not in field:
+            continue
+        if 'resource_id' not in field['ref']:
+            resource_backrefs.append((resource_id, version, field_name, field))
+            resource_refs.append((resource_id, version, field_name, field))
+        else:
+            resource_refs.append((field['ref']['resource_id'], field['ref']['resource_version'], field_name, field))
+
+    for resource_def in all_other_resources:
+        other_resource = get_resource(resource_def.resource_id, version=resource_def.version)
+        for field_name, field in other_resource.config['fields'].items():
+            ref = field.get('ref')
+            if ref and ref.get('resource_id') == resource_id and ref.get('resource_version') == version:
+                resource_backrefs.append((resource_def.resource_id, resource_def.version, field_name, field))
+
+    return resource_refs, resource_backrefs
