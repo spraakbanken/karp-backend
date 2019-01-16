@@ -1,9 +1,11 @@
 import json
 from typing import Dict
+import collections
 
 from .index import IndexModule
 import karp.resourcemgr as resourcemgr
 import karp.resourcemgr.entryread as entryread
+import karp.network as network
 
 indexer = IndexModule()
 
@@ -17,7 +19,7 @@ def reindex(resource_id, index_name, version=None):
         for entry in entries:
             yield (entry.entry_id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields))
 
-    add_entries(index_name, prepare_entries(), do_reindex=False)
+    add_entries(index_name, prepare_entries(), update_refs=False)
 
 
 def create_index(resource_id, version=None):
@@ -29,17 +31,10 @@ def publish_index(alias_name, index_name):
     return indexer.impl.publish_index(alias_name, index_name)
 
 
-def add_entries(resource_id, src_entries, do_reindex=True):
-    """
-    Tmp solution to changes in entries that are referred to by another entry (we don't know yet!):
-      Reindex after every change...
-    """
-    if do_reindex:
-        index_name = create_index(resource_id)
-        reindex(resource_id, index_name)
-        publish_index(resource_id, index_name)
-    else:
-        indexer.impl.add_entries(resource_id, src_entries)
+def add_entries(resource_id, entries, update_refs=True):
+    indexer.impl.add_entries(resource_id, entries)
+    if update_refs:
+        _update_references(resource_id, entries)
 
 
 def delete_entry(resource_id, entry_id):
@@ -48,9 +43,21 @@ def delete_entry(resource_id, entry_id):
       Reindex after every change...
       For delete this currently means "do nothing", since the deleted element will not be included on next reindex
     """
-    index_name = create_index(resource_id)
-    reindex(resource_id, index_name)
-    publish_index(resource_id, index_name)
+    indexer.impl.delete_entry(resource_id, entry_id)
+    _update_references(resource_id, [entry_id])
+
+
+def _update_references(resource_id, entry_ids):
+    add = collections.defaultdict(list)
+    for src_entry_id in entry_ids:
+        refs = network.get_referenced_entries(resource_id, None, src_entry_id)
+        for field_ref in refs:
+            ref_resource_id = field_ref['resource_id']
+            ref_resource = resourcemgr.get_resource(ref_resource_id, version=(field_ref['resource_version']))
+            body = transform_to_index_entry(ref_resource, field_ref['entry'], ref_resource.config['fields'].items())
+            add[ref_resource_id].append(((field_ref['id']), body))
+    for ref_resource_id, ref_entries in add.items():
+        indexer.impl.add_entries(ref_resource_id, ref_entries)
 
 
 def transform_to_index_entry(resource: resourcemgr.Resource, src_entry: Dict, fields):
