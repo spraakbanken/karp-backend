@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import pytest  # pyre-ignore
 import json
 import time
@@ -50,6 +51,12 @@ def test_query_no_q(es, client_with_data_f):
 
 
 @pytest.mark.skip(reason="places doesn't exist")
+=======
+import pytest
+
+
+@pytest.mark.skip(reason='no impl')
+>>>>>>> impl-query
 def test_no_q(client):
     response = client.get('/places/query')
     assert response.status == '200 OK'
@@ -58,13 +65,21 @@ def test_no_q(client):
     assert "query_params" in json_data
 
 
+<<<<<<< HEAD
 @pytest.mark.skip(reason='no protected stuff')
+=======
+@pytest.mark.skip(reason='no impl')
+>>>>>>> impl-query
 def test_protected(client_with_data_scope_module):
     response = client_with_data_scope_module.get('/municipalities/query')
     assert response.status == '403 FORBIDDEN'
 
 
+<<<<<<< HEAD
 @pytest.mark.skip(reason="places doesn't exist")
+=======
+@pytest.mark.skip(reason='no impl')
+>>>>>>> impl-query
 def test_pagination_explicit_0_25(client):
     resource = 'places'
     response = client.get('/{}/query?from=0&size=25'.format(resource))
@@ -77,7 +92,11 @@ def test_pagination_explicit_0_25(client):
     assert len(json_data[resource]['hits']) == 25
 
 
+<<<<<<< HEAD
 @pytest.mark.skip(reason="places doesn't exist")
+=======
+@pytest.mark.skip(reason='no impl')
+>>>>>>> impl-query
 def test_pagination_explicit_13_45(client):
     resource = 'places'
     response = client.get('/{}/query?from=13&size=45'.format(resource))
@@ -90,7 +109,11 @@ def test_pagination_explicit_13_45(client):
     assert len(json_data[resource]['hits']) == 45
 
 
+<<<<<<< HEAD
 @pytest.mark.skip(reason="places doesn't exist")
+=======
+@pytest.mark.skip(reason='no impl')
+>>>>>>> impl-query
 def test_pagination_default_size(client):
     resource = 'places'
     response = client.get('/{}/query?from=0'.format(resource))
@@ -100,7 +123,11 @@ def test_pagination_default_size(client):
     assert len(json_data[resource]['hits']) == 25
 
 
+<<<<<<< HEAD
 @pytest.mark.skip(reason="places doesn't exist")
+=======
+@pytest.mark.skip(reason='no impl')
+>>>>>>> impl-query
 def test_pagination_default_from(client):
     resource = 'places'
     response = client.get('/{}/query?size=45'.format(resource))

@@ -7,6 +7,10 @@ Used to perform readiness and liveness probes on the server.
 from typing import List
 from typing import Optional
 from typing import Dict
+from typing import TypeVar
+from typing import Callable
+# from typing import ImmutableMapping
+
 from distutils.util import strtobool
 import json
 
@@ -16,6 +20,8 @@ from karp.resourcemgr import Resource
 from karp.resourcemgr import get_resource
 
 from karp import search
+
+from karp import util
 
 
 query_api = Blueprint('query_api', __name__)
@@ -140,9 +146,23 @@ def read_general_arguments() -> QueryParameters:
     return params
 
 
-def read_resource_arguments(params: QueryParameters,
-                            resource: Resource) -> QueryParameters:
-    format_query = request.args.get('format_query')
+T = TypeVar('T', bool, int, str, List[str])
+
+
+def arg_get(arg_name: str,
+            convert: Optional[Callable[[str], T]] = None,
+            default: Optional[T] = None) -> T:
+    arg = request.args.get(arg_name)
+    if not arg:
+        return default
+    if not convert:
+        return arg
+    return convert(arg)
+
+
+def read_resource_arguments(params: Dict,
+                            resource: Resource) -> Dict:
+    format_query = arg_get('format_query')
     resource_params = {}
     if format_query:
         if resource.has_format_query(format_query):
@@ -150,22 +170,26 @@ def read_resource_arguments(params: QueryParameters,
         else:
             # TODO What do if the user called with a unsupported format_query
             raise RuntimeError
-    if request.args.get('sort'):
-        resource_params['sort'] = request.args.get('sort')
+
+    if not params.get('sort'):
+        resource_params['sort'] = resource.default_sort()
 
     # Populate list over all fields to search for
-    if params.include_fields:
-        fields = params.include_fields
+    if params.get('include_fields'):
+        fields = params['include_fields']
     else:
         fields = resource.get_fields()
 
     # Remove excluded fields from the intial list
-    if params.exclude_fields:
-        for field in params.exclude_fields:
-            fields.remove(field)
+    for field in params.get('exclude_fields', []):
+        fields.remove(field)
 
     resource_params['fields'] = fields
-    params.resource_params[resource.id()] = resource_params
+
+    if not params.get('resource_params'):
+        params['resource_params'] = {}
+    params['resource_params'][resource.id()] = resource_params
+
     return params
 
 
@@ -188,8 +212,8 @@ def read_resource_arguments(params: QueryParameters,
 #     return jsonify({'status': 'ok'}), 200
 
 
-def user_is_authorized(resource: Resource, fields: List[str]) -> bool:
-    if resource.is_protected(mode="read", fields=fields):
+def user_is_authorized(resource: Resource, fields: List[str], mode="read") -> bool:
+    if resource.is_protected(mode=mode, fields=fields):
         return False
     else:
         return True
@@ -218,4 +242,68 @@ def get_indexed_entry(resource_id, entry_id):
         'id': response[0].meta.id,
         'version': -1
     }
+
     return jsonify(result), 200
+
+
+def get_fields(name: str, include_fields: List[str], exclude_fields: List[str]) -> List[str]:
+    return []
+
+
+def parse_arguments(args: Dict[str, str], resource_str: str = None) -> Dict:
+    params = {}
+    s2l = util.convert.str2list(',')
+    if resource_str:
+        params['resources'] = arg_get('resources', s2l)
+    else:
+        params['resources'] = s2l(resource_str)
+    available_fields = {
+        'from': {'default': 0, 'convert': int},
+        'size': {'default': 25, 'convert': int},
+        'split_results': {'default': False, 'convert': strtobool},
+        'lexicon_stats': {'default': True, 'convert': strtobool},
+        'include_fields': {'convert': s2l},
+        'exclude_fields': {'convert': s2l},
+        'format': {},
+        'format_query': {},
+        'q': {},
+        'sort': {}
+    }
+
+    for field, m in available_fields.items():
+        params[field] = arg_get(field, m.get('convert'), m.get('default'))
+
+    return params
+
+
+
+    # resources = resources.split(',')
+    # result = {}
+    # query_params = read_general_arguments()
+    # query_params.resources = resources
+    # for resource_id in resources:
+    #     resource_result = {}
+    #     resource = get_resource(resource_id)
+    #     query_params = read_resource_arguments(query_params, resource)
+    #     print("/query got resource: {resource}".format(resource=resource_id))
+    #     print(resource)
+    #     print(query_params)
+    #     if not user_is_authorized(resource=resource,
+    #                               fields=query_params.fields):
+    #         return jsonify({'status': 'forbidden'}), 403
+    #
+    #     hits: List[str] = []
+    #
+    #     for i in range(query_params.from_, query_params.from_ + query_params.size):
+    #         hits.append("{}[{}]".format(resource_id, str(i)))
+    #
+    #     resource_result['hits'] = hits
+    #
+    #     # es_result = search.search(resource_id, resource.version, simple_query="Kommun")
+    #     # resource_result['es'] = es_result
+    #     result[resource_id] = resource_result
+    #
+    # result['query_params'] = repr(query_params)
+    #
+    # print(result)
+    # return jsonify(result), 200
