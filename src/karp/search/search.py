@@ -1,4 +1,23 @@
+import distutils
+
+from typing import Optional, Callable, TypeVar, List
+
 from . import errors
+
+
+T = TypeVar('T', bool, int, str, List[str])
+
+
+def arg_get(args,
+            arg_name: str,
+            convert: Optional[Callable[[str], T]] = None,
+            default: Optional[T] = None) -> T:
+    arg = args.get(arg_name, None)
+    if arg is None:
+        return default
+    if convert is None:
+        return arg
+    return convert(arg)
 
 
 class Query:
@@ -11,6 +30,15 @@ class Query:
         if resource_str is None:
             raise errors.IncompleteQuery('No resources are defined.')
         self.resources = resource_str.split(',')
+        self.split_results = arg_get(args, 'split_results', distutils.util.strtobool, False)
+
+    def __repr__(self) -> str:
+        return '{} resources={} split_results={}'.format(self._self_name(),
+                                                         self.resources,
+                                                         self.split_results)
+
+    def _self_name(self) -> str:
+        return 'Query'
 
 
 class SearchInterface:
