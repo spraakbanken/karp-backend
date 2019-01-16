@@ -154,3 +154,13 @@ class QueryParser():
             return _ast
         else:
             raise errors.ParseError(error)
+
+
+_parser = QueryParser()
+
+
+def parse(s: str) -> ast.Ast:
+    if not s:
+        return ast.Ast(None)
+
+    return _parser.parse(s)

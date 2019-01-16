@@ -2,6 +2,7 @@ import distutils
 
 from typing import Optional, Callable, TypeVar, List
 
+from . import query_parser as parser
 from . import errors
 
 
@@ -21,7 +22,8 @@ def arg_get(args,
 
 
 class Query:
-    resource = []
+    resources = []
+    q = None
 
     def __init__(self):
         pass
@@ -31,7 +33,9 @@ class Query:
             raise errors.IncompleteQuery('No resources are defined.')
         self.resources = resource_str.split(',')
         self.split_results = arg_get(args, 'split_results', distutils.util.strtobool, False)
-
+        self.q = arg_get(args, 'q')
+        self.ast = parser.parse(self.q)
+        
     def __repr__(self) -> str:
         return '{} resources={} split_results={}'.format(self._self_name(),
                                                          self.resources,
