@@ -5,12 +5,13 @@ import json
 
 import karp.resourcemgr.entryread as entryread
 import karp.resourcemgr.entrywrite as entrywrite
-
+import karp.auth.auth as auth
 
 edit_api = Blueprint('edit_api', __name__)
 
 
 @edit_api.route('/<resource_id>/<entry_id>')
+@auth.auth.authorization('WRITE')
 def get_entry_for_editing(resource_id, entry_id):
     db_entry = entryread.get_entry(resource_id, entry_id)
     result = {

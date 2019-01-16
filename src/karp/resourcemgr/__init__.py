@@ -189,3 +189,13 @@ def get_refs(resource_id, version=None):
                 resource_backrefs.append((resource_def.resource_id, resource_def.version, field_name, field))
 
     return resource_refs, resource_backrefs
+
+
+def is_protected(resource_id, level):
+    resource = get_resource(resource_id)
+    protection = resource.config.get('protected', {})
+    if protection:
+        # TODO
+        return True
+    else:
+        return False

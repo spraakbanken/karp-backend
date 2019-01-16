@@ -17,6 +17,8 @@ elasticsearch = "*"
 elasticsearch-dsl = "*"
 alembic = "*"
 slacker-log-handler = "*"
+pyjwt = "*"
+cryptography = "*"
 
 [dev-packages]
 pytest = "*"
