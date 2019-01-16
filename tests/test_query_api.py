@@ -1,4 +1,52 @@
 import pytest  # pyre-ignore
+import json
+import time
+
+
+def get_json(client, path):
+    response = client.get(path)
+    return json.loads(response.data.decode())
+
+
+def init(client, es_status_code, entries):
+    if es_status_code == 'skip':
+        pytest.skip('elasticsearch disabled')
+    client_with_data = client(use_elasticsearch=True)
+
+    for entry in entries:
+        client_with_data.post('places/add',
+                              data=json.dumps({'entry': entry}),
+                              content_type='application/json')
+    return client_with_data
+
+
+def test_query_no_q(es, client_with_data_f):
+    client = init(client_with_data_f, es, [])
+
+    client.post('places/add', data=json.dumps({
+        'entry': {
+            'code': 3,
+            'name': 'test3',
+            'population': 4,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        }
+    }), content_type='application/json')
+
+    # currently no connections are made on add/update, so we need to reindex to get the connections
+    with client.application.app_context():
+        import karp.indexmgr as indexmgr
+        resource_id = 'places'
+        version = 1
+        index_name = indexmgr.create_index(resource_id, version)
+        indexmgr.reindex(resource_id, index_name, version=version)
+        indexmgr.publish_index(resource_id, index_name)
+
+    time.sleep(1)
+    entries = get_json(client, 'places/query')
+    assert len(entries) == 1
+    assert entries[0]['entry']['name'] == 'test3'
 
 
 @pytest.mark.skip(reason="places doesn't exist")
