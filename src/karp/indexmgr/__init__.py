@@ -38,11 +38,6 @@ def add_entries(resource_id, entries, update_refs=True):
 
 
 def delete_entry(resource_id, entry_id):
-    """
-    Tmp solution to changes in entries that are referred to by another entry (we don't know yet!):
-      Reindex after every change...
-      For delete this currently means "do nothing", since the deleted element will not be included on next reindex
-    """
     indexer.impl.delete_entry(resource_id, entry_id)
     _update_references(resource_id, [entry_id])
 
