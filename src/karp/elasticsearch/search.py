@@ -9,6 +9,10 @@ class EsQuery(search.Query):
         self.resource_str = resource_str
         self.query = None
 
+    def _self_name(self) -> str:
+        return 'EsQuery query={} resource_str={}'.format(self.query,
+                                                         self.resource_str)
+
 
 class EsSearch(search.SearchInterface):
 
@@ -21,6 +25,7 @@ class EsSearch(search.SearchInterface):
         return query
 
     def search_with_query(self, query: EsQuery):
+        print('search_with_query called with query={}'.format(query))
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
 
@@ -37,12 +42,13 @@ class EsSearch(search.SearchInterface):
 
             return result
         else:
-            s = es_dsl.Search(using=self.es, index=query.resources_str)
+            s = es_dsl.Search(using=self.es, index=query.resource_str)
+            print('s = {}'.format(s))
             if query.query is not None:
                 s = s.query(query.query)
             response = s.execute()
 
-            return ({'id': result.meta.id, 'version': -1, 'entry': result.to_dict()} for result in response)
+            return [{'id': result.meta.id, 'version': -1, 'entry': result.to_dict()} for result in response]
 
     def get_query(self, query):
         # Only handle simplest case, for example: 'and|baseform.search|equals|userinput'
