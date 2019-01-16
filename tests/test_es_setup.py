@@ -61,7 +61,9 @@ def test_es_search(es, client_with_data_f):
         query = search.get_query('and|population|equals|3')
         ids = search.search(['places'], {'query': query, 'split_results': False})
         assert len(ids) == 1
-        assert ids[0]['population'] == 3
+        print('ids[0] = {}'.format(ids[0]))
+        assert 'entry' in ids[0]
+        assert ids[0]['entry']['population'] == 3
 
 
 def test_es_search2(es, client_with_data_f):
