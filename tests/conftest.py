@@ -54,6 +54,9 @@ class ConfigTest(Config):
     def __init__(self, use_elasticsearch=False):
         if use_elasticsearch:
             self.ELASTICSEARCH_HOST = 'http://localhost:9201'
+        else:
+            # this can help us see errors were we hit elasticsearch without meaning to
+            self.ELASTICSEARCH_HOST = 'http://localhost:12345'
 
 
 @pytest.fixture
@@ -88,9 +91,9 @@ def app_with_data_f(app_f):
             for file in ['tests/data/config/places.json', 'tests/data/config/municipalities.json']:
                 with open(file) as fp:
                     resource, version = resourcemgr.create_new_resource(fp)
-                    resourcemgr.publish_resource(resource, version)
                     resourcemgr.setup_resource_class(resource, version)
                     if kwargs.get('use_elasticsearch', False):
+                        resourcemgr.publish_resource(resource, version)
                         index_name = indexmgr.create_index(resource, version=version)
                         indexmgr.publish_index(resource, index_name)
         return app
