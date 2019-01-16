@@ -1,6 +1,7 @@
 import pytest
 
 from karp.search import basic_ast as ast
+from karp.search import errors
 from karp.search import query_parser
 
 
@@ -23,13 +24,13 @@ def do_test_ast(x, facit):
 
 
 def test_ParseError():
-    e = query_parser.ParseError('test')
+    e = errors.ParseError('test')
     assert repr(e) == "ParseError message='test'"
 
 
 def test_SyntaxError():
-    e = query_parser.SyntaxError('test')
-    assert isinstance(e, query_parser.ParseError)
+    e = errors.SyntaxError('test')
+    assert isinstance(e, errors.ParseError)
     assert repr(e) == "SyntaxError message='test'"
 
 
@@ -141,12 +142,12 @@ def test_and_equals_not_equals_karp_v5_extended_6(parser):
 
 
 def test_fail_no_operator(parser):
-    with pytest.raises(query_parser.SyntaxError):
+    with pytest.raises(errors.SyntaxError):
         parser.parse('freett|litet hus')
 
 
 def test_fail_too_many_operators(parser):
-    with pytest.raises(query_parser.SyntaxError):
+    with pytest.raises(errors.SyntaxError):
         parser.parse('and||exists|wordform||exists|baseform||exists|pos')
 
 
@@ -159,7 +160,7 @@ def test_freergxp_1(parser):
 
 
 def test_fail_freergxp_too_many_arguments(parser):
-    with pytest.raises(query_parser.ParseError):
+    with pytest.raises(errors.ParseError):
         parser.parse('freergxp|str.*ng1|str.*ng2')
 
 

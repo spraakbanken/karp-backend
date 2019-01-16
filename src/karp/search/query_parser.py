@@ -1,24 +1,7 @@
 import collections
 
-from .basic_ast import unary_operator, binary_operator, ternary_operator
-from .basic_ast import AstNode, ArgNode, IntNode, FloatNode, StringNode
-from .basic_ast import Ast, AstException
-
-
-class ParseError(BaseException):
-    def __init__(self, msg: str) -> None:
-        self.msg = msg
-
-    def __repr__(self) -> str:
-        return "ParseError message='{}'".format(self.msg)
-
-
-class SyntaxError(ParseError):
-    def __init__(self, msg: str):
-        super().__init__(msg)
-
-    def __repr__(self) -> str:
-        return "SyntaxError message='{}'".format(self.msg)
+from . import basic_ast as ast
+from . import errors
 
 
 class Operator():
@@ -42,59 +25,59 @@ class Operator():
 
 
 OPERATORS = {
-    'and': binary_operator(Operator.AND),
-    'or': binary_operator(Operator.OR),
-    'not': unary_operator(Operator.NOT),
-    'freetext': unary_operator(Operator.FREETEXT),
-    'freergxp': unary_operator(Operator.FREERGXP),
-    'regexp': binary_operator(Operator.REGEXP),
-    'exists': unary_operator(Operator.EXISTS),
-    'missing': unary_operator(Operator.MISSING),
-    'equals': binary_operator(Operator.EQUALS),
-    'contains': binary_operator(Operator.CONTAINS),
-    'startswith': binary_operator(Operator.STARTSWITH),
-    'endswith': binary_operator(Operator.ENDSWITH),
-    'lt': binary_operator(Operator.LT),
-    'lte': binary_operator(Operator.LTE),
-    'gt': binary_operator(Operator.GT),
-    'gte': binary_operator(Operator.GTE),
-    'range': ternary_operator(Operator.RANGE),
+    'and': ast.binary_operator(Operator.AND),
+    'or': ast.binary_operator(Operator.OR),
+    'not': ast.unary_operator(Operator.NOT),
+    'freetext': ast.unary_operator(Operator.FREETEXT),
+    'freergxp': ast.unary_operator(Operator.FREERGXP),
+    'regexp': ast.binary_operator(Operator.REGEXP),
+    'exists': ast.unary_operator(Operator.EXISTS),
+    'missing': ast.unary_operator(Operator.MISSING),
+    'equals': ast.binary_operator(Operator.EQUALS),
+    'contains': ast.binary_operator(Operator.CONTAINS),
+    'startswith': ast.binary_operator(Operator.STARTSWITH),
+    'endswith': ast.binary_operator(Operator.ENDSWITH),
+    'lt': ast.binary_operator(Operator.LT),
+    'lte': ast.binary_operator(Operator.LTE),
+    'gt': ast.binary_operator(Operator.GT),
+    'gte': ast.binary_operator(Operator.GTE),
+    'range': ast.ternary_operator(Operator.RANGE),
 }
 
 
 class QueryParser():
-    def create_ast_node(self, s: str) -> AstNode:
+    def create_node(self, s: str) -> ast.tree.Node:
         node_creator = OPERATORS.get(s)
         if not node_creator:
             try:
                 int_value = int(s)
-                return IntNode(int_value)
+                return ast.IntNode(int_value)
             except ValueError:
                 pass
 
             try:
                 float_value = float(s)
-                return FloatNode(float_value)
+                return ast.FloatNode(float_value)
             except ValueError:
                 pass
 
-            return StringNode(s)
+            return ast.StringNode(s)
 
         return node_creator()
 
     def _sub_expr(self, s):
         exprs = s.split('|')
 
-        _node = self.create_ast_node(exprs[0])
+        _node = self.create_node(exprs[0])
 
-        if not isinstance(_node, ArgNode):
+        if not isinstance(_node, ast.ArgNode):
             for expr in exprs[1:]:
                 if _node.can_add_child():
-                    _node.add_child(self.create_ast_node(expr))
+                    _node.add_child(self.create_node(expr))
                 else:
-                    raise SyntaxError("Too many arguments to '{}'".format(_node))
+                    raise errors.SyntaxError("Too many arguments to '{}'".format(_node))
         elif len(exprs) > 1:
-            raise SyntaxError("Can't add '{}' to '{}'. Did you miss a '|'?".format(exprs[1:], _node))
+            raise errors.SyntaxError("Can't add '{}' to '{}'. Did you miss a '|'?".format(exprs[1:], _node))
 
         return _node
 
@@ -124,11 +107,11 @@ class QueryParser():
                         new_curr.add_child(node)
                         curr = new_curr
                     else:
-                        raise ParseError('Too complex query')
+                        raise errors.ParseError('Too complex query')
                 else:
-                    raise ParseError('Too complex query')
+                    raise errors.ParseError('Too complex query')
             else:
-                raise SyntaxError("Too many operators. Can't combine '{}' and '{}'".format(curr, node))
+                raise errors.SyntaxError("Too many operators. Can't combine '{}' and '{}'".format(curr, node))
 
         while len(node_stack) > 0:
             parent = node_stack.pop()
@@ -139,7 +122,7 @@ class QueryParser():
                 if new_parent.can_add_child():
                     new_parent.add_child(parent)
                 else:
-                    raise ParseError('Too complex query.')
+                    raise errors.ParseError('Too complex query.')
                 parent = new_parent
             parent.add_child(curr)
             curr = parent
@@ -150,24 +133,24 @@ class QueryParser():
             curr = q.popleft()
             for child in curr.children():
                 if child.min_arity > 0 and child.num_children() == 0:
-                    new_child = StringNode(child.value.lower())
+                    new_child = ast.StringNode(child.value.lower())
                     curr.update_child(child, new_child)
                 else:
                     q.append(child)
 
         return _node
 
-    def parse(self, s: str) -> Ast:
+    def parse(self, s: str) -> ast.Ast:
         # print('parsing "{}"'.format(s))
         root_node = self._expr(s)
         try:
-            ast = Ast(root_node)
-        except AstException as e:
-            raise ParseError(e.msg)
-        except ParseError as e:
+            _ast = ast.Ast(root_node)
+        except ast.tree.errors.TreeException as e:
+            raise errors.ParseError(e.msg)
+        except errors.ParseError as e:
             raise e
-        ok, error = ast.validate_arity()
+        ok, error = _ast.validate_arity()
         if ok:
-            return ast
+            return _ast
         else:
-            raise ParseError(error)
+            raise errors.ParseError(error)
