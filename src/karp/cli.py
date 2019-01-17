@@ -91,8 +91,8 @@ def reindex_resource(resource_id):
 @cli.command('list')
 @click.option('--show-active/--show-all', default=False)
 @cli_error_handler
-def list_resources(show_only_active):
-    if show_only_active:
+def list_resources(show_active):
+    if show_active:
         resources = resourcemgr.get_available_resources()
     else:
         resources = resourcemgr.get_all_resources()
