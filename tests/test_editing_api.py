@@ -116,7 +116,7 @@ def test_refs(es, client_with_data_f):
         resource_id = 'places'
         version = 1
         index_name = indexmgr.create_index(resource_id, version)
-        indexmgr.reindex(resource_id, index_name, version=version)
+        indexmgr._reindex(resource_id, index_name, version=version)
         indexmgr.publish_index(resource_id, index_name)
 
     time.sleep(1)
@@ -191,7 +191,7 @@ def test_external_refs(es, client_with_data_f):
         for resource_id in ['places', 'municipalities']:
             version = 1
             index_name = indexmgr.create_index(resource_id, version)
-            indexmgr.reindex(resource_id, index_name, version=version)
+            indexmgr._reindex(resource_id, index_name, version=version)
             indexmgr.publish_index(resource_id, index_name)
 
     time.sleep(1)
@@ -243,7 +243,7 @@ def test_update_refs(es, client_with_data_f):
         resource_id = 'places'
         version = 1
         index_name = indexmgr.create_index(resource_id, version)
-        indexmgr.reindex(resource_id, index_name, version=version)
+        indexmgr._reindex(resource_id, index_name, version=version)
         indexmgr.publish_index(resource_id, index_name)
 
     time.sleep(1)

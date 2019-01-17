@@ -1,7 +1,3 @@
-import json
-import click
-from flask.cli import with_appcontext  # pyre-ignore
-from distutils.util import strtobool
 import logging
 import click
 from flask.cli import FlaskGroup
@@ -10,7 +6,7 @@ from .config import MariaDBConfig
 import karp.resourcemgr as resourcemgr
 import karp.resourcemgr.entrywrite as entrywrite
 import karp.indexmgr as indexmgr
-from karp.errors import KarpError
+from karp.errors import KarpError, ResourceNotFoundError
 
 
 _logger = logging.getLogger('karp')
@@ -36,7 +32,7 @@ def cli_error_handler(func):
 
 
 @cli.command('create')
-@click.option('--config', default=None, help='')
+@click.option('--config', default=None, help='', required=True)
 @cli_error_handler
 def create_resource(config):
     with open(config) as fp:
@@ -48,75 +44,52 @@ def create_resource(config):
 
 
 @cli.command('import')
-@click.option('--resource_id', default=None, help='')
-@click.option('--version', default=None, help='')
-@click.option('--data', default=None, help='')
+@click.option('--resource_id', default=None, help='', required=True)
+@click.option('--version', default=None, help='', required=True)
+@click.option('--data', default=None, help='', required=True)
 @cli_error_handler
 def import_resource(resource_id, version, data):
-    resourcemgr.setup_resource_class(resource_id, version)
-    with open(data) as fp:
-        objs = []
-        for line in fp:
-            objs.append(json.loads(line))
-        entrywrite.add_entries(resource_id, objs, resource_version=version)
+    count = entrywrite.add_entries_from_file(resource_id, version, data)
+    click.echo("Added {count} entries to {resource_id}, version {version}".format(
+        count=count,
+        version=version,
+        resource_id=resource_id
+    ))
 
 
 @cli.command('publish')
-@with_appcontext
-@click.option('--resource_id', default=None, help='')
-@click.option('--version', default=None, help='')
+@click.option('--resource_id', default=None, help='', required=True)
+@click.option('--version', default=None, help='', required=True)
 @cli_error_handler
 def publish_resource(resource_id, version):
-    index_name = indexmgr.create_index(resource_id, version)
-    indexmgr.reindex(resource_id, index_name, version=version)
-    indexmgr.publish_index(resource_id, index_name)
-    resourcemgr.publish_resource(resource_id, version)
-
-
-@cli.command('create_index')
-@click.option('--resource_id', default=None, help='')
-@cli_error_handler
-def create_index(resource_id):
-    index_name = indexmgr.create_index(resource_id)
-    click.echo("Created index for resource {resource_id}".format(
-        resource_id=resource_id
-    ))
-    click.echo("New index name: {index_name}".format(
-        resource_id=resource_id,
-        index_name=index_name
-    ))
-
-
-@cli.command('publish_index')
-@with_appcontext
-@click.option('--resource_id', default=None, help='')
-@click.option('--index_name', default=None, help='Name of the index to ')
-@cli_error_handler
-def publish_index(resource_id, index_name):
-    indexmgr.publish_index(resource_id, index_name)
-
-
-@cli.command('reindex')
-@click.option('--resource_id', default=None, help='')
-@click.option('--publish_index', 'publish_index_arg', default='', help='')
-@cli_error_handler
-def reindex(resource_id, publish_index_arg):
-    index_name = indexmgr.create_index(resource_id)
-    indexmgr.reindex(resource_id, index_name)
-    click.echo("Successfully reindexed all data to index {index_name}".format(
-        index_name=index_name
-    ))
-    if not publish_index_arg:
-        publish_index_arg = click.prompt('Publish new index?', default='n')
-    if strtobool(publish_index_arg):
-        indexmgr.publish_index(resource_id, index_name)
-        click.echo('Index for {resource_id} published'.format(
-            resource_id=resource_id
+    resource = resourcemgr.get_resource(resource_id, version=version)
+    if resource.active:
+        click.echo("Resource already published")
+    else:
+        indexmgr.publish_index(resource_id, version=version)
+        click.echo("Successfully indexed and published all data in {resource_id}, version {version}".format(
+            resource_id=resource_id,
+            version=version
         ))
 
 
-@cli.command('list_resources')
-@click.option('--show_only_active/--show-all', default=False)
+@cli.command('reindex')
+@click.option('--resource_id', default=None, help='', required=True)
+@cli_error_handler
+def reindex_resource(resource_id):
+    try:
+        resource = resourcemgr.get_resource(resource_id)
+        indexmgr.publish_index(resource_id)
+        click.echo("Successfully reindexed all data in {resource_id}, version {version}".format(
+            resource_id=resource_id,
+            version=resource.version)
+        )
+    except ResourceNotFoundError:
+        click.echo("No active version of {resource_id}".format(resource_id=resource_id))
+
+
+@cli.command('list')
+@click.option('--show-active/--show-all', default=False)
 @cli_error_handler
 def list_resources(show_only_active):
     if show_only_active:

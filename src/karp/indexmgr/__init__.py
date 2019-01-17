@@ -10,7 +10,7 @@ import karp.network as network
 indexer = IndexModule()
 
 
-def reindex(resource_id, index_name, version=None):
+def _reindex(resource_id, version=None):
     resource_obj = resourcemgr.get_resource(resource_id, version=version)
     entries = resource_obj.model.query.filter_by(deleted=False)
 
@@ -19,16 +19,15 @@ def reindex(resource_id, index_name, version=None):
         for entry in entries:
             yield (entry.entry_id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields))
 
+    index_name = indexer.impl.create_index(resource_id, resource_obj.config)
     add_entries(index_name, prepare_entries(), update_refs=False)
+    indexer.impl.publish_index(resource_id, index_name)
 
 
-def create_index(resource_id, version=None):
-    resource = resourcemgr.get_resource(resource_id, version=version)
-    return indexer.impl.create_index(resource_id, resource.config)
-
-
-def publish_index(alias_name, index_name):
-    return indexer.impl.publish_index(alias_name, index_name)
+def publish_index(resource_id, version=None):
+    _reindex(resource_id, version=version)
+    if version:
+        resourcemgr.publish_resource(resource_id, version)
 
 
 def add_entries(resource_id, entries, update_refs=True):

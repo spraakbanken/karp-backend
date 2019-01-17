@@ -3,7 +3,7 @@ import fastjsonschema
 import logging
 
 from karp.errors import KarpError
-from karp.resourcemgr import get_resource
+from karp.resourcemgr import get_resource, setup_resource_class
 from karp.database import db
 import karp.indexmgr as indexmgr
 from .resource import Resource
@@ -52,6 +52,15 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
     db.session.commit()
 
     indexmgr.add_entries(resource_id, [(entry_id, index_entry_json)])
+
+
+def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
+    with open(data) as fp:
+        objs = []
+        for line in fp:
+            objs.append(json.loads(line))
+        add_entries(resource_id, objs, resource_version=version)
+    return len(objs)
 
 
 def add_entries(resource_id, entries, message=None, resource_version=None):

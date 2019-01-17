@@ -38,6 +38,8 @@ def get_resource(resource_id: str, version: int=None) -> Resource:
         resource_def = get_active_resource_definition(resource_id)
         if not resource_def:
             raise ResourceNotFoundError(resource_id)
+        if resource_id not in resource_models:
+            setup_resource_class(resource_id)
         return Resource(model=resource_models[resource_id],
                         history_model=history_models[resource_id],
                         resource_def=resource_def,
