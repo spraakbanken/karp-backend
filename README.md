@@ -17,7 +17,7 @@ This project uses [pipenv](https://pipenv.readthedocs.io/) and
    export MARIADB_PASSWORD=<user's password>
    export MARIADB_HOST=localhost
    ```
-5. Run `pipenv run alembic --upgrade head` to initialize database
+5. Run `pipenv run alembic upgrade head` to initialize database
 6. Run `pipenv run python wsgi.py` to start development server
 
     or `pipenv shell` when `python wsgi.py`
