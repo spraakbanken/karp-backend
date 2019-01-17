@@ -17,7 +17,10 @@ setup(
     url='https://spraakbanken.gu.se',
     packages=find_packages('src'),
     package_dir={'': 'src'},
-    package_data={'karp': ['schema/resourceconf.schema.json']},
+    package_data={'karp': [
+        'schema/resourceconf.schema.json',
+        'auth/pubkey.pem'
+    ]},
     entry_points={
         'console_scripts': [
             'karp-cli=karp.cli:cli'

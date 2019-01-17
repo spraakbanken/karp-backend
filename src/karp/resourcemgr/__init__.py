@@ -197,6 +197,7 @@ def get_refs(resource_id, version=None):
             if ref and ref.get('resource_id') == resource_id and ref.get('resource_version') == version:
                 resource_backrefs[resource_def.resource_id][resource_def.version][field_name] = field
 
+
     def flatten_dict(ref_dict):
         ref_list = []
         for ref_resource_id, versions in ref_dict.items():
@@ -206,3 +207,13 @@ def get_refs(resource_id, version=None):
         return ref_list
 
     return flatten_dict(resource_refs), flatten_dict(resource_backrefs)
+
+
+def is_protected(resource_id, level):
+    resource = get_resource(resource_id)
+    protection = resource.config.get('protected', {})
+    if protection:
+        # TODO
+        return True
+    else:
+        return False
