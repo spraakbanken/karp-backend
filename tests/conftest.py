@@ -93,9 +93,7 @@ def app_with_data_f(app_f):
                     resource, version = resourcemgr.create_new_resource(fp)
                     resourcemgr.setup_resource_class(resource, version)
                     if kwargs.get('use_elasticsearch', False):
-                        resourcemgr.publish_resource(resource, version)
-                        index_name = indexmgr.create_index(resource, version=version)
-                        indexmgr.publish_index(resource, index_name)
+                        indexmgr.publish_index(resource, version)
         return app
     yield fun
 
@@ -107,8 +105,6 @@ def app_with_data(app):
             resourcemgr.create_new_resource(fp)
         with open('tests/data/config/municipalities.json') as fp:
             resourcemgr.create_new_resource(fp)
-        resourcemgr.publish_resource('places', 1)
-        resourcemgr.publish_resource('municipalities', 1)
 
     return app
 
@@ -120,8 +116,6 @@ def app_with_data_scope_module(app_scope_module):
             resourcemgr.create_new_resource(fp)
         with open('tests/data/config/municipalities.json') as fp:
             resourcemgr.create_new_resource(fp)
-        resourcemgr.publish_resource('places', 1)
-        resourcemgr.publish_resource('municipalities', 1)
 
     return app_scope_module
 

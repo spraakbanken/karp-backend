@@ -92,12 +92,10 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
         db.session.add(history_entry)
     db.session.commit()
 
-    def index_entries(entry_db_map):
-        for db_entry, entry, _ in entry_db_map:
-            yield (db_entry.entry_id, _src_entry_to_index_entry(resource, entry))
-
     if resource.active:
-        indexmgr.add_entries(resource_id, index_entries(created_db_entries))
+        indexmgr.add_entries(resource_id,
+                             [(db_entry.entry_id, _src_entry_to_index_entry(resource, entry))
+                              for db_entry, entry, _ in created_db_entries])
 
 
 def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):

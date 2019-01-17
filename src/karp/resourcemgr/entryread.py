@@ -45,12 +45,10 @@ def get_entries_indexed(resource_id):
 
 
 def get_entry(resource_id: str, entry_id: str, version: int=None):
-    cls = get_resource(resource_id, version=version).model
-    entry = cls.query.filter_by(entry_id=entry_id).first()
-    return entry
+    resource = get_resource(resource_id, version=version)
+    return get_entry_by_entry_id(resource, entry_id)
 
 
 def get_entry_by_entry_id(resource: Resource, entry_id: str):
     cls = resource.model
-    entry = cls.query.filter_by(entry_id=entry_id).first()
-    return entry
+    return cls.query.filter_by(entry_id=entry_id).first()

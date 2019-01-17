@@ -1,5 +1,5 @@
 import json
-from typing import Dict
+from typing import Dict, List
 import collections
 
 from .index import IndexModule
@@ -14,13 +14,11 @@ def _reindex(resource_id, version=None):
     resource_obj = resourcemgr.get_resource(resource_id, version=version)
     entries = resource_obj.model.query.filter_by(deleted=False)
 
-    def prepare_entries():
-        fields = resource_obj.config['fields'].items()
-        for entry in entries:
-            yield (entry.entry_id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields))
+    fields = resource_obj.config['fields'].items()
+    entries2 = [(entry.entry_id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
 
     index_name = indexer.impl.create_index(resource_id, resource_obj.config)
-    add_entries(index_name, prepare_entries(), update_refs=False)
+    add_entries(index_name, entries2, update_refs=False)
     indexer.impl.publish_index(resource_id, index_name)
 
 
@@ -30,10 +28,10 @@ def publish_index(resource_id, version=None):
         resourcemgr.publish_resource(resource_id, version)
 
 
-def add_entries(resource_id, entries, update_refs=True):
+def add_entries(resource_id, entries: List, update_refs=True):
     indexer.impl.add_entries(resource_id, entries)
     if update_refs:
-        _update_references(resource_id, entries)
+        _update_references(resource_id, [entry_id for (entry_id, _) in entries])
 
 
 def delete_entry(resource_id, entry_id):
