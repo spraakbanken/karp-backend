@@ -55,12 +55,6 @@ class SearchInterface:
     def search_with_query(self, query: Query):
         return []
 
-    def get_query(self, resources):
-        return None
-
-    def search(self, resources, query=None):
-        return []
-
 
 class KarpSearch(SearchInterface):
 
@@ -75,9 +69,3 @@ class KarpSearch(SearchInterface):
 
     def search_with_query(self, query: Query):
         return self.impl.search_with_query(query)
-
-    def get_query(self, resources):
-        return self.impl.get_query(resources)
-
-    def search(self, resources, query=None):
-        return self.impl.search(resources, query=query)
