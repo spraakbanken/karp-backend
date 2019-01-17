@@ -24,7 +24,7 @@ class JWTAuthenticator(Authenticator):
             lexicon_permissions = {}
             if "scope" in user_token and "lexicons" in user_token["scope"]:
                 lexicon_permissions = user_token["scope"]["lexicons"]
-            return User('asdf', lexicon_permissions, user_token["levels"])
+            return User(user_token['sub'], lexicon_permissions, user_token["levels"])
 
         return None
 
