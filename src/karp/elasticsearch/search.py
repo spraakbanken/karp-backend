@@ -5,6 +5,11 @@ from karp import search
 
 
 class EsQuery(search.Query):
+    def __init__(self):
+        super().__init__()
+        self.query = None
+        self.resource_str = None
+
     def parse_arguments(self, args, resource_str):
         super().parse_arguments(args, resource_str)
         self.resource_str = resource_str
