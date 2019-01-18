@@ -5,23 +5,13 @@ Used to perform readiness and liveness probes on the server.
 """
 
 from typing import List
-from typing import Optional
-from typing import Dict
-from typing import TypeVar
-from typing import Callable
-# from typing import ImmutableMapping
 
-from distutils.util import strtobool
-import json
 
 from flask import Blueprint, jsonify, request    # pyre-ignore
 
 from karp.resourcemgr import Resource
-from karp.resourcemgr import get_resource
 
 from karp import search
-
-from karp import util
 
 
 query_api = Blueprint('query_api', __name__)
@@ -42,13 +32,13 @@ def query_w_resources(resources: str):
     print('query={}'.format(query))
     response = search.search.search_with_query(query)
     print('response={}'.format(response))
-    return jsonify(response)
+    return jsonify(response), 200
 
 
 @query_api.route('/<resource_id>/<entry_id>/get_indexed', methods=['GET'])
 def get_indexed_entry(resource_id, entry_id):
     # TODO a temporary soulution until search is done
-    from elasticsearch_dsl import Q, Search # pyre-ignore
+    from elasticsearch_dsl import Q, Search  # pyre-ignore
     s = Search(using=search.search.impl.es, index=resource_id)
     s = s.query(Q('term', _id=entry_id))
     response = s.execute()
