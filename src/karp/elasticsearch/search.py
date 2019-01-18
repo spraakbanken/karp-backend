@@ -13,7 +13,8 @@ class EsQuery(search.Query):
     def parse_arguments(self, args, resource_str):
         super().parse_arguments(args, resource_str)
         self.resource_str = resource_str
-        self.query = create_es_query(self.ast.root)
+        if not self.ast.is_empty():
+            self.query = create_es_query(self.ast.root)
 
     def _self_name(self) -> str:
         return 'EsQuery query={} resource_str={}'.format(self.query,
@@ -32,6 +33,9 @@ def get_value(value_node):
 
 
 def create_es_query(node):
+    if node is None:
+        raise TypeError()
+
     q = None
     if isinstance(node, ast.UnaryOp):
         op = node.value
