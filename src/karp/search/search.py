@@ -2,8 +2,10 @@ import distutils
 
 from typing import Optional, Callable, TypeVar, List, Dict
 
-from . import errors
 from karp import util
+
+from . import errors
+from . import query_parser as parser
 
 
 T = TypeVar('T', bool, int, str, List[str])
@@ -78,6 +80,9 @@ class Query:
         self.format_query = arg_get(args, 'format_query')
         self.q = arg_get(args, 'q')
         self.sort = arg_get(args, 'sort')
+
+        _parser = parser.QueryParser()
+        self.ast = _parser.parse(self.q)
 
     def __repr__(self) -> str:
         return """
