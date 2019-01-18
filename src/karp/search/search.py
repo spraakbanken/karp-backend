@@ -4,8 +4,8 @@ from typing import Optional, Callable, TypeVar, List, Dict
 
 from karp import util
 
-from . import errors
 from . import query_parser as parser
+from . import errors
 
 
 T = TypeVar('T', bool, int, str, List[str])
@@ -81,8 +81,7 @@ class Query:
         self.q = arg_get(args, 'q')
         self.sort = arg_get(args, 'sort')
 
-        _parser = parser.QueryParser()
-        self.ast = _parser.parse(self.q)
+        self.ast = parser.parse(self.q)
 
     def __repr__(self) -> str:
         return """
@@ -124,12 +123,6 @@ class SearchInterface:
     def search_with_query(self, query: Query):
         return []
 
-    def get_query(self, resources):
-        return None
-
-    def search(self, resources, query=None):
-        return []
-
 
 class KarpSearch(SearchInterface):
 
@@ -144,9 +137,3 @@ class KarpSearch(SearchInterface):
 
     def search_with_query(self, query: Query):
         return self.impl.search_with_query(query)
-
-    def get_query(self, resources):
-        return self.impl.get_query(resources)
-
-    def search(self, resources, query=None):
-        return self.impl.search(resources, query=query)
