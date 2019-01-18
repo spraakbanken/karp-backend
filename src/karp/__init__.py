@@ -1,11 +1,13 @@
 import os
 import pkg_resources
-
+import json
+import logging  # pyre-ignore
 from flask import Flask     # pyre-ignore
-import elasticsearch
 
+from karp.errors import KarpError
+import karp.util.logging.slack as slack_logging  # pyre-ignore
 
-__version__ = '0.4.7'
+__version__ = '0.6.0'
 
 
 # TODO handle settings correctly
@@ -17,8 +19,10 @@ def create_app(config_class=None):
     if os.getenv('KARP_CONFIG'):
         app.config.from_object(os.getenv('KARP_CONFIG'))
 
-    from .api import health_api, crud_api, query_api, documentation
-    app.register_blueprint(crud_api)
+    logger = setup_logging(app)
+
+    from .api import health_api, edit_api, query_api, documentation
+    app.register_blueprint(edit_api)
     app.register_blueprint(health_api)
     app.register_blueprint(query_api)
     app.register_blueprint(documentation)
@@ -26,12 +30,40 @@ def create_app(config_class=None):
     from .init import init_db
     init_db(app)
 
-    if app.config['ELASTICSEARCH_ENABLED'] and app.config['ELASTICSEARCH_URL']:
-        app.elasticsearch = elasticsearch.Elasticsearch(app.config['ELASTICSEARCH_URL'])
+    if app.config['ELASTICSEARCH_ENABLED'] and app.config.get('ELASTICSEARCH_HOST', ''):
+        from karp.elasticsearch import init_es
+        init_es(app.config['ELASTICSEARCH_HOST'])
     else:
-        app.elasticsearch = None
+        # TODO if an elasticsearch test runs before a non elasticsearch test this
+        # is needed to reset the index and search modules
+        from karp.search import SearchInterface, search
+        from karp.indexmgr.index import IndexInterface
+        from karp.indexmgr import indexer
+        search.init(SearchInterface())
+        indexer.init(IndexInterface())
+
+    @app.errorhandler(Exception)
+    def http_error_handler(error: Exception):
+        if isinstance(error, KarpError):
+            return json.dumps({'error': error.message}), 400
+        else:
+            logger.exception('supererror')
+            return json.dumps({'error': 'unknown error'}), 400
 
     return app
+
+
+def setup_logging(app):
+    logger = logging.getLogger('karp')
+    if app.config.get('LOG_TO_SLACK'):
+        slack_handler = slack_logging.get_slack_logging_handler(app.config.get('SLACK_SECRET'))
+        logger.addHandler(slack_handler)
+    console_handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    console_handler.setFormatter(formatter)
+    logger.setLevel(app.config['CONSOLE_LOG_LEVEL'])
+    logger.addHandler(console_handler)
+    return logger
 
 
 def get_version() -> str:

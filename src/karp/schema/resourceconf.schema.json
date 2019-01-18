@@ -3,7 +3,49 @@
   "$id": "http://spraakbanken.gu.se/resourceconf.schema.json",
   "title": "Resource configuration",
   "description": "",
+  "definitions": {
+    "aField": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string" },
+        "required": { "type": "boolean" },
+        "collection": { "type": "boolean" },
+        "fields": { "$ref": "#/properties/fields" },
+        "ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "resource_id": { "type": "string" },
+            "resource_version": { "type": "number" },
+            "field": { "$ref": "#/definitions/aField" }
+          }
+        },
+        "virtual": { "type": "boolean" },
+        "function": { "$ref": "#/definitions/function" }
+      },
+      "required": ["type"]
+    },
+    "function": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "multi_ref": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "resource_id": { "type": "string" },
+            "resource_version": { "type": "number" },
+            "field": { "type": "string" },
+            "result": { "$ref": "#/definitions/aField" },
+            "test": { "type": "object" }
+          }
+        }
+      }
+    }
+  },
   "type": "object",
+  "additionalProperties": false,
   "properties": {
     "resource_id": {
       "description": "The unique identifier for a resource",
@@ -17,19 +59,8 @@
       "description": "The fields of the resource",
       "type": "object",
       "patternProperties": {
-        "^.*$":  {
-          "oneOf": [
-            { "$ref": "#/properties/fields" },
-            {
-              "type": "object",
-              "properties": {
-                "type": { "type": "string" },
-                "required": { "type": "boolean" },
-                "collection": { "type": "boolean" }
-              },
-              "required": ["type"]
-            }
-          ]
+        "^.*$": {
+          "$ref": "#/definitions/aField"
         }
       }
     },
@@ -38,8 +69,9 @@
       "type": "string"
     },
     "protected": {
-      "description": "Settings for the permissions of the corpora",
+      "description": "Settings for the permissions of the lexica",
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "write": {
           "type": "boolean"
@@ -47,6 +79,12 @@
         "read": {
           "type": "boolean"
         }
+      }
+    },
+    "referenceable": {
+      "type": "array",
+      "items": {
+        "type": "string"
       }
     },
     "id": {

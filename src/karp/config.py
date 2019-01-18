@@ -1,4 +1,6 @@
 import os
+import logging
+from distutils.util import strtobool
 
 MYSQL_FORMAT = "mysql://{user}:{passwd}@{dbhost}/{dbname}"
 
@@ -8,8 +10,11 @@ class Config:
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    ELASTICSEARCH_URL = os.environ['ELASTICSEARCH_URL'].split(',') if 'ELASTICSEARCH_URL' in os.environ else None
+    ELASTICSEARCH_HOST = os.environ['ELASTICSEARCH_HOST'].split(',') if 'ELASTICSEARCH_HOST' in os.environ else None
     ELASTICSEARCH_ENABLED = os.environ.get('ELASTICSEARCH_ENABLED', '') == 'true'
+    CONSOLE_LOG_LEVEL = logging.getLevelName(os.environ.get('CONSOLE_LOG_LEVEL', 'INFO'))
+    LOG_TO_SLACK = strtobool(os.environ.get('LOG_TO_SLACK', 'n'))
+    SLACK_SECRET = os.environ.get('SLACK_SECRET')
 
 
 class ProductionConfig(Config):

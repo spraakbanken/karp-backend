@@ -9,7 +9,7 @@ from setuptools import setup
 
 setup(
     name='karp',
-    version='0.4.7',
+    version='0.6.0',
     license='MIT License',
     description='',
     author='Språkbanken',
@@ -20,7 +20,7 @@ setup(
     package_data={'karp': ['schema/resourceconf.schema.json']},
     entry_points={
         'console_scripts': [
-            'karp-cli=karp.cli:app.cli'
+            'karp-cli=karp.cli:cli'
         ]
     },
     install_requires=[

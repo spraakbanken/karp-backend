@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info: 
   title: Karp API
-  version: '0.4.7'
+  version: '0.6.0'
   description: |
     Karp TNG
 
@@ -12,7 +12,7 @@ info:
   contact:
     name: Språkbanken
     url: https://spraakbanken.gu.se/
-    email: sb@svenska.gu.se
+    email: 'sb-info@svenska.gu.se'
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
