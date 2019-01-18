@@ -190,7 +190,6 @@ class NodeWithThreeChildren(NodeWithTwoChildren):
 
 class Tree:
     def __init__(self, root: Node = None):
-        assert isinstance(root, Node), "Wrong type"
         self.root = root
 
     def __repr__(self):
@@ -208,7 +207,7 @@ class Tree:
     def validate_arity(self) -> Tuple[bool, str]:
         if self.is_empty():
             return True, "This tree is empty."
-        
+
         result = []
         self.root.validate_arity(result)
         if not result:
