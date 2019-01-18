@@ -1,8 +1,7 @@
-import distutils
 
 from typing import Optional, Callable, TypeVar, List, Dict
 
-from karp import util
+from karp.util import convert as util_convert
 
 from . import query_parser as parser
 from . import errors
@@ -72,10 +71,10 @@ class Query:
         self.resources = resource_str.split(',')
         self.from_ = arg_get(args, 'from', int, 0)
         self.size = arg_get(args, 'size', int, 25)
-        self.split_results = arg_get(args, 'split_results', distutils.util.strtobool, False)
-        self.lexicon_stats = arg_get(args, 'lexicon_stats', distutils.util.strtobool, True)
-        self.include_fields = arg_get(args, 'include_fields', util.convert.str2list(','))
-        self.exclude_fields = arg_get(args, 'exclude_fields', util.convert.str2list(','))
+        self.split_results = arg_get(args, 'split_results', util_convert.str2bool, False)
+        self.lexicon_stats = arg_get(args, 'lexicon_stats', util_convert.str2bool, True)
+        self.include_fields = arg_get(args, 'include_fields', util_convert.str2list(','))
+        self.exclude_fields = arg_get(args, 'exclude_fields', util_convert.str2list(','))
         self.fields = []
         self.format = arg_get(args, 'format')
         self.format_query = arg_get(args, 'format_query')
