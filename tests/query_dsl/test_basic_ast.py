@@ -1,6 +1,6 @@
 import pytest
 
-from karp.search import basic_ast as ast
+from karp.query_dsl import basic_ast as ast
 
 
 def test_UnaryOp_1():

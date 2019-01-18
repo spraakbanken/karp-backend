@@ -4,7 +4,7 @@ from . import basic_ast as ast
 from . import errors
 
 
-class Operator():
+class Operators:
     AND = 'AND'
     OR = 'OR'
     NOT = 'NOT'
@@ -25,23 +25,23 @@ class Operator():
 
 
 OPERATORS = {
-    'and': ast.binary_operator(Operator.AND),
-    'or': ast.binary_operator(Operator.OR),
-    'not': ast.unary_operator(Operator.NOT),
-    'freetext': ast.unary_operator(Operator.FREETEXT),
-    'freergxp': ast.unary_operator(Operator.FREERGXP),
-    'regexp': ast.binary_operator(Operator.REGEXP),
-    'exists': ast.unary_operator(Operator.EXISTS),
-    'missing': ast.unary_operator(Operator.MISSING),
-    'equals': ast.binary_operator(Operator.EQUALS),
-    'contains': ast.binary_operator(Operator.CONTAINS),
-    'startswith': ast.binary_operator(Operator.STARTSWITH),
-    'endswith': ast.binary_operator(Operator.ENDSWITH),
-    'lt': ast.binary_operator(Operator.LT),
-    'lte': ast.binary_operator(Operator.LTE),
-    'gt': ast.binary_operator(Operator.GT),
-    'gte': ast.binary_operator(Operator.GTE),
-    'range': ast.ternary_operator(Operator.RANGE),
+    'and': ast.binary_operator(Operators.AND),
+    'or': ast.binary_operator(Operators.OR),
+    'not': ast.unary_operator(Operators.NOT),
+    'freetext': ast.unary_operator(Operators.FREETEXT),
+    'freergxp': ast.unary_operator(Operators.FREERGXP),
+    'regexp': ast.binary_operator(Operators.REGEXP),
+    'exists': ast.unary_operator(Operators.EXISTS),
+    'missing': ast.unary_operator(Operators.MISSING),
+    'equals': ast.binary_operator(Operators.EQUALS),
+    'contains': ast.binary_operator(Operators.CONTAINS),
+    'startswith': ast.binary_operator(Operators.STARTSWITH),
+    'endswith': ast.binary_operator(Operators.ENDSWITH),
+    'lt': ast.binary_operator(Operators.LT),
+    'lte': ast.binary_operator(Operators.LTE),
+    'gt': ast.binary_operator(Operators.GT),
+    'gte': ast.binary_operator(Operators.GTE),
+    'range': ast.ternary_operator(Operators.RANGE),
 }
 
 

@@ -1,7 +1,8 @@
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
-from karp.search import basic_ast as ast
+from karp.query_dsl import basic_ast as ast
 from karp import search
+from karp import query_dsl
 
 
 class EsQuery(search.Query):
@@ -39,22 +40,21 @@ def create_es_query(node):
     q = None
     if isinstance(node, ast.UnaryOp):
         op = node.value
-        value = get_value(next(node.children()))
-        if op == 'FREETEXT':
+        value = get_value(node.child0)
+        if op == query_dsl.Operators.FREETEXT:
             q = es_dsl.Q('term', freetext=value)
-        elif op == 'FREERGXP':
+        elif op == query_dsl.Operators.FREERGXP:
             q = es_dsl.Q('regexp', freetext=value)
-        elif op == 'EXISTS':
+        elif op == query_dsl.Operators.EXISTS:
             q = es_dsl.Q('exists', field=value)
-        elif op == 'MISSING':
+        elif op == query_dsl.Operators.MISSING:
             q = es_dsl.Q('bool', must_not=es_dsl.Q('exists', field=value))
         else:
             raise RuntimeError('not implemented')
     elif isinstance(node, ast.BinaryOp):
         op = node.value
-        children = node.children()
-        arg1 = next(children)
-        arg2 = next(children)
+        arg1 = node.child0
+        arg2 = node.child1
 
         if not isinstance(arg1, ast.ArgNode) or not isinstance(arg2, ast.ArgNode):
             # TODO these need to be moved outside of current query, for example:
@@ -66,49 +66,55 @@ def create_es_query(node):
             # can only be expressed as in the longer form above
             raise RuntimeError()
 
-        if op in ['AND', 'OR']:
+        if op in [query_dsl.Operators.AND, query_dsl.Operators.OR]:
             # TODO check minimum should match rules in different contexts
             q1 = create_es_query(arg1)
             q2 = create_es_query(arg2)
-            if op == 'AND':
+            if op == query_dsl.Operators.AND:
                 q = es_dsl.Q('bool', must=[q1, q2])
             else:
                 q = es_dsl.Q('bool', should=[q1, q2])
-        elif op in ['EQUALS', 'REGEXP', 'CONTAINS', 'STARTSWITH', 'ENDSWITH']:
+        elif op in [query_dsl.Operators.EQUALS, query_dsl.Operators.REGEXP, query_dsl.Operators.CONTAINS, query_dsl.Operators.STARTSWITH, query_dsl.Operators.ENDSWITH]:
             arg11 = get_value(arg1)
             arg22 = get_value(arg2)
-            if op == 'EQUALS':
+            if op == query_dsl.Operators.EQUALS:
                 query_type = 'term'
-            elif op == 'REGEXP':
+            elif op == query_dsl.Operators.REGEXP:
                 query_type = 'regexp'
-            elif op == 'CONTAINS':
+            elif op == query_dsl.Operators.CONTAINS:
                 query_type = 'regexp'
                 arg22 = '.*' + arg22 + '.*'  # TODO escape regexp characters
-            elif op == 'STARTSWITH':
+            elif op == query_dsl.Operators.STARTSWITH:
                 query_type = 'regexp'
                 arg22 = arg22 + '.*'  # TODO escape regexp characters
-            else:  # 'ENDSWITH'
+            else:  # query_dsl.Operators.ENDSWITH
                 query_type = 'regexp'
                 arg22 = '.*' + arg22  # TODO escape regexp characters
             q = es_dsl.Q(query_type, **{arg11: arg22})
-        elif op in ['LT', 'LTE', 'GT', 'GTE', 'RANGE']:
+        elif op in [query_dsl.Operators.LT, query_dsl.Operators.LTE, query_dsl.Operators.GT, query_dsl.Operators.GTE]:
             range_args = {}
             arg11 = get_value(arg1)
             arg22 = get_value(arg2)
-            if op == 'LT':
+            if op == query_dsl.Operators.LT:
                 range_args['lt'] = arg22
-            elif op == 'LTE':
+            elif op == query_dsl.Operators.LTE:
                 range_args['lte'] = arg22
-            elif op == 'GT':
+            elif op == query_dsl.Operators.GT:
                 range_args['gt'] = arg22
-            elif op == 'GTE':
+            elif op == query_dsl.Operators.GTE:
                 range_args['gte'] = arg22
-            elif op == 'RANGE':
-                # TODO range isn't even a binary operator...
+            else:
                 raise RuntimeError('don\'t now what to do yet')
             q = es_dsl.Q('range', **{arg11: range_args})
     elif isinstance(node, ast.TernaryOp):
-        raise RuntimeError('what operators?')
+        op = node.value
+        arg1 = node.child0
+        arg2 = node.child1
+        arg3 = node.child2
+        if op == query_dsl.Operators.RANGE:
+            raise RuntimeError('don\'t now what to do yet')
+        else:
+            raise RuntimeError('what operators?')
     else:
         raise ValueError('Unknown query op %s' % node)
 

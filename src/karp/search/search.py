@@ -3,7 +3,8 @@ from typing import Optional, Callable, TypeVar, List, Dict
 
 from karp.util import convert as util_convert
 
-from . import query_parser as parser
+from karp import query_dsl
+
 from . import errors
 
 
@@ -55,7 +56,7 @@ class Query:
         self.q = arg_get(args, 'q')
         self.sort = arg_get(args, 'sort')
 
-        self.ast = parser.parse(self.q)
+        self.ast = query_dsl.parse(self.q)
 
     def __repr__(self) -> str:
         return """
