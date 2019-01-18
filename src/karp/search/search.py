@@ -76,6 +76,7 @@ class Query:
         self.lexicon_stats = arg_get(args, 'lexicon_stats', distutils.util.strtobool, True)
         self.include_fields = arg_get(args, 'include_fields', util.convert.str2list(','))
         self.exclude_fields = arg_get(args, 'exclude_fields', util.convert.str2list(','))
+        self.fields = []
         self.format = arg_get(args, 'format')
         self.format_query = arg_get(args, 'format_query')
         self.q = arg_get(args, 'q')
@@ -96,13 +97,12 @@ class Query:
                 split_results={}, lexicon_stats={},
                 format={}
                 format_query={}
-                resource_params={}
             )""".format(self._self_name(),
                         self.q,
                         self.resources,
                         self.include_fields,
                         self.exclude_fields,
-                        self.fields if self.fields else [],
+                        self.fields,
                         self.sort,
                         self.from_, self.size,
                         self.split_results, self.lexicon_stats,
