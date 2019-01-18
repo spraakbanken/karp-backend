@@ -10,7 +10,7 @@ class UnaryOp(tree.NodeWithOneChild):
         self.min_arity = min_arity
         self.max_arity = 2
 
-    def _format_self(self):
+    def _format_self(self) -> str:
         return 'UnaryOp op={}'.format(self.value)
 
 
@@ -21,7 +21,7 @@ class BinaryOp(tree.NodeWithTwoChildren):
         self.min_arity = min_arity
         self.max_arity = 3
 
-    def _format_self(self):
+    def _format_self(self) -> str:
         return 'BinaryOp op={}'.format(self.value)
 
 
@@ -32,7 +32,7 @@ class TernaryOp(tree.NodeWithThreeChildren):
         self.min_arity = min_arity
         self.max_arity = 4
 
-    def _format_self(self):
+    def _format_self(self) -> str:
         return '<TernaryOpNode op={}'.format(self.op)
 
 

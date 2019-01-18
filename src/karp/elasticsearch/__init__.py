@@ -1,4 +1,4 @@
-from elasticsearch import Elasticsearch
+from elasticsearch import Elasticsearch  # pyre-ignore
 from .index import EsIndex
 from .search import EsSearch
 import karp.search.search

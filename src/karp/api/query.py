@@ -48,7 +48,7 @@ def query_w_resources(resources: str):
 @query_api.route('/<resource_id>/<entry_id>/get_indexed', methods=['GET'])
 def get_indexed_entry(resource_id, entry_id):
     # TODO a temporary soulution until search is done
-    from elasticsearch_dsl import Q, Search
+    from elasticsearch_dsl import Q, Search # pyre-ignore
     s = Search(using=search.search.impl.es, index=resource_id)
     s = s.query(Q('term', _id=entry_id))
     response = s.execute()

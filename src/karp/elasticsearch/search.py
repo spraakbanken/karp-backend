@@ -1,4 +1,4 @@
-import elasticsearch_dsl as es_dsl
+import elasticsearch_dsl as es_dsl  # pyre-ignore
 
 from karp.search import basic_ast as ast
 from karp import search

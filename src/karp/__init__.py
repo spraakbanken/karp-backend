@@ -1,11 +1,11 @@
 import os
 import pkg_resources
 import json
-import logging  # pyre-ignore
+import logging
 from flask import Flask     # pyre-ignore
 
 from karp.errors import KarpError
-import karp.util.logging.slack as slack_logging  # pyre-ignore
+import karp.util.logging.slack as slack_logging
 
 __version__ = '0.6.0'
 
