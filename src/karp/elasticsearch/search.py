@@ -8,7 +8,7 @@ class EsQuery(search.Query):
     def parse_arguments(self, args, resource_str):
         super().parse_arguments(args, resource_str)
         self.resource_str = resource_str
-        self.query = build_query(self.ast.root)
+        self.query = create_es_query(self.ast.root)
 
     def _self_name(self) -> str:
         return 'EsQuery query={} resource_str={}'.format(self.query,
@@ -26,7 +26,7 @@ def get_value(value_node):
         raise NotImplementedError()
 
 
-def build_query(node):
+def create_es_query(node):
     q = None
     if isinstance(node, ast.UnaryOp):
         op = node.value
@@ -59,8 +59,8 @@ def build_query(node):
 
         if op in ['AND', 'OR']:
             # TODO check minimum should match rules in different contexts
-            q1 = build_query(arg1)
-            q2 = build_query(arg2)
+            q1 = create_es_query(arg1)
+            q2 = create_es_query(arg2)
             if op == 'AND':
                 q = es_dsl.Q('bool', must=[q1, q2])
             else:
