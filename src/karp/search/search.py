@@ -10,7 +10,7 @@ from . import errors
 T = TypeVar('T', bool, int, str, List[str])
 
 
-def arg_get(args,
+def arg_get(args: Dict,
             arg_name: str,
             convert: Optional[Callable[[str], T]] = None,
             default: Optional[T] = None) -> T:
@@ -20,32 +20,6 @@ def arg_get(args,
     if convert is None:
         return arg
     return convert(arg)
-
-
-def parse_arguments(args: Dict[str, str], resource_str: str = None) -> Dict:
-    params = {}
-    s2l = util.convert.str2list(',')
-    if resource_str:
-        params['resources'] = arg_get('resources', s2l)
-    else:
-        params['resources'] = s2l(resource_str)
-    available_fields = {
-        'from': {'default': 0, 'convert': int},
-        'size': {'default': 25, 'convert': int},
-        'split_results': {'default': False, 'convert': distutils.util.strtobool},
-        'lexicon_stats': {'default': True, 'convert': distutils.util.strtobool},
-        'include_fields': {'convert': s2l},
-        'exclude_fields': {'convert': s2l},
-        'format': {},
-        'format_query': {},
-        'q': {},
-        'sort': {}
-    }
-
-    for field, m in available_fields.items():
-        params[field] = arg_get(field, m.get('convert'), m.get('default'))
-
-    return params
 
 
 class Query:
