@@ -122,7 +122,10 @@ def test_refs(es, client_with_data_f):
     time.sleep(1)
     entries = get_json(client, 'places/_all_indexed')
     assert len(entries) == 2
-    for entry in entries:
+    for val in entries:
+        assert 'entry' in val
+        entry = val['entry']
+        print('entry = {}'.format(entry))
         if entry['code'] == 1:
             assert 'larger_place' not in entry
             assert 'smaller_places' in entry
@@ -196,7 +199,12 @@ def test_external_refs(es, client_with_data_f):
 
     time.sleep(1)
     entries = get_json(client, 'municipalities/_all_indexed')
-    for entry in entries:
+    for val in entries:
+        print('val = {}'.format(val))
+        assert 'entry' in val
+        entry = val['entry']
+        print('entry = {}'.format(entry))
+
         assert 'places' in entry
         place_codes = [place['code'] for place in entry['places']]
         assert len(place_codes) == 2
@@ -208,7 +216,10 @@ def test_external_refs(es, client_with_data_f):
             assert 3 in place_codes
 
     places_entries = get_json(client, 'places/_all_indexed')
-    for entry in places_entries:
+    for val in places_entries:
+        assert 'entry' in val
+        entry = val['entry']
+        print('entry = {}'.format(entry))
         assert 'municipality' in entry
         assert isinstance(entry['municipality'], list)
         if entry['code'] == 2:
@@ -249,7 +260,10 @@ def test_update_refs(es, client_with_data_f):
     time.sleep(1)
     entries = get_json(client, 'places/_all_indexed')
     assert len(entries) == 2
-    for entry in entries:
+    for val in entries:
+        assert 'entry' in val
+        entry = val['entry']
+        print('entry = {}'.format(entry))
         if entry['code'] == 5:
             assert 'smaller_places' in entry
             assert entry['smaller_places'][0]['code'] == 6

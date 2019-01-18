@@ -1,4 +1,4 @@
-import elasticsearch.helpers
+import elasticsearch.helpers  # pyre-ignore
 from datetime import datetime
 from karp.indexmgr.index import IndexInterface
 

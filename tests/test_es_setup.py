@@ -4,6 +4,7 @@ import urllib.request
 import urllib.parse
 import pytest  # pyre-ignore
 from karp.search import search
+from karp import elasticsearch as karp_es
 
 entries = [{
     "code": 1,
@@ -58,10 +59,16 @@ def test_es_search(es, client_with_data_f):
     time.sleep(1)
 
     with client_with_data.application.app_context():
-        query = search.get_query('and|population|equals|3')
-        ids = search.search(['places'], {'query': query, 'split_results': False})
+        args = {
+            'split_results': 'False',
+            'q': 'equals|population|3'
+        }
+        query = search.build_query(args, 'places,municipalities')
+        ids = search.search_with_query(query)
         assert len(ids) == 1
-        assert ids[0]['population'] == 3
+        print('ids[0] = {}'.format(ids[0]))
+        assert 'entry' in ids[0]
+        assert ids[0]['entry']['population'] == 3
 
 
 def test_es_search2(es, client_with_data_f):
@@ -70,8 +77,13 @@ def test_es_search2(es, client_with_data_f):
     time.sleep(1)
 
     with client_with_data.application.app_context():
-        query = search.get_query('and|population|equals|3')
-        result = search.search(['places', 'municipalities'], {'query': query, 'split_results': True})
+        args = {
+            'split_results': 'True',
+            'q': 'equals|population|3'
+        }
+        query = search.build_query(args, 'places,municipalities')
+        assert isinstance(query, karp_es.search.EsQuery)
+        result = search.search_with_query(query)
         assert 'places' in result
         assert 'municipalities' in result
         assert len(result['municipalities']) == 0
