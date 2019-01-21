@@ -110,15 +110,6 @@ def test_refs(es, client_with_data_f):
         }
     ])
 
-    # currently no connections are made on add/update, so we need to reindex to get the connections
-    with client.application.app_context():
-        import karp.indexmgr as indexmgr
-        resource_id = 'places'
-        version = 1
-        index_name = indexmgr.create_index(resource_id, version)
-        indexmgr.reindex(resource_id, index_name, version=version)
-        indexmgr.publish_index(resource_id, index_name)
-
     time.sleep(1)
     entries = get_json(client, 'places/_all_indexed')
     assert len(entries) == 2
@@ -188,15 +179,6 @@ def test_external_refs(es, client_with_data_f):
                 }),
                 content_type='application/json')
 
-    # currently no connections are made on add/update, so we need to reindex to get the connections
-    with client.application.app_context():
-        import karp.indexmgr as indexmgr
-        for resource_id in ['places', 'municipalities']:
-            version = 1
-            index_name = indexmgr.create_index(resource_id, version)
-            indexmgr.reindex(resource_id, index_name, version=version)
-            indexmgr.publish_index(resource_id, index_name)
-
     time.sleep(1)
     entries = get_json(client, 'municipalities/_all_indexed')
     for val in entries:
@@ -247,15 +229,6 @@ def test_update_refs(es, client_with_data_f):
             'municipality': [2, 3]
         }
     ])
-
-    # currently no connections are made on add/update, so we need to reindex to get the connections
-    with client.application.app_context():
-        import karp.indexmgr as indexmgr
-        resource_id = 'places'
-        version = 1
-        index_name = indexmgr.create_index(resource_id, version)
-        indexmgr.reindex(resource_id, index_name, version=version)
-        indexmgr.publish_index(resource_id, index_name)
 
     time.sleep(1)
     entries = get_json(client, 'places/_all_indexed')

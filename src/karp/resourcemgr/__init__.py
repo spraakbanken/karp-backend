@@ -7,6 +7,7 @@ from typing import List
 
 import fastjsonschema  # pyre-ignore
 import logging
+import collections
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
@@ -38,6 +39,8 @@ def get_resource(resource_id: str, version: int = None) -> Resource:
         resource_def = get_active_resource_definition(resource_id)
         if not resource_def:
             raise ResourceNotFoundError(resource_id)
+        if resource_id not in resource_models:
+            setup_resource_class(resource_id)
         return Resource(model=resource_models[resource_id],
                         history_model=history_models[resource_id],
                         resource_def=resource_def,
@@ -158,3 +161,59 @@ def delete_resource(resource_id, version):
     resource.active = False
     db.session.update(resource)
     db.session.commit()
+
+
+def get_refs(resource_id, version=None):
+    """
+    Goes through all other resource configs finding resources and fields that refer to this resource
+    """
+    resource_backrefs = collections.defaultdict(lambda: collections.defaultdict(dict))
+    resource_refs = collections.defaultdict(lambda: collections.defaultdict(dict))
+
+    src_resource = get_resource(resource_id, version=version)
+
+    all_other_resources = [resource_def for resource_def in get_all_resources()
+                           if resource_def.resource_id != resource_id or resource_def.version != version]
+
+    for field_name, field in src_resource.config['fields'].items():
+        if 'ref' in field:
+            if 'resource_id' not in field['ref']:
+                resource_backrefs[resource_id][version][field_name] = field
+                resource_refs[resource_id][version][field_name] = field
+            else:
+                resource_refs[field['ref']['resource_id']][field['ref']['resource_version']][field_name] = field
+        elif 'function' in field and 'multi_ref' in field['function']:
+            virtual_field = field['function']['multi_ref']
+            ref_field = virtual_field['field']
+            if 'resource_id' in virtual_field:
+                resource_backrefs[virtual_field['resource_id']][virtual_field['resource_version']][ref_field] = None
+            else:
+                resource_backrefs[resource_id][version][ref_field] = None
+
+    for resource_def in all_other_resources:
+        other_resource = get_resource(resource_def.resource_id, version=resource_def.version)
+        for field_name, field in other_resource.config['fields'].items():
+            ref = field.get('ref')
+            if ref and ref.get('resource_id') == resource_id and ref.get('resource_version') == version:
+                resource_backrefs[resource_def.resource_id][resource_def.version][field_name] = field
+
+
+    def flatten_dict(ref_dict):
+        ref_list = []
+        for ref_resource_id, versions in ref_dict.items():
+            for ref_version, field_names in versions.items():
+                for field_name, field in field_names.items():
+                    ref_list.append((ref_resource_id, ref_version, field_name, field))
+        return ref_list
+
+    return flatten_dict(resource_refs), flatten_dict(resource_backrefs)
+
+
+def is_protected(resource_id, level):
+    resource = get_resource(resource_id)
+    protection = resource.config.get('protected', {})
+    if protection:
+        # TODO
+        return True
+    else:
+        return False

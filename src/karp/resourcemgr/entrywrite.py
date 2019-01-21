@@ -3,7 +3,7 @@ import fastjsonschema  # pyre-ignore
 import logging
 
 from karp.errors import KarpError
-from karp.resourcemgr import get_resource
+from karp.resourcemgr import get_resource, setup_resource_class
 from karp.database import db
 import karp.indexmgr as indexmgr
 from .resource import Resource
@@ -54,6 +54,15 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
     indexmgr.add_entries(resource_id, [(entry_id, index_entry_json)])
 
 
+def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
+    with open(data) as fp:
+        objs = []
+        for line in fp:
+            objs.append(json.loads(line))
+        add_entries(resource_id, objs, resource_version=version)
+    return len(objs)
+
+
 def add_entries(resource_id, entries, message=None, resource_version=None):
     resource = get_resource(resource_id, version=resource_version)
     resource_conf = resource.config
@@ -83,12 +92,10 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
         db.session.add(history_entry)
     db.session.commit()
 
-    def index_entries(entry_db_map):
-        for db_entry, entry, _ in entry_db_map:
-            yield (db_entry.entry_id, _src_entry_to_index_entry(resource, entry))
-
     if resource.active:
-        indexmgr.add_entries(resource_id, index_entries(created_db_entries))
+        indexmgr.add_entries(resource_id,
+                             [(db_entry.entry_id, _src_entry_to_index_entry(resource, entry))
+                              for db_entry, entry, _ in created_db_entries])
 
 
 def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):

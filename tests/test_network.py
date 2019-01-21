@@ -1,0 +1,119 @@
+import karp.resourcemgr.entrywrite as entrywrite
+import karp.network as network
+
+places = [
+    {
+        'code': 3,
+        'name': 'a',
+        'municipality': [1]
+    },
+    {
+        'code': 4,
+        'name': 'b',
+        'municipality': [2, 3]
+    },
+    {
+        'code': 5,
+        'name': 'c',
+        'municipality': [2, 3],
+        'larger_place': 4
+    }
+]
+
+municipalities = [
+    {
+        'name': 'd',
+        'code': 1
+    },
+    {
+        'name': 'e',
+        'code': 2
+    },
+    {
+        'name': 'f',
+        'code': 3
+    }
+]
+
+
+def test_no_refs_1(app_with_data_f):
+    app = app_with_data_f()
+
+    with app.app_context():
+        entrywrite.add_entries('places', places[0:1], resource_version=1)
+
+        referenced_entries = list(network.get_referenced_entries('places', 1, '3'))
+        assert len(referenced_entries) == 0
+
+
+def test_no_refs_2(app_with_data_f):
+    app = app_with_data_f()
+
+    with app.app_context():
+        entrywrite.add_entries('places', places[0:2], resource_version=1)
+
+        referenced_entries = list(network.get_referenced_entries('places', 1, '3'))
+        assert len(referenced_entries) == 0
+        referenced_entries = list(network.get_referenced_entries('places', 1, '4'))
+        assert len(referenced_entries) == 0
+
+
+def test_internal_ref(app_with_data_f):
+    app = app_with_data_f()
+
+    with app.app_context():
+        entrywrite.add_entries('places', places[1:3], resource_version=1)
+
+        referenced_entries = list(network.get_referenced_entries('places', 1, '5'))
+        assert len(referenced_entries) == 1
+        assert referenced_entries[0]['id'] == '4'
+
+
+def test_external_ref(app_with_data_f):
+    app = app_with_data_f()
+
+    with app.app_context():
+        entrywrite.add_entries('places', places, resource_version=1)
+        entrywrite.add_entries('municipalities', municipalities, resource_version=1)
+
+        referenced_entries = list(network.get_referenced_entries('places', 1, '3'))
+        assert len(referenced_entries) == 1
+        assert referenced_entries[0]['id'] == '1'
+
+        referenced_entries = list(network.get_referenced_entries('places', 1, '4'))
+        assert 3 == len(referenced_entries)
+        ref_municipalities = [entry for entry in referenced_entries if entry['resource_id'] == 'municipalities']
+        assert ref_municipalities[0]['id'] in ['2', '3']
+        assert ref_municipalities[1]['id'] in ['2', '3']
+        assert ref_municipalities[0]['id'] != ref_municipalities[1]['id']
+
+        referenced_entries = list(network.get_referenced_entries('places', 1, '5'))
+        assert len(referenced_entries) == 3
+        ref_municipalities = [entry for entry in referenced_entries if entry['resource_id'] == 'municipalities']
+        assert ref_municipalities[0]['id'] in ['2', '3']
+        assert ref_municipalities[1]['id'] in ['2', '3']
+        assert ref_municipalities[0]['id'] != ref_municipalities[1]['id']
+
+
+def test_virtual_internal_ref(app_with_data_f):
+    app = app_with_data_f()
+
+    with app.app_context():
+        entrywrite.add_entries('places', places[1:3], resource_version=1)
+
+        referenced_entries = list(network.get_referenced_entries('places', 1, '4'))
+        assert 1 == len(referenced_entries)
+        assert referenced_entries[0]['id'] == '5'
+
+
+def test_virtual_external_ref(app_with_data_f):
+    app = app_with_data_f()
+
+    with app.app_context():
+        entrywrite.add_entries('places', places[0:1], resource_version=1)
+        entrywrite.add_entries('municipalities', municipalities[0:1], resource_version=1)
+
+        referenced_entries = list(network.get_referenced_entries('municipalities', 1, '1'))
+        assert 1 == len(referenced_entries)
+        assert referenced_entries[0]['resource_id'] == 'places'
+        assert referenced_entries[0]['id'] == '3'

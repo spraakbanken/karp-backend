@@ -50,6 +50,14 @@ def create_app(config_class=None):
             logger.exception('supererror')
             return json.dumps({'error': 'unknown error'}), 400
 
+    import karp.auth.auth as auth
+    if app.config['JWT_AUTH']:
+        from karp.auth.jwt_authenticator import JWTAuthenticator
+        auth.auth.set_authenticator(JWTAuthenticator())
+    else:
+        from karp.auth.authenticator import Authenticator
+        auth.auth.set_authenticator(Authenticator())
+
     return app
 
 

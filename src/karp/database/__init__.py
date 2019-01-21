@@ -86,19 +86,19 @@ def get_or_create_history_model(resource_id, version):
     if history_table_name in class_cache:
         return class_cache[history_table_name]
 
-    class History(db.Model, BaseHistory):
-        __tablename__ = history_table_name
+    foreign_key_constraint = db.ForeignKeyConstraint(
+        ('entry_id',), (resource_table_name + '.id',)
+    )
 
-        @declared_attr
-        def __table_args__(cls):
-            foreign_key_constraint = db.ForeignKeyConstraint(
-                ('entry_id',), (resource_table_name + '.id',)
-            )
-            return (foreign_key_constraint,) + BaseHistory.__table_args__
+    attributes = {
+        '__tablename__': history_table_name,
+        '__table_args__': (foreign_key_constraint,) + BaseHistory.__table_args__
+    }
 
-    class_cache[history_table_name] = History
+    sqlalchemy_class = type(history_table_name, (db.Model, BaseHistory,), attributes)
+    class_cache[history_table_name] = sqlalchemy_class
 
-    return History
+    return sqlalchemy_class
 
 
 def get_latest_resource_definition(id: str) -> Optional[ResourceDefinition]:
