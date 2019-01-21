@@ -34,15 +34,6 @@ def test_query_no_q(es, client_with_data_f):
         }
     }), content_type='application/json')
 
-    # currently no connections are made on add/update, so we need to reindex to get the connections
-    with client.application.app_context():
-        import karp.indexmgr as indexmgr
-        resource_id = 'places'
-        version = 1
-        index_name = indexmgr.create_index(resource_id, version)
-        indexmgr.reindex(resource_id, index_name, version=version)
-        indexmgr.publish_index(resource_id, index_name)
-
     time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries) == 1
