@@ -34,7 +34,7 @@ def get_available_resources() -> List[ResourceDefinition]:
     return ResourceDefinition.query.filter_by(active=True)
 
 
-def get_resource(resource_id: str, version: int=None) -> Resource:
+def get_resource(resource_id: str, version: int = None) -> Resource:
     if not version:
         resource_def = get_active_resource_definition(resource_id)
         if not resource_def:

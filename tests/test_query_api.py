@@ -1,4 +1,43 @@
 import pytest  # pyre-ignore
+import json
+import time
+
+
+def get_json(client, path):
+    response = client.get(path)
+    return json.loads(response.data.decode())
+
+
+def init(client, es_status_code, entries):
+    if es_status_code == 'skip':
+        pytest.skip('elasticsearch disabled')
+    client_with_data = client(use_elasticsearch=True)
+
+    for entry in entries:
+        client_with_data.post('places/add',
+                              data=json.dumps({'entry': entry}),
+                              content_type='application/json')
+    return client_with_data
+
+
+def test_query_no_q(es, client_with_data_f):
+    client = init(client_with_data_f, es, [])
+
+    client.post('places/add', data=json.dumps({
+        'entry': {
+            'code': 3,
+            'name': 'test3',
+            'population': 4,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        }
+    }), content_type='application/json')
+
+    time.sleep(1)
+    entries = get_json(client, 'places/query')
+    assert len(entries) == 1
+    assert entries[0]['entry']['name'] == 'test3'
 
 
 @pytest.mark.skip(reason="places doesn't exist")
@@ -10,6 +49,7 @@ def test_no_q(client):
     assert "query_params" in json_data
 
 
+@pytest.mark.skip(reason='no protected stuff')
 def test_protected(client_with_data_scope_module):
     response = client_with_data_scope_module.get('/municipalities/query')
     assert response.status == '403 FORBIDDEN'

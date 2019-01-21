@@ -1,5 +1,5 @@
 import json
-import fastjsonschema
+import fastjsonschema  # pyre-ignore
 import logging
 
 from karp.errors import KarpError

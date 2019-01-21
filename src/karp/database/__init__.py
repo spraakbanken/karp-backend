@@ -2,7 +2,7 @@ from typing import Optional
 
 from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
 from sqlalchemy.sql import func  # pyre-ignore
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.declarative import declared_attr  # pyre-ignore
 
 
 db = SQLAlchemy()
@@ -105,7 +105,7 @@ def get_latest_resource_definition(id: str) -> Optional[ResourceDefinition]:
     return ResourceDefinition.query.filter_by(resource_id=id).order_by(ResourceDefinition.version.desc()).first()
 
 
-def get_resource_definition(id: str, version: id) -> Optional[ResourceDefinition]:
+def get_resource_definition(id: str, version: int) -> Optional[ResourceDefinition]:
     return ResourceDefinition.query.filter_by(resource_id=id, version=version).first()
 
 

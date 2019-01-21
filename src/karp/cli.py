@@ -1,6 +1,5 @@
 import logging
-import click
-from flask.cli import FlaskGroup
+from flask.cli import FlaskGroup  # pyre-ignore
 
 from .config import MariaDBConfig
 import karp.resourcemgr as resourcemgr

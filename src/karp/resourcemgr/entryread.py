@@ -40,8 +40,8 @@ def get_entries_by_column(resource_obj: Resource, filters):
 
 
 def get_entries_indexed(resource_id):
-    res = search.search((resource_id,))
-    return res
+    query = search.build_query({}, resource_id)
+    return search.search_with_query(query)
 
 
 def get_entry(resource_id: str, entry_id: str, version: int=None):
