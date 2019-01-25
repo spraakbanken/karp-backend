@@ -26,7 +26,7 @@ def get_entry_for_editing(resource_id, entry_id):
 @auth.auth.authorization('WRITE', add_user=True)
 def add_entry(user, resource_id):
     data = request.get_json()
-    new_id = entrywrite.add_entry(resource_id, data['entry'], message=data.get('message', ''))
+    new_id = entrywrite.add_entry(resource_id, data['entry'], user.identifier, message=data.get('message', ''))
     return flask_jsonify({'status': 'added', 'newID': new_id}), 201
 
 
@@ -54,14 +54,14 @@ def get_all_indexed_entries(resource_id):
 @auth.auth.authorization('WRITE', add_user=True)
 def update_entry(user, resource_id, entry_id):
     data = request.get_json()
-    entrywrite.update_entry(resource_id, entry_id, data['entry'], message=data['message'])
+    entrywrite.update_entry(resource_id, entry_id, data['entry'], user.identifier, message=data['message'])
     return flask_jsonify({'status': 'updated'})
 
 
 @edit_api.route('/<resource_id>/<entry_id>/delete', methods=['DELETE'])
 @auth.auth.authorization('WRITE', add_user=True)
 def delete_entry(user, resource_id, entry_id):
-    entrywrite.delete_entry(resource_id, entry_id)
+    entrywrite.delete_entry(resource_id, entry_id, user.identifier)
     return flask_jsonify({'status': 'removed'})
 
 

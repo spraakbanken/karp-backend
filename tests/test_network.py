@@ -40,7 +40,7 @@ def test_no_refs_1(app_with_data_f):
     app = app_with_data_f()
 
     with app.app_context():
-        entrywrite.add_entries('places', places[0:1], resource_version=1)
+        entrywrite.add_entries('places', places[0:1], 'test', resource_version=1)
 
         referenced_entries = list(network.get_referenced_entries('places', 1, '3'))
         assert len(referenced_entries) == 0
@@ -50,7 +50,7 @@ def test_no_refs_2(app_with_data_f):
     app = app_with_data_f()
 
     with app.app_context():
-        entrywrite.add_entries('places', places[0:2], resource_version=1)
+        entrywrite.add_entries('places', places[0:2], 'test', resource_version=1)
 
         referenced_entries = list(network.get_referenced_entries('places', 1, '3'))
         assert len(referenced_entries) == 0
@@ -62,7 +62,7 @@ def test_internal_ref(app_with_data_f):
     app = app_with_data_f()
 
     with app.app_context():
-        entrywrite.add_entries('places', places[1:3], resource_version=1)
+        entrywrite.add_entries('places', places[1:3], 'test', resource_version=1)
 
         referenced_entries = list(network.get_referenced_entries('places', 1, '5'))
         assert len(referenced_entries) == 1
@@ -73,8 +73,8 @@ def test_external_ref(app_with_data_f):
     app = app_with_data_f()
 
     with app.app_context():
-        entrywrite.add_entries('places', places, resource_version=1)
-        entrywrite.add_entries('municipalities', municipalities, resource_version=1)
+        entrywrite.add_entries('places', places, 'test', resource_version=1)
+        entrywrite.add_entries('municipalities', municipalities, 'test', resource_version=1)
 
         referenced_entries = list(network.get_referenced_entries('places', 1, '3'))
         assert len(referenced_entries) == 1
@@ -99,7 +99,7 @@ def test_virtual_internal_ref(app_with_data_f):
     app = app_with_data_f()
 
     with app.app_context():
-        entrywrite.add_entries('places', places[1:3], resource_version=1)
+        entrywrite.add_entries('places', places[1:3], 'test', resource_version=1)
 
         referenced_entries = list(network.get_referenced_entries('places', 1, '4'))
         assert 1 == len(referenced_entries)
@@ -110,8 +110,8 @@ def test_virtual_external_ref(app_with_data_f):
     app = app_with_data_f()
 
     with app.app_context():
-        entrywrite.add_entries('places', places[0:1], resource_version=1)
-        entrywrite.add_entries('municipalities', municipalities[0:1], resource_version=1)
+        entrywrite.add_entries('places', places[0:1], 'test', resource_version=1)
+        entrywrite.add_entries('municipalities', municipalities[0:1], 'test', resource_version=1)
 
         referenced_entries = list(network.get_referenced_entries('municipalities', 1, '1'))
         assert 1 == len(referenced_entries)
