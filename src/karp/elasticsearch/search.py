@@ -104,8 +104,6 @@ def create_es_query(node):
                 range_args['gt'] = arg22
             elif op == query_dsl.Operators.GTE:
                 range_args['gte'] = arg22
-            else:
-                raise RuntimeError('don\'t now what to do yet')
             q = es_dsl.Q('range', **{arg11: range_args})
     elif isinstance(node, ast.TernaryOp):
         op = node.value
