@@ -1,3 +1,4 @@
+import re
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
 from karp.query_dsl import basic_ast as ast
@@ -83,13 +84,13 @@ def create_es_query(node):
                 query_type = 'regexp'
             elif op == query_dsl.Operators.CONTAINS:
                 query_type = 'regexp'
-                arg22 = '.*' + arg22 + '.*'  # TODO escape regexp characters
+                arg22 = '.*' + re.escape(arg22) + '.*'
             elif op == query_dsl.Operators.STARTSWITH:
                 query_type = 'regexp'
-                arg22 = arg22 + '.*'  # TODO escape regexp characters
+                arg22 = re.escape(arg22) + '.*'
             else:  # query_dsl.Operators.ENDSWITH
                 query_type = 'regexp'
-                arg22 = '.*' + arg22  # TODO escape regexp characters
+                arg22 = '.*' + re.escape(arg22)
             q = es_dsl.Q(query_type, **{arg11: arg22})
         elif op in [query_dsl.Operators.LT, query_dsl.Operators.LTE, query_dsl.Operators.GT, query_dsl.Operators.GTE]:
             range_args = {}
