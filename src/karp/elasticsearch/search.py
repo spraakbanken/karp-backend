@@ -75,7 +75,8 @@ def create_es_query(node):
                 q = es_dsl.Q('bool', must=[q1, q2])
             else:
                 q = es_dsl.Q('bool', should=[q1, q2])
-        elif op in [query_dsl.Operators.EQUALS, query_dsl.Operators.REGEXP, query_dsl.Operators.CONTAINS, query_dsl.Operators.STARTSWITH, query_dsl.Operators.ENDSWITH]:
+        elif op in [query_dsl.Operators.EQUALS, query_dsl.Operators.REGEXP, query_dsl.Operators.CONTAINS,
+                    query_dsl.Operators.STARTSWITH, query_dsl.Operators.ENDSWITH]:
             arg11 = get_value(arg1)
             arg22 = get_value(arg2)
             if op == query_dsl.Operators.EQUALS:
