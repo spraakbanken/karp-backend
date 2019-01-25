@@ -2,9 +2,8 @@ import json
 
 import pytest  # pyre-ignore
 import os
-import subprocess
-import tempfile
 from distutils.util import strtobool
+import elasticsearch_test
 
 from karp import create_app
 from karp.database import db
@@ -152,39 +151,10 @@ def es():
     if not strtobool(os.environ.get('ELASTICSEARCH_ENABLED', 'false')):
         yield 'skip'
     else:
-        if not os.environ.get('ES_PATH'):
-            raise RuntimeError('must set $ES_PATH to run tests that use elasticsearch')
-        executable = os.path.join(os.environ.get('ES_PATH'), 'bin/elasticsearch')
-        data_arg = '-Epath.data=%s' % tempfile.mkdtemp()
-        logs_arg = '-Epath.logs=%s' % tempfile.mkdtemp()
-        port_arg = '-Ehttp.port=9201'
-        cluster_arg = '-Ecluster.name=testcluster'
-        env_copy = os.environ.copy()
-        env_copy['ES_JAVA_OPTS'] = '-Xms512m -Xmx512m'
-
-        p = subprocess.Popen([executable, data_arg, logs_arg, port_arg, cluster_arg],
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             env=env_copy)
-
-        line = ''
-        while True:
-            out = p.stdout.read(1)
-            if out == b'' and p.poll() is not None:
-                raise RuntimeError('Failed to start Elasticsearch')
-            if out:
-                char = out.decode()
-                if char != '\n':
-                    line += char
-                else:
-                    line = ''
-
-            if 'started' in line:
-                break
-
-        yield 'run'
-
-        p.kill()
+        if not os.environ.get('ES_HOME'):
+            raise RuntimeError('must set $ES_HOME to run tests that use elasticsearch')
+        with elasticsearch_test.ElasticsearchTest(port=9201):
+            yield 'run'
 
 
 @pytest.fixture
