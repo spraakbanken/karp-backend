@@ -1,10 +1,8 @@
 import json
-
 from typing import BinaryIO
 from typing import Tuple
 from typing import Dict
 from typing import List
-
 import fastjsonschema  # pyre-ignore
 import logging
 import collections
@@ -16,10 +14,8 @@ from karp.database import db
 from karp.database import get_next_resource_version
 from karp.database import get_active_resource_definition
 from karp.database import get_resource_definition
-
 from karp.util.json_schema import create_entry_json_schema
 from karp.errors import ResourceNotFoundError
-
 from .resource import Resource
 
 _logger = logging.getLogger('karp')

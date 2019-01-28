@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, List, Any, Iterator
+from typing import Dict, Any, Iterator
 import json
 
 from karp.resourcemgr import get_resource, get_refs

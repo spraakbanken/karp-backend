@@ -3,7 +3,7 @@ import fastjsonschema  # pyre-ignore
 import logging
 
 from karp.errors import KarpError
-from karp.resourcemgr import get_resource, setup_resource_class
+from karp.resourcemgr import get_resource
 from karp.database import db
 import karp.indexmgr as indexmgr
 from .resource import Resource
@@ -22,7 +22,8 @@ def preview_entry(resource_id, entry, resource_version=None):
     return entry_json
 
 
-def update_entry(resource_id: str, entry_id: str, entry: Dict, user_id: str, message: str=None, resource_version: int=None):
+def update_entry(resource_id: str, entry_id: str, entry: Dict, user_id: str,
+                 message: str=None, resource_version: int=None):
     resource = get_resource(resource_id, version=resource_version)
 
     index_entry_json = _validate_and_prepare_entry(resource, entry)
