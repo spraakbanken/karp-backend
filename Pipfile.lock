@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e82f7c402c5c81ec830ca7b45299033292ad1e4ed9c7d33d7137427ca3d444ed"
+            "sha256": "3e7ee6b1f193d0f3f359fe141e05a367c449f603bb47b1f9574c3e0713f84093"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -18,10 +18,10 @@
     "default": {
         "alembic": {
             "hashes": [
-                "sha256:35660f7e6159288e2be111126be148ef04cbf7306da73c8b8bd4400837bb08e3"
+                "sha256:16505782b229007ae905ef9e0ae6e880fddafa406f086ac7d442c1aaf712f8c2"
             ],
             "index": "pypi",
-            "version": "==1.0.6"
+            "version": "==1.0.7"
         },
         "asn1crypto": {
             "hashes": [
@@ -158,6 +158,14 @@
             ],
             "index": "pypi",
             "version": "==1.0.2"
+        },
+        "flask-cors": {
+            "hashes": [
+                "sha256:7ad56ee3b90d4955148fc25a2ecaa1124fc84298471e266a7fea59aeac4405a5",
+                "sha256:7e90bf225fdf163d11b84b59fb17594d0580a16b97ab4e1146b1fb2737c1cfec"
+            ],
+            "index": "pypi",
+            "version": "==3.0.7"
         },
         "flask-sqlalchemy": {
             "hashes": [
@@ -334,10 +342,10 @@
         },
         "sqlalchemy": {
             "hashes": [
-                "sha256:6af3ca2f7f00844465ab4fa78337d487b39e53f516c51328aed4ed3a719d4264"
+                "sha256:52a42dbf02d0562d6e90e7af59f177f1cc027e72833cc29c3a821eefa009c71d"
             ],
             "index": "pypi",
-            "version": "==1.2.16"
+            "version": "==1.2.17"
         },
         "urllib3": {
             "hashes": [

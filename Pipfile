@@ -19,6 +19,7 @@ alembic = "*"
 slacker-log-handler = "*"
 pyjwt = "*"
 cryptography = "*"
+flask-cors = "*"
 
 [dev-packages]
 pytest = "*"

@@ -3,6 +3,7 @@ import pkg_resources
 import json
 import logging
 from flask import Flask     # pyre-ignore
+from flask_cors import CORS  # pyre-ignore
 
 from karp.errors import KarpError
 import karp.util.logging.slack as slack_logging
@@ -57,6 +58,8 @@ def create_app(config_class=None):
     else:
         from karp.auth.authenticator import Authenticator
         auth.auth.set_authenticator(Authenticator())
+
+    CORS(app)
 
     return app
 
