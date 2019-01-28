@@ -20,6 +20,7 @@ slacker-log-handler = "*"
 pyjwt = "*"
 cryptography = "*"
 flask-cors = "*"
+elasticsearch-test-py = "*"
 
 [dev-packages]
 pytest = "*"
@@ -27,7 +28,6 @@ pytest = "*"
 coverage = "*"
 pytest-xdist = "*"
 pytest-cov = "*"
-elasticsearch-test-py = "*"
 
 [requires]
 python_version = "3"

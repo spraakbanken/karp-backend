@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3e7ee6b1f193d0f3f359fe141e05a367c449f603bb47b1f9574c3e0713f84093"
+            "sha256": "ee41529b2c39fe744fbeaa761060694d15f958a41f5625eb8f61772e84fde794"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -143,6 +143,14 @@
             ],
             "index": "pypi",
             "version": "==6.3.1"
+        },
+        "elasticsearch-test-py": {
+            "hashes": [
+                "sha256:4282dff57f4198a578a22ea98d606be4f7565b4f5b3f636a29b07ecf6b8b4543",
+                "sha256:854664f968d167c5a300be0d79cb8e1952bc9eab75d5c051fd65bd0371b06576"
+            ],
+            "index": "pypi",
+            "version": "==1.0.0"
         },
         "fastjsonschema": {
             "hashes": [
@@ -420,14 +428,6 @@
             ],
             "index": "pypi",
             "version": "==4.5.2"
-        },
-        "elasticsearch-test-py": {
-            "hashes": [
-                "sha256:4282dff57f4198a578a22ea98d606be4f7565b4f5b3f636a29b07ecf6b8b4543",
-                "sha256:854664f968d167c5a300be0d79cb8e1952bc9eab75d5c051fd65bd0371b06576"
-            ],
-            "index": "pypi",
-            "version": "==1.0.0"
         },
         "execnet": {
             "hashes": [
