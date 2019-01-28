@@ -37,7 +37,8 @@ def _create_es_mapping(config):
             else:
                 mapped_type = 'keyword'
             result = {
-                'type': mapped_type
+                'type': mapped_type,
+                'copy_to': 'freetext'
             }
         else:
             result = {
@@ -62,6 +63,10 @@ class EsIndex(IndexInterface):
 
     def create_index(self, resource_id, config):
         mapping = _create_es_mapping(config)
+
+        mapping['properties']['freetext'] = {
+            'type': 'text'
+        }
 
         body = {
             'settings': {

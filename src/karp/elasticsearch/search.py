@@ -42,7 +42,7 @@ def create_es_query(node):
         op = node.value
         value = get_value(node.child0)
         if op == query_dsl.Operators.FREETEXT:
-            q = es_dsl.Q('term', freetext=value)
+            q = es_dsl.Q('term', freetext=value.lower())
         elif op == query_dsl.Operators.FREERGXP:
             q = es_dsl.Q('regexp', freetext=value)
         elif op == query_dsl.Operators.EXISTS:
