@@ -1,5 +1,4 @@
 import json
-import logging
 import collections
 
 from karp.resourcemgr import get_resource

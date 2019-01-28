@@ -3,17 +3,17 @@ import fastjsonschema  # pyre-ignore
 import logging
 
 from karp.errors import KarpError
-from karp.resourcemgr import get_resource, setup_resource_class
+from karp.resourcemgr import get_resource
 from karp.database import db
 import karp.indexmgr as indexmgr
 from .resource import Resource
-from typing import Dict
+from typing import Dict, List
 
 _logger = logging.getLogger('karp')
 
 
-def add_entry(resource_id, entry, message=None, resource_version=None):
-    add_entries(resource_id, [entry], message=message, resource_version=resource_version)
+def add_entry(resource_id: str, entry: Dict, user_id: str, message: str=None, resource_version: int=None):
+    add_entries(resource_id, [entry], user_id, message=message, resource_version=resource_version)
 
 
 def preview_entry(resource_id, entry, resource_version=None):
@@ -22,7 +22,8 @@ def preview_entry(resource_id, entry, resource_version=None):
     return entry_json
 
 
-def update_entry(resource_id, entry_id, entry, message=None, resource_version=None):
+def update_entry(resource_id: str, entry_id: str, entry: Dict, user_id: str,
+                 message: str=None, resource_version: int=None):
     resource = get_resource(resource_id, version=resource_version)
 
     index_entry_json = _validate_and_prepare_entry(resource, entry)
@@ -42,7 +43,7 @@ def update_entry(resource_id, entry_id, entry, message=None, resource_version=No
         order_by(resource.history_model.version.desc()).first()
     history_entry = resource.history_model(
         entry_id=db_id,
-        user_id='TODO',
+        user_id=user_id,
         body=db_entry_json,
         version=latest_history_entry.version + 1,
         op='UPDATE',
@@ -63,7 +64,7 @@ def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
     return len(objs)
 
 
-def add_entries(resource_id, entries, message=None, resource_version=None):
+def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: str=None, resource_version: int=None):
     resource = get_resource(resource_id, version=resource_version)
     resource_conf = resource.config
 
@@ -83,7 +84,7 @@ def add_entries(resource_id, entries, message=None, resource_version=None):
     for db_entry, entry, entry_json in created_db_entries:
         history_entry = resource.history_model(
             entry_id=db_entry.id,
-            user_id='TODO',
+            user_id=user_id,
             body=entry_json,
             version=1,
             op='ADD',
@@ -123,7 +124,7 @@ def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):
     return db_entry
 
 
-def delete_entry(resource_id, entry_id):
+def delete_entry(resource_id: str, entry_id: str, user_id: str):
     resource = get_resource(resource_id)
     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
     if not entry:
@@ -132,7 +133,7 @@ def delete_entry(resource_id, entry_id):
     history_cls = resource.history_model
     history_entry = history_cls(
         entry_id=entry.id,
-        user_id='TODO',
+        user_id=user_id,
         op='DELETE',
         version=-1
     )

@@ -1,3 +1,4 @@
+import re
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
 from karp.query_dsl import basic_ast as ast
@@ -74,7 +75,8 @@ def create_es_query(node):
                 q = es_dsl.Q('bool', must=[q1, q2])
             else:
                 q = es_dsl.Q('bool', should=[q1, q2])
-        elif op in [query_dsl.Operators.EQUALS, query_dsl.Operators.REGEXP, query_dsl.Operators.CONTAINS, query_dsl.Operators.STARTSWITH, query_dsl.Operators.ENDSWITH]:
+        elif op in [query_dsl.Operators.EQUALS, query_dsl.Operators.REGEXP, query_dsl.Operators.CONTAINS,
+                    query_dsl.Operators.STARTSWITH, query_dsl.Operators.ENDSWITH]:
             arg11 = get_value(arg1)
             arg22 = get_value(arg2)
             if op == query_dsl.Operators.EQUALS:
@@ -83,13 +85,13 @@ def create_es_query(node):
                 query_type = 'regexp'
             elif op == query_dsl.Operators.CONTAINS:
                 query_type = 'regexp'
-                arg22 = '.*' + arg22 + '.*'  # TODO escape regexp characters
+                arg22 = '.*' + re.escape(arg22) + '.*'
             elif op == query_dsl.Operators.STARTSWITH:
                 query_type = 'regexp'
-                arg22 = arg22 + '.*'  # TODO escape regexp characters
+                arg22 = re.escape(arg22) + '.*'
             else:  # query_dsl.Operators.ENDSWITH
                 query_type = 'regexp'
-                arg22 = '.*' + arg22  # TODO escape regexp characters
+                arg22 = '.*' + re.escape(arg22)
             q = es_dsl.Q(query_type, **{arg11: arg22})
         elif op in [query_dsl.Operators.LT, query_dsl.Operators.LTE, query_dsl.Operators.GT, query_dsl.Operators.GTE]:
             range_args = {}
@@ -103,8 +105,6 @@ def create_es_query(node):
                 range_args['gt'] = arg22
             elif op == query_dsl.Operators.GTE:
                 range_args['gte'] = arg22
-            else:
-                raise RuntimeError('don\'t now what to do yet')
             q = es_dsl.Q('range', **{arg11: range_args})
     elif isinstance(node, ast.TernaryOp):
         op = node.value

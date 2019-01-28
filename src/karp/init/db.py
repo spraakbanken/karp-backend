@@ -1,4 +1,4 @@
-from karp.database import db, ResourceDefinition
+from karp.database import db
 from karp.resourcemgr import setup_resource_classes
 
 

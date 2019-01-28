@@ -27,6 +27,7 @@ pytest = "*"
 coverage = "*"
 pytest-xdist = "*"
 pytest-cov = "*"
+elasticsearch-test-py = "*"
 
 [requires]
 python_version = "3"
