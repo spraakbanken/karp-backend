@@ -31,7 +31,7 @@ This project uses [pipenv](https://pipenv.readthedocs.io/) and
 ## Create test resources
 
 1. `pipenv run karp-cli create --config tests/data/config/places.json`
-2. `pipenv run karp-cli import --resource_id places --version 1 --data tests/data/places.json`
+2. `pipenv run karp-cli import --resource_id places --version 1 --data tests/data/places.jsonl`
 3. Do the same for `municipalities`
 4. `pipenv run karp-cli publish --resource_id places --version 1`
 4. `pipenv run karp-cli publish --resource_id municipalities --version 1`
