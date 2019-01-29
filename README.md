@@ -10,7 +10,7 @@ This project uses [pipenv](https://pipenv.readthedocs.io/) and
 1. Install pipenv
 2. Run `pipenv install --dev` (skip --dev if deploying)
 3. Install MariaDB and create a database
-4. Setup environment variables:
+4. Setup environment variables (can be placed in a `.env` file in the root and then `pipenv run` sets those):
    ```
    export MARIADB_DATABASE=<name of database>
    export MARIADB_USER=<database user>
