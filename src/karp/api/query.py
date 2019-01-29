@@ -12,7 +12,7 @@ from flask import Blueprint, jsonify, request    # pyre-ignore
 from karp.resourcemgr import Resource
 
 from karp import search
-
+import karp.auth.auth as auth
 
 query_api = Blueprint('query_api', __name__)
 
@@ -26,6 +26,7 @@ def user_is_authorized(resource: Resource, fields: List[str], mode="read") -> bo
 
 @query_api.route('/<resources>/query', methods=['GET'])
 @query_api.route('/query/<resources>', methods=['GET'])
+@auth.auth.authorization('READ')
 def query_w_resources(resources: str):
     print('query_w_resources called with resources={}'.format(resources))
     query = search.search.build_query(request.args, resources)
@@ -36,6 +37,7 @@ def query_w_resources(resources: str):
 
 
 @query_api.route('/<resource_id>/<entry_id>/get_indexed', methods=['GET'])
+@auth.auth.authorization('READ')
 def get_indexed_entry(resource_id, entry_id):
     # TODO a temporary soulution until search is done
     from elasticsearch_dsl import Q, Search  # pyre-ignore

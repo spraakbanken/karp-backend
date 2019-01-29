@@ -22,8 +22,8 @@ class JWTAuthenticator(Authenticator):
                 raise RuntimeError("The given jwt have expired")
 
             lexicon_permissions = {}
-            if "scope" in user_token and "lexicons" in user_token["scope"]:
-                lexicon_permissions = user_token["scope"]["lexicons"]
+            if "scope" in user_token and "lexica" in user_token["scope"]:
+                lexicon_permissions = user_token["scope"]["lexica"]
             return User(user_token['sub'], lexicon_permissions, user_token["levels"])
 
         return None
@@ -33,14 +33,13 @@ class JWTAuthenticator(Authenticator):
             resource_ids = [args['resource_id']]
         elif 'resource_ids' in args:
             resource_ids = args['resource_id'].split(',')
+        elif 'resources' in args:
+            resource_ids = args['resources'].split(',')
         else:
             return True
 
         for resource_id in resource_ids:
             if resourcemgr.is_protected(resource_id, level):
-                if not user:
+                if not user or user.permissions[resource_id] < user.levels[level]:
                     return False
-                for corpus, level in user.lexicon_permissions[resource_id]:
-                    if user.level > level:
-                        return False
         return True

@@ -206,10 +206,11 @@ def get_refs(resource_id, version=None):
 
 
 def is_protected(resource_id, level):
+    """
+    Level can be READ, WRITE or ADMIN
+    """
     resource = get_resource(resource_id)
     protection = resource.config.get('protected', {})
-    if protection:
-        # TODO
-        return True
-    else:
-        return False
+    return protection.get('read') or \
+           protection.get('write') and level != 'READ' or \
+           protection.get('admin') and level == 'ADMIN'
