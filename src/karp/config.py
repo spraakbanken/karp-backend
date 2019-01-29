@@ -1,7 +1,8 @@
 import os
+import logging
+from distutils.util import strtobool
 
-
-__MYSQL_FORMAT = "mysql://{user}:{passwd}@{dbhost}/{dbname}"
+MYSQL_FORMAT = "mysql://{user}:{passwd}@{dbhost}/{dbname}"
 
 
 class Config:
@@ -9,11 +10,17 @@ class Config:
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    ELASTICSEARCH_HOST = os.environ['ELASTICSEARCH_HOST'].split(',') if 'ELASTICSEARCH_HOST' in os.environ else None
+    ELASTICSEARCH_ENABLED = os.environ.get('ELASTICSEARCH_ENABLED', '') == 'true'
+    CONSOLE_LOG_LEVEL = logging.getLevelName(os.environ.get('CONSOLE_LOG_LEVEL', 'INFO'))
+    LOG_TO_SLACK = strtobool(os.environ.get('LOG_TO_SLACK', 'n'))
+    SLACK_SECRET = os.environ.get('SLACK_SECRET')
+    JWT_AUTH = strtobool(os.environ.get('JWT_AUTH', 'n'))
 
 
 class ProductionConfig(Config):
     def __init__(self):
-        self.SQLALCHEMY_DATABASE_URI = __MYSQL_FORMAT.format(
+        self.SQLALCHEMY_DATABASE_URI = MYSQL_FORMAT.format(
             user=os.environ["MARIADB_USER"],
             pwd=os.environ["MARIADB_PASSWORD"],
             dbhost=os.environ["MARIADB_HOST"],
@@ -34,9 +41,8 @@ def get_config():
 
 
 class MariaDBConfig(Config):
-    SETUP_DATABASE = False
 
-    def __init__(self, user=None, pwd=None, host=None, dbname=None):
+    def __init__(self, user=None, pwd=None, host=None, dbname=None, setup_database=False):
         if not user:
             user = os.environ["MARIADB_USER"]
         if not pwd:
@@ -46,7 +52,8 @@ class MariaDBConfig(Config):
         if not dbname:
             dbname = os.environ["MARIADB_DATABASE"]
 
-        self.SQLALCHEMY_DATABASE_URI = __MYSQL_FORMAT.format(
+        self.SETUP_DATABASE = setup_database
+        self.SQLALCHEMY_DATABASE_URI = MYSQL_FORMAT.format(
             user=user,
             passwd=pwd,
             dbhost=host,

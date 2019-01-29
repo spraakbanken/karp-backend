@@ -3,7 +3,8 @@
   "resource_name": "Kommuner i Sverige",
   "fields": {
     "name": {
-      "type": "string"
+      "type": "string",
+      "required": true
     },
     "state": {
       "type": "string"
@@ -59,10 +60,41 @@
       }
     },
     "code": {
-      "type": "string"
+      "type": "number",
+      "required": true
     },
     "link": {
       "type": "string"
+    },
+    "places": {
+      "virtual": true,
+      "type": "object",
+      "collection": true,
+      "function": {
+        "multi_ref": {
+          "resource_id": "places",
+          "resource_version": 1,
+          "field": "municipality",
+          "result": {
+            "type": "object",
+            "fields": {
+              "code": {
+                "type": "number"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "test": {
+            "contains": [
+              {
+                "self": "code"
+              }
+            ]
+          }
+        }
+      }
     }
   },
   "sort": "name",

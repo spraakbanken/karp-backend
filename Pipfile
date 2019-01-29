@@ -11,7 +11,15 @@ mysqlclient = "*"
 gunicorn = "*"
 karp = {editable = true, path = "."}
 click = "*"
+fastjsonschema = "*"
 pytest = "*"
+elasticsearch = "*"
+elasticsearch-dsl = "*"
+alembic = "*"
+slacker-log-handler = "*"
+pyjwt = "*"
+cryptography = "*"
+flask-cors = "*"
 
 [dev-packages]
 pytest = "*"
@@ -19,6 +27,7 @@ pytest = "*"
 coverage = "*"
 pytest-xdist = "*"
 pytest-cov = "*"
+elasticsearch-test-py = "*"
 
 [requires]
 python_version = "3"
