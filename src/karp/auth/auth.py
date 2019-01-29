@@ -1,5 +1,5 @@
 import functools
-from flask import request
+from flask import request, jsonify
 
 from karp.auth.authenticator import Authenticator
 
@@ -14,11 +14,13 @@ class Auth:
             @functools.wraps(func)
             def wrapper(*args, **kwargs):
                 user = self.impl.authenticate(request)
-                self.impl.authorize(level, user, kwargs)
-                if add_user:
-                    return func(user, *args, **kwargs)
+                if self.impl.authorize(level, user, kwargs):
+                    if add_user:
+                        return func(user, *args, **kwargs)
+                    else:
+                        return func(*args, **kwargs)
                 else:
-                    return func(*args, **kwargs)
+                    return jsonify({'error': 'not permitted'}), 403
             return wrapper
         return decorator
 
