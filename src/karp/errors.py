@@ -1,3 +1,5 @@
+NoIndexModuleConfigured = 10
+
 
 class KarpError(Exception):
 
