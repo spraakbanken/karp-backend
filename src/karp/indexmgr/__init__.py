@@ -53,12 +53,20 @@ def _update_references(resource_id, entry_ids):
 
 
 def transform_to_index_entry(resource: resourcemgr.Resource, src_entry: Dict, fields):
+    print('Called transform_to_index_entry(resource, src_entry, fields) with:')
+    print('  resource = {}'.format(resource))
+    print('  src_entry = {}'.format(src_entry))
+    print('  fields = {}'.format(fields))
     index_entry = indexer.impl.create_empty_object()
     _transform_to_index_entry(resource, src_entry, index_entry, fields)
     return index_entry
 
 
 def _evaluate_function(function_conf, src_entry, src_resource):
+    print('Called _evaluate_function(function_conf, src_entry, src_resource) with:')
+    print('  function_conf = {}'.format(function_conf))
+    print('  src_entry = {}'.format(src_entry))
+    print('  src_resource = {}'.format(src_resource))
     if 'multi_ref' in function_conf:
         function_conf = function_conf['multi_ref']
         target_field = function_conf['field']
@@ -91,9 +99,12 @@ def _evaluate_function(function_conf, src_entry, src_resource):
 
         res = indexer.impl.create_empty_list()
         for entry in target_entries:
+            print('_evaluate_function::entry = {}'.format(entry))
             index_entry = indexer.impl.create_empty_object()
             list_of_sub_fields = ("tmp", function_conf['result']),
+            print('_evaluate_function::list_of_sub_fields = {}'.format(list_of_sub_fields))
             _transform_to_index_entry(target_resource, {'tmp': entry['entry']}, index_entry, list_of_sub_fields)
+            print('_evaluate_function::index_entry = {}'.format(repr(index_entry)))
             indexer.impl.add_to_list_field(res, index_entry["tmp"])
     else:
         raise NotImplementedError()
@@ -101,7 +112,13 @@ def _evaluate_function(function_conf, src_entry, src_resource):
 
 
 def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, _index_entry, fields):
+    print('Called _transform_to_index_entry(resource, _src_entry, _index_entry, fields) with:')
+    print('  resource = {}'.format(resource))
+    print('  _src_entry = {}'.format(_src_entry))
+    print('  _index_entry = {}'.format(_index_entry))
+    print('  fields = {}'.format(fields))
     for field_name, field_conf in fields:
+        print('field_name = {}, field_conf = {}'.format(field_name, field_conf))
         if field_conf.get('virtual', False):
             res = _evaluate_function(field_conf['function'], _src_entry, resource)
             if res:
@@ -132,6 +149,7 @@ def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, 
             else:
                 # TODO this assumes non-collection, fix
                 ref_id = _src_entry.get(field_name)
+                print('ref_id = {}'.format(ref_id))
                 if ref_id:
                     ref_entry = {field_name: json.loads(entryread.get_entry_by_entry_id(resource, str(ref_id)).body)}
                     ref_index_entry = {}
@@ -139,4 +157,8 @@ def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, 
                     _transform_to_index_entry(resource, ref_entry, ref_index_entry, list_of_sub_fields)
                     indexer.impl.assign_field(_index_entry, field_name, ref_index_entry[field_name])
         else:
+            print('Calling indexer.impl.assign_field(_index_entry, field_name, _src_entry.get(field_name))')
+            print('  _index_entry = {}'.format(_index_entry))
+            print('  field_name = {}'.format(field_name))
+            print('  _src_entry.get(field_name) = {}'.format(_src_entry.get(field_name)))
             indexer.impl.assign_field(_index_entry, field_name, _src_entry.get(field_name))
