@@ -34,7 +34,8 @@ def test_add(es, client_with_data_f):
         }
     }), content_type='application/json')
 
-    entries = get_json(client, 'places/_all')
+    time.sleep(1)
+    entries = get_json(client, 'places/query')
     assert len(entries) == 1
     assert entries[0]['entry']['name'] == 'test3'
 
@@ -49,12 +50,14 @@ def test_delete(es, client_with_data_f):
         'municipality': [2, 3]
     }])
 
-    entries = get_json(client, 'places/_all')
+    time.sleep(1)
+    entries = get_json(client, 'places/query')
     entry_id = entries[0]['id']
 
     client.delete('places/%s/delete' % entry_id)
 
-    entries = get_json(client, 'places/_all')
+    time.sleep(1)
+    entries = get_json(client, 'places/query')
     assert len(entries) == 0
 
 
@@ -68,7 +71,8 @@ def test_update(es, client_with_data_f):
         'municipality': [2, 3]
     }])
 
-    entries = get_json(client, 'places/_all')
+    time.sleep(1)
+    entries = get_json(client, 'places/query')
     entry_id = entries[0]['id']
 
     client.post('places/%s/update' % entry_id, data=json.dumps({
@@ -83,7 +87,8 @@ def test_update(es, client_with_data_f):
         'message': 'changes'
     }), content_type='application/json')
 
-    entries = get_json(client, 'places/_all')
+    time.sleep(1)
+    entries = get_json(client, 'places/query')
     assert len(entries) == 1
     assert entries[0]['id'] == entry_id
     assert entries[0]['entry']['population'] == 5
@@ -111,7 +116,7 @@ def test_refs(es, client_with_data_f):
     ])
 
     time.sleep(1)
-    entries = get_json(client, 'places/_all_indexed')
+    entries = get_json(client, 'places/query')
     assert len(entries) == 2
     for val in entries:
         assert 'entry' in val
@@ -181,7 +186,7 @@ def test_external_refs(es, client_with_data_f):
                 content_type='application/json')
 
     time.sleep(1)
-    entries = get_json(client, 'municipalities/_all_indexed')
+    entries = get_json(client, 'municipalities/query')
     for val in entries:
         assert 'entry' in val
         entry = val['entry']
@@ -196,7 +201,7 @@ def test_external_refs(es, client_with_data_f):
             assert 2 in place_codes
             assert 3 in place_codes
 
-    places_entries = get_json(client, 'places/_all_indexed')
+    places_entries = get_json(client, 'places/query')
     for val in places_entries:
         assert 'entry' in val
         entry = val['entry']
@@ -229,7 +234,7 @@ def test_update_refs(es, client_with_data_f):
     ])
 
     time.sleep(1)
-    entries = get_json(client, 'places/_all_indexed')
+    entries = get_json(client, 'places/query')
     assert len(entries) == 2
     for val in entries:
         assert 'entry' in val
@@ -242,7 +247,7 @@ def test_update_refs(es, client_with_data_f):
     client.delete('/places/6/delete')
 
     time.sleep(1)
-    entries = get_json(client, 'places/_all_indexed')
+    entries = get_json(client, 'places/query')
     assert len(entries) == 1
     entry = entries[0]
     assert '_smaller_places' not in entry

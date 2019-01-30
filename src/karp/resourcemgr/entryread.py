@@ -2,14 +2,7 @@ import json
 import collections
 
 from karp.resourcemgr import get_resource
-from karp.search import search
 from .resource import Resource
-
-
-def get_entries(resource_id):
-    cls = get_resource(resource_id).model
-    entries = cls.query.filter_by(deleted=False)
-    return [{'id': db_entry.entry_id, 'entry': json.loads(db_entry.body)} for db_entry in entries]
 
 
 def get_entries_by_column(resource_obj: Resource, filters):
@@ -36,11 +29,6 @@ def get_entries_by_column(resource_obj: Resource, filters):
         query = query.join(child_cls).filter_by(**child_filters)
 
     return [{'id': db_entry.entry_id, 'entry': json.loads(db_entry.body)} for db_entry in query]
-
-
-def get_entries_indexed(resource_id):
-    query = search.build_query({}, resource_id)
-    return search.search_with_query(query)
 
 
 def get_entry(resource_id: str, entry_id: str, version: int=None):
