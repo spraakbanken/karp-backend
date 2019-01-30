@@ -54,6 +54,9 @@ def test_es_setup(es):
 
 
 def test_es_search(es, client_with_data_f):
+    if es == 'skip':
+        pytest.skip("elasticsearch disabled")
+
     client_with_data = init(client_with_data_f, es)
 
     time.sleep(1)
@@ -72,6 +75,9 @@ def test_es_search(es, client_with_data_f):
 
 
 def test_es_search2(es, client_with_data_f):
+    if es == 'skip':
+        pytest.skip("elasticsearch disabled")
+
     client_with_data = init(client_with_data_f, es)
 
     time.sleep(1)
