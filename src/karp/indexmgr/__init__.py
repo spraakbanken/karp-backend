@@ -144,7 +144,6 @@ def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, 
             else:
                 # TODO this assumes non-collection, fix
                 ref_id = _src_entry.get(field_name)
-                print('ref_id = {}'.format(ref_id))
                 if ref_id:
                     ref_entry = {field_name: json.loads(entryread.get_entry_by_entry_id(resource, str(ref_id)).body)}
                     ref_index_entry = {}
