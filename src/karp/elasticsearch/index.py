@@ -33,12 +33,12 @@ def _create_es_mapping(config):
             if parent_field_def['type'] == 'number':
                 mapped_type = 'long'
             elif parent_field_def['type'] == 'string':
-                mapped_type = 'keyword'
+                mapped_type = 'text'
             else:
                 mapped_type = 'keyword'
             result = {
-                'type': mapped_type,
-                'copy_to': 'freetext'
+                'type': mapped_type
+                # 'copy_to': 'freetext'
             }
         else:
             result = {
