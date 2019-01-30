@@ -47,9 +47,10 @@ def create_app(config_class=None):
     @app.errorhandler(Exception)
     def http_error_handler(error: Exception):
         if isinstance(error, KarpError):
+            logger.debug(error.message)
             return json.dumps({'error': error.message}), 400
         else:
-            logger.exception('supererror')
+            logger.exception('unhandled exception')
             return json.dumps({'error': 'unknown error'}), 400
 
     import karp.auth.auth as auth
