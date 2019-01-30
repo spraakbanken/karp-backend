@@ -95,7 +95,7 @@ class SearchInterface:
         return query
 
     def search_with_query(self, query: Query):
-        return []
+        raise NotImplementedError()
 
 
 class KarpSearch(SearchInterface):
