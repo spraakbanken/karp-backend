@@ -60,7 +60,7 @@ def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
         objs = []
         for line in fp:
             objs.append(json.loads(line))
-        add_entries(resource_id, objs, resource_version=version)
+        add_entries(resource_id, objs, user_id='admin', resource_version=version)
     return len(objs)
 
 
