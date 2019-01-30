@@ -117,13 +117,7 @@ def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, 
         if field_conf.get('virtual', False):
             res = _evaluate_function(field_conf['function'], _src_entry, resource)
             if res:
-                indexer.impl.assign_field(_index_entry, field_name, res)
-        elif field_conf['type'] == 'object':
-            new_object = indexer.impl.create_empty_object()
-            if field_name in _src_entry:
-                _transform_to_index_entry(resource, _src_entry[field_name],
-                                          new_object, field_conf['fields'].items())
-            indexer.impl.assign_field(_index_entry, field_name, new_object)
+                indexer.impl.assign_field(_index_entry, '_' + field_name, res)
         elif field_conf.get('ref', {}):
             ref_field = field_conf['ref']
             if ref_field.get('resource_id'):
@@ -138,7 +132,7 @@ def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, 
                             list_of_sub_fields = (field_name, ref_field['field']),
                             _transform_to_index_entry(resource, ref_entry, ref_index_entry, list_of_sub_fields)
                             ref_objs.append(ref_index_entry[field_name])
-                    indexer.impl.assign_field(_index_entry, field_name, ref_objs)
+                    indexer.impl.assign_field(_index_entry, '_' + field_name, ref_objs)
                 else:
                     raise NotImplementedError()
             else:
@@ -149,6 +143,14 @@ def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, 
                     ref_index_entry = {}
                     list_of_sub_fields = (field_name, ref_field['field']),
                     _transform_to_index_entry(resource, ref_entry, ref_index_entry, list_of_sub_fields)
-                    indexer.impl.assign_field(_index_entry, field_name, ref_index_entry[field_name])
+                    indexer.impl.assign_field(_index_entry, '_' + field_name, ref_index_entry[field_name])
+
+        if field_conf['type'] == 'object':
+            field_content = indexer.impl.create_empty_object()
+            if field_name in _src_entry:
+                _transform_to_index_entry(resource, _src_entry[field_name], field_content, field_conf['fields'].items())
         else:
-            indexer.impl.assign_field(_index_entry, field_name, _src_entry.get(field_name))
+            field_content = _src_entry.get(field_name)
+
+        if field_content:
+            indexer.impl.assign_field(_index_entry, field_name, field_content)
