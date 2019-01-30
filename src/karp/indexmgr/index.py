@@ -2,28 +2,28 @@
 class IndexInterface:
 
     def create_index(self, resource_id, config):
-        return 'dummy'
+        raise NotImplementedError()
 
     def publish_index(self, alias_name, index_name):
-        return
+        raise NotImplementedError()
 
     def add_entries(self, resource_id, entries):
-        return
+        raise NotImplementedError()
 
     def delete_entry(self, resource_id, entry_id):
-        return
+        raise NotImplementedError()
 
     def create_empty_object(self):
-        return {}
+        raise NotImplementedError()
 
     def assign_field(self, _index_entry, field_name, part):
-        return
+        raise NotImplementedError()
 
     def create_empty_list(self):
-        return []
+        raise NotImplementedError()
 
     def add_to_list_field(self, elems, elem):
-        return
+        raise NotImplementedError()
 
 
 class IndexModule:

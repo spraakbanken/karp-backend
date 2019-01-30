@@ -1,23 +1,35 @@
 import json
+import sys
 from typing import Dict, List
 import collections
+import logging
 
 from .index import IndexModule
 import karp.resourcemgr as resourcemgr
 import karp.resourcemgr.entryread as entryread
 import karp.network as network
+from karp import errors
+
 
 indexer = IndexModule()
+
+_logger = logging.getLogger('karp')
 
 
 def _reindex(resource_id, version=None):
     resource_obj = resourcemgr.get_resource(resource_id, version=version)
+
+    try:
+        index_name = indexer.impl.create_index(resource_id, resource_obj.config)
+    except NotImplementedError:
+        _logger.error('No Index module is loaded. Check your configurations...')
+        sys.exit(errors.NoIndexModuleConfigured)
+
     entries = resource_obj.model.query.filter_by(deleted=False)
 
     fields = resource_obj.config['fields'].items()
     entries2 = [(entry.entry_id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
 
-    index_name = indexer.impl.create_index(resource_id, resource_obj.config)
     add_entries(index_name, entries2, update_refs=False)
     indexer.impl.publish_index(resource_id, index_name)
 

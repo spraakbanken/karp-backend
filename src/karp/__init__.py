@@ -8,7 +8,7 @@ from flask_cors import CORS  # pyre-ignore
 from karp.errors import KarpError
 import karp.util.logging.slack as slack_logging
 
-__version__ = '0.6.0'
+__version__ = '0.6.1'
 
 
 # TODO handle settings correctly
@@ -22,10 +22,11 @@ def create_app(config_class=None):
 
     logger = setup_logging(app)
 
-    from .api import health_api, edit_api, query_api, documentation
+    from .api import health_api, edit_api, query_api, conf_api, documentation
     app.register_blueprint(edit_api)
     app.register_blueprint(health_api)
     app.register_blueprint(query_api)
+    app.register_blueprint(conf_api)
     app.register_blueprint(documentation)
 
     from .init import init_db
