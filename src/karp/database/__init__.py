@@ -141,8 +141,10 @@ def get_or_create_resource_model(config, version):
         for field_name in config.get('referenceable', ()):
             field = config['fields'][field_name]
             if not field.get('collection'):
-                if field['type'] == 'number':
+                if field['type'] == 'integer':
                     column_type = db.Integer()
+                elif field['type'] == 'number':
+                    column_type = db.Float()
                 else:
                     raise NotImplementedError()
                 attributes[field_name] = db.Column(column_type)
@@ -156,8 +158,10 @@ def get_or_create_resource_model(config, version):
                 }
                 if field['type'] == 'object':
                     raise ValueError('not possible to reference lists of objects')
-                if field['type'] == 'number':
+                if field['type'] == 'integer':
                     child_db_column_type = db.Integer()
+                elif field['type'] == 'number':
+                    child_db_column_type = db.Float()
                 elif field['type'] == 'string':
                     child_db_column_type = db.Text()
                 else:
