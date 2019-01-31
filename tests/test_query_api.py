@@ -90,6 +90,16 @@ def test_equals_integer(es, client_with_data_f):
     assert entries[0]['entry']['name'] == 'botten test'
 
 
+def test_freergxp_string(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    time.sleep(1)
+    entries = get_json(client, 'places/query?q=freergxp|grunds?')
+    assert len(entries) == 2
+    assert entries[0]['entry']['name'] == 'grund test'
+    assert entries[1]['entry']['name'] == 'grunds'
+
+
 @pytest.mark.skip(reason="places doesn't exist")
 def test_no_q(client):
     response = client.get('/places/query')
