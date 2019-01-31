@@ -30,8 +30,10 @@ def _create_es_mapping(config):
         if parent_field_def['type'] != 'object':
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
-            if parent_field_def['type'] == 'number':
+            if parent_field_def['type'] == 'integer':
                 mapped_type = 'long'
+            elif parent_field_def['type'] == 'number':
+                mapped_type = 'double'
             elif parent_field_def['type'] == 'string':
                 mapped_type = 'text'
             else:
