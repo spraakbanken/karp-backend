@@ -1,11 +1,26 @@
+import json
+
 from flask import Blueprint                     # pyre-ignore
 from flask import jsonify as flask_jsonify       # pyre-ignore
 from flask import request  # pyre-ignore
 
-import karp.resourcemgr.entrywrite as entrywrite
+from karp.resourcemgr import entrywrite
+from karp.resourcemgr import entryread
 import karp.auth.auth as auth
 
 edit_api = Blueprint('edit_api', __name__)
+
+
+@edit_api.route('/<resource_id>/<entry_id>')
+@auth.auth.authorization('READ')
+def get_entry_for_editing(resource_id, entry_id):
+    db_entry = entryread.get_entry(resource_id, entry_id)
+    result = {
+        'id': entry_id,
+        'version': -1,  # TODO: version are only available in history right now
+        'entry': json.loads(db_entry.body)
+    }
+    return flask_jsonify(result)
 
 
 @edit_api.route('/<resource_id>/add', methods=['POST'])
