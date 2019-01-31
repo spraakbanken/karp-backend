@@ -8,7 +8,7 @@ from flask_cors import CORS  # pyre-ignore
 from karp.errors import KarpError
 import karp.util.logging.slack as slack_logging
 
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 
 
 # TODO handle settings correctly
