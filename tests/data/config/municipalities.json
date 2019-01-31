@@ -14,7 +14,7 @@
     },
     "capital": {
       "type": "string"
-    },  
+    },
     "area": {
       "type": "object",
       "fields": {
@@ -39,10 +39,10 @@
           "type": "object",
           "fields": {
             "total": {
-              "type": "number"
+              "type": "integer"
             },
             "city": {
-              "type": "number"
+              "type": "integer"
             }
           }
         },
@@ -60,7 +60,7 @@
       }
     },
     "code": {
-      "type": "number",
+      "type": "integer",
       "required": true
     },
     "link": {
@@ -79,7 +79,7 @@
             "type": "object",
             "fields": {
               "code": {
-                "type": "number"
+                "type": "integer"
               },
               "name": {
                 "type": "string"

@@ -2,6 +2,30 @@ import pytest  # pyre-ignore
 import json
 import time
 
+ENTRIES = [{
+    "code": 1,
+    "name": "grund test",
+    "population": 3122,
+    "area": 30000,
+    "density": 5,
+    "municipality": [1]
+}, {
+    "code": 2,
+    "name": "grunds",
+    "population": 6312,
+    "area": 20000,
+    "density": 6,
+    "municipality": [1]
+}, {
+    "code": 3,
+    "name": "botten test",
+    "population": 4132,
+    "area": 50000,
+    "density": 7,
+    "municipality": [2, 3]
+}
+]
+
 
 def get_json(client, path):
     response = client.get(path)
@@ -21,21 +45,31 @@ def init(client, es_status_code, entries):
 
 
 def test_query_no_q(es, client_with_data_f):
-    client = init(client_with_data_f, es, [])
-
-    client.post('places/add', data=json.dumps({
-        'entry': {
-            'code': 3,
-            'name': 'test3',
-            'population': 4,
-            'area': 50000,
-            'density': 5,
-            'municipality': [2, 3]
-        }
-    }), content_type='application/json')
+    client = init(client_with_data_f, es, ENTRIES)
 
     time.sleep(1)
     entries = get_json(client, 'places/query')
+    assert len(entries) == 3
+    assert entries[0]['entry']['name'] == 'grund test'
+
+
+def test_freetext_string(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    time.sleep(1)
+    entries = get_json(client, 'places/query?q=freetext|grund')
+    assert len(entries) == 2
+    assert entries[1]['entry']['name'] == 'grund test'
+    assert entries[0]['entry']['name'] == 'grunds'
+
+
+def test_freetext_integer(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    time.sleep(1)
+    entries = get_json(client, 'places/query?q=freetext|3122')
+    assert len(entries) == 1
+    assert entries[0]['entry']['name'] == 'grund test'
     assert len(entries) == 1
     assert entries[0]['entry']['name'] == 'test3'
 

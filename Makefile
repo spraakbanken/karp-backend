@@ -20,3 +20,6 @@ flaske8:
 
 pyre:
 	pyre check
+
+run-dev:
+	pipenv run python wsgi.py
