@@ -70,8 +70,24 @@ def test_freetext_integer(es, client_with_data_f):
     entries = get_json(client, 'places/query?q=freetext|3122')
     assert len(entries) == 1
     assert entries[0]['entry']['name'] == 'grund test'
+
+
+def test_equals_string(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    time.sleep(1)
+    entries = get_json(client, 'places/query?q=equals|name|grunds')
     assert len(entries) == 1
-    assert entries[0]['entry']['name'] == 'test3'
+    assert entries[0]['entry']['name'] == 'grunds'
+
+
+def test_equals_integer(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    time.sleep(1)
+    entries = get_json(client, 'places/query?q=equals|density|7')
+    assert len(entries) == 1
+    assert entries[0]['entry']['name'] == 'botten test'
 
 
 @pytest.mark.skip(reason="places doesn't exist")

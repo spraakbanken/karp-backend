@@ -9,11 +9,8 @@ import collections
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
-from karp.database import get_or_create_resource_model, get_or_create_history_model
 from karp.database import db
-from karp.database import get_next_resource_version
-from karp.database import get_active_resource_definition
-from karp.database import get_resource_definition
+from karp import database
 from karp.util.json_schema import create_entry_json_schema
 from karp.errors import ResourceNotFoundError
 from .resource import Resource
@@ -32,7 +29,7 @@ def get_available_resources() -> List[ResourceDefinition]:
 
 def get_resource(resource_id: str, version: int = None) -> Resource:
     if not version:
-        resource_def = get_active_resource_definition(resource_id)
+        resource_def = database.get_active_resource_definition(resource_id)
         if not resource_def:
             raise ResourceNotFoundError(resource_id)
         if resource_id not in resource_models:
@@ -43,12 +40,12 @@ def get_resource(resource_id: str, version: int = None) -> Resource:
                         version=resource_versions[resource_id],
                         config=resource_configs[resource_id])
     else:
-        resource_def = get_resource_definition(resource_id, version)
+        resource_def = database.get_resource_definition(resource_id, version)
         if not resource_def:
             raise ResourceNotFoundError(resource_id, version=version)
         config = json.loads(resource_def.config_file)
-        cls = get_or_create_resource_model(config, version)
-        history_cls = get_or_create_history_model(resource_id, version)
+        cls = database.get_or_create_resource_model(config, version)
+        history_cls = database.get_or_create_history_model(resource_id, version)
         return Resource(model=cls,
                         history_model=history_cls,
                         resource_def=resource_def,
@@ -63,8 +60,8 @@ def get_all_resources()-> List[ResourceDefinition]:
 def create_and_update_caches(id: str,
                              version: int,
                              config: Dict) -> None:
-    resource_models[id] = get_or_create_resource_model(config, version)
-    history_models[id] = get_or_create_history_model(id, version)
+    resource_models[id] = database.get_or_create_resource_model(config, version)
+    history_models[id] = database.get_or_create_history_model(id, version)
     resource_versions[id] = version
     resource_configs[id] = config
 
@@ -84,9 +81,9 @@ def setup_resource_classes() -> None:
 
 def setup_resource_class(resource_id, version=None):
     if version:
-        resource_def = get_resource_definition(resource_id, version)
+        resource_def = database.get_resource_definition(resource_id, version)
     else:
-        resource_def = get_active_resource_definition(resource_id)
+        resource_def = database.get_active_resource_definition(resource_id)
     if not resource_def:
         raise ResourceNotFoundError(resource_id, version)
     config = json.loads(resource_def.config_file)
@@ -104,7 +101,7 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
     resource_id = config['resource_id']
 
-    version = get_next_resource_version(resource_id)
+    version = database.get_next_resource_version(resource_id)
 
     entry_json_schema = create_entry_json_schema(config)
 
@@ -119,8 +116,8 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
     db.session.add(new_resource)
     db.session.commit()
 
-    sqlalchemyclass = get_or_create_resource_model(config, version)
-    history_model = get_or_create_history_model(resource_id, version)
+    sqlalchemyclass = database.get_or_create_resource_model(config, version)
+    history_model = database.get_or_create_history_model(resource_id, version)
     sqlalchemyclass.__table__.create(bind=db.engine)
     for child_class in sqlalchemyclass.child_tables.values():
         child_class.__table__.create(bind=db.engine)
@@ -130,8 +127,8 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
 
 def publish_resource(resource_id, version):
-    resource = get_resource_definition(resource_id, version)
-    old_active = get_active_resource_definition(resource_id)
+    resource = database.get_resource_definition(resource_id, version)
+    old_active = database.get_active_resource_definition(resource_id)
     if old_active:
         old_active.active = False
     resource.active = True
@@ -143,7 +140,7 @@ def publish_resource(resource_id, version):
 
 
 def unpublish_resource(resource_id):
-    resource = get_active_resource_definition(resource_id)
+    resource = database.get_active_resource_definition(resource_id)
     if resource:
         resource.active = False
         db.session.update(resource)
@@ -152,7 +149,7 @@ def unpublish_resource(resource_id):
 
 
 def delete_resource(resource_id, version):
-    resource = get_resource_definition(resource_id, version)
+    resource = database.get_resource_definition(resource_id, version)
     resource.deleted = True
     resource.active = False
     db.session.update(resource)

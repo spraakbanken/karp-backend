@@ -78,24 +78,30 @@ def create_es_query(node):
                 q = es_dsl.Q('bool', must=[q1, q2])
             else:
                 q = es_dsl.Q('bool', should=[q1, q2])
-        elif op in [query_dsl.Operators.EQUALS, query_dsl.Operators.REGEXP, query_dsl.Operators.CONTAINS,
-                    query_dsl.Operators.STARTSWITH, query_dsl.Operators.ENDSWITH]:
+        elif op == query_dsl.Operators.EQUALS:
             arg11 = get_value(arg1)
             arg22 = get_value(arg2)
-            if op == query_dsl.Operators.EQUALS:
-                query_type = 'term'
-            elif op == query_dsl.Operators.REGEXP:
-                query_type = 'regexp'
-            elif op == query_dsl.Operators.CONTAINS:
-                query_type = 'regexp'
+            kwargs = {
+                arg11: {
+                    'query': arg22,
+                    'operator': 'and'
+                }
+            }
+            q = es_dsl.Q('match', **kwargs)
+        elif op in [query_dsl.Operators.REGEXP,
+                    query_dsl.Operators.CONTAINS,
+                    query_dsl.Operators.STARTSWITH,
+                    query_dsl.Operators.ENDSWITH]:
+            arg11 = get_value(arg1)
+            arg22 = get_value(arg2)
+
+            if op == query_dsl.Operators.CONTAINS:
                 arg22 = '.*' + re.escape(arg22) + '.*'
             elif op == query_dsl.Operators.STARTSWITH:
-                query_type = 'regexp'
                 arg22 = re.escape(arg22) + '.*'
-            else:  # query_dsl.Operators.ENDSWITH
-                query_type = 'regexp'
+            elif op == query_dsl.Operators.ENDSWITH:
                 arg22 = '.*' + re.escape(arg22)
-            q = es_dsl.Q(query_type, **{arg11: arg22})
+            q = es_dsl.Q('regexp', **{arg11: arg22})
         elif op in [query_dsl.Operators.LT, query_dsl.Operators.LTE, query_dsl.Operators.GT, query_dsl.Operators.GTE]:
             range_args = {}
             arg11 = get_value(arg1)
