@@ -23,3 +23,16 @@ pyre:
 
 run-dev:
 	pipenv run python wsgi.py
+
+prepare-release:
+	pipenv lock -r > requirements.txt
+	pipenv lock -r --dev > requirements-dev.txt
+
+bumpversion-patch: prepare-release
+	bumpversion patch
+
+bumpversion-minor: prepare-release
+	bumpversion minor
+
+bumpversion-major: prepare-release
+	bumpversion major

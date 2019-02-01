@@ -97,6 +97,9 @@ class SearchInterface:
     def search_with_query(self, query: Query):
         raise NotImplementedError()
 
+    def search_ids(self, args, resource_id: str, entry_ids: str):
+        raise NotImplementedError()
+
 
 class KarpSearch(SearchInterface):
 
@@ -111,3 +114,6 @@ class KarpSearch(SearchInterface):
 
     def search_with_query(self, query: Query):
         return self.impl.search_with_query(query)
+
+    def search_ids(self, args, resource_id: str, entry_ids: str):
+        return self.impl.search_ids(args, resource_id, entry_ids)

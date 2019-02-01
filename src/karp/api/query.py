@@ -7,7 +7,7 @@ Used to perform readiness and liveness probes on the server.
 from typing import List
 
 
-from flask import Blueprint, jsonify, request    # pyre-ignore
+from flask import Blueprint, jsonify as flask_jsonify, request    # pyre-ignore
 
 from karp.resourcemgr import Resource
 
@@ -17,11 +17,11 @@ import karp.auth.auth as auth
 query_api = Blueprint('query_api', __name__)
 
 
-def user_is_authorized(resource: Resource, fields: List[str], mode="read") -> bool:
-    if resource.is_protected(mode=mode, fields=fields):
-        return False
-    else:
-        return True
+@query_api.route('/<resource_id>/<entry_ids>')
+@auth.auth.authorization('READ')
+def get_entries_by_id(resource_id: str, entry_ids: str):
+    response = search.search.search_ids(request.args, resource_id, entry_ids)
+    return flask_jsonify(response)
 
 
 @query_api.route('/<resources>/query', methods=['GET'])
@@ -33,7 +33,7 @@ def query_w_resources(resources: str):
     print('query={}'.format(query))
     response = search.search.search_with_query(query)
     print('response={}'.format(response))
-    return jsonify(response), 200
+    return flask_jsonify(response), 200
 
 
 @query_api.route('/<resource_id>/<entry_id>/get_indexed', methods=['GET'])
@@ -49,4 +49,4 @@ def get_indexed_entry(resource_id, entry_id):
         'id': response[0].meta.id,
         'version': -1
     }
-    return jsonify(result), 200
+    return flask_jsonify(result), 200
