@@ -3,7 +3,7 @@ Perform health checks on the server.
 
 Used to perform readiness and liveness probes on the server.
 """
-
+import logging
 from typing import List
 
 
@@ -13,6 +13,10 @@ from karp.resourcemgr import Resource
 
 from karp import search
 import karp.auth.auth as auth
+
+
+_logger = logging.getLogger('karp')
+
 
 query_api = Blueprint('query_api', __name__)
 
@@ -27,12 +31,15 @@ def get_entries_by_id(resource_id: str, entry_ids: str):
 @query_api.route('/<resources>/query', methods=['GET'])
 @query_api.route('/query/<resources>', methods=['GET'])
 @auth.auth.authorization('READ')
-def query_w_resources(resources: str):
+def query(resources: str):
     print('query_w_resources called with resources={}'.format(resources))
-    query = search.search.build_query(request.args, resources)
-    print('query={}'.format(query))
-    response = search.search.search_with_query(query)
-    print('response={}'.format(response))
+    try:
+        query = search.search.build_query(request.args, resources)
+        print('query={}'.format(query))
+        response = search.search.search_with_query(query)
+    except errors.KarpError as e:
+        _logger.exception("Error occured when calling 'query' with resources='{}' and q='{}'".format(resources, request.args.get('q')))
+        raise
     return flask_jsonify(response), 200
 
 
