@@ -163,9 +163,15 @@ class EsSearch(search.SearchInterface):
                 ms = ms.add(s)
 
             responses = ms.execute()
-            result = {}
+            result = {
+                'distribution': {
+                    'total': 0
+                }
+            }
             for i, response in enumerate(responses):
-                result[query.resources[i]] = [part_result.to_dict() for part_result in response]
+                result[query.resources[i]] = self._format_result(response)
+                result['distribution'][query.resources[i]] = response.hits.total
+                result['distribution']['total'] += response.hits.total
 
             return result
         else:
@@ -175,7 +181,7 @@ class EsSearch(search.SearchInterface):
                 s = s.query(query.query)
             response = s.execute()
 
-            return [{'id': result.meta.id, 'version': -1, 'entry': result.to_dict()} for result in response]
+            return self._format_result(response)
 
     def search_ids(self, args, resource_id: str, entry_ids: str):
         print('Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:')
