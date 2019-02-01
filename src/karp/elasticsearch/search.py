@@ -48,7 +48,11 @@ def create_es_query(node):
             else:
                 q = es_dsl.Q('multi_match', query=value)
         elif op == query_dsl.Operators.FREERGXP:
-            q = es_dsl.Q('regexp', freetext=value)
+            kwargs = {
+                'default_field': '*',
+                'query': '/{}/'.format(value)
+            }
+            q = es_dsl.Q('query_string', **kwargs)
         elif op == query_dsl.Operators.EXISTS:
             q = es_dsl.Q('exists', field=value)
         elif op == query_dsl.Operators.MISSING:
