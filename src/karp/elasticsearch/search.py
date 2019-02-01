@@ -144,6 +144,13 @@ class EsSearch(search.SearchInterface):
         query.parse_arguments(args, resource_str)
         return query
 
+    def _format_result(self, response):
+        result = {
+            'total': response.hits.total,
+            'hits': [{'id': result.meta.id, 'version': -1, 'entry': result.to_dict()} for result in response]
+        }
+        return result
+
     def search_with_query(self, query: EsQuery):
         print('search_with_query called with query={}'.format(query))
         if query.split_results:
@@ -169,3 +176,20 @@ class EsSearch(search.SearchInterface):
             response = s.execute()
 
             return [{'id': result.meta.id, 'version': -1, 'entry': result.to_dict()} for result in response]
+
+    def search_ids(self, args, resource_id: str, entry_ids: str):
+        print('Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:')
+        print('  resource_id = {}'.format(resource_id))
+        print('  entry_ids = {}'.format(entry_ids))
+        # s = es_dsl.Search(using=self.es, index=resource_id)
+        entries = entry_ids.split(',')
+        if len(entries) == 1:
+            query = es_dsl.Q('match', _id=entries[0])
+        else:
+            query = es_dsl.Q('bool', should=[es_dsl.Q('match', _id=entry) for entry in entries])
+        print('query = {}'.format(query))
+        s = es_dsl.Search(using=self.es, index=resource_id).query(query)
+        print('s = {}'.format(s.to_dict()))
+        response = s.execute()
+
+        return self._format_result(response)
