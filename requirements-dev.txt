@@ -1,0 +1,15 @@
+-i https://pypi.org/simple
+apipkg==1.5
+atomicwrites==1.2.1
+attrs==18.2.0
+coverage==4.5.2
+execnet==1.5.0
+more-itertools==5.0.0
+pluggy==0.8.1
+py==1.7.0
+pysqlcipher3==1.0.3
+pytest-cov==2.6.1
+pytest-forked==1.0.1
+pytest-xdist==1.26.0
+pytest==4.1.1
+six==1.11.0
