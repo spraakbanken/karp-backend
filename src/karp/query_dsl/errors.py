@@ -8,7 +8,7 @@ class QueryDSLError(errors.KarpError):
 
 class ParseError(QueryDSLError):
     def __init__(self, msg: str) -> None:
-        self.msg = msg
+        super().__init__(msg)
 
     def __repr__(self) -> str:
         return "ParseError message='{}'".format(self.msg)
