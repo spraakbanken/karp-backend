@@ -144,10 +144,19 @@ class EsSearch(search.SearchInterface):
         query.parse_arguments(args, resource_str)
         return query
 
-    def _format_result(self, response):
+    def _format_result(self, resource_ids, response):
+
+        def format_entry(entry):
+            return {
+                'id': entry.meta.id,
+                'version': -1,
+                'resource': next(resource for resource in resource_ids if entry.meta.index.startswith(resource)),
+                'entry': entry.to_dict()
+            }
+
         result = {
             'total': response.hits.total,
-            'hits': [{'id': result.meta.id, 'version': -1, 'entry': result.to_dict()} for result in response]
+            'hits': [format_entry(entry) for entry in response]
         }
         return result
 
@@ -169,7 +178,7 @@ class EsSearch(search.SearchInterface):
                 }
             }
             for i, response in enumerate(responses):
-                result[query.resources[i]] = self._format_result(response)
+                result[query.resources[i]] = self._format_result(query.resources, response)
                 result['distribution'][query.resources[i]] = response.hits.total
                 result['distribution']['total'] += response.hits.total
 
@@ -180,8 +189,9 @@ class EsSearch(search.SearchInterface):
             if query.query is not None:
                 s = s.query(query.query)
             response = s.execute()
+            print('response = {}'.format(response.to_dict()))
 
-            return self._format_result(response)
+            return self._format_result(query.resources, response)
 
     def search_ids(self, args, resource_id: str, entry_ids: str):
         print('Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:')
@@ -198,4 +208,4 @@ class EsSearch(search.SearchInterface):
         print('s = {}'.format(s.to_dict()))
         response = s.execute()
 
-        return self._format_result(response)
+        return self._format_result([resource_id], response)
