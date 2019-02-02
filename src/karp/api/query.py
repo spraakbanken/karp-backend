@@ -13,6 +13,7 @@ from karp.resourcemgr import Resource
 
 from karp import search
 import karp.auth.auth as auth
+from karp import errors
 
 
 _logger = logging.getLogger('karp')
