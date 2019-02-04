@@ -36,11 +36,9 @@ def update_entry(resource_id: str, entry_id: str, entry: Dict, user_id: str,
         ))
 
     db_entry_json = json.dumps(entry)
-    current_db_entry.body = db_entry_json
-
     db_id = current_db_entry.id
-    latest_history_entry = resource.history_model.query.filter_by(entry_id=db_id).\
-        order_by(resource.history_model.version.desc()).first()
+    latest_history_entry = resource.history_model.query.filter_by(entry_id=db_id).order_by(
+        resource.history_model.version.desc()).first()
     history_entry = resource.history_model(
         entry_id=db_id,
         user_id=user_id,
@@ -49,6 +47,11 @@ def update_entry(resource_id: str, entry_id: str, entry: Dict, user_id: str,
         op='UPDATE',
         message=message
     )
+
+    kwargs = _src_entry_to_db_kwargs(entry, db_entry_json, resource.model, resource.config)
+    for key, value in kwargs.items():
+        setattr(current_db_entry, key, value)
+
     db.session.add(history_entry)
     db.session.commit()
 
@@ -100,6 +103,12 @@ def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: st
 
 
 def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):
+    kwargs = _src_entry_to_db_kwargs(entry, entry_json, resource_model, resource_conf)
+    db_entry = resource_model(**kwargs)
+    return db_entry
+
+
+def _src_entry_to_db_kwargs(entry, entry_json, resource_model, resource_conf):
     kwargs = {
         'body': entry_json
     }
@@ -120,8 +129,7 @@ def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):
         kwargs['entry_id'] = entry[id_field]
     else:
         kwargs['entry_id'] = 'TODO'  # generate id for resources that are missing it
-    db_entry = resource_model(**kwargs)
-    return db_entry
+    return kwargs
 
 
 def delete_entry(resource_id: str, entry_id: str, user_id: str):

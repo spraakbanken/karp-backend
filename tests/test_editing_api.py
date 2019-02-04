@@ -2,6 +2,8 @@ import json
 import pytest
 import time
 
+import karp.resourcemgr.entryread as entryread
+
 
 def get_json(client, path):
     response = client.get(path)
@@ -251,3 +253,33 @@ def test_update_refs(es, client_with_data_f):
     assert len(entries['hits']) == 1
     entry = entries['hits'][0]
     assert '_smaller_places' not in entry
+
+
+def test_update_refs2(es, client_with_data_f):
+    client = init(client_with_data_f, es, [{
+        'code': 3,
+        'name': 'test3',
+        'municipality': [2, 3]
+    }])
+
+    time.sleep(1)
+
+    client.post('places/3/update', data=json.dumps({
+        'entry': {
+            'code': 3,
+            'name': 'test3',
+            'municipality': [2]
+        },
+        'message': 'changes'
+    }), content_type='application/json')
+
+    time.sleep(1)
+    entries = get_json(client, 'places/query')
+    assert len(entries['hits']) == 1
+    assert entries['hits'][0]['id'] == '3'
+    assert entries['hits'][0]['entry']['municipality'] == [2]
+    assert '_municipality' not in entries['hits'][0] or len(entries['hits'][0]['municipality']) == 0
+    with client.application.app_context():
+        db_entry = entryread.get_entry('places', '3')
+        assert len(db_entry.municipality) == 1
+        assert db_entry.municipality[0].municipality == 2
