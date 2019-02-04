@@ -125,14 +125,14 @@ def test_refs(es, client_with_data_f):
         entry = val['entry']
         print('entry = {}'.format(entry))
         if entry['code'] == 1:
-            assert '_larger_place' not in entry
+            assert 'v_larger_place' not in entry
             assert 'larger_place' not in entry
-            assert '_smaller_places' in entry
-            assert entry['_smaller_places'][0]['code'] == 2
+            assert 'v_smaller_places' in entry
+            assert entry['v_smaller_places'][0]['code'] == 2
         else:
-            assert entry['_larger_place']['code'] == 1
-            assert entry['_larger_place']['name'] == 'test1'
-            assert '_smaller_places' not in entry
+            assert entry['v_larger_place']['code'] == 1
+            assert entry['v_larger_place']['name'] == 'test1'
+            assert 'v_smaller_places' not in entry
 
 
 def test_external_refs(es, client_with_data_f):
@@ -193,8 +193,8 @@ def test_external_refs(es, client_with_data_f):
         assert 'entry' in val
         entry = val['entry']
 
-        assert '_places' in entry
-        place_codes = [place['code'] for place in entry['_places']]
+        assert 'v_places' in entry
+        place_codes = [place['code'] for place in entry['v_places']]
         assert len(place_codes) == 2
         if entry['code'] == 1:
             assert 1 in place_codes
@@ -208,10 +208,10 @@ def test_external_refs(es, client_with_data_f):
         assert 'entry' in val
         entry = val['entry']
         assert 'municipality' in entry
-        assert isinstance(entry['_municipality'], list)
+        assert isinstance(entry['v_municipality'], list)
         if entry['code'] == 2:
-            assert {'code': 1, 'name': 'municipality1', 'state': 'state1'} in entry['_municipality']
-            assert {'code': 2, 'name': 'municipality2', 'state': 'state2'} in entry['_municipality']
+            assert {'code': 1, 'name': 'municipality1', 'state': 'state1'} in entry['v_municipality']
+            assert {'code': 2, 'name': 'municipality2', 'state': 'state2'} in entry['v_municipality']
 
 
 def test_update_refs(es, client_with_data_f):
@@ -243,8 +243,8 @@ def test_update_refs(es, client_with_data_f):
         entry = val['entry']
         print('entry = {}'.format(entry))
         if entry['code'] == 5:
-            assert '_smaller_places' in entry
-            assert entry['_smaller_places'][0]['code'] == 6
+            assert 'v_smaller_places' in entry
+            assert entry['v_smaller_places'][0]['code'] == 6
 
     client.delete('/places/6/delete')
 
@@ -252,7 +252,7 @@ def test_update_refs(es, client_with_data_f):
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 1
     entry = entries['hits'][0]
-    assert '_smaller_places' not in entry
+    assert 'v_smaller_places' not in entry
 
 
 def test_update_refs2(es, client_with_data_f):
@@ -278,7 +278,7 @@ def test_update_refs2(es, client_with_data_f):
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['id'] == '3'
     assert entries['hits'][0]['entry']['municipality'] == [2]
-    assert '_municipality' not in entries['hits'][0] or len(entries['hits'][0]['municipality']) == 0
+    assert 'v_municipality' not in entries['hits'][0] or len(entries['hits'][0]['municipality']) == 0
     with client.application.app_context():
         db_entry = entryread.get_entry('places', '3')
         assert len(db_entry.municipality) == 1
