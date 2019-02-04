@@ -1,9 +1,12 @@
+import logging
 import re
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
 from karp.query_dsl import basic_ast as ast
 from karp import search
 from karp import query_dsl
+
+logger = logging.getLogger('karp')
 
 
 class EsQuery(search.Query):
@@ -161,7 +164,7 @@ class EsSearch(search.SearchInterface):
         return result
 
     def search_with_query(self, query: EsQuery):
-        print('search_with_query called with query={}'.format(query))
+        logging.info('search_with_query called with query={}'.format(query))
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
 
@@ -185,27 +188,23 @@ class EsSearch(search.SearchInterface):
             return result
         else:
             s = es_dsl.Search(using=self.es, index=query.resource_str)
-            print('s = {}'.format(s))
+            logging.debug('s = {}'.format(s))
             if query.query is not None:
                 s = s.query(query.query)
             response = s.execute()
-            print('response = {}'.format(response.to_dict()))
+            logging.debug('response = {}'.format(response.to_dict()))
 
             return self._format_result(query.resources, response)
 
     def search_ids(self, args, resource_id: str, entry_ids: str):
-        print('Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:')
-        print('  resource_id = {}'.format(resource_id))
-        print('  entry_ids = {}'.format(entry_ids))
-        # s = es_dsl.Search(using=self.es, index=resource_id)
+        logging.info('Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:')
+        logging.info('  resource_id = {}'.format(resource_id))
+        logging.info('  entry_ids = {}'.format(entry_ids))
         entries = entry_ids.split(',')
-        if len(entries) == 1:
-            query = es_dsl.Q('match', _id=entries[0])
-        else:
-            query = es_dsl.Q('bool', should=[es_dsl.Q('match', _id=entry) for entry in entries])
-        print('query = {}'.format(query))
+        query = es_dsl.Q('terms', _id=entries)
+        logging.debug('query = {}'.format(query))
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
-        print('s = {}'.format(s.to_dict()))
+        logging.debug('s = {}'.format(s.to_dict()))
         response = s.execute()
 
         return self._format_result([resource_id], response)
