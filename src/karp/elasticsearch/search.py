@@ -172,6 +172,7 @@ class EsSearch(search.SearchInterface):
                 s = es_dsl.Search(index=resource)
                 if query.query is not None:
                     s = s.query(query.query)
+                s = s[query.from_:query.from_ + query.size]
                 ms = ms.add(s)
 
             responses = ms.execute()
@@ -191,6 +192,8 @@ class EsSearch(search.SearchInterface):
             logging.debug('s = {}'.format(s))
             if query.query is not None:
                 s = s.query(query.query)
+
+            s = s[query.from_:query.from_ + query.size]
             response = s.execute()
             logging.debug('response = {}'.format(response.to_dict()))
 

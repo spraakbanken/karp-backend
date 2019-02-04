@@ -115,47 +115,77 @@ def test_protected(client_with_data_scope_module):
     assert response.status == '403 FORBIDDEN'
 
 
-@pytest.mark.skip(reason="places doesn't exist")
-def test_pagination_explicit_0_25(client):
+def test_pagination_explicit_0_25(es, client_with_data_f):
+    client = init_data(client_with_data_f, es, 30)
+    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?from=0&size=25'.format(resource))
     assert response.status == '200 OK'
     assert response.is_json
     json_data = response.get_json()
     assert json_data
-    assert resource in json_data
-    assert 'hits' in json_data[resource]
-    assert len(json_data[resource]['hits']) == 25
+    assert 'hits' in json_data
+    assert len(json_data['hits']) == 25
 
 
-@pytest.mark.skip(reason="places doesn't exist")
-def test_pagination_explicit_13_45(client):
+def test_pagination_explicit_13_45(es, client_with_data_f):
+    client = init_data(client_with_data_f, es, 60)
+    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?from=13&size=45'.format(resource))
     assert response.status == '200 OK'
     assert response.is_json
     json_data = response.get_json()
     assert json_data
-    assert resource in json_data
-    assert 'hits' in json_data[resource]
-    assert len(json_data[resource]['hits']) == 45
+    assert 'hits' in json_data
+    assert len(json_data['hits']) == 45
 
 
-@pytest.mark.skip(reason="places doesn't exist")
-def test_pagination_default_size(client):
+def test_pagination_default_size(es, client_with_data_f):
+    client = init_data(client_with_data_f, es, 30)
+    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?from=0'.format(resource))
     assert response.status == '200 OK'
     assert response.is_json
     json_data = response.get_json()
-    assert len(json_data[resource]['hits']) == 25
+    assert len(json_data['hits']) == 25
 
 
-@pytest.mark.skip(reason="places doesn't exist")
-def test_pagination_default_from(client):
+def test_pagination_default_from(es, client_with_data_f):
+    client = init_data(client_with_data_f, es, 50)
+    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?size=45'.format(resource))
     assert response.status == '200 OK'
     assert response.is_json
     json_data = response.get_json()
-    assert len(json_data[resource]['hits']) == 45
+    assert len(json_data['hits']) == 45
+
+
+def test_pagination_fewer(es, client_with_data_f):
+    client = init_data(client_with_data_f, es, 5)
+    time.sleep(1)
+    resource = 'places'
+    response = client.get('/{}/query?from=10'.format(resource))
+    assert response.status == '200 OK'
+    assert response.is_json
+    json_data = response.get_json()
+    assert len(json_data['hits']) == 0
+
+
+def init_data(client, es_status_code, no_entries):
+    if es_status_code == 'skip':
+        pytest.skip('elasticsearch disabled')
+    client_with_data = client(use_elasticsearch=True)
+
+    for i in range(0, no_entries):
+        entry = {
+            'code': i,
+            'name': 'name',
+            'municipality': [1]
+        }
+        client_with_data.post('places/add',
+                              data=json.dumps({'entry': entry}),
+                              content_type='application/json')
+    return client_with_data
