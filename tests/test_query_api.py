@@ -49,8 +49,8 @@ def test_query_no_q(es, client_with_data_f):
 
     time.sleep(1)
     entries = get_json(client, 'places/query')
-    assert len(entries) == 3
-    assert entries[0]['entry']['name'] == 'grund test'
+    assert len(entries['hits']) == 3
+    assert entries['hits'][0]['entry']['name'] == 'grund test'
 
 
 def test_freetext_string(es, client_with_data_f):
@@ -58,9 +58,9 @@ def test_freetext_string(es, client_with_data_f):
 
     time.sleep(1)
     entries = get_json(client, 'places/query?q=freetext|grund')
-    assert len(entries) == 2
-    assert entries[1]['entry']['name'] == 'grund test'
-    assert entries[0]['entry']['name'] == 'grunds'
+    assert len(entries['hits']) == 2
+    assert entries['hits'][1]['entry']['name'] == 'grund test'
+    assert entries['hits'][0]['entry']['name'] == 'grunds'
 
 
 def test_freetext_integer(es, client_with_data_f):
@@ -68,8 +68,8 @@ def test_freetext_integer(es, client_with_data_f):
 
     time.sleep(1)
     entries = get_json(client, 'places/query?q=freetext|3122')
-    assert len(entries) == 1
-    assert entries[0]['entry']['name'] == 'grund test'
+    assert len(entries['hits']) == 1
+    assert entries['hits'][0]['entry']['name'] == 'grund test'
 
 
 def test_equals_string(es, client_with_data_f):
@@ -77,8 +77,8 @@ def test_equals_string(es, client_with_data_f):
 
     time.sleep(1)
     entries = get_json(client, 'places/query?q=equals|name|grunds')
-    assert len(entries) == 1
-    assert entries[0]['entry']['name'] == 'grunds'
+    assert len(entries['hits']) == 1
+    assert entries['hits'][0]['entry']['name'] == 'grunds'
 
 
 def test_equals_integer(es, client_with_data_f):
@@ -86,8 +86,8 @@ def test_equals_integer(es, client_with_data_f):
 
     time.sleep(1)
     entries = get_json(client, 'places/query?q=equals|density|7')
-    assert len(entries) == 1
-    assert entries[0]['entry']['name'] == 'botten test'
+    assert len(entries['hits']) == 1
+    assert entries['hits'][0]['entry']['name'] == 'botten test'
 
 
 def test_freergxp_string(es, client_with_data_f):
@@ -95,9 +95,9 @@ def test_freergxp_string(es, client_with_data_f):
 
     time.sleep(1)
     entries = get_json(client, 'places/query?q=freergxp|grunds?')
-    assert len(entries) == 2
-    assert entries[0]['entry']['name'] == 'grund test'
-    assert entries[1]['entry']['name'] == 'grunds'
+    assert len(entries['hits']) == 2
+    assert entries['hits'][0]['entry']['name'] == 'grund test'
+    assert entries['hits'][1]['entry']['name'] == 'grunds'
 
 
 @pytest.mark.skip(reason="places doesn't exist")

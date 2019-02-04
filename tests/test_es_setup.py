@@ -68,10 +68,10 @@ def test_es_search(es, client_with_data_f):
         }
         query = search.build_query(args, 'places,municipalities')
         ids = search.search_with_query(query)
-        assert len(ids) == 1
-        print('ids[0] = {}'.format(ids[0]))
-        assert 'entry' in ids[0]
-        assert ids[0]['entry']['population'] == 3
+        assert len(ids['hits']) == 1
+        print('ids[0] = {}'.format(ids['hits'][0]))
+        assert 'entry' in ids['hits'][0]
+        assert ids['hits'][0]['entry']['population'] == 3
 
 
 def test_es_search2(es, client_with_data_f):
@@ -92,5 +92,5 @@ def test_es_search2(es, client_with_data_f):
         result = search.search_with_query(query)
         assert 'places' in result
         assert 'municipalities' in result
-        assert len(result['municipalities']) == 0
-        assert len(result['places']) == 1
+        assert len(result['municipalities']['hits']) == 0
+        assert len(result['places']['hits']) == 1
