@@ -49,6 +49,7 @@ class ConfigTest(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     TESTING = True
     SETUP_DATABASE = False
+    JWT_AUTH = False
 
     def __init__(self, use_elasticsearch=False):
         if use_elasticsearch:
