@@ -100,6 +100,35 @@ def test_freergxp_string(es, client_with_data_f):
     assert entries['hits'][1]['entry']['name'] == 'grunds'
 
 
+def test_and(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+    entry = {
+        "code": 4,
+        "name": "botten test",
+        "population": 4133,
+        "area": 50000,
+        "density": 7,
+        "municipality": [2, 3]
+    }
+    client.post('places/add',
+                data=json.dumps({'entry': entry}),
+                content_type='application/json')
+
+    time.sleep(1)
+    query = 'and||equals|population|4133||equals|area|50000'
+    entries = get_json(client, 'places/query?q=' + query)
+    assert len(entries['hits']) == 1
+
+
+def test_or(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    time.sleep(1)
+    query = 'or||equals|population|6312||equals|population|4132'
+    entries = get_json(client, 'places/query?q=' + query)
+    assert len(entries['hits']) == 2
+
+
 @pytest.mark.skip(reason="places doesn't exist")
 def test_no_q(client):
     response = client.get('/places/query')

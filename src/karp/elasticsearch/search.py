@@ -67,7 +67,8 @@ def create_es_query(node):
         arg1 = node.child0
         arg2 = node.child1
 
-        if not isinstance(arg1, ast.ArgNode) or not isinstance(arg2, ast.ArgNode):
+        # TODO this check breaks and and or since they always (?) have ast.ArgNode as parameters
+        # if not isinstance(arg1, ast.ArgNode) or not isinstance(arg2, ast.ArgNode):
             # TODO these need to be moved outside of current query, for example:
             # "equals|name||or|Partille|Kumla" could be expressed in two ways
             # es_dsl.Q('terms', name=['Partille', 'Kumla'])
@@ -75,7 +76,7 @@ def create_es_query(node):
             # es_dsl.Q('bool', should=[es_dsl.Q('term', name='Partille'), es_dsl.Q('term', name='Kumla')])
             # but "regexp|name||or|Part*|Kum*"
             # can only be expressed as in the longer form above
-            raise RuntimeError()
+            # raise RuntimeError()
 
         if op in [query_dsl.Operators.AND, query_dsl.Operators.OR]:
             # TODO check minimum should match rules in different contexts
