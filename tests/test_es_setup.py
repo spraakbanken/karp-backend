@@ -59,8 +59,6 @@ def test_es_search(es, client_with_data_f):
 
     client_with_data = init(client_with_data_f, es)
 
-    time.sleep(1)
-
     with client_with_data.application.app_context():
         args = {
             'split_results': 'False',
@@ -79,8 +77,6 @@ def test_es_search2(es, client_with_data_f):
         pytest.skip("elasticsearch disabled")
 
     client_with_data = init(client_with_data_f, es)
-
-    time.sleep(1)
 
     with client_with_data.application.app_context():
         args = {

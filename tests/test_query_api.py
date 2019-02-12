@@ -47,7 +47,6 @@ def init(client, es_status_code, entries):
 def test_query_no_q(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 3
     assert entries['hits'][0]['entry']['name'] == 'grund test'
@@ -56,7 +55,6 @@ def test_query_no_q(es, client_with_data_f):
 def test_freetext_string(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
-    time.sleep(1)
     entries = get_json(client, 'places/query?q=freetext|grund')
     assert len(entries['hits']) == 2
     assert entries['hits'][1]['entry']['name'] == 'grund test'
@@ -66,7 +64,6 @@ def test_freetext_string(es, client_with_data_f):
 def test_freetext_integer(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
-    time.sleep(1)
     entries = get_json(client, 'places/query?q=freetext|3122')
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['entry']['name'] == 'grund test'
@@ -75,7 +72,6 @@ def test_freetext_integer(es, client_with_data_f):
 def test_equals_string(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
-    time.sleep(1)
     entries = get_json(client, 'places/query?q=equals|name|grunds')
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['entry']['name'] == 'grunds'
@@ -84,7 +80,6 @@ def test_equals_string(es, client_with_data_f):
 def test_equals_integer(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
-    time.sleep(1)
     entries = get_json(client, 'places/query?q=equals|density|7')
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['entry']['name'] == 'botten test'
@@ -93,7 +88,6 @@ def test_equals_integer(es, client_with_data_f):
 def test_freergxp_string(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
-    time.sleep(1)
     entries = get_json(client, 'places/query?q=freergxp|grunds?')
     assert len(entries['hits']) == 2
     assert entries['hits'][0]['entry']['name'] == 'grund test'
@@ -114,7 +108,6 @@ def test_and(es, client_with_data_f):
                 data=json.dumps({'entry': entry}),
                 content_type='application/json')
 
-    time.sleep(1)
     query = 'and||equals|population|4133||equals|area|50000'
     entries = get_json(client, 'places/query?q=' + query)
     assert len(entries['hits']) == 1
@@ -123,7 +116,6 @@ def test_and(es, client_with_data_f):
 def test_or(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
-    time.sleep(1)
     query = 'or||equals|population|6312||equals|population|4132'
     entries = get_json(client, 'places/query?q=' + query)
     assert len(entries['hits']) == 2
@@ -146,7 +138,6 @@ def test_protected(client_with_data_scope_module):
 
 def test_pagination_explicit_0_25(es, client_with_data_f):
     client = init_data(client_with_data_f, es, 30)
-    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?from=0&size=25'.format(resource))
     assert response.status == '200 OK'
@@ -159,7 +150,6 @@ def test_pagination_explicit_0_25(es, client_with_data_f):
 
 def test_pagination_explicit_13_45(es, client_with_data_f):
     client = init_data(client_with_data_f, es, 60)
-    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?from=13&size=45'.format(resource))
     assert response.status == '200 OK'
@@ -172,7 +162,6 @@ def test_pagination_explicit_13_45(es, client_with_data_f):
 
 def test_pagination_default_size(es, client_with_data_f):
     client = init_data(client_with_data_f, es, 30)
-    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?from=0'.format(resource))
     assert response.status == '200 OK'
@@ -183,7 +172,6 @@ def test_pagination_default_size(es, client_with_data_f):
 
 def test_pagination_default_from(es, client_with_data_f):
     client = init_data(client_with_data_f, es, 50)
-    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?size=45'.format(resource))
     assert response.status == '200 OK'
@@ -194,7 +182,6 @@ def test_pagination_default_from(es, client_with_data_f):
 
 def test_pagination_fewer(es, client_with_data_f):
     client = init_data(client_with_data_f, es, 5)
-    time.sleep(1)
     resource = 'places'
     response = client.get('/{}/query?from=10'.format(resource))
     assert response.status == '200 OK'

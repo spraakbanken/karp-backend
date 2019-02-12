@@ -72,7 +72,8 @@ class EsIndex(IndexInterface):
         body = {
             'settings': {
                 'number_of_shards': 1,
-                'number_of_replicas': 1
+                'number_of_replicas': 1,
+                'refresh_interval': -1
             },
             'mappings': {
                 'entry': mapping
@@ -102,10 +103,10 @@ class EsIndex(IndexInterface):
                 '_source': entry
             })
 
-        elasticsearch.helpers.bulk(self.es, index_to_es)
+        elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
     def delete_entry(self, resource_id, entry_id):
-        self.es.delete(index=resource_id, doc_type='entry', id=entry_id)
+        self.es.delete(index=resource_id, doc_type='entry', id=entry_id, refresh=True)
 
     def create_empty_object(self):
         return {}

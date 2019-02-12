@@ -36,7 +36,6 @@ def test_add(es, client_with_data_f):
         }
     }), content_type='application/json')
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['entry']['name'] == 'test3'
@@ -52,13 +51,11 @@ def test_delete(es, client_with_data_f):
         'municipality': [2, 3]
     }])
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     entry_id = entries['hits'][0]['id']
 
     client.delete('places/%s/delete' % entry_id)
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 0
 
@@ -73,7 +70,6 @@ def test_update(es, client_with_data_f):
         'municipality': [2, 3]
     }])
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     entry_id = entries['hits'][0]['id']
 
@@ -89,7 +85,6 @@ def test_update(es, client_with_data_f):
         'message': 'changes'
     }), content_type='application/json')
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['id'] == entry_id
@@ -117,7 +112,6 @@ def test_refs(es, client_with_data_f):
         }
     ])
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries) == 2
     for val in entries['hits']:
@@ -187,7 +181,6 @@ def test_external_refs(es, client_with_data_f):
                 }),
                 content_type='application/json')
 
-    time.sleep(1)
     entries = get_json(client, 'municipalities/query')
     for val in entries['hits']:
         assert 'entry' in val
@@ -235,7 +228,6 @@ def test_update_refs(es, client_with_data_f):
         }
     ])
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 2
     for val in entries['hits']:
@@ -248,7 +240,6 @@ def test_update_refs(es, client_with_data_f):
 
     client.delete('/places/6/delete')
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 1
     entry = entries['hits'][0]
@@ -262,8 +253,6 @@ def test_update_refs2(es, client_with_data_f):
         'municipality': [2, 3]
     }])
 
-    time.sleep(1)
-
     client.post('places/3/update', data=json.dumps({
         'entry': {
             'code': 3,
@@ -273,7 +262,6 @@ def test_update_refs2(es, client_with_data_f):
         'message': 'changes'
     }), content_type='application/json')
 
-    time.sleep(1)
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['id'] == '3'
