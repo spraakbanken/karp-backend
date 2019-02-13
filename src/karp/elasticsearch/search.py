@@ -1,5 +1,6 @@
 import logging
 import re
+import json
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
 from karp.query_dsl import basic_ast as ast
@@ -204,7 +205,7 @@ class EsSearch(search.SearchInterface):
         return result
 
     def search_with_query(self, query: EsQuery):
-        logging.info('search_with_query called with query={}'.format(query))
+        logger.info('search_with_query called with query={}'.format(query))
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
 
@@ -230,7 +231,7 @@ class EsSearch(search.SearchInterface):
             return result
         else:
             s = es_dsl.Search(using=self.es, index=query.resource_str)
-            logging.debug('s = {}'.format(s))
+            logger.debug('s = {}'.format(s))
             if query.query is not None:
                 s = s.query(query.query)
 
@@ -241,7 +242,7 @@ class EsSearch(search.SearchInterface):
 
             response = s.execute()
 
-            logging.debug('response = {}'.format(response.to_dict()))
+            logger.debug('response = {}'.format(response.to_dict()))
 
             result = self._format_result(query.resources, response)
             if query.lexicon_stats:
@@ -255,14 +256,14 @@ class EsSearch(search.SearchInterface):
             return result
 
     def search_ids(self, args, resource_id: str, entry_ids: str):
-        logging.info('Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:')
-        logging.info('  resource_id = {}'.format(resource_id))
-        logging.info('  entry_ids = {}'.format(entry_ids))
+        logger.info('Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:')
+        logger.info('  resource_id = {}'.format(resource_id))
+        logger.info('  entry_ids = {}'.format(entry_ids))
         entries = entry_ids.split(',')
         query = es_dsl.Q('terms', _id=entries)
-        logging.debug('query = {}'.format(query))
+        logger.debug('query = {}'.format(query))
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
-        logging.debug('s = {}'.format(s.to_dict()))
+        logger.debug('s = {}'.format(s.to_dict()))
         response = s.execute()
 
         return self._format_result([resource_id], response)
@@ -274,6 +275,12 @@ class EsSearch(search.SearchInterface):
         if field in self.analyzed_fields[resource_id]:
             field = field + '.raw'
 
+        logger.debug('Statistics: analyzed fields are:')
+        logger.debug(json.dumps(self.analyzed_fields, indent=4))
+        logger.debug('Doing aggregations on resource_id: {resource_id}, on field {field}'.format(
+            resource_id=resource_id,
+            field=field
+        ))
         s.aggs.bucket('field_values', 'terms', field=field, size=2147483647)
         response = s.execute()
         result = []
