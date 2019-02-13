@@ -113,7 +113,7 @@ def test_refs(es, client_with_data_f):
     ])
 
     entries = get_json(client, 'places/query')
-    assert len(entries) == 2
+    assert len(entries['hits']) == 2
     for val in entries['hits']:
         assert 'entry' in val
         entry = val['entry']

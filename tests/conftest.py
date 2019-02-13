@@ -50,13 +50,12 @@ class ConfigTest(Config):
     TESTING = True
     SETUP_DATABASE = False
     JWT_AUTH = False
+    ELASTICSEARCH_ENABLED = False
 
     def __init__(self, use_elasticsearch=False):
         if use_elasticsearch:
+            self.ELASTICSEARCH_ENABLED = True
             self.ELASTICSEARCH_HOST = 'http://localhost:9201'
-        else:
-            # this can help us see errors were we hit elasticsearch without meaning to
-            self.ELASTICSEARCH_HOST = 'http://localhost:12345'
 
 
 @pytest.fixture
