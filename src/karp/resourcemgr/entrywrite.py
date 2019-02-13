@@ -22,7 +22,7 @@ def preview_entry(resource_id, entry, resource_version=None):
     return entry_json
 
 
-def update_entry(resource_id: str, entry_id: str, entry: Dict, user_id: str,
+def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, user_id: str,
                  message: str=None, resource_version: int=None):
     resource = get_resource(resource_id, version=resource_version)
 
@@ -39,6 +39,8 @@ def update_entry(resource_id: str, entry_id: str, entry: Dict, user_id: str,
     db_id = current_db_entry.id
     latest_history_entry = resource.history_model.query.filter_by(entry_id=db_id).order_by(
         resource.history_model.version.desc()).first()
+    if latest_history_entry.version > version:
+        raise KarpError('Version conflict. Please update entry.')
     history_entry = resource.history_model(
         entry_id=db_id,
         user_id=user_id,
@@ -55,7 +57,7 @@ def update_entry(resource_id: str, entry_id: str, entry: Dict, user_id: str,
     db.session.add(history_entry)
     db.session.commit()
 
-    indexmgr.add_entries(resource_id, [(entry_id, index_entry_json)])
+    indexmgr.add_entries(resource_id, [(entry_id, latest_history_entry.version + 1, index_entry_json)])
 
 
 def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
@@ -98,7 +100,7 @@ def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: st
 
     if resource.active:
         indexmgr.add_entries(resource_id,
-                             [(db_entry.entry_id, _src_entry_to_index_entry(resource, entry))
+                             [(db_entry.entry_id, 1, _src_entry_to_index_entry(resource, entry))
                               for db_entry, entry, _ in created_db_entries])
 
 

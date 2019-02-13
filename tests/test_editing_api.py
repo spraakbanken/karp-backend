@@ -82,7 +82,8 @@ def test_update(es, client_with_data_f):
             'density': 5,
             'municipality': [2, 3]
         },
-        'message': 'changes'
+        'message': 'changes',
+        'version': 1
     }), content_type='application/json')
 
     entries = get_json(client, 'places/query')
@@ -259,7 +260,8 @@ def test_update_refs2(es, client_with_data_f):
             'name': 'test3',
             'municipality': [2]
         },
-        'message': 'changes'
+        'message': 'changes',
+        'version': 1
     }), content_type='application/json')
 
     entries = get_json(client, 'places/query')
