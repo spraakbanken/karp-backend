@@ -178,14 +178,15 @@ class EsSearch(search.SearchInterface):
 
             responses = ms.execute()
             result = {
-                'distribution': {
-                    'total': 0
-                }
+                'total': 0
             }
             for i, response in enumerate(responses):
                 result[query.resources[i]] = self._format_result(query.resources, response)
-                result['distribution'][query.resources[i]] = response.hits.total
-                result['distribution']['total'] += response.hits.total
+                result['total'] += response.hits.total
+                if query.lexicon_stats:
+                    if 'distribution' not in result:
+                        result['distribution'] = {}
+                    result['distribution'][query.resources[i]] = response.hits.total
 
             return result
         else:
@@ -195,10 +196,24 @@ class EsSearch(search.SearchInterface):
                 s = s.query(query.query)
 
             s = s[query.from_:query.from_ + query.size]
+
+            if query.lexicon_stats:
+                s.aggs.bucket('distribution', 'terms', field='_index', size=len(query.resources))
+
             response = s.execute()
+
             logging.debug('response = {}'.format(response.to_dict()))
 
-            return self._format_result(query.resources, response)
+            result = self._format_result(query.resources, response)
+            if query.lexicon_stats:
+                for bucket in response.aggregations.distribution.buckets:
+                    key = bucket['key']
+                    value = bucket['doc_count']
+                    if 'distribution' not in result:
+                        result['distribution'] = {}
+                    result['distribution'][key.rsplit('_', 1)[0]] = value
+
+            return result
 
     def search_ids(self, args, resource_id: str, entry_ids: str):
         logging.info('Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:')
