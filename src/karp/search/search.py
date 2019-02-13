@@ -100,6 +100,9 @@ class SearchInterface:
     def search_ids(self, args, resource_id: str, entry_ids: str):
         raise NotImplementedError()
 
+    def statistics(self, resource_id: str, field: str):
+        raise NotImplementedError()
+
 
 class KarpSearch(SearchInterface):
 
@@ -117,3 +120,6 @@ class KarpSearch(SearchInterface):
 
     def search_ids(self, args, resource_id: str, entry_ids: str):
         return self.impl.search_ids(args, resource_id, entry_ids)
+
+    def statistics(self, resource_id: str, field: str):
+        return self.impl.statistics(resource_id, field)

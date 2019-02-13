@@ -39,8 +39,13 @@ def _create_es_mapping(config):
                 mapped_type = 'keyword'
             result = {
                 'type': mapped_type
-                # 'copy_to': 'freetext'
             }
+            if mapped_type == 'text':
+                result['fields'] = {
+                    "raw": {
+                      "type":  "keyword"
+                    }
+                }
         else:
             result = {
                 'properties': {}

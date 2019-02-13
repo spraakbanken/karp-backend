@@ -142,6 +142,45 @@ class EsSearch(search.SearchInterface):
 
     def __init__(self, es):
         self.es = es
+        self.analyzed_fields = self._init_field_mapping()
+
+    def _init_field_mapping(self):
+        """
+        Create a field mapping based on the mappings of elasticsearch
+        currently the only information we need is if a field is analyzed (i.e. text)
+        or not.
+        """
+        def parse_mapping(properties):
+            analyzed_fields = []
+            for prop_name, prop_values in properties.items():
+                if 'properties' in prop_values:
+                    res = parse_mapping(prop_values['properties'])
+                    analyzed_fields.extend([prop_name + '.' + prop for prop in res])
+                else:
+                    if prop_values['type'] == 'text':
+                        analyzed_fields.append(prop_name)
+            return analyzed_fields
+
+        aliases = self._get_all_aliases()
+        mapping = self.es.indices.get_mapping()
+        field_mapping = {}
+        for (alias, index) in aliases:
+            field_mapping[alias] = parse_mapping(mapping[index]['mappings']['entry']['properties'])
+        return field_mapping
+
+    def _get_all_aliases(self):
+        """
+        :return: a list of tuples (alias_name, index_name)
+        """
+        result = self.es.cat.aliases(h='alias,index')
+        index_names = []
+        for index_name in result.split('\n')[:-1]:
+            if index_name[0] != '.':
+                groups = re.search(r'([^ ]*) +(.*)', index_name).groups()
+                alias = groups[0]
+                index = groups[1]
+                index_names.append((alias, index))
+        return index_names
 
     def build_query(self, args, resource_str: str) -> EsQuery:
         query = EsQuery()
@@ -227,3 +266,17 @@ class EsSearch(search.SearchInterface):
         response = s.execute()
 
         return self._format_result([resource_id], response)
+
+    def statistics(self, resource_id: str, field: str):
+        s = es_dsl.Search(using=self.es, index=resource_id)
+        s = s[0:0]
+
+        if field in self.analyzed_fields[resource_id]:
+            field = field + '.raw'
+
+        s.aggs.bucket('field_values', 'terms', field=field, size=2147483647)
+        response = s.execute()
+        result = []
+        for bucket in response.aggregations.field_values.buckets:
+            result.append(bucket['key'])
+        return result
