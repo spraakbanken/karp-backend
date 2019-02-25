@@ -8,6 +8,7 @@ from karp.database import db
 import karp.indexmgr as indexmgr
 from .resource import Resource
 from typing import Dict, List
+import karp.util.jsondiff as jsondiff
 
 _logger = logging.getLogger('karp')
 
@@ -34,6 +35,10 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
             resource_id=resource_id,
             entry_id=entry_id
         ))
+
+    diff = jsondiff.compare(json.loads(current_db_entry.body), entry)
+    if not diff:
+        raise KarpError('No changes made')
 
     db_entry_json = json.dumps(entry)
     db_id = current_db_entry.id
