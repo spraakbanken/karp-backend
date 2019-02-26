@@ -4,10 +4,6 @@ from typing import Dict, List, Tuple
 import collections
 import logging
 
-import karp.database as db
-from sqlalchemy import text
-from sqlalchemy.sql import func
-
 from .index import IndexModule
 import karp.resourcemgr as resourcemgr
 import karp.resourcemgr.entryread as entryread
@@ -29,12 +25,7 @@ def _reindex(resource_id, version=None):
         _logger.error('No Index module is loaded. Check your configurations...')
         sys.exit(errors.NoIndexModuleConfigured)
 
-    history_table = resource_obj.history_model
-    result = db.db.session.query(
-        history_table.entry_id, func.max(history_table.version)
-    ).group_by(history_table.entry_id)
-    versions = {row[0]: row[1] for row in result}
-
+    versions = resourcemgr.get_all_versions(resource_obj)
     fields = resource_obj.config['fields'].items()
     entries = resource_obj.model.query.filter_by(deleted=False)
     search_entries = [(entry.entry_id, versions[entry.id],
@@ -69,13 +60,7 @@ def _update_references(resource_id, entry_ids):
             ref_resource_id = field_ref['resource_id']
             ref_resource = resourcemgr.get_resource(ref_resource_id, version=(field_ref['resource_version']))
             body = transform_to_index_entry(ref_resource, field_ref['entry'], ref_resource.config['fields'].items())
-
-            history_table = ref_resource.history_model
-            result = db.db.session.query(
-                func.max(history_table.version)
-            ).filter(history_table.entry_id == field_ref['id']).group_by(history_table.entry_id)
-            version = [row[0] for row in result][0]
-
+            version = resourcemgr.get_version(ref_resource, field_ref['id'])
             add[ref_resource_id].append(((field_ref['entry_id']), version, body))
     for ref_resource_id, ref_entries in add.items():
         indexer.impl.add_entries(ref_resource_id, ref_entries)

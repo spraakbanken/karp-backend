@@ -6,6 +6,7 @@ from typing import List
 import fastjsonschema  # pyre-ignore
 import logging
 import collections
+from sqlalchemy.sql import func
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
@@ -211,3 +212,19 @@ def is_protected(resource_id, level):
     return protection.get('read') or \
            protection.get('write') and level != 'READ' or \
            protection.get('admin') and level == 'ADMIN'
+
+
+def get_all_versions(resource_obj: Resource) -> Dict[int, int]:
+    history_table = resource_obj.history_model
+    result = db.session.query(
+        history_table.entry_id, func.max(history_table.version)
+    ).group_by(history_table.entry_id)
+    return {row[0]: row[1] for row in result}
+
+
+def get_version(resource_def: Resource, _id: int) -> int:
+    history_table = resource_def.history_model
+    result = db.session.query(
+        func.max(history_table.version)
+    ).filter(history_table.entry_id == _id).group_by(history_table.entry_id)
+    return [row[0] for row in result][0]
