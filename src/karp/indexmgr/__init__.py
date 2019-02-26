@@ -6,6 +6,7 @@ import logging
 
 import karp.database as db
 from sqlalchemy import text
+from sqlalchemy.sql import func
 
 from .index import IndexModule
 import karp.resourcemgr as resourcemgr
@@ -28,13 +29,14 @@ def _reindex(resource_id, version=None):
         _logger.error('No Index module is loaded. Check your configurations...')
         sys.exit(errors.NoIndexModuleConfigured)
 
-    entries = resource_obj.model.query.filter_by(deleted=False)
-    history_table_name = resource_obj.history_model.__tablename__
-    sql = text('select entry_id, max(version) from ' + history_table_name + ' group by entry_id')
-    result = db.db.engine.execute(sql)
+    history_table = resource_obj.history_model
+    result = db.db.session.query(
+        history_table.entry_id, func.max(history_table.version)
+    ).group_by(history_table.entry_id)
     versions = {row[0]: row[1] for row in result}
 
     fields = resource_obj.config['fields'].items()
+    entries = resource_obj.model.query.filter_by(deleted=False)
     search_entries = [(entry.entry_id, versions[entry.id],
                       transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
 
@@ -68,14 +70,12 @@ def _update_references(resource_id, entry_ids):
             ref_resource = resourcemgr.get_resource(ref_resource_id, version=(field_ref['resource_version']))
             body = transform_to_index_entry(ref_resource, field_ref['entry'], ref_resource.config['fields'].items())
 
-            _id = field_ref['id']
-            history_table_name = ref_resource.history_model.__tablename__
-            sql = text('select max(version) '
-                       'from ' + history_table_name +
-                       ' where entry_id is ' + str(_id) +
-                       ' group by entry_id')
-            result = db.db.engine.execute(sql)
+            history_table = ref_resource.history_model
+            result = db.db.session.query(
+                func.max(history_table.version)
+            ).filter(history_table.entry_id == field_ref['id']).group_by(history_table.entry_id)
             version = [row[0] for row in result][0]
+
             add[ref_resource_id].append(((field_ref['entry_id']), version, body))
     for ref_resource_id, ref_entries in add.items():
         indexer.impl.add_entries(ref_resource_id, ref_entries)
