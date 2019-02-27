@@ -33,7 +33,7 @@ class TernaryOp(tree.NodeWithThreeChildren):
         self.max_arity = 4
 
     def _format_self(self) -> str:
-        return '<TernaryOpNode op={}'.format(self.op)
+        return '<TernaryOpNode op={}'.format(self.value)
 
 
 class ArgNode(tree.Node):

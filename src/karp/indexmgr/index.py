@@ -1,28 +1,30 @@
+from typing import Dict, List, Tuple
+
 
 class IndexInterface:
 
-    def create_index(self, resource_id, config):
+    def create_index(self, resource_id: str, config: Dict):
         raise NotImplementedError()
 
-    def publish_index(self, alias_name, index_name):
+    def publish_index(self, alias_name: str, index_name: str):
         raise NotImplementedError()
 
-    def add_entries(self, resource_id, entries):
+    def add_entries(self, resource_id: str, entries: List[Tuple[str, Dict]]):
         raise NotImplementedError()
 
-    def delete_entry(self, resource_id, entry_id):
+    def delete_entry(self, resource_id: str, entry_id: str):
         raise NotImplementedError()
 
     def create_empty_object(self):
         raise NotImplementedError()
 
-    def assign_field(self, _index_entry, field_name, part):
+    def assign_field(self, _index_entry, field_name: str, part):
         raise NotImplementedError()
 
     def create_empty_list(self):
         raise NotImplementedError()
 
-    def add_to_list_field(self, elems, elem):
+    def add_to_list_field(self, elems: List, elem):
         raise NotImplementedError()
 
 
@@ -31,5 +33,5 @@ class IndexModule:
     def __init__(self):
         self.impl = IndexInterface()
 
-    def init(self, impl):
+    def init(self, impl: IndexInterface):
         self.impl = impl

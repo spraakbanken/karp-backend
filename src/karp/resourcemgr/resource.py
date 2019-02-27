@@ -1,13 +1,12 @@
 import json
 
-from typing import List
-from typing import Dict
+from typing import List, Dict, Optional
 
 from karp.database import ResourceDefinition
 
 
 class Resource(object):
-    def __init__(self, model: Dict, history_model: Dict, resource_def: ResourceDefinition, version: int, config: Dict=None) -> None:
+    def __init__(self, model, history_model, resource_def: ResourceDefinition, version: int, config: Optional[Dict]=None) -> None:
         self.model = model
         self.history_model = history_model
         if config:
