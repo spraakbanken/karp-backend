@@ -136,14 +136,20 @@ def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, 
                 else:
                     raise NotImplementedError()
             else:
-                # TODO this assumes non-collection, fix
                 ref_id = _src_entry.get(field_name)
-                if ref_id:
-                    ref_entry = {field_name: json.loads(entryread.get_entry_by_entry_id(resource, str(ref_id)).body)}
-                    ref_index_entry = {}
-                    list_of_sub_fields = (field_name, ref_field['field']),
-                    _transform_to_index_entry(resource, ref_entry, ref_index_entry, list_of_sub_fields)
-                    indexer.impl.assign_field(_index_entry, 'v_' + field_name, ref_index_entry[field_name])
+                if not ref_id:
+                    continue
+                if not ref_field['field'].get('collection', False):
+                    ref_id = [ref_id]
+
+                for elem in ref_id:
+                    ref = entryread.get_entry_by_entry_id(resource, str(elem))
+                    if ref:
+                        ref_entry = {field_name: json.loads(ref.body)}
+                        ref_index_entry = {}
+                        list_of_sub_fields = (field_name, ref_field['field']),
+                        _transform_to_index_entry(resource, ref_entry, ref_index_entry, list_of_sub_fields)
+                        indexer.impl.assign_field(_index_entry, 'v_' + field_name, ref_index_entry[field_name])
 
         if field_conf['type'] == 'object':
             field_content = indexer.impl.create_empty_object()

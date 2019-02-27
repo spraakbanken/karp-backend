@@ -134,17 +134,21 @@ def get_or_create_resource_model(config, version):
         attributes = {
             '__tablename__': table_name,
             '__table_args__': (db.UniqueConstraint('entry_id', name='entry_id_unique_constraint'),),
-            'entry_id': db.Column(db.String(30), nullable=False)
+            'entry_id': db.Column(db.Unicode(100, collation='utf8_bin'), nullable=False)
         }
 
         child_tables = {}
         for field_name in config.get('referenceable', ()):
             field = config['fields'][field_name]
+            # TODO check if field is nullable
+
             if not field.get('collection'):
                 if field['type'] == 'integer':
                     column_type = db.Integer()
                 elif field['type'] == 'number':
                     column_type = db.Float()
+                elif field['type'] == 'string':
+                    column_type = db.Unicode(100, collation='utf8_bin')
                 else:
                     raise NotImplementedError()
                 attributes[field_name] = db.Column(column_type)
@@ -164,7 +168,7 @@ def get_or_create_resource_model(config, version):
                 elif field['type'] == 'number':
                     child_db_column_type = db.Float()
                 elif field['type'] == 'string':
-                    child_db_column_type = db.Text()
+                    child_db_column_type = db.Unicode(100, collation='utf8_bin')
                 else:
                     raise NotImplementedError()
                 child_attributes[field_name] = db.Column(child_db_column_type)
