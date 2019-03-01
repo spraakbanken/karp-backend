@@ -1,24 +1,22 @@
-# spec can be tested using https://editor.swagger.io/
 openapi: 3.0.2
-info: 
+info:
   title: Karp API
-  version: '0.6.3'
+  version: 0.6.3
   description: |
     Karp TNG
 
     Very cool!
   x-logo:
-    url: https://spraakbanken.gu.se/karp/img/karplogogr.png
+    url: 'https://spraakbanken.gu.se/karp/img/karplogogr.png'
   contact:
     name: Språkbanken
-    url: https://spraakbanken.gu.se/
-    email: 'sb-info@svenska.gu.se'
+    url: 'https://spraakbanken.gu.se/'
+    email: sb-info@svenska.gu.se
   license:
     name: MIT
-    url: https://opensource.org/licenses/MIT
-
+    url: 'https://opensource.org/licenses/MIT'
 servers:
-  - url: http://karp-tng-backend-os-sample-python.os-dev.spraakbanken.gu.se/
+  - url: 'http://karp-tng-backend-os-sample-python.os-dev.spraakbanken.gu.se/'
     description: Under development
 tags:
   - name: Querying
@@ -27,36 +25,25 @@ tags:
   - name: Inflection
   - name: Configuration
 paths:
-  /query/{resources}:
+  '/query/{resources}':
     get:
       tags:
         - Querying
       summary: Get lexical entries
-      description: |
-        Returns a list of entries matching the given query in the given lexicons.
+      description: >
+        Returns a list of entries matching the given query in the given
+        lexicons.
       parameters:
-        - name: q
-          in: query
-          required: false
-          description: |
-            The query. If missing, all entries in chosen resources will be returned.
-
-            Format:
-
-            `simple||apa` - Search in all fields for `apa`
-
-            `extended||<and/or/not>|<field>|<operator>|<value>||*`
-
-            The extended format may also be nested.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/Query'
         - $ref: '#/components/parameters/FromPage'
         - $ref: '#/components/parameters/SizePage'
         - name: split_results
           in: query
           required: false
-          description: |
-            If `true`, splits gives `size` hits for each resource separated in output.
+          description: >
+            If `true`, splits gives `size` hits for each resource separated in
+            output.
+
 
             If `false`, return `size` hits mixed from resources.
           schema:
@@ -72,10 +59,13 @@ paths:
               type: string
         - name: sort
           in: query
-          description: |
-            The `field` sort by. If missing, default order for each resource will be used.
+          description: >
+            The `field` sort by. If missing, default order for each resource
+            will be used.
+
 
             <span style="color: red">Do we need sort order per resource?</span>
+
 
             Format: `lemma|asc` or `pos|desc`
           schema:
@@ -91,13 +81,13 @@ paths:
           description: Comma-separated list of which fields to return
           schema:
             type: string
-            default: 'All field are returned'
+            default: All field are returned
         - name: exclude_fields
           in: query
           description: Comma-separated list of which fields to remove from result
           schema:
             type: string
-            default: 'No fields are excluded'
+            default: No fields are excluded
         - name: format
           in: query
           description: Will return the result in the specified format
@@ -112,8 +102,10 @@ paths:
             default: json
         - name: format_query
           in: query
-          description: |
-            Will return each entry in the specified format (encoded in JSON-field)
+          description: >
+            Will return each entry in the specified format (encoded in
+            JSON-field)
+
 
             <span style="color: red">Why is it called format query?</span>
           schema:
@@ -125,21 +117,60 @@ paths:
               - lmf?
               - tsb
             default: json
-
       responses:
         '200':
-          description: A bunch of entries
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResultSchema'
+                type: object
+                required:
+                  - total
+                  - hits
+                properties:
+                  total:
+                    type: integer
+                    description: Total number of matches
+                    example: 6278
+                  hits:
+                    properties:
+                      match:
+                        oneOf:
+                          - type: array
+                            description: If `split_results=false`
+                            items:
+                              $ref: '#/components/schemas/ResultEntrySchema'
+                          - type: object
+                            description: If `split_results=true`
+                            additionalProperties:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/ResultEntrySchema'
+                  distribution:
+                    description: Only present if `lexicon_stats=true`
+                    additionalProperties:
+                      type: integer
+                    example:
+                      places: 123
+                      municipalities: 6
+                example:
+                  total: 6578,
+                  hits: [
+                    {
+                      id: "1410", 
+                      resource: "places",
+                      version: 2,
+                      entry: ...
+                    }
+                  ]
+
         '500':
           description: Query failed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /{resource}/add:
+  '/{resource}/add':
     post:
       tags:
         - Editing
@@ -162,7 +193,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /{resource}/add_with_message:
+  '/{resource}/add_with_message':
     post:
       tags:
         - Editing
@@ -190,7 +221,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /{resource}/update/{id}:
+  '/{resource}/update/{id}':
     post:
       tags:
         - Editing
@@ -222,7 +253,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /{resource}/delete/{id}:
+  '/{resource}/delete/{id}':
     delete:
       tags:
         - Editing
@@ -276,7 +307,42 @@ components:
       schema:
         type: number
         default: 10
+    Query:
+      name: q
+      in: query
+      required: false
+      description: |
+        The query. If missing, all entries in chosen resources will be returned.
+
+        **Query DSL**
+        - `equals|<field>|apa`
+          Find all entries where `<field>` equals `apa`
+          
+        - `exists|<field>`
+          Find all entries that has the field `<field>`
+
+        - `freetxt|apa` 
+          Search in all fields for `apa`
+
+        - `freergxp|ap.*` 
+          Search in all fields for the regex `ap.*`
+
+        - `startswith|<field>|apa`
+          Find all entries that `<field>`starts with `apa`
+          
+        - 
+        `simple||apa` - 
+
+        `extended||<and/or/not>|<field>|<operator>|<value>||*`
+
+        The extended format may also be nested.
+      schema:
+        type: string
   schemas:
+    DistributionResult:
+      type: object
+      additionalProperties:
+        type: integer
     GeneralError:
       type: object
       properties:
@@ -286,14 +352,34 @@ components:
             message:
               type: string
               example: Some error message
-    ResultSchema:
+    QueryResultSchema:
       type: object
-      description: Hit schema
+      description: Result schema for a query
       properties:
+        total:
+          type: integer
         hits:
           type: array
           items:
-            $ref: '#/components/schemas/EntrySchema'
+            $ref: '#/components/schemas/ResultEntrySchema'
+    ResultEntrySchema:
+      type: object
+      description: Hits entry schema
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+        resource:
+          type: string
+          description: Name of the resource where this entry was found.
+          example: places
+        entry:
+          $ref: '#/components/schemas/EntrySchema'
+      example:
+        id: "1410"
+        version: 2
+        resource: "places"
     EntrySchema:
       type: object
       description: This will different for each resource
