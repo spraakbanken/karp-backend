@@ -179,4 +179,4 @@ def _validate_entry(schema, json_obj):
             entry=json.dumps(json_obj, indent=2),
             message=e.message
         ))
-        raise ValueError()
+        raise KarpError("entry not valid")
