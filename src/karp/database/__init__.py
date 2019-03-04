@@ -131,10 +131,14 @@ def get_or_create_resource_model(config, version):
     if table_name in class_cache:
         return class_cache[table_name]
     else:
+        if db.engine.driver == 'pysqlite':
+            ref_column = db.Unicode(100)
+        else:
+            ref_column = db.Unicode(100, collation='utf8_bin')
         attributes = {
             '__tablename__': table_name,
             '__table_args__': (db.UniqueConstraint('entry_id', name='entry_id_unique_constraint'),),
-            'entry_id': db.Column(db.Unicode(100, collation='utf8_bin'), nullable=False)
+            'entry_id': db.Column(ref_column, nullable=False)
         }
 
         child_tables = {}
@@ -148,7 +152,7 @@ def get_or_create_resource_model(config, version):
                 elif field['type'] == 'number':
                     column_type = db.Float()
                 elif field['type'] == 'string':
-                    column_type = db.Unicode(100, collation='utf8_bin')
+                    column_type = ref_column
                 else:
                     raise NotImplementedError()
                 attributes[field_name] = db.Column(column_type)
@@ -168,7 +172,7 @@ def get_or_create_resource_model(config, version):
                 elif field['type'] == 'number':
                     child_db_column_type = db.Float()
                 elif field['type'] == 'string':
-                    child_db_column_type = db.Unicode(100, collation='utf8_bin')
+                    child_db_column_type = ref_column
                 else:
                     raise NotImplementedError()
                 child_attributes[field_name] = db.Column(child_db_column_type)
