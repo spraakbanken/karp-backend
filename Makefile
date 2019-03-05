@@ -1,3 +1,4 @@
+.PHONY: test pytest build-dev
 default: tox
 
 test:
@@ -9,11 +10,13 @@ pytest: build-dev
 tox:
 	tox
 
-build:
+build: Pipfile
 	pipenv install
 
-build-dev:
+build-dev: .venv/build-dev
+.venv/build-dev: Pipfile
 	pipenv install --dev
+	touch $@
 
 flaske8:
 	flake8 src tests setup.py wsgi.py
