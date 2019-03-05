@@ -157,7 +157,7 @@ paths:
                   total: 6578,
                   hits: [
                     {
-                      id: "1410", 
+                      id: "1410",
                       resource: "places",
                       version: 2,
                       entry: ...
@@ -314,28 +314,73 @@ components:
       description: |
         The query. If missing, all entries in chosen resources will be returned.
 
-        **Query DSL**
-        - `equals|<field>|apa`
-          Find all entries where `<field>` equals `apa`
-          
+        ### Query DSL
+
+        #### Query operators
+
+        - `contains|<field>|<string>`
+          Find all entries where the field `<field>` contains `<string>`.
+          More premissive than `equals`.
+
+        - `endswith|<field>|<string>`
+          Find all entries where the field `<field>` ends with `<string>`
+
+        - `equals|<field>|<string>`
+          Find all entries where `<field>` equals `<string>`.
+          Stricter than `contains`
+
         - `exists|<field>`
-          Find all entries that has the field `<field>`
+          Find all entries that has the field `<field>`.
 
-        - `freetxt|apa` 
-          Search in all fields for `apa`
+        - `freetext|<string>`
+          Search in all fields for `<string>` and similar values.
 
-        - `freergxp|ap.*` 
-          Search in all fields for the regex `ap.*`
+        - `freergxp|<regex.*>`
+          Search in all fields for the regex `<regex.*>`.
 
-        - `startswith|<field>|apa`
-          Find all entries that `<field>`starts with `apa`
-          
-        - 
-        `simple||apa` - 
+        - `gt|<field>|<value>`
+          Find all entries where `<field>` is greater than `<value>`.
 
-        `extended||<and/or/not>|<field>|<operator>|<value>||*`
+        - `gte|<field>|<value>`
+          Find all entries where `<field>` is greater than or equals `<value>`.
 
-        The extended format may also be nested.
+        - `lt|<field>|<value>`
+          Find all entries where `<field>` is less than `<value>`.
+
+        - `lte|<field>|<value>`
+          Find all entries where `<field>` is less than or equals `<value>`.
+
+        - `missing|<field>`
+          Search for all entries that doesn't have the field `<field>`.
+
+        - `regexp|<field>|<regex.*>`
+          Find all entries where the field `<field>` matches the regex `<regex.*>`.
+
+        - `startswith|<field>|<string>`
+          Find all entries where `<field>`starts with `<string>`.
+
+        #### Logical Operators
+
+        The logical operators can be used both at top-level and lower-levels.
+
+        - `not||<expression>`
+          Find all entries that doesn't match the expression `<expression>`.
+
+        - `and||<expression1>||<expression2>`
+          Find all entries that matches `<expression1>` AND `<expression2>`.
+
+        - `or||<expression1>||<expression2>`
+          Find all entries that matches `<expression1>` OR `<expression2>`.
+
+        #### Regular expressions
+        - Always matches complete tokens.
+
+
+        #### Examples
+        - `not||missing|pos`
+        - `and||freergxp|str.*ng||regexp|pos|str.*ng`
+        - `and||missing|pos||equals|wf||or|blomma|äpple`
+        - `and||equals|wf|sitta||not||equals|wf|satt`
       schema:
         type: string
   schemas:
