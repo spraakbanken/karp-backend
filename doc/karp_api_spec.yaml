@@ -198,6 +198,13 @@ paths:
       parameters:
         - $ref: '#/components/parameters/SingleResource'
         - $ref: '#/components/parameters/IdParam'
+        - name: force
+          in: query
+          required: false
+          description: |
+            If true, the update will be done even though there is a version conflict.
+          schema:
+            type: string
       requestBody:
         description: The entry object with a version and a message
         required: true

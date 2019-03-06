@@ -22,13 +22,14 @@ def add_entry(user, resource_id):
 @edit_api.route('/<resource_id>/<entry_id>/update', methods=['POST'])
 @auth.auth.authorization('WRITE', add_user=True)
 def update_entry(user, resource_id, entry_id):
+    force_update = request.args.get('force') in ['True', 'true']
     data = request.get_json()
     version = data.get('version')
     entry = data.get('entry')
     message = data.get('message')
     if not (version and entry and message):
         raise KarpError('Missing field')
-    entrywrite.update_entry(resource_id, entry_id, version, entry, user.identifier, message=message)
+    entrywrite.update_entry(resource_id, entry_id, version, entry, user.identifier, message=message, force=force_update)
     return flask_jsonify({'status': 'updated'})
 
 

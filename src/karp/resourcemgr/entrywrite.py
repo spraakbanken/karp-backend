@@ -24,7 +24,7 @@ def preview_entry(resource_id, entry, resource_version=None):
 
 
 def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, user_id: str,
-                 message: str=None, resource_version: int=None):
+                 message: str=None, resource_version: int=None, force: bool=False):
     resource = get_resource(resource_id, version=resource_version)
 
     index_entry_json = _validate_and_prepare_entry(resource, entry)
@@ -44,7 +44,7 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
     db_id = current_db_entry.id
     latest_history_entry = resource.history_model.query.filter_by(entry_id=db_id).order_by(
         resource.history_model.version.desc()).first()
-    if latest_history_entry.version > version:
+    if not force and latest_history_entry.version > version:
         raise KarpError('Version conflict. Please update entry.')
     history_entry = resource.history_model(
         entry_id=db_id,
