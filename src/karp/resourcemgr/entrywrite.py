@@ -143,7 +143,7 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
     resource = get_resource(resource_id)
     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
     if not entry:
-        raise RuntimeError('no entry with id {entry_id} found'.format(entry_id=entry_id))
+        raise KarpError('no entry with id {entry_id} found'.format(entry_id=entry_id))
     entry.deleted = True
     history_cls = resource.history_model
     history_entry = history_cls(
@@ -186,4 +186,4 @@ def _validate_entry(schema, json_obj):
             entry=json.dumps(json_obj, indent=2),
             message=e.message
         ))
-        raise ValueError()
+        raise KarpError("entry not valid")

@@ -1,5 +1,5 @@
 import logging
-from slacker_log_handler import SlackerLogHandler
+from slacker_log_handler import SlackerLogHandler  # pyre-ignore
 
 
 def get_slack_logging_handler(secret):

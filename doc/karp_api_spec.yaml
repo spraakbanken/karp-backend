@@ -1,62 +1,50 @@
-# spec can be tested using https://editor.swagger.io/
 openapi: 3.0.2
-info: 
+info:
   title: Karp API
-  version: '0.6.3'
+  version: 0.6.4
   description: |
     Karp TNG
 
     Very cool!
   x-logo:
-    url: https://spraakbanken.gu.se/karp/img/karplogogr.png
+    url: 'https://spraakbanken.gu.se/karp/img/karplogogr.png'
   contact:
     name: Språkbanken
-    url: https://spraakbanken.gu.se/
-    email: 'sb-info@svenska.gu.se'
+    url: 'https://spraakbanken.gu.se/'
+    email: sb-info@svenska.gu.se
   license:
     name: MIT
-    url: https://opensource.org/licenses/MIT
-
+    url: 'https://opensource.org/licenses/MIT'
 servers:
-  - url: http://karp-tng-backend-os-sample-python.os-dev.spraakbanken.gu.se/
+  - url: 'http://karp-tng-backend-os-sample-python.os-dev.spraakbanken.gu.se/'
     description: Under development
 tags:
   - name: Querying
   - name: Editing
+  - name: Statistics
   - name: History
   - name: Inflection
   - name: Configuration
 paths:
-  /query/{resources}:
+  '/query/{resources}':
     get:
       tags:
         - Querying
       summary: Get lexical entries
-      description: |
-        Returns a list of entries matching the given query in the given lexicons.
+      description: >
+        Returns a list of entries matching the given query in the given
+        lexicons.
       parameters:
-        - name: q
-          in: query
-          required: false
-          description: |
-            The query. If missing, all entries in chosen resources will be returned.
-
-            Format:
-
-            `simple||apa` - Search in all fields for `apa`
-
-            `extended||<and/or/not>|<field>|<operator>|<value>||*`
-
-            The extended format may also be nested.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/Query'
         - $ref: '#/components/parameters/FromPage'
         - $ref: '#/components/parameters/SizePage'
         - name: split_results
           in: query
           required: false
-          description: |
-            If `true`, splits gives `size` hits for each resource separated in output.
+          description: >
+            If `true`, splits gives `size` hits for each resource separated in
+            output.
+
 
             If `false`, return `size` hits mixed from resources.
           schema:
@@ -72,10 +60,13 @@ paths:
               type: string
         - name: sort
           in: query
-          description: |
-            The `field` sort by. If missing, default order for each resource will be used.
+          description: >
+            The `field` sort by. If missing, default order for each resource
+            will be used.
+
 
             <span style="color: red">Do we need sort order per resource?</span>
+
 
             Format: `lemma|asc` or `pos|desc`
           schema:
@@ -91,13 +82,13 @@ paths:
           description: Comma-separated list of which fields to return
           schema:
             type: string
-            default: 'All field are returned'
+            default: All field are returned
         - name: exclude_fields
           in: query
           description: Comma-separated list of which fields to remove from result
           schema:
             type: string
-            default: 'No fields are excluded'
+            default: No fields are excluded
         - name: format
           in: query
           description: Will return the result in the specified format
@@ -112,8 +103,10 @@ paths:
             default: json
         - name: format_query
           in: query
-          description: |
-            Will return each entry in the specified format (encoded in JSON-field)
+          description: >
+            Will return each entry in the specified format (encoded in
+            JSON-field)
+
 
             <span style="color: red">Why is it called format query?</span>
           schema:
@@ -125,21 +118,60 @@ paths:
               - lmf?
               - tsb
             default: json
-
       responses:
         '200':
-          description: A bunch of entries
+          description: OK
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ResultSchema'
+                type: object
+                required:
+                  - total
+                  - hits
+                properties:
+                  total:
+                    type: integer
+                    description: Total number of matches
+                    example: 6278
+                  hits:
+                    properties:
+                      match:
+                        oneOf:
+                          - type: array
+                            description: If `split_results=false`
+                            items:
+                              $ref: '#/components/schemas/ResultEntrySchema'
+                          - type: object
+                            description: If `split_results=true`
+                            additionalProperties:
+                              type: array
+                              items:
+                                $ref: '#/components/schemas/ResultEntrySchema'
+                  distribution:
+                    description: Only present if `lexicon_stats=true`
+                    additionalProperties:
+                      type: integer
+                    example:
+                      places: 123
+                      municipalities: 6
+                example:
+                  total: 6578,
+                  hits: [
+                    {
+                      id: "1410",
+                      resource: "places",
+                      version: 2,
+                      entry: ...
+                    }
+                  ]
+
         '500':
           description: Query failed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /{resource}/add:
+  '/{resource}/add':
     post:
       tags:
         - Editing
@@ -147,30 +179,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/SingleResource'
       requestBody:
-        description: The entry object
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EntrySchema'
-      responses:
-        '201':
-          description: Successful add
-        '500':
-          description: Add failed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GeneralError'
-  /{resource}/add_with_message:
-    post:
-      tags:
-        - Editing
-      summary: Add entry to resource
-      parameters:
-        - $ref: '#/components/parameters/SingleResource'
-      requestBody:
-        description: The entry object with a message for history purposes
+        description: TODO
         required: true
         content:
           application/json:
@@ -179,18 +188,25 @@ paths:
               properties:
                 message:
                   type: string
-                doc:
+                entry:
                   $ref: '#/components/schemas/EntrySchema'
       responses:
         '201':
           description: Successful add
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newID:
+                    type: string
         '500':
           description: Add failed
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /{resource}/update/{id}:
+  '/{resource}/{id}/update':
     post:
       tags:
         - Editing
@@ -215,13 +231,13 @@ paths:
               properties:
                 message:
                   type: string
-                doc:
+                entry:
                   $ref: '#/components/schemas/EntrySchema'
                 version:
                   type: number
                   description: Use latest version seen when fetching the object to edit
       responses:
-        '200':
+        '204':
           description: Successful update
         '500':
           description: Update failed
@@ -229,7 +245,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  /{resource}/delete/{id}:
+  '/{resource}/{id}/delete':
     delete:
       tags:
         - Editing
@@ -238,7 +254,7 @@ paths:
         - $ref: '#/components/parameters/SingleResource'
         - $ref: '#/components/parameters/IdParam'
       responses:
-        '200':
+        '204':
           description: Succesful delete
         '500':
           description: Delete failed
@@ -246,6 +262,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+  '/{resource}/stats/{field}':
+    get:
+      tags:
+        - Statistics
+      summary: Get all current values in field
+      parameters:
+        - $ref: '#/components/parameters/SingleResource'
+        - $ref: '#/components/parameters/FieldReference'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - value
+                    - count
+                  properties:
+                    count:
+                      type: integer
+                      description: Total number of occurences of value in given resource
+                      example: 6278
+                    value:
+                      type: any
+                      description: A value that occurs for field in given resource
+                      example: "NN"
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -282,8 +327,95 @@ components:
       description: Number of entries in page
       schema:
         type: number
-        default: 10
+        default: 25
+    FieldReference:
+      name: field
+      in: path
+      required: true
+      description: A field name
+      schema:
+        type: string
+    Query:
+      name: q
+      in: query
+      required: false
+      description: |
+        The query. If missing, all entries in chosen resources will be returned.
+
+        ### Query DSL
+
+        #### Query operators
+
+        - `contains|<field>|<string>`
+          Find all entries where the field `<field>` contains `<string>`.
+          More premissive than `equals`.
+
+        - `endswith|<field>|<string>`
+          Find all entries where the field `<field>` ends with `<string>`
+
+        - `equals|<field>|<string>`
+          Find all entries where `<field>` equals `<string>`.
+          Stricter than `contains`
+
+        - `exists|<field>`
+          Find all entries that has the field `<field>`.
+
+        - `freetext|<string>`
+          Search in all fields for `<string>` and similar values.
+
+        - `freergxp|<regex.*>`
+          Search in all fields for the regex `<regex.*>`.
+
+        - `gt|<field>|<value>`
+          Find all entries where `<field>` is greater than `<value>`.
+
+        - `gte|<field>|<value>`
+          Find all entries where `<field>` is greater than or equals `<value>`.
+
+        - `lt|<field>|<value>`
+          Find all entries where `<field>` is less than `<value>`.
+
+        - `lte|<field>|<value>`
+          Find all entries where `<field>` is less than or equals `<value>`.
+
+        - `missing|<field>`
+          Search for all entries that doesn't have the field `<field>`.
+
+        - `regexp|<field>|<regex.*>`
+          Find all entries where the field `<field>` matches the regex `<regex.*>`.
+
+        - `startswith|<field>|<string>`
+          Find all entries where `<field>`starts with `<string>`.
+
+        #### Logical Operators
+
+        The logical operators can be used both at top-level and lower-levels.
+
+        - `not||<expression>`
+          Find all entries that doesn't match the expression `<expression>`.
+
+        - `and||<expression1>||<expression2>`
+          Find all entries that matches `<expression1>` AND `<expression2>`.
+
+        - `or||<expression1>||<expression2>`
+          Find all entries that matches `<expression1>` OR `<expression2>`.
+
+        #### Regular expressions
+        - Always matches complete tokens.
+
+
+        #### Examples
+        - `not||missing|pos`
+        - `and||freergxp|str.*ng||regexp|pos|str.*ng`
+        - `and||missing|pos||equals|wf||or|blomma|äpple`
+        - `and||equals|wf|sitta||not||equals|wf|satt`
+      schema:
+        type: string
   schemas:
+    DistributionResult:
+      type: object
+      additionalProperties:
+        type: integer
     GeneralError:
       type: object
       properties:
@@ -293,28 +425,42 @@ components:
             message:
               type: string
               example: Some error message
-    ResultSchema:
+    QueryResultSchema:
       type: object
-      description: Hit schema
+      description: Result schema for a query
       properties:
+        total:
+          type: integer
         hits:
           type: array
           items:
-            $ref: '#/components/schemas/EntrySchema'
+            $ref: '#/components/schemas/ResultEntrySchema'
+    ResultEntrySchema:
+      type: object
+      description: Hits entry schema
+      properties:
+        id:
+          type: string
+        version:
+          type: integer
+        resource:
+          type: string
+          description: Name of the resource where this entry was found.
+          example: places
+        entry:
+          $ref: '#/components/schemas/EntrySchema'
+      example:
+        id: "1410"
+        version: 2
+        resource: "places"
     EntrySchema:
       type: object
-      description: This will different for each resource
-      properties:
-        field1:
-          type: string
-        field2:
-          type: object
-          properties:
-            subfield1:
-              type: string
-            subfield2:
-              type: number
-        field3:
-          type: array
-          items:
-            type: string
+      description: Actual schema different for each resource
+      example:
+        pos: nn
+        lemgram: apa..nn.1
+        baseform: apa
+        v_saldo:
+          saldo: apa..1
+          primary: djur..1
+          secondary: ['primat..1']

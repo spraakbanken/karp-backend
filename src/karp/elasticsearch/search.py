@@ -288,5 +288,5 @@ class EsSearch(search.SearchInterface):
         response = s.execute()
         result = []
         for bucket in response.aggregations.field_values.buckets:
-            result.append(bucket['key'])
+            result.append({'value': bucket['key'], 'count': bucket['doc_count']})
         return result

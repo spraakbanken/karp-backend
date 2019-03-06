@@ -1,3 +1,4 @@
+from typing import Optional
 import json
 import collections
 
@@ -31,7 +32,7 @@ def get_entries_by_column(resource_obj: Resource, filters):
     return [{'id': db_entry.id, 'entry_id': db_entry.entry_id, 'entry': json.loads(db_entry.body)} for db_entry in query]
 
 
-def get_entry(resource_id: str, entry_id: str, version: int=None):
+def get_entry(resource_id: str, entry_id: str, version: Optional[int]=None):
     resource = get_resource(resource_id, version=version)
     return get_entry_by_entry_id(resource, entry_id)
 

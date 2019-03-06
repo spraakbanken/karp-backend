@@ -1,3 +1,4 @@
+.PHONY: test pytest build-dev
 default: tox
 
 test:
@@ -9,11 +10,13 @@ pytest: build-dev
 tox:
 	tox
 
-build:
+build: Pipfile
 	pipenv install
 
-build-dev:
+build-dev: .venv/build-dev
+.venv/build-dev: Pipfile
 	pipenv install --dev
+	touch $@
 
 flaske8:
 	flake8 src tests setup.py wsgi.py
@@ -28,11 +31,18 @@ prepare-release:
 	pipenv lock -r > requirements.txt
 	pipenv lock -r --dev > requirements-dev.txt
 
-bumpversion-patch: prepare-release
+docs/openapi.html: doc/karp_api_spec.yaml
+	redoc-cli bundle --output $@ $<
+
+bumpversion-patch:
 	bumpversion patch
 
-bumpversion-minor: prepare-release
+bumpversion-minor:
 	bumpversion minor
 
-bumpversion-major: prepare-release
+bumpversion-major:
 	bumpversion major
+
+mkrelease-patch: bumpversion-patch prepare-release docs/openapi.html
+mkrelease-minor: bumpversion-minor prepare-release docs/openapi.html
+mkrelease-major: bumpversion-major prepare-release docs/openapi.html

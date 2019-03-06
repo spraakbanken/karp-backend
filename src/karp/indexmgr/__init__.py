@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import collections
 import logging
 
@@ -16,7 +16,7 @@ indexer = IndexModule()
 _logger = logging.getLogger('karp')
 
 
-def _reindex(resource_id, version=None):
+def _reindex(resource_id: str, version: Optional[int]=None) -> None:
     resource_obj = resourcemgr.get_resource(resource_id, version=version)
 
     try:
@@ -35,24 +35,24 @@ def _reindex(resource_id, version=None):
     indexer.impl.publish_index(resource_id, index_name)
 
 
-def publish_index(resource_id, version=None):
+def publish_index(resource_id: str, version: Optional[int]=None) -> None:
     _reindex(resource_id, version=version)
     if version:
         resourcemgr.publish_resource(resource_id, version)
 
 
-def add_entries(resource_id, entries: List[Tuple[str, int, Dict]], update_refs=True):
+def add_entries(resource_id: str, entries: List[Tuple[str, int, Dict]], update_refs: bool=True) -> None:
     indexer.impl.add_entries(resource_id, entries)
     if update_refs:
         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
-def delete_entry(resource_id, entry_id):
+def delete_entry(resource_id: str, entry_id: str) -> None:
     indexer.impl.delete_entry(resource_id, entry_id)
     _update_references(resource_id, [entry_id])
 
 
-def _update_references(resource_id, entry_ids):
+def _update_references(resource_id: str, entry_ids: List[str]) -> None:
     add = collections.defaultdict(list)
     for src_entry_id in entry_ids:
         refs = network.get_referenced_entries(resource_id, None, src_entry_id)
@@ -66,13 +66,13 @@ def _update_references(resource_id, entry_ids):
         indexer.impl.add_entries(ref_resource_id, ref_entries)
 
 
-def transform_to_index_entry(resource: resourcemgr.Resource, src_entry: Dict, fields):
+def transform_to_index_entry(resource: resourcemgr.Resource, src_entry: Dict, fields: Tuple[str, Dict]):
     index_entry = indexer.impl.create_empty_object()
     _transform_to_index_entry(resource, src_entry, index_entry, fields)
     return index_entry
 
 
-def _evaluate_function(function_conf, src_entry, src_resource):
+def _evaluate_function(function_conf: Dict, src_entry: Dict, src_resource: resourcemgr.Resource):
     if 'multi_ref' in function_conf:
         function_conf = function_conf['multi_ref']
         target_field = function_conf['field']
@@ -138,14 +138,20 @@ def _transform_to_index_entry(resource: resourcemgr.Resource, _src_entry: Dict, 
                 else:
                     raise NotImplementedError()
             else:
-                # TODO this assumes non-collection, fix
                 ref_id = _src_entry.get(field_name)
-                if ref_id:
-                    ref_entry = {field_name: json.loads(entryread.get_entry_by_entry_id(resource, str(ref_id)).body)}
-                    ref_index_entry = {}
-                    list_of_sub_fields = (field_name, ref_field['field']),
-                    _transform_to_index_entry(resource, ref_entry, ref_index_entry, list_of_sub_fields)
-                    indexer.impl.assign_field(_index_entry, 'v_' + field_name, ref_index_entry[field_name])
+                if not ref_id:
+                    continue
+                if not ref_field['field'].get('collection', False):
+                    ref_id = [ref_id]
+
+                for elem in ref_id:
+                    ref = entryread.get_entry_by_entry_id(resource, str(elem))
+                    if ref:
+                        ref_entry = {field_name: json.loads(ref.body)}
+                        ref_index_entry = {}
+                        list_of_sub_fields = (field_name, ref_field['field']),
+                        _transform_to_index_entry(resource, ref_entry, ref_index_entry, list_of_sub_fields)
+                        indexer.impl.assign_field(_index_entry, 'v_' + field_name, ref_index_entry[field_name])
 
         if field_conf['type'] == 'object':
             field_content = indexer.impl.create_empty_object()

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Iterator
+from typing import Dict, Any, Iterator, Optional
 import json
 
 from karp.resourcemgr import get_resource, get_refs
@@ -6,7 +6,7 @@ import karp.resourcemgr.entryread as entryread
 from karp.errors import EntryNotFoundError
 
 
-def get_referenced_entries(resource_id: str, version: int, entry_id: str) -> Iterator[Dict[str, Any]]:
+def get_referenced_entries(resource_id: str, version: Optional[int], entry_id: str) -> Iterator[Dict[str, Any]]:
     resource_refs, resource_backrefs = get_refs(resource_id, version=version)
 
     src_entry = entryread.get_entry(resource_id, entry_id, version=version)

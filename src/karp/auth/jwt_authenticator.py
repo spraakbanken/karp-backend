@@ -5,6 +5,7 @@ from .authenticator import Authenticator
 from karp import get_resource_string
 from karp.auth.user import User
 import karp.resourcemgr as resourcemgr
+from karp.errors import KarpError
 
 jwt_key = get_resource_string('auth/pubkey.pem')
 
@@ -19,7 +20,7 @@ class JWTAuthenticator(Authenticator):
         if auth_token:
             user_token = jwt.decode(auth_token, key=jwt_key, algorithms=["RS256"])
             if user_token["exp"] < time.time():
-                raise RuntimeError("The given jwt have expired")
+                raise KarpError("The given jwt have expired")
 
             lexicon_permissions = {}
             if "scope" in user_token and "lexica" in user_token["scope"]:

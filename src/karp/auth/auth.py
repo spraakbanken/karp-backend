@@ -1,5 +1,5 @@
 import functools
-from flask import request, jsonify
+from flask import request, jsonify  # pyre-ignore
 
 from karp.auth.authenticator import Authenticator
 
