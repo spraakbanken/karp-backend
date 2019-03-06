@@ -21,6 +21,7 @@ servers:
 tags:
   - name: Querying
   - name: Editing
+  - name: Statistics
   - name: History
   - name: Inflection
   - name: Configuration
@@ -270,6 +271,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+  '/{resource}/stats/{field}':
+    get:
+      tags:
+        - Statistics
+      summary: Get all current values in field
+      parameters:
+        - $ref: '#/components/parameters/SingleResource'
+        - $ref: '#/components/parameters/FieldReference'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - value
+                    - count
+                  properties:
+                    count:
+                      type: integer
+                      description: Total number of occurences of value in given resource
+                      example: 6278
+                    value:
+                      type: any
+                      description: A value that occurs for field in given resource
+                      example: "NN"
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -307,6 +337,13 @@ components:
       schema:
         type: number
         default: 10
+    FieldReference:
+      name: field
+      in: path
+      required: true
+      description: A field name
+      schema:
+        type: string
     Query:
       name: q
       in: query
