@@ -22,7 +22,7 @@ def add_entry(user, resource_id):
 @edit_api.route('/<resource_id>/<entry_id>/update', methods=['POST'])
 @auth.auth.authorization('WRITE', add_user=True)
 def update_entry(user, resource_id, entry_id):
-    force_update = request.args.get('force') in ['True', 'true']
+    force_update = request.args.get('force').lower() == 'true'
     data = request.get_json()
     version = data.get('version')
     entry = data.get('entry')
