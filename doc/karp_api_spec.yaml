@@ -320,7 +320,7 @@ components:
       description: Number of entries in page
       schema:
         type: number
-        default: 10
+        default: 25
     FieldReference:
       name: field
       in: path
