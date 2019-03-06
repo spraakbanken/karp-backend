@@ -29,7 +29,7 @@ def get_entries_by_column(resource_obj: Resource, filters):
         child_cls = cls.child_tables[list(child_filters.keys())[0]]
         query = query.join(child_cls).filter_by(**child_filters)
 
-    return [{'id': db_entry.entry_id, 'entry': json.loads(db_entry.body)} for db_entry in query]
+    return [{'id': db_entry.id, 'entry_id': db_entry.entry_id, 'entry': json.loads(db_entry.body)} for db_entry in query]
 
 
 def get_entry(resource_id: str, entry_id: str, version: Optional[int]=None):

@@ -5,7 +5,7 @@ from flask import jsonify as flask_jsonify       # pyre-ignore
 from flask import request  # pyre-ignore
 
 from karp.resourcemgr import entrywrite
-from karp.resourcemgr import entryread
+from karp.errors import KarpError
 import karp.auth.auth as auth
 
 edit_api = Blueprint('edit_api', __name__)
@@ -22,8 +22,14 @@ def add_entry(user, resource_id):
 @edit_api.route('/<resource_id>/<entry_id>/update', methods=['POST'])
 @auth.auth.authorization('WRITE', add_user=True)
 def update_entry(user, resource_id, entry_id):
+    force_update = request.args.get('force') in ['True', 'true']
     data = request.get_json()
-    entrywrite.update_entry(resource_id, entry_id, data['entry'], user.identifier, message=data['message'])
+    version = data.get('version')
+    entry = data.get('entry')
+    message = data.get('message')
+    if not (version and entry and message):
+        raise KarpError('Missing field')
+    entrywrite.update_entry(resource_id, entry_id, version, entry, user.identifier, message=message, force=force_update)
     return '', 204
 
 

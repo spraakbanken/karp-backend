@@ -16,7 +16,7 @@ def get_referenced_entries(resource_id: str, version: Optional[int], entry_id: s
     for (ref_resource_id, ref_resource_version, field_name, field) in resource_backrefs:
         resource = get_resource(ref_resource_id, version=version)
         for entry in entryread.get_entries_by_column(resource, {field_name: entry_id}):
-            yield _create_ref(ref_resource_id, ref_resource_version, entry['id'], entry['entry'])
+            yield _create_ref(ref_resource_id, ref_resource_version, entry['id'], entry['entry_id'], entry['entry'])
 
     src_body = json.loads(src_entry.body)
     for (ref_resource_id, ref_resource_version, field_name, field) in resource_refs:
@@ -26,13 +26,14 @@ def get_referenced_entries(resource_id: str, version: Optional[int], entry_id: s
         for ref_entry_id in ids:
             entry = entryread.get_entry(ref_resource_id, ref_entry_id, version=ref_resource_version)
             if entry:
-                yield _create_ref(ref_resource_id, ref_resource_version, entry.entry_id, json.loads(entry.body))
+                yield _create_ref(ref_resource_id, ref_resource_version, entry.id, entry.entry_id, json.loads(entry.body))
 
 
-def _create_ref(resource_id: str, resource_version: int, entry_id: str, entry_body: Dict) -> Dict[str, Any]:
+def _create_ref(resource_id: str, resource_version: int, _id: int, entry_id: str, entry_body: Dict) -> Dict[str, Any]:
     return {
         'resource_id': resource_id,
         'resource_version': resource_version,
-        'id': entry_id,
+        'id': _id,
+        'entry_id': entry_id,
         'entry': entry_body
     }

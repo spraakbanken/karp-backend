@@ -25,12 +25,13 @@ def _reindex(resource_id: str, version: Optional[int]=None) -> None:
         _logger.error('No Index module is loaded. Check your configurations...')
         sys.exit(errors.NoIndexModuleConfigured)
 
-    entries = resource_obj.model.query.filter_by(deleted=False)
-
+    versions = resourcemgr.get_all_versions(resource_obj)
     fields = resource_obj.config['fields'].items()
-    entries2 = [(entry.entry_id, transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
+    entries = resource_obj.model.query.filter_by(deleted=False)
+    search_entries = [(entry.entry_id, versions[entry.id],
+                      transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
 
-    add_entries(index_name, entries2, update_refs=False)
+    add_entries(index_name, search_entries, update_refs=False)
     indexer.impl.publish_index(resource_id, index_name)
 
 
@@ -40,10 +41,10 @@ def publish_index(resource_id: str, version: Optional[int]=None) -> None:
         resourcemgr.publish_resource(resource_id, version)
 
 
-def add_entries(resource_id: str, entries: List[Tuple[str, Dict]], update_refs: bool=True) -> None:
+def add_entries(resource_id: str, entries: List[Tuple[str, int, Dict]], update_refs: bool=True) -> None:
     indexer.impl.add_entries(resource_id, entries)
     if update_refs:
-        _update_references(resource_id, [entry_id for (entry_id, _) in entries])
+        _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
 def delete_entry(resource_id: str, entry_id: str) -> None:
@@ -59,7 +60,8 @@ def _update_references(resource_id: str, entry_ids: List[str]) -> None:
             ref_resource_id = field_ref['resource_id']
             ref_resource = resourcemgr.get_resource(ref_resource_id, version=(field_ref['resource_version']))
             body = transform_to_index_entry(ref_resource, field_ref['entry'], ref_resource.config['fields'].items())
-            add[ref_resource_id].append(((field_ref['id']), body))
+            version = resourcemgr.get_version(ref_resource, field_ref['id'])
+            add[ref_resource_id].append(((field_ref['entry_id']), version, body))
     for ref_resource_id, ref_entries in add.items():
         indexer.impl.add_entries(ref_resource_id, ref_entries)
 

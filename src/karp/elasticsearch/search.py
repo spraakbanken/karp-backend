@@ -191,11 +191,13 @@ class EsSearch(search.SearchInterface):
     def _format_result(self, resource_ids, response):
 
         def format_entry(entry):
+            dict_entry = entry.to_dict()
+            version = dict_entry.pop('_entry_version')
             return {
                 'id': entry.meta.id,
-                'version': -1,
+                'version': version,
                 'resource': next(resource for resource in resource_ids if entry.meta.index.startswith(resource)),
-                'entry': entry.to_dict()
+                'entry': dict_entry
             }
 
         result = {
@@ -211,6 +213,7 @@ class EsSearch(search.SearchInterface):
 
             for resource in query.resources:
                 s = es_dsl.Search(index=resource)
+
                 if query.query is not None:
                     s = s.query(query.query)
                 s = s[query.from_:query.from_ + query.size]
