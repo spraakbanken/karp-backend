@@ -1,5 +1,5 @@
 import json
-import pytest
+import pytest  # pyre-ignore
 import time
 
 import karp.resourcemgr.entryread as entryread
