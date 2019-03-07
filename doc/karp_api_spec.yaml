@@ -134,6 +134,9 @@ paths:
                     description: Total number of matches
                     example: 6278
                   hits:
+                    description: If `split_results=false`, hits is an array.
+                                 If `split_results=true`, hits is an object
+                                 with resource as keys and arrays with hits as values.
                     properties:
                       match:
                         oneOf:
