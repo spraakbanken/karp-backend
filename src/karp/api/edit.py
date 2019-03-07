@@ -29,7 +29,7 @@ def update_entry(user, resource_id, entry_id):
     entry = data.get('entry')
     message = data.get('message')
     if not (version and entry and message):
-        raise KarpError('Missing field')
+        raise KarpError('Missing version, entry or message')
     entrywrite.update_entry(resource_id, entry_id, version, entry, user.identifier, message=message, force=force_update)
     return '', 204
 
