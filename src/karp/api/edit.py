@@ -7,6 +7,7 @@ from flask import request  # pyre-ignore
 from karp.resourcemgr import entrywrite
 from karp.errors import KarpError
 import karp.auth.auth as auth
+from karp.util import convert
 
 edit_api = Blueprint('edit_api', __name__)
 
@@ -22,7 +23,7 @@ def add_entry(user, resource_id):
 @edit_api.route('/<resource_id>/<entry_id>/update', methods=['POST'])
 @auth.auth.authorization('WRITE', add_user=True)
 def update_entry(user, resource_id, entry_id):
-    force_update = request.args.get('force').lower() == 'true'
+    force_update = convert.str2bool(request.args.get('force', 'false'))
     data = request.get_json()
     version = data.get('version')
     entry = data.get('entry')
