@@ -1,11 +1,8 @@
 .PHONY: test pytest build-dev
 default: tox
 
-test:
-	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests
-
-pytest: build-dev
-	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests
+test: build-dev
+	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests > pytest.log
 
 tox:
 	tox
@@ -18,10 +15,10 @@ build-dev: .venv/build-dev
 	pipenv install --dev
 	touch $@
 
-flaske8:
+lint:
 	flake8 src tests setup.py wsgi.py
 
-pyre:
+type-check:
 	pyre check
 
 run-dev:
