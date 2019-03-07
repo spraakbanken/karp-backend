@@ -101,7 +101,12 @@ def create_es_query(node):
                     query_dsl.Operators.CONTAINS,
                     query_dsl.Operators.STARTSWITH,
                     query_dsl.Operators.ENDSWITH]:
-            arg11 = get_value(arg1)
+            def extract_field_plus_rawfield(field: str):
+                if field.endswith('.raw'):
+                    return [field]
+                else:
+                    return [field, field + '.raw']
+            arg11 = extract_field_plus_rawfield(get_value(arg1))
             arg22 = get_value(arg2)
 
             if op == query_dsl.Operators.CONTAINS:
@@ -110,7 +115,11 @@ def create_es_query(node):
                 arg22 = re.escape(arg22) + '.*'
             elif op == query_dsl.Operators.ENDSWITH:
                 arg22 = '.*' + re.escape(arg22)
-            q = es_dsl.Q('regexp', **{arg11: arg22})
+            # Construct query
+            if len(arg11) == 1:
+                q = es_dsl.Q('regexp', **{arg11[0]: arg22})
+            else:
+                q = es_dsl.Q('bool', should=[es_dsl.Q('regexp', **{field: arg22}) for field in arg11])
         elif op in [query_dsl.Operators.LT, query_dsl.Operators.LTE, query_dsl.Operators.GT, query_dsl.Operators.GTE]:
             range_args = {}
             arg11 = get_value(arg1)

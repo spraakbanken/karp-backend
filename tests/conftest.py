@@ -51,6 +51,7 @@ class ConfigTest(Config):
     SETUP_DATABASE = False
     JWT_AUTH = False
     ELASTICSEARCH_ENABLED = False
+    CONSOLE_LOG_LEVEL = 'WARNING'
 
     def __init__(self, use_elasticsearch=False):
         if use_elasticsearch:
