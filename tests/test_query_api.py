@@ -190,6 +190,13 @@ def test_pagination_fewer(es, client_with_data_f):
     assert len(json_data['hits']) == 0
 
 
+def test_resource_not_existing(es, client_with_data_f):
+    client = init_data(client_with_data_f, es, 0)
+    response = client.get('/asdf/query')
+    assert response.status_code == 400
+    assert 'Resource is not searchable: "asdf"' == json.loads(response.data.decode())['error']
+
+
 def init_data(client, es_status_code, no_entries):
     if es_status_code == 'skip':
         pytest.skip('elasticsearch disabled')

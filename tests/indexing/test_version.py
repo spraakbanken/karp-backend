@@ -152,3 +152,45 @@ def test_reindex(es, client_with_data_f):
     result = get_json(client, 'places/query')
     assert result['hits'][0]['version'] == 9
     assert len(result['hits']) == 1
+
+
+def test_force_update(es, client_with_data_f):
+    client = init(client_with_data_f, es)
+
+    entry = {
+        'code': 1,
+        'name': '1',
+        'municipality': [1]
+    }
+    client.post('places/add',
+                data=json.dumps({'entry': entry}),
+                content_type='application/json')
+
+    entry['name'] = '2'
+    client.post('places/1/update', data=json.dumps({
+        'entry': entry,
+        'message': 'message',
+        'version': 1
+    }), content_type='application/json')
+
+    entry['name'] = '1'
+
+    response = client.post('places/1/update', data=json.dumps({
+        'entry': entry,
+        'message': 'message',
+        'version': 1
+    }), content_type='application/json')
+
+    assert response.status_code == 400
+    assert 'Version' in json.loads(response.data.decode())['error']
+
+    response = client.post('places/1/update?force=true', data=json.dumps({
+        'entry': entry,
+        'message': 'message',
+        'version': 1
+    }), content_type='application/json')
+
+    assert response.status_code == 204
+
+    result = get_json(client, 'places/1')
+    assert result['hits'][0]['entry']['name'] == '1'
