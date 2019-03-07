@@ -1,5 +1,7 @@
-.PHONY: test pytest build-dev
-default: tox
+.PHONY: test pytest build-dev run-tests
+default: run-tests
+
+run-tests: lint type-check test
 
 test: build-dev
 	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests > pytest.log
@@ -7,11 +9,13 @@ test: build-dev
 tox:
 	tox
 
-build: Pipfile
+build: .venv-build
+.venv-build: Pipfile
 	pipenv install
+	touch $@
 
-build-dev: .venv/build-dev
-.venv/build-dev: Pipfile
+build-dev: .venv-build-dev
+.venv-build-dev: Pipfile
 	pipenv install --dev
 	touch $@
 
@@ -21,7 +25,7 @@ lint:
 type-check:
 	pyre check
 
-run-dev:
+run-dev: build-dev
 	pipenv run python wsgi.py
 
 prepare-release:
@@ -29,7 +33,8 @@ prepare-release:
 	pipenv lock -r --dev > requirements-dev.txt
 
 docs/openapi.html: doc/karp_api_spec.yaml
-	redoc-cli bundle --output $@ $<
+	@echo "Skipping 'redoc-cli bundle --output $@ $<'"
+	touch $@
 
 bumpversion-patch:
 	bumpversion patch
