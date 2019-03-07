@@ -9,7 +9,7 @@ from typing import List
 
 from flask import Blueprint, jsonify as flask_jsonify, request    # pyre-ignore
 
-from karp.resourcemgr import Resource
+from karp import resourcemgr
 
 from karp import search
 import karp.auth.auth as auth
@@ -34,6 +34,8 @@ def get_entries_by_id(resource_id: str, entry_ids: str):
 @auth.auth.authorization('READ')
 def query(resources: str):
     print('query_w_resources called with resources={}'.format(resources))
+    resource_list = resources.split(',')
+    resourcemgr.check_resource_published(resource_list)
     try:
         query = search.search.build_query(request.args, resources)
         print('query={}'.format(query))
