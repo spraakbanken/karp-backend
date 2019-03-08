@@ -193,6 +193,25 @@ def test_freergxp_string(es, client_with_data_f):
     assert entries['hits'][1]['entry']['name'] == 'Grunds'
 
 
+def test_not_freetext(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=not||freetext|botten')
+
+    assert len(entries['hits']) == 2
+    assert entries['hits'][0]['entry']['name'] == 'Grund test'
+    assert entries['hits'][1]['entry']['name'] == 'Grunds'
+
+
+def test_not_freergxp(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=not||freergxp|.*test')
+
+    assert len(entries['hits']) == 1
+    assert entries['hits'][0]['entry']['name'] == 'Grunds'
+
+
 def test_or(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 

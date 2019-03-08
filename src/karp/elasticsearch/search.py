@@ -46,6 +46,10 @@ def create_es_query(node):
     q = None
     if isinstance(node, ast.UnaryOp):
         op = node.value
+        if op == query_dsl.Operators.NOT:
+            q1 = create_es_query(node.child0)
+            q = ~q1
+            return q
         value = get_value(node.child0)
         if op == query_dsl.Operators.FREETEXT:
             if isinstance(node.child0, ast.StringNode):
