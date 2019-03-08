@@ -46,24 +46,26 @@ def create_es_query(node):
     q = None
     if isinstance(node, ast.UnaryOp):
         op = node.value
-        value = get_value(node.child0)
-        if op == query_dsl.Operators.FREETEXT:
-            if isinstance(node.child0, ast.StringNode):
-                q = es_dsl.Q('multi_match', query=value, fuzziness=1)
-            else:
-                q = es_dsl.Q('multi_match', query=value)
-        elif op == query_dsl.Operators.FREERGXP:
-            kwargs = {
-                'default_field': '*',
-                'query': '/{}/'.format(value)
-            }
-            q = es_dsl.Q('query_string', **kwargs)
-        elif op == query_dsl.Operators.EXISTS:
-            q = es_dsl.Q('exists', field=value)
-        elif op == query_dsl.Operators.MISSING:
-            q = es_dsl.Q('bool', must_not=es_dsl.Q('exists', field=value))
+        if op == query_dsl.Operators.NOT:
+            q = ~create_es_query(node.child0)
         else:
-            raise RuntimeError('not implemented')
+            if op == query_dsl.Operators.FREETEXT:
+                if isinstance(node.child0, ast.StringNode):
+                    q = es_dsl.Q('multi_match', query=node.child0.value, fuzziness=1)
+                else:
+                    q = es_dsl.Q('multi_match', query=node.child0.value)
+            elif op == query_dsl.Operators.FREERGXP:
+                kwargs = {
+                    'default_field': '*',
+                    'query': '/{}/'.format(node.child0.value)
+                }
+                q = es_dsl.Q('query_string', **kwargs)
+            elif op == query_dsl.Operators.EXISTS:
+                q = es_dsl.Q('exists', field=node.child0.value)
+            elif op == query_dsl.Operators.MISSING:
+                q = es_dsl.Q('bool', must_not=es_dsl.Q('exists', field=node.child0.value))
+            else:
+                raise RuntimeError('not implemented')
     elif isinstance(node, ast.BinaryOp):
         op = node.value
         arg1 = node.child0
