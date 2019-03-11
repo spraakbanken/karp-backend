@@ -23,7 +23,20 @@ ENTRIES = [{
     "area": 50000,
     "density": 7,
     "municipality": [2, 3]
-}
+},
+{
+    "code": 4,
+    "name": "Hambo",
+    "population": 4133,
+    "area": 50000,
+    "municipality": [2, 3]
+},
+{
+    "code": 5,
+    "name": "Rutvik",
+    "area": 50000,
+    "municipality": [2, 3]
+},
 ]
 
 
@@ -48,29 +61,33 @@ def test_query_no_q(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
     entries = get_json(client, 'places/query')
-    assert len(entries['hits']) == 3
+    assert len(entries['hits']) == 5
     assert entries['hits'][0]['entry']['name'] == 'Grund test'
     assert entries['hits'][1]['entry']['name'] == 'Grunds'
     assert entries['hits'][2]['entry']['name'] == 'Botten test'
+    assert entries['hits'][3]['entry']['name'] == 'Hambo'
+    assert entries['hits'][4]['entry']['name'] == 'Rutvik'
 
 
-def test_and(es, client_with_data_f):
+def test_and_equals_equals(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
-    entry = {
-        "code": 4,
-        "name": "botten test",
-        "population": 4133,
-        "area": 50000,
-        "density": 7,
-        "municipality": [2, 3]
-    }
-    client.post('places/add',
-                data=json.dumps({'entry': entry}),
-                content_type='application/json')
 
     query = 'and||equals|population|4133||equals|area|50000'
     entries = get_json(client, 'places/query?q=' + query)
+
     assert len(entries['hits']) == 1
+    assert entries['hits'][0]['entry']['name'] == 'Hambo'
+
+
+def test_and_regexp_equals(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    query = 'and||regexp|name|.*bo.*||equals|area|50000'
+    entries = get_json(client, 'places/query?q=' + query)
+
+    assert len(entries['hits']) == 2
+    assert entries['hits'][0]['entry']['name'] == 'Hambo'
+    assert entries['hits'][1]['entry']['name'] == 'Botten test'
 
 
 def test_contains_string_lowercase(es, client_with_data_f):
@@ -167,6 +184,37 @@ def test_equals_integer(es, client_with_data_f):
     assert entries['hits'][0]['entry']['name'] == 'Botten test'
 
 
+def test_exists(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=exists|density')
+    assert len(entries['hits']) == 3
+
+
+def test_exists_and(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=exists||and|density|population')
+    assert len(entries['hits']) == 3
+
+
+def test_exists_or(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=exists||or|density|population')
+    assert len(entries['hits']) == 4
+
+
+def test_exists_not(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=exists||not|density')
+    assert len(entries['hits']) == 2
+
+    assert entries['hits'][0]['entry']['name'] == 'Hambo'
+    assert entries['hits'][1]['entry']['name'] == 'Rutvik'
+
+
 def test_freetext_string(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
@@ -184,25 +232,56 @@ def test_freetext_integer(es, client_with_data_f):
     assert entries['hits'][0]['entry']['name'] == 'Grund test'
 
 
-@pytest.mark.skip(reason='Currently only allow top level NOT')
+def test_freetext_and(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=freetext||and|botten|test')
+
+    assert len(entries['hits']) == 1
+    assert entries['hits'][0]['entry']['name'] == 'Botten test'
+
+
 def test_freetext_not(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
     entries = get_json(client, 'places/query?q=freetext||not|botten')
 
-    assert len(entries['hits']) == 2
+    assert len(entries['hits']) == 4
     assert entries['hits'][0]['entry']['name'] == 'Grund test'
     assert entries['hits'][1]['entry']['name'] == 'Grunds'
+    assert entries['hits'][2]['entry']['name'] == 'Hambo'
+    assert entries['hits'][3]['entry']['name'] == 'Rutvik'
+
+
+def test_freergxp_and(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=freergxp||and|.*test|Gr.*')
+
+    assert len(entries['hits']) == 1
+    assert entries['hits'][0]['entry']['name'] == 'Grund test'
 
 
 @pytest.mark.skip(reason='Currently only allow top level NOT')
 def test_freergxp_not(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
-    entries = get_json(client, 'places/query?q=freergxp||not|.*test')
+    entries = get_json(client, 'places/query?q=freergxp||not|Gr.*')
 
-    assert len(entries['hits']) == 1
-    assert entries['hits'][0]['entry']['name'] == 'Grunds'
+    assert len(entries['hits']) == 2
+    assert entries['hits'][0]['entry']['name'] == 'Botten test'
+    assert entries['hits'][1]['entry']['name'] == 'Hambo'
+
+
+def test_freergxp_or(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=freergxp||or|.*test|Gr.*')
+
+    assert len(entries['hits']) == 3
+    assert entries['hits'][0]['entry']['name'] == 'Grund test'
+    assert entries['hits'][1]['entry']['name'] == 'Grunds'
+    assert entries['hits'][2]['entry']['name'] == 'Botten test'
 
 
 def test_freergxp_string(es, client_with_data_f):
@@ -214,14 +293,52 @@ def test_freergxp_string(es, client_with_data_f):
     assert entries['hits'][1]['entry']['name'] == 'Grunds'
 
 
+def test_missing(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=missing|density')
+    assert len(entries['hits']) == 2
+    assert entries['hits'][0]['entry']['name'] == 'Hambo'
+    assert entries['hits'][1]['entry']['name'] == 'Rutvik'
+
+
+def test_missing_and(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=missing||and|density|population')
+    assert len(entries['hits']) == 1
+    assert entries['hits'][0]['entry']['name'] == 'Rutvik'
+
+
+def test_missing_not(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=missing||not|density')
+    assert len(entries['hits']) == 3
+    assert entries['hits'][0]['entry']['name'] == 'Grund test'
+    assert entries['hits'][1]['entry']['name'] == 'Grunds'
+    assert entries['hits'][2]['entry']['name'] == 'Botten test'
+
+
+def test_missing_or(es, client_with_data_f):
+    client = init(client_with_data_f, es, ENTRIES)
+
+    entries = get_json(client, 'places/query?q=missing||or|density|population')
+    assert len(entries['hits']) == 2
+    assert entries['hits'][0]['entry']['name'] == 'Rutvik'
+    assert entries['hits'][1]['entry']['name'] == 'Hambo'
+
+
 def test_not_freetext(es, client_with_data_f):
     client = init(client_with_data_f, es, ENTRIES)
 
     entries = get_json(client, 'places/query?q=not||freetext|botten')
 
-    assert len(entries['hits']) == 2
+    assert len(entries['hits']) == 4
     assert entries['hits'][0]['entry']['name'] == 'Grund test'
     assert entries['hits'][1]['entry']['name'] == 'Grunds'
+    assert entries['hits'][2]['entry']['name'] == 'Hambo'
+    assert entries['hits'][3]['entry']['name'] == 'Rutvik'
 
 
 def test_not_freergxp(es, client_with_data_f):
@@ -229,8 +346,10 @@ def test_not_freergxp(es, client_with_data_f):
 
     entries = get_json(client, 'places/query?q=not||freergxp|.*test')
 
-    assert len(entries['hits']) == 1
+    assert len(entries['hits']) == 3
     assert entries['hits'][0]['entry']['name'] == 'Grunds'
+    assert entries['hits'][1]['entry']['name'] == 'Hambo'
+    assert entries['hits'][2]['entry']['name'] == 'Rutvik'
 
 
 def test_or(es, client_with_data_f):

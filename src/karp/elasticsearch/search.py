@@ -46,24 +46,76 @@ def create_es_query(node):
     q = None
     if isinstance(node, ast.UnaryOp):
         op = node.value
+        values = []
+        if node.child0.value in [query_dsl.Operators.AND, query_dsl.Operators.OR, query_dsl.Operators.NOT]:
+            for child in node.child0.children():
+                values.append(child.value)
+            print('values = {}'.format(values))
         if op == query_dsl.Operators.NOT:
             q = ~create_es_query(node.child0)
         else:
             if op == query_dsl.Operators.FREETEXT:
-                if isinstance(node.child0, ast.StringNode):
-                    q = es_dsl.Q('multi_match', query=node.child0.value, fuzziness=1)
+                def freetext_query(node):
+                    if isinstance(node, ast.StringNode):
+                        return es_dsl.Q('multi_match', query=node.value, fuzziness=1)
+                    else:
+                        return es_dsl.Q('multi_match', query=node.value)
+                if not values:
+                    q = freetext_query(node.child0)
                 else:
-                    q = es_dsl.Q('multi_match', query=node.child0.value)
+                    queries = [freetext_query(n) for n in node.child0.children()]
+                    if node.child0.value == query_dsl.Operators.OR:
+                        q = es_dsl.Q('bool', should=queries)
+                    elif node.child0.value == query_dsl.Operators.AND:
+                        q = es_dsl.Q('bool', must=queries)
+                    else:
+                        q = es_dsl.Q('bool', must_not=queries)
             elif op == query_dsl.Operators.FREERGXP:
                 kwargs = {
-                    'default_field': '*',
-                    'query': '/{}/'.format(node.child0.value)
+                    'default_field': '*'
                 }
+                if not values:
+                    kwargs['query'] = '/{}/'.format(node.child0.value)
+                else:
+                    if node.child0.value == query_dsl.Operators.OR:
+                        operator = ' OR '
+                    elif node.child0.value == query_dsl.Operators.AND:
+                        operator = ' AND '
+                    else:
+                        raise RuntimeError('NOT is not supported for FREERGXP')
+                    kwargs['query'] = operator.join('(/{}/)'.format(v) for v in values)
+                print('kwargs = {}'.format(kwargs))
                 q = es_dsl.Q('query_string', **kwargs)
             elif op == query_dsl.Operators.EXISTS:
-                q = es_dsl.Q('exists', field=node.child0.value)
+                if not values:
+                    q = es_dsl.Q('exists', field=node.child0.value)
+                else:
+                    queries = [es_dsl.Q('exists', field=value) for value in values]
+                    if node.child0.value == query_dsl.Operators.OR:
+                        q = es_dsl.Q('bool', should=queries)
+                    elif node.child0.value == query_dsl.Operators.AND:
+                        q = es_dsl.Q('bool', must=queries)
+                    else:
+                        q = es_dsl.Q('bool', must_not=queries)
             elif op == query_dsl.Operators.MISSING:
-                q = es_dsl.Q('bool', must_not=es_dsl.Q('exists', field=node.child0.value))
+                if not values:
+                    q = es_dsl.Q('bool', must_not=es_dsl.Q('exists', field=node.child0.value))
+                else:
+                    if node.child0.value == query_dsl.Operators.NOT:
+                        q = es_dsl.Q('exists', field=values[0])
+                    else:
+                        queries = [es_dsl.Q('exists', field=value) for value in values]
+
+                        if node.child0.value == query_dsl.Operators.AND:
+                            q = es_dsl.Q('bool', must_not=queries)
+                        else:
+                            q = None
+                            for query in queries:
+                                q_tmp = es_dsl.Q('bool', must_not=query)
+                                if not q:
+                                    q = q_tmp
+                                else:
+                                    q = q | q_tmp
             else:
                 raise RuntimeError('not implemented')
     elif isinstance(node, ast.BinaryOp):
