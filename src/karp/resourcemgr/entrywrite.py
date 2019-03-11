@@ -14,7 +14,7 @@ _logger = logging.getLogger('karp')
 
 
 def add_entry(resource_id: str, entry: Dict, user_id: str, message: str=None, resource_version: int=None):
-    add_entries(resource_id, [entry], user_id, message=message, resource_version=resource_version)
+    return add_entries(resource_id, [entry], user_id, message=message, resource_version=resource_version)[0]
 
 
 def preview_entry(resource_id, entry, resource_version=None):
@@ -107,6 +107,8 @@ def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: st
         indexmgr.add_entries(resource_id,
                              [(db_entry.entry_id, 1, _src_entry_to_index_entry(resource, entry))
                               for db_entry, entry, _ in created_db_entries])
+
+    return [db_entry.entry_id for db_entry, _, _ in created_db_entries]
 
 
 def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):

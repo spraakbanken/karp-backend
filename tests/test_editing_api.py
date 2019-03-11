@@ -25,7 +25,7 @@ def init(client, es_status_code, entries):
 def test_add(es, client_with_data_f):
     client = init(client_with_data_f, es, [])
 
-    client.post('places/add', data=json.dumps({
+    response = client.post('places/add', data=json.dumps({
         'entry': {
             'code': 3,
             'name': 'test3',
@@ -35,6 +35,9 @@ def test_add(es, client_with_data_f):
             'municipality': [2, 3]
         }
     }), content_type='application/json')
+    response_data = json.loads(response.data.decode())
+    assert 'newID' in response_data
+    assert '3' == response_data['newID']
 
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 1
