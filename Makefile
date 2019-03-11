@@ -4,7 +4,7 @@ default: run-tests
 run-tests: lint type-check test
 
 test: build-dev
-	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests > pytest.log
+	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests
 
 tox:
 	tox
