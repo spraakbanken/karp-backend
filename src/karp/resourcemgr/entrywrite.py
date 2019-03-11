@@ -2,7 +2,7 @@ import json
 import fastjsonschema  # pyre-ignore
 import logging
 
-from karp.errors import KarpError
+from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError
 from karp.resourcemgr import get_resource
 from karp.database import db
 import karp.indexmgr as indexmgr
@@ -31,21 +31,18 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
 
     current_db_entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
     if not current_db_entry:
-        raise KarpError('No entry in resource {resource_id} with id {entry_id}'.format(
-            resource_id=resource_id,
-            entry_id=entry_id
-        ))
+        raise EntryNotFoundError(resource_id, entry_id, entry_version=version, resource_version=resource_version)
 
     diff = jsondiff.compare(json.loads(current_db_entry.body), entry)
     if not diff:
-        raise KarpError('No changes made')
+        raise KarpError('No changes made', ClientErrorCodes.ENTRY_NOT_CHANGED)
 
     db_entry_json = json.dumps(entry)
     db_id = current_db_entry.id
     latest_history_entry = resource.history_model.query.filter_by(entry_id=db_id).order_by(
         resource.history_model.version.desc()).first()
     if not force and latest_history_entry.version > version:
-        raise KarpError('Version conflict. Please update entry.')
+        raise KarpError('Version conflict. Please update entry.', ClientErrorCodes.VERSION_CONFLICT)
     history_entry = resource.history_model(
         entry_id=db_id,
         user_id=user_id,
@@ -145,7 +142,7 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
     resource = get_resource(resource_id)
     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
     if not entry:
-        raise KarpError('no entry with id {entry_id} found'.format(entry_id=entry_id))
+        raise EntryNotFoundError(resource_id, entry_id)
     entry.deleted = True
     history_cls = resource.history_model
     history_entry = history_cls(
@@ -188,4 +185,4 @@ def _validate_entry(schema, json_obj):
             entry=json.dumps(json_obj, indent=2),
             message=e.message
         ))
-        raise KarpError("entry not valid")
+        raise KarpError("entry not valid", ClientErrorCodes.ENTRY_NOT_VALID)

@@ -423,11 +423,22 @@ components:
       type: object
       properties:
         error:
-          type: object
-          properties:
-            message:
-              type: string
-              example: Some error message
+          type: string
+          example: Some error message
+        code:
+          type: integer
+          description: |
+            The current error codes are:
+            ```
+            NOT_SPECIFIED = 0
+            RESOURCE_DOES_NOT_EXIST = 20
+            RESOURCE_NOT_PUBLISHED = 21
+            ENTRY_NOT_FOUND = 30
+            ENTRY_NOT_CHANGED = 31
+            ENTRY_NOT_VALID = 32
+            VERSION_CONFLICT = 32
+            EXPIRED_JWT = 40
+            ```
     QueryResultSchema:
       type: object
       description: Result schema for a query
