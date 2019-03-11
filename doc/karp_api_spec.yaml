@@ -199,10 +199,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  newID:
-                    type: string
+                $ref: '#/components/schemas/NewID'
         '500':
           description: Add failed
           content:
@@ -240,8 +237,12 @@ paths:
                   type: number
                   description: Use latest version seen when fetching the object to edit
       responses:
-        '204':
+        '200':
           description: Successful update
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NewID'
         '500':
           description: Update failed
           content:
@@ -467,3 +468,8 @@ components:
           saldo: apa..1
           primary: djur..1
           secondary: ['primat..1']
+    NewID:
+      type: object
+      properties:
+        newID:
+          type: string

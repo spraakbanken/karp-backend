@@ -56,13 +56,16 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
     )
 
     kwargs = _src_entry_to_db_kwargs(entry, db_entry_json, resource.model, resource.config)
+    if kwargs['entry_id'] != current_db_entry.entry_id:
+        indexmgr.delete_entry(resource_id, current_db_entry.entry_id)
     for key, value in kwargs.items():
         setattr(current_db_entry, key, value)
 
     db.session.add(history_entry)
     db.session.commit()
 
-    indexmgr.add_entries(resource_id, [(entry_id, latest_history_entry.version + 1, index_entry_json)])
+    indexmgr.add_entries(resource_id, [(current_db_entry.entry_id, latest_history_entry.version + 1, index_entry_json)])
+    return current_db_entry.entry_id
 
 
 def add_entries_from_file(resource_id: str, version: int, data: str) -> int:

@@ -190,7 +190,7 @@ def test_force_update(es, client_with_data_f):
         'version': 1
     }), content_type='application/json')
 
-    assert response.status_code == 204
+    assert response.status_code == 200
 
     result = get_json(client, 'places/1')
     assert result['hits'][0]['entry']['name'] == '1'

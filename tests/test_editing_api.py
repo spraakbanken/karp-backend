@@ -76,7 +76,7 @@ def test_update(es, client_with_data_f):
     entries = get_json(client, 'places/query')
     entry_id = entries['hits'][0]['id']
 
-    client.post('places/%s/update' % entry_id, data=json.dumps({
+    response = client.post('places/%s/update' % entry_id, data=json.dumps({
         'entry': {
             'code': 3,
             'name': 'test3',
@@ -88,11 +88,44 @@ def test_update(es, client_with_data_f):
         'message': 'changes',
         'version': 1
     }), content_type='application/json')
+    response_data = json.loads(response.data.decode())
+    assert 'newID' in response_data
+    assert '3' == response_data['newID']
 
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['id'] == entry_id
     assert entries['hits'][0]['entry']['population'] == 5
+
+
+def test_update_entry_id(es, client_with_data_f):
+    client = init(client_with_data_f, es, [{
+        'code': 3,
+        'name': 'test3',
+        'population': 4,
+        'area': 50000,
+        'density': 5,
+        'municipality': [2, 3]
+    }])
+
+    entries = get_json(client, 'places/query')
+    entry_id = entries['hits'][0]['id']
+
+    response = client.post('places/%s/update' % entry_id, data=json.dumps({
+        'entry': {
+            'code': 4,
+            'name': 'test3',
+            'population': 5,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        },
+        'message': 'changes',
+        'version': 1
+    }), content_type='application/json')
+    response_data = json.loads(response.data.decode())
+    assert 'newID' in response_data
+    assert '4' == response_data['newID']
 
 
 def test_refs(es, client_with_data_f):
