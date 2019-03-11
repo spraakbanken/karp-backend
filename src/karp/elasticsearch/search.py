@@ -122,7 +122,18 @@ def create_es_query(node):
         op = node.value
         arg1 = node.child0
         arg2 = node.child1
+        arg1_values = []
+        arg2_values = []
 
+        if arg1.value in [query_dsl.Operators.AND, query_dsl.Operators.OR, query_dsl.Operators.NOT]:
+            for child in arg1.children():
+                arg1_values.append(child.value)
+            print('arg1_values = {}'.format(arg1_values))
+
+        if arg2.value in [query_dsl.Operators.AND, query_dsl.Operators.OR, query_dsl.Operators.NOT]:
+            for child in arg2.children():
+                arg2_values.append(child.value)
+            print('arg2_values = {}'.format(arg2_values))
         # TODO this check breaks and and or since they always (?) have ast.ArgNode as parameters
         # if not isinstance(arg1, ast.ArgNode) or not isinstance(arg2, ast.ArgNode):
             # TODO these need to be moved outside of current query, for example:
@@ -143,15 +154,61 @@ def create_es_query(node):
             else:
                 q = es_dsl.Q('bool', should=[q1, q2])
         elif op == query_dsl.Operators.EQUALS:
-            arg11 = get_value(arg1)
-            arg22 = get_value(arg2)
-            kwargs = {
-                arg11: {
-                    'query': arg22,
-                    'operator': 'and'
+            def create_equals_query(field: str, query):
+                kwargs = {
+                    field: {
+                        'query': query,
+                        'operator': 'and'
+                    }
                 }
-            }
-            q = es_dsl.Q('match', **kwargs)
+                return es_dsl.Q('match', **kwargs)
+
+            if not arg1_values:
+                arg1_values.append(get_value(arg1))
+            # arg11 = get_value(arg1)
+            if not arg2_values:
+                arg2_values.append(get_value(arg2))
+            # arg22 = get_value(arg2)
+
+            q = None
+            if len(arg1_values) == 1:
+                for query in arg2_values:
+                    q_tmp = create_equals_query(arg1_values[0], query)
+                    if arg2.value == query_dsl.Operators.NOT:
+                        q_tmp = ~q_tmp
+                    if not q:
+                        q = q_tmp
+                    else:
+                        if arg2.value == query_dsl.Operators.OR:
+                            q = q | q_tmp
+                        else:
+                            q = q & q_tmp
+            else: # if len(arg1_values) > 1:
+                if len(arg2_values) == 1:
+                    if arg1.value == query_dsl.Operators.AND:
+                        # q = es_dsl.Q('multi_match', query=arg2_values[0], fields=arg1_values, operator='and', type='cross_fields')
+                        for field in arg1_values:
+                            q_tmp = create_equals_query(field, arg2_values[0])
+                            if not q:
+                                q = q_tmp
+                            else:
+                                if arg2.value == query_dsl.Operators.OR:
+                                    q = q | q_tmp
+                                else:
+                                    q = q & q_tmp
+
+                    else:
+                        q = es_dsl.Q('multi_match', query=arg2_values[0], fields=arg1_values)
+                else: # if len(arg2_values) > 1:
+                    raise RuntimeError("Don't know how to handle ")
+
+            # kwargs = {
+            #     arg11: {
+            #         'query': arg22,
+            #         'operator': 'and'
+            #     }
+            # }
+            # q = es_dsl.Q('match', **kwargs)
         elif op in [query_dsl.Operators.REGEXP,
                     query_dsl.Operators.CONTAINS,
                     query_dsl.Operators.STARTSWITH,
