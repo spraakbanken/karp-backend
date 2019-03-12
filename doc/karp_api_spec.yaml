@@ -232,21 +232,13 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  required:
-                    - value
-                    - count
-                  properties:
-                    count:
-                      type: integer
-                      description: Total number of occurences of value in given resource
-                      example: 6278
-                    value:
-                      type: any
-                      description: A value that occurs for field in given resource
-                      example: "NN"
+                $ref: '#/components/schemas/StatsResult'
+        '500':
+          description: Failed request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -477,3 +469,19 @@ components:
       properties:
         newID:
           type: string
+    StatsResult:
+      type: array
+      items:
+        type: object
+        required:
+        - value
+        - count
+        properties:
+          count:
+            type: integer
+            description: Total number of occurences of value in given resource
+            example: 6278
+          value:
+            type: any
+            description: A value that occurs for field in given resource
+            example: "NN"
