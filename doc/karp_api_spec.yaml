@@ -144,7 +144,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AddEntrySchema'
+              $ref: '#/components/schemas/AddEntry'
       responses:
         '201':
           description: Successful add
@@ -184,7 +184,7 @@ paths:
                 message:
                   type: string
                 entry:
-                  $ref: '#/components/schemas/EntrySchema'
+                  $ref: '#/components/schemas/Entry'
                 version:
                   type: number
                   description: Use latest version seen when fetching the object to edit
@@ -404,13 +404,13 @@ components:
               - type: array
                 description: If `split_results=false`
                 items:
-                  $ref: '#/components/schemas/ResultEntrySchema'
+                  $ref: '#/components/schemas/ResultEntry'
               - type: object
                 description: If `split_results=true`
                 additionalProperties:
                   type: array
                   items:
-                    $ref: '#/components/schemas/ResultEntrySchema'
+                    $ref: '#/components/schemas/ResultEntry'
         distribution:
           description: Only present if `lexicon_stats=true`
           additionalProperties:
@@ -428,7 +428,7 @@ components:
             entry: ...
           }
         ]
-    ResultEntrySchema:
+    ResultEntry:
       type: object
       description: Hits entry schema
       properties:
@@ -441,19 +441,19 @@ components:
           description: Name of the resource where this entry was found.
           example: places
         entry:
-          $ref: '#/components/schemas/EntrySchema'
+          $ref: '#/components/schemas/Entry'
       example:
         id: "1410"
         version: 2
         resource: "places"
-    AddEntrySchema:
+    AddEntry:
       type: object
       properties:
         message:
           type: string
         entry:
-          $ref: '#/components/schemas/EntrySchema'
-    EntrySchema:
+          $ref: '#/components/schemas/Entry'
+    Entry:
       type: object
       description: Actual schema different for each resource
       example:
