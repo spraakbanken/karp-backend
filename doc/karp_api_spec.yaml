@@ -378,7 +378,7 @@ components:
         error:
           type: string
           example: Some error message
-        code:
+        errorCode:
           type: integer
           description: |
             The current error codes are:
