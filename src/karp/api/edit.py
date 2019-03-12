@@ -30,8 +30,8 @@ def update_entry(user, resource_id, entry_id):
     message = data.get('message')
     if not (version and entry and message):
         raise KarpError('Missing version, entry or message')
-    entrywrite.update_entry(resource_id, entry_id, version, entry, user.identifier, message=message, force=force_update)
-    return '', 204
+    new_id = entrywrite.update_entry(resource_id, entry_id, version, entry, user.identifier, message=message, force=force_update)
+    return flask_jsonify({'newID': new_id}), 200
 
 
 @edit_api.route('/<resource_id>/<entry_id>/delete', methods=['DELETE'])
