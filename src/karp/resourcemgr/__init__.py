@@ -10,7 +10,7 @@ from karp.database import ResourceDefinition
 from karp.database import db
 from karp import database
 from karp.util.json_schema import create_entry_json_schema
-from karp.errors import ResourceNotFoundError, KarpError
+from karp.errors import ResourceNotFoundError, KarpError, ClientErrorCodes
 from .resource import Resource
 
 _logger = logging.getLogger('karp')
@@ -59,7 +59,7 @@ def check_resource_published(resource_ids: List[str]) -> None:
     published_resources = [resource_def.resource_id for resource_def in get_available_resources()]
     for resource_id in resource_ids:
         if resource_id not in published_resources:
-            raise KarpError('Resource is not searchable: "' + resource_id + '"')
+            raise KarpError('Resource is not searchable: "' + resource_id + '"', ClientErrorCodes.RESOURCE_NOT_PUBLISHED)
 
 
 def create_and_update_caches(id: str,

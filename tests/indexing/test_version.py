@@ -182,7 +182,9 @@ def test_force_update(es, client_with_data_f):
     }), content_type='application/json')
 
     assert response.status_code == 400
-    assert 'Version' in json.loads(response.data.decode())['error']
+    error_obj = json.loads(response.data.decode())
+    assert 'Version' in error_obj['error']
+    assert error_obj['errorCode'] == 32
 
     response = client.post('places/1/update?force=true', data=json.dumps({
         'entry': entry,

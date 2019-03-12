@@ -49,10 +49,11 @@ def create_app(config_class=None):
     def http_error_handler(error: Exception):
         if isinstance(error, KarpError):
             logger.debug(error.message)
-            return json.dumps({'error': error.message}), 400
+            error_code = error.code if error.code else 0
+            return json.dumps({'error': error.message, 'errorCode': error_code}), 400
         else:
             logger.exception('unhandled exception')
-            return json.dumps({'error': 'unknown error'}), 400
+            return json.dumps({'error': 'unknown error', 'errorCode': 0}), 400
 
     import karp.auth.auth as auth
     if app.config['JWT_AUTH']:
