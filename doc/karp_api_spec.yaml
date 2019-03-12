@@ -124,50 +124,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required:
-                  - total
-                  - hits
-                properties:
-                  total:
-                    type: integer
-                    description: Total number of matches
-                    example: 6278
-                  hits:
-                    description: If `split_results=false`, hits is an array.
-                                 If `split_results=true`, hits is an object
-                                 with resource as keys and arrays with hits as values.
-                    properties:
-                      match:
-                        oneOf:
-                          - type: array
-                            description: If `split_results=false`
-                            items:
-                              $ref: '#/components/schemas/ResultEntrySchema'
-                          - type: object
-                            description: If `split_results=true`
-                            additionalProperties:
-                              type: array
-                              items:
-                                $ref: '#/components/schemas/ResultEntrySchema'
-                  distribution:
-                    description: Only present if `lexicon_stats=true`
-                    additionalProperties:
-                      type: integer
-                    example:
-                      places: 123
-                      municipalities: 6
-                example:
-                  total: 6578,
-                  hits: [
-                    {
-                      id: "1410",
-                      resource: "places",
-                      version: 2,
-                      entry: ...
-                    }
-                  ]
-
+                $ref: '#/components/schemas/QueryResult'
         '500':
           description: Query failed
           content:
@@ -187,12 +144,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                message:
-                  type: string
-                entry:
-                  $ref: '#/components/schemas/EntrySchema'
+              $ref: '#/components/schemas/AddEntrySchema'
       responses:
         '201':
           description: Successful add
@@ -440,16 +392,50 @@ components:
             VERSION_CONFLICT = 33
             EXPIRED_JWT = 40
             ```
-    QueryResultSchema:
+    QueryResult:
       type: object
-      description: Result schema for a query
+      required:
+      - total
+      - hits
       properties:
         total:
           type: integer
+          description: Total number of matches
+          example: 6278
         hits:
-          type: array
-          items:
-            $ref: '#/components/schemas/ResultEntrySchema'
+          description: If `split_results=false`, hits is an array.
+            If `split_results=true`, hits is an object
+            with resource as keys and arrays with hits as values.
+          properties:
+            match:
+              oneOf:
+              - type: array
+                description: If `split_results=false`
+                items:
+                  $ref: '#/components/schemas/ResultEntrySchema'
+              - type: object
+                description: If `split_results=true`
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/ResultEntrySchema'
+        distribution:
+          description: Only present if `lexicon_stats=true`
+          additionalProperties:
+            type: integer
+          example:
+            places: 123
+            municipalities: 6
+      example:
+        total: 6578,
+        hits: [
+          {
+            id: "1410",
+            resource: "places",
+            version: 2,
+            entry: ...
+          }
+        ]
     ResultEntrySchema:
       type: object
       description: Hits entry schema
@@ -468,6 +454,13 @@ components:
         id: "1410"
         version: 2
         resource: "places"
+    AddEntrySchema:
+      type: object
+      properties:
+        message:
+          type: string
+        entry:
+          $ref: '#/components/schemas/EntrySchema'
     EntrySchema:
       type: object
       description: Actual schema different for each resource
