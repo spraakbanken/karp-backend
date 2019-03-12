@@ -7,7 +7,7 @@ class ClientErrorCodes:
     ENTRY_NOT_FOUND = 30
     ENTRY_NOT_CHANGED = 31
     ENTRY_NOT_VALID = 32
-    VERSION_CONFLICT = 32
+    VERSION_CONFLICT = 33
     EXPIRED_JWT = 40
 
 
