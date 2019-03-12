@@ -1,4 +1,5 @@
 import logging
+import time
 import click
 from flask.cli import FlaskGroup  # pyre-ignore
 
@@ -31,9 +32,19 @@ def cli_error_handler(func):
     return func_wrapper
 
 
+def cli_timer(func):
+    def func_wrapper(*args, **kwargs):
+        before_t = time.time()
+        result = func(*args, **kwargs)
+        click.echo("Command took: %0.1fs" % (time.time() - before_t))
+        return result
+    return func_wrapper
+
+
 @cli.command('create')
 @click.option('--config', default=None, help='', required=True)
 @cli_error_handler
+@cli_timer
 def create_resource(config):
     with open(config) as fp:
         resource_id, version = resourcemgr.create_new_resource(fp)
@@ -48,6 +59,7 @@ def create_resource(config):
 @click.option('--version', default=None, help='', required=True)
 @click.option('--data', default=None, help='', required=True)
 @cli_error_handler
+@cli_timer
 def import_resource(resource_id, version, data):
     count = entrywrite.add_entries_from_file(resource_id, version, data)
     click.echo("Added {count} entries to {resource_id}, version {version}".format(
@@ -61,6 +73,7 @@ def import_resource(resource_id, version, data):
 @click.option('--resource_id', default=None, help='', required=True)
 @click.option('--version', default=None, help='', required=True)
 @cli_error_handler
+@cli_timer
 def publish_resource(resource_id, version):
     resource = resourcemgr.get_resource(resource_id, version=version)
     if resource.active:
@@ -76,6 +89,7 @@ def publish_resource(resource_id, version):
 @cli.command('reindex')
 @click.option('--resource_id', default=None, help='', required=True)
 @cli_error_handler
+@cli_timer
 def reindex_resource(resource_id):
     try:
         resource = resourcemgr.get_resource(resource_id)
@@ -91,6 +105,7 @@ def reindex_resource(resource_id):
 @cli.command('list')
 @click.option('--show-active/--show-all', default=False)
 @cli_error_handler
+@cli_timer
 def list_resources(show_active):
     if show_active:
         resources = resourcemgr.get_available_resources()
