@@ -1,10 +1,13 @@
-.PHONY: test pytest build-dev run-tests
+.PHONY: test test-to-log pytest build-dev run-tests
 default: run-tests
 
 run-tests: lint type-check test
 
 test: build-dev
 	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests
+
+test-to-log: build-dev
+	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests > pytest.log
 
 tox:
 	tox
