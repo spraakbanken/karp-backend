@@ -2,7 +2,7 @@ import pytest  # pyre-ignore
 import json
 import time
 
-from typing import List
+from typing import List, Tuple
 
 
 ENTRIES = [{
@@ -26,7 +26,8 @@ ENTRIES = [{
     "population": 4133,
     "area": 50000,
     "density": 7,
-    "municipality": [2, 3]
+    "municipality": [2, 3],
+    "larger_place": 8  # "Bjurvik"
     # "smaller_places": 4 "Hambo"
 },
 {
@@ -36,6 +37,7 @@ ENTRIES = [{
     "area": 50000,
     "municipality": [2, 3],
     "larger_place": 3 # Botten test
+    # "smaller_places": 7 "Alhamn"
 },
 {
     "code": 5,
@@ -50,7 +52,7 @@ ENTRIES = [{
     "population": 6312,
     "density": 12,
     "municipality": [2, 3]
-    # "smaller_places": 7  "Alhamn"
+    # "smaller_places": 7  "Bjurvik"
 },
 {
     "code": 7,
@@ -59,8 +61,8 @@ ENTRIES = [{
     "population": 3812,
     "density": 12,
     "municipality": [2, 3],
-    "larger_place": 6 # Alvik
-    # "smaller_places": 1  "Botten test"
+    "larger_place": 4 # Hambo
+    # "smaller_places": 1  "Grund test"
 },
 {
     "code": 8,
@@ -82,7 +84,9 @@ def client_with_entries(es, client_with_data_f_scope_module):
 
 
 def get_json(client, path):
+    print("Calling '{}' ...".format(path))
     response = client.get(path)
+    assert 200 <= response.status_code < 300
     return json.loads(response.data.decode())
 
 
@@ -102,6 +106,13 @@ def extract_names(entries):
     names = []
     for entry in entries['hits']:
         names.append(entry['entry']['name'])
+    return names
+
+
+def extract_names_set(entries):
+    names = set()
+    for entry in entries['hits']:
+        names.add(entry['entry']['name'])
     return names
 
 
@@ -125,208 +136,171 @@ def test_query_no_q(client_with_entries):
             print('  entry = {}'.format(entries['hits'][i]['entry']))
             assert 'larger_place' in entries['hits'][i]['entry']
             assert 'v_larger_place' in entries['hits'][i]['entry']
-        if name in ['Alvik', 'Botten test', 'Alhamn']:
+        if name == 'Alvik':
+            print("Testing 'smaller_places' for '{}' ...".format(name))
+            print('  entry = {}'.format(entries['hits'][i]['entry']))
+            assert 'v_smaller_places' in entries['hits'][i]['entry']
+            assert entries['hits'][i]['entry']['v_smaller_places'][0]['name'] == 'Bjurvik'
+        elif name in ['Botten test', 'Alhamn']:
             print("Testing 'smaller_places' for '{}' ...".format(name))
             print('  entry = {}'.format(entries['hits'][i]['entry']))
             assert 'v_smaller_places' in entries['hits'][i]['entry']
 
 
-def test_and_equals_equals(client_with_entries):
-    query = 'and||equals|population|4133||equals|area|50000'
-    entries = get_json(client_with_entries, 'places/query?q=' + query)
+@pytest.mark.parametrize("query1,query2,expected_result", [
+    ('equals|population|4133', 'equals|area|50000', ['Botten test']),
+    ('regexp|name|.*bo.*', 'equals|area|50000', ['Hambo', 'Botten test']),
+])
+def test_and(client_with_entries, query1, query2, expected_result: List[str]):
+    query = 'places/query?q=and||{query1}||{query2}'.format(
+        query1=query1,
+        query2=query2
+    )
+    entries = get_json(client_with_entries, query)
 
     names = extract_names(entries)
 
-    assert len(names) == 1
-    assert 'Botten test' in names
+    assert len(names) == len(expected_result)
+
+    for name in names:
+        assert name in expected_result
+
+    for expected in expected_result:
+        assert expected in names
 
 
-def test_and_regexp_equals(client_with_entries):
-    query = 'and||regexp|name|.*bo.*||equals|area|50000'
-    entries = get_json(client_with_entries, 'places/query?q=' + query)
-
-    names = extract_names(entries)
-
-    assert len(names) == 2
-    assert 'Hambo' in names
-    assert 'Botten test' in names
-
-
-def test_contains_string_lowercase(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=contains|name|Grund')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-
-
-def test_contains_string_correct_case(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=contains|name|Grund')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-
-
-def test_contains_raw_field_string_correct_case(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=contains|name.raw|Grund')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-
-
-@pytest.mark.skip(reason="regex can't handle integer")
-def test_contains_integer(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=contains|population|3122')
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grund test' in names
-
-
-def test_contains_1st_arg_and(client_with_entries):
-    query = 'places/query?q=contains||and|name|v_smaller_places.name||Al'
+@pytest.mark.parametrize("field,value,expected_result", [
+    ('name', 'grund', ['Grund test', 'Grunds']),
+    ('name', 'Grund', ['Grund test', 'Grunds']),
+    ('name.raw', 'Grund', ['Grund test', 'Grunds']),
+    pytest.param('population', 3122, ['Grund test'], marks=pytest.mark.xfail),
+    ('|and|name|v_larger_place.name|', 'vi', ['Bjurvik']),
+    pytest.param('|and|name|v_smaller_places.name|', 'and|Al|vi', ['Alvik'], marks=pytest.mark.skip(reason="regex can't handle complex")),
+    ('|not|name|', 'test', [
+        'Grunds',
+        'Hambo',
+        'Alhamn',
+        'Rutvik',
+        'Alvik',
+        'Bjurvik',
+    ]),
+    ('|or|name|v_smaller_places.name|', 'Al', [
+        'Alvik',
+        'Alhamn',
+        'Hambo',
+    ]),
+    ('name', '|and|un|es', ['Grund test',]),
+    ('name', '|not|test', [
+        'Grunds',
+        'Hambo',
+        'Alhamn',
+        'Rutvik',
+        'Alvik',
+        'Bjurvik',
+    ]),
+    ('name', '|or|vi|bo', [
+        'Alvik',
+        'Rutvik',
+        'Bjurvik',
+        'Botten test',
+        'Hambo',
+    ]),
+])
+def test_contains(client_with_entries, field: str, value, expected_result: List[str]):
+    query = 'places/query?q=contains|{field}|{value}'.format(
+        field=field,
+        value=value
+    )
     entries = get_json(client_with_entries, query)
     names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Alvik' in names
+
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
 
 
-@pytest.mark.skip(reason="regex can't handle complex")
-def test_contains_1st_arg_and_2nd_arg_and(client_with_entries):
-    query = 'places/query?q=contains||and|name|v_smaller_places.name||and|Al|vi'
+@pytest.mark.parametrize("fields,values,expected_result", [
+    (('name', 'v_larger_place.name'), ('vi', 'vi'), ['Bjurvik']),
+])
+def test_contains_and_separate_calls(client_with_entries, fields: Tuple, values: Tuple, expected_result: List[str]):
+    names = set()
+    for field, value in zip(fields, values):
+        query = 'places/query?q=contains|{field}|{value}'.format(
+            field=field,
+            value=value
+        )
+        entries = get_json(client_with_entries, query)
+        if not names:
+            print('names is empty')
+            names = extract_names_set(entries)
+        else:
+            names = names & extract_names_set(entries)
+
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
+
+
+@pytest.mark.parametrize("field,value,expected_result", [
+    ('name', 'est', ['Grund test', 'Botten test']),
+    ('name', 'unds', ['Grunds']),
+    ('name', 'grund', ['Grund test']),
+    pytest.param('population', 3122, ['Grund test'], marks=pytest.mark.xfail),
+    ('|and|name|v_smaller_places.name|', 'vik', ['Alvik']),
+    ('|and|name|v_larger_place.name|', 'vik', ['Bjurvik']),
+    pytest.param(
+        '|and|name|v_smaller_places.name|',
+        'and|Al|vi',
+        ['Alvik'],
+        marks=pytest.mark.skip(reason="regex can't handle complex")
+    ),
+    pytest.param(
+        '|not|name|',
+        'vik',
+        [
+            'Grund test',
+            'Botten test',
+            'Alvik',
+            'Bjurvik',
+        ],
+        marks=pytest.mark.skip(reason='Gives the same result as not||endswith|name|vik')
+    ),
+    ('|or|name|v_smaller_places.name|', 'otten', [
+        'Botten test',
+        'Bjurvik',
+    ]),
+    ('name', '|and|und|est', ['Grund test',]),
+    ('name', '|not|vik', [
+        'Grund test',
+        'Grunds',
+        'Botten test',
+        'Hambo',
+        'Alhamn',
+    ]),
+    ('name', '|or|vik|bo', [
+        'Alvik',
+        'Rutvik',
+        'Bjurvik',
+        'Hambo',
+    ]),
+])
+def test_endswith(client_with_entries, field: str, value, expected_result: List[str]):
+    query = 'places/query?q=endswith|{field}|{value}'.format(
+        field=field,
+        value=value
+    )
     entries = get_json(client_with_entries, query)
     names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Alvik' in names
 
-
-def test_contains_1st_arg_not(client_with_entries):
-    query = 'places/query?q=contains||not|name||test'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 6
-    assert 'Grunds' in names
-    assert 'Hambo' in names
-    assert 'Alhamn' in names
-    assert 'Rutvik' in names
-    assert 'Alvik' in names
-    assert 'Bjurvik' in names
-
-
-def test_contains_1st_arg_or(client_with_entries):
-    query = 'places/query?q=contains||or|name|v_smaller_places.name||Al'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Alvik' in names
-    assert 'Alhamn' in names
-
-
-def test_contains_2nd_arg_and(client_with_entries):
-    query = 'places/query?q=contains|name||and|un|es'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grund test' in names
-
-
-def test_contains_2nd_arg_not(client_with_entries):
-    query = 'places/query?q=contains|name||not|test'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 6
-    assert 'Grunds' in names
-    assert 'Hambo' in names
-    assert 'Alhamn' in names
-    assert 'Rutvik' in names
-    assert 'Alvik' in names
-    assert 'Bjurvik' in names
-
-
-def test_contains_2nd_arg_or(client_with_entries):
-    query = 'places/query?q=contains|name||or|vi|bo'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 5
-    assert 'Alvik' in names
-    assert 'Rutvik' in names
-    assert 'Bjurvik' in names
-    assert 'Botten test' in names
-    assert 'Hambo' in names
-
-
-def test_endswith_string_lower_case(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=endswith|name|est')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Botten test' in names
-
-
-def test_endswith_string_regex(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=endswith|name|unds')
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grunds' in names
-
-
-def test_endswith_string_lower_case_first_word(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=endswith|name|grund')
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grund test' in names
-
-
-def test_endswith_1st_arg_and(client_with_entries):
-    query = 'places/query?q=endswith||and|name|v_larger_place||vik'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Bjurvik' in names
-
-
-def test_endswith_1st_arg_not(client_with_entries):
-    query = 'places/query?q=endswith||not|name||vik'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == (len(ENTRIES) - 3)
-    assert 'Grund test' in names
-
-
-def test_endswith_1st_arg_or(client_with_entries):
-    query = 'places/query?q=endswith||or|name|v_smaller_places||grund'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grund test' in names
-
-
-def test_endswith_2nd_arg_and(client_with_entries):
-    query = 'places/query?q=endswith|name||and|grund|est'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grund test' in names
-
-
-def test_endswith_2nd_arg_not(client_with_entries):
-    query = 'places/query?q=endswith|name||not|vik'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 5
-    assert 'Grund test' in names
-
-
-def test_endswith_2nd_arg_or(client_with_entries):
-    query = 'places/query?q=endswith|name||or|vik|bo'
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == 4
-    assert 'Hambo' in names
-    assert 'Rutvik' in names
-    assert 'Alvik' in names
-    assert 'Bjurvik' in names
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
 
 
 @pytest.mark.parametrize("field,value,expected_result", [
@@ -346,7 +320,12 @@ def test_endswith_2nd_arg_or(client_with_entries):
         'Grunds',
     ]),
     ('name', '|and|botten|test', ['Botten test']),
-    ('area', '|not|6312', ['Grunds']),
+    ('area', '|not|6312', [
+        'Grunds',
+        'Botten test',
+        'Hambo',
+        'Rutvik',
+    ]),
     ('population', '|or|6312|3122', ['Alvik', 'Grund test', 'Grunds']),
 ])
 def test_equals(client_with_entries, field: str, value, expected_result: List[str]):
@@ -364,34 +343,88 @@ def test_equals(client_with_entries, field: str, value, expected_result: List[st
         assert expected in names
 
 
-def test_exists(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=exists|density')
+@pytest.mark.parametrize('field,expected_result',[
+    ('density', [
+        'Bjurvik',
+        'Grund test',
+        'Grunds',
+        'Botten test',
+        'Alvik',
+        'Alhamn'
+    ]),
+    ('|and|density|population', [
+        'Bjurvik',
+        'Grund test',
+        'Grunds',
+        'Botten test',
+        'Alvik',
+        'Alhamn'
+    ]),
+    ('|and|v_larger_place|v_smaller_places', [
+        'Bjurvik',
+        'Hambo',
+        'Botten test',
+        'Alhamn'
+    ]),
+    ('|or|density|population', [
+        'Bjurvik',
+        'Grund test',
+        'Grunds',
+        'Hambo',
+        'Botten test',
+        'Alvik',
+        'Alhamn'
+    ]),
+    ('|not|density', [
+        'Hambo',
+        'Rutvik',
+    ]),
+])
+def test_exists(client_with_entries, field: str, expected_result: List[str]):
+    query = 'places/query?q=exists|{field}'.format(field=field)
+    entries = get_json(client_with_entries, query)
     names = extract_names(entries)
-    assert len(names) == 6
-    assert 'Bjurvik' in names
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
 
 
-def test_exists_and(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=exists||and|density|population')
+@pytest.mark.parametrize('field,expected_result',[
+    ('|and|.*test|Gr.*', [
+        'Grund test',
+        'Alhamn',  # through smaller_places
+    ]),
+    ('|not|Gr.*', [
+        'Botten test',
+        'Hambo',
+        'Alvik',
+        'Rutvik',
+        'Bjurvik',
+    ]),
+    ('|or|.*test|Gr.*', [
+        'Grund test',
+        'Grunds',
+        'Botten test',
+        'Hambo',  # through smaller_places
+        'Alhamn',
+    ]),
+    ('Grunds?', [
+        'Grund test',
+        'Grunds',
+        'Alhamn',
+    ]),
+])
+def test_freergxp(client_with_entries, field: str, expected_result: List[str]):
+    query = 'places/query?q=freergxp|{field}'.format(field=field)
+    entries = get_json(client_with_entries, query)
     names = extract_names(entries)
-    assert len(names) == 6
-    assert 'Bjurvik' in names
-
-
-def test_exists_or(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=exists||or|density|population')
-    names = extract_names(entries)
-    assert len(names) == 7
-    assert 'Bjurvik' in names
-
-
-def test_exists_not(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=exists||not|density')
-    names = extract_names(entries)
-    assert len(names) == 2
-
-    assert 'Hambo' in names
-    assert 'Rutvik' in names
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
 
 
 def test_freergxp_and(client_with_entries):
@@ -438,6 +471,45 @@ def test_freergxp_string(client_with_entries):
     assert 'Grund test' in names
     assert 'Grunds' in names
     assert 'Alhamn' in names
+
+
+@pytest.mark.parametrize('field,expected_result',[
+    ('grund', [
+    	'Grund test',
+    	'Grunds',
+    	'Alhamn',  # through smaller_places
+    ]),
+    ('3122', [
+    	'Grund test',
+    ]),
+    ('|and|botten|test', [
+    	'Botten test',
+    	'Hambo',  # through smaller_places
+    ]),
+    ('|not|botten', [
+    	'Grund test',
+    	'Grunds',
+    	'Alhamn',
+    	'Rutvik',
+    	'Alvik',
+    	'Bjurvik',
+    ]),
+    ('|or|botten|test', [
+    	'Botten test',
+    	'Hambo',  # through smaller_places
+    	'Grund test',
+    	'Alhamn',
+    ]),
+])
+def test_freetext(client_with_entries, field: str, expected_result: List[str]):
+    query = 'places/query?q=freetext|{field}'.format(field=field)
+    entries = get_json(client_with_entries, query)
+    names = extract_names(entries)
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
 
 
 def test_freetext_string(client_with_entries):
@@ -597,7 +669,39 @@ def test_and_gt_lt(client_with_entries, field, lower, upper, expected_hits):
     assert len(entries['hits']) == expected_hits
 
 
-def test_missing(client_with_entries):
+@pytest.mark.parametrize('field,expected_result',[
+    ('density', [
+    	'Hambo',
+    	'Rutvik',
+    ]),
+    ('|and|density|population', [
+    	'Rutvik',
+    ]),
+    ('|not|density', [
+    	'Grund test',
+    	'Grunds',
+    	'Botten test',
+    	'Alvik',
+    	'Alhamn',
+    	'Bjurvik',
+    ]),
+    ('|or|density|population', [
+    	'Rutvik',
+    	'Hambo',
+    ]),
+])
+def test_missing(client_with_entries, field: str, expected_result: List[str]):
+    query = 'places/query?q=missing|{field}'.format(field=field)
+    entries = get_json(client_with_entries, query)
+    names = extract_names(entries)
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
+
+
+def test_missing_d(client_with_entries):
     entries = get_json(client_with_entries, 'places/query?q=missing|density')
     names = extract_names(entries)
     assert len(names) == 2
@@ -632,6 +736,33 @@ def test_missing_or(client_with_entries):
     assert 'Hambo' in names
 
 
+@pytest.mark.parametrize('query1,expected_result', [
+    ('freetext|botten', [
+    	'Grunds',
+    	'Rutvik',
+    	'Alvik',
+    	'Bjurvik',
+    	'Grund test',
+    	'Alhamn',
+    ]),
+    ('freergxp|.*test', [
+    	'Grunds',
+    	'Rutvik',
+    	'Alvik',
+    	'Bjurvik',
+    ]),
+])
+def test_not(client_with_entries, query1: str, expected_result: List[str]):
+    query = 'places/query?q=not||{query1}'.format(query1=query1)
+    entries = get_json(client_with_entries, query)
+    names = extract_names(entries)
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
+
+
 def test_not_freetext(client_with_entries):
     entries = get_json(client_with_entries, 'places/query?q=not||freetext|botten')
 
@@ -658,11 +789,70 @@ def test_not_freergxp(client_with_entries):
     assert 'Bjurvik' in names
 
 
-def test_or(client_with_entries):
+@pytest.mark.parametrize("query1,query2,expected_result", [
+    ('equals|population|3122', 'equals|population|4132', [
+        'Botten test',
+        'Grund test',
+    ]),
+])
+def test_or(client_with_entries, query1, query2, expected_result: List[str]):
+    query = 'places/query?q=or||{query1}||{query2}'.format(
+        query1=query1,
+        query2=query2
+    )
+    entries = get_json(client_with_entries, query)
+
+    names = extract_names(entries)
+
+    assert len(names) == len(expected_result)
+
+    for name in names:
+        assert name in expected_result
+
+    for expected in expected_result:
+        assert expected in names
+
+
+def test_or_(client_with_entries):
     query = 'or||equals|population|6312||equals|population|4132'
     entries = get_json(client_with_entries, 'places/query?q=' + query)
     names = extract_names(entries)
     assert len(names) == 3
+
+
+@pytest.mark.parametrize("field,value,expected_result", [
+    ('name', 'grun.*', [
+    	'Grund test',
+    	'Grunds',
+    ]),
+    ('name', 'Grun.*', [
+    	'Grund test',
+    	'Grunds',
+    ]),
+    ('name', 'Grunds?', [
+    	'Grunds',
+    ]),
+    ('name', 'grunds?', [
+    	'Grund test',
+    	'Grunds',
+    ]),
+    ('name', 'Grun.*est', [
+    	'Grund test',
+    ]),
+])
+def test_regexp(client_with_entries, field: str, value, expected_result: List[str]):
+    query = 'places/query?q=regexp|{field}|{value}'.format(
+        field=field,
+        value=value
+    )
+    entries = get_json(client_with_entries, query)
+    names = extract_names(entries)
+
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
 
 
 def test_regex_string_lower_case(client_with_entries):
@@ -701,6 +891,35 @@ def test_regex_string_whole_name(client_with_entries):
     names = extract_names(entries)
     assert len(names) == 1
     assert 'Grund test' in names
+
+
+@pytest.mark.parametrize("field,value,expected_result", [
+    ('name', 'grun', [
+    	'Grund test',
+    	'Grunds',
+    ]),
+    ('name', 'Grun', [
+    	'Grund test',
+    	'Grunds',
+    ]),
+    ('name', 'tes', [
+    	'Grund test',
+        'Botten test'
+    ]),
+])
+def test_startswith(client_with_entries, field: str, value, expected_result: List[str]):
+    query = 'places/query?q=startswith|{field}|{value}'.format(
+        field=field,
+        value=value
+    )
+    entries = get_json(client_with_entries, query)
+    names = extract_names(entries)
+
+    assert len(names) == len(expected_result)
+    for name in names:
+        assert name in expected_result
+    for expected in expected_result:
+        assert expected in names
 
 
 def test_startswith_string_lower_case(client_with_entries):
