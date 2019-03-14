@@ -33,91 +33,18 @@ paths:
       summary: Get lexical entries
       description: >
         Returns a list of entries matching the given query in the given
-        lexicons.
+        lexicons. The results are mixed from all resources.
       parameters:
         - $ref: '#/components/parameters/Query'
         - $ref: '#/components/parameters/FromPage'
         - $ref: '#/components/parameters/SizePage'
-        - name: split_results
-          in: query
-          required: false
-          description: >
-            If `true`, splits gives `size` hits for each resource separated in
-            output.
-
-
-            If `false`, return `size` hits mixed from resources.
-          schema:
-            type: boolean
-            default: true
-        - name: resources
-          in: path
-          required: true
-          description: A comma-separated list of resource identifiers
-          schema:
-            type: array
-            items:
-              type: string
-        - name: sort
-          in: query
-          description: >
-            The `field` sort by. If missing, default order for each resource
-            will be used.
-
-
-            <span style="color: red">Do we need sort order per resource?</span>
-
-
-            Format: `lemma|asc` or `pos|desc`
-          schema:
-            type: string
-        - name: lexicon_stats
-          in: query
-          description: Show the hit count per lexicon
-          schema:
-            type: boolean
-            default: true
-        - name: include_fields
-          in: query
-          description: Comma-separated list of which fields to return
-          schema:
-            type: string
-            default: All field are returned
-        - name: exclude_fields
-          in: query
-          description: Comma-separated list of which fields to remove from result
-          schema:
-            type: string
-            default: No fields are excluded
-        - name: format
-          in: query
-          description: Will return the result in the specified format
-          schema:
-            type: string
-            enum:
-              - json
-              - csv
-              - xml
-              - lmf?
-              - tsb
-            default: json
-        - name: format_query
-          in: query
-          description: >
-            Will return each entry in the specified format (encoded in
-            JSON-field)
-
-
-            <span style="color: red">Why is it called format query?</span>
-          schema:
-            type: string
-            enum:
-              - json
-              - csv
-              - xml
-              - lmf?
-              - tsb
-            default: json
+        - $ref: '#/components/parameters/PathResources'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/LexiconStats'
+        - $ref: '#/components/parameters/IncludeFields'
+        - $ref: '#/components/parameters/ExcludeFields'
+        - $ref: '#/components/parameters/ResultFormat'
+        - $ref: '#/components/parameters/ResultFormatQuery'
       responses:
         '200':
           description: OK
@@ -125,6 +52,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/QueryResult'
+        '500':
+          description: Query failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  '/query_split/{resources}':
+    get:
+      tags:
+        - Querying
+      summary: Get lexical entries
+      description: >
+        Returns a list of entries matching the given query in the given
+        lexicons. The results are mixed from all resources.
+      parameters:
+        - $ref: '#/components/parameters/Query'
+        - $ref: '#/components/parameters/FromPage'
+        - $ref: '#/components/parameters/SizePage'
+        - $ref: '#/components/parameters/PathResources'
+        - $ref: '#/components/parameters/SortBy'
+        - $ref: '#/components/parameters/LexiconStats'
+        - $ref: '#/components/parameters/IncludeFields'
+        - $ref: '#/components/parameters/ExcludeFields'
+        - $ref: '#/components/parameters/ResultFormat'
+        - $ref: '#/components/parameters/ResultFormatQuery'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuerySplitResult'
         '500':
           description: Query failed
           content:
@@ -283,6 +242,81 @@ components:
       description: A field name
       schema:
         type: string
+    PathResources:
+      name: resources
+      in: path
+      required: true
+      description: A comma-separated list of resource identifiers
+      schema:
+        type: array
+        items:
+          type: string
+    SortBy:
+      name: sort
+      in: query
+      description: >
+        The `field` sort by. If missing, default order for each resource
+        will be used.
+
+
+        <span style="color: red">Do we need sort order per resource?</span>
+
+
+        Format: `lemma|asc` or `pos|desc`
+      schema:
+        type: string
+    LexiconStats:
+      name: lexicon_stats
+      in: query
+      description: Show the hit count per lexicon
+      schema:
+        type: boolean
+        default: true
+    IncludeFields:
+      name: include_fields
+      in: query
+      description: Comma-separated list of which fields to return
+      schema:
+        type: string
+        default: All field are returned
+    ExcludeFields:
+      name: exclude_fields
+      in: query
+      description: Comma-separated list of which fields to remove from result
+      schema:
+        type: string
+        default: No fields are excluded
+    ResultFormat:
+      name: format
+      in: query
+      description: Will return the result in the specified format
+      schema:
+        type: string
+        enum:
+          - json
+          - csv
+          - xml
+          - lmf?
+          - tsb
+        default: json
+    ResultFormatQuery:
+      name: format_query
+      in: query
+      description: >
+        Will return each entry in the specified format (encoded in
+        JSON-field)
+
+
+        <span style="color: red">Why is it called format query?</span>
+      schema:
+        type: string
+        enum:
+          - json
+          - csv
+          - xml
+          - lmf?
+          - tsb
+        default: json
     Query:
       name: q
       in: query
@@ -395,22 +429,10 @@ components:
           description: Total number of matches
           example: 6278
         hits:
-          description: If `split_results=false`, hits is an array.
-            If `split_results=true`, hits is an object
-            with resource as keys and arrays with hits as values.
-          properties:
-            match:
-              oneOf:
-              - type: array
-                description: If `split_results=false`
-                items:
-                  $ref: '#/components/schemas/ResultEntry'
-              - type: object
-                description: If `split_results=true`
-                additionalProperties:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/ResultEntry'
+          description: The matching entries.
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultEntry'
         distribution:
           description: Only present if `lexicon_stats=true`
           additionalProperties:
@@ -428,6 +450,43 @@ components:
             entry: ...
           }
         ]
+    QuerySplitResult:
+      type: object
+      required:
+      - total
+      - hits
+      properties:
+        total:
+          type: integer
+          description: Total number of matches
+          example: 6278
+        hits:
+          description: The matching entries per resource.
+          properties:
+            type: object
+            additionalProperties:
+              type: array
+              items:
+                $ref: '#/components/schemas/ResultEntry'
+        distribution:
+          description: Only present if `lexicon_stats=true`
+          additionalProperties:
+            type: integer
+          example:
+            places: 123
+            municipalities: 6
+      example:
+        total: 6578,
+        hits: {
+            "places": [
+                {
+                    id: "1410",
+                    resource: "places",
+                    version: 2,
+                    entry: ...
+                }
+            ]
+        }
     ResultEntry:
       type: object
       description: Hits entry schema
