@@ -283,29 +283,39 @@ def create_es_query(node):
                 if not arg2_values:
                     q = construct_regexp_query(get_value(arg1), prepare_regex(op, get_value(arg2)))
                 else:
+                    queries = []
                     for regex in arg2_values:
                         q_tmp = construct_regexp_query(get_value(arg1), prepare_regex(op, regex))
                         if arg2.value == query_dsl.Operators.NOT:
-                            q_tmp = ~q_tmp
-                        if not q:
-                            q = q_tmp
-                        elif arg2.value == query_dsl.Operators.OR:
-                            q = q | q_tmp
-                        else: # if arg2.value == query_dsl.Operators.AND:
-                            q = q & q_tmp
+                            queries.append(~q_tmp)
+                        else:
+                            queries.append(q_tmp)
+                    if len(queries) == 1:
+                        q = queries[0]
+                    elif arg2.value == query_dsl.Operators.OR:
+                        q = es_dsl.Q('bool', should=queries)
+                    elif arg2.value == query_dsl.Operators.AND:
+                        q = es_dsl.Q('bool', must=queries)
+                    else:
+                        raise RuntimeError('Should not be here.')
             else:
                 if not arg2_values:
                     regex = prepare_regex(op, get_value(arg2))
+                    queries = []
                     for field in arg1_values:
                         q_tmp = construct_regexp_query(field, regex)
                         if arg1.value == query_dsl.Operators.NOT:
-                            q_tmp = ~q_tmp
-                        if not q:
-                            q = q_tmp
-                        elif arg1.value == query_dsl.Operators.OR:
-                            q = q | q_tmp
-                        else: # if arg1.value == query_dsl.Operators.AND:
-                            q = q & q_tmp
+                            queries.append(~q_tmp)
+                        else:
+                            queries.append(q_tmp)
+                    if len(queries) == 1:
+                        q = queries[0]
+                    elif arg1.value == query_dsl.Operators.OR:
+                        q = es_dsl.Q('bool', should=queries)
+                    elif arg1.value == query_dsl.Operators.AND:
+                        q = es_dsl.Q('bool', must=queries)
+                    else:
+                        raise RuntimeError('Should not be here.')
                 else:
                     raise RuntimeError('Complex regex not implemented')
 
