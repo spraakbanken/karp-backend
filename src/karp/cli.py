@@ -1,6 +1,7 @@
 import logging
 import time
 import click
+import pickle
 from flask.cli import FlaskGroup  # pyre-ignore
 
 from .config import MariaDBConfig
@@ -100,6 +101,49 @@ def reindex_resource(resource_id):
         )
     except ResourceNotFoundError:
         click.echo("No active version of {resource_id}".format(resource_id=resource_id))
+
+
+@cli.command('pre_process')
+@click.option('--resource_id', required=True)
+@click.option('--version', required=True)
+@click.option('--filename', required=True)
+@cli_error_handler
+@cli_timer
+def pre_process_resource(resource_id, version, filename):
+    resource = resourcemgr.get_resource(resource_id, version=version)
+    with open(filename, 'wb') as fp:
+        processed = indexmgr.pre_process_resource(resource)
+        pickle.dump(processed, fp)
+
+
+@cli.command('publish_preprocessed')
+@click.option('--resource_id', required=True)
+@click.option('--version', required=True)
+@click.option('--data', required=True)
+@cli_error_handler
+@cli_timer
+def index_processed(resource_id, version, data):
+    with open(data, 'rb') as fp:
+        try:
+            loaded_data = pickle.load(fp)
+            resourcemgr.publish_resource(resource_id, version)
+            indexmgr.reindex(resource_id, version=version, search_entries=loaded_data)
+        except EOFError:
+            click.echo('Something wrong with file')
+
+
+@cli.command('reindex_preprocessed')
+@click.option('--resource_id', required=True)
+@click.option('--data', required=True)
+@cli_error_handler
+@cli_timer
+def reindex_preprocessed(resource_id, data):
+    with open(data, 'rb') as fp:
+        try:
+            loaded_data = pickle.load(fp)
+            indexmgr.reindex(resource_id, search_entries=loaded_data)
+        except EOFError:
+            click.echo('Something wrong with file')
 
 
 @cli.command('list')
