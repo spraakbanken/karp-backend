@@ -51,16 +51,17 @@ def query(resources: str):
 @auth.auth.authorization('READ')
 def query_split(resources: str):
     print('query_split called with resources={}'.format(resources))
-    # resource_list = resources.split(',')
-    # resourcemgr.check_resource_published(resource_list)
-    # try:
-    #     query = search.search.build_query(request.args, resources)
-    #     print('query={}'.format(query))
-    #     response = search.search.search_with_query(query)
-    # except errors.KarpError as e:
-    #     _logger.exception("Error occured when calling 'query' with resources='{}' and q='{}'".format(resources, request.args.get('q')))
-    #     raise
-    return flask_jsonify({'error': 'not implemented'}), 503
+    resource_list = resources.split(',')
+    resourcemgr.check_resource_published(resource_list)
+    try:
+        query = search.search.build_query(request.args, resources)
+        query.split_results = True
+        print('query={}'.format(query))
+        response = search.search.search_with_query(query)
+    except errors.KarpError as e:
+        _logger.exception("Error occured when calling 'query' with resources='{}' and q='{}'".format(resources, request.args.get('q')))
+        raise
+    return flask_jsonify(response), 200
 
 
 @query_api.route('/<resource_id>/<entry_id>/get_indexed', methods=['GET'])
