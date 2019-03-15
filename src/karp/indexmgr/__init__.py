@@ -8,6 +8,7 @@ from .index import IndexModule
 import karp.resourcemgr as resourcemgr
 import karp.resourcemgr.entryread as entryread
 import karp.network as network
+from karp.resourcemgr.resource import Resource
 from karp import errors
 
 
@@ -16,27 +17,33 @@ indexer = IndexModule()
 _logger = logging.getLogger('karp')
 
 
-def _reindex(resource_id: str, version: Optional[int]=None) -> None:
-    resource_obj = resourcemgr.get_resource(resource_id, version=version)
+def pre_process_resource(resource_obj: Resource):
+    versions = resourcemgr.get_all_versions(resource_obj)
+    fields = resource_obj.config['fields'].items()
+    entries = resource_obj.model.query.filter_by(deleted=False)
+    return [(entry.entry_id, versions[entry.id],
+            transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
 
+
+def reindex(resource_id: str, version: Optional[int]=None, search_entries: List[Tuple[str, int, Dict]]=()) -> None:
+    """
+    If `search_entries` is not given, they will be fetched from DB and processed using `transform_to_index_entry`
+    If `search_entries` is given, they most have the same format as the output from `pre_process_resource`
+    """
+    resource_obj = resourcemgr.get_resource(resource_id, version=version)
     try:
         index_name = indexer.impl.create_index(resource_id, resource_obj.config)
     except NotImplementedError:
         _logger.error('No Index module is loaded. Check your configurations...')
         sys.exit(errors.NoIndexModuleConfigured)
-
-    versions = resourcemgr.get_all_versions(resource_obj)
-    fields = resource_obj.config['fields'].items()
-    entries = resource_obj.model.query.filter_by(deleted=False)
-    search_entries = [(entry.entry_id, versions[entry.id],
-                      transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
-
+    if not search_entries:
+        search_entries = pre_process_resource(resource_obj)
     add_entries(index_name, search_entries, update_refs=False)
     indexer.impl.publish_index(resource_id, index_name)
 
 
 def publish_index(resource_id: str, version: Optional[int]=None) -> None:
-    _reindex(resource_id, version=version)
+    reindex(resource_id, version=version)
     if version:
         resourcemgr.publish_resource(resource_id, version)
 
