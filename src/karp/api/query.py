@@ -33,7 +33,7 @@ def get_entries_by_id(resource_id: str, entry_ids: str):
 @query_api.route('/query/<resources>', methods=['GET'])
 @auth.auth.authorization('READ')
 def query(resources: str):
-    print('query_w_resources called with resources={}'.format(resources))
+    print('query called with resources={}'.format(resources))
     resource_list = resources.split(',')
     resourcemgr.check_resource_published(resource_list)
     try:
@@ -50,7 +50,7 @@ def query(resources: str):
 @query_api.route('/query_split/<resources>', methods=['GET'])
 @auth.auth.authorization('READ')
 def query_split(resources: str):
-    # print('query_w_resources called with resources={}'.format(resources))
+    print('query_split called with resources={}'.format(resources))
     # resource_list = resources.split(',')
     # resourcemgr.check_resource_published(resource_list)
     # try:
