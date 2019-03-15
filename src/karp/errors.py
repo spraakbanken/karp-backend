@@ -9,6 +9,7 @@ class ClientErrorCodes:
     ENTRY_NOT_VALID = 32
     VERSION_CONFLICT = 33
     EXPIRED_JWT = 40
+    NOT_PERMITTED = 41
 
 
 class KarpError(Exception):

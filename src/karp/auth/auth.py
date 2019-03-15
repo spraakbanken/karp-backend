@@ -1,7 +1,8 @@
 import functools
-from flask import request, jsonify  # pyre-ignore
+from flask import request  # pyre-ignore
 
 from karp.auth.authenticator import Authenticator
+from karp.errors import KarpError, ClientErrorCodes
 
 
 class Auth:
@@ -20,7 +21,7 @@ class Auth:
                     else:
                         return func(*args, **kwargs)
                 else:
-                    return jsonify({'error': 'not permitted'}), 403
+                    raise KarpError('Not permitted', code=ClientErrorCodes.NOT_PERMITTED)
             return wrapper
         return decorator
 
