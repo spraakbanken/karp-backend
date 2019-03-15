@@ -46,7 +46,6 @@ class Query:
         self.resources = resource_str.split(',')
         self.from_ = arg_get(args, 'from', int, 0)
         self.size = arg_get(args, 'size', int, 25)
-        self.split_results = arg_get(args, 'split_results', util_convert.str2bool, False)
         self.lexicon_stats = arg_get(args, 'lexicon_stats', util_convert.str2bool, True)
         self.include_fields = arg_get(args, 'include_fields', util_convert.str2list(','))
         self.exclude_fields = arg_get(args, 'exclude_fields', util_convert.str2list(','))

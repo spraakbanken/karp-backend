@@ -62,7 +62,7 @@ paths:
     get:
       tags:
         - Querying
-      summary: Get lexical entries
+      summary: Get lexical entries per lexicon
       description: >
         Returns a list of entries matching the given query in the given
         lexicons. The results are mixed from all resources.

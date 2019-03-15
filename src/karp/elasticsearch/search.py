@@ -245,16 +245,16 @@ class EsSearch(search.SearchInterface):
 
             responses = ms.execute()
             result = {
-                'total': 0
+                'total': 0,
+                'hits': {}
             }
             for i, response in enumerate(responses):
-                result[query.resources[i]] = self._format_result(query.resources, response)
+                result['hits'][query.resources[i]] = self._format_result(query.resources, response).get('hits', [])
                 result['total'] += response.hits.total
                 if query.lexicon_stats:
                     if 'distribution' not in result:
                         result['distribution'] = {}
                     result['distribution'][query.resources[i]] = response.hits.total
-
             return result
         else:
             s = es_dsl.Search(using=self.es, index=query.resource_str)
