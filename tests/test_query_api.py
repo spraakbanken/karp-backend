@@ -623,6 +623,22 @@ def test_or(client_with_entries, query1, query2, expected_result: List[str]):
     ('name', 'Grun.*est', [
     	'Grund test',
     ]),
+    ('name', '|and|grun.*|.*est', [
+    	'Grund test',
+    ]),
+    ('name', '|or|grun.*|.*est', [
+    	'Grund test',
+        'Grunds',
+        'Botten test',
+    ]),
+    ('name', '|not|.*est', [
+    	'Grunds',
+        'Hambo',
+        'Rutvik',
+        'Alvik',
+        'Alhamn',
+        'Bjurvik',
+    ]),
 ])
 def test_regexp(client_with_entries, field: str, value, expected_result: List[str]):
     query = 'places/query?q=regexp|{field}|{value}'.format(
