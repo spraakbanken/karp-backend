@@ -61,7 +61,6 @@ def test_es_search(es, client_with_data_f):
 
     with client_with_data.application.app_context():
         args = {
-            'split_results': 'False',
             'q': 'equals|population|3'
         }
         query = search.build_query(args, 'places,municipalities')
@@ -80,13 +79,14 @@ def test_es_search2(es, client_with_data_f):
 
     with client_with_data.application.app_context():
         args = {
-            'split_results': 'True',
             'q': 'equals|population|3'
         }
         query = search.build_query(args, 'places,municipalities')
         assert isinstance(query, karp_es.search.EsQuery)
+        query.split_results = True
         result = search.search_with_query(query)
-        assert 'places' in result
-        assert 'municipalities' in result
-        assert len(result['municipalities']['hits']) == 0
-        assert len(result['places']['hits']) == 1
+        assert 'hits' in result
+        assert 'places' in result['hits']
+        assert 'municipalities' in result['hits']
+        assert len(result['hits']['municipalities']) == 0
+        assert len(result['hits']['places']) == 1

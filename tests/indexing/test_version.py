@@ -73,8 +73,8 @@ def test_update(es, client_with_data_f):
     result = get_json(client, 'places/query')
     assert result['hits'][0]['version'] == 2
 
-    result = get_json(client, 'places/query?split_results=true')
-    assert result['places']['hits'][0]['version'] == 2
+    result = get_json(client, 'places/query_split')
+    assert result['hits']['places'][0]['version'] == 2
 
 
 def test_conflict(es, client_with_data_f):
