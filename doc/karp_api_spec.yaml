@@ -128,8 +128,9 @@ paths:
         - name: force
           in: query
           required: false
-          description: |
-            If true, the update will be done even though there is a version conflict.
+          description: >
+            If true, the update will be done even though there is a version
+            conflict.
           schema:
             type: string
       requestBody:
@@ -255,8 +256,8 @@ components:
       name: sort
       in: query
       description: >
-        The `field` sort by. If missing, default order for each resource
-        will be used.
+        The `field` sort by. If missing, default order for each resource will be
+        used.
 
 
         <span style="color: red">Do we need sort order per resource?</span>
@@ -302,10 +303,8 @@ components:
     ResultFormatQuery:
       name: format_query
       in: query
-      description: >
-        Will return each entry in the specified format (encoded in
-        JSON-field)
-
+      description: |
+        Will return each entry in the specified format (encoded in JSON-field)
 
         <span style="color: red">Why is it called format query?</span>
       schema:
@@ -398,6 +397,10 @@ components:
       type: object
       additionalProperties:
         type: integer
+      description: Only present if `lexicon_stats=true`
+      example:
+            places: 123
+            municipalities: 6
     GeneralError:
       type: object
       properties:
@@ -421,8 +424,8 @@ components:
     QueryResult:
       type: object
       required:
-      - total
-      - hits
+        - total
+        - hits
       properties:
         total:
           type: integer
@@ -434,59 +437,78 @@ components:
           items:
             $ref: '#/components/schemas/ResultEntry'
         distribution:
-          description: Only present if `lexicon_stats=true`
-          additionalProperties:
-            type: integer
-          example:
-            places: 123
-            municipalities: 6
+          $ref: '#/components/schemas/DistributionResult'
       example:
-        total: 6578,
-        hits: [
-          {
-            id: "1410",
-            resource: "places",
-            version: 2,
-            entry: ...
-          }
-        ]
+        total: 26
+        hits:
+          - id:  "8724"
+            resource:  "places"
+            version:  1
+            entry:  
+              code:  8724
+              name:  "Luleå"
+          - id:  "2580"
+            resource:  "municipalities"
+            version:  1
+            entry:
+              code:  2580
+              name:  "Luleå kommun"
+              region:  "Norrbotten"
+              state:  "Norrbottens län"
+        distribution:
+          places: 25
+          municipalities: 1
+    QuerySplitResultHits:
+      type: object
+      description: The matching entries per resource.
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/ResultEntry'
     QuerySplitResult:
       type: object
       required:
-      - total
-      - hits
+        - total
+        - hits
       properties:
         total:
           type: integer
           description: Total number of matches
           example: 6278
         hits:
-          description: The matching entries per resource.
-          properties:
-            type: object
-            additionalProperties:
-              type: array
-              items:
-                $ref: '#/components/schemas/ResultEntry'
+          $ref: '#/components/schemas/QuerySplitResultHits'
         distribution:
-          description: Only present if `lexicon_stats=true`
-          additionalProperties:
-            type: integer
-          example:
-            places: 123
-            municipalities: 6
+          $ref: '#/components/schemas/DistributionResult'
       example:
-        total: 6578,
-        hits: {
-            "places": [
-                {
-                    id: "1410",
-                    resource: "places",
-                    version: 2,
-                    entry: ...
+        total: 26
+        hits:
+          places: [
+              {
+                id:  "8724",
+                resource:  "places",
+                version:  1,
+                entry: {
+                  code:  8724,
+                  name:  "Luleå"
                 }
+              }
             ]
-        }
+          municipalities: [
+              {
+                id:  "2580",
+                resource:  "municipalities",
+                version:  1,
+                entry: {
+                  code:  2580,
+                  name:  "Luleå kommun",
+                  region:  "Norrbotten",
+                  state:  "Norrbottens län",
+                }
+              }
+            ]
+        distribution:
+          places: 25
+          municipalities: 1
     ResultEntry:
       type: object
       description: Hits entry schema
@@ -502,9 +524,9 @@ components:
         entry:
           $ref: '#/components/schemas/Entry'
       example:
-        id: "1410"
+        id: '1410'
         version: 2
-        resource: "places"
+        resource: places
     AddEntry:
       type: object
       properties:
@@ -522,25 +544,34 @@ components:
         v_saldo:
           saldo: apa..1
           primary: djur..1
-          secondary: ['primat..1']
+          secondary:
+            - primat..1
     NewID:
       type: object
       properties:
         newID:
           type: string
+    StatsResultEntryValue:
+      oneOf:
+        - type: string
+        - type: integer
+        - type: boolean
+        - type: number
+      description: A value that occurs for field in given resource
+      example: NN
+    StatsResultEntry:
+      type: object
+      required:
+        - value
+        - count
+      properties:
+        count:
+          type: integer
+          description: Total number of occurences of value in given resource
+          example: 6278
+        value:
+          $ref: '#/components/schemas/StatsResultEntryValue'
     StatsResult:
       type: array
       items:
-        type: object
-        required:
-        - value
-        - count
-        properties:
-          count:
-            type: integer
-            description: Total number of occurences of value in given resource
-            example: 6278
-          value:
-            type: any
-            description: A value that occurs for field in given resource
-            example: "NN"
+        $ref: '#/components/schemas/StatsResultEntry'
