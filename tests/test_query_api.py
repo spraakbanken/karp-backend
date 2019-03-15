@@ -2,7 +2,7 @@ import pytest  # pyre-ignore
 import json
 import time
 
-from typing import List, Tuple
+from typing import Callable, List, Tuple
 
 
 ENTRIES = [{
@@ -116,6 +116,46 @@ def extract_names_set(entries):
     return names
 
 
+def _test_path(client, path: str, expected_result: List[str]):
+    entries = get_json(client, path)
+
+    names = extract_names(entries)
+
+    assert len(names) == len(expected_result)
+
+    for name in names:
+        assert name in expected_result
+
+    for expected in expected_result:
+        assert expected in names
+
+
+def _test_against_entries(
+        client,
+        path: str,
+        field: str,
+        predicate: Callable,
+        expected_n_hits: int = None
+    ):
+    entries = get_json(client, path)
+    names = extract_names(entries)
+
+    if field.endswith('.raw'):
+        field = field[:-4]
+
+    assert len(names) == sum(1 for entry in ENTRIES if field in entry and predicate(entry[field]))
+
+    num_names_to_match = len(names)
+    for entry in ENTRIES:
+        if field in entry and predicate(entry[field]):
+            assert entry['name'] in names
+            num_names_to_match -= 1
+    assert num_names_to_match == 0
+
+    if expected_n_hits:
+        assert len(entries['hits']) == expected_n_hits
+
+
 def test_query_no_q(client_with_entries):
     entries = get_json(client_with_entries, 'places/query')
 
@@ -156,17 +196,7 @@ def test_and(client_with_entries, query1, query2, expected_result: List[str]):
         query1=query1,
         query2=query2
     )
-    entries = get_json(client_with_entries, query)
-
-    names = extract_names(entries)
-
-    assert len(names) == len(expected_result)
-
-    for name in names:
-        assert name in expected_result
-
-    for expected in expected_result:
-        assert expected in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize("field,value,expected_result", [
@@ -211,14 +241,7 @@ def test_contains(client_with_entries, field: str, value, expected_result: List[
         field=field,
         value=value
     )
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize("fields,values,expected_result", [
@@ -293,14 +316,7 @@ def test_endswith(client_with_entries, field: str, value, expected_result: List[
         field=field,
         value=value
     )
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize("field,value,expected_result", [
@@ -333,14 +349,7 @@ def test_equals(client_with_entries, field: str, value, expected_result: List[st
         field=field,
         value=value
     )
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize('field,expected_result',[
@@ -382,13 +391,7 @@ def test_equals(client_with_entries, field: str, value, expected_result: List[st
 ])
 def test_exists(client_with_entries, field: str, expected_result: List[str]):
     query = 'places/query?q=exists|{field}'.format(field=field)
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize('field,expected_result',[
@@ -407,8 +410,9 @@ def test_exists(client_with_entries, field: str, expected_result: List[str]):
         'Grund test',
         'Grunds',
         'Botten test',
-        'Hambo',  # through smaller_places
-        'Alhamn',
+        'Hambo',  # through larger_place
+        'Alhamn',  # through smaller_places
+        'Bjurvik',  # through smaller_places
     ]),
     ('Grunds?', [
         'Grund test',
@@ -418,59 +422,7 @@ def test_exists(client_with_entries, field: str, expected_result: List[str]):
 ])
 def test_freergxp(client_with_entries, field: str, expected_result: List[str]):
     query = 'places/query?q=freergxp|{field}'.format(field=field)
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
-
-
-def test_freergxp_and(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freergxp||and|.*test|Gr.*')
-
-    names = extract_names(entries)
-
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Alhamn' in names  # through smaller_places
-
-
-# @pytest.mark.skip(reason='Currently only allow top level NOT')
-def test_freergxp_not(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freergxp||not|Gr.*')
-
-    names = extract_names(entries)
-
-    assert len(names) == 5
-    assert 'Botten test' in names
-    assert 'Hambo' in names
-    assert 'Alvik' in names
-    assert 'Rutvik' in names
-    assert 'Bjurvik' in names
-
-
-def test_freergxp_or(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freergxp||or|.*test|Gr.*')
-
-    names = extract_names(entries)
-
-    assert len(names) == 5
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-    assert 'Botten test' in names
-    assert 'Hambo' in names  # through smaller_places
-    assert 'Alhamn' in names
-
-
-def test_freergxp_string(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freergxp|Grunds?')
-    names = extract_names(entries)
-    assert len(names) == 3
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-    assert 'Alhamn' in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize('field,expected_result',[
@@ -484,7 +436,8 @@ def test_freergxp_string(client_with_entries):
     ]),
     ('|and|botten|test', [
     	'Botten test',
-    	'Hambo',  # through smaller_places
+    	'Hambo',  # through larger_place
+        'Bjurvik',  # through smaller_places
     ]),
     ('|not|botten', [
     	'Grund test',
@@ -492,92 +445,19 @@ def test_freergxp_string(client_with_entries):
     	'Alhamn',
     	'Rutvik',
     	'Alvik',
-    	'Bjurvik',
+    	# 'Bjurvik',
     ]),
     ('|or|botten|test', [
     	'Botten test',
     	'Hambo',  # through smaller_places
     	'Grund test',
-    	'Alhamn',
+    	'Alhamn',  # through smaller_places
+        'Bjurvik',  # through smaller_places
     ]),
 ])
 def test_freetext(client_with_entries, field: str, expected_result: List[str]):
     query = 'places/query?q=freetext|{field}'.format(field=field)
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
-
-
-def test_freetext_string(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freetext|grund')
-    names = extract_names(entries)
-    assert len(names) == 3
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-    assert 'Alhamn' in names  # through smaller_places
-
-
-def test_freetext_integer(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freetext|3122')
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grund test' in names
-
-
-def test_freetext_and(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freetext||and|botten|test')
-
-    names = extract_names(entries)
-
-    assert len(names) == 2
-    assert 'Botten test' in names
-    assert 'Hambo' in names  # through smaller_places
-
-
-def test_freetext_not(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freetext||not|botten')
-
-    names = extract_names(entries)
-
-    assert len(names) == 6
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-    assert 'Alhamn' in names
-    assert 'Rutvik' in names
-    assert 'Alvik' in names
-    assert 'Bjurvik' in names
-
-
-def test_freetext_or(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=freetext||or|botten|test')
-
-    names = extract_names(entries)
-
-    assert len(names) == 4
-    assert 'Botten test' in names
-    assert 'Hambo' in names  # through smaller_places
-    assert 'Grund test' in names
-    assert 'Alhamn' in names
-
-
-def _test_against_entries(entries, field: str, predicate):
-    names = extract_names(entries)
-
-    if field.endswith('.raw'):
-        field = field[:-4]
-
-    assert len(names) == sum(1 for entry in ENTRIES if field in entry and predicate(entry[field]))
-
-    num_names_to_match = len(names)
-    for entry in ENTRIES:
-        if field in entry and predicate(entry[field]):
-            assert entry['name'] in names
-            num_names_to_match -= 1
-    assert num_names_to_match == 0
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize("field,value", [
@@ -595,8 +475,7 @@ def _test_against_entries(entries, field: str, predicate):
 ])
 def test_gt(client_with_entries, field, value):
     query = 'places/query?q=gt|{field}|{value}'.format(field=field, value=value[0])
-    entries = get_json(client_with_entries, query)
-    _test_against_entries(entries, field, lambda x: value[-1] < x)
+    _test_against_entries(client_with_entries, query, field, lambda x: value[-1] < x)
 
 
 @pytest.mark.parametrize("field,value", [
@@ -610,9 +489,7 @@ def test_gt(client_with_entries, field, value):
 ])
 def test_gte(client_with_entries, field, value):
     query = 'places/query?q=gte|{field}|{value}'.format(field=field, value=value[0])
-    entries = get_json(client_with_entries, query)
-
-    _test_against_entries(entries, field, lambda x: value[-1] <= x)
+    _test_against_entries(client_with_entries, query, field, lambda x: value[-1] <= x)
 
 
 @pytest.mark.parametrize("field,value", [
@@ -626,9 +503,7 @@ def test_gte(client_with_entries, field, value):
 ])
 def test_lt(client_with_entries, field, value):
     query = 'places/query?q=lt|{field}|{value}'.format(field=field, value=value[0])
-    entries = get_json(client_with_entries, query)
-
-    _test_against_entries(entries, field, lambda x: x < value[-1])
+    _test_against_entries(client_with_entries, query, field, lambda x: x < value[-1])
 
 
 @pytest.mark.parametrize("field,value", [
@@ -642,12 +517,10 @@ def test_lt(client_with_entries, field, value):
 ])
 def test_lte(client_with_entries, field, value):
     query = 'places/query?q=lte|{field}|{value}'.format(field=field, value=value[0])
-    entries = get_json(client_with_entries, query)
-
-    _test_against_entries(entries, field, lambda x: x <= value[-1])
+    _test_against_entries(client_with_entries, query, field, lambda x: x <= value[-1])
 
 
-@pytest.mark.parametrize("field,lower,upper,expected_hits", [
+@pytest.mark.parametrize("field,lower,upper,expected_n_hits", [
     ('population', (3812,), (4133,), 1),
     ('area', (6312,), (50000,), 1),
     ('name', ('alhamn', 'Alhamn'), ('bjurvik', 'Bjurvik'), 1),
@@ -655,18 +528,21 @@ def test_lte(client_with_entries, field, value):
     pytest.param('name', ('Alhamn',), ('Bjurvik',), 1, marks=pytest.mark.xfail),
     pytest.param('name', ('B',), ('H',), 1, marks=pytest.mark.xfail),
     ('name.raw', ('Alhamn',), ('Bjurvik',), 1),
-    ('name.raw', ('B',), ('H',), 1),
+    ('name.raw', ('B',), ('H',), 4),
 ])
-def test_and_gt_lt(client_with_entries, field, lower, upper, expected_hits):
+def test_and_gt_lt(client_with_entries, field, lower, upper, expected_n_hits):
     query = 'places/query?q=and||gt|{field}|{lower}||lt|{field}|{upper}'.format(
         field=field,
         lower=lower[0],
         upper=upper[0]
     )
-    entries = get_json(client_with_entries, query)
-
-    _test_against_entries(entries, field, lambda x: lower[-1] < x < upper[-1])
-    assert len(entries['hits']) == expected_hits
+    _test_against_entries(
+        client_with_entries,
+        query,
+        field,
+        lambda x: lower[-1] < x < upper[-1],
+        expected_n_hits
+    )
 
 
 @pytest.mark.parametrize('field,expected_result',[
@@ -692,106 +568,31 @@ def test_and_gt_lt(client_with_entries, field, lower, upper, expected_hits):
 ])
 def test_missing(client_with_entries, field: str, expected_result: List[str]):
     query = 'places/query?q=missing|{field}'.format(field=field)
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
-
-
-def test_missing_d(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=missing|density')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Hambo' in names
-    assert 'Rutvik' in names
-
-
-def test_missing_and(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=missing||and|density|population')
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Rutvik' in names
-
-
-def test_missing_not(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=missing||not|density')
-    names = extract_names(entries)
-    assert len(names) == 6
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-    assert 'Botten test' in names
-    assert 'Alvik' in names
-    assert 'Alhamn' in names
-    assert 'Bjurvik' in names
-
-
-def test_missing_or(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=missing||or|density|population')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Rutvik' in names
-    assert 'Hambo' in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize('query1,expected_result', [
     ('freetext|botten', [
+    	'Grund test',
     	'Grunds',
     	'Rutvik',
     	'Alvik',
-    	'Bjurvik',
-    	'Grund test',
     	'Alhamn',
     ]),
     ('freergxp|.*test', [
     	'Grunds',
     	'Rutvik',
     	'Alvik',
-    	'Bjurvik',
     ]),
 ])
 def test_not(client_with_entries, query1: str, expected_result: List[str]):
     query = 'places/query?q=not||{query1}'.format(query1=query1)
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
-
-
-def test_not_freetext(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=not||freetext|botten')
-
-    names = extract_names(entries)
-
-    assert len(names) == 6
-    assert 'Grunds' in names
-    assert 'Rutvik' in names
-    assert 'Alvik' in names
-    assert 'Bjurvik' in names
-    assert 'Grund test' in names
-    assert 'Alhamn' in names
-
-
-def test_not_freergxp(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=not||freergxp|.*test')
-
-    names = extract_names(entries)
-
-    assert len(names) == 4
-    assert 'Grunds' in names
-    assert 'Rutvik' in names
-    assert 'Alvik' in names
-    assert 'Bjurvik' in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize("query1,query2,expected_result", [
     ('equals|population|3122', 'equals|population|4132', [
-        'Botten test',
+        'Hambo',
         'Grund test',
     ]),
 ])
@@ -800,24 +601,7 @@ def test_or(client_with_entries, query1, query2, expected_result: List[str]):
         query1=query1,
         query2=query2
     )
-    entries = get_json(client_with_entries, query)
-
-    names = extract_names(entries)
-
-    assert len(names) == len(expected_result)
-
-    for name in names:
-        assert name in expected_result
-
-    for expected in expected_result:
-        assert expected in names
-
-
-def test_or_(client_with_entries):
-    query = 'or||equals|population|6312||equals|population|4132'
-    entries = get_json(client_with_entries, 'places/query?q=' + query)
-    names = extract_names(entries)
-    assert len(names) == 3
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize("field,value,expected_result", [
@@ -845,52 +629,7 @@ def test_regexp(client_with_entries, field: str, value, expected_result: List[st
         field=field,
         value=value
     )
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
-
-
-def test_regex_string_lower_case(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=regexp|name|grun.*')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-
-
-def test_regex_string_correct_case(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=regexp|name|Grun.*')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-
-
-def test_regex_string_correct_case_question_mark(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=regexp|name|Grunds?')
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grunds' in names
-
-
-def test_regex_string_lower_case_question_mark(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=regexp|name|grunds?')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-
-
-def test_regex_string_whole_name(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=regexp|name|Grun.*est')
-    names = extract_names(entries)
-    assert len(names) == 1
-    assert 'Grund test' in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.parametrize("field,value,expected_result", [
@@ -912,30 +651,7 @@ def test_startswith(client_with_entries, field: str, value, expected_result: Lis
         field=field,
         value=value
     )
-    entries = get_json(client_with_entries, query)
-    names = extract_names(entries)
-
-    assert len(names) == len(expected_result)
-    for name in names:
-        assert name in expected_result
-    for expected in expected_result:
-        assert expected in names
-
-
-def test_startswith_string_lower_case(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=startswith|name|grun')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Grunds' in names
-
-
-def test_startswith_string_correct_case(client_with_entries):
-    entries = get_json(client_with_entries, 'places/query?q=startswith|name|Grun')
-    names = extract_names(entries)
-    assert len(names) == 2
-    assert 'Grund test' in names
-    assert 'Grunds' in names
+    _test_path(client_with_entries, query, expected_result)
 
 
 @pytest.mark.skip(reason='no protected stuff')
