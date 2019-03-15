@@ -165,6 +165,22 @@ def list_resources(show_active):
         ))
 
 
+@cli.command('set_permissions')
+@click.option('--resource_id', required=True)
+@click.option('--version', required=True)
+@click.option('--level', required=True)
+@cli_error_handler
+@cli_timer
+def set_permissions(resource_id, version, level):
+    # TODO use level
+    permissions = {
+        'write': True,
+        'read': True
+    }
+    resourcemgr.set_permissions(resource_id, version, permissions)
+    click.echo('updated permissions')
+
+
 def export_resource():
     pass
 

@@ -161,6 +161,15 @@ def delete_resource(resource_id, version):
     db.session.commit()
 
 
+def set_permissions(resource_id: str, version: int, permissions: Dict[str, bool]):
+    resource_def = database.get_resource_definition(resource_id, version)
+    config = json.loads(resource_def.config_file)
+    config['protected'] = permissions
+    resource_def.config_file = json.dumps(config)
+    # db.session.update(resource_def)
+    db.session.commit()
+
+
 def get_refs(resource_id, version=None):
     """
     Goes through all other resource configs finding resources and fields that refer to this resource
