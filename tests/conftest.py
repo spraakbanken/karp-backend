@@ -72,6 +72,19 @@ def app_f():
     return fun
 
 
+@pytest.fixture(scope='module')
+def app_f_scope_module():
+    def fun(**kwargs):
+        app = create_app(ConfigTest(**kwargs))
+        with app.app_context():
+            ResourceDefinition.__table__.create(bind=db.engine)
+            yield app
+
+            db.session.remove()
+            db.drop_all()
+    return fun
+
+
 @pytest.fixture(scope="module")
 def app_scope_module():
     app = create_app(ConfigTest)
@@ -87,6 +100,21 @@ def app_scope_module():
 def app_with_data_f(app_f):
     def fun(**kwargs):
         app = next(app_f(**kwargs))
+        with app.app_context():
+            for file in ['tests/data/config/places.json', 'tests/data/config/municipalities.json']:
+                with open(file) as fp:
+                    resource, version = resourcemgr.create_new_resource(fp)
+                    resourcemgr.setup_resource_class(resource, version)
+                    if kwargs.get('use_elasticsearch', False):
+                        indexmgr.publish_index(resource, version)
+        return app
+    yield fun
+
+
+@pytest.fixture(scope='module')
+def app_with_data_f_scope_module(app_f_scope_module):
+    def fun(**kwargs):
+        app = next(app_f_scope_module(**kwargs))
         with app.app_context():
             for file in ['tests/data/config/places.json', 'tests/data/config/municipalities.json']:
                 with open(file) as fp:
@@ -131,6 +159,16 @@ def client_with_data_f(app_with_data_f):
 
     def fun(**kwargs):
         app_with_data = app_with_data_f(**kwargs)
+        return app_with_data.test_client()
+
+    return fun
+
+
+@pytest.fixture(scope='module')
+def client_with_data_f_scope_module(app_with_data_f_scope_module):
+
+    def fun(**kwargs):
+        app_with_data = app_with_data_f_scope_module(**kwargs)
         return app_with_data.test_client()
 
     return fun
