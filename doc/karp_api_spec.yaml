@@ -445,7 +445,7 @@ components:
           - id:  "8724"
             resource:  "places"
             version:  1
-            entry:  
+            entry:
               code:  8724
               name:  "Luleå"
           - id:  "2580"
@@ -524,10 +524,16 @@ components:
           example: places
         entry:
           $ref: '#/components/schemas/Entry'
+      required:
+          - id
+          - version
+          - resource
+          - entry
       example:
         id: '1410'
         version: 2
         resource: places
+        entry: {}
     AddEntry:
       type: object
       properties:
