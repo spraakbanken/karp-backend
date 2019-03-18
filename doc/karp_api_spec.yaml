@@ -58,6 +58,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+  '/{resource}/{entry_ids}':
+    get:
+      tags:
+        - Querying
+      summary: Get lexical entries by id
+      description: >
+        Returns a list of entries matching the given ids
+      parameters:
+        - $ref: '#/components/parameters/SingleResource'
+        - $ref: '#/components/parameters/EntryIds'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResult'
+        '500':
+          description: Query failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
   '/query_split/{resources}':
     get:
       tags:
@@ -220,6 +243,14 @@ components:
       description: The id to perform operation on
       schema:
         type: string
+    EntryIds:
+      name: entry_ids
+      in: path
+      required: true
+      description: Comma-separated. The ids to perform operation on.
+      schema:
+        type: string
+        minimum: 1
     FromPage:
       name: from
       in: query
