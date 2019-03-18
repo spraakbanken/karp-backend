@@ -3,7 +3,7 @@ import re
 import json
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
-from typing import List, Set, Union
+from typing import Dict, List, Set, Union
 
 from karp.query_dsl import basic_ast as ast
 from karp import query_dsl
@@ -326,18 +326,56 @@ def create_es_query(node):
             # else:
             #     q = es_dsl.Q('bool', should=[es_dsl.Q('regexp', **{field: arg22}) for field in fields])
         elif op in [query_dsl.Operators.LT, query_dsl.Operators.LTE, query_dsl.Operators.GT, query_dsl.Operators.GTE]:
-            range_args = {}
-            arg11 = get_value(arg1)
+            if arg2_values:
+                raise RuntimeError('Unsupported usage')
             arg22 = get_value(arg2)
+            range_args = {}
             if op == query_dsl.Operators.LT:
-                range_args['lt'] = arg22
+                if arg1.value == query_dsl.Operators.NOT:
+                    range_args['gte'] = arg22
+                else:
+                    range_args['lt'] = arg22
             elif op == query_dsl.Operators.LTE:
-                range_args['lte'] = arg22
+                if arg1.value == query_dsl.Operators.NOT:
+                    range_args['gt'] = arg22
+                else:
+                    range_args['lte'] = arg22
             elif op == query_dsl.Operators.GT:
-                range_args['gt'] = arg22
+                if arg1.value == query_dsl.Operators.NOT:
+                    range_args['lte'] = arg22
+                else:
+                    range_args['gt'] = arg22
             elif op == query_dsl.Operators.GTE:
-                range_args['gte'] = arg22
-            q = es_dsl.Q('range', **{arg11: range_args})
+                if arg1.value == query_dsl.Operators.NOT:
+                    range_args['lt'] = arg22
+                else:
+                    range_args['gte'] = arg22
+
+            def construct_range_query(field: str, range_args: Dict):
+                return es_dsl.Q('range', **{field: range_args})
+
+            q = None
+            if not arg1_values:
+                q = construct_range_query(get_value(arg1), range_args)
+            else:
+                for field in arg1_values:
+                    q_tmp = construct_range_query(field, range_args)
+                    if not q:
+                        q = q_tmp
+                    elif arg1.value == query_dsl.Operators.AND:
+                        q = q & q_tmp
+                    elif arg1.value == query_dsl.Operators.OR:
+                        q = q | q_tmp
+            # arg11 = get_value(arg1)
+            # if op == query_dsl.Operators.LT:
+            #     range_args['lt'] = arg22
+            # elif op == query_dsl.Operators.LTE:
+            #     range_args['lte'] = arg22
+            # elif op == query_dsl.Operators.GT:
+            #     range_args['gt'] = arg22
+            # elif op == query_dsl.Operators.GTE:
+            #     range_args['gte'] = arg22
+            # q = es_dsl.Q('range', **{arg11: range_args})
     elif isinstance(node, ast.TernaryOp):
         op = node.value
         arg1 = node.child0

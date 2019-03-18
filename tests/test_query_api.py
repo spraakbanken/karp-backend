@@ -156,6 +156,37 @@ def _test_against_entries(
         assert len(entries['hits']) == expected_n_hits
 
 
+def _test_against_entries_general(
+        client,
+        path: str,
+        fields: Tuple[str],
+        predicate: Callable,
+        expected_n_hits: int = None
+    ):
+    entries = get_json(client, path)
+    names = extract_names(entries)
+
+    for i, field in enumerate(fields):
+        if field.endswith('.raw'):
+            fields[i] = field[:-4]
+
+    for field in fields:
+        print('field = {}'.format(field))
+
+    # assert len(names) == sum(1 for entry in ENTRIES if all(field in entry for field in fields) and predicate([entry[field] for field in fields]))
+
+    num_names_to_match = len(names)
+    for entry in ENTRIES:
+        print('entry = {}'.format(entry))
+        if all(field in entry for field in fields) and predicate([entry[field] for field in fields]):
+            assert entry['name'] in names
+            num_names_to_match -= 1
+    assert num_names_to_match == 0
+
+    if expected_n_hits:
+        assert len(entries['hits']) == expected_n_hits
+
+
 def test_query_no_q(client_with_entries):
     entries = get_json(client_with_entries, 'places/query')
 
@@ -205,15 +236,14 @@ def test_and(client_with_entries, query1, query2, expected_result: List[str]):
     ('name.raw', 'Grund', ['Grund test', 'Grunds']),
     pytest.param('population', 3122, ['Grund test'], marks=pytest.mark.xfail),
     ('|and|name|v_larger_place.name|', 'vi', ['Bjurvik']),
-    pytest.param('|and|name|v_smaller_places.name|', 'and|Al|vi', ['Alvik'], marks=pytest.mark.skip(reason="regex can't handle complex")),
-    ('|not|name|', 'test', [
-        'Grunds',
+    pytest.param('|and|name|v_smaller_places.name|', 'and|Al|vi', [
+        'Alvik'
+    ], marks=pytest.mark.skip(reason="regex can't handle complex")),
+    pytest.param('|not|name|', 'test', [
         'Hambo',
         'Alhamn',
-        'Rutvik',
-        'Alvik',
         'Bjurvik',
-    ]),
+    ], marks=pytest.mark.xfail(reason='Unclear semantics')),
     ('|or|name|v_smaller_places.name|', 'Al', [
         'Alvik',
         'Alhamn',
@@ -327,7 +357,10 @@ def test_endswith(client_with_entries, field: str, value, expected_result: List[
     ('name', '|and|grund|test', ['Grund test']),
     ('density', 7, ['Botten test']),
     ('|and|population|area|', 6312, ['Alvik']),
-    ('|not|area|', 6312, ['Alhamn', 'Alvik', 'Bjurvik', 'Grund test']),
+    pytest.param('|not|area|', 6312, [
+        'Alvik',
+        'Grunds',
+    ], marks=pytest.mark.xfail(reason='Cannot handle negated field.')),
     ('|or|population|area|', 6312, [
         'Alhamn',
         'Alvik',
@@ -520,6 +553,50 @@ def test_lte(client_with_entries, field, value):
     _test_against_entries(client_with_entries, query, field, lambda x: x <= value[-1])
 
 
+@pytest.mark.parametrize("op,fields,value,expected_result", [
+    ('gt', ('population', 'area'), (6212,), None),
+    ('gt', ('name', 'v_smaller_places.name'), ('bjurvik',), [
+        'Botten test',
+    ]),
+    ('gte', ('population', 'area'), (6212,), None),
+    ('gte', ('name', 'v_smaller_places.name'), ('bjurvik',), [
+        'Botten test',
+        'Bjurvik',
+    ]),
+])
+def test_binary_range_1st_arg_and(
+        client_with_entries,
+        op: str,
+        fields: Tuple,
+        value: Tuple,
+        expected_result: List[str]
+    ):
+    query = 'places/query?q={op}||and|{field1}|{field2}||{value}'.format(
+        op=op,
+        field1=fields[0],
+        field2=fields[1],
+        value=value[0]
+    )
+    if not expected_result:
+        if op == 'gt':
+            predicate = lambda X: all(value[-1] < x for x in X)
+        elif op == 'gte':
+            predicate = lambda X: all(value[-1] <= x for x in X)
+        else:
+            pytest.fail(msg="Unknown range operator '{}'".format(op))
+        _test_against_entries_general(
+            client_with_entries,
+            query,
+            fields,
+            predicate
+        )
+    else:
+        _test_path(client_with_entries, query, expected_result)
+
+
+
+
+
 @pytest.mark.parametrize("field,lower,upper,expected_n_hits", [
     ('population', (3812,), (4133,), 1),
     ('area', (6312,), (50000,), 1),
@@ -639,6 +716,18 @@ def test_or(client_with_entries, query1, query2, expected_result: List[str]):
         'Alhamn',
         'Bjurvik',
     ]),
+    ('|and|name|v_larger_place.name|', '.*vik', [
+        'Bjurvik',
+    ]),
+    ('|or|name|v_larger_place.name|', 'al.*n', [
+        'Grund test',
+        'Alhamn'
+    ]),
+    pytest.param('|not|name|', 'Al.*', [
+        'Grund test',
+        'Hambo',
+        'Bjurvik',
+    ], marks=pytest.mark.xfail(reason='Unclear semantics.'))
 ])
 def test_regexp(client_with_entries, field: str, value, expected_result: List[str]):
     query = 'places/query?q=regexp|{field}|{value}'.format(
@@ -661,6 +750,37 @@ def test_regexp(client_with_entries, field: str, value, expected_result: List[st
     	'Grund test',
         'Botten test'
     ]),
+    ('name', '|and|grun|te', [
+    	'Grund test',
+    ]),
+    ('name', '|or|grun|te', [
+    	'Grund test',
+        'Grunds',
+        'Botten test',
+    ]),
+    ('name', '|not|te', [
+    	'Grunds',
+        'Hambo',
+        'Rutvik',
+        'Alvik',
+        'Alhamn',
+        'Bjurvik',
+    ]),
+    ('|and|name|v_larger_place.name|', 'b', [
+        'Botten test',
+    ]),
+    ('|and|name|v_larger_place.name|', 'B', [
+        'Botten test',
+    ]),
+    ('|or|name|v_larger_place.name|', 'alh', [
+        'Grund test',
+        'Alhamn'
+    ]),
+    pytest.param('|not|name|', 'Al', [
+        'Grund test',
+        'Hambo',
+        'Bjurvik',
+    ], marks=pytest.mark.xfail(reason='Unclear semantics.'))
 ])
 def test_startswith(client_with_entries, field: str, value, expected_result: List[str]):
     query = 'places/query?q=startswith|{field}|{value}'.format(
