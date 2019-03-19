@@ -74,7 +74,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/QueryResult'
+                $ref: '#/components/schemas/GetEntriesResult'
         '500':
           description: Query failed
           content:
@@ -490,6 +490,21 @@ components:
         distribution:
           places: 25
           municipalities: 1
+    GetEntriesResult:
+      type: object
+      required:
+        - total
+        - hits
+      properties:
+        total:
+          type: integer
+          description: Total number of matches
+          example: 6278
+        hits:
+          description: The matching entries.
+          type: array
+          items:
+            $ref: '#/components/schemas/ResultEntry'
     QuerySplitResultHits:
       type: object
       description: The matching entries per resource.
