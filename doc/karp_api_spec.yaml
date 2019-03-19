@@ -434,6 +434,9 @@ components:
             municipalities: 6
     GeneralError:
       type: object
+      required:
+        - error
+        - errorCode
       properties:
         error:
           type: string
@@ -453,6 +456,31 @@ components:
             EXPIRED_JWT = 40
             NOT_PERMITTED = 41
             ```
+        diff:
+          type: array
+          description: |
+            Only for VERSION_CONFLICT
+          items:
+            type: object
+            required:
+              - type
+              - field
+            properties:
+              type:
+                type: string
+                description: What type of operation was done on field
+                enum:
+                  - CHANGE
+                  - REMOVED
+                  - ADDED
+                  - TYPECHANGE
+              field:
+                type: string
+                description: The field that was changed
+              before:
+                description: Value before update
+              after:
+                description: Value after update
     QueryResult:
       type: object
       required:

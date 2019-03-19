@@ -39,3 +39,14 @@ class EntryNotFoundError(KarpError):
             entry_id=entry_id,
             entry_version=entry_version if entry_version else 'latest'
         ), ClientErrorCodes.ENTRY_NOT_FOUND)
+
+
+class UpdateConflict(KarpError):
+
+    def __init__(self, diff):
+        super().__init__('Version conflict. Please update entry.', code=ClientErrorCodes.VERSION_CONFLICT)
+        self.error_obj = {
+            'diff': diff,
+            'errorCode': self.code,
+            'error': self.message
+        }
