@@ -105,7 +105,9 @@ def test_conflict(es, client_with_data_f):
     }), content_type='application/json')
 
     assert response.status_code == 400
-    assert 'Version' in json.loads(response.data.decode())['error']
+    error_obj = json.loads(response.data.decode())
+    assert 'Version' in error_obj['error']
+    assert 'diff' in error_obj
 
 
 def test_delete(es, client_with_data_f):

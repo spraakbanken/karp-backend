@@ -2,7 +2,7 @@ import json
 import fastjsonschema  # pyre-ignore
 import logging
 
-from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError
+from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError, UpdateConflict
 from karp.resourcemgr import get_resource
 from karp.database import db
 import karp.indexmgr as indexmgr
@@ -42,7 +42,7 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
     latest_history_entry = resource.history_model.query.filter_by(entry_id=db_id).order_by(
         resource.history_model.version.desc()).first()
     if not force and latest_history_entry.version > version:
-        raise KarpError('Version conflict. Please update entry.', ClientErrorCodes.VERSION_CONFLICT)
+        raise UpdateConflict(diff)
     history_entry = resource.history_model(
         entry_id=db_id,
         user_id=user_id,
