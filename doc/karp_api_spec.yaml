@@ -618,6 +618,7 @@ components:
     Entry:
       type: object
       description: Actual schema different for each resource
+      additionalProperties: {}
       example:
         pos: nn
         lemgram: apa..nn.1
