@@ -43,3 +43,8 @@ def get_yaml():
     with open('doc/karp_api_spec.yaml') as fp:
         spec = fp.read()
     return Response(spec, mimetype='text/yaml')
+
+
+@documentation.route('/favicon.ico', methods=['GET'])
+def favicon_blocker():
+    return '', 404
