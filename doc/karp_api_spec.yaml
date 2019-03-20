@@ -16,7 +16,7 @@ info:
     name: MIT
     url: 'https://opensource.org/licenses/MIT'
 servers:
-  - url: 'https://karp-tng-backend-os-sample-python.os-dev.spraakbanken.gu.se/'
+  - url: 'https://karp-tng-backend-https-os-sample-python.os-dev.spraakbanken.gu.se/'
     description: Under development
 tags:
   - name: Querying
