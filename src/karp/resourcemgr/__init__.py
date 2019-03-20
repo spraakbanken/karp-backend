@@ -222,9 +222,7 @@ def is_protected(resource_id, level):
     """
     resource = get_resource(resource_id)
     protection = resource.config.get('protected', {})
-    return protection.get('read') or \
-           protection.get('write') and level != 'READ' or \
-           protection.get('admin') and level == 'ADMIN'
+    return level == 'WRITE' or level == 'ADMIN' or protection.get('read')
 
 
 def get_all_versions(resource_obj: Resource) -> Dict[int, int]:
