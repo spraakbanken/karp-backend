@@ -4,6 +4,7 @@ import fastjsonschema  # pyre-ignore
 import logging
 import collections
 from sqlalchemy.sql import func
+from distutils.util import strtobool
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
@@ -222,7 +223,7 @@ def is_protected(resource_id, level):
     """
     resource = get_resource(resource_id)
     protection = resource.config.get('protected', {})
-    return level == 'WRITE' or level == 'ADMIN' or protection.get('read')
+    return level == 'WRITE' or level == 'ADMIN' or strtobool(protection.get('read', 'false'))
 
 
 def get_all_versions(resource_obj: Resource) -> Dict[int, int]:
