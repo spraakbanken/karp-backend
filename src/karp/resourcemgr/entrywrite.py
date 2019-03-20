@@ -27,7 +27,8 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
                  message: str=None, resource_version: int=None, force: bool=False):
     resource = get_resource(resource_id, version=resource_version)
 
-    index_entry_json = _validate_and_prepare_entry(resource, entry)
+    schema = _compile_schema(resource.entry_json_schema)
+    _validate_entry(schema, entry)
 
     current_db_entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
     if not current_db_entry:
@@ -53,15 +54,17 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
     )
 
     kwargs = _src_entry_to_db_kwargs(entry, db_entry_json, resource.model, resource.config)
-    if kwargs['entry_id'] != current_db_entry.entry_id:
-        indexmgr.delete_entry(resource_id, current_db_entry.entry_id)
     for key, value in kwargs.items():
         setattr(current_db_entry, key, value)
 
     db.session.add(history_entry)
     db.session.commit()
 
-    indexmgr.add_entries(resource_id, [(current_db_entry.entry_id, latest_history_entry.version + 1, index_entry_json)])
+    if resource.active:
+        index_entry_json = _src_entry_to_index_entry(resource, entry)
+        if kwargs['entry_id'] != current_db_entry.entry_id:
+            indexmgr.delete_entry(resource_id, current_db_entry.entry_id)
+        indexmgr.add_entries(resource_id, [(current_db_entry.entry_id, latest_history_entry.version + 1, index_entry_json)])
     return current_db_entry.entry_id
 
 

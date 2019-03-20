@@ -22,13 +22,14 @@ def create_app(config_class=None):
 
     logger = setup_logging(app)
 
-    from .api import health_api, edit_api, query_api, conf_api, documentation, stats_api
+    from .api import health_api, edit_api, query_api, conf_api, documentation, stats_api, history_api
     app.register_blueprint(edit_api)
     app.register_blueprint(health_api)
     app.register_blueprint(query_api)
     app.register_blueprint(conf_api)
     app.register_blueprint(documentation)
     app.register_blueprint(stats_api)
+    app.register_blueprint(history_api)
 
     from .init import init_db
     init_db(app)

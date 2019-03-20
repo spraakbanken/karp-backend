@@ -4,6 +4,8 @@ import collections
 
 from karp.resourcemgr import get_resource
 from .resource import Resource
+import karp.util.jsondiff as jsondiff
+import karp.errors as errors
 
 
 def get_entries_by_column(resource_obj: Resource, filters):
@@ -40,3 +42,14 @@ def get_entry(resource_id: str, entry_id: str, version: Optional[int]=None):
 def get_entry_by_entry_id(resource: Resource, entry_id: str):
     cls = resource.model
     return cls.query.filter_by(entry_id=entry_id).first()
+
+
+def diff(resource_obj: Resource, entry_id: str, version1: int, version2: int):
+    src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
+    obj1 = resource_obj.history_model.query.filter_by(entry_id=src.id, version=version1).first()
+    obj2 = resource_obj.history_model.query.filter_by(entry_id=src.id, version=version2).first()
+    if not obj1:
+        raise errors.EntryNotFoundError(resource_obj.config['resource_id'], entry_id, entry_version=version1)
+    if not obj2:
+        raise errors.EntryNotFoundError(resource_obj.config['resource_id'], entry_id, entry_version=version2)
+    return jsondiff.compare(json.loads(obj1.body), json.loads(obj2.body))
