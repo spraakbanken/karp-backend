@@ -74,6 +74,12 @@ def _update_references(resource_id: str, entry_ids: List[str]) -> None:
 
 
 def transform_to_index_entry(resource: resourcemgr.Resource, src_entry: Dict, fields: Tuple[str, Dict]):
+    """
+    TODO This is very slow (for resources with references) because of db-lookups everywhere in the code
+    TODO We can pre-fetch the needed entries (same code that only looks for refs?) or
+    TODO somehow get the needed entries in bulk after transforming some entries and insert them into
+    TODO the transformed entries afterward. Very tricky.
+    """
     index_entry = indexer.impl.create_empty_object()
     _transform_to_index_entry(resource, src_entry, index_entry, fields)
     return index_entry
