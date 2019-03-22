@@ -8,8 +8,8 @@ import karp.resourcemgr as resourcemgr
 history_api = Blueprint('history_api', __name__)
 
 
-@history_api.route('/<resource_id>/<entry_id>/diff/<version1>/<version2>', methods=['GET'])
+@history_api.route('/<resource_id>/<entry_id>/diff/<from_version>/<to_version>', methods=['GET'])
 @auth.auth.authorization('READ')
-def get_diff(resource_id, entry_id, version1, version2):
-    diff = entryread.diff(resourcemgr.get_resource(resource_id), entry_id, version1, version2)
+def get_diff(resource_id, entry_id, from_version, to_version):
+    diff = entryread.diff(resourcemgr.get_resource(resource_id), entry_id, from_version, to_version)
     return jsonify({'diff': diff})
