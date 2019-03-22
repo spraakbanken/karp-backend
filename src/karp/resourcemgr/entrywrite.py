@@ -54,6 +54,8 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
     )
 
     kwargs = _src_entry_to_db_kwargs(entry, db_entry_json, resource.model, resource.config)
+    if resource.active and kwargs['entry_id'] != current_db_entry.entry_id:
+        indexmgr.delete_entry(resource_id, current_db_entry.entry_id)
     for key, value in kwargs.items():
         setattr(current_db_entry, key, value)
 
@@ -62,8 +64,6 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
 
     if resource.active:
         index_entry_json = _src_entry_to_index_entry(resource, entry)
-        if kwargs['entry_id'] != current_db_entry.entry_id:
-            indexmgr.delete_entry(resource_id, current_db_entry.entry_id)
         indexmgr.add_entries(resource_id, [(current_db_entry.entry_id, latest_history_entry.version + 1, index_entry_json)])
     return current_db_entry.entry_id
 

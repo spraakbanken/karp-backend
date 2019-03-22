@@ -127,6 +127,10 @@ def test_update_entry_id(es, client_with_data_f):
     assert 'newID' in response_data
     assert '4' == response_data['newID']
 
+    # check that the old entry with old id has been removed
+    entries = get_json(client, 'places/query')
+    assert 1 == len(entries['hits'])
+
 
 def test_refs(es, client_with_data_f):
     client = init(client_with_data_f, es, [
