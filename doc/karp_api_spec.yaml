@@ -222,6 +222,29 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+  '/{resource}/{id}/diff/{from_version}/{to_version}':
+    get:
+      tags:
+      - History
+      summary: Get diff between `from_version` and `to_version`
+      parameters:
+      - $ref: '#/components/parameters/SingleResource'
+      - $ref: '#/components/parameters/IdParam'
+      - $ref: '#/components/parameters/FromVersion'
+      - $ref: '#/components/parameters/ToVersion'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryDiff'
+        '500':
+          description: Diff failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -283,6 +306,18 @@ components:
         type: array
         items:
           type: string
+    FromVersion:
+      name: from_version
+      in: path
+      required: true
+      schema:
+        type: int
+    ToVersion:
+      name: to_version
+      in: path
+      required: true
+      schema:
+        type: int
     SortBy:
       name: sort
       in: query
@@ -457,30 +492,7 @@ components:
             NOT_PERMITTED = 41
             ```
         diff:
-          type: array
-          description: |
-            Only for VERSION_CONFLICT
-          items:
-            type: object
-            required:
-              - type
-              - field
-            properties:
-              type:
-                type: string
-                description: What type of operation was done on field
-                enum:
-                  - CHANGE
-                  - REMOVED
-                  - ADDED
-                  - TYPECHANGE
-              field:
-                type: string
-                description: The field that was changed
-              before:
-                description: Value before update
-              after:
-                description: Value after update
+          $ref: '#/components/schemas/DiffResult'
     QueryResult:
       type: object
       required:
@@ -657,3 +669,33 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/StatsResultEntry'
+    HistoryDiff:
+      type: object
+      properties:
+        diff:
+          $ref: '#/components/schemas/DiffResult'
+    DiffResult:
+      type: array
+      description: |
+        Description of what has been modified from one version to another
+      items:
+        type: object
+        required:
+        - type
+        - field
+        properties:
+          type:
+            type: string
+            description: What type of operation was done on field
+            enum:
+            - CHANGE
+            - REMOVED
+            - ADDED
+            - TYPECHANGE
+          field:
+            type: string
+            description: The field that was changed
+          before:
+            description: Value before update
+          after:
+            description: Value after update
