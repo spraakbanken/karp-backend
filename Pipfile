@@ -21,6 +21,7 @@ pyjwt = "*"
 cryptography = "*"
 flask-cors = "*"
 elasticsearch-test-py = "*"
+gevent = "*"
 
 [dev-packages]
 pytest = "*"
