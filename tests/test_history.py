@@ -1,5 +1,6 @@
 import json
 import pytest
+from datetime import datetime
 
 places = [
     {
@@ -45,7 +46,7 @@ def init_diff_data(client_f, es_status_code):
     return client
 
 
-def test_diff(client_with_data_f, es):
+def test_diff1(client_with_data_f, es):
     client = init_diff_data(client_with_data_f, es)
 
     response = client.get('places/3/diff?from_version=1&to_version=2')
@@ -55,4 +56,17 @@ def test_diff(client_with_data_f, es):
     assert diff[0]['type'] == 'CHANGE'
     assert diff[0]['before'] == 'a'
     assert diff[0]['after'] == 'aa'
+    assert diff[0]['field'] == 'name'
+
+
+def test_diff2(client_with_data_f, es):
+    client = init_diff_data(client_with_data_f, es)
+
+    response = client.get('places/3/diff?from_date=%s&to_date=%s' % ('0', str(datetime.now().timestamp() * 1000)))
+    response_data = json.loads(response.data.decode())
+    diff = response_data['diff']
+    assert len(diff) == 1
+    assert diff[0]['type'] == 'CHANGE'
+    assert diff[0]['before'] == 'a'
+    assert diff[0]['after'] == 'aaaaaaa'
     assert diff[0]['field'] == 'name'

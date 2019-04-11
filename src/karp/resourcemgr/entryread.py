@@ -1,6 +1,7 @@
 from typing import Optional
 import json
 import collections
+from datetime import datetime
 
 from karp.resourcemgr import get_resource
 from .resource import Resource
@@ -44,12 +45,28 @@ def get_entry_by_entry_id(resource: Resource, entry_id: str):
     return cls.query.filter_by(entry_id=entry_id).first()
 
 
-def diff(resource_obj: Resource, entry_id: str, version1: int, version2: int):
+def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_version: int=None, from_date: datetime=None, to_date: datetime=None):
     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
-    obj1 = resource_obj.history_model.query.filter_by(entry_id=src.id, version=version1).first()
-    obj2 = resource_obj.history_model.query.filter_by(entry_id=src.id, version=version2).first()
-    if not obj1:
-        raise errors.EntryNotFoundError(resource_obj.config['resource_id'], entry_id, entry_version=version1)
-    if not obj2:
-        raise errors.EntryNotFoundError(resource_obj.config['resource_id'], entry_id, entry_version=version2)
+
+    query = resource_obj.history_model.query.filter_by(entry_id=src.id)
+    timestamp_field = resource_obj.history_model.timestamp
+    if from_version:
+        obj1_query = query.filter_by(version=from_version)
+    elif from_date:
+        obj1_query = query.filter(timestamp_field >= from_date).order_by(timestamp_field)
+    else:
+        obj1_query = query.order_by(timestamp_field)
+    if to_version:
+        obj2_query = query.filter_by(version=to_version)
+    elif to_date:
+        obj2_query = query.filter(timestamp_field <= to_date).order_by(timestamp_field.desc())
+    else:
+        obj2_query = query.order_by(timestamp_field.desc())
+
+    obj1 = obj1_query.first()
+    obj2 = obj2_query.first()
+
+    if not obj1 or not obj2:
+        raise errors.KarpError('diff impossible!')
+
     return jsondiff.compare(json.loads(obj1.body), json.loads(obj2.body))

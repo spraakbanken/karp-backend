@@ -1,8 +1,11 @@
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request    # pyre-ignore
 
 import karp.auth.auth as auth
 import karp.resourcemgr.entryread as entryread
 import karp.resourcemgr as resourcemgr
+import karp.errors as errors
 
 history_api = Blueprint('history_api', __name__)
 
@@ -21,10 +24,29 @@ def get_diff(resource_id, entry_id):
     """
     from_version = request.args.get('from_version')
     to_version = request.args.get('to_version')
-    # from_date = request.args.get('from_version')
-    # to_date = request.args.get('to_version')
+    from_date_str = request.args.get('from_date')
+    to_date_str = request.args.get('to_date')
+    from_date = None
+    to_date = None
+    try:
+        if from_date_str:
+            from_date_timestamp = float(from_date_str)
+            from_date = datetime.utcfromtimestamp(from_date_timestamp / 1000.0)
+        if to_date_str:
+            to_date_timestamp = float(to_date_str)
+            to_date = datetime.utcfromtimestamp(to_date_timestamp / 1000.0)
+    except ValueError:
+        raise errors.KarpError('Wrong date format', code=50)
+
+    diff_parameters = {
+        'from_date': from_date,
+        'to_date': to_date,
+        'from_version': from_version,
+        'to_version': to_version
+    }
+
     # entry = request.get_json()
-    diff = entryread.diff(resourcemgr.get_resource(resource_id), entry_id, from_version, to_version)
+    diff = entryread.diff(resourcemgr.get_resource(resource_id), entry_id, **diff_parameters)
     return jsonify({'diff': diff})
 
 
