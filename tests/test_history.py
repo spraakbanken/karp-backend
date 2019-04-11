@@ -1,6 +1,7 @@
 import json
 import pytest
 from datetime import datetime
+import time
 
 places = [
     {
@@ -27,21 +28,20 @@ def init_diff_data(client_f, es_status_code):
         pytest.skip('elasticsearch disabled')
     client = client_f(use_elasticsearch=True)
 
-    new_ids = []
-    for entry in places:
-        response = client.post('places/add',
-                               data=json.dumps({'entry': entry}),
-                               content_type='application/json')
-        new_ids.append(json.loads(response.data.decode())['newID'])
-    for i in range(1,10):
-        for entry, entry_id in zip(places, new_ids):
-            changed_entry = entry.copy()
-            changed_entry['name'] = entry['name'] * i
-            client.post('places/%s/update' % entry_id, data=json.dumps({
-                'entry': changed_entry,
-                'message': 'changes',
-                'version': i
-            }), content_type='application/json')
+    response = client.post('places/add',
+                           data=json.dumps({'entry': places[0]}),
+                           content_type='application/json')
+    new_id = json.loads(response.data.decode())['newID']
+    time.sleep(1)
+    for i in range(1, 10):
+        changed_entry = places[0].copy()
+        changed_entry['name'] = places[0]['name'] * i
+        client.post('places/%s/update' % new_id, data=json.dumps({
+            'entry': changed_entry,
+            'message': 'changes',
+            'version': i
+        }), content_type='application/json')
+        time.sleep(1)
 
     return client
 
@@ -53,10 +53,10 @@ def test_diff1(client_with_data_f, es):
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
     assert len(diff) == 1
-    assert diff[0]['type'] == 'CHANGE'
-    assert diff[0]['before'] == 'a'
-    assert diff[0]['after'] == 'aa'
-    assert diff[0]['field'] == 'name'
+    assert 'CHANGE' == diff[0]['type']
+    assert 'a' == diff[0]['before']
+    assert 'aa' == diff[0]['after']
+    assert 'name' == diff[0]['field']
 
 
 def test_diff2(client_with_data_f, es):
@@ -65,8 +65,8 @@ def test_diff2(client_with_data_f, es):
     response = client.get('places/3/diff?from_date=%s&to_date=%s' % ('0', str(datetime.now().timestamp() * 1000)))
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
-    assert len(diff) == 1
-    assert diff[0]['type'] == 'CHANGE'
-    assert diff[0]['before'] == 'a'
-    assert diff[0]['after'] == 'aaaaaaa'
-    assert diff[0]['field'] == 'name'
+    assert 1 == len(diff)
+    assert 'CHANGE' == diff[0]['type']
+    assert 'a' == diff[0]['before']
+    assert 'aaaaaaaaa' == diff[0]['after']
+    assert 'name' == diff[0]['field']
