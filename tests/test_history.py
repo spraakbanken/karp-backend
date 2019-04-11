@@ -1,7 +1,5 @@
-import karp.resourcemgr.entrywrite as entrywrite
-import karp.resourcemgr.entryread as entryread
-import karp.resourcemgr as resourcemgr
-import karp.network as network
+import json
+import pytest
 
 places = [
     {
@@ -23,18 +21,38 @@ places = [
 ]
 
 
-def test_diff(app_with_data_f):
-    app = app_with_data_f()
+def init_diff_data(client_f, es_status_code):
+    if es_status_code == 'skip':
+        pytest.skip('elasticsearch disabled')
+    client = client_f(use_elasticsearch=True)
 
-    with app.app_context():
-        entrywrite.add_entries('places', [places[0]], 'test', resource_version=1)
-        new_entry = places[0]
-        new_entry['name'] = 'b'
-        entrywrite.update_entry('places', '3', 1, new_entry, 'test', message='message', resource_version=1)
+    new_ids = []
+    for entry in places:
+        response = client.post('places/add',
+                               data=json.dumps({'entry': entry}),
+                               content_type='application/json')
+        new_ids.append(json.loads(response.data.decode())['newID'])
+    for i in range(1,10):
+        for entry, entry_id in zip(places, new_ids):
+            changed_entry = entry.copy()
+            changed_entry['name'] = entry['name'] * i
+            client.post('places/%s/update' % entry_id, data=json.dumps({
+                'entry': changed_entry,
+                'message': 'changes',
+                'version': i
+            }), content_type='application/json')
 
-        diff = entryread.diff(resourcemgr.get_resource('places', 1), '3', 1, 2)
-        assert len(diff) == 1
-        assert diff[0]['type'] == 'CHANGE'
-        assert diff[0]['before'] == 'a'
-        assert diff[0]['after'] == 'b'
-        assert diff[0]['field'] == 'name'
+    return client
+
+
+def test_diff(client_with_data_f, es):
+    client = init_diff_data(client_with_data_f, es)
+
+    response = client.get('places/3/diff?from_version=1&to_version=2')
+    response_data = json.loads(response.data.decode())
+    diff = response_data['diff']
+    assert len(diff) == 1
+    assert diff[0]['type'] == 'CHANGE'
+    assert diff[0]['before'] == 'a'
+    assert diff[0]['after'] == 'aa'
+    assert diff[0]['field'] == 'name'

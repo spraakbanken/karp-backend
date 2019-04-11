@@ -30,7 +30,7 @@ def get_diff(resource_id, entry_id):
 
 @history_api.route('/<resource_id>/<user_id>/history', methods=['GET'])
 @auth.auth.authorization('ADMIN')
-def check_user_history(resource_id, user_id):
+def get_user_history(resource_id, user_id):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     pass
@@ -38,7 +38,7 @@ def check_user_history(resource_id, user_id):
 
 @history_api.route('/<resource_id>/<entry_id>/history', methods=['GET'])
 @auth.auth.authorization('ADMIN')
-def check_user_history(resource_id, entry_id):
+def get_entry_history(resource_id, entry_id):
     from_date = request.args.get('from_date')
     to_date = request.args.get('to_date')
     from_version = request.args.get('from_version')
