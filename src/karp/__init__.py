@@ -4,6 +4,8 @@ import json
 import logging
 from flask import Flask     # pyre-ignore
 from flask_cors import CORS  # pyre-ignore
+from flask import request  # pyre-ignore
+import werkzeug.exceptions  # pyre-ignore
 
 from karp.errors import KarpError
 import karp.util.logging.slack as slack_logging
@@ -48,10 +50,16 @@ def create_app(config_class=None):
 
     @app.errorhandler(Exception)
     def http_error_handler(error: Exception):
+        logger.error('Exception on %s [%s]' % (
+             request.path,
+             request.method
+        ))
         if isinstance(error, KarpError):
             logger.debug(error.message)
             error_code = error.code if error.code else 0
             return json.dumps({'error': error.message, 'errorCode': error_code}), 400
+        elif isinstance(error, werkzeug.exceptions.NotFound):
+            return '', 404
         else:
             logger.exception('unhandled exception')
             return json.dumps({'error': 'unknown error', 'errorCode': 0}), 400
