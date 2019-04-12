@@ -34,13 +34,13 @@ def diff_data_client(client_with_data_f, es):
                            content_type='application/json')
     new_id = json.loads(response.data.decode())['newID']
     time.sleep(1)
-    for i in range(1, 10):
+    for i in range(2, 10):
         changed_entry = places[0].copy()
         changed_entry['name'] = places[0]['name'] * i
         client.post('places/%s/update' % new_id, data=json.dumps({
             'entry': changed_entry,
             'message': 'changes',
-            'version': i
+            'version': i - 1
         }), content_type='application/json')
         time.sleep(1)
 
