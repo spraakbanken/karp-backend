@@ -9,9 +9,6 @@ class SQLAlchemy(_BaseSQLAlchemy):
 
     def apply_pool_defaults(self, app, options):
         super(SQLAlchemy, self).apply_pool_defaults(app, options)
-        # if app.config['SQLALCHEMY_DATABASE_URI'] == 'sqlite://':
-        #     import sqlite3  # pyre-ignore
-        #     options['connect_args'] = {'detect_types': sqlite3.PARSE_DECLTYPES}
         # options['echo'] = True
 
 

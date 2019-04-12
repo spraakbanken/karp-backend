@@ -31,10 +31,10 @@ def get_diff(resource_id, entry_id):
     try:
         if from_date_str:
             from_date_timestamp = float(from_date_str)
-            from_date = datetime.utcfromtimestamp(from_date_timestamp / 1000.0)
+            from_date = datetime.utcfromtimestamp(from_date_timestamp)
         if to_date_str:
             to_date_timestamp = float(to_date_str)
-            to_date = datetime.utcfromtimestamp(to_date_timestamp / 1000.0)
+            to_date = datetime.utcfromtimestamp(to_date_timestamp)
     except ValueError:
         raise errors.KarpError('Wrong date format', code=50)
 
