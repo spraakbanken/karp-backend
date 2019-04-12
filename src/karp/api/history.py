@@ -46,8 +46,11 @@ def get_diff(resource_id, entry_id):
         'entry': request.get_json()
     }
 
-    diff = entryread.diff(resourcemgr.get_resource(resource_id), entry_id, **diff_parameters)
-    return jsonify({'diff': diff})
+    diff, from_version, to_version = entryread.diff(resourcemgr.get_resource(resource_id), entry_id, **diff_parameters)
+    result = {'diff': diff, 'from_version': from_version}
+    if to_version:
+        result['to_version'] = to_version
+    return jsonify(result)
 
 
 @history_api.route('/<resource_id>/<user_id>/history', methods=['GET'])

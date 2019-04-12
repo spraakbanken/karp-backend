@@ -72,6 +72,7 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
         obj2 = obj2_query.first()
         obj2_body = json.loads(obj2.body) if obj2 else None
     elif entry:
+        obj2 = None
         obj2_body = entry
     else:
         obj2 = query.order_by(timestamp_field.desc()).first()
@@ -80,4 +81,4 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
     if not obj1_body or not obj2_body:
         raise errors.KarpError('diff impossible!')
 
-    return jsondiff.compare(obj1_body, obj2_body)
+    return jsondiff.compare(obj1_body, obj2_body), obj1.version, obj2.version if obj2 else None

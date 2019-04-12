@@ -23,11 +23,11 @@ places = [
 ]
 
 
-@pytest.fixture
-def diff_data_client(client_with_data_f, es):
+@pytest.fixture(scope='module')
+def diff_data_client(client_with_data_f_scope_module, es):
     if es == 'skip':
         pytest.skip('elasticsearch disabled')
-    client = client_with_data_f(use_elasticsearch=True)
+    client = client_with_data_f_scope_module(use_elasticsearch=True)
 
     response = client.post('places/add',
                            data=json.dumps({'entry': places[0]}),
@@ -56,6 +56,8 @@ def test_diff1(diff_data_client):
     assert 'a' == diff[0]['before']
     assert 'aa' == diff[0]['after']
     assert 'name' == diff[0]['field']
+    assert response_data['from_version'] == 1
+    assert response_data['to_version'] == 2
 
 
 def test_diff2(diff_data_client):
@@ -64,6 +66,8 @@ def test_diff2(diff_data_client):
     diff = response_data['diff']
     assert 'a' == diff[0]['before']
     assert 'aaaaaaaaa' == diff[0]['after']
+    assert response_data['from_version'] == 1
+    assert response_data['to_version'] == 9
 
 
 def test_diff_from_first_to_date(diff_data_client):
@@ -75,6 +79,8 @@ def test_diff_from_first_to_date(diff_data_client):
     diff = response_data['diff']
     assert 'a' == diff[0]['before']
     assert 'aaaaaaa' == diff[0]['after']
+    assert response_data['from_version'] == 1
+    assert response_data['to_version'] == 7
 
 
 def test_diff_from_date_to_last(diff_data_client):
@@ -86,6 +92,8 @@ def test_diff_from_date_to_last(diff_data_client):
     diff = response_data['diff']
     assert 'aaaaaaaa' == diff[0]['before']
     assert 'aaaaaaaaa' == diff[0]['after']
+    assert response_data['from_version'] == 8
+    assert response_data['to_version'] == 9
 
 
 def test_diff_from_first_to_version(diff_data_client):
@@ -94,6 +102,8 @@ def test_diff_from_first_to_version(diff_data_client):
     diff = response_data['diff']
     assert 'a' == diff[0]['before']
     assert 'aaaaaaa' == diff[0]['after']
+    assert response_data['from_version'] == 1
+    assert response_data['to_version'] == 7
 
 
 def test_diff_from_version_to_last(diff_data_client):
@@ -102,6 +112,8 @@ def test_diff_from_version_to_last(diff_data_client):
     diff = response_data['diff']
     assert 'aaaaaaa' == diff[0]['before']
     assert 'aaaaaaaaa' == diff[0]['after']
+    assert response_data['from_version'] == 7
+    assert response_data['to_version'] == 9
 
 
 def test_diff_mix_version_date(diff_data_client):
@@ -110,16 +122,22 @@ def test_diff_mix_version_date(diff_data_client):
     diff = response_data['diff']
     assert 'aa' == diff[0]['before']
     assert 'aaaaaaa' == diff[0]['after']
+    assert response_data['from_version'] == 2
+    assert response_data['to_version'] == 7
 
 
 def test_diff_to_entry_data(diff_data_client):
     edited_entry = places[0].copy()
     edited_entry['name'] = 'testing'
-    response = diff_data_client.get('places/3/diff?from_version=1', data=json.dumps(edited_entry), content_type='application/json')
+    response = diff_data_client.get('places/3/diff?from_version=1',
+                                    data=json.dumps(edited_entry),
+                                    content_type='application/json')
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
     assert 'a' == diff[0]['before']
     assert 'testing' == diff[0]['after']
+    assert response_data['from_version'] == 1
+    assert 'to_version' not in response_data
 
 
 def test_diff_no_flags(diff_data_client):
@@ -128,3 +146,5 @@ def test_diff_no_flags(diff_data_client):
     diff = response_data['diff']
     assert 'a' == diff[0]['before']
     assert 'aaaaaaaaa' == diff[0]['after']
+    assert response_data['from_version'] == 1
+    assert response_data['to_version'] == 9
