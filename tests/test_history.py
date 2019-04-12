@@ -120,3 +120,11 @@ def test_diff_to_entry_data(diff_data_client):
     diff = response_data['diff']
     assert 'a' == diff[0]['before']
     assert 'testing' == diff[0]['after']
+
+
+def test_diff_no_flags(diff_data_client):
+    response = diff_data_client.get('places/3/diff?from_version=1')
+    response_data = json.loads(response.data.decode())
+    diff = response_data['diff']
+    assert 'a' == diff[0]['before']
+    assert 'aaaaaaaaa' == diff[0]['after']
