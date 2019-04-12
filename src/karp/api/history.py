@@ -19,8 +19,8 @@ def get_diff(resource_id, entry_id):
     2. If a to_* is given, but no from_*, diff from first version
     3. If a from_* is given, but no to_*, diff to latest version
     4. *_version trumps *_date
-    5. If an entry is sent as JSON-data is sent in, this will be used instead of first/last version as described above
-    6. If both from_* and to_* are given, entry data will not be used
+    5. If an entry is sent as JSON-data is sent in, this will be used instead of last version as described above
+    6. If both to_* is given, entry data will not be used
     """
     from_version = request.args.get('from_version')
     to_version = request.args.get('to_version')
@@ -42,10 +42,10 @@ def get_diff(resource_id, entry_id):
         'from_date': from_date,
         'to_date': to_date,
         'from_version': from_version,
-        'to_version': to_version
+        'to_version': to_version,
+        'entry': request.get_json()
     }
 
-    # entry = request.get_json()
     diff = entryread.diff(resourcemgr.get_resource(resource_id), entry_id, **diff_parameters)
     return jsonify({'diff': diff})
 

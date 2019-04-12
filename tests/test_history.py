@@ -62,11 +62,8 @@ def test_diff2(diff_data_client):
     response = diff_data_client.get('places/3/diff?from_date=%s&to_date=%s' % ('0', str(datetime.now().timestamp())))
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
-    assert 1 == len(diff)
-    assert 'CHANGE' == diff[0]['type']
     assert 'a' == diff[0]['before']
     assert 'aaaaaaaaa' == diff[0]['after']
-    assert 'name' == diff[0]['field']
 
 
 def test_diff_from_first_to_date(diff_data_client):
@@ -76,11 +73,8 @@ def test_diff_from_first_to_date(diff_data_client):
     response = diff_data_client.get('places/3/diff?to_date=%s' % (str(datetime.now().timestamp() - 3)))
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
-    assert 1 == len(diff)
-    assert 'CHANGE' == diff[0]['type']
     assert 'a' == diff[0]['before']
     assert 'aaaaaaa' == diff[0]['after']
-    assert 'name' == diff[0]['field']
 
 
 def test_diff_from_date_to_last(diff_data_client):
@@ -90,30 +84,39 @@ def test_diff_from_date_to_last(diff_data_client):
     response = diff_data_client.get('places/3/diff?from_date=%s' % (str(datetime.now().timestamp() - 3)))
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
-    assert 1 == len(diff)
-    assert 'CHANGE' == diff[0]['type']
     assert 'aaaaaaaa' == diff[0]['before']
     assert 'aaaaaaaaa' == diff[0]['after']
-    assert 'name' == diff[0]['field']
 
 
 def test_diff_from_first_to_version(diff_data_client):
     response = diff_data_client.get('places/3/diff?to_version=7')
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
-    assert 1 == len(diff)
-    assert 'CHANGE' == diff[0]['type']
     assert 'a' == diff[0]['before']
     assert 'aaaaaaa' == diff[0]['after']
-    assert 'name' == diff[0]['field']
 
 
 def test_diff_from_version_to_last(diff_data_client):
     response = diff_data_client.get('places/3/diff?from_version=7')
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
-    assert 1 == len(diff)
-    assert 'CHANGE' == diff[0]['type']
     assert 'aaaaaaa' == diff[0]['before']
     assert 'aaaaaaaaa' == diff[0]['after']
-    assert 'name' == diff[0]['field']
+
+
+def test_diff_mix_version_date(diff_data_client):
+    response = diff_data_client.get('places/3/diff?from_version=2&to_date=%s' % str(datetime.now().timestamp() - 3))
+    response_data = json.loads(response.data.decode())
+    diff = response_data['diff']
+    assert 'aa' == diff[0]['before']
+    assert 'aaaaaaa' == diff[0]['after']
+
+
+def test_diff_to_entry_data(diff_data_client):
+    edited_entry = places[0].copy()
+    edited_entry['name'] = 'testing'
+    response = diff_data_client.get('places/3/diff?from_version=1', data=json.dumps(edited_entry), content_type='application/json')
+    response_data = json.loads(response.data.decode())
+    diff = response_data['diff']
+    assert 'a' == diff[0]['before']
+    assert 'testing' == diff[0]['after']

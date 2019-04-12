@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict
 import json
 import collections
 from datetime import datetime
@@ -45,11 +45,13 @@ def get_entry_by_entry_id(resource: Resource, entry_id: str):
     return cls.query.filter_by(entry_id=entry_id).first()
 
 
-def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_version: int=None, from_date: datetime=None, to_date: datetime=None):
+def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_version: int=None, from_date: datetime=None,
+         to_date: datetime=None, entry: Optional[Dict]=None):
     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
 
     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
     timestamp_field = resource_obj.history_model.timestamp
+
     if from_version:
         obj1_query = query.filter_by(version=from_version)
     elif from_date:
@@ -61,12 +63,21 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
     elif to_date:
         obj2_query = query.filter(timestamp_field <= to_date).order_by(timestamp_field.desc())
     else:
-        obj2_query = query.order_by(timestamp_field.desc())
+        obj2_query = None
 
     obj1 = obj1_query.first()
-    obj2 = obj2_query.first()
+    obj1_body = json.loads(obj1.body) if obj1 else None
 
-    if not obj1 or not obj2:
+    if obj2_query:
+        obj2 = obj2_query.first()
+        obj2_body = json.loads(obj2.body) if obj2 else None
+    elif entry:
+        obj2_body = entry
+    else:
+        obj2 = query.order_by(timestamp_field.desc()).first()
+        obj2_body = json.loads(obj2.body) if obj2 else None
+
+    if not obj1_body or not obj2_body:
         raise errors.KarpError('diff impossible!')
 
-    return jsondiff.compare(json.loads(obj1.body), json.loads(obj2.body))
+    return jsondiff.compare(obj1_body, obj2_body)
