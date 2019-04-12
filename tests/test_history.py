@@ -70,6 +70,9 @@ def test_diff2(diff_data_client):
 
 
 def test_diff_from_first_to_date(diff_data_client):
+    """
+    this test is a bit shaky due to assuming that we will find the correct version by subtracting three seconds
+    """
     response = diff_data_client.get('places/3/diff?to_date=%s' % (str(datetime.now().timestamp() - 3)))
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
@@ -81,11 +84,36 @@ def test_diff_from_first_to_date(diff_data_client):
 
 
 def test_diff_from_date_to_last(diff_data_client):
+    """
+        this test is a bit shaky due to assuming that we will find the correct version by subtracting three seconds
+    """
     response = diff_data_client.get('places/3/diff?from_date=%s' % (str(datetime.now().timestamp() - 3)))
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
     assert 1 == len(diff)
     assert 'CHANGE' == diff[0]['type']
     assert 'aaaaaaaa' == diff[0]['before']
+    assert 'aaaaaaaaa' == diff[0]['after']
+    assert 'name' == diff[0]['field']
+
+
+def test_diff_from_first_to_version(diff_data_client):
+    response = diff_data_client.get('places/3/diff?to_version=7')
+    response_data = json.loads(response.data.decode())
+    diff = response_data['diff']
+    assert 1 == len(diff)
+    assert 'CHANGE' == diff[0]['type']
+    assert 'a' == diff[0]['before']
+    assert 'aaaaaaa' == diff[0]['after']
+    assert 'name' == diff[0]['field']
+
+
+def test_diff_from_version_to_last(diff_data_client):
+    response = diff_data_client.get('places/3/diff?from_version=7')
+    response_data = json.loads(response.data.decode())
+    diff = response_data['diff']
+    assert 1 == len(diff)
+    assert 'CHANGE' == diff[0]['type']
+    assert 'aaaaaaa' == diff[0]['before']
     assert 'aaaaaaaaa' == diff[0]['after']
     assert 'name' == diff[0]['field']
