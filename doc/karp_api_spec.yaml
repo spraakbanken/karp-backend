@@ -222,16 +222,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  '/{resource}/{id}/diff/{from_version}/{to_version}':
+  '/{resource}/{id}/diff':
     get:
       tags:
       - History
-      summary: Get diff between `from_version` and `to_version`
+      summary: Get diff of two entries
+      description: |
+        - If no parameters are given, diff is between first and last version of entry.
+        - If `to_date` or `to_version` is not given, diff against latest version
+        - If `from_date` or `from_version` is not given, diff against first version
+        - If both `from_date` and `from_version` is given, use `from_version` and same for `to_date`/`to_version`
+        - If an entry is sent in the request body, this will be used and `to_version` and `to_date` will be ignored.
       parameters:
       - $ref: '#/components/parameters/SingleResource'
       - $ref: '#/components/parameters/IdParam'
       - $ref: '#/components/parameters/FromVersion'
       - $ref: '#/components/parameters/ToVersion'
+      - $ref: '#/components/parameters/FromDate'
+      - $ref: '#/components/parameters/ToDate'
+      requestBody:
+        description: An entry object to diff against
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Entry'
       responses:
         '200':
           description: OK
@@ -308,14 +323,30 @@ components:
           type: string
     FromVersion:
       name: from_version
-      in: path
-      required: true
+      description: An entry version number
+      in: query
+      required: false
       schema:
         type: int
     ToVersion:
       name: to_version
-      in: path
-      required: true
+      description: An entry version number
+      in: query
+      required: false
+      schema:
+        type: int
+    FromDate:
+      name: from_date
+      description: A timestamp in Unix Epoch time
+      in: query
+      required: false
+      schema:
+        type: int
+    ToDate:
+      name: to_date
+      description: A timestamp in Unix Epoch time
+      in: query
+      required: false
       schema:
         type: int
     SortBy:

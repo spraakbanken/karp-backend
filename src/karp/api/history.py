@@ -13,15 +13,6 @@ history_api = Blueprint('history_api', __name__)
 @history_api.route('/<resource_id>/<entry_id>/diff', methods=['GET', 'POST'])
 @auth.auth.authorization('ADMIN')
 def get_diff(resource_id, entry_id):
-    """
-    Get diff between two entries
-    1. Needed for this call to work, at least from_version/from_date OR to_version/to_date
-    2. If a to_* is given, but no from_*, diff from first version
-    3. If a from_* is given, but no to_*, diff to latest version
-    4. *_version trumps *_date
-    5. If an entry is sent as JSON-data is sent in, this will be used instead of last version as described above
-    6. If both to_* is given, entry data will not be used
-    """
     from_version = request.args.get('from_version')
     to_version = request.args.get('to_version')
     from_date_str = request.args.get('from_date')
