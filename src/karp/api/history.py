@@ -44,19 +44,36 @@ def get_diff(resource_id, entry_id):
     return jsonify(result)
 
 
-@history_api.route('/<resource_id>/<user_id>/history', methods=['GET'])
+@history_api.route('/<resource_id>/history', methods=['GET'])
 @auth.auth.authorization('ADMIN')
-def get_user_history(resource_id, user_id):
-    from_date = request.args.get('from_date')
-    to_date = request.args.get('to_date')
-    pass
+def get_history(resource_id):
+    history_parameters = {}
+    from_date_str = request.args.get('from_date')
+    to_date_str = request.args.get('to_date')
+    try:
+        if from_date_str:
+            from_date_timestamp = float(from_date_str)
+            from_date = datetime.utcfromtimestamp(from_date_timestamp)
+            history_parameters['from_date'] = from_date
+        if to_date_str:
+            to_date_timestamp = float(to_date_str)
+            to_date = datetime.utcfromtimestamp(to_date_timestamp)
+            history_parameters['to_date'] = to_date
+    except ValueError:
+        raise errors.KarpError('Wrong date format', code=50)
 
+    user_id = request.args.get('user_id')
+    if user_id:
+        history_parameters['user_id'] = user_id
+    entry_id = request.args.get('entry_id')
+    if entry_id:
+        history_parameters['entry_id'] = entry_id
+        from_version = request.args.get('from_version')
+        to_version = request.args.get('to_version')
+        if from_version:
+            history_parameters['from_version'] = from_version
+        if to_version:
+            history_parameters['to_version'] = to_version
 
-@history_api.route('/<resource_id>/<entry_id>/history', methods=['GET'])
-@auth.auth.authorization('ADMIN')
-def get_entry_history(resource_id, entry_id):
-    from_date = request.args.get('from_date')
-    to_date = request.args.get('to_date')
-    from_version = request.args.get('from_version')
-    to_version = request.args.get('to_version')
-    pass
+    history = entryread.get_history(resource_id, **history_parameters)
+    return jsonify({'history': history})
