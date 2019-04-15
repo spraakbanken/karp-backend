@@ -75,5 +75,8 @@ def get_history(resource_id):
         if to_version:
             history_parameters['to_version'] = to_version
 
-    history = entryread.get_history(resource_id, **history_parameters)
-    return jsonify({'history': history})
+    history_parameters['current_page'] = int(request.args.get('current_page', 0))
+    history_parameters['page_size'] = int(request.args.get('page_size', 100))
+
+    history, total = entryread.get_history(resource_id, **history_parameters)
+    return jsonify({'history': history, 'total': total})

@@ -86,7 +86,8 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
 
 def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optional[str]=None,
                 from_date: Optional[datetime]=None, to_date: Optional[datetime]=None,
-                from_version: Optional[int]=None, to_version: Optional[int]=None):
+                from_version: Optional[int]=None, to_version: Optional[int]=None,
+                current_page: Optional[int]=0, page_size: Optional[int]=100):
     resource_obj = get_resource(resource_id)
     timestamp_field = resource_obj.history_model.timestamp
     query = resource_obj.history_model.query
@@ -106,8 +107,11 @@ def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optiona
     elif to_date:
         query = query.filter(timestamp_field <= to_date)
 
+    paged_query = query.limit(page_size).offset(current_page*page_size)
+    total = query.count()
+
     result = []
-    for history_entry in query:
+    for history_entry in paged_query:
         # TODO fix this, entry_id in history refers to the "normal" id in non-history table
         entry_id = resource_obj.model.query.filter_by(id=history_entry.entry_id).first().entry_id
         # TODO fix this, we should get the diff in another way, probably store the diffs directly in the database
@@ -128,5 +132,4 @@ def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optiona
             'diff': history_diff
         })
 
-    # TODO add pagination
-    return result[0:20]
+    return result, total
