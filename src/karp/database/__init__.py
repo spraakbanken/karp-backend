@@ -1,8 +1,15 @@
 from typing import Optional
 
-from flask_sqlalchemy import SQLAlchemy     # pyre-ignore
+from flask_sqlalchemy import SQLAlchemy as _BaseSQLAlchemy  # pyre-ignore
 from sqlalchemy.sql import func  # pyre-ignore
 from sqlalchemy.ext.declarative import declared_attr  # pyre-ignore
+
+
+class SQLAlchemy(_BaseSQLAlchemy):
+
+    def apply_pool_defaults(self, app, options):
+        super(SQLAlchemy, self).apply_pool_defaults(app, options)
+        # options['echo'] = True
 
 
 db = SQLAlchemy()
@@ -60,7 +67,7 @@ class BaseHistory:
     id = db.Column(db.Integer, primary_key=True)
     entry_id = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False, server_default=func.now())
+    timestamp = db.Column(db.TIMESTAMP, nullable=False, server_default=func.now())
     body = db.Column(db.Text)
     op = db.Column(db.Enum('ADD', 'DELETE', 'UPDATE'), nullable=False)
     version = db.Column(db.Integer, nullable=False)

@@ -222,16 +222,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  '/{resource}/{id}/diff/{from_version}/{to_version}':
+  '/{resource}/{id}/diff':
     get:
       tags:
       - History
-      summary: Get diff between `from_version` and `to_version`
+      summary: Get diff of two entries
+      description: |
+        - If no parameters are given, diff is between first and last version of entry.
+        - If `to_date` or `to_version` is not given, diff against latest version
+        - If `from_date` or `from_version` is not given, diff against first version
+        - If both `from_date` and `from_version` is given, use `from_version` and same for `to_date`/`to_version`
+        - If an entry is sent in the request body, this will be used and `to_version` and `to_date` will be ignored.
       parameters:
       - $ref: '#/components/parameters/SingleResource'
       - $ref: '#/components/parameters/IdParam'
       - $ref: '#/components/parameters/FromVersion'
       - $ref: '#/components/parameters/ToVersion'
+      - $ref: '#/components/parameters/FromDate'
+      - $ref: '#/components/parameters/ToDate'
+      requestBody:
+        description: An entry object to diff against
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Entry'
       responses:
         '200':
           description: OK
@@ -239,6 +254,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HistoryDiff'
+        '500':
+          description: Diff failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+  '/{resource}/history':
+    get:
+      tags:
+      - History
+      summary: Query history of resource
+      description: |
+        - `from_version` and `to_version` can only be used when `entry_id` is given
+      parameters:
+      - $ref: '#/components/parameters/SingleResource'
+      - $ref: '#/components/parameters/IdParamQuery'
+      - $ref: '#/components/parameters/FromVersion'
+      - $ref: '#/components/parameters/ToVersion'
+      - $ref: '#/components/parameters/FromDate'
+      - $ref: '#/components/parameters/ToDate'
+      - $ref: '#/components/parameters/HistoryCurrentPage'
+      - $ref: '#/components/parameters/HistoryPageSize'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResult'
         '500':
           description: Diff failed
           content:
@@ -262,6 +306,13 @@ components:
     IdParam:
       name: id
       in: path
+      required: true
+      description: The id to perform operation on
+      schema:
+        type: string
+    IdParamQuery:
+      name: id
+      in: query
       required: true
       description: The id to perform operation on
       schema:
@@ -308,14 +359,46 @@ components:
           type: string
     FromVersion:
       name: from_version
-      in: path
-      required: true
+      description: An entry version number
+      in: query
+      required: false
       schema:
         type: int
     ToVersion:
       name: to_version
-      in: path
-      required: true
+      description: An entry version number
+      in: query
+      required: false
+      schema:
+        type: int
+    FromDate:
+      name: from_date
+      description: A timestamp in Unix Epoch time
+      in: query
+      required: false
+      schema:
+        type: int
+    ToDate:
+      name: to_date
+      description: A timestamp in Unix Epoch time
+      in: query
+      required: false
+      schema:
+        type: int
+    HistoryCurrentPage:
+      name: current_page
+      description: The current page
+      default: 0
+      in: query
+      required: false
+      schema:
+        type: int
+    HistoryPageSize:
+      name: page_size
+      description: The wanted page size
+      default: 100
+      in: query
+      required: false
       schema:
         type: int
     SortBy:
@@ -490,6 +573,7 @@ components:
             VERSION_CONFLICT = 33
             EXPIRED_JWT = 40
             NOT_PERMITTED = 41
+            BAD_PARAMETER_FORMAT = 50
             ```
         diff:
           $ref: '#/components/schemas/DiffResult'
@@ -672,6 +756,43 @@ components:
     HistoryDiff:
       type: object
       properties:
+        diff:
+          $ref: '#/components/schemas/DiffResult'
+    HistoryResult:
+      type: object
+      properties:
+        history:
+          type: array
+          items:
+            $ref: '#/components/schemas/HistoryEntry'
+        total:
+          type: int
+          description: total number of hits
+    HistoryEntry:
+      type: object
+      properties:
+        entry_id:
+          type: string
+          description: Entry ID
+        user_id:
+          type: string
+          description: User ID
+        version:
+          type: int
+          description: Version of entry that history entry refers to
+        messsage:
+          type: string
+          description: Message given by user when updating
+        op:
+          type: string
+          description: What type of operation was done on entry
+          enum:
+          - ADD
+          - DELETE
+          - UPDATE
+        timestamp:
+          type: int
+          description: A timestamp in Unix Epoch time
         diff:
           $ref: '#/components/schemas/DiffResult'
     DiffResult:
