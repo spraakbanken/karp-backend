@@ -41,6 +41,6 @@ class JWTAuthenticator(Authenticator):
 
         for resource_id in resource_ids:
             if resourcemgr.is_protected(resource_id, level):
-                if not user or user.permissions[resource_id] < user.levels[level]:
+                if not user or not user.permissions.get(resource_id) or user.permissions[resource_id] < user.levels[level]:
                     return False
         return True
