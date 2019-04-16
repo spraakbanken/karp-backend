@@ -269,7 +269,7 @@ paths:
         - `from_version` and `to_version` can only be used when `entry_id` is given
       parameters:
       - $ref: '#/components/parameters/SingleResource'
-      - $ref: '#/components/parameters/IdParamQuery'
+      - $ref: '#/components/parameters/EntryIdParamQuery'
       - $ref: '#/components/parameters/FromVersion'
       - $ref: '#/components/parameters/ToVersion'
       - $ref: '#/components/parameters/FromDate'
@@ -310,8 +310,8 @@ components:
       description: The id to perform operation on
       schema:
         type: string
-    IdParamQuery:
-      name: id
+    EntryIdParamQuery:
+      name: entry_id
       in: query
       required: true
       description: The id to perform operation on
