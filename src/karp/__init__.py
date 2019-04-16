@@ -50,21 +50,18 @@ def create_app(config_class=None):
 
     @app.errorhandler(Exception)
     def http_error_handler(error: Exception):
+        error_str = 'Exception on %s [%s]' % (request.path, request.method)
         if isinstance(error, werkzeug.exceptions.NotFound):
-            logger.debug('Exception on %s [%s]' % (
-                request.path,
-                request.method
-            ))
+            logger.debug(error_str)
             return '', 404
-        logger.error('Exception on %s [%s]' % (
-             request.path,
-             request.method
-        ))
+
         if isinstance(error, KarpError):
+            logger.debug(error_str)
             logger.debug(error.message)
             error_code = error.code if error.code else 0
             return json.dumps({'error': error.message, 'errorCode': error_code}), 400
         else:
+            logger.error(error_str)
             logger.exception('unhandled exception')
             return json.dumps({'error': 'unknown error', 'errorCode': 0}), 400
 
