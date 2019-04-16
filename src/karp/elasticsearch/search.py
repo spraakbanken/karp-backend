@@ -457,9 +457,13 @@ class EsSearch(search.SearchInterface):
         def format_entry(entry):
             dict_entry = entry.to_dict()
             version = dict_entry.pop('_entry_version')
+            last_modified_by = dict_entry.pop('_last_modified_by')
+            last_modified = dict_entry.pop('_last_modified')
             return {
                 'id': entry.meta.id,
                 'version': version,
+                'last_modified': last_modified,
+                'last_modified_by': last_modified_by,
                 'resource': next(resource for resource in resource_ids if entry.meta.index.startswith(resource)),
                 'entry': dict_entry
             }

@@ -4,6 +4,7 @@ import fastjsonschema  # pyre-ignore
 import logging
 import collections
 from sqlalchemy.sql import func
+from datetime import datetime
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
@@ -12,6 +13,7 @@ from karp import database
 from karp.util.json_schema import create_entry_json_schema
 from karp.errors import ResourceNotFoundError, KarpError, ClientErrorCodes
 from .resource import Resource
+from karp.resourcemgr.entrymetadata import EntryMetadata
 
 _logger = logging.getLogger('karp')
 
@@ -225,17 +227,18 @@ def is_protected(resource_id, level):
     return level == 'WRITE' or level == 'ADMIN' or protection.get('read')
 
 
-def get_all_versions(resource_obj: Resource) -> Dict[int, int]:
+def get_all_metadata(resource_obj: Resource) -> Dict[str, EntryMetadata]:
     history_table = resource_obj.history_model
     result = db.session.query(
-        history_table.entry_id, func.max(history_table.version)
+        history_table.entry_id, history_table.user_id, history_table.timestamp, func.max(history_table.version)
     ).group_by(history_table.entry_id)
-    return {row[0]: row[1] for row in result}
+    result_ = {row[0]: EntryMetadata(row[1], last_modified=row[2], version=row[3]) for row in result}
+    return result_
 
 
-def get_version(resource_def: Resource, _id: int) -> int:
+def get_metadata(resource_def: Resource, _id: int) -> EntryMetadata:
     history_table = resource_def.history_model
     result = db.session.query(
-        func.max(history_table.version)
+        history_table.user_id, history_table.timestamp, func.max(history_table.version)
     ).filter(history_table.entry_id == _id).group_by(history_table.entry_id)
-    return [row[0] for row in result][0]
+    return EntryMetadata(result[0][0], last_modified=result[0][1], version=result[0][2])

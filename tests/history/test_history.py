@@ -1,6 +1,6 @@
 import json
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import re
 
@@ -88,13 +88,13 @@ def test_user2_history(history_data_client):
 
 def test_user_history_from_date(history_data_client):
     response_data = get_helper(history_data_client,
-                               'places/history?user_id=user1&from_date=%s' % str(datetime.now().timestamp() - 6))
+                               'places/history?user_id=user1&from_date=%s' % str(datetime.now(timezone.utc).timestamp() - 5))
     assert 4 > len(response_data['history'])
 
 
 def test_user_history_to_date(history_data_client):
     response_data = get_helper(history_data_client,
-                               'places/history?user_id=user2to_date=%s' % str(datetime.now().timestamp() - 5))
+                               'places/history?user_id=user2to_date=%s' % str(datetime.now(timezone.utc).timestamp() - 5))
     assert 4 > len(response_data['history'])
 
 
