@@ -20,3 +20,4 @@ except (IndexError, ValueError):
 application = create_app(MariaDBConfig(user, passwd, dbhost, dbname, True))
 
 WSGIServer(('0.0.0.0', port), application).serve_forever()
+
