@@ -456,9 +456,9 @@ class EsSearch(search.SearchInterface):
 
         def format_entry(entry):
             dict_entry = entry.to_dict()
-            version = dict_entry.pop('_entry_version')
-            last_modified_by = dict_entry.pop('_last_modified_by')
-            last_modified = dict_entry.pop('_last_modified')
+            version = dict_entry.pop('_entry_version', None)
+            last_modified_by = dict_entry.pop('_last_modified_by', None)
+            last_modified = dict_entry.pop('_last_modified', None)
             return {
                 'id': entry.meta.id,
                 'version': version,
