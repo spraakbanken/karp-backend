@@ -81,7 +81,7 @@ def test_user2_history(history_data_client):
     assert 'ADD' == response_data['history'][1]['op']
     assert 'UPDATE' == response_data['history'][2]['op']
     assert 'UPDATE' == response_data['history'][3]['op']
-    assert re.match(r'^\d{10}$', str(response_data['history'][3]['timestamp']))
+    assert re.match(r'^\d{10}\.\d{6}$', str(response_data['history'][3]['timestamp']))
     for history_entry in response_data['history']:
         assert 'user2' == history_entry['user_id']
 

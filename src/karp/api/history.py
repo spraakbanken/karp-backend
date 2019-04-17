@@ -1,5 +1,3 @@
-from datetime import datetime, timezone
-
 from flask import Blueprint, jsonify, request    # pyre-ignore
 
 import karp.auth.auth as auth
@@ -21,11 +19,9 @@ def get_diff(resource_id, entry_id):
     to_date = None
     try:
         if from_date_str:
-            from_date_timestamp = float(from_date_str)
-            from_date = datetime.fromtimestamp(from_date_timestamp, tz=timezone.utc)
+            from_date = float(from_date_str)
         if to_date_str:
-            to_date_timestamp = float(to_date_str)
-            to_date = datetime.fromtimestamp(to_date_timestamp, tz=timezone.utc)
+            to_date = float(to_date_str)
     except ValueError:
         raise errors.KarpError('Wrong date format', code=50)
 
@@ -52,12 +48,10 @@ def get_history(resource_id):
     to_date_str = request.args.get('to_date')
     try:
         if from_date_str:
-            from_date_timestamp = float(from_date_str)
-            from_date = datetime.fromtimestamp(from_date_timestamp, tz=timezone.utc)
+            from_date = float(from_date_str)
             history_parameters['from_date'] = from_date
         if to_date_str:
-            to_date_timestamp = float(to_date_str)
-            to_date = datetime.fromtimestamp(to_date_timestamp, tz=timezone.utc)
+            to_date = float(to_date_str)
             history_parameters['to_date'] = to_date
     except ValueError:
         raise errors.KarpError('Wrong date format', code=50)

@@ -53,7 +53,7 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
         version=latest_history_entry.version + 1,
         op='UPDATE',
         message=message,
-        timestamp=datetime.now(timezone.utc)
+        timestamp=datetime.now(timezone.utc).timestamp()
     )
 
     kwargs = _src_entry_to_db_kwargs(entry, db_entry_json, resource.model, resource.config)
@@ -108,7 +108,7 @@ def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: st
             version=1,
             op='ADD',
             message=message,
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc).timestamp()
         )
         created_history_entries.append((db_entry, entry, history_entry))
         db.session.add(history_entry)
@@ -166,7 +166,7 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
         user_id=user_id,
         op='DELETE',
         version=-1,
-        timestamp=datetime.now(timezone.utc)
+        timestamp=datetime.now(timezone.utc).timestamp()
     )
     db.session.add(history_entry)
     db.session.commit()
