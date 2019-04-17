@@ -1,7 +1,6 @@
 import json
 import fastjsonschema  # pyre-ignore
 import logging
-from datetime import datetime, timezone
 
 from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError, UpdateConflict
 from karp.resourcemgr import get_resource
@@ -10,7 +9,6 @@ import karp.indexmgr as indexmgr
 from .resource import Resource
 from typing import Dict, List
 import karp.util.jsondiff as jsondiff
-import karp.resourcemgr.entrymetadata as entrymetadata
 
 _logger = logging.getLogger('karp')
 
@@ -52,8 +50,7 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
         body=db_entry_json,
         version=latest_history_entry.version + 1,
         op='UPDATE',
-        message=message,
-        timestamp=datetime.now(timezone.utc).timestamp()
+        message=message
     )
 
     kwargs = _src_entry_to_db_kwargs(entry, db_entry_json, resource.model, resource.config)
@@ -67,9 +64,7 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
 
     if resource.active:
         index_entry_json = _src_entry_to_index_entry(resource, entry)
-        indexmgr.add_entries(resource_id, [(current_db_entry.entry_id,
-                                            entrymetadata.EntryMetadata.init_from_model(history_entry),
-                                            index_entry_json)])
+        indexmgr.add_entries(resource_id, [(current_db_entry.entry_id, latest_history_entry.version + 1, index_entry_json)])
     return current_db_entry.entry_id
 
 
@@ -99,7 +94,6 @@ def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: st
 
     db.session.commit()
 
-    created_history_entries = []
     for db_entry, entry, entry_json in created_db_entries:
         history_entry = resource.history_model(
             entry_id=db_entry.id,
@@ -107,19 +101,15 @@ def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: st
             body=entry_json,
             version=1,
             op='ADD',
-            message=message,
-            timestamp=datetime.now(timezone.utc).timestamp()
+            message=message
         )
-        created_history_entries.append((db_entry, entry, history_entry))
         db.session.add(history_entry)
     db.session.commit()
 
     if resource.active:
         indexmgr.add_entries(resource_id,
-                             [(db_entry.entry_id,
-                               entrymetadata.EntryMetadata.init_from_model(history_entry),
-                               _src_entry_to_index_entry(resource, entry))
-                              for db_entry, entry, history_entry in created_history_entries])
+                             [(db_entry.entry_id, 1, _src_entry_to_index_entry(resource, entry))
+                              for db_entry, entry, _ in created_db_entries])
 
     return [db_entry.entry_id for db_entry, _, _ in created_db_entries]
 
@@ -165,8 +155,7 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
         entry_id=entry.id,
         user_id=user_id,
         op='DELETE',
-        version=-1,
-        timestamp=datetime.now(timezone.utc).timestamp()
+        version=-1
     )
     db.session.add(history_entry)
     db.session.commit()

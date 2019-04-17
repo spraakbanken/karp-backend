@@ -1,7 +1,6 @@
 import json
 import pytest  # pyre-ignore
 import time
-from datetime import datetime, timezone
 
 import karp.resourcemgr.entryread as entryread
 
@@ -314,43 +313,3 @@ def test_update_refs2(es, client_with_data_f):
         db_entry = entryread.get_entry('places', '3')
         assert len(db_entry.municipality) == 1
         assert db_entry.municipality[0].municipality == 2
-
-
-def test_last_modified(es, client_with_data_f):
-    before_add = datetime.now(timezone.utc).timestamp()
-
-    time.sleep(1)
-    client = init(client_with_data_f, es, [{
-        'code': 1,
-        'name': 'test1',
-        'municipality': [1]
-    }])
-    time.sleep(1)
-
-    after_add = datetime.now(timezone.utc).timestamp()
-
-    entries = get_json(client, 'places/query')
-    hit = entries['hits'][0]
-    assert 'dummy' == hit['last_modified_by']
-    assert before_add < hit['last_modified']
-    assert after_add > hit['last_modified']
-
-    time.sleep(1)
-    client.post('places/1/update', data=json.dumps({
-        'entry': {
-            'code': 1,
-            'name': 'test2',
-            'municipality': [1]
-        },
-        'message': 'changes',
-        'version': 1
-    }), content_type='application/json')
-    time.sleep(1)
-
-    after_update = datetime.now(timezone.utc).timestamp()
-
-    entries = get_json(client, 'places/query')
-    hit = entries['hits'][0]
-    assert 'dummy' == hit['last_modified_by']
-    assert after_add < hit['last_modified']
-    assert after_update > hit['last_modified']

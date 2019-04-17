@@ -1,6 +1,7 @@
 from typing import Optional, Dict
 import json
 import collections
+from datetime import datetime
 
 from karp.resourcemgr import get_resource
 from .resource import Resource
@@ -44,8 +45,8 @@ def get_entry_by_entry_id(resource: Resource, entry_id: str):
     return cls.query.filter_by(entry_id=entry_id).first()
 
 
-def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_version: int=None,
-         from_date: Optional[int]=None, to_date: Optional[int]=None, entry: Optional[Dict]=None):
+def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_version: int=None, from_date: datetime=None,
+         to_date: datetime=None, entry: Optional[Dict]=None):
     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
 
     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
@@ -53,13 +54,13 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
 
     if from_version:
         obj1_query = query.filter_by(version=from_version)
-    elif from_date is not None:
+    elif from_date:
         obj1_query = query.filter(timestamp_field >= from_date).order_by(timestamp_field)
     else:
         obj1_query = query.order_by(timestamp_field)
     if to_version:
         obj2_query = query.filter_by(version=to_version)
-    elif to_date is not None:
+    elif to_date:
         obj2_query = query.filter(timestamp_field <= to_date).order_by(timestamp_field.desc())
     else:
         obj2_query = None
@@ -70,7 +71,7 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
     if obj2_query:
         obj2 = obj2_query.first()
         obj2_body = json.loads(obj2.body) if obj2 else None
-    elif entry is not None:
+    elif entry:
         obj2 = None
         obj2_body = entry
     else:
@@ -84,7 +85,7 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
 
 
 def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optional[str]=None,
-                from_date: Optional[int]=None, to_date: Optional[int]=None,
+                from_date: Optional[datetime]=None, to_date: Optional[datetime]=None,
                 from_version: Optional[int]=None, to_version: Optional[int]=None,
                 current_page: Optional[int]=0, page_size: Optional[int]=100):
     resource_obj = get_resource(resource_id)
@@ -99,11 +100,11 @@ def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optiona
     version_field = resource_obj.history_model.version
     if entry_id and from_version:
         query = query.filter(version_field >= from_version)
-    elif from_date is not None:
+    elif from_date:
         query = query.filter(timestamp_field >= from_date)
     if entry_id and to_version:
         query = query.filter(version_field < to_version)
-    elif to_date is not None:
+    elif to_date:
         query = query.filter(timestamp_field <= to_date)
 
     paged_query = query.limit(page_size).offset(current_page*page_size)
@@ -122,7 +123,7 @@ def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optiona
             previous_body = {}
         history_diff = jsondiff.compare(previous_body, json.loads(history_entry.body))
         result.append({
-            'timestamp': history_entry.timestamp,
+            'timestamp': round(history_entry.timestamp.timestamp()),
             'message': history_entry.message if history_entry.message else '',
             'entry_id': entry_id,
             'version': entry_version,
@@ -132,17 +133,3 @@ def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optiona
         })
 
     return result, total
-
-
-def get_entry_history(resource_id, entry_id, version):
-    resource_obj = get_resource(resource_id)
-    db_id = resource_obj.model.query.filter_by(entry_id=entry_id).first().id
-    result = resource_obj.history_model.query.filter_by(entry_id=db_id, version=version).first()
-    return {
-        'id': entry_id,
-        'resource': resource_id,
-        'version': version,
-        'entry': json.loads(result.body),
-        'last_modified_by': result.user_id,
-        'last_modified': result.timestamp
-    }

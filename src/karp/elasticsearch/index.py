@@ -70,14 +70,12 @@ class EsIndex(IndexInterface):
     def create_index(self, resource_id, config):
         mapping = _create_es_mapping(config)
 
-        properties = mapping['properties']
-        properties['freetext'] = {
+        mapping['properties']['freetext'] = {
             'type': 'text'
         }
-        disabled_property = {'enabled': False}
-        properties['_entry_version'] = disabled_property
-        properties['_last_modified'] = disabled_property
-        properties['_last_modified_by'] = disabled_property
+        mapping['properties']['_entry_version'] = {
+            'enabled': False
+        }
 
         body = {
             'settings': {
@@ -105,8 +103,8 @@ class EsIndex(IndexInterface):
 
     def add_entries(self, resource_id, entries):
         index_to_es = []
-        for (entry_id, metadata, entry) in entries:
-            entry.update(metadata.to_dict())
+        for (entry_id, entry_version, entry) in entries:
+            entry['_entry_version'] = entry_version
             index_to_es.append({
                 '_index': resource_id,
                 '_id': entry_id,

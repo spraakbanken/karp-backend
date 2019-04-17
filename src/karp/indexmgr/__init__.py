@@ -10,7 +10,7 @@ import karp.resourcemgr.entryread as entryread
 import karp.network as network
 from karp.resourcemgr.resource import Resource
 from karp import errors
-from karp.resourcemgr.entrymetadata import EntryMetadata
+
 
 indexer = IndexModule()
 
@@ -18,10 +18,10 @@ _logger = logging.getLogger('karp')
 
 
 def pre_process_resource(resource_obj: Resource):
-    metadata = resourcemgr.get_all_metadata(resource_obj)
+    versions = resourcemgr.get_all_versions(resource_obj)
     fields = resource_obj.config['fields'].items()
     entries = resource_obj.model.query.filter_by(deleted=False)
-    return [(entry.entry_id, metadata[entry.id],
+    return [(entry.entry_id, versions[entry.id],
             transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
 
 
@@ -48,7 +48,7 @@ def publish_index(resource_id: str, version: Optional[int]=None) -> None:
         resourcemgr.publish_resource(resource_id, version)
 
 
-def add_entries(resource_id: str, entries: List[Tuple[str, EntryMetadata, Dict]], update_refs: bool=True) -> None:
+def add_entries(resource_id: str, entries: List[Tuple[str, int, Dict]], update_refs: bool=True) -> None:
     indexer.impl.add_entries(resource_id, entries)
     if update_refs:
         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
@@ -67,8 +67,8 @@ def _update_references(resource_id: str, entry_ids: List[str]) -> None:
             ref_resource_id = field_ref['resource_id']
             ref_resource = resourcemgr.get_resource(ref_resource_id, version=(field_ref['resource_version']))
             body = transform_to_index_entry(ref_resource, field_ref['entry'], ref_resource.config['fields'].items())
-            metadata = resourcemgr.get_metadata(ref_resource, field_ref['id'])
-            add[ref_resource_id].append(((field_ref['entry_id']), metadata, body))
+            version = resourcemgr.get_version(ref_resource, field_ref['id'])
+            add[ref_resource_id].append(((field_ref['entry_id']), version, body))
     for ref_resource_id, ref_entries in add.items():
         indexer.impl.add_entries(ref_resource_id, ref_entries)
 

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from flask import Blueprint, jsonify, request    # pyre-ignore
 
 import karp.auth.auth as auth
@@ -19,9 +21,11 @@ def get_diff(resource_id, entry_id):
     to_date = None
     try:
         if from_date_str:
-            from_date = float(from_date_str)
+            from_date_timestamp = float(from_date_str)
+            from_date = datetime.utcfromtimestamp(from_date_timestamp)
         if to_date_str:
-            to_date = float(to_date_str)
+            to_date_timestamp = float(to_date_str)
+            to_date = datetime.utcfromtimestamp(to_date_timestamp)
     except ValueError:
         raise errors.KarpError('Wrong date format', code=50)
 
@@ -48,10 +52,12 @@ def get_history(resource_id):
     to_date_str = request.args.get('to_date')
     try:
         if from_date_str:
-            from_date = float(from_date_str)
+            from_date_timestamp = float(from_date_str)
+            from_date = datetime.utcfromtimestamp(from_date_timestamp)
             history_parameters['from_date'] = from_date
         if to_date_str:
-            to_date = float(to_date_str)
+            to_date_timestamp = float(to_date_str)
+            to_date = datetime.utcfromtimestamp(to_date_timestamp)
             history_parameters['to_date'] = to_date
     except ValueError:
         raise errors.KarpError('Wrong date format', code=50)
@@ -74,10 +80,3 @@ def get_history(resource_id):
 
     history, total = entryread.get_history(resource_id, **history_parameters)
     return jsonify({'history': history, 'total': total})
-
-
-@history_api.route('/<resource_id>/<entry_id>/<version>/history', methods=['GET'])
-@auth.auth.authorization('ADMIN')
-def get_history_for_entry(resource_id, entry_id, version):
-    historical_entry = entryread.get_entry_history(resource_id, entry_id, version)
-    return jsonify(historical_entry)
