@@ -71,7 +71,7 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
     if obj2_query:
         obj2 = obj2_query.first()
         obj2_body = json.loads(obj2.body) if obj2 else None
-    elif entry:
+    elif entry is not None:
         obj2 = None
         obj2_body = entry
     else:
