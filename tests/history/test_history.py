@@ -121,3 +121,13 @@ def test_diff_against_nothing(history_data_client):
     assert 'ADD' == history_entry['op']
     for diff in history_entry['diff']:
         assert 'ADDED' == diff['type']
+
+
+def test_historical_entry(history_data_client):
+    response_data = get_helper(history_data_client, 'places/4/2/history')
+    assert datetime.now(timezone.utc).timestamp() > response_data['last_modified']
+    assert 'user2' == response_data['last_modified_by']
+    assert 'id' in response_data
+    assert 'resource' in response_data
+    assert 'bb' == response_data['entry']['name']
+    assert 'version' in response_data

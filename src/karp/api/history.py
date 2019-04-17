@@ -74,3 +74,10 @@ def get_history(resource_id):
 
     history, total = entryread.get_history(resource_id, **history_parameters)
     return jsonify({'history': history, 'total': total})
+
+
+@history_api.route('/<resource_id>/<entry_id>/<version>/history', methods=['GET'])
+@auth.auth.authorization('ADMIN')
+def get_history_for_entry(resource_id, entry_id, version):
+    historical_entry = entryread.get_entry_history(resource_id, entry_id, version)
+    return jsonify(historical_entry)

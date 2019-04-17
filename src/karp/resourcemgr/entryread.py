@@ -132,3 +132,17 @@ def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optiona
         })
 
     return result, total
+
+
+def get_entry_history(resource_id, entry_id, version):
+    resource_obj = get_resource(resource_id)
+    db_id = resource_obj.model.query.filter_by(entry_id=entry_id).first().id
+    result = resource_obj.history_model.query.filter_by(entry_id=db_id, version=version).first()
+    return {
+        'id': entry_id,
+        'resource': resource_id,
+        'version': version,
+        'entry': json.loads(result.body),
+        'last_modified_by': result.user_id,
+        'last_modified': result.timestamp
+    }
