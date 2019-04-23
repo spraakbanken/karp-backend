@@ -67,7 +67,7 @@ class BaseHistory:
     id = db.Column(db.Integer, primary_key=True)
     entry_id = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.Integer, nullable=False, server_default=func.now())
+    timestamp = db.Column(db.Integer, nullable=False)
     body = db.Column(db.Text)
     op = db.Column(db.Enum('ADD', 'DELETE', 'UPDATE'), nullable=False)
     version = db.Column(db.Integer, nullable=False)
