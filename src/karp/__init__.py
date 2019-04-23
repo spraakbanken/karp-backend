@@ -61,6 +61,8 @@ def create_app(config_class=None):
             error_code = error.code if error.code else 0
             return json.dumps({'error': error.message, 'errorCode': error_code}), 400
         else:
+            if app.config['DEBUG']:
+                raise error
             logger.error(error_str)
             logger.exception('unhandled exception')
             return json.dumps({'error': 'unknown error', 'errorCode': 0}), 400
