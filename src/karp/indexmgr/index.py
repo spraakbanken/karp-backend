@@ -1,5 +1,5 @@
 from typing import Dict, List, Tuple
-
+from karp.resourcemgr.entrymetadata import EntryMetadata
 
 class IndexInterface:
 
@@ -9,7 +9,7 @@ class IndexInterface:
     def publish_index(self, alias_name: str, index_name: str):
         raise NotImplementedError()
 
-    def add_entries(self, resource_id: str, entries: List[Tuple[str, Dict]]):
+    def add_entries(self, resource_id: str, entries: List[Tuple[str, EntryMetadata, Dict]]):
         raise NotImplementedError()
 
     def delete_entry(self, resource_id: str, entry_id: str):

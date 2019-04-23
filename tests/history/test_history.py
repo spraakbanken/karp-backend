@@ -1,6 +1,6 @@
 import json
 import pytest
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import re
 
@@ -81,20 +81,20 @@ def test_user2_history(history_data_client):
     assert 'ADD' == response_data['history'][1]['op']
     assert 'UPDATE' == response_data['history'][2]['op']
     assert 'UPDATE' == response_data['history'][3]['op']
-    assert re.match(r'^\d{10}$', str(response_data['history'][3]['timestamp']))
+    assert re.match(r'^\d{10}\.\d{6}$', str(response_data['history'][3]['timestamp']))
     for history_entry in response_data['history']:
         assert 'user2' == history_entry['user_id']
 
 
 def test_user_history_from_date(history_data_client):
     response_data = get_helper(history_data_client,
-                               'places/history?user_id=user1&from_date=%s' % str(datetime.now().timestamp() - 6))
+                               'places/history?user_id=user1&from_date=%s' % str(datetime.now(timezone.utc).timestamp() - 5))
     assert 4 > len(response_data['history'])
 
 
 def test_user_history_to_date(history_data_client):
     response_data = get_helper(history_data_client,
-                               'places/history?user_id=user2to_date=%s' % str(datetime.now().timestamp() - 5))
+                               'places/history?user_id=user2to_date=%s' % str(datetime.now(timezone.utc).timestamp() - 5))
     assert 4 > len(response_data['history'])
 
 
@@ -121,3 +121,13 @@ def test_diff_against_nothing(history_data_client):
     assert 'ADD' == history_entry['op']
     for diff in history_entry['diff']:
         assert 'ADDED' == diff['type']
+
+
+def test_historical_entry(history_data_client):
+    response_data = get_helper(history_data_client, 'places/4/2/history')
+    assert datetime.now(timezone.utc).timestamp() > response_data['last_modified']
+    assert 'user2' == response_data['last_modified_by']
+    assert 'id' in response_data
+    assert 'resource' in response_data
+    assert 'bb' == response_data['entry']['name']
+    assert 'version' in response_data
