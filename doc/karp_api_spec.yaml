@@ -223,7 +223,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeneralError'
   '/{resource}/{id}/diff':
-    get:
+    post:
       tags:
       - History
       summary: Get diff of two entries
