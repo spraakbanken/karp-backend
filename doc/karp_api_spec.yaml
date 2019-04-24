@@ -26,7 +26,7 @@ tags:
   - name: Inflection
   - name: Configuration
 paths:
-  '/query/{resources}':
+  '/{resources}/query':
     get:
       tags:
         - Querying
@@ -81,7 +81,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  '/query_split/{resources}':
+  '/{resources}/query_split':
     get:
       tags:
         - Querying
