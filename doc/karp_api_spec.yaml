@@ -694,15 +694,25 @@ components:
           example: places
         entry:
           $ref: '#/components/schemas/Entry'
+        last_modified:
+          type: int
+          description: Timestamp of when the entry was last modified in Unix Epoch time
+        last_modified_by:
+          type: string
+          description: Identifier of the user who made the last change in the entry
       required:
           - id
           - version
           - resource
           - entry
+          - last_modified
+          - last_modified_by
       example:
         id: '1410'
         version: 2
         resource: places
+        last_modified_by: karpuser
+        last_modified: 1556106754
         entry: {}
     AddEntry:
       type: object
