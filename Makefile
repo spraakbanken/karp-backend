@@ -1,5 +1,5 @@
 .PHONY: test test-to-log pytest build-dev run-tests
-default: run-tests
+.DEFAULT: test
 
 run-tests: lint type-check test
 
