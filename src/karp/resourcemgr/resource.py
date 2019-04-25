@@ -34,13 +34,11 @@ class Resource(object):
                 # mode was found
                 return self.config["protected"][mode]
 
-        if mode == "read":
-            return False
-        else:
-            return True
+        return mode != "read"
 
     def has_format_query(self, format: str) -> bool:
         return True
 
+    @property
     def id(self) -> str:
         return self.config['resource_id']
