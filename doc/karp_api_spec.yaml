@@ -26,7 +26,7 @@ tags:
   - name: Inflection
   - name: Configuration
 paths:
-  '/query/{resources}':
+  '/{resources}/query':
     get:
       tags:
         - Querying
@@ -81,7 +81,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  '/query_split/{resources}':
+  '/{resources}/query_split':
     get:
       tags:
         - Querying
@@ -223,7 +223,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/GeneralError'
   '/{resource}/{id}/diff':
-    get:
+    post:
       tags:
       - History
       summary: Get diff of two entries
@@ -363,44 +363,42 @@ components:
       in: query
       required: false
       schema:
-        type: int
+        type: integer
     ToVersion:
       name: to_version
       description: An entry version number
       in: query
       required: false
       schema:
-        type: int
+        type: integer
     FromDate:
       name: from_date
       description: A timestamp in Unix Epoch time
       in: query
       required: false
       schema:
-        type: int
+        type: integer
     ToDate:
       name: to_date
       description: A timestamp in Unix Epoch time
       in: query
       required: false
       schema:
-        type: int
+        type: integer
     HistoryCurrentPage:
       name: current_page
-      description: The current page
-      default: 0
+      description: The current page, default 0
       in: query
       required: false
       schema:
-        type: int
+        type: integer
     HistoryPageSize:
       name: page_size
-      description: The wanted page size
-      default: 100
+      description: The wanted page size, default 100
       in: query
       required: false
       schema:
-        type: int
+        type: integer
     SortBy:
       name: sort
       in: query
@@ -694,15 +692,25 @@ components:
           example: places
         entry:
           $ref: '#/components/schemas/Entry'
+        last_modified:
+          type: integer
+          description: Timestamp of when the entry was last modified in Unix Epoch time
+        last_modified_by:
+          type: string
+          description: Identifier of the user who made the last change in the entry
       required:
           - id
           - version
           - resource
           - entry
+          - last_modified
+          - last_modified_by
       example:
         id: '1410'
         version: 2
         resource: places
+        last_modified_by: karpuser
+        last_modified: 1556106754
         entry: {}
     AddEntry:
       type: object
@@ -766,7 +774,7 @@ components:
           items:
             $ref: '#/components/schemas/HistoryEntry'
         total:
-          type: int
+          type: integer
           description: total number of hits
     HistoryEntry:
       type: object
@@ -778,7 +786,7 @@ components:
           type: string
           description: User ID
         version:
-          type: int
+          type: integer
           description: Version of entry that history entry refers to
         messsage:
           type: string
@@ -791,7 +799,7 @@ components:
           - DELETE
           - UPDATE
         timestamp:
-          type: int
+          type: integer
           description: A timestamp in Unix Epoch time
         diff:
           $ref: '#/components/schemas/DiffResult'
