@@ -2,8 +2,7 @@ from itertools import zip_longest
 
 import pytest
 
-from karp.query_dsl import karp_tng_parser as parser
-from karp.query_dsl.karp_tng_parser import op
+from karp.query_dsl import parser, op
 
 
 def _test_nodes(r, facit):
@@ -17,22 +16,34 @@ def _test_nodes(r, facit):
 
 
 @pytest.mark.parametrize('query,facit', [
-    # ('and||missing|pos||equals|wf||or|blomma|äpple',[
-    #    (op.AND, None),
-    #    (op.MISSING, None),
-    #    (op.STRING, 'pos'),
-    #    (op.EQUALS, None),
-    #    (op.STRING, 'wf'),
-    #    (op.ARG_OR, None),
-    #    (op.STRING, 'blomma'),
-    #    (op.STRING, 'äpple'),
-    # ]),
+     ('and||missing|pos||equals|wf||or|blomma|äpple',[
+        (op.AND, None),
+        (op.MISSING, None),
+        (op.STRING, 'pos'),
+        (op.EQUALS, None),
+        (op.STRING, 'wf'),
+        (op.ARG_OR, None),
+        (op.STRING, 'blomma'),
+        (op.STRING, 'äpple'),
+    ]),
     ('freetext|stort hus',[
         (op.FREETEXT, None),
         (op.STRING, 'stort hus'),
     ]),
     ('freetext|flicka',[
         (op.FREETEXT, None),
+        (op.STRING, 'flicka'),
+    ]),
+    ('freetext||and|3|flicka',[
+        (op.FREETEXT, None),
+        (op.ARG_AND, None),
+        (op.INT, 3),
+        (op.STRING, 'flicka'),
+    ]),
+    ('freetext||or|3|flicka',[
+        (op.FREETEXT, None),
+        (op.ARG_OR, None),
+        (op.INT, 3),
         (op.STRING, 'flicka'),
     ]),
     ('freetext|6',[
@@ -42,6 +53,13 @@ def _test_nodes(r, facit):
     ('startswith|lemgram|dalinm--',[
         (op.STARTSWITH, None),
         (op.STRING, 'lemgram'),
+        (op.STRING, 'dalinm--'),
+    ]),
+    ('startswith|lemgram||or|3|dalinm--',[
+        (op.STARTSWITH, None),
+        (op.STRING, 'lemgram'),
+        (op.ARG_OR, None),
+        (op.STRING, '3'),
         (op.STRING, 'dalinm--'),
     ]),
     ('and||equals|wf|äta||missing|pos',[
@@ -80,18 +98,33 @@ def _test_nodes(r, facit):
         (op.FREERGXP, None),
         (op.STRING, 'str.*ng'),
     ]),
-#    ('freergxp||or|str.*ng1|str.*ng2',[
-#        ('ROOT', None),
-#    ]),
-#    ('regexp|field||or|str.*ng1|str.*ng2',[
-#        ('ROOT', None),
-#    ]),
-#    ('regexp||or|field1|field2||str.*ng',[
-#        ('ROOT', None),
-#    ]),
-#    ('exists||or|and|or',[
-#        ('ROOT', None),
-#    ]),
+    ('freergxp||or|str.*ng1|str.*ng2',[
+        (op.FREERGXP, None),
+        (op.ARG_OR, None),
+        (op.STRING, 'str.*ng1'),
+        (op.STRING, 'str.*ng2'),
+    ]),
+    ('regexp|field||or|str.*ng1|str.*ng2',[
+        (op.REGEXP, None),
+        (op.STRING, 'field'),
+        (op.ARG_OR, None),
+        (op.STRING, 'str.*ng1'),
+        (op.STRING, 'str.*ng2'),
+    ]),
+    ('regexp||or|field1|field2||str.*ng',[
+        (op.REGEXP, None),
+        (op.ARG_OR, None),
+        (op.STRING, 'field1'),
+        (op.STRING, 'field2'),
+        (op.STRING, 'str.*ng'),
+
+    ]),
+    ('exists||or|and|or',[
+        (op.EXISTS, None),
+        (op.ARG_OR, None),
+        (op.STRING, 'and'),
+        (op.STRING, 'or'),
+    ]),
     ('missing|field',[
         (op.MISSING, None),
         (op.STRING, 'field'),
@@ -136,12 +169,24 @@ def _test_nodes(r, facit):
         (op.STRING, 'field'),
         (op.STRING, 'str.*ng'),
     ]),
-#    ('and||regexp||or|wordform|baseform||s.tt.?||exists|pos',[
-#        ('ROOT', None),
-#    ]),
-#    ('equals|field||or|string1|string2',[
-#        ('ROOT', None),
-#    ]),
+   ('and||regexp||or|wordform|baseform||s.tt.?||exists|pos',[
+       (op.AND, None),
+       (op.REGEXP, None),
+       (op.ARG_OR, None),
+       (op.STRING, 'wordform'),
+       (op.STRING, 'baseform'),
+       (op.STRING, 's.tt.?'),
+       (op.EXISTS, None),
+       (op.STRING, 'pos'),
+   ]),
+   ('equals|field||or|string1|string2|string3',[
+       (op.EQUALS, None),
+       (op.STRING, 'field'),
+       (op.ARG_OR, None),
+       (op.STRING, 'string1'),
+       (op.STRING, 'string2'),
+       (op.STRING, 'string3'),
+   ]),
     ('contains|field|string',[
         (op.CONTAINS, None),
         (op.STRING, 'field'),
@@ -198,27 +243,66 @@ def _test_nodes(r, facit):
         (op.STRING, 'wf'),
         (op.STRING, 'bov'),
     ]),
-#    ('exists||or||or|field1|field2||field3',[
-#        ('ROOT', None),
-#    ]),
-#    ('exists||or|field1||or|field2|field3',[
-#        ('ROOT', None),
-#    ]),
-#     ('and||exists|field||and||or||missing|field||contains|field|string||not||contains|field|string',[
-#        (op.AND, None),
-#        (op.EXISTS, None),
-#        (op.STRING, 'field'),
-#    ]),
-#    	('and||not||equals|wf|satt||or||exists|wf||contains|wf|sitta',[
-#        ('ROOT', None),
-#    ]),
-#    ('not||and||equals|wf|satt||or||exists|wf||contains|wf|sitta',[
-#        ('ROOT', None),
-#    ]),
+   ('exists||or|field1|field2|field3',[
+        (op.EXISTS, None),
+        (op.ARG_OR, None),
+        (op.STRING, 'field1'),
+        (op.STRING, 'field2'),
+        (op.STRING, 'field3'),
+   ]),
+    ('and||exists|field||and||or||missing|field||contains|field|string||not||contains|field|string',[
+       (op.AND, None),
+       (op.EXISTS, None),
+       (op.STRING, 'field'),
+       (op.AND, None),
+       (op.OR, None),
+       (op.MISSING, None),
+       (op.STRING, 'field'),
+       (op.CONTAINS, None),
+       (op.STRING, 'field'),
+       (op.STRING, 'string'),
+       (op.NOT, None),
+       (op.CONTAINS, None),
+       (op.STRING, 'field'),
+       (op.STRING, 'string'),
+   ]),
+   	('and||not||equals|wf|satt||or||exists|wf||contains|wf|sitta',[
+       (op.AND, None),
+       (op.NOT, None),
+       (op.EQUALS, None),
+       (op.STRING, 'wf'),
+       (op.STRING, 'satt'),
+       (op.OR, None),
+       (op.EXISTS, None),
+       (op.STRING, 'wf'),
+       (op.CONTAINS, None),
+       (op.STRING, 'wf'),
+       (op.STRING, 'sitta'),
+   ]),
+   ('not||and||equals|wf|satt||or||exists|wf||contains|wf|sitta',[
+       (op.NOT, None),
+       (op.AND, None),
+       (op.EQUALS, None),
+       (op.STRING, 'wf'),
+       (op.STRING, 'satt'),
+       (op.OR, None),
+       (op.EXISTS, None),
+       (op.STRING, 'wf'),
+       (op.CONTAINS, None),
+       (op.STRING, 'wf'),
+       (op.STRING, 'sitta'),
+   ]),
+   ('contains|name||or|vi|bo',[
+       (op.CONTAINS, None),
+       (op.STRING, 'name'),
+       (op.ARG_OR, None),
+       (op.STRING, 'vi'),
+       (op.STRING, 'bo'),
+   ]),
 ])
 def test_karp_tng_parser_success(query, facit):
     r = parser.parse(query)
 
     assert r is not None
-
+    r.pprint()
     _test_nodes(r, facit)

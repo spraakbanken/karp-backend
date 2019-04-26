@@ -42,6 +42,7 @@ def get_value(value_node):
 
 
 def create_es_query(node):
+    node.pprint(0)
     if node is None:
         raise TypeError()
 
@@ -73,9 +74,10 @@ def create_es_query(node):
         else:
             q = q1 | q2
     elif is_a(node, op.UNARY_OPS):
+        arg = node.children[0]
         values = []
-        if is_a(node.children[0], op.LOGICAL):
-            for child in node.children[0].children:
+        if is_a(arg, op.ARG_LOGICAL):
+            for child in arg.children:
                 values.append(child.value)
             print('values = {}'.format(values))
         if is_a(node, op.FREETEXT):
@@ -85,63 +87,52 @@ def create_es_query(node):
                 else:
                     return es_dsl.Q('multi_match', query=node.value)
             if not values:
-                q = construct_freetext_query(node.children[0])
+                q = construct_freetext_query(arg)
             else:
-                queries = [construct_freetext_query(n) for n in node.children[0].children]
-                if is_a(node.children[0], op.OR):
+                queries = [construct_freetext_query(n) for n in arg.children]
+                if is_a(arg, op.ARG_OR):
                     q = es_dsl.Q('bool', should=queries)
-                elif is_a(node.children[0], op.AND):
+                else:  # if is_a(arg, op.ARG_AND):
                     q = es_dsl.Q('bool', must=queries)
-                else:
-                    q = es_dsl.Q('bool', must_not=queries)
         elif is_a(node, op.FREERGXP):
             kwargs = {
                 'default_field': '*'
             }
             if not values:
-                kwargs['query'] = '/{}/'.format(node.children[0].value)
+                kwargs['query'] = '/{}/'.format(arg.value)
             else:
-                if is_a(node.children[0], op.OR):
+                if is_a(arg, op.ARG_OR):
                     operator = ' OR '
-                elif is_a(node.children[0], op.AND):
+                else:  # if is_a(arg, op.ARG_AND):
                     operator = ' AND '
-                else:
-                    operator = ''
                 kwargs['query'] = operator.join('(/{}/)'.format(v) for v in values)
             print('kwargs = {}'.format(kwargs))
             q = es_dsl.Q('query_string', **kwargs)
-            if is_a(node.children[0], op.NOT):
-                q = es_dsl.Q('bool', must_not=q)
         elif is_a(node, op.EXISTS):
             if not values:
-                q = es_dsl.Q('exists', field=node.children[0].value)
+                q = es_dsl.Q('exists', field=arg.value)
             else:
                 queries = [es_dsl.Q('exists', field=value) for value in values]
-                if is_a(node.children[0], op.OR):
+                if is_a(arg, op.ARG_OR):
                     q = es_dsl.Q('bool', should=queries)
-                elif is_a(node.children[0], op.AND):
+                else:  # if is_a(arg, op.ARG_AND):
                     q = es_dsl.Q('bool', must=queries)
-                else:
-                    q = es_dsl.Q('bool', must_not=queries)
         elif is_a(node, op.MISSING):
             if not values:
-                q = es_dsl.Q('bool', must_not=es_dsl.Q('exists', field=node.children[0].value))
+                q = es_dsl.Q('bool', must_not=es_dsl.Q('exists', field=arg.value))
             else:
-                if is_a(node.children[0], op.NOT):
-                    q = es_dsl.Q('exists', field=values[0])
-                else:
-                    queries = [es_dsl.Q('exists', field=value) for value in values]
+                queries = [es_dsl.Q('exists', field=value) for value in values]
 
-                    if is_a(node.children[0], op.AND):
-                        q = es_dsl.Q('bool', must_not=queries)
-                    else:
-                        q = None
-                        for query in queries:
-                            q_tmp = es_dsl.Q('bool', must_not=query)
-                            if not q:
-                                q = q_tmp
-                            else:
-                                q = q | q_tmp
+                if is_a(arg, op.ARG_AND):
+                    q = es_dsl.Q('bool', must_not=queries)
+                else:
+                    q = None
+                    for query in queries:
+                        q_tmp = es_dsl.Q('bool', must_not=query)
+                        if not q:
+                            q = q_tmp
+                        else:
+                            q = q | q_tmp
         else:
             raise RuntimeError('not implemented')
     elif is_a(node, op.BINARY_OPS):
@@ -150,12 +141,12 @@ def create_es_query(node):
         arg1_values = []
         arg2_values = []
 
-        if is_a(arg1, op.LOGICAL):
+        if is_a(arg1, op.ARG_LOGICAL):
             for child in arg1.children:
                 arg1_values.append(child.value)
             print('arg1_values = {}'.format(arg1_values))
 
-        if is_a(arg2, op.LOGICAL):
+        if is_a(arg2, op.ARG_LOGICAL):
             for child in arg2.children:
                 arg2_values.append(child.value)
             print('arg2_values = {}'.format(arg2_values))
@@ -171,7 +162,7 @@ def create_es_query(node):
             # raise RuntimeError()
 
 
-        elif is_a(node, op.EQUALS):
+        if is_a(node, op.EQUALS):
             def construct_equals_query(field: str, query):
                 kwargs = {
                     field: {
@@ -192,25 +183,23 @@ def create_es_query(node):
             if len(arg1_values) == 1:
                 for query in arg2_values:
                     q_tmp = construct_equals_query(arg1_values[0], query)
-                    if is_a(arg2, op.NOT):
-                        q_tmp = ~q_tmp
                     if not q:
                         q = q_tmp
                     else:
-                        if is_a(arg2, op.OR):
+                        if is_a(arg2, op.ARG_OR):
                             q = q | q_tmp
                         else:
                             q = q & q_tmp
             else: # if len(arg1_values) > 1:
                 if len(arg2_values) == 1:
-                    if is_a(arg1, op.AND):
+                    if is_a(arg1, op.ARG_AND):
                         # q = es_dsl.Q('multi_match', query=arg2_values[0], fields=arg1_values, operator='and', type='cross_fields')
                         for field in arg1_values:
                             q_tmp = construct_equals_query(field, arg2_values[0])
                             if not q:
                                 q = q_tmp
                             else:
-                                if is_a(arg2, op.OR):
+                                if is_a(arg2, op.ARG_OR):
                                     q = q | q_tmp
                                 else:
                                     q = q & q_tmp
@@ -287,36 +276,26 @@ def create_es_query(node):
                                     get_value(arg1),
                                     prepare_regex(node, regex)
                                 )
-                        if is_a(arg2, op.NOT):
-                            queries.append(~q_tmp)
-                        else:
-                            queries.append(q_tmp)
+                        queries.append(q_tmp)
                     if len(queries) == 1:
                         q = queries[0]
-                    elif is_a(arg2, op.OR):
+                    elif is_a(arg2, op.ARG_OR):
                         q = es_dsl.Q('bool', should=queries)
-                    elif is_a(arg2, op.AND):
+                    else:  # if is_a(arg2, op.ARG_AND):
                         q = es_dsl.Q('bool', must=queries)
-                    else:
-                        raise RuntimeError('Should not be here.')
             else:
                 if not arg2_values:
-                    regex = prepare_regex(op, get_value(arg2))
+                    regex = prepare_regex(node, get_value(arg2))
                     queries = []
                     for field in arg1_values:
                         q_tmp = construct_regexp_query(field, regex)
-                        if is_a(arg1, op.NOT):
-                            queries.append(~q_tmp)
-                        else:
-                            queries.append(q_tmp)
+                        queries.append(q_tmp)
                     if len(queries) == 1:
                         q = queries[0]
-                    elif is_a(arg1, op.OR):
+                    elif is_a(arg1, op.ARG_OR):
                         q = es_dsl.Q('bool', should=queries)
-                    elif is_a(arg1, op.AND):
+                    else:  # if is_a(arg1, op.ARG_AND):
                         q = es_dsl.Q('bool', must=queries)
-                    else:
-                        raise RuntimeError('Should not be here.')
                 else:
                     raise RuntimeError('Complex regex not implemented')
 
@@ -332,25 +311,13 @@ def create_es_query(node):
             arg22 = get_value(arg2)
             range_args = {}
             if is_a(node, op.LT):
-                if is_a(arg1, op.NOT):
-                    range_args['gte'] = arg22
-                else:
-                    range_args['lt'] = arg22
+                range_args['lt'] = arg22
             elif is_a(node, op.LTE):
-                if is_a(arg1, op.NOT):
-                    range_args['gt'] = arg22
-                else:
-                    range_args['lte'] = arg22
+                range_args['lte'] = arg22
             elif is_a(node, op.GT):
-                if is_a(arg1, op.NOT):
-                    range_args['lte'] = arg22
-                else:
-                    range_args['gt'] = arg22
+                range_args['gt'] = arg22
             elif is_a(node, op.GTE):
-                if is_a(arg1, op.NOT):
-                    range_args['lt'] = arg22
-                else:
-                    range_args['gte'] = arg22
+                range_args['gte'] = arg22
 
             def construct_range_query(field: str, range_args: Dict):
                 return es_dsl.Q('range', **{field: range_args})
@@ -363,9 +330,9 @@ def create_es_query(node):
                     q_tmp = construct_range_query(field, range_args)
                     if not q:
                         q = q_tmp
-                    elif is_a(arg1, op.AND):
+                    elif is_a(arg1, op.ARG_AND):
                         q = q & q_tmp
-                    elif is_a(arg1, op.OR):
+                    else:  # if is_a(arg1, op.ARG_OR):
                         q = q | q_tmp
             # arg11 = get_value(arg1)
             # if is_a(node, op.LT):

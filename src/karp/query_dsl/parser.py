@@ -1,8 +1,11 @@
 from typing import Union
-from .errors import ParseError, SyntaxError
-from .token import Token
-from .node import Node
+
 from .basic_ast import Ast
+from .errors import ParseError, SyntaxError
+from .node import create_binary_node
+from .node import create_unary_node
+from .node import Node
+from .token import Token
 
 
 class op:
@@ -11,6 +14,9 @@ class op:
     OR          = 'OR'
     AND_OR      = [AND, OR]
     LOGICAL     = [AND, OR, NOT]
+    ARG_AND     = 'ARG_AND'
+    ARG_OR      = 'ARG_OR'
+    ARG_LOGICAL = [ARG_AND, ARG_OR]
     FREETEXT    = 'FREETEXT'
     FREERGXP    = 'FREERGXP'
     EXISTS      = 'EXISTS'
@@ -28,10 +34,25 @@ class op:
     REGEXP      = 'REGEXP'
     BINARY_OPS  = [EQUALS, GT, GTE, LT, LTE, CONTAINS, STARTSWITH, ENDSWITH, REGEXP]
     REGEX_OPS   = [CONTAINS, STARTSWITH, ENDSWITH, REGEXP]
+    OPS         = [
+        CONTAINS,
+        ENDSWITH,
+        EQUALS,
+        EXISTS,
+        FREERGXP,
+        FREETEXT,
+        GT,
+        GTE,
+        LT,
+        LTE,
+        MISSING,
+        REGEXP,
+        STARTSWITH,
+    ]
     INT         = 'INT'
     FLOAT       = 'FLOAT'
     STRING      = 'STRING'
-    ARG         = [INT, FLOAT, STRING]
+    ARGS        = [INT, FLOAT, STRING]
     SEP = '||'
 
 
@@ -68,6 +89,10 @@ class KarpTNGLexer():
         'and': op.AND,
         'not': op.NOT,
         'or': op.OR,
+    }
+    arg_logical = {
+        'and': op.ARG_AND,
+        'or': op.ARG_OR,
     }
     ops = {
         'freetext': op.FREETEXT,
@@ -111,72 +136,93 @@ class KarpTNGLexer():
         'lte': arg_token_any,
     }
 
-    def _tokenize_level_2(self, s: str):
-        print('Tokenizing {s}'.format(s=s))
-        exprs = s.split(self.SEPARATOR_2)
-
-        if exprs[0] in self.ops:
-            yield Token(self.ops[exprs[0]])
-            yield self.arg1[exprs[0]](exprs[1])
-            arg_2 = self.arg2.get(exprs[0])
-            if arg_2:
-                if len(exprs) > 2:
-                    yield arg_2(exprs[2])
-                else:
-                    raise SyntaxError(
-                        "Too few arguments to '{op}' in '{s}'".format(
-                            op=exprs[0],
-                            s=s
-                        )
-                    )
-            else:
-                if len(exprs) > 2:
-                    raise SyntaxError(
-                        "Too many arguments to '{op}' in '{s}'".format(
-                            op=exprs[0],
-                            s=s
-                        )
-                    )
-
-    def _tokenize(self, s: str):
-        exprs = s.split(self.SEPARATOR_1)
-        if len(exprs) == 1:
-            yield from self._tokenize_level_2(s)
-            yield Token(op.SEP)
-        else:
-            for expr in exprs:
-                if expr in ['and','not','or']:
-                    yield Token(self.logical[expr])
-                else:
-                    yield from self._tokenize_level_2(expr)
-
-                yield Token(op.SEP)
-
-
     def tokenize(self, s: str):
         print('Tokenizing {s}'.format(s=s))
-        yield from self._tokenize(s)
+        exprs = s.split(self.SEPARATOR_1)
+        arg_types = []
+        for expr in exprs:
+            logical_type = self.logical.get(expr)
+            if logical_type:
+                yield Token(logical_type)
+            else:
+                print('Tokenizing {expr}'.format(expr=expr))
+                sub_exprs = expr.split(self.SEPARATOR_2)
+
+                if sub_exprs[0] in self.ops:
+                    yield Token(self.ops[sub_exprs[0]])
+                    arg_1 = self.arg1[sub_exprs[0]]
+                    arg_2 = self.arg2.get(sub_exprs[0])
+                    if len(sub_exprs) > 1:
+                        yield arg_1(sub_exprs[1])
+                        arg_1 = None
+                        if len(sub_exprs) > 2:
+                            if arg_2:
+                                yield arg_2(sub_exprs[2])
+                                arg_2 = None
+                            else:
+                                raise SyntaxError(
+                                    "Too many arguments to '{op}' in '{expr}'".format(
+                                        op=sub_exprs[0],
+                                        expr=expr
+                                    )
+                                )
+                    if arg_2:
+                        arg_types.append(arg_2)
+                    if arg_1:
+                        arg_types.append(arg_1)
+                else:
+                    if sub_exprs[0] in self.arg_logical:
+                        yield Token(self.arg_logical[sub_exprs[0]])
+                        arg_exprs = sub_exprs[1:]
+                    else:
+                        arg_exprs = sub_exprs
+                    arg = arg_types.pop()
+                    if not arg:
+                        raise ParseError('No arg type is set')
+                    for arg_expr in arg_exprs:
+                        yield arg(arg_expr)
+
+            yield Token(op.SEP)
 
 
 def create_node(tok: Token):
-    return Node(tok.type, tok.value)
+    if is_a(tok, op.UNARY_OPS) or is_a(tok, op.NOT):
+        return create_unary_node(tok.type, tok.value)
+    elif is_a(tok, op.BINARY_OPS):
+        return create_binary_node(tok.type, tok.value)
+    elif is_a(tok, op.ARGS):
+        return Node(tok.type, 0, tok.value)
+    elif is_a(tok, op.LOGICAL) or is_a(tok, op.ARG_LOGICAL):
+        return Node(tok.type, None, tok.value)
+    else:
+        return None
 
 
 class KarpTNGParser:
+
     def parse(self, tokens):
-        #root = Node('ROOT')
-        root = None
         curr = None
-        logical = None
         stack = []
         for tok in tokens:
-            if is_a(tok, op.ARG):
-                curr.add_child(
-                    Node(tok.type, tok.value)
-                )
+            print('Token({}, {})'.format(tok.type, tok.value))
+            if is_a(tok, op.ARGS):
+                n = create_node(tok)
+                if curr:
+                    curr.add_child(n)
+                elif stack:
+                    stack[-1].add_child(n)
             elif is_a(tok, op.SEP):
                 if curr:
-                    if stack:
+                    if is_a(curr, op.OPS) and curr.n_children() < curr.arity:
+                        stack.append(curr)
+                    elif is_a(curr, op.ARG_LOGICAL):
+                        n = stack.pop()
+                        if is_a(n, op.OPS):
+                            n.add_child(curr)
+                            stack.append(n)
+                        else:
+                            raise ParseError("No OP to add ARG_LOGICAL '{curr}'".format(curr=curr))
+                    elif stack:
                         n1 = stack.pop()
                         n1.add_child(curr)
                         if is_a(n1, op.NOT):
@@ -191,16 +237,14 @@ class KarpTNGParser:
                     else:
                         stack.append(curr)
                     curr = None
-
-
-            elif is_a(tok, op.AND_OR):
-                stack.append(create_node(tok))
-            elif is_a(tok, op.NOT):
+            elif is_a(tok, op.LOGICAL):
                 stack.append(create_node(tok))
             else:
                 if curr:
                     raise RuntimeError('')
                 curr = create_node(tok)
+            print('curr = {curr}'.format(curr=curr))
+            print('stack = {stack}'.format(stack=stack))
 
         root = None
         for node in reversed(stack):

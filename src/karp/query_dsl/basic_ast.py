@@ -30,5 +30,6 @@ class Ast:
     #     else:
     #         return False, ', '.join(result)
 
-    def gen_stream(self):
-        yield from self.root.gen_stream()
+    def gen_stream(self) -> Iterable[Node]:
+        if not self.is_empty():
+            yield from self.root.gen_stream()
