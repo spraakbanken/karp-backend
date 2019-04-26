@@ -6,9 +6,10 @@ app = create_app(MariaDBConfig(setup_database=False))
 
 with app.app_context():
     try:
-        entry_tables = [resource.resource_id + '_' + str(resource.version) for resource in ResourceDefinition.query.all()]
+        entry_tables = [resource.resource_id + '_' + str(resource.version)
+                        for resource in ResourceDefinition.query.all()]
         history_tables = [table_name + '_history' for table_name in entry_tables]
-    except:
+    except Exception:
         entry_tables = []
         history_tables = []
 

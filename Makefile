@@ -6,11 +6,17 @@ run-tests: lint type-check test
 test: build-dev
 	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests
 
+test-queryapi: build-dev
+	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests/test_query_api.py
+
 test-to-log: build-dev
 	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests > pytest.log
 
 tox:
 	tox
+
+tox-to-log:
+	tox > tox.log
 
 build: .venv-build
 .venv-build: Pipfile

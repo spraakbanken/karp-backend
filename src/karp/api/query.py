@@ -33,13 +33,13 @@ def get_entries_by_id(resource_id: str, entry_ids: str):
 @query_api.route('/query/<resources>', methods=['GET'])
 @auth.auth.authorization('READ')
 def query(resources: str):
-    print('query called with resources={}'.format(resources))
+    print("Called 'query' called with resources={}".format(resources))
     resource_list = resources.split(',')
     resourcemgr.check_resource_published(resource_list)
     try:
-        query = search.search.build_query(request.args, resources)
-        print('query={}'.format(query))
-        response = search.search.search_with_query(query)
+        q = search.search.build_query(request.args, resources)
+        print('query::q={q}'.format(q=q))
+        response = search.search.search_with_query(q)
     except errors.KarpError as e:
         _logger.exception("Error occured when calling 'query' with resources='{}' and q='{}'".format(resources, request.args.get('q')))
         raise

@@ -13,6 +13,7 @@ ENTRIES = [{
     "density": 5,
     "municipality": [1],
     "larger_place": 7 # Alhamn
+    #"smaller_places": 9 "Bjurvik2"
 }, {
     "code": 2,
     "name": "Grunds",
@@ -74,6 +75,15 @@ ENTRIES = [{
     "larger_place": 6 # Alvik
     # "smaller_places": 1  "Botten test"
 },
+{
+    "code": 9,
+    "name": "Bjurvik2",
+    "area": 7312,
+    "population": 641,
+    "density": 12,
+    "municipality": [2, 3],
+    "larger_place": 1 # Grund test
+},
 ]
 
 
@@ -120,6 +130,7 @@ def _test_path(client, path: str, expected_result: List[str]):
     entries = get_json(client, path)
 
     names = extract_names(entries)
+    print('names = {names}'.format(names=names))
 
     assert len(names) == len(expected_result)
 
@@ -233,37 +244,39 @@ def test_and(client_with_entries, query1, query2, expected_result: List[str]):
 @pytest.mark.parametrize("field,value,expected_result", [
     ('name', 'grund', ['Grund test', 'Grunds']),
     ('name', 'Grund', ['Grund test', 'Grunds']),
+    ('name', 2, ['Bjurvik2']),
     ('name.raw', 'Grund', ['Grund test', 'Grunds']),
     pytest.param('population', 3122, ['Grund test'], marks=pytest.mark.xfail),
     ('|and|name|v_larger_place.name|', 'vi', ['Bjurvik']),
     pytest.param('|and|name|v_smaller_places.name|', 'and|Al|vi', [
         'Alvik'
-    ], marks=pytest.mark.skip(reason="regex can't handle complex")),
+    ], marks=pytest.mark.xfail(reason="regex can't handle complex")),
     pytest.param('|not|name|', 'test', [
         'Hambo',
         'Alhamn',
         'Bjurvik',
-    ], marks=pytest.mark.xfail(reason='Unclear semantics')),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
     ('|or|name|v_smaller_places.name|', 'Al', [
         'Alvik',
         'Alhamn',
         'Hambo',
     ]),
     ('name', '|and|un|es', ['Grund test',]),
-    ('name', '|not|test', [
+    pytest.param('name', '|not|test', [
         'Grunds',
         'Hambo',
         'Alhamn',
         'Rutvik',
         'Alvik',
         'Bjurvik',
-    ]),
+    ], marks=pytest.mark.skip(reason='NOT is not supported')),
     ('name', '|or|vi|bo', [
         'Alvik',
         'Rutvik',
         'Bjurvik',
         'Botten test',
         'Hambo',
+        'Bjurvik2',
     ]),
 ])
 def test_contains(client_with_entries, field: str, value, expected_result: List[str]):
@@ -302,6 +315,7 @@ def test_contains_and_separate_calls(client_with_entries, fields: Tuple, values:
     ('name', 'est', ['Grund test', 'Botten test']),
     ('name', 'unds', ['Grunds']),
     ('name', 'grund', ['Grund test']),
+    ('name', 2, ['Bjurvik2']),
     pytest.param('population', 3122, ['Grund test'], marks=pytest.mark.xfail),
     ('|and|name|v_smaller_places.name|', 'vik', ['Alvik']),
     ('|and|name|v_larger_place.name|', 'vik', ['Bjurvik']),
@@ -327,13 +341,13 @@ def test_contains_and_separate_calls(client_with_entries, fields: Tuple, values:
         'Bjurvik',
     ]),
     ('name', '|and|und|est', ['Grund test',]),
-    ('name', '|not|vik', [
+    pytest.param('name', '|not|vik', [
         'Grund test',
         'Grunds',
         'Botten test',
         'Hambo',
         'Alhamn',
-    ]),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
     ('name', '|or|vik|bo', [
         'Alvik',
         'Rutvik',
@@ -369,12 +383,12 @@ def test_endswith(client_with_entries, field: str, value, expected_result: List[
         'Grunds',
     ]),
     ('name', '|and|botten|test', ['Botten test']),
-    ('area', '|not|6312', [
+    pytest.param('area', '|not|6312', [
         'Grunds',
         'Botten test',
         'Hambo',
         'Rutvik',
-    ]),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
     ('population', '|or|6312|3122', ['Alvik', 'Grund test', 'Grunds']),
 ])
 def test_equals(client_with_entries, field: str, value, expected_result: List[str]):
@@ -388,6 +402,7 @@ def test_equals(client_with_entries, field: str, value, expected_result: List[st
 @pytest.mark.parametrize('field,expected_result',[
     ('density', [
         'Bjurvik',
+        'Bjurvik2',
         'Grund test',
         'Grunds',
         'Botten test',
@@ -396,6 +411,7 @@ def test_equals(client_with_entries, field: str, value, expected_result: List[st
     ]),
     ('|and|density|population', [
         'Bjurvik',
+        'Bjurvik2',
         'Grund test',
         'Grunds',
         'Botten test',
@@ -406,10 +422,12 @@ def test_equals(client_with_entries, field: str, value, expected_result: List[st
         'Bjurvik',
         'Hambo',
         'Botten test',
-        'Alhamn'
+        'Alhamn',
+        'Grund test',
     ]),
     ('|or|density|population', [
         'Bjurvik',
+        'Bjurvik2',
         'Grund test',
         'Grunds',
         'Hambo',
@@ -417,10 +435,10 @@ def test_equals(client_with_entries, field: str, value, expected_result: List[st
         'Alvik',
         'Alhamn'
     ]),
-    ('|not|density', [
+    pytest.param('|not|density', [
         'Hambo',
         'Rutvik',
-    ]),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
 ])
 def test_exists(client_with_entries, field: str, expected_result: List[str]):
     query = 'places/query?q=exists|{field}'.format(field=field)
@@ -431,14 +449,15 @@ def test_exists(client_with_entries, field: str, expected_result: List[str]):
     ('|and|.*test|Gr.*', [
         'Grund test',
         'Alhamn',  # through smaller_places
+        'Bjurvik2',  # through larger_place
     ]),
-    ('|not|Gr.*', [
+    pytest.param('|not|Gr.*', [
         'Botten test',
         'Hambo',
         'Alvik',
         'Rutvik',
         'Bjurvik',
-    ]),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
     ('|or|.*test|Gr.*', [
         'Grund test',
         'Grunds',
@@ -446,10 +465,12 @@ def test_exists(client_with_entries, field: str, expected_result: List[str]):
         'Hambo',  # through larger_place
         'Alhamn',  # through smaller_places
         'Bjurvik',  # through smaller_places
+        'Bjurvik2',  # through larger_place
     ]),
     ('Grunds?', [
         'Grund test',
         'Grunds',
+        'Bjurvik2',
         'Alhamn',
     ]),
 ])
@@ -463,6 +484,7 @@ def test_freergxp(client_with_entries, field: str, expected_result: List[str]):
     	'Grund test',
     	'Grunds',
     	'Alhamn',  # through smaller_places
+        'Bjurvik2',  # through larger_place
     ]),
     ('3122', [
     	'Grund test',
@@ -472,20 +494,21 @@ def test_freergxp(client_with_entries, field: str, expected_result: List[str]):
     	'Hambo',  # through larger_place
         'Bjurvik',  # through smaller_places
     ]),
-    ('|not|botten', [
+    pytest.param('|not|botten', [
     	'Grund test',
     	'Grunds',
     	'Alhamn',
     	'Rutvik',
     	'Alvik',
     	# 'Bjurvik',
-    ]),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
     ('|or|botten|test', [
     	'Botten test',
     	'Hambo',  # through smaller_places
     	'Grund test',
     	'Alhamn',  # through smaller_places
         'Bjurvik',  # through smaller_places
+        'Bjurvik2',  # through larger_places
     ]),
 ])
 def test_freetext(client_with_entries, field: str, expected_result: List[str]):
@@ -557,11 +580,13 @@ def test_lte(client_with_entries, field, value):
     ('gt', ('population', 'area'), (6212,), None),
     ('gt', ('name', 'v_smaller_places.name'), ('bjurvik',), [
         'Botten test',
+        'Grund test',
     ]),
     ('gte', ('population', 'area'), (6212,), None),
     ('gte', ('name', 'v_smaller_places.name'), ('bjurvik',), [
         'Botten test',
         'Bjurvik',
+        'Grund test',
     ]),
 ])
 def test_binary_range_1st_arg_and(
@@ -599,13 +624,13 @@ def test_binary_range_1st_arg_and(
 
 @pytest.mark.parametrize("field,lower,upper,expected_n_hits", [
     ('population', (3812,), (4133,), 1),
-    ('area', (6312,), (50000,), 1),
+    ('area', (6312,), (50000,), 2),
     ('name', ('alhamn', 'Alhamn'), ('bjurvik', 'Bjurvik'), 1),
     pytest.param('name', ('b', 'B'), ('h', 'H'), 1, marks=pytest.mark.xfail),
     pytest.param('name', ('Alhamn',), ('Bjurvik',), 1, marks=pytest.mark.xfail),
     pytest.param('name', ('B',), ('H',), 1, marks=pytest.mark.xfail),
     ('name.raw', ('Alhamn',), ('Bjurvik',), 1),
-    ('name.raw', ('B',), ('H',), 4),
+    ('name.raw', ('B',), ('H',), 5),
 ])
 def test_and_gt_lt(client_with_entries, field, lower, upper, expected_n_hits):
     query = 'places/query?q=and||gt|{field}|{lower}||lt|{field}|{upper}'.format(
@@ -630,14 +655,14 @@ def test_and_gt_lt(client_with_entries, field, lower, upper, expected_n_hits):
     ('|and|density|population', [
     	'Rutvik',
     ]),
-    ('|not|density', [
+    pytest.param('|not|density', [
     	'Grund test',
     	'Grunds',
     	'Botten test',
     	'Alvik',
     	'Alhamn',
     	'Bjurvik',
-    ]),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
     ('|or|density|population', [
     	'Rutvik',
     	'Hambo',
@@ -654,6 +679,7 @@ def test_missing(client_with_entries, field: str, expected_result: List[str]):
     	'Grunds',
     	'Rutvik',
     	'Alvik',
+        'Bjurvik2',
     	'Alhamn',
     ]),
     ('freergxp|.*test', [
@@ -708,14 +734,14 @@ def test_or(client_with_entries, query1, query2, expected_result: List[str]):
         'Grunds',
         'Botten test',
     ]),
-    ('name', '|not|.*est', [
+    pytest.param('name', '|not|.*est', [
     	'Grunds',
         'Hambo',
         'Rutvik',
         'Alvik',
         'Alhamn',
         'Bjurvik',
-    ]),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
     ('|and|name|v_larger_place.name|', '.*vik', [
         'Bjurvik',
     ]),
@@ -758,14 +784,14 @@ def test_regexp(client_with_entries, field: str, value, expected_result: List[st
         'Grunds',
         'Botten test',
     ]),
-    ('name', '|not|te', [
+    pytest.param('name', '|not|te', [
     	'Grunds',
         'Hambo',
         'Rutvik',
         'Alvik',
         'Alhamn',
         'Bjurvik',
-    ]),
+    ], marks=pytest.mark.xfail(reason='NOT in arg is not supported')),
     ('|and|name|v_larger_place.name|', 'b', [
         'Botten test',
     ]),

@@ -1,105 +1,35 @@
 from typing import Tuple, Iterable
 
-from karp.util import tree
+from .node import Node
 
 
-class UnaryOp(tree.NodeWithOneChild):
-
-    def __init__(self, value, child0=None, min_arity=1):
-        super().__init__(value, child0)
-        self.min_arity = min_arity
-        self.max_arity = 2
-
-    def _format_self(self) -> str:
-        return 'UnaryOp op={}'.format(self.value)
-
-
-class BinaryOp(tree.NodeWithTwoChildren):
-
-    def __init__(self, op, child0=None, child1=None, min_arity=2):
-        super().__init__(op, child0, child1)
-        self.min_arity = min_arity
-        self.max_arity = 3
-
-    def _format_self(self) -> str:
-        return 'BinaryOp op={}'.format(self.value)
-
-
-class TernaryOp(tree.NodeWithThreeChildren):
-
-    def __init__(self, op, child0=None, child1=None, child2=None, min_arity=3):
-        super().__init__(op, child0, child1, child2)
-        self.min_arity = min_arity
-        self.max_arity = 4
-
-    def _format_self(self) -> str:
-        return '<TernaryOpNode op={}'.format(self.value)
-
-
-class ArgNode(tree.Node):
-
-    def __init__(self, arg):
-        super().__init__(value=arg)
+class Ast:
+    def __init__(self, root: Node = None):
+        self.root = root
 
     def __repr__(self):
-        return "<ArgNode arg={}>".format(self.value)
+        return "<Tree root={}>".format(repr(self.root))
 
-    _format_self = __repr__
+    def is_empty(self) -> bool:
+        return self.root is None
 
+    def pprint(self):
+        print('<Tree root=')
+        if not self.is_empty():
+            self.root.pprint(1)
+        print('>')
 
-class StringNode(ArgNode):
+    # def validate_arity(self) -> Tuple[bool, str]:
+    #     if self.is_empty():
+    #         return True, "This tree is empty."
+    #
+    #     result = []
+    #     self.root.validate_arity(result)
+    #     if not result:
+    #         return True, None
+    #     else:
+    #         return False, ', '.join(result)
 
-    def __init__(self, arg: str):
-        assert isinstance(arg, str), "Wrong type"
-        super().__init__(arg)
-
-    def __repr__(self):
-        return "<StringNode str={}>".format(self.value)
-
-    _format_self = __repr__
-
-
-class IntNode(ArgNode):
-
-    def __init__(self, arg: int):
-        assert isinstance(arg, int), "Wrong type"
-        super().__init__(arg)
-
-    def __repr__(self):
-        return "<IntNode value={}>".format(self.value)
-
-    _format_self = __repr__
-
-
-class FloatNode(ArgNode):
-
-    def __init__(self, arg: float):
-        assert isinstance(arg, float), "Wrong type"
-        super().__init__(arg)
-
-    def __repr__(self):
-        return "<FloatNode value={}>".format(self.value)
-
-    _format_self = __repr__
-
-
-def ternary_operator(op_name):
-    def result():
-        return TernaryOp(op_name)
-    return result
-
-
-def binary_operator(op_name, **kwargs):
-    def result():
-        return BinaryOp(op_name, **kwargs)
-    return result
-
-
-def unary_operator(op_name):
-    def result():
-        return UnaryOp(op_name)
-    return result
-
-
-class Ast(tree.Tree):
-    pass
+    def gen_stream(self) -> Iterable[Node]:
+        if not self.is_empty():
+            yield from self.root.gen_stream()

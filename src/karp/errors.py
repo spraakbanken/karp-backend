@@ -15,7 +15,7 @@ class ClientErrorCodes:
 
 class KarpError(Exception):
 
-    def __init__(self, message: str, code: int=None):
+    def __init__(self, message: str, code: int = None):
         super().__init__(message)
         self.message = message
         self.code = code
@@ -23,7 +23,7 @@ class KarpError(Exception):
 
 class ResourceNotFoundError(KarpError):
 
-    def __init__(self, resource_id, version=None):
+    def __init__(self, resource_id, version = None):
         super().__init__('Resource not found. ID: {resource_id}, version: {version}'. format(
             resource_id=resource_id,
             version=version
@@ -32,7 +32,13 @@ class ResourceNotFoundError(KarpError):
 
 class EntryNotFoundError(KarpError):
 
-    def __init__(self, resource_id, entry_id, entry_version=None, resource_version=None):
+    def __init__(
+            self,
+            resource_id,
+            entry_id,
+            entry_version=None,
+            resource_version=None
+        ):
         msg = 'Entry {entry_id} (version {entry_version}) not found. ID: {resource_id}, version: {resource_version}'
         super().__init__(msg. format(
             resource_id=resource_id,
