@@ -1,5 +1,6 @@
 import jwt
 import time
+import jwt.exceptions as jwte
 
 from .authenticator import Authenticator
 from karp import get_resource_string
@@ -18,7 +19,12 @@ class JWTAuthenticator(Authenticator):
         if auth_header:
             auth_token = auth_header.split(" ")[1]
         if auth_token:
-            user_token = jwt.decode(auth_token, key=jwt_key, algorithms=["RS256"])
+            try:
+                user_token = jwt.decode(auth_token, key=jwt_key, algorithms=["RS256"])
+            except jwte.ExpiredSignatureError:
+                raise KarpError("The given jwt have expired", ClientErrorCodes.EXPIRED_JWT)
+
+            # TODO check code, but this should't be needed since it seems like the JWT-lib checks expiration
             if user_token["exp"] < time.time():
                 raise KarpError("The given jwt have expired", ClientErrorCodes.EXPIRED_JWT)
 
