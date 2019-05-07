@@ -289,6 +289,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
+  '/{resource}/{id}/{version}/history':
+    get:
+      tags:
+      - History
+      summary: Get a specific version of an entry
+      parameters:
+      - $ref: '#/components/parameters/SingleResource'
+      - $ref: '#/components/parameters/IdParam'
+      - $ref: '#/components/parameters/Version'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultEntry'
+        '500':
+          description: Not OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -310,6 +332,13 @@ components:
       description: The id to perform operation on
       schema:
         type: string
+    Version:
+      name: version
+      in: path
+      required: true
+      description: The version to perform operation on
+      schema:
+        type: integer
     EntryIdParamQuery:
       name: entry_id
       in: query
