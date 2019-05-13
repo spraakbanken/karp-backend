@@ -30,6 +30,7 @@ coverage = "*"
 pytest-xdist = "*"
 pytest-cov = "*"
 flake8 = "*"
+black = "*"
 
 [requires]
 python_version = "3"
