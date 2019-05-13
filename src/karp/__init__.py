@@ -48,6 +48,9 @@ def create_app(config_class=None):
         search.init(SearchInterface())
         indexer.init(IndexInterface())
 
+    import karp.pluginmanager
+    karp.pluginmanager.init()
+
     @app.errorhandler(Exception)
     def http_error_handler(error: Exception):
         error_str = 'Exception on %s [%s]' % (request.path, request.method)
