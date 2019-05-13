@@ -41,7 +41,7 @@ def get_value(value_node):
         raise NotImplementedError()
 
 
-def create_es_query(node):
+def create_es_query(node: ast.Node):
     node.pprint(0)
     if node is None:
         raise TypeError()
@@ -51,8 +51,9 @@ def create_es_query(node):
         q = ~create_es_query(node.children[0])
     elif is_a(node, op.AND_OR):
         # TODO check minimum should match rules in different contexts
-        q1 = create_es_query(node.children[0])
-        q2 = create_es_query(node.children[1])
+        queries = [create_es_query(n) for n in node.children]
+        q1 = queries[0]
+        q2 = queries[1]
         print('q1 = {}'.format(q1.to_dict()))
         print('q2 = {}'.format(repr(q2)))
         q1_dict = q1.to_dict()
@@ -68,11 +69,10 @@ def create_es_query(node):
                         print('range_args = {}'.format(range_args))
                         q = es_dsl.Q('range', **{q1_field: range_args})
                         return q
-
         if is_a(node, op.AND):
-            q = q1 & q2
+            q = es_dsl.Q('bool', must=queries)
         else:
-            q = q1 | q2
+            q = es_dsl.Q('bool', should=queries)
     elif is_a(node, op.UNARY_OPS):
         arg = node.children[0]
         values = []
@@ -161,7 +161,6 @@ def create_es_query(node):
             # can only be expressed as in the longer form above
             # raise RuntimeError()
 
-
         if is_a(node, op.EQUALS):
             def construct_equals_query(field: str, query):
                 kwargs = {
@@ -190,10 +189,14 @@ def create_es_query(node):
                             q = q | q_tmp
                         else:
                             q = q & q_tmp
-            else: # if len(arg1_values) > 1:
+            else:  # if len(arg1_values) > 1:
                 if len(arg2_values) == 1:
                     if is_a(arg1, op.ARG_AND):
-                        # q = es_dsl.Q('multi_match', query=arg2_values[0], fields=arg1_values, operator='and', type='cross_fields')
+                        # q = es_dsl.Q('multi_match',
+                        #               query=arg2_values[0],
+                        #               fields=arg1_values,
+                        #               operator='and',
+                        #               type='cross_fields')
                         for field in arg1_values:
                             q_tmp = construct_equals_query(field, arg2_values[0])
                             if not q:
@@ -206,7 +209,7 @@ def create_es_query(node):
 
                     else:
                         q = es_dsl.Q('multi_match', query=arg2_values[0], fields=arg1_values)
-                else: # if len(arg2_values) > 1:
+                else:  # if len(arg2_values) > 1:
                     raise RuntimeError("Don't know how to handle ")
 
             # kwargs = {
@@ -298,7 +301,6 @@ def create_es_query(node):
                         q = es_dsl.Q('bool', must=queries)
                 else:
                     raise RuntimeError('Complex regex not implemented')
-
 
             # q = construct_regexp_query(get_value(arg1), arg22)
             # if len(fields) == 1:
@@ -393,9 +395,11 @@ class EsSearch(search.SearchInterface):
         aliases = self._get_all_aliases()
         mapping = self.es.indices.get_mapping()
         for (alias, index) in aliases:
-            if ('mappings' in mapping[index] and
-                'entry' in mapping[index]['mappings'] and
-                'properties' in mapping[index]['mappings']['entry']):
+            if (
+                    'mappings' in mapping[index]
+                    and 'entry' in mapping[index]['mappings']
+                    and 'properties' in mapping[index]['mappings']['entry']
+                    ):
                 field_mapping[alias] = parse_mapping(
                     mapping[index]['mappings']['entry']['properties']
                 )
