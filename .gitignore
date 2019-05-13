@@ -107,3 +107,6 @@ venv.bak/
 .pyre/
 
 .idea
+
+# VS Code settings
+.vscode/
