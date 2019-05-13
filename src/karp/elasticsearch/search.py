@@ -485,11 +485,10 @@ class EsSearch(search.SearchInterface):
 
             result = self._format_result(query.resources, response)
             if query.lexicon_stats:
+                result['distribution'] = {}
                 for bucket in response.aggregations.distribution.buckets:
                     key = bucket['key']
                     value = bucket['doc_count']
-                    if 'distribution' not in result:
-                        result['distribution'] = {}
                     result['distribution'][key.rsplit('_', 1)[0]] = value
 
             return result

@@ -41,7 +41,13 @@ def query(resources: str):
         print('query::q={q}'.format(q=q))
         response = search.search.search_with_query(q)
     except errors.KarpError as e:
-        _logger.exception("Error occured when calling 'query' with resources='{}' and q='{}'".format(resources, request.args.get('q')))
+        _logger.exception(
+            "Error occured when calling 'query' with resources='{}' and q='{}'. e.msg='{}".format(
+                resources,
+                request.args.get('q'),
+                e.message
+            )
+        )
         raise
     return flask_jsonify(response), 200
 
@@ -59,6 +65,12 @@ def query_split(resources: str):
         print('query={}'.format(query))
         response = search.search.search_with_query(query)
     except errors.KarpError as e:
-        _logger.exception("Error occured when calling 'query' with resources='{}' and q='{}'".format(resources, request.args.get('q')))
+        _logger.exception(
+            "Error occured when calling 'query' with resources='{}' and q='{}'. msg='{}'".format(
+                resources,
+                request.args.get('q'),
+                e.message
+            )
+        )
         raise
     return flask_jsonify(response), 200
