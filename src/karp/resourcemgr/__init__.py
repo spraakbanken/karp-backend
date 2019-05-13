@@ -112,6 +112,14 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
     entry_json_schema = create_entry_json_schema(config)
 
+    if 'plugins' in config:
+        for plugin_id in config['plugins']:
+            # TODO lookup plugin from somewhere
+            def create_resource(resource_id, version, config):
+                return [()]
+            for (field_name, field_conf) in create_resource(resource_id, version, config):
+                config['fields'][field_name] = field_conf
+
     resource = {
         'resource_id': resource_id,
         'version': version,
