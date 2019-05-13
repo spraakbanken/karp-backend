@@ -122,6 +122,12 @@ def _evaluate_function(function_conf: Dict, src_entry: Dict, src_resource: resou
             list_of_sub_fields = ("tmp", function_conf['result']),
             _transform_to_index_entry(target_resource, {'tmp': entry['entry']}, index_entry, list_of_sub_fields)
             indexer.impl.add_to_list_field(res, index_entry["tmp"])
+    if 'plugin' in function_conf:
+        plugin_id = function_conf['plugin']
+        # TODO load plugin in some way
+        def plugin_function(resource_id, resource_version, entry):
+            return []
+        res = plugin_function(src_resource.id, src_resource.version, src_entry)
     else:
         raise NotImplementedError()
     return res
