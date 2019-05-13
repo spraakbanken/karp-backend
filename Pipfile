@@ -9,7 +9,7 @@ sqlalchemy = "<=1.2"
 flask-sqlalchemy = "*"
 mysqlclient = "*"
 gunicorn = "*"
-karp = {editable = true, path = "."}
+karp = {editable = true,path = "."}
 click = "*"
 fastjsonschema = "*"
 pytest = "*"
@@ -29,6 +29,7 @@ pytest = "*"
 coverage = "*"
 pytest-xdist = "*"
 pytest-cov = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3"
