@@ -61,7 +61,10 @@ def test_diff1(diff_data_client):
 
 
 def test_diff2(diff_data_client):
-    response = diff_data_client.get('places/3/diff?from_date=%s&to_date=%s' % ('0', str(datetime.now(timezone.utc).timestamp())))
+    response = diff_data_client.get(
+        'places/3/diff?from_date=%s&to_date=%s' %
+        ('0', str(datetime.now(timezone.utc).timestamp()))
+    )
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
     assert 'a' == diff[0]['before']
@@ -117,7 +120,10 @@ def test_diff_from_version_to_last(diff_data_client):
 
 
 def test_diff_mix_version_date(diff_data_client):
-    response = diff_data_client.get('places/3/diff?from_version=2&to_date=%s' % str(datetime.now(timezone.utc).timestamp() - 3))
+    response = diff_data_client.get(
+        'places/3/diff?from_version=2&to_date=%s' %
+        str(datetime.now(timezone.utc).timestamp() - 3)
+    )
     response_data = json.loads(response.data.decode())
     diff = response_data['diff']
     assert 'aa' == diff[0]['before']
