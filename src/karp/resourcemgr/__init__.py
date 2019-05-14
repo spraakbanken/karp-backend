@@ -4,7 +4,8 @@ import fastjsonschema  # pyre-ignore
 import logging
 import collections
 from sqlalchemy.sql import func
-from datetime import datetime
+import os
+import re
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
@@ -97,7 +98,19 @@ def setup_resource_class(resource_id, version=None):
     create_and_update_caches(resource_id, resource_def.version, config)
 
 
-def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
+def create_new_resource_from_dir(config_dir: str) -> List[Tuple[str, int]]:
+    files = [f for f in os.listdir(config_dir) if re.match(r'.*\.json', f)]
+    result = []
+    for file in files:
+        result.append(create_new_resource(open(os.path.join(config_dir, file)), config_dir=config_dir))
+    return result
+
+
+def create_new_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
+    return create_new_resource(config_file)
+
+
+def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:
     config = json.load(config_file)
     try:
         schema = get_resource_string('schema/resourceconf.schema.json')
@@ -114,10 +127,8 @@ def create_new_resource(config_file: BinaryIO) -> Tuple[str, int]:
 
     if 'plugins' in config:
         for plugin_id in config['plugins']:
-            # TODO lookup plugin from somewhere
-            def create_resource(resource_id, version, config):
-                return [()]
-            for (field_name, field_conf) in create_resource(resource_id, version, config):
+            import karp.pluginmanager as plugins
+            for (field_name, field_conf) in plugins.plugins[plugin_id].resource_creation(resource_id, version, config_dir):
                 config['fields'][field_name] = field_conf
 
     resource = {

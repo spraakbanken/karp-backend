@@ -43,16 +43,25 @@ def cli_timer(func):
 
 
 @cli.command('create')
-@click.option('--config', default=None, help='', required=True)
+@click.option('--config', default=None, help='A JSON file containing settings for one resource', required=False)
+@click.option('--config_dir', default=None,
+              help='A directory containing config files for resource and optionally plugin settings', required=False)
 @cli_error_handler
 @cli_timer
-def create_resource(config):
-    with open(config) as fp:
-        resource_id, version = resourcemgr.create_new_resource(fp)
-    click.echo("Created version {version} of resource {resource_id}".format(
-        version=version,
-        resource_id=resource_id
-    ))
+def create_resource(config, config_dir):
+    if config:
+        with open(config) as fp:
+            new_resource = resourcemgr.create_new_resource_from_file(fp)
+        new_resources = [new_resource]
+    elif config_dir:
+        new_resources = resourcemgr.create_new_resource_from_dir(config_dir)
+    else:
+        click.echo('Must give either --config or --config_dir')
+    for (resource_id, version) in new_resources:
+        click.echo('Created version {version} of resource {resource_id}'.format(
+            version=version,
+            resource_id=resource_id
+        ))
 
 
 @cli.command('import')

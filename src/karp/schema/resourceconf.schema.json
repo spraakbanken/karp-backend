@@ -89,6 +89,12 @@
     },
     "id": {
       "type": "string"
+    },
+    "plugins": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     }
   },
   "required": ["resource_id", "resource_name", "fields", "sort"]
