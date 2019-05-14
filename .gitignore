@@ -89,6 +89,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.venv-build-dev
 
 # Spyder project settings
 .spyderproject
@@ -110,3 +111,4 @@ venv.bak/
 
 # VS Code settings
 .vscode/
+
