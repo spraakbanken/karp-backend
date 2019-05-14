@@ -122,7 +122,7 @@ def app_with_data_f(app_f):
                 "tests/data/config/municipalities.json",
             ]:
                 with open(file) as fp:
-                    resource, version = resourcemgr.create_new_resource(fp)
+                    resource, version = resourcemgr.create_new_resource_from_file(fp)
                     resourcemgr.setup_resource_class(resource, version)
                     if kwargs.get("use_elasticsearch", False):
                         indexmgr.publish_index(resource, version)
@@ -141,7 +141,7 @@ def app_with_data_f_scope_module(app_f_scope_module):
                 "tests/data/config/municipalities.json",
             ]:
                 with open(file) as fp:
-                    resource, version = resourcemgr.create_new_resource(fp)
+                    resource, version = resourcemgr.create_new_resource_from_file(fp)
                     resourcemgr.setup_resource_class(resource, version)
                     if kwargs.get("use_elasticsearch", False):
                         indexmgr.publish_index(resource, version)
@@ -172,21 +172,20 @@ def app_with_data_f_scope_session(app_f_scope_session):
 @pytest.fixture
 def app_with_data(app):
     with app.app_context():
-        with open("tests/data/config/places.json") as fp:
-            resourcemgr.create_new_resource(fp)
-        with open("tests/data/config/municipalities.json") as fp:
-            resourcemgr.create_new_resource(fp)
-
+        with open('tests/data/config/places.json') as fp:
+            resourcemgr.create_new_resource_from_file(fp)
+        with open('tests/data/config/municipalities.json') as fp:
+            resourcemgr.create_new_resource_from_file(fp)
     return app
 
 
 @pytest.fixture(scope="module")
 def app_with_data_scope_module(app_scope_module):
     with app_scope_module.app_context():
-        with open("tests/data/config/places.json") as fp:
-            resourcemgr.create_new_resource(fp)
-        with open("tests/data/config/municipalities.json") as fp:
-            resourcemgr.create_new_resource(fp)
+        with open('tests/data/config/places.json') as fp:
+            resourcemgr.create_new_resource_from_file(fp)
+        with open('tests/data/config/municipalities.json') as fp:
+            resourcemgr.create_new_resource_from_file(fp)
 
     return app_scope_module
 

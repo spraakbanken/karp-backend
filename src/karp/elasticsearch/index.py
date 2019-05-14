@@ -17,6 +17,9 @@ def _create_es_mapping(config):
             if list(fun.keys())[0] == 'multi_ref':
                 res_object = fun['multi_ref']['result']
                 recursive_field(parent_schema, 'v_' + parent_field_name, res_object)
+            if 'result' in fun:
+                res_object = fun['result']
+                recursive_field(parent_schema, 'v_' + parent_field_name, res_object)
             return
         if parent_field_def.get('ref'):
             if 'field' in parent_field_def['ref']:
