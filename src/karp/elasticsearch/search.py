@@ -47,9 +47,7 @@ def create_es_query(node: ast.Node):
         raise TypeError()
 
     q = None
-    if is_a(node, op.NOT):
-        q = ~create_es_query(node.children[0])
-    elif is_a(node, op.AND_OR):
+    if is_a(node, op.LOGICAL):
         # TODO check minimum should match rules in different contexts
         queries = [create_es_query(n) for n in node.children]
         q1 = queries[0]
@@ -71,8 +69,10 @@ def create_es_query(node: ast.Node):
                         return q
         if is_a(node, op.AND):
             q = es_dsl.Q('bool', must=queries)
-        else:
+        elif is_a(node, op.OR):
             q = es_dsl.Q('bool', should=queries)
+        else:
+            q = es_dsl.Q('bool', must_not=queries)
     elif is_a(node, op.UNARY_OPS):
         arg = node.children[0]
         values = []
