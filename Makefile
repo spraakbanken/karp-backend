@@ -1,15 +1,15 @@
-.PHONY: test test-to-log pytest build-dev run-tests
+.PHONY: test test-to-log pytest build-dev run-tests clean clean-pyc
 .DEFAULT: test
 
 run-tests: lint type-check test
 
-test: build-dev
+test: build-dev clean-pyc
 	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests
 
-test-queryapi: build-dev
+test-queryapi: build-dev clean-pyc
 	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests/test_query_api.py
 
-test-to-log: build-dev
+test-to-log: build-dev clean-pyc
 	pipenv run py.test -vv --cov=karp --cov-report=term-missing tests > pytest.log
 
 tox:
@@ -57,3 +57,9 @@ bumpversion-major:
 mkrelease-patch: bumpversion-patch prepare-release docs/openapi.html
 mkrelease-minor: bumpversion-minor prepare-release docs/openapi.html
 mkrelease-major: bumpversion-major prepare-release docs/openapi.html
+
+clean: clean-pyc
+clean-pyc:
+	find . -name '*.pyc' -exec rm {} \;
+	find . -d -name '__pycache__' -exec rm -rf {} \;
+	rm -rf .pytest_cache
