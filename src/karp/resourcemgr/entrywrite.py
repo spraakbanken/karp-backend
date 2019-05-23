@@ -3,6 +3,8 @@ import fastjsonschema  # pyre-ignore
 import logging
 from datetime import datetime, timezone
 
+from sqlalchemy import exc as sql_exception
+
 from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError, UpdateConflict
 from karp.resourcemgr import get_resource
 from karp.database import db
@@ -82,12 +84,29 @@ def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
     return len(objs)
 
 
-def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: str=None, resource_version: int=None):
+def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: str = None, resource_version: int = None):
+    """
+    Add entries to DB and INDEX (if present and resource is active).
+
+    Raises
+    ------
+    RuntimeError
+        If the resource.entry_json_schema fails to compile.
+    KarpError
+        - If an entry fails to be validated against the json schema.
+        - If the DB interaction fails.
+
+    Returns
+    -------
+    List
+        List of the id's of the created entries.
+    """
     resource = get_resource(resource_id, version=resource_version)
     resource_conf = resource.config
 
     validate_entry = _compile_schema(resource.entry_json_schema)
 
+    try:
     created_db_entries = []
     for entry in entries:
         _validate_entry(validate_entry, entry)
@@ -113,6 +132,21 @@ def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: st
         created_history_entries.append((db_entry, entry, history_entry))
         db.session.add(history_entry)
     db.session.commit()
+    except sql_exception.IntegrityError as e:
+        _logger.exception("IntegrityError")
+        print("e = {e!r}".format(e=e))
+        print("e.orig.args = {e!r}".format(e=e.orig.args))
+        raise KarpError(
+            'Database error: {msg}'.format(msg=e.orig.args),
+            ClientErrorCodes.DB_INTEGRITY_ERROR
+        )
+    except sql_exception.SQLAlchemyError as e:
+        _logger.exception("Adding entries to DB failed.")
+        print("e = {e!r}".format(e=e))
+        raise KarpError(
+            'Database error: {msg}'.format(msg=e.msg),
+            ClientErrorCodes.DB_GENERAL_ERROR
+        )
 
     if resource.active:
         indexmgr.add_entries(resource_id,

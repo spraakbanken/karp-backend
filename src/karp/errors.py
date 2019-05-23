@@ -11,6 +11,8 @@ class ClientErrorCodes:
     EXPIRED_JWT = 40
     NOT_PERMITTED = 41
     BAD_PARAMETER_FORMAT = 50
+    DB_GENERAL_ERROR = 60
+    DB_INTEGRITY_ERROR = 61
 
 
 class KarpError(Exception):
