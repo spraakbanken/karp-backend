@@ -839,6 +839,7 @@ def test_missing(
             ["Grund test", "Grunds", "Rutvik", "Alvik", "Bjurvik2", "Alhamn"],
         ),
         ("freergxp|.*test", ["Grunds", "Rutvik", "Alvik"]),
+        ("freergxp|.*test||freergxp|.*vik", ["Grunds"]),
     ],
 )
 def test_not(

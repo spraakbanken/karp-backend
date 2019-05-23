@@ -50,23 +50,24 @@ def create_es_query(node: ast.Node):
     if is_a(node, op.LOGICAL):
         # TODO check minimum should match rules in different contexts
         queries = [create_es_query(n) for n in node.children]
-        q1 = queries[0]
-        q2 = queries[1]
-        print('q1 = {}'.format(q1.to_dict()))
-        print('q2 = {}'.format(repr(q2)))
-        q1_dict = q1.to_dict()
-        q2_dict = q2.to_dict()
-        if 'range' in q1_dict and 'range' in q2_dict:
-            for q1_field, q1_value in q1_dict['range'].items():
-                for q2_field, q2_value in q2_dict['range'].items():
-                    if q1_field == q2_field:
-                        print('q1_field == q2_field')
-                        range_args = q1_value
-                        range_args.update(q2_value)
-                        print('field = {}'.format(q1_field))
-                        print('range_args = {}'.format(range_args))
-                        q = es_dsl.Q('range', **{q1_field: range_args})
-                        return q
+        if len(queries) == 2:
+            q1 = queries[0]
+            q2 = queries[1]
+            print('q1 = {}'.format(q1.to_dict()))
+            print('q2 = {}'.format(repr(q2)))
+            q1_dict = q1.to_dict()
+            q2_dict = q2.to_dict()
+            if 'range' in q1_dict and 'range' in q2_dict:
+                for q1_field, q1_value in q1_dict['range'].items():
+                    for q2_field, q2_value in q2_dict['range'].items():
+                        if q1_field == q2_field:
+                            print('q1_field == q2_field')
+                            range_args = q1_value
+                            range_args.update(q2_value)
+                            print('field = {}'.format(q1_field))
+                            print('range_args = {}'.format(range_args))
+                            q = es_dsl.Q('range', **{q1_field: range_args})
+                            return q
         if is_a(node, op.AND):
             q = es_dsl.Q('bool', must=queries)
         elif is_a(node, op.OR):

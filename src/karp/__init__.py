@@ -63,7 +63,7 @@ def create_app(config_class=None):
             logger.debug(error_str)
             logger.debug(error.message)
             error_code = error.code if error.code else 0
-            return json.dumps({'error': error.message, 'errorCode': error_code}), 400
+            return json.dumps({'error': error.message, 'errorCode': error_code}), error.http_return_code
         else:
             if app.config['DEBUG']:
                 raise error

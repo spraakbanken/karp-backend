@@ -4,6 +4,7 @@ import time
 from datetime import datetime, timezone
 
 import karp.resourcemgr.entryread as entryread
+from karp.errors import ClientErrorCodes
 
 
 def get_json(client, path):
@@ -43,6 +44,40 @@ def test_add(es, client_with_data_f):
     entries = get_json(client, 'places/query')
     assert len(entries['hits']) == 1
     assert entries['hits'][0]['entry']['name'] == 'test3'
+
+
+def test_add_existing(es, client_with_data_f):
+    client = init(client_with_data_f, es, [])
+
+    response = client.post('places/add', data=json.dumps({
+        'entry': {
+            'code': 3,
+            'name': 'test3',
+            'population': 4,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        }
+    }), content_type='application/json')
+    assert 200 <= response.status_code < 300
+
+    response = client.post('places/add', data=json.dumps({
+        'entry': {
+            'code': 3,
+            'name': 'test3',
+            'population': 4,
+            'area': 50000,
+            'density': 5,
+            'municipality': [2, 3]
+        }
+    }), content_type='application/json')
+    assert response.status_code == 400
+    response_data = json.loads(response.data.decode())
+
+    assert 'error' in response_data
+    assert 'errorCode' in response_data
+    assert ClientErrorCodes.DB_INTEGRITY_ERROR == response_data['errorCode']
+    assert 'Database error' in response_data['error']
 
 
 def test_delete(es, client_with_data_f):

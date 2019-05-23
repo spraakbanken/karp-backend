@@ -3,6 +3,8 @@ import fastjsonschema  # pyre-ignore
 import logging
 from datetime import datetime, timezone
 
+from sqlalchemy import exc as sql_exception
+
 from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError, UpdateConflict
 from karp.resourcemgr import get_resource
 from karp.database import db
@@ -15,7 +17,7 @@ import karp.resourcemgr.entrymetadata as entrymetadata
 _logger = logging.getLogger('karp')
 
 
-def add_entry(resource_id: str, entry: Dict, user_id: str, message: str=None, resource_version: int=None):
+def add_entry(resource_id: str, entry: Dict, user_id: str, message: str = None, resource_version: int = None):
     return add_entries(resource_id, [entry], user_id, message=message, resource_version=resource_version)[0]
 
 
@@ -26,7 +28,7 @@ def preview_entry(resource_id, entry, resource_version=None):
 
 
 def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, user_id: str,
-                 message: str=None, resource_version: int=None, force: bool=False):
+                 message: str = None, resource_version: int = None, force: bool = False):
     resource = get_resource(resource_id, version=resource_version)
 
     schema = _compile_schema(resource.entry_json_schema)
@@ -82,37 +84,69 @@ def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
     return len(objs)
 
 
-def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: str=None, resource_version: int=None):
+def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: str = None, resource_version: int = None):
+    """
+    Add entries to DB and INDEX (if present and resource is active).
+
+    Raises
+    ------
+    RuntimeError
+        If the resource.entry_json_schema fails to compile.
+    KarpError
+        - If an entry fails to be validated against the json schema.
+        - If the DB interaction fails.
+
+    Returns
+    -------
+    List
+        List of the id's of the created entries.
+    """
     resource = get_resource(resource_id, version=resource_version)
     resource_conf = resource.config
 
     validate_entry = _compile_schema(resource.entry_json_schema)
 
-    created_db_entries = []
-    for entry in entries:
-        _validate_entry(validate_entry, entry)
+    try:
+        created_db_entries = []
+        for entry in entries:
+            _validate_entry(validate_entry, entry)
 
-        entry_json = json.dumps(entry)
-        db_entry = _src_entry_to_db_entry(entry, entry_json, resource.model, resource_conf)
-        created_db_entries.append((db_entry, entry, entry_json))
-        db.session.add(db_entry)
+            entry_json = json.dumps(entry)
+            db_entry = _src_entry_to_db_entry(entry, entry_json, resource.model, resource_conf)
+            created_db_entries.append((db_entry, entry, entry_json))
+            db.session.add(db_entry)
 
-    db.session.commit()
+        db.session.commit()
 
-    created_history_entries = []
-    for db_entry, entry, entry_json in created_db_entries:
-        history_entry = resource.history_model(
-            entry_id=db_entry.id,
-            user_id=user_id,
-            body=entry_json,
-            version=1,
-            op='ADD',
-            message=message,
-            timestamp=datetime.now(timezone.utc).timestamp()
+        created_history_entries = []
+        for db_entry, entry, entry_json in created_db_entries:
+            history_entry = resource.history_model(
+                entry_id=db_entry.id,
+                user_id=user_id,
+                body=entry_json,
+                version=1,
+                op='ADD',
+                message=message,
+                timestamp=datetime.now(timezone.utc).timestamp()
+            )
+            created_history_entries.append((db_entry, entry, history_entry))
+            db.session.add(history_entry)
+        db.session.commit()
+    except sql_exception.IntegrityError as e:
+        _logger.exception("IntegrityError")
+        print("e = {e!r}".format(e=e))
+        print("e.orig.args = {e!r}".format(e=e.orig.args))
+        raise KarpError(
+            'Database error: {msg}'.format(msg=e.orig.args),
+            ClientErrorCodes.DB_INTEGRITY_ERROR
         )
-        created_history_entries.append((db_entry, entry, history_entry))
-        db.session.add(history_entry)
-    db.session.commit()
+    except sql_exception.SQLAlchemyError as e:
+        _logger.exception("Adding entries to DB failed.")
+        print("e = {e!r}".format(e=e))
+        raise KarpError(
+            'Database error: {msg}'.format(msg=e.msg),
+            ClientErrorCodes.DB_GENERAL_ERROR
+        )
 
     if resource.active:
         indexmgr.add_entries(resource_id,
