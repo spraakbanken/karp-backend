@@ -15,10 +15,11 @@ class ClientErrorCodes:
 
 class KarpError(Exception):
 
-    def __init__(self, message: str, code: int = None):
+    def __init__(self, message: str, code: int = None, http_return_code: int = 400):
         super().__init__(message)
         self.message = message
         self.code = code
+        self.http_return_code = http_return_code
 
 
 class ResourceNotFoundError(KarpError):
