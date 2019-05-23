@@ -17,7 +17,7 @@ import karp.resourcemgr.entrymetadata as entrymetadata
 _logger = logging.getLogger('karp')
 
 
-def add_entry(resource_id: str, entry: Dict, user_id: str, message: str=None, resource_version: int=None):
+def add_entry(resource_id: str, entry: Dict, user_id: str, message: str = None, resource_version: int = None):
     return add_entries(resource_id, [entry], user_id, message=message, resource_version=resource_version)[0]
 
 
@@ -28,7 +28,7 @@ def preview_entry(resource_id, entry, resource_version=None):
 
 
 def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, user_id: str,
-                 message: str=None, resource_version: int=None, force: bool=False):
+                 message: str = None, resource_version: int = None, force: bool = False):
     resource = get_resource(resource_id, version=resource_version)
 
     schema = _compile_schema(resource.entry_json_schema)
@@ -107,31 +107,31 @@ def add_entries(resource_id: str, entries: List[Dict], user_id: str, message: st
     validate_entry = _compile_schema(resource.entry_json_schema)
 
     try:
-    created_db_entries = []
-    for entry in entries:
-        _validate_entry(validate_entry, entry)
+        created_db_entries = []
+        for entry in entries:
+            _validate_entry(validate_entry, entry)
 
-        entry_json = json.dumps(entry)
-        db_entry = _src_entry_to_db_entry(entry, entry_json, resource.model, resource_conf)
-        created_db_entries.append((db_entry, entry, entry_json))
-        db.session.add(db_entry)
+            entry_json = json.dumps(entry)
+            db_entry = _src_entry_to_db_entry(entry, entry_json, resource.model, resource_conf)
+            created_db_entries.append((db_entry, entry, entry_json))
+            db.session.add(db_entry)
 
-    db.session.commit()
+        db.session.commit()
 
-    created_history_entries = []
-    for db_entry, entry, entry_json in created_db_entries:
-        history_entry = resource.history_model(
-            entry_id=db_entry.id,
-            user_id=user_id,
-            body=entry_json,
-            version=1,
-            op='ADD',
-            message=message,
-            timestamp=datetime.now(timezone.utc).timestamp()
-        )
-        created_history_entries.append((db_entry, entry, history_entry))
-        db.session.add(history_entry)
-    db.session.commit()
+        created_history_entries = []
+        for db_entry, entry, entry_json in created_db_entries:
+            history_entry = resource.history_model(
+                entry_id=db_entry.id,
+                user_id=user_id,
+                body=entry_json,
+                version=1,
+                op='ADD',
+                message=message,
+                timestamp=datetime.now(timezone.utc).timestamp()
+            )
+            created_history_entries.append((db_entry, entry, history_entry))
+            db.session.add(history_entry)
+        db.session.commit()
     except sql_exception.IntegrityError as e:
         _logger.exception("IntegrityError")
         print("e = {e!r}".format(e=e))
