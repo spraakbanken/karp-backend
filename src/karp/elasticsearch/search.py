@@ -542,7 +542,7 @@ class EsSearch(search.SearchInterface):
             return result
         else:
             s = es_dsl.Search(using=self.es, index=query.resource_str)
-            logger.debug('s = {}'.format(s))
+            logger.debug('s = {}'.format(s.to_dict()))
             if query.query is not None:
                 s = s.query(query.query)
 
@@ -553,7 +553,8 @@ class EsSearch(search.SearchInterface):
 
             response = s.execute()
 
-            logger.debug('response = {}'.format(response.to_dict()))
+            # TODO format response in a better way, because the whole response takes up too much space in the logs
+            # logger.debug('response = {}'.format(response.to_dict()))
 
             result = self._format_result(query.resources, response)
             if query.lexicon_stats:
