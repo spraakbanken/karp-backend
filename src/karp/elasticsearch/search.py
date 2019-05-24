@@ -542,7 +542,6 @@ class EsSearch(search.SearchInterface):
             return result
         else:
             s = es_dsl.Search(using=self.es, index=query.resource_str)
-            logger.debug('s = {}'.format(s.to_dict()))
             if query.query is not None:
                 s = s.query(query.query)
 
@@ -551,6 +550,7 @@ class EsSearch(search.SearchInterface):
             if query.lexicon_stats:
                 s.aggs.bucket('distribution', 'terms', field='_index', size=len(query.resources))
 
+            logger.debug('s = {}'.format(s.to_dict()))
             response = s.execute()
 
             # TODO format response in a better way, because the whole response takes up too much space in the logs
