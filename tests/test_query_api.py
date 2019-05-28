@@ -5,7 +5,7 @@ import json
 
 from typing import Callable, List, Tuple
 
-from conftest import ENTRIES
+from conftest import PLACES as ENTRIES
 
 
 def get_json(client, path):

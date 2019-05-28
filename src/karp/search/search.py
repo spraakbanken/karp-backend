@@ -3,7 +3,7 @@ from typing import Optional, Callable, TypeVar, List, Dict
 
 from karp.util import convert as util_convert
 
-from karp import query_dsl
+from karp import query_dsl, resourcemgr
 
 from . import errors
 
@@ -38,6 +38,7 @@ class Query:
     sort = ""
 
     def __init__(self):
+        # Load field_translations here?
         pass
 
     def parse_arguments(self, args, resource_str: str):
@@ -56,6 +57,43 @@ class Query:
         self.sort = arg_get(args, 'sort')
 
         self.ast = query_dsl.parse(self.q)
+        self._update_ast()
+
+    def _update_ast(self):
+        if self.ast.is_empty():
+            return
+
+        field_translations = {}
+        for resource in self.resources:
+            ft = resourcemgr.get_field_translations(resource)
+            if ft:
+                for field, lst in ft.items():
+                    if field in field_translations:
+                        field_translations[field].update(lst)
+                    else:
+                        field_translations[field] = set(lst)
+
+        def translate_node(node: query_dsl.Node):
+            print("node = {node!r}".format(node=node))
+            if query_dsl.is_a(node, [query_dsl.op.FREERGXP, query_dsl.op.FREETEXT, query_dsl.op.ARGS]):
+                return
+
+            if query_dsl.is_a(node, query_dsl.op.LOGICAL):
+                for child in node.children:
+                    translate_node(child)
+            elif query_dsl.is_a(node, query_dsl.op.OPS):
+                print('node.children = {}'.format(node.children))
+                field = node.children[0]
+                if query_dsl.is_a(field, query_dsl.op.STRING):
+                    if field.value in field_translations:
+                        fields = query_dsl.Node(query_dsl.op.ARG_OR, None)
+                        fields.add_child(field)
+                        for _ft in field_translations[field.value]:
+                            fields.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
+                        node.children[0] = fields
+
+        translate_node(self.ast.root)
+        # TODO rewrite
 
     def __repr__(self) -> str:
         return """
