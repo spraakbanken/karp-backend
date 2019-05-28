@@ -3,6 +3,8 @@ import json
 import pytest  # pyre-ignore
 import os
 from distutils.util import strtobool
+from typing import Dict
+
 import elasticsearch_test
 
 from karp import create_app
