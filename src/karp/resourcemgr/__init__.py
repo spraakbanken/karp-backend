@@ -26,10 +26,15 @@ resource_models = {}  # Dict
 history_models = {}  # Dict
 resource_configs = {}  # Dict
 resource_versions = {}  # Dict[str, int]
+field_translations = {}  # Dict[str, Dict[str, List[str]]]
 
 
 def get_available_resources() -> List[ResourceDefinition]:
     return ResourceDefinition.query.filter_by(active=True)
+
+
+def get_field_translations(resource_id) -> Optional[Dict]:
+    return field_translations.get(resource_id)
 
 
 def get_resource(resource_id: str, version: Optional[int] = None) -> Resource:
@@ -79,6 +84,8 @@ def create_and_update_caches(id: str,
     history_models[id] = database.get_or_create_history_model(id, version)
     resource_versions[id] = version
     resource_configs[id] = config
+    if "field_mapping" in config:
+        field_translations[id] = config["field_mapping"]
 
 
 def remove_from_caches(id: str) -> None:
@@ -86,6 +93,8 @@ def remove_from_caches(id: str) -> None:
     del history_models[id]
     del resource_versions[id]
     del resource_configs[id]
+    if id in field_translations:
+        del field_translations[id]
 
 
 def setup_resource_classes() -> None:

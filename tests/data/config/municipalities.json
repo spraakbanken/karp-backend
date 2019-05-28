@@ -101,5 +101,8 @@
   "protected": {
     "read": true
   },
-  "id": "code"
+  "id": "code",
+  "field_mapping": {
+    "population": ["population.value.total"]
+  }
 }
