@@ -254,7 +254,7 @@ def json_schema_config():
     return json.loads(CONFIG_PLACES)
 
 
-ENTRIES = [
+PLACES = [
     {
         "code": 1,
         "name": "Grund test",
@@ -292,7 +292,12 @@ ENTRIES = [
         "larger_place": 3  # Botten test
         # "smaller_places": 7 "Alhamn"
     },
-    {"code": 5, "name": "Rutvik", "area": 50000, "municipality": [2, 3]},
+    {
+        "code": 5,
+        "name": "Rutvik",
+        "area": 50000,
+        "municipality": [2, 3]
+    },
     {
         "code": 6,
         "name": "Alvik",
@@ -334,19 +339,87 @@ ENTRIES = [
 ]
 
 
-def init(client, es_status_code, entries):
+MUNICIPALITIES = [
+    {
+        "code": 1,
+        "name": "Luleå kommun",
+        "state": "Norrbottens län",
+        "region": "Norrbotten",
+        "capital": "Luleå",
+        "area": {
+            "land": 2094.08,
+            "water": 148.39},
+        "population": {
+            "value": {
+                "total": 77860
+            },
+            "density": {
+                "total": 37.18
+            }
+        }
+    },
+    {
+        "code": 2,
+        "name": "Norsjö kommun",
+        "state": "Västerbottens län",
+        "region": "Västerbotten",
+        "capital": "Norsjö",
+        "area": {
+            "land": 1739.15,
+            "water": 184.43
+        },
+        "population": {
+            "value": {
+                "total": 4101
+            },
+            "density": {
+                "total": 2.36
+            }
+        }
+    },
+    {
+        "code": 3,
+        "name": "Piteå kommun",
+        "state": "Norrbottens län",
+        "region": "Norrbotten",
+        "capital": "Piteå",
+        "area": {
+            "land": 3086.04,
+            "water": 149.04
+        },
+        "population": {
+            "value": {
+                "total": 42108
+            },
+            "density": {
+                "total": 13.64
+            }
+        }
+    }
+]
+
+
+def init(client, es_status_code, entries: Dict):
     if es_status_code == 'skip':
         pytest.skip('elasticsearch disabled')
     client_with_data = client(use_elasticsearch=True)
 
-    for entry in entries:
-        client_with_data.post('places/add',
-                              data=json.dumps({'entry': entry}),
-                              content_type='application/json')
+    for resource, _entries in entries.items():
+        for entry in _entries:
+            client_with_data.post('{resource}/add'.format(resource=resource),
+                                  data=json.dumps({'entry': entry}),
+                                  content_type='application/json')
     return client_with_data
 
 
 @pytest.fixture(scope="session")
 def client_with_entries_scope_session(es, client_with_data_f_scope_session):
-    client_with_data = init(client_with_data_f_scope_session, es, ENTRIES)
+    client_with_data = init(
+        client_with_data_f_scope_session,
+        es,
+        {
+            "places": PLACES,
+            "municipalities": MUNICIPALITIES
+        }
+    )
     return client_with_data

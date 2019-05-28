@@ -6,7 +6,7 @@ import pytest  # pyre-ignore
 # import time
 
 
-from conftest import ENTRIES
+from conftest import PLACES as ENTRIES
 
 
 def get_json(client, path):
