@@ -152,7 +152,14 @@ def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, in
 
     entry_json_schema = create_entry_json_schema(config)
 
-    config = load_plugins_to_config(config, version, config_dir)
+    if 'plugins' in config:
+        for plugin_id in config['plugins']:
+            import karp.pluginmanager as plugins
+            for (field_name, field_conf) in plugins.plugins[plugin_id].resource_creation(
+                                                                        resource_id,
+                                                                        version,
+                                                                        config_dir):
+                config['fields'][field_name] = field_conf
 
     resource = {
         'resource_id': resource_id,
