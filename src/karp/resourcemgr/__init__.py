@@ -22,10 +22,15 @@ resource_models = {}  # Dict
 history_models = {}  # Dict
 resource_configs = {}  # Dict
 resource_versions = {}  # Dict[str, int]
+field_translations = {}  # Dict[str, Dict[str, List[str]]]
 
 
 def get_available_resources() -> List[ResourceDefinition]:
     return ResourceDefinition.query.filter_by(active=True)
+
+
+def get_field_translations(resource_id) -> Optional[Dict]:
+    return field_translations.get(resource_id)
 
 
 def get_resource(resource_id: str, version: Optional[int] = None) -> Resource:
@@ -54,7 +59,7 @@ def get_resource(resource_id: str, version: Optional[int] = None) -> Resource:
                         config=config)
 
 
-def get_all_resources()-> List[ResourceDefinition]:
+def get_all_resources() -> List[ResourceDefinition]:
     return ResourceDefinition.query.all()
 
 
@@ -62,7 +67,10 @@ def check_resource_published(resource_ids: List[str]) -> None:
     published_resources = [resource_def.resource_id for resource_def in get_available_resources()]
     for resource_id in resource_ids:
         if resource_id not in published_resources:
-            raise KarpError('Resource is not searchable: "' + resource_id + '"', ClientErrorCodes.RESOURCE_NOT_PUBLISHED)
+            raise KarpError(
+                'Resource is not searchable: "{resource_id}"'.format(resource_id=resource_id),
+                ClientErrorCodes.RESOURCE_NOT_PUBLISHED
+            )
 
 
 def create_and_update_caches(id: str,
@@ -72,6 +80,8 @@ def create_and_update_caches(id: str,
     history_models[id] = database.get_or_create_history_model(id, version)
     resource_versions[id] = version
     resource_configs[id] = config
+    if "field_mapping" in config:
+        field_translations[id] = config["field_mapping"]
 
 
 def remove_from_caches(id: str) -> None:
@@ -79,6 +89,8 @@ def remove_from_caches(id: str) -> None:
     del history_models[id]
     del resource_versions[id]
     del resource_configs[id]
+    if id in field_translations:
+        del field_translations[id]
 
 
 def setup_resource_classes() -> None:
@@ -128,7 +140,10 @@ def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, in
     if 'plugins' in config:
         for plugin_id in config['plugins']:
             import karp.pluginmanager as plugins
-            for (field_name, field_conf) in plugins.plugins[plugin_id].resource_creation(resource_id, version, config_dir):
+            for (field_name, field_conf) in plugins.plugins[plugin_id].resource_creation(
+                                                                        resource_id,
+                                                                        version,
+                                                                        config_dir):
                 config['fields'][field_name] = field_conf
 
     resource = {

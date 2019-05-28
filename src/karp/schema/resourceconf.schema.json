@@ -90,6 +90,17 @@
     "id": {
       "type": "string"
     },
+    "field_mapping": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "plugins": {
       "type": "array",
       "items": {

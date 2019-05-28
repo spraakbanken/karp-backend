@@ -90,5 +90,8 @@
   },
   "referenceable": ["code", "larger_place", "municipality"],
   "sort": "name",
-  "id": "code"
+  "id": "code",
+  "field_mapping": {
+    "state": ["v_municipality.state"]
+  }
 }
