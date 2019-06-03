@@ -5,9 +5,7 @@ import pickle
 from flask.cli import FlaskGroup  # pyre-ignore
 
 from .config import MariaDBConfig
-import karp.resourcemgr as resourcemgr
-import karp.resourcemgr.entrywrite as entrywrite
-import karp.indexmgr as indexmgr
+from karp import database
 from karp.errors import KarpError, ResourceNotFoundError
 
 
@@ -173,6 +171,33 @@ def list_resources(show_active):
             version=resource.version,
             active='y' if resource.active else 'n'
         ))
+
+
+@cli.command('show')
+@click.option('--version', default=None, type=int)
+@click.argument('resource_id')
+@cli_error_handler
+@cli_timer
+def show_resource(resource_id, version):
+    if version:
+        resource = database.get_resource_definition(resource_id, version)
+    else:
+        resource = database.get_active_or_latest_resource_definition(resource_id)
+    if not resource:
+        click.echo(
+            "Can't find resource '{resource_id}', version '{version}'".format(
+                resource_id=resource_id,
+                version=version if version else 'active or latest'
+            )
+        )
+        raise click.exceptions.Exit(3)
+
+    click.echo("""
+    Resource: {resource.resource_id}
+    Version: {resource.version}
+    Active: {resource.active}
+    Config: {resource.config_file}
+    """.format(resource=resource))
 
 
 @cli.command('set_permissions')
