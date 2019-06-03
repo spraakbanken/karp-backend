@@ -57,6 +57,7 @@ def create_resource(config, config_dir):
         new_resources = resourcemgr.create_new_resource_from_dir(config_dir)
     else:
         click.echo('Must give either --config or --config_dir')
+        click.exceptions.Exit(64)  # Usage error
     for (resource_id, version) in new_resources:
         click.echo('Created version {version} of resource {resource_id}'.format(
             version=version,
