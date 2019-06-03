@@ -105,12 +105,18 @@ def setup_resource_class(resource_id, version=None):
     create_and_update_caches(resource_id, resource_def.version, config)
 
 
-def create_new_resource_from_dir(config_dir: str) -> List[Tuple[str, int]]:
-    files = [f for f in os.listdir(config_dir) if re.match(r'.*\.json', f)]
+def _read_and_process_resources_from_dir(config_dir: str, func) -> List[Tuple[str, int]]:
+    files = [f for f in os.listdir(config_dir) if re.match(r'.*\.json$', f)]
     result = []
-    for file in files:
-        result.append(create_new_resource(open(os.path.join(config_dir, file)), config_dir=config_dir))
+    for filename in files:
+        print("Processing '{filename}' ...".format(filename=filename))
+        with open(os.path.join(config_dir, filename)) as fp:
+            result.append(func(fp, config_dir=config_dir))
     return result
+
+
+def create_new_resource_from_dir(config_dir: str) -> List[Tuple[str, int]]:
+    return _read_and_process_resources_from_dir(config_dir, create_new_resource)
 
 
 def create_new_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
@@ -118,11 +124,7 @@ def create_new_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
 
 
 def update_resource_from_dir(config_dir: str) -> List[Tuple[str, int]]:
-    files = [f for f in os.listdir(config_dir) if re.match(r'.*\.json', f)]
-    result = []
-    for file in files:
-        result.append(update_resource(open(os.path.join(config_dir, file)), config_dir=config_dir))
-    return result
+    return _read_and_process_resources_from_dir(config_dir, update_resource)
 
 
 def update_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:

@@ -46,7 +46,7 @@ def cli_timer(func):
 
 @cli.command('create')
 @click.option('--config', default=None, help='A JSON file containing settings for one resource', required=False)
-@click.option('--config_dir', default=None,
+@click.option('--config-dir', default=None,
               help='A directory containing config files for resource and optionally plugin settings', required=False)
 @cli_error_handler
 @cli_timer
@@ -58,7 +58,7 @@ def create_resource(config, config_dir):
     elif config_dir:
         new_resources = resourcemgr.create_new_resource_from_dir(config_dir)
     else:
-        click.echo('Must give either --config or --config_dir')
+        click.echo('Must give either --config or --config-dir')
         raise click.exceptions.Exit(3)  # Usage error
     for (resource_id, version) in new_resources:
         click.echo('Created version {version} of resource {resource_id}'.format(
@@ -69,7 +69,7 @@ def create_resource(config, config_dir):
 
 @cli.command('update')
 @click.option('--config', default=None, help='A JSON file containing settings for one resource', required=False)
-@click.option('--config_dir', default=None,
+@click.option('--config-dir', default=None,
               help='A directory containing config files for resource and optionally plugin settings', required=False)
 @cli_error_handler
 @cli_timer
@@ -81,7 +81,7 @@ def update_resource(config, config_dir):
     elif config_dir:
         new_resources = resourcemgr.update_resource_from_dir(config_dir)
     else:
-        click.echo('Must give either --config or --config_dir')
+        click.echo('Must give either --config or --config-dir')
         raise click.exceptions.Exit(3)  # Usage error
     for (resource_id, version) in new_resources:
         if version is None:
