@@ -1,9 +1,14 @@
+from typing import IO
+
+
 NoIndexModuleConfigured = 10
 
 
 class ClientErrorCodes:
     RESOURCE_DOES_NOT_EXIST = 20
     RESOURCE_NOT_PUBLISHED = 21
+    RESOURCE_CONFIG_NOT_VALID = 22
+    RESOURCE_CONFIG_CANNOT_UPDATE = 23
     ENTRY_NOT_FOUND = 30
     ENTRY_NOT_CHANGED = 31
     ENTRY_NOT_VALID = 32
@@ -13,6 +18,7 @@ class ClientErrorCodes:
     BAD_PARAMETER_FORMAT = 50
     DB_GENERAL_ERROR = 60
     DB_INTEGRITY_ERROR = 61
+    PLUGIN_DOES_NOT_EXIT = 70
 
 
 class KarpError(Exception):
@@ -27,10 +33,51 @@ class KarpError(Exception):
 class ResourceNotFoundError(KarpError):
 
     def __init__(self, resource_id, version: int = None):
-        super().__init__('Resource not found. ID: {resource_id}, version: {version}'. format(
-            resource_id=resource_id,
-            version=version
-        ), ClientErrorCodes.RESOURCE_DOES_NOT_EXIST)
+        super().__init__(
+            'Resource not found. ID: {resource_id}, version: {version}'. format(
+                resource_id=resource_id,
+                version=version
+            ),
+            ClientErrorCodes.RESOURCE_DOES_NOT_EXIST
+        )
+
+
+class ResourceInvalidConfigError(KarpError):
+
+    def __init__(self, resource_id, config_file: IO, validation_error_msg: str):
+        msg_fmt = '''
+        Resource config is not valid.
+        ID: {resource_id},
+        config: {config_file},
+        error: "{validation_error_msg}"
+        '''
+        super().__init__(
+            msg_fmt. format(
+                resource_id=resource_id,
+                config_file=config_file.name,
+                validation_error_msg=validation_error_msg,
+            ),
+            ClientErrorCodes.RESOURCE_CONFIG_NOT_VALID
+        )
+
+
+class ResourceConfigUpdateError(KarpError):
+
+    def __init__(self, msg, resource_id, config_file: IO):
+        msg_fmt = '''
+        Cannot update config for resource.
+        Message: '{msg}'
+        ID: {resource_id},
+        config: {config_file}"
+        '''
+        super().__init__(
+            msg_fmt. format(
+                resource_id=resource_id,
+                config_file=config_file.name,
+                msg=msg,
+            ),
+            ClientErrorCodes.RESOURCE_CONFIG_CANNOT_UPDATE
+        )
 
 
 class EntryNotFoundError(KarpError):
@@ -60,3 +107,15 @@ class UpdateConflict(KarpError):
             'errorCode': self.code,
             'error': self.message
         }
+
+
+class PluginNotFoundError(KarpError):
+
+    def __init__(self, plugin_id: str, resource_id: str = None):
+        super().__init__(
+            "Plugin '{plugin_id}' not found, referenced by '{resource_id}'". format(
+                plugin_id=plugin_id,
+                resource_id=resource_id if resource_id else "..."
+            ),
+            ClientErrorCodes.PLUGIN_DOES_NOT_EXIT
+        )
