@@ -5,6 +5,9 @@ import pickle
 from flask.cli import FlaskGroup  # pyre-ignore
 
 from .config import MariaDBConfig
+from karp import resourcemgr
+from karp.resourcemgr import entrywrite
+from karp import indexmgr
 from karp import database
 from karp.errors import KarpError, ResourceNotFoundError
 
@@ -28,6 +31,7 @@ def cli_error_handler(func):
             return func(*args, **kwargs)
         except KarpError as e:
             _logger.error(e.message)
+            raise click.exceptions.Exit(e.code)
     return func_wrapper
 
 
@@ -55,7 +59,7 @@ def create_resource(config, config_dir):
         new_resources = resourcemgr.create_new_resource_from_dir(config_dir)
     else:
         click.echo('Must give either --config or --config_dir')
-        click.exceptions.Exit(64)  # Usage error
+        raise click.exceptions.Exit(3)  # Usage error
     for (resource_id, version) in new_resources:
         click.echo('Created version {version} of resource {resource_id}'.format(
             version=version,
