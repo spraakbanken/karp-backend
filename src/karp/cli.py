@@ -5,9 +5,10 @@ import pickle
 from flask.cli import FlaskGroup  # pyre-ignore
 
 from .config import MariaDBConfig
-import karp.resourcemgr as resourcemgr
-import karp.resourcemgr.entrywrite as entrywrite
-import karp.indexmgr as indexmgr
+from karp import resourcemgr
+from karp.resourcemgr import entrywrite
+from karp import indexmgr
+from karp import database
 from karp.errors import KarpError, ResourceNotFoundError
 
 
@@ -30,6 +31,7 @@ def cli_error_handler(func):
             return func(*args, **kwargs)
         except KarpError as e:
             _logger.error(e.message)
+            raise click.exceptions.Exit(e.code)
     return func_wrapper
 
 
@@ -57,11 +59,38 @@ def create_resource(config, config_dir):
         new_resources = resourcemgr.create_new_resource_from_dir(config_dir)
     else:
         click.echo('Must give either --config or --config_dir')
+        raise click.exceptions.Exit(3)  # Usage error
     for (resource_id, version) in new_resources:
         click.echo('Created version {version} of resource {resource_id}'.format(
             version=version,
             resource_id=resource_id
         ))
+
+
+@cli.command('update')
+@click.option('--config', default=None, help='A JSON file containing settings for one resource', required=False)
+@click.option('--config_dir', default=None,
+              help='A directory containing config files for resource and optionally plugin settings', required=False)
+@cli_error_handler
+@cli_timer
+def update_resource(config, config_dir):
+    if config:
+        with open(config) as fp:
+            new_resource = resourcemgr.update_resource_from_file(fp)
+        new_resources = [new_resource]
+    elif config_dir:
+        new_resources = resourcemgr.update_resource_from_dir(config_dir)
+    else:
+        click.echo('Must give either --config or --config_dir')
+        raise click.exceptions.Exit(3)  # Usage error
+    for (resource_id, version) in new_resources:
+        if version is None:
+            click.echo("Nothing to do for resource '{resource_id}'".format(resource_id=resource_id))
+        else:
+            click.echo("Updated version {version} of resource '{resource_id}'".format(
+                version=version,
+                resource_id=resource_id
+            ))
 
 
 @cli.command('import')
@@ -172,6 +201,33 @@ def list_resources(show_active):
             version=resource.version,
             active='y' if resource.active else 'n'
         ))
+
+
+@cli.command('show')
+@click.option('--version', default=None, type=int)
+@click.argument('resource_id')
+@cli_error_handler
+@cli_timer
+def show_resource(resource_id, version):
+    if version:
+        resource = database.get_resource_definition(resource_id, version)
+    else:
+        resource = database.get_active_or_latest_resource_definition(resource_id)
+    if not resource:
+        click.echo(
+            "Can't find resource '{resource_id}', version '{version}'".format(
+                resource_id=resource_id,
+                version=version if version else 'active or latest'
+            )
+        )
+        raise click.exceptions.Exit(3)
+
+    click.echo("""
+    Resource: {resource.resource_id}
+    Version: {resource.version}
+    Active: {resource.active}
+    Config: {resource.config_file}
+    """.format(resource=resource))
 
 
 @cli.command('set_permissions')

@@ -12,7 +12,11 @@ from karp.database import ResourceDefinition
 from karp.database import db
 from karp import database
 from karp.util.json_schema import create_entry_json_schema
-from karp.errors import ResourceNotFoundError, KarpError, ClientErrorCodes
+from karp.util import jsondiff
+from karp.errors import KarpError
+from karp.errors import ClientErrorCodes
+from karp.errors import ResourceNotFoundError, ResourceInvalidConfigError, ResourceConfigUpdateError
+from karp.errors import PluginNotFoundError
 from .resource import Resource
 from karp.resourcemgr.entrymetadata import EntryMetadata
 
@@ -54,7 +58,7 @@ def get_resource(resource_id: str, version: Optional[int] = None) -> Resource:
                         config=config)
 
 
-def get_all_resources()-> List[ResourceDefinition]:
+def get_all_resources() -> List[ResourceDefinition]:
     return ResourceDefinition.query.all()
 
 
@@ -62,7 +66,10 @@ def check_resource_published(resource_ids: List[str]) -> None:
     published_resources = [resource_def.resource_id for resource_def in get_available_resources()]
     for resource_id in resource_ids:
         if resource_id not in published_resources:
-            raise KarpError('Resource is not searchable: "' + resource_id + '"', ClientErrorCodes.RESOURCE_NOT_PUBLISHED)
+            raise KarpError(
+                'Resource is not searchable: "{resource_id}"'.format(resource_id=resource_id),
+                ClientErrorCodes.RESOURCE_NOT_PUBLISHED
+            )
 
 
 def create_and_update_caches(id: str,
@@ -110,14 +117,20 @@ def create_new_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
     return create_new_resource(config_file)
 
 
+def update_resource_from_dir(config_dir: str) -> List[Tuple[str, int]]:
+    files = [f for f in os.listdir(config_dir) if re.match(r'.*\.json', f)]
+    result = []
+    for file in files:
+        result.append(update_resource(open(os.path.join(config_dir, file)), config_dir=config_dir))
+    return result
+
+
+def update_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
+    return update_resource(config_file)
+
+
 def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:
-    config = json.load(config_file)
-    try:
-        schema = get_resource_string('schema/resourceconf.schema.json')
-        validate_conf = fastjsonschema.compile(json.loads(schema))
-        validate_conf(config)
-    except fastjsonschema.JsonSchemaException as e:
-        raise RuntimeError(e)
+    config = load_and_validate_config(config_file)
 
     resource_id = config['resource_id']
 
@@ -125,11 +138,7 @@ def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, in
 
     entry_json_schema = create_entry_json_schema(config)
 
-    if 'plugins' in config:
-        for plugin_id in config['plugins']:
-            import karp.pluginmanager as plugins
-            for (field_name, field_conf) in plugins.plugins[plugin_id].resource_creation(resource_id, version, config_dir):
-                config['fields'][field_name] = field_conf
+    config = load_plugins_to_config(config, version, config_dir)
 
     resource = {
         'resource_id': resource_id,
@@ -150,6 +159,110 @@ def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, in
     history_model.__table__.create(bind=db.engine)
 
     return resource['resource_id'], resource['version']
+
+
+def load_and_validate_config(config_file):
+    config = json.load(config_file)
+    try:
+        schema = get_resource_string('schema/resourceconf.schema.json')
+        validate_conf = fastjsonschema.compile(json.loads(schema))
+        validate_conf(config)
+    except fastjsonschema.JsonSchemaException as e:
+        raise ResourceInvalidConfigError(config['resource_id'], config_file, e.message)
+    return config
+
+
+def load_plugins_to_config(config: Dict, version, config_dir) -> Dict:
+    resource_id = config['resource_id']
+
+    if 'plugins' in config:
+        for plugin_id in config['plugins']:
+            import karp.pluginmanager as plugins
+            if plugin_id not in plugins.plugins:
+                raise PluginNotFoundError(plugin_id, resource_id)
+            for (field_name, field_conf) in plugins.plugins[plugin_id].resource_creation(resource_id,
+                                                                                         version,
+                                                                                         config_dir):
+                config['fields'][field_name] = field_conf
+
+    return config
+
+
+def update_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:
+    config = load_and_validate_config(config_file)
+
+    resource_id = config['resource_id']
+    entry_json_schema = create_entry_json_schema(config)
+
+    resource_def = database.get_active_or_latest_resource_definition(resource_id)
+    config = load_plugins_to_config(config, resource_def.version, config_dir)
+
+    config_diff = jsondiff.compare(json.loads(resource_def.config_file), config)
+    needs_reindex = False
+    not_allowed_change = False
+    not_allowed_changes = []
+    changes = []
+    for diff in config_diff:
+        print("config_diff = '{diff}'".format(diff=diff))
+        changes.append(diff)
+
+        if diff['type'] == 'TYPECHANGE':
+            not_allowed_change = True
+            not_allowed_changes.append(diff)
+        elif diff['field'].endswith('required'):
+            continue
+        elif diff['type'] == 'ADDED':
+            # TODO add rule for field_mappings
+            needs_reindex = True
+        elif diff['type'] == 'REMOVED':
+            needs_reindex = True
+        elif diff['type'] == 'CHANGE':
+            if diff['field'].endswith('type'):
+                not_allowed_change = True
+                not_allowed_changes.append(diff)
+            else:
+                needs_reindex = True
+        else:
+            not_allowed_change = True
+            not_allowed_changes.append(diff)
+
+    # entry_json_schema_diff = jsondiff.compare(json.loads(resource_def.entry_json_schema), entry_json_schema)
+    # for diff in entry_json_schema_diff:
+    #     print("entry_json_schema_diff = '{diff}'".format(diff=diff))
+
+    if not config_diff:
+        return resource_id, None
+
+    if not_allowed_change:
+        raise ResourceConfigUpdateError(
+            """
+            You must 'create' a new version of '{resource_id}', current version '{version}'.
+            Changes = {not_allowed_changes}""".format(
+                resource_id=resource_id,
+                version=resource_def.version,
+                not_allowed_changes=not_allowed_changes,
+            ),
+            resource_id,
+            config_file
+        )
+    if needs_reindex:
+        print("You might need to reindex '{resource_id}' version '{version}'".format(
+            resource_id=resource_id,
+            version=resource_def.version
+        ))
+    else:
+        print("Safe update.")
+    print("Changes:")
+    for diff in changes:
+        print(" - {diff}".format(diff=diff))
+    resource_def.config_file = json.dumps(config)
+    resource_def.entry_json_schema = json.dumps(entry_json_schema)
+    # db.session.update(resource_def)
+    db.session.commit()
+    if resource_def.active:
+        create_and_update_caches(resource_id, resource_def.version, config)
+
+    return resource_id, resource_def.version
 
 
 def publish_resource(resource_id, version):
