@@ -82,7 +82,7 @@ class Query:
                 for child in node.children:
                     translate_node(child)
             elif query_dsl.is_a(node, query_dsl.op.OPS):
-                print('node.children = {}'.format(node.children))
+                print('|OPS| node.children = {}'.format(node.children))
                 field = node.children[0]
                 if query_dsl.is_a(field, query_dsl.op.STRING):
                     if field.value in field_translations:
@@ -91,6 +91,15 @@ class Query:
                         for _ft in field_translations[field.value]:
                             fields.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
                         node.children[0] = fields
+                else:
+                    translate_node(field)
+            elif query_dsl.is_a(node, query_dsl.op.ARG_LOGICAL):
+                print('|ARG_LOGICAL| node.children = {node.children}'.format(node=node))
+                if query_dsl.is_a(node, query_dsl.op.ARG_OR):
+                    for child in node.children:
+                        if child.value in field_translations:
+                            for _ft in field_translations[child.value]:
+                                node.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
 
         translate_node(self.ast.root)
         # TODO rewrite
