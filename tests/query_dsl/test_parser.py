@@ -315,6 +315,19 @@ def _test_nodes(r, facit):
                 (op.STRING, "bo"),
             ],
         ),
+        pytest.param(
+            'equals||and|area||or|population|density||6312',
+            [
+                (op.EQUALS, None),
+                (op.ARG_AND, None),
+                    (op.STRING, "area"),
+                    (op.ARG_OR, None),
+                        (op.STRING, "population"),
+                        (op.STRING, "density"),
+                (op.INT, 6312),
+            ],
+            marks=pytest.mark.xfail(reason="Current query-dsl syntax can't handle this")
+        ),
     ],
 )
 def test_karp_tng_parser_success(query, facit):
