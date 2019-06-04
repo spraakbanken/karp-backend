@@ -302,7 +302,7 @@ PLACES = [
         "area": 6312,
         "population": 6312,
         "density": 12,
-        "municipality": [2, 3]
+        "municipality": [3]
         # "smaller_places": 7  "Bjurvik"
     },
     {
@@ -331,7 +331,7 @@ PLACES = [
         "area": 7312,
         "population": 641,
         "density": 12,
-        "municipality": [2, 3],
+        "municipality": [2],
         "larger_place": 1,  # Grund test
     },
 ]
