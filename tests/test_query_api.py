@@ -284,6 +284,10 @@ def test_endswith(
         ("density", 7, ["Botten test"]),
         ("|and|population|area|", 6312, ["Alvik"]),
         pytest.param(
+            "|and|area||or|population|density|", 6312, ["Alvik", "Grund test"],
+            marks=pytest.mark.xfail(reason="Current query dsl can't handle this.")
+        ),
+        pytest.param(
             "|not|area|",
             6312,
             ["Alvik", "Grunds"],

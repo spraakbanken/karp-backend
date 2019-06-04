@@ -93,13 +93,28 @@ class Query:
                         node.children[0] = fields
                 else:
                     translate_node(field)
-            elif query_dsl.is_a(node, query_dsl.op.ARG_LOGICAL):
-                print('|ARG_LOGICAL| node.children = {node.children}'.format(node=node))
-                if query_dsl.is_a(node, query_dsl.op.ARG_OR):
-                    for child in node.children:
-                        if child.value in field_translations:
-                            for _ft in field_translations[child.value]:
-                                node.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
+            # elif query_dsl.is_a(node, query_dsl.op.ARG_LOGICAL):
+            elif query_dsl.is_a(node, query_dsl.op.ARG_OR):
+                print('|ARG_OR| node.children = {node.children}'.format(node=node))
+
+                for child in node.children:
+                    if child.value in field_translations:
+                        for _ft in field_translations[child.value]:
+                            node.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
+            elif query_dsl.is_a(node, query_dsl.op.ARG_AND):
+                print('|ARG_AND| node.children = {node.children}'.format(node=node))
+                changes = []
+                for i, child in enumerate(node.children):
+                    if child.value in field_translations:
+                        fields = query_dsl.Node(query_dsl.op.ARG_OR, None)
+                        fields.add_child(child)
+                        for _ft in field_translations[child.value]:
+                            fields.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
+                        changes.append((i, fields))
+                print('|ARG_AND| changes = {changes}'.format(changes=changes))
+                for i, fields in changes:
+                    node.children[i] = fields
+                print('|ARG_AND| node.children = {node.children}'.format(node=node))
 
         translate_node(self.ast.root)
         # TODO rewrite

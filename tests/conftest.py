@@ -258,7 +258,7 @@ PLACES = [
         "name": "Grund test",
         "population": 3122,
         "area": 6312,
-        "density": 5,
+        "density": 6312,
         "municipality": [1],
         "larger_place": 7  # Alhamn
         # "smaller_places": 9 "Bjurvik2"
