@@ -94,6 +94,91 @@ def test_query_field_mapping(client_with_entries_scope_session, resource, query,
             Exists(field="v_municipality.state")
         ])
     ),
+    (
+        'places',
+        'exists||or|state|name',
+        Bool(should=[
+            Exists(field="state"),
+            Exists(field="name"),
+            Exists(field="v_municipality.state")
+        ])
+    ),
+    (
+        'places',
+        'exists||and|state|name',
+        Bool(must=[
+            Bool(should=[
+                Exists(field="state"),
+                Exists(field="v_municipality.state")
+            ]),
+            Exists(field="name"),
+        ])
+    ),
+    (
+        'places',
+        'exists||not|state|name',
+        Bool(must_not=[
+            Bool(should=[
+                Exists(field="state"),
+                Exists(field="v_municipality.state")
+            ]),
+            Exists(field="name"),
+        ])
+    ),
+    (
+        'places',
+        'missing|state',
+        Bool(should=[
+            Bool(must_not=[
+                Exists(field="state"),
+            ]),
+            Bool(must_not=[
+                Exists(field="v_municipality.state")
+            ]),
+        ])
+    ),
+    (
+        'places',
+        'missing||or|state|name',
+        # missing(or(or(state, v_municipality.state), name)) => missing(or(state, v_municipality.state, name))
+        Bool(should=[
+            Bool(must_not=[
+                Exists(field="state"),
+            ]),
+            Bool(must_not=[
+                Exists(field="name"),
+            ]),
+            Bool(must_not=[
+                Exists(field="v_municipality.state")
+            ]),
+        ])
+    ),
+    (
+        'places',
+        'missing||and|state|name',  # Bool(must_not=[Exists(state), Exists(v_municipality.state), Exists(name)])
+        # missing(and(or(state, v_municipality.state), name))
+        # Bool(must_not=[])
+        Bool(must_not=[
+            Exists(field="name"),
+            Bool(should=[
+                Exists(field="state"),
+                Exists(field="v_municipality.state"),
+            ])
+        ])
+    ),
+    (
+        'places',
+        'missing||not|state|name',
+        # missing(not(or(state, v_municipality.state), name))
+        # Bool(must_not=[Bool(must_not=[Bool(should=[Exists(state), Exists(v_municipality.state)]), Exists(name)])])
+        Bool(must=[
+            Exists(field="name"),
+            Bool(should=[
+                Exists(field="state"),
+                Exists(field="v_municipality.state")
+            ]),
+        ])
+    ),
     # ('places', 'and||startswith|state|Norr||equals|area|6312', 4),
     # ('places', 'or||startswith|state|Norr||equals|area|6312', 8),
     # ('places', 'not||startswith|state|Norr||equals|area|6312', 1),
