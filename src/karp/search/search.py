@@ -101,7 +101,7 @@ class Query:
                     if child.value in field_translations:
                         for _ft in field_translations[child.value]:
                             node.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
-            elif query_dsl.is_a(node, query_dsl.op.ARG_AND):
+            elif query_dsl.is_a(node, query_dsl.op.ARG_LOGICAL):  # ARG_OR handled above
                 print('|ARG_AND| node.children = {node.children}'.format(node=node))
                 changes = []
                 for i, child in enumerate(node.children):
