@@ -225,6 +225,8 @@ def update_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:
             not_allowed_changes.append(diff)
         elif diff['field'].endswith('required'):
             continue
+        elif diff['field'] == 'field_mapping':
+            continue
         elif diff['type'] == 'ADDED':
             # TODO add rule for field_mappings
             needs_reindex = True
