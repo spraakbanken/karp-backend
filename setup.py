@@ -31,7 +31,7 @@ setup(
         'flask-sqlalchemy',
         'flask-cors',
         'click',
-        'slack-log-handler',
+        'slacker-log-handler',
     ],
     include_package_data=True,
     zip_safe=False,
