@@ -29,7 +29,8 @@ setup(
     install_requires=[
         'flask',
         'flask-sqlalchemy',
-        'click'
+        'flask-cors',
+        'click',
     ],
     include_package_data=True,
     zip_safe=False,
