@@ -33,6 +33,8 @@ setup(
         'click',
         'slacker-log-handler',
         'fastjsonschema',
+        'elasticsearch>=6,<7.0.0',
+        'elasticsearch-dsl>=6,<7.0.0'
     ],
     include_package_data=True,
     zip_safe=False,
