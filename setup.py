@@ -29,7 +29,6 @@ setup(
     install_requires=[
         'flask',
         'flask-sqlalchemy',
-        'mysqlclient',
         'click'
     ],
     include_package_data=True,
