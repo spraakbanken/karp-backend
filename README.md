@@ -1,6 +1,6 @@
 # Karp TNG backend
 
-![](https://github.com/spraakbanken/karp-tng-backend/workflows/Python%20package/badge.svg)
+![](https://github.com/spraakbanken/karp-tng-backend/workflows/Build/badge.svg)
 
 This in the next version of Karp backend
 
