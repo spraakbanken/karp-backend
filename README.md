@@ -1,5 +1,7 @@
 # Karp TNG backend
 
+![](https://github.com/spraakbanken/karp-tng-backend/workflows/Python%20package/badge.svg)
+
 This in the next version of Karp backend
 
 ## Setup
