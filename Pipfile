@@ -13,14 +13,13 @@ karp = {editable = true,path = "."}
 click = "*"
 fastjsonschema = "*"
 pytest = "*"
-elasticsearch = "*"
-elasticsearch-dsl = "*"
+elasticsearch = ">=6,<7.0.0"
+elasticsearch-dsl = ">=6,<7.0.0"
 alembic = "*"
 slacker-log-handler = "*"
 pyjwt = "*"
 cryptography = "*"
 flask-cors = "*"
-elasticsearch-test-py = "*"
 gevent = "*"
 
 [dev-packages]
@@ -30,6 +29,7 @@ coverage = "*"
 pytest-xdist = "*"
 pytest-cov = "*"
 flake8 = "*"
+elasticsearch-test-py = "*"
 
 [requires]
 python_version = "3"
