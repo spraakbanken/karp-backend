@@ -12,4 +12,3 @@ application = create_app(MariaDBConfig(user, passwd, dbhost, dbname, True))
 
 if __name__ == "__main__":
     application.run(debug=True)
-

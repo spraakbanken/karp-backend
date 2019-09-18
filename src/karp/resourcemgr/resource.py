@@ -6,7 +6,10 @@ from karp.database import ResourceDefinition
 
 
 class Resource(object):
-    def __init__(self, model, history_model, resource_def: ResourceDefinition, version: int, config: Optional[Dict]=None) -> None:
+    def __init__(self, model, history_model,
+                 resource_def: ResourceDefinition,
+                 version: int,
+                 config: Optional[Dict] = None) -> None:
         self.model = model
         self.history_model = history_model
         if config:

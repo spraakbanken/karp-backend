@@ -1,6 +1,7 @@
 from typing import Dict, List, Tuple
 from karp.resourcemgr.entrymetadata import EntryMetadata
 
+
 class IndexInterface:
 
     def create_index(self, resource_id: str, config: Dict):

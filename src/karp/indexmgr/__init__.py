@@ -25,7 +25,7 @@ def pre_process_resource(resource_obj: Resource):
             transform_to_index_entry(resource_obj, json.loads(entry.body), fields)) for entry in entries]
 
 
-def reindex(resource_id: str, version: Optional[int]=None, search_entries: List[Tuple[str, int, Dict]]=()) -> None:
+def reindex(resource_id: str, version: Optional[int] = None, search_entries: List[Tuple[str, int, Dict]] = ()) -> None:
     """
     If `search_entries` is not given, they will be fetched from DB and processed using `transform_to_index_entry`
     If `search_entries` is given, they most have the same format as the output from `pre_process_resource`
@@ -42,13 +42,13 @@ def reindex(resource_id: str, version: Optional[int]=None, search_entries: List[
     indexer.impl.publish_index(resource_id, index_name)
 
 
-def publish_index(resource_id: str, version: Optional[int]=None) -> None:
+def publish_index(resource_id: str, version: Optional[int] = None) -> None:
     reindex(resource_id, version=version)
     if version:
         resourcemgr.publish_resource(resource_id, version)
 
 
-def add_entries(resource_id: str, entries: List[Tuple[str, EntryMetadata, Dict]], update_refs: bool=True) -> None:
+def add_entries(resource_id: str, entries: List[Tuple[str, EntryMetadata, Dict]], update_refs: bool = True) -> None:
     indexer.impl.add_entries(resource_id, entries)
     if update_refs:
         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])

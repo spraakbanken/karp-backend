@@ -31,10 +31,17 @@ def get_entries_by_column(resource_obj: Resource, filters):
         child_cls = cls.child_tables[list(child_filters.keys())[0]]
         query = query.join(child_cls).filter_by(**child_filters)
 
-    return [{'id': db_entry.id, 'entry_id': db_entry.entry_id, 'entry': json.loads(db_entry.body)} for db_entry in query]
+    return [
+        {
+            'id': db_entry.id,
+            'entry_id': db_entry.entry_id,
+            'entry': json.loads(db_entry.body)
+        }
+        for db_entry in query
+        ]
 
 
-def get_entry(resource_id: str, entry_id: str, version: Optional[int]=None):
+def get_entry(resource_id: str, entry_id: str, version: Optional[int] = None):
     resource = get_resource(resource_id, version=version)
     return get_entry_by_entry_id(resource, entry_id)
 
@@ -44,8 +51,8 @@ def get_entry_by_entry_id(resource: Resource, entry_id: str):
     return cls.query.filter_by(entry_id=entry_id).first()
 
 
-def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_version: int=None,
-         from_date: Optional[int]=None, to_date: Optional[int]=None, entry: Optional[Dict]=None):
+def diff(resource_obj: Resource, entry_id: str, from_version: int = None, to_version: int = None,
+         from_date: Optional[int] = None, to_date: Optional[int] = None, entry: Optional[Dict] = None):
     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
 
     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
@@ -83,10 +90,10 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int=None, to_versi
     return jsondiff.compare(obj1_body, obj2_body), obj1.version, obj2.version if obj2 else None
 
 
-def get_history(resource_id: str, user_id: Optional[str]=None, entry_id: Optional[str]=None,
-                from_date: Optional[int]=None, to_date: Optional[int]=None,
-                from_version: Optional[int]=None, to_version: Optional[int]=None,
-                current_page: Optional[int]=0, page_size: Optional[int]=100):
+def get_history(resource_id: str, user_id: Optional[str] = None, entry_id: Optional[str] = None,
+                from_date: Optional[int] = None, to_date: Optional[int] = None,
+                from_version: Optional[int] = None, to_version: Optional[int] = None,
+                current_page: Optional[int] = 0, page_size: Optional[int] = 100):
     resource_obj = get_resource(resource_id)
     timestamp_field = resource_obj.history_model.timestamp
     query = resource_obj.history_model.query

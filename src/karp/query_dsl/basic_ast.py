@@ -1,4 +1,4 @@
-from typing import Tuple, Iterable
+from typing import Iterable
 
 from .node import Node
 

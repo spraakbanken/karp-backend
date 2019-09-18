@@ -26,7 +26,13 @@ def get_referenced_entries(resource_id: str, version: Optional[int], entry_id: s
         for ref_entry_id in ids:
             entry = entryread.get_entry(ref_resource_id, ref_entry_id, version=ref_resource_version)
             if entry:
-                yield _create_ref(ref_resource_id, ref_resource_version, entry.id, entry.entry_id, json.loads(entry.body))
+                yield _create_ref(
+                        ref_resource_id,
+                        ref_resource_version,
+                        entry.id,
+                        entry.entry_id,
+                        json.loads(entry.body)
+                    )
 
 
 def _create_ref(resource_id: str, resource_version: int, _id: int, entry_id: str, entry_body: Dict) -> Dict[str, Any]:

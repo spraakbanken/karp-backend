@@ -4,8 +4,6 @@ Perform health checks on the server.
 Used to perform readiness and liveness probes on the server.
 """
 import logging
-from typing import List
-
 
 from flask import Blueprint, jsonify as flask_jsonify, request    # pyre-ignore
 

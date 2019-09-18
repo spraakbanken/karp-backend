@@ -6,7 +6,7 @@ class Node:
             type_,
             arity: int,
             value=None
-        ):
+    ):
         self.type = type_
         self.arity = arity
         self.value = value
