@@ -30,6 +30,14 @@ jobs:
         flake8 src tests setup.py wsgi.py --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 src tests setup.py wsgi.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Download elasticsearch
+      run: |
+        wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.5.4.tar.gz
+        tar -xzf elasticsearch-6.5.4.tar.gz
+        echo "ELASTICSEARCH_ENABLED=True" >> .env
+        echo "ELASTICSEARCH_HOST=localhost:9200" >> .env
+        echo "ES_HOME=`realpath elasticsearch-6.5.4`" >> .env
+        cat .env
     - name: Test with pytest
       run: |
         pytest --cov=src/ --cov-report=term tests
