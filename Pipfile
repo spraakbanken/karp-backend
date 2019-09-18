@@ -30,6 +30,7 @@ pytest-xdist = "*"
 pytest-cov = "*"
 flake8 = "*"
 elasticsearch-test-py = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3"

@@ -7,12 +7,15 @@ from typing import Dict
 
 import elasticsearch_test
 
-from karp import create_app
-from karp.database import db
-from karp.config import Config
-import karp.resourcemgr as resourcemgr
-import karp.indexmgr as indexmgr
-from karp.database import ResourceDefinition
+import dotenv
+dotenv.load_dotenv(dotenv_path='.env', verbose=True)
+
+from karp import create_app  # noqa: E402
+from karp.database import db  # noqa: E402
+from karp.config import Config  # noqa: E402
+import karp.resourcemgr as resourcemgr  # noqa: E402
+import karp.indexmgr as indexmgr  # noqa: E402
+from karp.database import ResourceDefinition  # noqa: E402
 
 
 CONFIG_PLACES = """{

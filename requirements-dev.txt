@@ -7,7 +7,7 @@ elasticsearch-test-py==1.1.0
 entrypoints==0.3
 execnet==1.7.1
 flake8==3.7.8
-importlib-metadata==0.22 ; python_version < '3.8'
+importlib-metadata==0.23 ; python_version < '3.8'
 mccabe==0.6.1
 more-itertools==7.2.0
 packaging==19.1
@@ -21,6 +21,7 @@ pytest-cov==2.7.1
 pytest-forked==1.0.2
 pytest-xdist==1.29.0
 pytest==5.1.2
+python-dotenv==0.10.3
 six==1.11.0
 wcwidth==0.1.7
 zipp==0.6.0
