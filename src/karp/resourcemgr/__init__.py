@@ -216,6 +216,10 @@ def update_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:
     entry_json_schema = create_entry_json_schema(config)
 
     resource_def = database.get_active_or_latest_resource_definition(resource_id)
+    if not resource_def:
+        raise RuntimeError(
+            "Could not find a resource_definition with id '{resource_id}".format(resource_id=resource_id)
+        )
     config = load_plugins_to_config(config, resource_def.version, config_dir)
 
     config_diff = jsondiff.compare(json.loads(resource_def.config_file), config)

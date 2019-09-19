@@ -1,4 +1,4 @@
-import pytest
+import pytest  # pyre-ignore
 import json
 
 

@@ -1,5 +1,5 @@
 import json
-import pytest
+import pytest  # pyre-ignore
 from datetime import datetime, timezone
 import time
 import re

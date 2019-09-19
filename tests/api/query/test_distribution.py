@@ -1,6 +1,6 @@
 import json
 
-import pytest
+import pytest  # pyre-ignore
 
 
 def get_json(client, path):
