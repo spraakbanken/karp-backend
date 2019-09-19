@@ -1,4 +1,4 @@
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, Optional
 from . import errors
 
 
@@ -91,7 +91,7 @@ class NodeWithOneChild(Node):
     def has_child(self, child) -> bool:
         return self.child0 is child
 
-    def update_child(self, old_child, new_child):
+    def update_child(self, old_child, new_child) -> None:
         if self.child0 is old_child:
             self.child0 = new_child
         else:
@@ -129,7 +129,7 @@ class NodeWithTwoChildren(NodeWithOneChild):
     def has_child(self, child) -> bool:
         return super().has_child(child) or self.child1 is child
 
-    def update_child(self, old_child, new_child):
+    def update_child(self, old_child, new_child) -> None:
         if self.child0 is old_child:
             self.child0 = new_child
         elif self.child1 is old_child:
@@ -171,7 +171,7 @@ class NodeWithThreeChildren(NodeWithTwoChildren):
     def has_child(self, child) -> bool:
         return super().has_child(child) or self.child2 is child
 
-    def update_child(self, old_child, new_child):
+    def update_child(self, old_child, new_child) -> None:
         if self.child0 is old_child:
             self.child0 = new_child
         elif self.child1 is old_child:
@@ -204,7 +204,7 @@ class Tree:
             self.root.pprint(1)
         print('>')
 
-    def validate_arity(self) -> Tuple[bool, str]:
+    def validate_arity(self) -> Tuple[bool, Optional[str]]:
         if self.is_empty():
             return True, "This tree is empty."
 

@@ -1,6 +1,6 @@
 import json
 
-from typing import List, Dict, Optional
+from typing import List, Dict
 
 from karp.database import ResourceDefinition
 
@@ -9,13 +9,13 @@ class Resource(object):
     def __init__(self, model, history_model,
                  resource_def: ResourceDefinition,
                  version: int,
-                 config: Optional[Dict] = None) -> None:
+                 config: Dict = None) -> None:
         self.model = model
         self.history_model = history_model
         if config:
             self.config = config
         else:
-            self.config = json.loads(resource_def.config)
+            self.config = json.loads(resource_def.config_file)
         self.entry_json_schema = json.loads(resource_def.entry_json_schema)
         self.active = resource_def.active
         self.version = version

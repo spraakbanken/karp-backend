@@ -1,4 +1,4 @@
-# import pytest
+# import pytest  # pyre-ignore
 
 from karp import resourcemgr
 

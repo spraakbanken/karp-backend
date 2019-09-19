@@ -1,6 +1,6 @@
 import jwt
 import time
-import jwt.exceptions as jwte
+import jwt.exceptions as jwte  # pyre-ignore
 
 from .authenticator import Authenticator
 from karp import get_resource_string

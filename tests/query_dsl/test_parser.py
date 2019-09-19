@@ -1,6 +1,6 @@
 from itertools import zip_longest
 
-import pytest
+import pytest  # pyre-ignore
 
 from karp.query_dsl import parser, op
 

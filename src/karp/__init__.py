@@ -5,7 +5,7 @@ import logging
 from flask import Flask     # pyre-ignore
 from flask_cors import CORS  # pyre-ignore
 from flask import request  # pyre-ignore
-import werkzeug.exceptions  # pyre-ignore
+import werkzeug.exceptions
 
 from karp.errors import KarpError
 import karp.util.logging.slack as slack_logging

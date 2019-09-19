@@ -1,13 +1,13 @@
 import json
-
-import pytest  # pyre-ignore
 import os
 from distutils.util import strtobool
 from typing import Dict
 
-import elasticsearch_test
+import pytest  # pyre-ignore
 
-import dotenv
+import elasticsearch_test  # pyre-ignore
+
+import dotenv  # pyre-ignore
 dotenv.load_dotenv(dotenv_path='.env', verbose=True)
 
 from karp import create_app  # noqa: E402
@@ -245,7 +245,7 @@ def es():
         yield "skip"
     else:
         if not os.environ.get("ES_HOME"):
-            raise RuntimeError("must set $ES_HOME to run tests that use elasticsearch")
+            raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
         with elasticsearch_test.ElasticsearchTest(port=9201):
             yield "run"
 
