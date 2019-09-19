@@ -3,12 +3,12 @@ import re
 import json
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple, Union
 
 from karp.query_dsl import basic_ast as ast, op, is_a
 # from karp import query_dsl
 from karp import search
-from karp.search.errors import SearchError, IncompleteQuery, UnsupportedQuery
+from karp.search.errors import IncompleteQuery, UnsupportedQuery
 
 
 logger = logging.getLogger('karp')
@@ -31,8 +31,10 @@ class EsQuery(search.Query):
                                                          self.resource_str)
 
 
-def get_value(value_node):
-    if is_a(value_node, op.STRING):
+def get_value(value_node: Union[ast.Node, ast.AnyValue]) -> ast.AnyValue:
+    if not isinstance(value_node, ast.Node):
+        return value_node
+    elif is_a(value_node, op.STRING):
         return value_node.value
     elif is_a(value_node, op.INT):
         return value_node.value
@@ -50,7 +52,7 @@ def create_es_query(node: ast.Node):
     if node is None:
         raise TypeError()
 
-    def extract_values(n: ast.Node) -> List:
+    def extract_values(n: ast.Node) -> List[ast.AnyValue]:
         values = []
         if is_a(n, op.ARG_LOGICAL):
             for child in n.children:
@@ -58,7 +60,7 @@ def create_es_query(node: ast.Node):
 
         return values
 
-    def extract_values_and_logicals(n: ast.Node) -> Tuple[List, List[ast.Node]]:
+    def extract_values_and_logicals(n: ast.Node) -> Tuple[List[ast.AnyValue], List[ast.Node]]:
         values = []
         logicals = []
         if is_a(n, op.ARG_LOGICAL):
@@ -212,8 +214,6 @@ def create_es_query(node: ast.Node):
             else:
                 q = query_creator(arg)
             return q
-
-
 
         def construct_exists_query(node: ast.Node):
             return es_dsl.Q('exists', field=get_value(node))
