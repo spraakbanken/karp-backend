@@ -21,6 +21,7 @@ pyjwt = "*"
 cryptography = "*"
 flask-cors = "*"
 gevent = "*"
+sb-json-tools = "*"
 
 [dev-packages]
 pytest = "*"
@@ -30,6 +31,8 @@ pytest-xdist = "*"
 pytest-cov = "*"
 flake8 = "*"
 elasticsearch-test-py = "*"
+pylint = "*"
+
 
 [requires]
 python_version = "3"
