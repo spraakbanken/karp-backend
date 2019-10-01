@@ -1,9 +1,10 @@
-import pytest  # pyre-ignore
+from typing import Callable, List, Tuple
 import json
+
+import pytest  # pyre-ignore
 
 # import time
 
-from typing import Callable, List, Tuple
 
 from conftest import ENTRIES
 
@@ -45,7 +46,11 @@ def _test_path(client, path: str, expected_result: List[str]):
 
 
 def _test_against_entries(
-    client, path: str, field: str, predicate: Callable, expected_n_hits: int = None
+        client,
+        path: str,
+        field: str,
+        predicate: Callable,
+        expected_n_hits: int = None
 ):
     entries = get_json(client, path)
     names = extract_names(entries)
@@ -69,11 +74,11 @@ def _test_against_entries(
 
 
 def _test_against_entries_general(
-    client,
-    path: str,
-    fields: Tuple[str],
-    predicate: Callable,
-    expected_n_hits: int = None,
+        client,
+        path: str,
+        fields: Tuple[str],
+        predicate: Callable,
+        expected_n_hits: int = None,
 ):
     entries = get_json(client, path)
     names = extract_names(entries)
@@ -148,7 +153,9 @@ def test_query_no_q(client_with_entries_scope_session):
     ],
 )
 def test_and(
-    client_with_entries_scope_session, queries: List[str], expected_result: List[str]
+        client_with_entries_scope_session,
+        queries: List[str],
+        expected_result: List[str]
 ):
     query = "places/query?q=and||{queries}".format(queries="||".join(queries))
     _test_path(client_with_entries_scope_session, query, expected_result)

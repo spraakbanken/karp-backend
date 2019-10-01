@@ -29,6 +29,7 @@ elasticsearch-test-py = "*"
 pylint = "*"
 pytest = "<=5.0.1"
 pytest-cov = "*"
+pyre-check = "*"
 
 [requires]
 python_version = "3"
