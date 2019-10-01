@@ -12,7 +12,6 @@ gunicorn = "*"
 karp = {editable = true,path = "."}
 click = "*"
 fastjsonschema = "*"
-pytest = "*"
 elasticsearch = ">=6,<7.0.0"
 elasticsearch-dsl = ">=6,<7.0.0"
 alembic = "*"
@@ -24,15 +23,12 @@ gevent = "*"
 sb-json-tools = ">=0.3.4"
 
 [dev-packages]
-pytest = "*"
 "pysqlcipher3" = "*"
-coverage = "*"
-pytest-xdist = "*"
-pytest-cov = "*"
 flake8 = "*"
 elasticsearch-test-py = "*"
 pylint = "*"
-
+pytest = "<=5.0.1"
+pytest-cov = "*"
 
 [requires]
 python_version = "3"
