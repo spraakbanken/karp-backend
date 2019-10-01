@@ -5,13 +5,14 @@ from datetime import datetime, timezone
 
 from sqlalchemy import exc as sql_exception
 
+from sb_json_tools import jt_diff
+
 from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError, UpdateConflict
 from karp.resourcemgr import get_resource
 from karp.database import db
 import karp.indexmgr as indexmgr
 from .resource import Resource
 from typing import Dict, List
-import karp.util.jsondiff as jsondiff
 import karp.resourcemgr.entrymetadata as entrymetadata
 
 _logger = logging.getLogger('karp')
@@ -38,7 +39,7 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
     if not current_db_entry:
         raise EntryNotFoundError(resource_id, entry_id, entry_version=version, resource_version=resource_version)
 
-    diff = jsondiff.compare(json.loads(current_db_entry.body), entry)
+    diff = jt_diff.compare(json.loads(current_db_entry.body), entry)
     if not diff:
         raise KarpError('No changes made', ClientErrorCodes.ENTRY_NOT_CHANGED)
 

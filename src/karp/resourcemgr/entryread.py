@@ -2,9 +2,9 @@ from typing import Optional, Dict
 import json
 import collections
 
+from sb_json_tools import jt_diff
 from karp.resourcemgr import get_resource
 from .resource import Resource
-import karp.util.jsondiff as jsondiff
 import karp.errors as errors
 
 
@@ -87,7 +87,7 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int = None, to_ver
     if not obj1_body or not obj2_body:
         raise errors.KarpError('diff impossible!')
 
-    return jsondiff.compare(obj1_body, obj2_body), obj1.version, obj2.version if obj2 else None
+    return jt_diff.compare(obj1_body, obj2_body), obj1.version, obj2.version if obj2 else None
 
 
 def get_history(resource_id: str, user_id: Optional[str] = None, entry_id: Optional[str] = None,
@@ -127,7 +127,7 @@ def get_history(resource_id: str, user_id: Optional[str] = None, entry_id: Optio
                                                                                   version=entry_version-1).first().body)
         else:
             previous_body = {}
-        history_diff = jsondiff.compare(previous_body, json.loads(history_entry.body))
+        history_diff = jt_diff.compare(previous_body, json.loads(history_entry.body))
         result.append({
             'timestamp': history_entry.timestamp,
             'message': history_entry.message if history_entry.message else '',
