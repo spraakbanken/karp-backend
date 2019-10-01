@@ -1,13 +1,15 @@
-import json
 from typing import BinaryIO, Tuple, Dict, List, Optional
-import fastjsonschema  # pyre-ignore
+import json
 import logging
 import collections
-from sqlalchemy.sql import func
 import os
 import re
 
-from json_tools import jt_diff
+from sqlalchemy.sql import func
+
+import fastjsonschema  # pyre-ignore
+
+from sb_json_tools import jt_diff
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition

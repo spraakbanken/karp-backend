@@ -21,7 +21,7 @@ pyjwt = "*"
 cryptography = "*"
 flask-cors = "*"
 gevent = "*"
-sb-json-tools = "*"
+sb-json-tools = ">=0.3.4"
 
 [dev-packages]
 pytest = "*"
