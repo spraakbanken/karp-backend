@@ -1,18 +1,22 @@
-import json
 from typing import BinaryIO, Tuple, Dict, List, Optional
-import fastjsonschema  # pyre-ignore
+import json
 import logging
 import collections
-from sqlalchemy.sql import func
 import os
 import re
+
+from sqlalchemy.sql import func
+
+import fastjsonschema  # pyre-ignore
+
+from sb_json_tools import jt_diff
 
 from karp import get_resource_string
 from karp.database import ResourceDefinition
 from karp.database import db
 from karp import database
 from karp.util.json_schema import create_entry_json_schema
-from karp.util import jsondiff
+# from karp.util import jsondiff
 from karp.errors import KarpError
 from karp.errors import ClientErrorCodes
 from karp.errors import ResourceNotFoundError, ResourceInvalidConfigError, ResourceConfigUpdateError
@@ -199,7 +203,8 @@ def update_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:
     resource_def = database.get_active_or_latest_resource_definition(resource_id)
     config = load_plugins_to_config(config, resource_def.version, config_dir)
 
-    config_diff = jsondiff.compare(json.loads(resource_def.config_file), config)
+    # config_diff = jsondiff.compare(json.loads(resource_def.config_file), config)
+    config_diff = jt_diff.compare(json.loads(resource_def.config_file), config)
     needs_reindex = False
     not_allowed_change = False
     not_allowed_changes = []

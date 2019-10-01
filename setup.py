@@ -34,7 +34,8 @@ setup(
         'slacker-log-handler',
         'fastjsonschema',
         'elasticsearch>=6,<7.0.0',
-        'elasticsearch-dsl>=6,<7.0.0'
+        'elasticsearch-dsl>=6,<7.0.0',
+        'sb-json-tools'
     ],
     include_package_data=True,
     zip_safe=False,
