@@ -2,9 +2,10 @@ from typing import Optional, Dict
 import json
 import collections
 
+from sb_json_tools import jsondiff
+
 from karp.resourcemgr import get_resource
 from .resource import Resource
-import karp.util.jsondiff as jsondiff
 import karp.errors as errors
 
 
