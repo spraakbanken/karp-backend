@@ -2,17 +2,17 @@ import json
 import fastjsonschema  # pyre-ignore
 import logging
 from datetime import datetime, timezone
+from typing import Dict, List
 
 from sqlalchemy import exc as sql_exception
 
-from sb_json_tools import jt_diff
+from sb_json_tools import jsondiff
 
 from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError, UpdateConflict
 from karp.resourcemgr import get_resource
 from karp.database import db
 import karp.indexmgr as indexmgr
 from .resource import Resource
-from typing import Dict, List
 import karp.resourcemgr.entrymetadata as entrymetadata
 
 _logger = logging.getLogger('karp')
