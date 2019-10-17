@@ -11,6 +11,7 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: [3.5, 3.6, 3.7]
+        es-version: ["6.8.3", "7.3.2"]
 
     steps:
     - uses: actions/checkout@v1
@@ -34,6 +35,14 @@ jobs:
       run: |
         pip install pylint
         pylint --rcfile=.pylintrc --exit-zero src
+    - name: Setup Elasticsearch ${{ matrix.es-version }}
+      run: |
+        wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
+        tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
+        echo "ELASTICSEARCH_ENABLED=True" >> .env
+        echo "ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
+        cat .env
+        # - name: Install python lib for  elasticsearch
     - name: Test with pytest
       run: |
         pytest --cov=src/ --cov-report=term tests
