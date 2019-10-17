@@ -35,7 +35,7 @@ setup(
         'fastjsonschema',
         'elasticsearch>=6,<7.0.0',
         'elasticsearch-dsl>=6,<7.0.0',
-        'sb-json-tools>=0.4.0'
+        'sb-json-tools>=0.4.2'
     ],
     include_package_data=True,
     zip_safe=False,
