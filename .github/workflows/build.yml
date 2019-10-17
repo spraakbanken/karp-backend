@@ -42,7 +42,12 @@ jobs:
         echo "ELASTICSEARCH_ENABLED=True" >> .env
         echo "ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
         cat .env
-        # - name: Install python lib for  elasticsearch
+    - name: Install python lib for Elasticsearch 6
+      if: startsWith( matrix.es-version, "6")
+      run: pip install -e .[elasticsearch6]
+    - name: Install python lib for Elasticsearch 7
+      if: startsWith( matrix.es-version, "7")
+      run: pip install -e .[elasticsearch7]
     - name: Test with pytest
       run: |
         pytest --cov=src/ --cov-report=term tests

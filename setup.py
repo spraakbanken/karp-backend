@@ -37,6 +37,16 @@ setup(
         'elasticsearch-dsl>=6,<7.0.0',
         'sb-json-tools>=0.4.2'
     ],
+    extras_require={
+        'elasticsearch6': [
+            'elasticsearch>=6,<7.0.0',
+            'elasticsearch-dsl>=6,<7.0.0',
+        ],
+        'elasticsearch7': [
+            'elasticsearch>=7,<8.0.0',
+            'elasticsearch-dsl>=7,<8.0.0',
+        ],
+    },
     include_package_data=True,
     zip_safe=False,
     classifiers=[
