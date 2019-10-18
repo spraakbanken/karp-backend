@@ -53,4 +53,5 @@ jobs:
           pip install -e .[elasticsearch7]
       - name: Test with pytest
         run: |
+          source .env
           pytest --cov=src/ --cov-report=term tests
