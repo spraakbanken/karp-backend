@@ -1,8 +1,12 @@
+from distutils.util import strtobool
 import json
+import os
 
 import pytest  # pyre-ignore
-import os
-from distutils.util import strtobool
+
+from dotenv import load_dotenv
+load_dotenv(dotenv_path='.env')
+
 import elasticsearch_test
 
 from karp import create_app
