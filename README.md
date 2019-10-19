@@ -1,6 +1,6 @@
 # Karp TNG backend
 
-![](https://github.com/spraakbanken/karp-tng-backend/workflows/Build/badge.svg)
+[![Build Status](https://github.com/spraakbanken/karp-tng-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-tng-backend/actions)
 
 This in the next version of Karp backend
 
