@@ -31,6 +31,8 @@ setup(
         'flask-sqlalchemy',
         'flask-cors',
         'click',
+        'elasticsearch>=6,<7.0.0',
+        'elasticsearch-dsl>=6,<7.0.0',
         'slacker-log-handler',
         'fastjsonschema',
         'sb-json-tools>=0.4.2'
