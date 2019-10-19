@@ -30,6 +30,7 @@ pylint = "*"
 pytest = "<=5.0.1"
 pytest-cov = "*"
 pyre-check = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3"
