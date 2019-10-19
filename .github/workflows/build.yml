@@ -22,8 +22,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -Ur requirements-dev.txt
-        pip install -e .
+        # pip install -Ur requirements-dev.txt
+        pip install -e .[dev]
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -37,17 +37,24 @@ jobs:
         pylint --rcfile=.pylintrc --exit-zero src
     - name: Setup Elasticsearch ${{ matrix.es-version }}
       run: |
+    - name: Install Elasticsearch 6
+      if: startsWith( matrix.es-version, '6')
+      run: |
         wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
         tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
         echo "ELASTICSEARCH_ENABLED=True" >> .env
         echo "ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
         cat .env
-    - name: Install python lib for Elasticsearch 6
-      if: startsWith( matrix.es-version, '6')
-      run: pip install -e .[elasticsearch6]
-    - name: Install python lib for Elasticsearch 7
+        pip install -e .[elasticsearch6]
+    - name: Install Elasticsearch 7
       if: startsWith( matrix.es-version, '7')
-      run: pip install -e .[elasticsearch7]
+      run: |
+        wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
+        tar -xzf elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
+        echo "ELASTICSEARCH_ENABLED=True" >> .env
+        echo "ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
+        cat .env
+        pip install -e .[elasticsearch7]
     - name: Test with pytest
       run: |
         pytest --cov=src/ --cov-report=term tests

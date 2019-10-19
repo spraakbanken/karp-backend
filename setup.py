@@ -46,6 +46,14 @@ setup(
             'elasticsearch>=7,<8.0.0',
             'elasticsearch-dsl>=7,<8.0.0',
         ],
+        'dev': [
+            'pysqlcipher3',
+            'flake8',
+            'elasticsearch-test-py',
+            'pylint',
+            'pytest<=5.0.1',
+            'pytest-cov',
+        ],
     },
     include_package_data=True,
     zip_safe=False,
@@ -71,3 +79,4 @@ setup(
         'Topic :: Utilities',
     ],
 )
+
