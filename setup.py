@@ -51,6 +51,7 @@ setup(
             'pylint',
             'pytest<=5.0.1',
             'pytest-cov',
+            'python-dotenv',
         ],
     },
     include_package_data=True,
