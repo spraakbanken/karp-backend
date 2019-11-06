@@ -11,8 +11,6 @@ import fastjsonschema  # pyre-ignore
 
 from sb_json_tools import jsondiff
 
-from karp import get_resource_string
-from karp.database import ResourceDefinition
 from karp.database import db
 from karp import database
 from karp.util.json_schema import create_entry_json_schema

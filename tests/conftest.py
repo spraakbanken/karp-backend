@@ -11,9 +11,6 @@ import pytest  # pyre-ignore
 
 import elasticsearch_test  # pyre-ignore
 
-import dotenv  # pyre-ignore
-dotenv.load_dotenv(dotenv_path='.env', verbose=True)
-
 from karp import create_app  # noqa: E402
 from karp.database import db  # noqa: E402
 from karp.config import Config  # noqa: E402
