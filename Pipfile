@@ -20,7 +20,7 @@ pyjwt = "*"
 cryptography = "*"
 flask-cors = "*"
 gevent = "*"
-sb-json-tools = ">=0.4.0"
+sb-json-tools = ">=0.4.2"
 
 [dev-packages]
 "pysqlcipher3" = "*"
@@ -30,6 +30,7 @@ pylint = "*"
 pytest = "<=5.0.1"
 pytest-cov = "*"
 pyre-check = "*"
+python-dotenv = "*"
 
 [requires]
 python_version = "3"

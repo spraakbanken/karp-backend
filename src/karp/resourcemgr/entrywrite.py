@@ -39,7 +39,7 @@ def update_entry(resource_id: str, entry_id: str, version: int, entry: Dict, use
     if not current_db_entry:
         raise EntryNotFoundError(resource_id, entry_id, entry_version=version, resource_version=resource_version)
 
-    diff = jt_diff.compare(json.loads(current_db_entry.body), entry)
+    diff = jsondiff.compare(json.loads(current_db_entry.body), entry)
     if not diff:
         raise KarpError('No changes made', ClientErrorCodes.ENTRY_NOT_CHANGED)
 

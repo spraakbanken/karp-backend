@@ -1,6 +1,6 @@
 # Karp TNG backend
 
-![](https://github.com/spraakbanken/karp-tng-backend/workflows/Build/badge.svg)
+[![Build Status](https://github.com/spraakbanken/karp-tng-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-tng-backend/actions)
 
 This in the next version of Karp backend
 
@@ -24,8 +24,11 @@ This project uses [pipenv](https://pipenv.readthedocs.io/) and
 
     or `pipenv shell` when `python wsgi.py`
 
-7. To setup Elasticsearch, download Elasticsearch 6.5.x and start it
-8. Add environment variables
+7. To setup Elasticsearch, download Elasticsearch 6.x or 7.x and start it
+8. Install elasticsearch python libs for the right version
+   1. If you use Elasticsearch 6.x, run `pipenv install -e .[elasticsearch6]`
+   2. If you use Elasticsearch 7.x, run `pipenv install -e .[elasticsearch7]`
+9.  Add environment variables
    ```
    export ES_ENABLED=true
    export ELASTICSEARCH_HOST=localhost:9200

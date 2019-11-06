@@ -31,12 +31,31 @@ setup(
         'flask-sqlalchemy',
         'flask-cors',
         'click',
-        'slacker-log-handler',
-        'fastjsonschema',
         'elasticsearch>=6,<7.0.0',
         'elasticsearch-dsl>=6,<7.0.0',
-        'sb-json-tools>=0.4.0'
+        'slacker-log-handler',
+        'fastjsonschema',
+        'sb-json-tools>=0.4.2'
     ],
+    extras_require={
+        'elasticsearch6': [
+            'elasticsearch>=6,<7.0.0',
+            'elasticsearch-dsl>=6,<7.0.0',
+        ],
+        'elasticsearch7': [
+            'elasticsearch>=7,<8.0.0',
+            'elasticsearch-dsl>=7,<8.0.0',
+        ],
+        'dev': [
+            'pysqlcipher3',
+            'flake8',
+            'elasticsearch-test-py',
+            'pylint',
+            'pytest<=5.0.1',
+            'pytest-cov',
+            'python-dotenv',
+        ],
+    },
     include_package_data=True,
     zip_safe=False,
     classifiers=[
@@ -61,3 +80,4 @@ setup(
         'Topic :: Utilities',
     ],
 )
+
