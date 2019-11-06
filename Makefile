@@ -99,5 +99,5 @@ mkrelease-major: bumpversion-major prepare-release docs/openapi.html
 clean: clean-pyc
 clean-pyc:
 	find . -name '*.pyc' -exec rm {} \;
-	find . -type d -name '__pycache__' -exec rm -rf {} \;
+	# find . -type d -name '__pycache__' -exec rm -rf {} \;
 	# test -d .pytest_cache && rm -rf .pytest_cache
