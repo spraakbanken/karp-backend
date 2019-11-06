@@ -11,6 +11,7 @@ import fastjsonschema  # pyre-ignore
 
 from sb_json_tools import jsondiff
 
+from karp import get_resource_string
 from karp.database import db
 from karp import database
 from karp.util.json_schema import create_entry_json_schema
@@ -30,8 +31,8 @@ resource_versions = {}  # Dict[str, int]
 field_translations = {}  # Dict[str, Dict[str, List[str]]]
 
 
-def get_available_resources() -> List[ResourceDefinition]:
-    return ResourceDefinition.query.filter_by(active=True)
+def get_available_resources() -> List[database.ResourceDefinition]:
+    return database.ResourceDefinition.query.filter_by(active=True)
 
 
 def get_field_translations(resource_id) -> Optional[Dict]:
@@ -64,8 +65,8 @@ def get_resource(resource_id: str, version: Optional[int] = None) -> Resource:
                         config=config)
 
 
-def get_all_resources() -> List[ResourceDefinition]:
-    return ResourceDefinition.query.all()
+def get_all_resources() -> List[database.ResourceDefinition]:
+    return database.ResourceDefinition.query.all()
 
 
 def check_resource_published(resource_ids: List[str]) -> None:
@@ -150,14 +151,7 @@ def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, in
 
     entry_json_schema = create_entry_json_schema(config)
 
-    if 'plugins' in config:
-        for plugin_id in config['plugins']:
-            import karp.pluginmanager as plugins
-            for (field_name, field_conf) in plugins.plugins[plugin_id].resource_creation(
-                                                                        resource_id,
-                                                                        version,
-                                                                        config_dir):
-                config['fields'][field_name] = field_conf
+    config = load_plugins_to_config(config, version, config_dir)
 
     resource = {
         'resource_id': resource_id,
@@ -166,7 +160,7 @@ def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, in
         'entry_json_schema': json.dumps(entry_json_schema)
     }
 
-    new_resource = ResourceDefinition(**resource)
+    new_resource = database.ResourceDefinition(**resource)
     db.session.add(new_resource)
     db.session.commit()
 

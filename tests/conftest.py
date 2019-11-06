@@ -1,13 +1,13 @@
 from distutils.util import strtobool
 import json
 import os
+from typing import Dict
 
 import pytest  # pyre-ignore
 
 from dotenv import load_dotenv
-load_dotenv(dotenv_path='.env')
 
-import pytest  # pyre-ignore
+load_dotenv(dotenv_path=".env")
 
 import elasticsearch_test  # pyre-ignore
 
@@ -178,9 +178,9 @@ def app_with_data_f_scope_session(app_f_scope_session):
 @pytest.fixture
 def app_with_data(app):
     with app.app_context():
-        with open('tests/data/config/places.json') as fp:
+        with open("tests/data/config/places.json") as fp:
             resourcemgr.create_new_resource_from_file(fp)
-        with open('tests/data/config/municipalities.json') as fp:
+        with open("tests/data/config/municipalities.json") as fp:
             resourcemgr.create_new_resource_from_file(fp)
     return app
 
@@ -188,9 +188,9 @@ def app_with_data(app):
 @pytest.fixture(scope="module")
 def app_with_data_scope_module(app_scope_module):
     with app_scope_module.app_context():
-        with open('tests/data/config/places.json') as fp:
+        with open("tests/data/config/places.json") as fp:
             resourcemgr.create_new_resource_from_file(fp)
-        with open('tests/data/config/municipalities.json') as fp:
+        with open("tests/data/config/municipalities.json") as fp:
             resourcemgr.create_new_resource_from_file(fp)
 
     return app_scope_module
@@ -294,12 +294,7 @@ PLACES = [
         "larger_place": 3  # Botten test
         # "smaller_places": 7 "Alhamn"
     },
-    {
-        "code": 5,
-        "name": "Rutvik",
-        "area": 50000,
-        "municipality": [2, 3]
-    },
+    {"code": 5, "name": "Rutvik", "area": 50000, "municipality": [2, 3]},
     {
         "code": 6,
         "name": "Alvik",
@@ -348,17 +343,8 @@ MUNICIPALITIES = [
         "state": "Norrbottens län",
         "region": "Norrbotten",
         "capital": "Luleå",
-        "area": {
-            "land": 2094.08,
-            "water": 148.39},
-        "population": {
-            "value": {
-                "total": 77860
-            },
-            "density": {
-                "total": 37.18
-            }
-        }
+        "area": {"land": 2094.08, "water": 148.39},
+        "population": {"value": {"total": 77860}, "density": {"total": 37.18}},
     },
     {
         "code": 2,
@@ -366,18 +352,8 @@ MUNICIPALITIES = [
         "state": "Västerbottens län",
         "region": "Västerbotten",
         "capital": "Norsjö",
-        "area": {
-            "land": 1739.15,
-            "water": 184.43
-        },
-        "population": {
-            "value": {
-                "total": 4101
-            },
-            "density": {
-                "total": 2.36
-            }
-        }
+        "area": {"land": 1739.15, "water": 184.43},
+        "population": {"value": {"total": 4101}, "density": {"total": 2.36}},
     },
     {
         "code": 3,
@@ -385,32 +361,24 @@ MUNICIPALITIES = [
         "state": "Norrbottens län",
         "region": "Norrbotten",
         "capital": "Piteå",
-        "area": {
-            "land": 3086.04,
-            "water": 149.04
-        },
-        "population": {
-            "value": {
-                "total": 42108
-            },
-            "density": {
-                "total": 13.64
-            }
-        }
-    }
+        "area": {"land": 3086.04, "water": 149.04},
+        "population": {"value": {"total": 42108}, "density": {"total": 13.64}},
+    },
 ]
 
 
 def init(client, es_status_code, entries: Dict):
-    if es_status_code == 'skip':
-        pytest.skip('elasticsearch disabled')
+    if es_status_code == "skip":
+        pytest.skip("elasticsearch disabled")
     client_with_data = client(use_elasticsearch=True)
 
     for resource, _entries in entries.items():
         for entry in _entries:
-            client_with_data.post('{resource}/add'.format(resource=resource),
-                                  data=json.dumps({'entry': entry}),
-                                  content_type='application/json')
+            client_with_data.post(
+                "{resource}/add".format(resource=resource),
+                data=json.dumps({"entry": entry}),
+                content_type="application/json",
+            )
     return client_with_data
 
 
@@ -419,9 +387,6 @@ def client_with_entries_scope_session(es, client_with_data_f_scope_session):
     client_with_data = init(
         client_with_data_f_scope_session,
         es,
-        {
-            "places": PLACES,
-            "municipalities": MUNICIPALITIES
-        }
+        {"places": PLACES, "municipalities": MUNICIPALITIES},
     )
     return client_with_data
