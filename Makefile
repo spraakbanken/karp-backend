@@ -38,6 +38,9 @@ ${VENV_NAME}/req-dev.installed: setup.py
 	${VENV_ACTIVATE}; pip install -e .[dev]
 	@touch $@
 
+init-db:
+	${VENV_ACTIVATE}; alembic upgrade head
+
 run: install
 	${VENV_ACTIVATE}; python run.py 8081
 
