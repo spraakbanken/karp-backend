@@ -34,7 +34,6 @@ setup(
         "alembic",
         "cryptography",
         "pyjwt",
-        "mysqlclient",
     ],
     extras_require={
         "elasticsearch6": ["elasticsearch>=6,<7.0.0", "elasticsearch-dsl>=6,<7.0.0",],
@@ -47,6 +46,7 @@ setup(
             "pytest<=5.0.1",
             "pytest-cov",
         ],
+        "mysql": ["mysqlclient"]
     },
     include_package_data=True,
     zip_safe=False,
