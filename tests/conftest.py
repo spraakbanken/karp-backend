@@ -1,3 +1,5 @@
+# pylint: disable=wrong-import-position,missing-function-docstring
+"""Pytest entry point."""
 from distutils.util import strtobool
 import json
 import os
@@ -52,6 +54,12 @@ CONFIG_PLACES = """{
 
 
 class ConfigTest(Config):
+    """[summary]
+
+    Arguments:
+        Config {[type]} -- [description]
+    """
+
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     TESTING = True
     SETUP_DATABASE = False
@@ -65,8 +73,17 @@ class ConfigTest(Config):
             self.ELASTICSEARCH_HOST = "http://localhost:9201"
 
 
-@pytest.fixture
-def app_f():
+@pytest.fixture(name="app_f")
+def fixture_app_f():
+    """[summary]
+
+    Returns:
+        [type] -- [description]
+
+    Yields:
+        [type] -- [description]
+    """
+
     def fun(**kwargs):
         app = create_app(ConfigTest(**kwargs))
         with app.app_context():
@@ -79,8 +96,8 @@ def app_f():
     return fun
 
 
-@pytest.fixture(scope="module")
-def app_f_scope_module():
+@pytest.fixture(name="app_f_scope_module", scope="module")
+def fixture_app_f_scope_module():
     def fun(**kwargs):
         app = create_app(ConfigTest(**kwargs))
         with app.app_context():
@@ -93,8 +110,8 @@ def app_f_scope_module():
     return fun
 
 
-@pytest.fixture(scope="session")
-def app_f_scope_session():
+@pytest.fixture(name="app_f_scope_session", scope="session")
+def fixture_app_f_scope_session():
     def fun(**kwargs):
         app = create_app(ConfigTest(**kwargs))
         with app.app_context():
@@ -107,8 +124,8 @@ def app_f_scope_session():
     return fun
 
 
-@pytest.fixture(scope="module")
-def app_scope_module():
+@pytest.fixture(name="app_scope_module", scope="module")
+def fixture_app_scope_module():
     app = create_app(ConfigTest)
     with app.app_context():
         ResourceDefinition.__table__.create(bind=db.engine)
@@ -118,8 +135,8 @@ def app_scope_module():
         db.drop_all()
 
 
-@pytest.fixture
-def app_with_data_f(app_f):
+@pytest.fixture(name="app_with_data_f")
+def fixture_app_with_data_f(app_f):
     def fun(**kwargs):
         app = next(app_f(**kwargs))
         with app.app_context():
@@ -137,8 +154,8 @@ def app_with_data_f(app_f):
     yield fun
 
 
-@pytest.fixture(scope="module")
-def app_with_data_f_scope_module(app_f_scope_module):
+@pytest.fixture(name="app_with_data_f_scope_module", scope="module")
+def fixture_app_with_data_f_scope_module(app_f_scope_module):
     def fun(**kwargs):
         app = next(app_f_scope_module(**kwargs))
         with app.app_context():
@@ -156,8 +173,8 @@ def app_with_data_f_scope_module(app_f_scope_module):
     yield fun
 
 
-@pytest.fixture(scope="session")
-def app_with_data_f_scope_session(app_f_scope_session):
+@pytest.fixture(name="app_with_data_f_scope_session", scope="session")
+def fixture_app_with_data_f_scope_session(app_f_scope_session):
     def fun(**kwargs):
         app = next(app_f_scope_session(**kwargs))
         with app.app_context():
@@ -175,8 +192,8 @@ def app_with_data_f_scope_session(app_f_scope_session):
     yield fun
 
 
-@pytest.fixture
-def app_with_data(app):
+@pytest.fixture(name="app_with_data")
+def fixture_app_with_data(app):
     with app.app_context():
         with open("tests/data/config/places.json") as fp:
             resourcemgr.create_new_resource_from_file(fp)
@@ -185,8 +202,8 @@ def app_with_data(app):
     return app
 
 
-@pytest.fixture(scope="module")
-def app_with_data_scope_module(app_scope_module):
+@pytest.fixture(name="app_with_data_scope_module", scope="module")
+def fixture_app_with_data_scope_module(app_scope_module):
     with app_scope_module.app_context():
         with open("tests/data/config/places.json") as fp:
             resourcemgr.create_new_resource_from_file(fp)
@@ -196,8 +213,8 @@ def app_with_data_scope_module(app_scope_module):
     return app_scope_module
 
 
-@pytest.fixture
-def client(app_f):
+@pytest.fixture(name="client")
+def fixture_client(app_f):
     app = next(app_f())
     return app.test_client()
 
@@ -220,8 +237,8 @@ def client_with_data_f_scope_module(app_with_data_f_scope_module):
     return fun
 
 
-@pytest.fixture(scope="session")
-def client_with_data_f_scope_session(app_with_data_f_scope_session):
+@pytest.fixture(name="client_with_data_f_scope_session", scope="session")
+def fixture_client_with_data_f_scope_session(app_with_data_f_scope_session):
     def fun(**kwargs):
         app_with_data = app_with_data_f_scope_session(**kwargs)
         return app_with_data.test_client()
@@ -229,8 +246,8 @@ def client_with_data_f_scope_session(app_with_data_f_scope_session):
     return fun
 
 
-@pytest.fixture(scope="module")
-def client_with_data_scope_module(app_with_data_scope_module):
+@pytest.fixture(name="client_with_data_scope_module", scope="module")
+def fixture_client_with_data_scope_module(app_with_data_scope_module):
     return app_with_data_scope_module.test_client()
 
 
@@ -240,8 +257,8 @@ def runner(app_f):
     return app.test_cli_runner()
 
 
-@pytest.fixture(scope="session")
-def es():
+@pytest.fixture(name="es", scope="session")
+def fixture_es():
     if not strtobool(os.environ.get("ELASTICSEARCH_ENABLED", "false")):
         yield "skip"
     else:
