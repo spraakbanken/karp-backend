@@ -1,5 +1,8 @@
-.PHONY: test test-to-log pytest build-dev run-tests clean clean-pyc help
+.PHONY: test test-log pytest build-dev run-tests clean clean-pyc help lint lint-syntax-errors
 .DEFAULT: test
+
+PYTHON = python3
+PLATFORM := ${shell uname -o}
 
 ifeq (${VIRTUAL_ENV},)
   VENV_NAME = .venv
@@ -14,6 +17,12 @@ ifeq (${VIRTUAL_ENV},)
   VENV_ACTIVATE = . ${VENV_BIN}/activate
 else
   VENV_ACTIVATE = true
+endif
+
+ifeq (${PLATFORM}, Android)
+  FLAKE8_FLAGS = --jobs=1
+else
+  FLAKE8_FLAGS = --jobs=auto
 endif
 
 help:
@@ -47,10 +56,13 @@ run: install
 run-dev: install-dev
 	${VENV_ACTIVATE}; python wsgi.py
 
-test: install-dev clean-pyc
+lint-syntax-errors: install-dev
+	${VENV_ACTIVATE}; flake8 src tests setup.py run.py cli.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
+
+test: install-dev clean-pyc lint-syntax-errors
 	${VENV_ACTIVATE}; pytest --cov=src --cov-report=term-missing tests
 
-test-log: install-dev clean-pyc
+test-log: install-dev clean-pyc lint-syntax-errors
 	${VENV_ACTIVATE}; pytest -vv --cov=src --cov-report=term-missing tests > pytest.log
 
 prepare-release: venv setup.py
@@ -76,8 +88,8 @@ tox:
 tox-to-log:
 	tox > tox.log
 
-lint:
-	flake8 src tests setup.py wsgi.py
+lint: install-dev
+	pylint --rcfile=.pylintrc src tests setup.py run.py wsgi.py
 
 type-check:
 	pyre check
@@ -101,6 +113,6 @@ mkrelease-major: bumpversion-major prepare-release docs/openapi.html
 
 clean: clean-pyc
 clean-pyc:
-	find . -name '*.pyc' -exec rm {} \;
+	find . -name '*.pyc' -exec rm --force {} \;
 	# find . -type d -name '__pycache__' -exec rm -rf {} \;
 	# test -d .pytest_cache && rm -rf .pytest_cache
