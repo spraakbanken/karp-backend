@@ -43,10 +43,12 @@ setup(
             "flake8",
             "elasticsearch-test-py",
             "pylint",
+            "pylint-flask",
             "pytest<=5.0.1",
             "pytest-cov",
+            "pyre-check",
         ],
-        "mysql": ["mysqlclient"]
+        "mysql": ["mysqlclient"],
     },
     include_package_data=True,
     zip_safe=False,
