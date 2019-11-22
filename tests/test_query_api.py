@@ -471,14 +471,14 @@ def test_freetext(
         pytest.param(
             "name",
             ("r", "R"),
-            marks=pytest.mark.skip(
+            marks=pytest.mark.xfail(
                 reason="'name' is tokenized, so greater than matches second word."
             ),
         ),
         pytest.param(
             "name",
             ("R",),
-            marks=pytest.mark.skip(
+            marks=pytest.mark.xfail(
                 reason="'name' is lower case, so greater than Uppercase returns all."
             ),
         ),
