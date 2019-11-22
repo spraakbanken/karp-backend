@@ -89,7 +89,7 @@ tox-to-log:
 	tox > tox.log
 
 lint: install-dev
-	pylint --rcfile=.pylintrc src tests setup.py run.py wsgi.py
+	${VENV_ACTIVATE}; pylint --rcfile=.pylintrc --load-plugins "pylint_flask" src tests setup.py run.py wsgi.py
 
 type-check:
 	pyre check
