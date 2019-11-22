@@ -1,7 +1,19 @@
+"""Helpers for converting.
+"""
 from typing import List, Callable
 
 
 def str2list(delimiter: str = None) -> Callable[[str], List[str]]:
-    def result(x: str) -> List[str]:
-        return x.split(delimiter)
+    """Return a function that splits a string using {delimiter} provided
+
+    Keyword Arguments:
+        delimiter {str} -- the delimiter to split by, defaults to ' ' (default: {None})
+
+    Returns:
+        Callable[[str], List[str]] -- the function to do the spliting.
+    """
+
+    def result(string: str) -> List[str]:
+        return string.split(delimiter)
+
     return result
