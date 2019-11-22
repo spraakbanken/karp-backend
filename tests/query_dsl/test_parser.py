@@ -316,17 +316,19 @@ def _test_nodes(r, facit):
             ],
         ),
         pytest.param(
-            'equals||and|area||or|population|density||6312',
+            "equals||and|area||or|population|density||6312",
             [
                 (op.EQUALS, None),
                 (op.ARG_AND, None),
-                    (op.STRING, "area"),
-                    (op.ARG_OR, None),
-                        (op.STRING, "population"),
-                        (op.STRING, "density"),
+                (op.STRING, "area"),
+                (op.ARG_OR, None),
+                (op.STRING, "population"),
+                (op.STRING, "density"),
                 (op.INT, 6312),
             ],
-            marks=pytest.mark.xfail(reason="Current query-dsl syntax can't handle this")
+            marks=pytest.mark.xfail(
+                reason="Current query-dsl syntax can't handle this"
+            ),
         ),
     ],
 )

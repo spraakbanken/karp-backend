@@ -19,7 +19,9 @@ def get_entries_by_column(resource_obj: Resource, filters):
 
     for filter_key in filters.keys():
         tmp = collections.defaultdict(dict)
-        if filter_key in config['referenceable'] and config['fields'][filter_key].get('collection', False):
+        if filter_key in config["referenceable"] and config["fields"][filter_key].get(
+            "collection", False
+        ):
             child_cls = cls.child_tables[filter_key]
             tmp[child_cls.__tablename__][filter_key] = filters[filter_key]
         else:
@@ -34,12 +36,12 @@ def get_entries_by_column(resource_obj: Resource, filters):
 
     return [
         {
-            'id': db_entry.id,
-            'entry_id': db_entry.entry_id,
-            'entry': json.loads(db_entry.body)
+            "id": db_entry.id,
+            "entry_id": db_entry.entry_id,
+            "entry": json.loads(db_entry.body),
         }
         for db_entry in query
-        ]
+    ]
 
 
 def get_entry(resource_id: str, entry_id: str, version: Optional[int] = None):
@@ -52,8 +54,15 @@ def get_entry_by_entry_id(resource: Resource, entry_id: str):
     return cls.query.filter_by(entry_id=entry_id).first()
 
 
-def diff(resource_obj: Resource, entry_id: str, from_version: int = None, to_version: int = None,
-         from_date: Optional[int] = None, to_date: Optional[int] = None, entry: Optional[Dict] = None):
+def diff(
+    resource_obj: Resource,
+    entry_id: str,
+    from_version: int = None,
+    to_version: int = None,
+    from_date: Optional[int] = None,
+    to_date: Optional[int] = None,
+    entry: Optional[Dict] = None,
+):
     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
 
     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
@@ -62,13 +71,17 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int = None, to_ver
     if from_version:
         obj1_query = query.filter_by(version=from_version)
     elif from_date is not None:
-        obj1_query = query.filter(timestamp_field >= from_date).order_by(timestamp_field)
+        obj1_query = query.filter(timestamp_field >= from_date).order_by(
+            timestamp_field
+        )
     else:
         obj1_query = query.order_by(timestamp_field)
     if to_version:
         obj2_query = query.filter_by(version=to_version)
     elif to_date is not None:
-        obj2_query = query.filter(timestamp_field <= to_date).order_by(timestamp_field.desc())
+        obj2_query = query.filter(timestamp_field <= to_date).order_by(
+            timestamp_field.desc()
+        )
     else:
         obj2_query = None
 
@@ -86,15 +99,26 @@ def diff(resource_obj: Resource, entry_id: str, from_version: int = None, to_ver
         obj2_body = json.loads(obj2.body) if obj2 else None
 
     if not obj1_body or not obj2_body:
-        raise errors.KarpError('diff impossible!')
+        raise errors.KarpError("diff impossible!")
 
-    return jsondiff.compare(obj1_body, obj2_body), obj1.version, obj2.version if obj2 else None
+    return (
+        jsondiff.compare(obj1_body, obj2_body),
+        obj1.version,
+        obj2.version if obj2 else None,
+    )
 
 
-def get_history(resource_id: str, user_id: Optional[str] = None, entry_id: Optional[str] = None,
-                from_date: Optional[int] = None, to_date: Optional[int] = None,
-                from_version: Optional[int] = None, to_version: Optional[int] = None,
-                current_page: Optional[int] = 0, page_size: Optional[int] = 100):
+def get_history(
+    resource_id: str,
+    user_id: Optional[str] = None,
+    entry_id: Optional[str] = None,
+    from_date: Optional[int] = None,
+    to_date: Optional[int] = None,
+    from_version: Optional[int] = None,
+    to_version: Optional[int] = None,
+    current_page: Optional[int] = 0,
+    page_size: Optional[int] = 100,
+):
     resource_obj = get_resource(resource_id)
     timestamp_field = resource_obj.history_model.timestamp
     query = resource_obj.history_model.query
@@ -114,30 +138,41 @@ def get_history(resource_id: str, user_id: Optional[str] = None, entry_id: Optio
     elif to_date is not None:
         query = query.filter(timestamp_field <= to_date)
 
-    paged_query = query.limit(page_size).offset(current_page*page_size)
+    paged_query = query.limit(page_size).offset(current_page * page_size)
     total = query.count()
 
     result = []
     for history_entry in paged_query:
         # TODO fix this, entry_id in history refers to the "normal" id in non-history table
-        entry_id = resource_obj.model.query.filter_by(id=history_entry.entry_id).first().entry_id
+        entry_id = (
+            resource_obj.model.query.filter_by(id=history_entry.entry_id)
+            .first()
+            .entry_id
+        )
         # TODO fix this, we should get the diff in another way, probably store the diffs directly in the database
         entry_version = history_entry.version
         if entry_version > 1:
-            previous_body = json.loads(resource_obj.history_model.query.filter_by(entry_id=history_entry.entry_id,
-                                                                                  version=entry_version-1).first().body)
+            previous_body = json.loads(
+                resource_obj.history_model.query.filter_by(
+                    entry_id=history_entry.entry_id, version=entry_version - 1
+                )
+                .first()
+                .body
+            )
         else:
             previous_body = {}
         history_diff = jsondiff.compare(previous_body, json.loads(history_entry.body))
-        result.append({
-            'timestamp': history_entry.timestamp,
-            'message': history_entry.message if history_entry.message else '',
-            'entry_id': entry_id,
-            'version': entry_version,
-            'op': history_entry.op,
-            'user_id': history_entry.user_id,
-            'diff': history_diff
-        })
+        result.append(
+            {
+                "timestamp": history_entry.timestamp,
+                "message": history_entry.message if history_entry.message else "",
+                "entry_id": entry_id,
+                "version": entry_version,
+                "op": history_entry.op,
+                "user_id": history_entry.user_id,
+                "diff": history_diff,
+            }
+        )
 
     return result, total
 
@@ -145,12 +180,14 @@ def get_history(resource_id: str, user_id: Optional[str] = None, entry_id: Optio
 def get_entry_history(resource_id, entry_id, version):
     resource_obj = get_resource(resource_id)
     db_id = resource_obj.model.query.filter_by(entry_id=entry_id).first().id
-    result = resource_obj.history_model.query.filter_by(entry_id=db_id, version=version).first()
+    result = resource_obj.history_model.query.filter_by(
+        entry_id=db_id, version=version
+    ).first()
     return {
-        'id': entry_id,
-        'resource': resource_id,
-        'version': version,
-        'entry': json.loads(result.body),
-        'last_modified_by': result.user_id,
-        'last_modified': result.timestamp
+        "id": entry_id,
+        "resource": resource_id,
+        "version": version,
+        "entry": json.loads(result.body),
+        "last_modified_by": result.user_id,
+        "last_modified": result.timestamp,
     }

@@ -17,10 +17,10 @@ def test_empty_arg_and_empty_resource_str(query):
 
 
 def test_minimal(query):
-    query.parse_arguments({}, 'saldo')
+    query.parse_arguments({}, "saldo")
     assert isinstance(query.resources, list)
     assert len(query.resources) == 1
-    assert query.resources[0] == 'saldo'
+    assert query.resources[0] == "saldo"
 
 
 def _test_nodes(r, facit):
@@ -39,9 +39,9 @@ def test_rewrite_ast(client_with_entries_scope_session):
     expected = [
         (op.EQUALS, None),
         (op.ARG_OR, None),
-            (op.STRING, "state"),  # noqa: E131
-            (op.STRING, "v_municipality.state"),
-        (op.STRING, "X")
+        (op.STRING, "state"),  # noqa: E131
+        (op.STRING, "v_municipality.state"),
+        (op.STRING, "X"),
     ]
     print("q.ast = {!r}".format(q.ast))
     _test_nodes(q.ast, expected)

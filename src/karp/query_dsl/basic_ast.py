@@ -17,10 +17,10 @@ class Ast:
         return self.root is None
 
     def pprint(self):
-        print('<Tree root=')
+        print("<Tree root=")
         if not self.is_empty():
             self.root.pprint(1)
-        print('>')
+        print(">")
 
     # def validate_arity(self) -> Tuple[bool, str]:
     #     if self.is_empty():

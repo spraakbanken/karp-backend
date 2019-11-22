@@ -1,4 +1,3 @@
-
 from typing import Optional, Callable, TypeVar, List, Dict
 
 from karp.util import convert as util_convert
@@ -8,13 +7,15 @@ from karp import query_dsl, resourcemgr
 from . import errors
 
 
-T = TypeVar('T', bool, int, str, List[str])
+T = TypeVar("T", bool, int, str, List[str])
 
 
-def arg_get(args: Dict,
-            arg_name: str,
-            convert: Optional[Callable[[str], T]] = None,
-            default: Optional[T] = None) -> Optional[T]:
+def arg_get(
+    args: Dict,
+    arg_name: str,
+    convert: Optional[Callable[[str], T]] = None,
+    default: Optional[T] = None,
+) -> Optional[T]:
     arg = args.get(arg_name, None)
     if arg is None:
         return default
@@ -43,18 +44,22 @@ class Query:
 
     def parse_arguments(self, args, resource_str: str):
         if resource_str is None:
-            raise errors.IncompleteQuery('No resources are defined.')
-        self.resources = resource_str.split(',')
-        self.from_ = arg_get(args, 'from', int, 0)
-        self.size = arg_get(args, 'size', int, 25)
-        self.lexicon_stats = arg_get(args, 'lexicon_stats', util_convert.str2bool, True)
-        self.include_fields = arg_get(args, 'include_fields', util_convert.str2list(','))
-        self.exclude_fields = arg_get(args, 'exclude_fields', util_convert.str2list(','))
+            raise errors.IncompleteQuery("No resources are defined.")
+        self.resources = resource_str.split(",")
+        self.from_ = arg_get(args, "from", int, 0)
+        self.size = arg_get(args, "size", int, 25)
+        self.lexicon_stats = arg_get(args, "lexicon_stats", util_convert.str2bool, True)
+        self.include_fields = arg_get(
+            args, "include_fields", util_convert.str2list(",")
+        )
+        self.exclude_fields = arg_get(
+            args, "exclude_fields", util_convert.str2list(",")
+        )
         self.fields = []
-        self.format = arg_get(args, 'format')
-        self.format_query = arg_get(args, 'format_query')
-        self.q = arg_get(args, 'q')
-        self.sort = arg_get(args, 'sort')
+        self.format = arg_get(args, "format")
+        self.format_query = arg_get(args, "format_query")
+        self.q = arg_get(args, "q")
+        self.sort = arg_get(args, "sort")
 
         self.ast = query_dsl.parse(self.q)
         self._update_ast()
@@ -75,46 +80,52 @@ class Query:
 
         def translate_node(node: query_dsl.Node):
             print("node = {node!r}".format(node=node))
-            if query_dsl.is_a(node, [query_dsl.op.FREERGXP, query_dsl.op.FREETEXT, query_dsl.op.ARGS]):
+            if query_dsl.is_a(
+                node, [query_dsl.op.FREERGXP, query_dsl.op.FREETEXT, query_dsl.op.ARGS]
+            ):
                 return
 
             if query_dsl.is_a(node, query_dsl.op.LOGICAL):
                 for child in node.children:
                     translate_node(child)
             elif query_dsl.is_a(node, query_dsl.op.OPS):
-                print('|OPS| node.children = {}'.format(node.children))
+                print("|OPS| node.children = {}".format(node.children))
                 field = node.children[0]
                 if query_dsl.is_a(field, query_dsl.op.STRING):
                     if field.value in field_translations:
                         fields = query_dsl.Node(query_dsl.op.ARG_OR, None)
                         fields.add_child(field)
                         for _ft in field_translations[field.value]:
-                            fields.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
+                            fields.add_child(
+                                query_dsl.Node(query_dsl.op.STRING, 0, _ft)
+                            )
                         node.children[0] = fields
                 else:
                     translate_node(field)
             # elif query_dsl.is_a(node, query_dsl.op.ARG_LOGICAL):
             elif query_dsl.is_a(node, query_dsl.op.ARG_OR):
-                print('|ARG_OR| node.children = {node.children}'.format(node=node))
+                print("|ARG_OR| node.children = {node.children}".format(node=node))
 
                 for child in node.children:
                     if child.value in field_translations:
                         for _ft in field_translations[child.value]:
                             node.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
             elif query_dsl.is_a(node, query_dsl.op.ARG_LOGICAL):  # ARG_OR handled above
-                print('|ARG_AND| node.children = {node.children}'.format(node=node))
+                print("|ARG_AND| node.children = {node.children}".format(node=node))
                 changes = []
                 for i, child in enumerate(node.children):
                     if child.value in field_translations:
                         fields = query_dsl.Node(query_dsl.op.ARG_OR, None)
                         fields.add_child(child)
                         for _ft in field_translations[child.value]:
-                            fields.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
+                            fields.add_child(
+                                query_dsl.Node(query_dsl.op.STRING, 0, _ft)
+                            )
                         changes.append((i, fields))
-                print('|ARG_AND| changes = {changes}'.format(changes=changes))
+                print("|ARG_AND| changes = {changes}".format(changes=changes))
                 for i, fields in changes:
                     node.children[i] = fields
-                print('|ARG_AND| node.children = {node.children}'.format(node=node))
+                print("|ARG_AND| node.children = {node.children}".format(node=node))
 
         translate_node(self.ast.root)
         # TODO rewrite
@@ -132,24 +143,27 @@ class Query:
                 split_results={}, lexicon_stats={},
                 format={}
                 format_query={}
-            )""".format(self._self_name(),
-                        self.q,
-                        self.resources,
-                        self.include_fields,
-                        self.exclude_fields,
-                        self.fields,
-                        self.sort,
-                        self.from_, self.size,
-                        self.split_results, self.lexicon_stats,
-                        self.format,
-                        self.format_query)
+            )""".format(
+            self._self_name(),
+            self.q,
+            self.resources,
+            self.include_fields,
+            self.exclude_fields,
+            self.fields,
+            self.sort,
+            self.from_,
+            self.size,
+            self.split_results,
+            self.lexicon_stats,
+            self.format,
+            self.format_query,
+        )
 
     def _self_name(self) -> str:
-        return 'Query'
+        return "Query"
 
 
 class SearchInterface:
-
     def build_query(self, args, resource_str: str) -> Query:
         query = Query()
         query.parse_arguments(args, resource_str)
@@ -166,7 +180,6 @@ class SearchInterface:
 
 
 class KarpSearch(SearchInterface):
-
     def __init__(self):
         self.impl = SearchInterface()
 

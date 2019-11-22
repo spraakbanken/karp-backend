@@ -462,4 +462,3 @@ def test_last_modified(es, client_with_data_f):
     assert "dummy" == hit["last_modified_by"]
     assert after_add < hit["last_modified"]
     assert after_update > hit["last_modified"]
-

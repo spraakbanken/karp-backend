@@ -4,10 +4,10 @@ Builds OpenAPI spec and serves it
 
 from flask import Blueprint, url_for, Response  # pyre-ignore
 
-documentation = Blueprint('documentation', __name__)
+documentation = Blueprint("documentation", __name__)
 
 
-@documentation.route('/', methods=['GET'])
+@documentation.route("/", methods=["GET"])
 def get_documentation():
     html = """
     <!DOCTYPE html>
@@ -34,17 +34,19 @@ def get_documentation():
         <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
       </body>
     </html>
-    """ % url_for('documentation.get_yaml')
+    """ % url_for(
+        "documentation.get_yaml"
+    )
     return html
 
 
-@documentation.route('/documentation/spec.yaml', methods=['GET'])
+@documentation.route("/documentation/spec.yaml", methods=["GET"])
 def get_yaml():
-    with open('doc/karp_api_spec.yaml') as fp:
+    with open("doc/karp_api_spec.yaml") as fp:
         spec = fp.read()
-    return Response(spec, mimetype='text/yaml')
+    return Response(spec, mimetype="text/yaml")
 
 
-@documentation.route('/favicon.ico', methods=['GET'])
+@documentation.route("/favicon.ico", methods=["GET"])
 def favicon_blocker():
-    return '', 404
+    return "", 404

@@ -25,7 +25,6 @@ class ClientErrorCodes:
 
 
 class KarpError(Exception):
-
     def __init__(self, message: str, code: int = None, http_return_code: int = 400):
         super().__init__(message)
         self.message = message
@@ -34,91 +33,79 @@ class KarpError(Exception):
 
 
 class ResourceNotFoundError(KarpError):
-
     def __init__(self, resource_id, version: int = None):
         super().__init__(
-            'Resource not found. ID: {resource_id}, version: {version}'. format(
-                resource_id=resource_id,
-                version=version
+            "Resource not found. ID: {resource_id}, version: {version}".format(
+                resource_id=resource_id, version=version
             ),
-            ClientErrorCodes.RESOURCE_DOES_NOT_EXIST
+            ClientErrorCodes.RESOURCE_DOES_NOT_EXIST,
         )
 
 
 class ResourceInvalidConfigError(KarpError):
-
     def __init__(self, resource_id, config_file: IO, validation_error_msg: str):
-        msg_fmt = '''
+        msg_fmt = """
         Resource config is not valid.
         ID: {resource_id},
         config: {config_file},
         error: "{validation_error_msg}"
-        '''
+        """
         super().__init__(
-            msg_fmt. format(
+            msg_fmt.format(
                 resource_id=resource_id,
                 config_file=config_file.name,
                 validation_error_msg=validation_error_msg,
             ),
-            ClientErrorCodes.RESOURCE_CONFIG_NOT_VALID
+            ClientErrorCodes.RESOURCE_CONFIG_NOT_VALID,
         )
 
 
 class ResourceConfigUpdateError(KarpError):
-
     def __init__(self, msg, resource_id, config_file: IO):
-        msg_fmt = '''
+        msg_fmt = """
         Cannot update config for resource.
         Message: '{msg}'
         ID: {resource_id},
         config: {config_file}"
-        '''
+        """
         super().__init__(
-            msg_fmt. format(
-                resource_id=resource_id,
-                config_file=config_file.name,
-                msg=msg,
+            msg_fmt.format(
+                resource_id=resource_id, config_file=config_file.name, msg=msg,
             ),
-            ClientErrorCodes.RESOURCE_CONFIG_CANNOT_UPDATE
+            ClientErrorCodes.RESOURCE_CONFIG_CANNOT_UPDATE,
         )
 
 
 class EntryNotFoundError(KarpError):
-
     def __init__(
-            self,
-            resource_id,
-            entry_id,
-            entry_version=None,
-            resource_version=None
+        self, resource_id, entry_id, entry_version=None, resource_version=None
     ):
-        msg = 'Entry {entry_id} (version {entry_version}) not found. ID: {resource_id}, version: {resource_version}'
-        super().__init__(msg. format(
-            resource_id=resource_id,
-            resource_version=resource_version if resource_version else 'latest',
-            entry_id=entry_id,
-            entry_version=entry_version if entry_version else 'latest'
-        ), ClientErrorCodes.ENTRY_NOT_FOUND)
+        msg = "Entry {entry_id} (version {entry_version}) not found. ID: {resource_id}, version: {resource_version}"
+        super().__init__(
+            msg.format(
+                resource_id=resource_id,
+                resource_version=resource_version if resource_version else "latest",
+                entry_id=entry_id,
+                entry_version=entry_version if entry_version else "latest",
+            ),
+            ClientErrorCodes.ENTRY_NOT_FOUND,
+        )
 
 
 class UpdateConflict(KarpError):
-
     def __init__(self, diff):
-        super().__init__('Version conflict. Please update entry.', code=ClientErrorCodes.VERSION_CONFLICT)
-        self.error_obj = {
-            'diff': diff,
-            'errorCode': self.code,
-            'error': self.message
-        }
+        super().__init__(
+            "Version conflict. Please update entry.",
+            code=ClientErrorCodes.VERSION_CONFLICT,
+        )
+        self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}
 
 
 class PluginNotFoundError(KarpError):
-
     def __init__(self, plugin_id: str, resource_id: str = None):
         super().__init__(
-            "Plugin '{plugin_id}' not found, referenced by '{resource_id}'". format(
-                plugin_id=plugin_id,
-                resource_id=resource_id if resource_id else "..."
+            "Plugin '{plugin_id}' not found, referenced by '{resource_id}'".format(
+                plugin_id=plugin_id, resource_id=resource_id if resource_id else "..."
             ),
-            ClientErrorCodes.PLUGIN_DOES_NOT_EXIT
+            ClientErrorCodes.PLUGIN_DOES_NOT_EXIT,
         )

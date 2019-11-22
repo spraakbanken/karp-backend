@@ -6,7 +6,6 @@ from karp.errors import KarpError, ClientErrorCodes
 
 
 class Auth:
-
     def __init__(self):
         self.impl = Authenticator()
 
@@ -21,8 +20,12 @@ class Auth:
                     else:
                         return func(*args, **kwargs)
                 else:
-                    raise KarpError('Not permitted', code=ClientErrorCodes.NOT_PERMITTED)
+                    raise KarpError(
+                        "Not permitted", code=ClientErrorCodes.NOT_PERMITTED
+                    )
+
             return wrapper
+
         return decorator
 
     def set_authenticator(self, authenticator):

@@ -9,33 +9,43 @@ from .token import Token
 
 
 class op:
-    AND         = 'AND'  # noqa: E221
-    NOT         = 'NOT'  # noqa: E221
-    OR          = 'OR'  # noqa: E221
-    AND_OR      = [AND, OR]  # noqa: E221
-    LOGICAL     = [AND, OR, NOT]  # noqa: E221
-    ARG_AND     = 'ARG_AND'  # noqa: E221
-    ARG_OR      = 'ARG_OR'  # noqa: E221
-    ARG_NOT      = 'ARG_NOT'  # noqa: E221
+    AND = "AND"  # noqa: E221
+    NOT = "NOT"  # noqa: E221
+    OR = "OR"  # noqa: E221
+    AND_OR = [AND, OR]  # noqa: E221
+    LOGICAL = [AND, OR, NOT]  # noqa: E221
+    ARG_AND = "ARG_AND"  # noqa: E221
+    ARG_OR = "ARG_OR"  # noqa: E221
+    ARG_NOT = "ARG_NOT"  # noqa: E221
     ARG_LOGICAL = [ARG_AND, ARG_OR, ARG_NOT]  # noqa: E221
-    FREETEXT    = 'FREETEXT'  # noqa: E221
-    FREERGXP    = 'FREERGXP'  # noqa: E221
-    EXISTS      = 'EXISTS'  # noqa: E221
-    MISSING     = 'MISSING'  # noqa: E221
-    UNARY_OPS   = [FREETEXT, FREERGXP, EXISTS, MISSING]  # noqa: E221
-    EQUALS      = 'EQUALS'  # noqa: E221
-    GT          = 'GT'  # noqa: E221
-    GTE         = 'GTE'  # noqa: E221
-    LT          = 'LT'  # noqa: E221
-    LTE         = 'LTE'  # noqa: E221
-    RANGE_OPS   = [GT, GTE, LT, LTE]  # noqa: E221
-    CONTAINS    = 'CONTAINS'  # noqa: E221
-    STARTSWITH  = 'STARTSWITH'  # noqa: E221
-    ENDSWITH    = 'ENDSWITH'  # noqa: E221
-    REGEXP      = 'REGEXP'  # noqa: E221
-    BINARY_OPS  = [EQUALS, GT, GTE, LT, LTE, CONTAINS, STARTSWITH, ENDSWITH, REGEXP]  # noqa: E221
-    REGEX_OPS   = [CONTAINS, STARTSWITH, ENDSWITH, REGEXP]  # noqa: E221
-    OPS         = [  # noqa: E221
+    FREETEXT = "FREETEXT"  # noqa: E221
+    FREERGXP = "FREERGXP"  # noqa: E221
+    EXISTS = "EXISTS"  # noqa: E221
+    MISSING = "MISSING"  # noqa: E221
+    UNARY_OPS = [FREETEXT, FREERGXP, EXISTS, MISSING]  # noqa: E221
+    EQUALS = "EQUALS"  # noqa: E221
+    GT = "GT"  # noqa: E221
+    GTE = "GTE"  # noqa: E221
+    LT = "LT"  # noqa: E221
+    LTE = "LTE"  # noqa: E221
+    RANGE_OPS = [GT, GTE, LT, LTE]  # noqa: E221
+    CONTAINS = "CONTAINS"  # noqa: E221
+    STARTSWITH = "STARTSWITH"  # noqa: E221
+    ENDSWITH = "ENDSWITH"  # noqa: E221
+    REGEXP = "REGEXP"  # noqa: E221
+    BINARY_OPS = [
+        EQUALS,
+        GT,
+        GTE,
+        LT,
+        LTE,
+        CONTAINS,
+        STARTSWITH,
+        ENDSWITH,
+        REGEXP,
+    ]  # noqa: E221
+    REGEX_OPS = [CONTAINS, STARTSWITH, ENDSWITH, REGEXP]  # noqa: E221
+    OPS = [  # noqa: E221
         CONTAINS,
         ENDSWITH,
         EQUALS,
@@ -50,11 +60,11 @@ class op:
         REGEXP,
         STARTSWITH,
     ]
-    INT         = 'INT'  # noqa: E221
-    FLOAT       = 'FLOAT'  # noqa: E221
-    STRING      = 'STRING'  # noqa: E221
-    ARGS        = [INT, FLOAT, STRING]  # noqa: E221
-    SEP         = '||'  # noqa: E221
+    INT = "INT"  # noqa: E221
+    FLOAT = "FLOAT"  # noqa: E221
+    STRING = "STRING"  # noqa: E221
+    ARGS = [INT, FLOAT, STRING]  # noqa: E221
+    SEP = "||"  # noqa: E221
 
 
 def is_a(x: Union[Node, Token], type_) -> bool:
@@ -83,63 +93,63 @@ def arg_token_string(s) -> Token:
     return Token(op.STRING, s)
 
 
-class KarpTNGLexer():
-    SEPARATOR_1    = '||'  # noqa: E221
-    SEPARATOR_2    = '|'  # noqa: E221
+class KarpTNGLexer:
+    SEPARATOR_1 = "||"  # noqa: E221
+    SEPARATOR_2 = "|"  # noqa: E221
     logical = {
-        'and': op.AND,
-        'not': op.NOT,
-        'or': op.OR,
+        "and": op.AND,
+        "not": op.NOT,
+        "or": op.OR,
     }
     arg_logical = {
-        'and': op.ARG_AND,
-        'or': op.ARG_OR,
-        'not': op.ARG_NOT,
+        "and": op.ARG_AND,
+        "or": op.ARG_OR,
+        "not": op.ARG_NOT,
     }
     ops = {
-        'freetext': op.FREETEXT,
-        'freergxp': op.FREERGXP,
-        'equals': op.EQUALS,
-        'exists': op.EXISTS,
-        'missing': op.MISSING,
-        'contains': op.CONTAINS,
-        'startswith': op.STARTSWITH,
-        'endswith': op.ENDSWITH,
-        'regexp': op.REGEXP,
-        'gt': op.GT,
-        'gte': op.GTE,
-        'lt': op.LT,
-        'lte': op.LTE,
+        "freetext": op.FREETEXT,
+        "freergxp": op.FREERGXP,
+        "equals": op.EQUALS,
+        "exists": op.EXISTS,
+        "missing": op.MISSING,
+        "contains": op.CONTAINS,
+        "startswith": op.STARTSWITH,
+        "endswith": op.ENDSWITH,
+        "regexp": op.REGEXP,
+        "gt": op.GT,
+        "gte": op.GTE,
+        "lt": op.LT,
+        "lte": op.LTE,
     }
     arg1 = {
-        'freetext': arg_token_any,
-        'freergxp': arg_token_string,
-        'equals': arg_token_string,
-        'exists': arg_token_string,
-        'missing': arg_token_string,
-        'contains': arg_token_string,
-        'startswith': arg_token_string,
-        'endswith': arg_token_string,
-        'regexp': arg_token_string,
-        'gt': arg_token_string,
-        'gte': arg_token_string,
-        'lt': arg_token_string,
-        'lte': arg_token_string,
+        "freetext": arg_token_any,
+        "freergxp": arg_token_string,
+        "equals": arg_token_string,
+        "exists": arg_token_string,
+        "missing": arg_token_string,
+        "contains": arg_token_string,
+        "startswith": arg_token_string,
+        "endswith": arg_token_string,
+        "regexp": arg_token_string,
+        "gt": arg_token_string,
+        "gte": arg_token_string,
+        "lt": arg_token_string,
+        "lte": arg_token_string,
     }
     arg2 = {
-        'equals': arg_token_any,
-        'contains': arg_token_string,
-        'startswith': arg_token_string,
-        'endswith': arg_token_string,
-        'regexp': arg_token_string,
-        'gt': arg_token_any,
-        'gte': arg_token_any,
-        'lt': arg_token_any,
-        'lte': arg_token_any,
+        "equals": arg_token_any,
+        "contains": arg_token_string,
+        "startswith": arg_token_string,
+        "endswith": arg_token_string,
+        "regexp": arg_token_string,
+        "gt": arg_token_any,
+        "gte": arg_token_any,
+        "lt": arg_token_any,
+        "lte": arg_token_any,
     }
 
     def tokenize(self, s: str):
-        print('Tokenizing {s}'.format(s=s))
+        print("Tokenizing {s}".format(s=s))
         exprs = s.split(self.SEPARATOR_1)
         arg_types = []
         for expr in exprs:
@@ -147,7 +157,7 @@ class KarpTNGLexer():
             if logical_type:
                 yield Token(logical_type)
             else:
-                print('Tokenizing {expr}'.format(expr=expr))
+                print("Tokenizing {expr}".format(expr=expr))
                 sub_exprs = expr.split(self.SEPARATOR_2)
 
                 if sub_exprs[0] in self.ops:
@@ -164,8 +174,7 @@ class KarpTNGLexer():
                             else:
                                 raise SyntaxError(
                                     "Too many arguments to '{op}' in '{expr}'".format(
-                                        op=sub_exprs[0],
-                                        expr=expr
+                                        op=sub_exprs[0], expr=expr
                                     )
                                 )
                     if arg_2:
@@ -180,7 +189,7 @@ class KarpTNGLexer():
                         arg_exprs = sub_exprs
                     arg = arg_types.pop()
                     if not arg:
-                        raise ParseError('No arg type is set')
+                        raise ParseError("No arg type is set")
                     for arg_expr in arg_exprs:
                         yield arg(arg_expr)
 
@@ -201,12 +210,11 @@ def create_node(tok: Token):
 
 
 class KarpTNGParser:
-
     def parse(self, tokens):
         curr = None
         stack = []
         for tok in tokens:
-            print('Token({}, {})'.format(tok.type, tok.value))
+            print("Token({}, {})".format(tok.type, tok.value))
             if is_a(tok, op.ARGS):
                 n = create_node(tok)
                 if curr:
@@ -223,7 +231,9 @@ class KarpTNGParser:
                             n.add_child(curr)
                             stack.append(n)
                         else:
-                            raise ParseError("No OP to add ARG_LOGICAL '{curr}'".format(curr=curr))
+                            raise ParseError(
+                                "No OP to add ARG_LOGICAL '{curr}'".format(curr=curr)
+                            )
                     elif stack:
                         n1 = stack.pop()
                         n1.add_child(curr)
@@ -243,10 +253,10 @@ class KarpTNGParser:
                 stack.append(create_node(tok))
             else:
                 if curr:
-                    raise RuntimeError('')
+                    raise RuntimeError("")
                 curr = create_node(tok)
-            print('curr = {curr}'.format(curr=curr))
-            print('stack = {stack}'.format(stack=stack))
+            print("curr = {curr}".format(curr=curr))
+            print("stack = {stack}".format(stack=stack))
 
         root = None
         for node in reversed(stack):

@@ -71,15 +71,15 @@ def test_user1_history(history_data_client):
 
 
 def test_user2_history(history_data_client):
-    response_data = get_helper(history_data_client, 'places/history?user_id=user2')
-    assert 4 == len(response_data['history'])
-    assert 'ADD' == response_data['history'][0]['op']
-    assert 'ADD' == response_data['history'][1]['op']
-    assert 'UPDATE' == response_data['history'][2]['op']
-    assert 'UPDATE' == response_data['history'][3]['op']
-    assert re.match(r'^\d{10}\.\d{3,6}$', str(response_data['history'][3]['timestamp']))
-    for history_entry in response_data['history']:
-        assert 'user2' == history_entry['user_id']
+    response_data = get_helper(history_data_client, "places/history?user_id=user2")
+    assert 4 == len(response_data["history"])
+    assert "ADD" == response_data["history"][0]["op"]
+    assert "ADD" == response_data["history"][1]["op"]
+    assert "UPDATE" == response_data["history"][2]["op"]
+    assert "UPDATE" == response_data["history"][3]["op"]
+    assert re.match(r"^\d{10}\.\d{3,6}$", str(response_data["history"][3]["timestamp"]))
+    for history_entry in response_data["history"]:
+        assert "user2" == history_entry["user_id"]
 
 
 def test_user_history_from_date(history_data_client):

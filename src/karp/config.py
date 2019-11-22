@@ -10,12 +10,18 @@ class Config:
     DEBUG = False
     TESTING = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
-    ELASTICSEARCH_HOST = os.environ['ELASTICSEARCH_HOST'].split(',') if 'ELASTICSEARCH_HOST' in os.environ else None
-    ELASTICSEARCH_ENABLED = os.environ.get('ELASTICSEARCH_ENABLED', '') == 'true'
-    CONSOLE_LOG_LEVEL = logging.getLevelName(os.environ.get('CONSOLE_LOG_LEVEL', 'INFO'))
-    LOG_TO_SLACK = strtobool(os.environ.get('LOG_TO_SLACK', 'n'))
-    SLACK_SECRET = os.environ.get('SLACK_SECRET')
-    JWT_AUTH = strtobool(os.environ.get('JWT_AUTH', 'n'))
+    ELASTICSEARCH_HOST = (
+        os.environ["ELASTICSEARCH_HOST"].split(",")
+        if "ELASTICSEARCH_HOST" in os.environ
+        else None
+    )
+    ELASTICSEARCH_ENABLED = os.environ.get("ELASTICSEARCH_ENABLED", "") == "true"
+    CONSOLE_LOG_LEVEL = logging.getLevelName(
+        os.environ.get("CONSOLE_LOG_LEVEL", "INFO")
+    )
+    LOG_TO_SLACK = strtobool(os.environ.get("LOG_TO_SLACK", "n"))
+    SLACK_SECRET = os.environ.get("SLACK_SECRET")
+    JWT_AUTH = strtobool(os.environ.get("JWT_AUTH", "n"))
 
 
 class ProductionConfig(Config):
@@ -24,7 +30,7 @@ class ProductionConfig(Config):
             user=os.environ["MARIADB_USER"],
             pwd=os.environ["MARIADB_PASSWORD"],
             dbhost=os.environ["MARIADB_HOST"],
-            dbname=os.environ["MARIADB_DATABASE"]
+            dbname=os.environ["MARIADB_DATABASE"],
         )
 
 
@@ -41,8 +47,9 @@ def get_config():
 
 
 class MariaDBConfig(Config):
-
-    def __init__(self, user=None, pwd=None, host=None, dbname=None, setup_database=False):
+    def __init__(
+        self, user=None, pwd=None, host=None, dbname=None, setup_database=False
+    ):
         if not user:
             user = os.environ["MARIADB_USER"]
         if not pwd:
@@ -54,8 +61,5 @@ class MariaDBConfig(Config):
 
         self.SETUP_DATABASE = setup_database
         self.SQLALCHEMY_DATABASE_URI = MYSQL_FORMAT.format(
-            user=user,
-            passwd=pwd,
-            dbhost=host,
-            dbname=dbname
+            user=user, passwd=pwd, dbhost=host, dbname=dbname
         )

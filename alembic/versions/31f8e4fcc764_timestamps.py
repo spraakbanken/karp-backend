@@ -10,18 +10,21 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.
-revision = '31f8e4fcc764'
-down_revision = '5bb29472d33f'
+revision = "31f8e4fcc764"
+down_revision = "5bb29472d33f"
 branch_labels = None
 depends_on = None
 
 
 def upgrade():
-    op.alter_column('dummy_history', 'timestamp',
-                    server_default=None,
-                    existing_type=sa.DateTime(),
-                    type_=sa.Integer(),
-                    existing_nullable=False)
+    op.alter_column(
+        "dummy_history",
+        "timestamp",
+        server_default=None,
+        existing_type=sa.DateTime(),
+        type_=sa.Integer(),
+        existing_nullable=False,
+    )
 
     # every history table needs the following done, but don't know how to express that in alembic
     """

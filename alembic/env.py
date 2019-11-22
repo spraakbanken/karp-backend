@@ -28,19 +28,18 @@ def run_migrations_online():
 
     """
     alembic_config = config.get_section(config.config_ini_section)
-    alembic_config['sqlalchemy.url'] = database_uri
+    alembic_config["sqlalchemy.url"] = database_uri
 
     connectable = engine_from_config(
-        alembic_config,
-        prefix='sqlalchemy.',
-        poolclass=pool.NullPool)
+        alembic_config, prefix="sqlalchemy.", poolclass=pool.NullPool
+    )
 
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
             target_metadata=db.metadata,
             include_object=include_object,
-            compare_type=True
+            compare_type=True,
         )
 
         with context.begin_transaction():

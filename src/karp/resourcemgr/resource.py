@@ -6,10 +6,14 @@ from karp.database import ResourceDefinition
 
 
 class Resource(object):
-    def __init__(self, model, history_model,
-                 resource_def: ResourceDefinition,
-                 version: int,
-                 config: Dict = None) -> None:
+    def __init__(
+        self,
+        model,
+        history_model,
+        resource_def: ResourceDefinition,
+        version: int,
+        config: Dict = None,
+    ) -> None:
         self.model = model
         self.history_model = history_model
         if config:
@@ -44,4 +48,4 @@ class Resource(object):
 
     @property
     def id(self) -> str:
-        return self.config['resource_id']
+        return self.config["resource_id"]
