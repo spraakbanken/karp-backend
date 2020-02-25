@@ -24,15 +24,12 @@ jobs:
           make install-dev
       - name: Lint with flake8
         run: |
-          # pip install flake8
           # stop the build if there are Python syntax errors or undefined names
           make lint-syntax-errors
-          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-          flake8 src tests setup.py wsgi.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Lint with pylint
         run: |
           # pip install pylint
-          pylint --rcfile=.pylintrc --exit-zero src
+          .venv/bin/pylint --rcfile=.pylintrc --exit-zero src
       - name: Setup Elasticsearch ${{ matrix.es-version }}
         run: |
       - name: Install Elasticsearch 6
