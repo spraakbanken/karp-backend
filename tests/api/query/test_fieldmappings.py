@@ -2,7 +2,7 @@ import pytest  # pyre-ignore
 
 from elasticsearch_dsl.query import Bool, Exists, Match, Range, Regexp  # pyre-ignore
 
-from karp.search import search
+from karp import search
 from karp.elasticsearch.search import EsQuery
 
 from tests.utils import get_json

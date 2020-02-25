@@ -2,7 +2,7 @@ import json
 import urllib.request
 import urllib.parse
 import pytest  # pyre-ignore
-from karp.search import search
+from karp import search
 from karp import elasticsearch as karp_es
 
 entries = [

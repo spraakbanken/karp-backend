@@ -23,7 +23,7 @@ query_api = Blueprint("query_api", __name__)
 @query_api.route("/<resource_id>/<entry_ids>")
 @auth.auth.authorization("READ")
 def get_entries_by_id(resource_id: str, entry_ids: str):
-    response = search.search.search_ids(request.args, resource_id, entry_ids)
+    response = search.search_ids(request.args, resource_id, entry_ids)
     return flask_jsonify(response)
 
 
@@ -35,9 +35,9 @@ def query(resources: str):
     resource_list = resources.split(",")
     resourcemgr.check_resource_published(resource_list)
     try:
-        q = search.search.build_query(request.args, resources)
+        q = search.build_query(request.args, resources)
         print("query::q={q}".format(q=q))
-        response = search.search.search_with_query(q)
+        response = search.search_with_query(q)
     except errors.KarpError as e:
         _logger.exception(
             "Error occured when calling 'query' with resources='{}' and q='{}'. e.msg='{}".format(
@@ -56,10 +56,10 @@ def query_split(resources: str):
     resource_list = resources.split(",")
     resourcemgr.check_resource_published(resource_list)
     try:
-        query = search.search.build_query(request.args, resources)
+        query = search.build_query(request.args, resources)
         query.split_results = True
         print("query={}".format(query))
-        response = search.search.search_with_query(query)
+        response = search.search_with_query(query)
     except errors.KarpError as e:
         _logger.exception(
             "Error occured when calling 'query' with resources='{}' and q='{}'. msg='{}'".format(

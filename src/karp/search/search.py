@@ -179,21 +179,21 @@ class SearchInterface:
         raise NotImplementedError()
 
 
-class KarpSearch(SearchInterface):
-    def __init__(self):
-        self.impl = SearchInterface()
+# class KarpSearch(SearchInterface):
+#     def __init__(self):
+#         self.impl = SearchInterface()
 
-    def init(self, impl: SearchInterface):
-        self.impl = impl
+#     def init(self, impl: SearchInterface):
+#         self.impl = impl
 
-    def build_query(self, args, resource_str: str) -> Query:
-        return self.impl.build_query(args, resource_str)
+#     def build_query(self, args, resource_str: str) -> Query:
+#         return self.impl.build_query(args, resource_str)
 
-    def search_with_query(self, query: Query):
-        return self.impl.search_with_query(query)
+#     def search_with_query(self, query: Query):
+#         return self.impl.search_with_query(query)
 
-    def search_ids(self, args, resource_id: str, entry_ids: str):
-        return self.impl.search_ids(args, resource_id, entry_ids)
+#     def search_ids(self, args, resource_id: str, entry_ids: str):
+#         return self.impl.search_ids(args, resource_id, entry_ids)
 
-    def statistics(self, resource_id: str, field: str):
-        return self.impl.statistics(resource_id, field)
+#     def statistics(self, resource_id: str, field: str):
+#         return self.impl.statistics(resource_id, field)

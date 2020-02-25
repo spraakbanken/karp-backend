@@ -920,7 +920,7 @@ def test_startswith(
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
-@pytest.mark.skip(reason="no protected stuff")
+@pytest.mark.xfail(reason="no protected stuff")
 def test_protected(client_with_data_scope_module):
     response = client_with_data_scope_module.get("/municipalities/query")
     names = response
