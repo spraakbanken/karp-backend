@@ -34,16 +34,16 @@ install: venv ${VENV_NAME}/req.installed
 install-dev: venv ${VENV_NAME}/req-dev.installed
 
 ${VENV_NAME}/venv.created:
-	@python3 -c "import sys; assert sys.version_info >= (3, 5)" || echo "Python >= 3.5 is needed"
+	@python3 -c "import sys; assert sys.version_info >= (3, 6)" || echo "Python >= 3.6 is needed"
 	test -d ${VENV_NAME} || python3 -m venv ${VENV_NAME}
 	${VENV_ACTIVATE}; pip install pip-tools
 	@touch $@
 
-${VENV_NAME}/req.installed: requirements.txt
+${VENV_NAME}/req.installed: deploy/requirements.txt
 	${VENV_ACTIVATE}; pip install -Ur $<
 	@touch $@
 
-${VENV_NAME}/req-dev.installed: setup.py
+${VENV_NAME}/req-dev.installed: setup.py setup.cfg tools/pip-requires
 	${VENV_ACTIVATE}; pip install -e .[dev]
 	@touch $@
 
@@ -59,14 +59,17 @@ run-dev: install-dev
 lint-syntax-errors: install-dev
 	${VENV_ACTIVATE}; flake8 src tests setup.py run.py cli.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
 
-test: install-dev clean-pyc lint-syntax-errors
-	${VENV_ACTIVATE}; pytest --cov=src --cov-report=term-missing tests
+test: install-dev clean-pyc
+	${VENV_ACTIVATE}; pytest -vv tests
+
+test-w-coverage: install-dev clean-pyc
+	${VENV_ACTIVATE}; pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests
 
 test-log: install-dev clean-pyc lint-syntax-errors
-	${VENV_ACTIVATE}; pytest -vv --cov=src --cov-report=term-missing tests > pytest.log
+	${VENV_ACTIVATE}; pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests > pytest.log
 
 prepare-release: venv setup.py
-	${VENV_ACTIVATE}; pip-compile --output-file=requirements.txt setup.py
+	${VENV_ACTIVATE}; pip-compile --output-file=deploy/requirements.txt setup.py
 
 bump-version-patch:
 	bumpversion patch
@@ -113,6 +116,7 @@ mkrelease-major: bumpversion-major prepare-release docs/openapi.html
 
 clean: clean-pyc
 clean-pyc:
-	find . -name '*.pyc' -exec rm --force {} \;
-	# find . -type d -name '__pycache__' -exec rm -rf {} \;
-	# test -d .pytest_cache && rm -rf .pytest_cache
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +

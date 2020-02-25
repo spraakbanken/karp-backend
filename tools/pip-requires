@@ -1,5 +1,5 @@
 flask
-sqlalchemy<=1.2
+sqlalchemy
 flask-sqlalchemy
 mysqlclient
 gunicorn

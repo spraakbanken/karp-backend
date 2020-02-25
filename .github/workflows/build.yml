@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
         es-version: [6.5.4, 6.8.3]
         # es-version: [6.8.3, 7.3.2]
 
@@ -21,13 +21,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # pip install -Ur requirements-dev.txt
-          pip install -e .[dev]
+          make install-dev
       - name: Lint with flake8
         run: |
           # pip install flake8
           # stop the build if there are Python syntax errors or undefined names
-          flake8 src tests setup.py wsgi.py --count --select=E9,F63,F7,F82 --show-source --statistics
+          make lint-syntax-errors
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 src tests setup.py wsgi.py --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Lint with pylint
@@ -57,4 +56,4 @@ jobs:
       - name: Test with pytest
         run: |
           # pip install pytest
-          pytest --cov=src/ --cov-report=term tests
+          pytest -vv --cov=src/ --cov-report=term tests
