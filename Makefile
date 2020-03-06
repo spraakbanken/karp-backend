@@ -95,13 +95,13 @@ docs/openapi.html: doc/karp_api_spec.yaml
 	@echo "Skipping 'redoc-cli bundle --output $@ $<'"
 	touch $@
 
-bumpversion-patch:
+bumpversion-patch: install-dev
 	${INVENV} bumpversion patch
 
-bumpversion-minor:
+bumpversion-minor: install-dev
 	${INVENV} bumpversion minor
 
-bumpversion-major:
+bumpversion-major: install-dev
 	${INVENV} bumpversion major
 
 mkrelease-patch: bumpversion-patch prepare-release docs/openapi.html
