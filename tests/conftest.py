@@ -3,6 +3,7 @@
 from distutils.util import strtobool
 import json
 import os
+import time
 from typing import Dict
 
 import pytest  # pyre-ignore
@@ -260,7 +261,7 @@ def runner(app_f):
 @pytest.fixture(name="es", scope="session")
 def fixture_es():
     if not strtobool(os.environ.get("ELASTICSEARCH_ENABLED", "false")):
-        yield "skip"
+        pytest.skip("Elasticsearch disabled.")
     else:
         if not os.environ.get("ES_HOME"):
             raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
@@ -406,4 +407,5 @@ def client_with_entries_scope_session(es, client_with_data_f_scope_session):
         es,
         {"places": PLACES, "municipalities": MUNICIPALITIES},
     )
+    time.sleep(5)
     return client_with_data

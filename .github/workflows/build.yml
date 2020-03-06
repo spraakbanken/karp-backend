@@ -3,7 +3,8 @@ name: Build
 on: [push]
 
 jobs:
-  build:
+  test_w_es:
+    name: Test with Elasticsearch
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -21,17 +22,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          # pip install -Ur requirements-dev.txt
           make install-dev
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          make lint-syntax-errors
+          make lint-syntax-error
       - name: Lint with pylint
         run: |
-          # pip install pylint
-          .venv/bin/pylint --rcfile=.pylintrc --exit-zero src
-      - name: Setup Elasticsearch ${{ matrix.es-version }}
-        run: |
+          make lint-no-fail
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es-version, '6')
         run: |
@@ -51,6 +50,30 @@ jobs:
           cat .env
           pip install -e .[elasticsearch7]
       - name: Test with pytest
+        run: make test-w-coverage
+  test_w_sql:
+    name: Test with SQL
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.6, 3.7, 3.8]
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
         run: |
-          # pip install pytest
-          pytest -vv --cov=src/ --cov-report=term tests
+          python -m pip install --upgrade pip
+          make install-dev
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          make lint-syntax-error
+      - name: Lint with pylint
+        run: make lint-no-fail
+      - name: Test with pytest
+        run: make test-w-coverage
