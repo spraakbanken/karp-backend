@@ -16,8 +16,11 @@ class Config:
         else None
     )
     ELASTICSEARCH_ENABLED = os.environ.get("ELASTICSEARCH_ENABLED", "") == "true"
-    CONSOLE_LOG_LEVEL = logging.getLevelName(
-        os.environ.get("CONSOLE_LOG_LEVEL", "INFO")
+    # CONSOLE_LOG_LEVEL = logging.getLevelName(
+    #     os.environ.get("CONSOLE_LOG_LEVEL", "INFO")
+    # )
+    CONSOLE_LOG_LEVEL = getattr(
+        logging, os.environ.get("CONSOLE_LOG_LEVEL", "INFO"), logging.INFO
     )
     LOG_TO_SLACK = strtobool(os.environ.get("LOG_TO_SLACK", "n"))
     SLACK_SECRET = os.environ.get("SLACK_SECRET")

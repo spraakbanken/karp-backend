@@ -71,7 +71,7 @@ test-w-coverage: install-dev clean-pyc
 test-log: install-dev clean-pyc lint-syntax-errors
 	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests > pytest.log
 
-prepare-release: venv setup.py tools/pip-require setup.cfg
+prepare-release: venv setup.py tools/pip-requires setup.cfg
 	${INVENV} pip-compile --output-file=deploy/requirements.txt setup.py
 
 run-tests: lint type-check test

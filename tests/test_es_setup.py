@@ -3,7 +3,7 @@ import urllib.request
 import urllib.parse
 import pytest  # pyre-ignore
 from karp import search
-from karp import elasticsearch as karp_es
+from karp.elasticsearch as es_search
 
 entries = [
     {

@@ -1,6 +1,6 @@
 from elasticsearch import Elasticsearch  # pyre-ignore
 from .index import EsIndex
-from .search import EsSearch
+from .es_search import EsSearch
 from karp import search
 from karp.indexmgr import indexer
 
