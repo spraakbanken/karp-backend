@@ -8,7 +8,7 @@ fastjsonschema
 elasticsearch>=6,<7.0.0
 elasticsearch-dsl>=6,<7.0.0
 alembic
-slacker-log-handler
+slack-log-utils
 pyjwt
 cryptography
 flask-cors
