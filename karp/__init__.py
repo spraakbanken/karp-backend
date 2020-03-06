@@ -10,7 +10,7 @@ import werkzeug.exceptions
 from karp.errors import KarpError
 import karp.util.logging.slack as slack_logging
 
-__version__ = "__version__ = '0.7.0'"
+__version__ = "__version__ = '0.7.1'"
 
 
 # TODO handle settings correctly
