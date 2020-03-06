@@ -3,20 +3,23 @@
 
 PYTHON = python3
 PLATFORM := ${shell uname -o}
+INVENV_PATH = ${shell which invenv}
 
 ifeq (${VIRTUAL_ENV},)
   VENV_NAME = .venv
 else
   VENV_NAME = ${VIRTUAL_ENV}
 endif
+${info Platform: ${PLATFORM}}
 ${info Using ${VENV_NAME}}
+${info invenv: ${INVENV_PATH}}
 
 VENV_BIN = ${VENV_NAME}/bin
 
-ifeq (${VIRTUAL_ENV},)
-  VENV_ACTIVATE = . ${VENV_BIN}/activate
+ifeq (${INVENV_PATH},)
+  INVENV = export VIRTUAL_ENV="${VENV_NAME}"; export PATH="${VENV_BIN}:${PATH}"; unset PYTHON_HOME;
 else
-  VENV_ACTIVATE = true
+  INVENV = invenv -C ${VENV_NAME}
 endif
 
 ifeq (${PLATFORM}, Android)
@@ -31,57 +34,45 @@ help:
 venv: ${VENV_NAME}/venv.created
 
 install: venv ${VENV_NAME}/req.installed
-install-dev: venv ${VENV_NAME}/req-dev.installed
+install-dev: venv install ${VENV_NAME}/req-dev.installed
 
 ${VENV_NAME}/venv.created:
 	@python3 -c "import sys; assert sys.version_info >= (3, 6)" || echo "Python >= 3.6 is needed"
 	test -d ${VENV_NAME} || python3 -m venv ${VENV_NAME}
-	${VENV_ACTIVATE}; pip install pip-tools
+	${INVENV} pip install pip-tools
 	@touch $@
 
 ${VENV_NAME}/req.installed: deploy/requirements.txt
-	${VENV_ACTIVATE}; pip install -Ur $<
+	${INVENV} pip install -Ur $<
 	@touch $@
 
 ${VENV_NAME}/req-dev.installed: setup.py setup.cfg tools/pip-requires
-	${VENV_ACTIVATE}; pip install -e .[dev]
+	${INVENV} pip install -e .[dev]
 	@touch $@
 
 init-db:
-	${VENV_ACTIVATE}; alembic upgrade head
+	${INVENV} alembic upgrade head
 
 run: install
-	${VENV_ACTIVATE}; python run.py 8081
+	${INVENV} python run.py 8081
 
 run-dev: install-dev
-	${VENV_ACTIVATE}; python wsgi.py
+	${INVENV} python wsgi.py
 
 lint-syntax-errors: install-dev
-	${VENV_ACTIVATE}; flake8 karp tests setup.py run.py cli.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
+	${INVENV} flake8 karp tests setup.py run.py cli.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
 
 test: install-dev clean-pyc
-	${VENV_ACTIVATE}; pytest -vv tests
+	${INVENV} pytest -vv tests/unit_tests
 
 test-w-coverage: install-dev clean-pyc
-	${VENV_ACTIVATE}; pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests
 
 test-log: install-dev clean-pyc lint-syntax-errors
-	${VENV_ACTIVATE}; pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests > pytest.log
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests > pytest.log
 
-prepare-release: venv setup.py
-	${VENV_ACTIVATE}; pip-compile --output-file=deploy/requirements.txt setup.py
-
-bump-version-patch:
-	bumpversion patch
-	make prepare-release
-
-bump-version-minor:
-	bumpversion minor
-	make prepare-release
-
-bump-version-major:
-	bumpversion major
-	make prepare-release
+prepare-release: venv setup.py tools/pip-require setup.cfg
+	${INVENV} pip-compile --output-file=deploy/requirements.txt setup.py
 
 run-tests: lint type-check test
 
@@ -92,7 +83,10 @@ tox-to-log:
 	tox > tox.log
 
 lint: install-dev
-	${VENV_ACTIVATE}; pylint --rcfile=.pylintrc --load-plugins "pylint_flask" src tests setup.py run.py wsgi.py
+	${INVENV} pylint --rcfile=.pylintrc --load-plugins "pylint_flask" karp tests setup.py run.py wsgi.py
+
+lint-no-fail: install-dev
+	${INVENV} pylint --rcfile=.pylintrc --load-plugins "pylint_flask" --exit-zero karp tests setup.py run.py wsgi.py
 
 type-check:
 	pyre check
@@ -102,13 +96,13 @@ docs/openapi.html: doc/karp_api_spec.yaml
 	touch $@
 
 bumpversion-patch:
-	bumpversion patch
+	${INVENV} bumpversion patch
 
 bumpversion-minor:
-	bumpversion minor
+	${INVENV} bumpversion minor
 
 bumpversion-major:
-	bumpversion major
+	${INVENV} bumpversion major
 
 mkrelease-patch: bumpversion-patch prepare-release docs/openapi.html
 mkrelease-minor: bumpversion-minor prepare-release docs/openapi.html
