@@ -1,6 +1,7 @@
 """
 Builds OpenAPI spec and serves it
 """
+import pkg_resources
 
 from flask import Blueprint, url_for, Response  # pyre-ignore
 
@@ -42,8 +43,11 @@ def get_documentation():
 
 @documentation.route("/documentation/spec.yaml", methods=["GET"])
 def get_yaml():
-    with open("doc/karp_api_spec.yaml") as fp:
-        spec = fp.read()
+    # with open("doc/karp_api_spec.yaml") as fp:
+    #     spec = fp.read()
+    spec = pkg_resources.resource_string(
+        "karp", "data_files/karp_api_spec.yaml"
+    ).decode("utf-8")
     return Response(spec, mimetype="text/yaml")
 
 
