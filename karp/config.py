@@ -15,7 +15,7 @@ class Config:
         if "ELASTICSEARCH_HOST" in os.environ
         else None
     )
-    ELASTICSEARCH_ENABLED = os.environ.get("ELASTICSEARCH_ENABLED", "") == "true"
+    ELASTICSEARCH_ENABLED = strtobool(os.environ.get("ELASTICSEARCH_ENABLED", "n"))
     # CONSOLE_LOG_LEVEL = logging.getLevelName(
     #     os.environ.get("CONSOLE_LOG_LEVEL", "INFO")
     # )
