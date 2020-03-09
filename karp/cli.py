@@ -2,7 +2,11 @@ import logging
 import time
 import click
 import pickle
+
 from flask.cli import FlaskGroup  # pyre-ignore
+import dotenv
+
+dotenv.load_dotenv(".env", verbose=True)
 
 from .config import MariaDBConfig
 from karp import resourcemgr
@@ -16,9 +20,6 @@ _logger = logging.getLogger("karp")
 
 
 def create_app():
-    import dotenv
-
-    dotenv.load_dotenv(".env", verbose=True)
 
     from karp import create_app
 
