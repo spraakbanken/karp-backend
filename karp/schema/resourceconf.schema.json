@@ -8,23 +8,46 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "type": { "type": "string" },
-        "required": { "type": "boolean" },
-        "collection": { "type": "boolean" },
-        "fields": { "$ref": "#/properties/fields" },
+        "type": {
+          "type": "string"
+        },
+        "skip_raw": {
+          "type": "boolean"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "collection": {
+          "type": "boolean"
+        },
+        "fields": {
+          "$ref": "#/properties/fields"
+        },
         "ref": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "resource_id": { "type": "string" },
-            "resource_version": { "type": "integer" },
-            "field": { "$ref": "#/definitions/aField" }
+            "resource_id": {
+              "type": "string"
+            },
+            "resource_version": {
+              "type": "integer"
+            },
+            "field": {
+              "$ref": "#/definitions/aField"
+            }
           }
         },
-        "virtual": { "type": "boolean" },
-        "function": { "$ref": "#/definitions/function" }
+        "virtual": {
+          "type": "boolean"
+        },
+        "function": {
+          "$ref": "#/definitions/function"
+        }
       },
-      "required": ["type"]
+      "required": [
+        "type"
+      ]
     },
     "function": {
       "type": "object",
@@ -34,11 +57,21 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "resource_id": { "type": "string" },
-            "resource_version": { "type": "integer" },
-            "field": { "type": "string" },
-            "result": { "$ref": "#/definitions/aField" },
-            "test": { "type": "object" }
+            "resource_id": {
+              "type": "string"
+            },
+            "resource_version": {
+              "type": "integer"
+            },
+            "field": {
+              "type": "string"
+            },
+            "result": {
+              "$ref": "#/definitions/aField"
+            },
+            "test": {
+              "type": "object"
+            }
           }
         }
       }
@@ -108,5 +141,10 @@
       }
     }
   },
-  "required": ["resource_id", "resource_name", "fields", "sort"]
+  "required": [
+    "resource_id",
+    "resource_name",
+    "fields",
+    "sort"
+  ]
 }
