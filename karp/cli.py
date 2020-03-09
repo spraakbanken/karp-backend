@@ -16,6 +16,10 @@ _logger = logging.getLogger("karp")
 
 
 def create_app():
+    import dotenv
+
+    dotenv.load_dotenv(".env", verbose=True)
+
     from karp import create_app
 
     return create_app(MariaDBConfig())
