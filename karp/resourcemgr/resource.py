@@ -28,7 +28,7 @@ class Resource(object):
         return "ResourceConfig(config={})".format(json.dumps(self.config))
 
     def default_sort(self) -> str:
-        return ""
+        return self.config["sort"]
 
     def get_fields(self) -> List[str]:
         return []

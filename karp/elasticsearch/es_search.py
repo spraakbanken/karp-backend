@@ -659,7 +659,8 @@ class EsSearch(search.SearchInterface):
                 s.aggs.bucket(
                     "distribution", "terms", field="_index", size=len(query.resources)
                 )
-
+            if query.sort:
+                s = s.sort(*query.sort)
             logger.debug("s = {}".format(s.to_dict()))
             response = s.execute()
 
