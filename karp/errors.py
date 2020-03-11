@@ -22,6 +22,7 @@ class ClientErrorCodes:
     SEARCH_GENERAL_ERROR = 80
     SEARCH_INCOMPLETE_QUERY = 81
     SEARCH_UNSUPPORTED_QUERY = 82
+    SEARCH_UNSUPPORTED_FIELD = 83
 
 
 class KarpError(Exception):
@@ -109,3 +110,4 @@ class PluginNotFoundError(KarpError):
             ),
             ClientErrorCodes.PLUGIN_DOES_NOT_EXIT,
         )
+
