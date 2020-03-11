@@ -34,7 +34,7 @@ else
 endif
 
 help:
-	echo "Available commands:"
+	@echo "Available commands:"
 
 venv: ${VENV_NAME}/venv.created
 
