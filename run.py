@@ -1,9 +1,5 @@
 import os
 import sys
-from gevent import monkey
-
-monkey.patch_all()
-from gevent.pywsgi import WSGIServer
 
 from dotenv import load_dotenv
 
@@ -34,13 +30,9 @@ application = create_app(MariaDBConfig(USER, PASSWD, DBHOST, DBNAME, True))
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        try:
-            PORT = int(sys.argv[1])
-            WSGIServer(("0.0.0.0", PORT), application).serve_forever()
-        except ValueError:
-            if sys.argv[1].lower() == "dev":
-                application.run(debug=True)
-            else:
-                usage()
+        if sys.argv[1].lower() == "dev":
+            application.run(debug=True)
+        else:
+            usage()
     else:
         usage()
