@@ -63,7 +63,7 @@ class Query:
         if not self.sort:
             for resource_id in self.resources:
                 resource = resourcemgr.get_resource(resource_id)
-                self.sort.append(resource.default_sort())
+                self.sort.extend(resource.default_sort())
         self.ast = query_dsl.parse(self.q)
         self._update_ast()
 
