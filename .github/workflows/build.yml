@@ -72,7 +72,7 @@ jobs:
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
-          make lint-syntax-error
+          make lint-syntax-errors
       - name: Lint with pylint
         run: make lint-no-fail
       - name: Test with pytest
