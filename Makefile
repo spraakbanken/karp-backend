@@ -5,22 +5,27 @@ PYTHON = python3
 PLATFORM := ${shell uname -o}
 INVENV_PATH = ${shell which invenv}
 
+
+
 ifeq (${VIRTUAL_ENV},)
   VENV_NAME = .venv
+  ${info invenv: ${INVENV_PATH}}
+  ifeq (${INVENV_PATH},)
+    INVENV = export VIRTUAL_ENV="${VENV_NAME}"; export PATH="${VENV_BIN}:${PATH}"; unset PYTHON_HOME;
+  else
+    INVENV = invenv -C ${VENV_NAME}
+  endif
 else
   VENV_NAME = ${VIRTUAL_ENV}
+  INVENV =
 endif
+
 ${info Platform: ${PLATFORM}}
-${info Using ${VENV_NAME}}
-${info invenv: ${INVENV_PATH}}
+${info Using virtual environment: ${VENV_NAME}}
 
 VENV_BIN = ${VENV_NAME}/bin
 
-ifeq (${INVENV_PATH},)
-  INVENV = export VIRTUAL_ENV="${VENV_NAME}"; export PATH="${VENV_BIN}:${PATH}"; unset PYTHON_HOME;
-else
-  INVENV = invenv -C ${VENV_NAME}
-endif
+
 
 ifeq (${PLATFORM}, Android)
   FLAKE8_FLAGS = --jobs=1
