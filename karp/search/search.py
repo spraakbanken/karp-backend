@@ -36,7 +36,7 @@ class Query:
     format_query = None
     q = None
     resources = []
-    sort = ""
+    sort = []
 
     def __init__(self):
         # Load field_translations here?
@@ -59,7 +59,7 @@ class Query:
         self.format = arg_get(args, "format")
         self.format_query = arg_get(args, "format_query")
         self.q = arg_get(args, "q")
-        self.sort = arg_get(args, "sort")
+        self.sort = arg_get(args, "sort", util_convert.str2list(","))
 
         self.ast = query_dsl.parse(self.q)
         self._update_ast()
