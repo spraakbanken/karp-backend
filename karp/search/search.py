@@ -34,9 +34,9 @@ class Query:
     fields = []
     format = None
     format_query = None
-    q = None
+    q: Optional[str] = None
     resources = []
-    sort = []
+    sort: List[str] = []
 
     def __init__(self):
         # Load field_translations here?
@@ -58,9 +58,12 @@ class Query:
         self.fields = []
         self.format = arg_get(args, "format")
         self.format_query = arg_get(args, "format_query")
-        self.q = arg_get(args, "q")
-        self.sort = arg_get(args, "sort", util_convert.str2list(","))
-
+        self.q = arg_get(args, "q") or ""
+        self.sort = arg_get(args, "sort", util_convert.str2list(",")) or []
+        if not self.sort:
+            for resource_id in self.resources:
+                resource = resourcemgr.get_resource(resource_id)
+                self.sort.append(resource.default_sort())
         self.ast = query_dsl.parse(self.q)
         self._update_ast()
 
