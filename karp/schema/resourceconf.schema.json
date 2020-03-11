@@ -99,7 +99,17 @@
     },
     "sort": {
       "description": "Default sorting order for the resource",
-      "type": "string"
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
     },
     "protected": {
       "description": "Settings for the permissions of the lexica",
