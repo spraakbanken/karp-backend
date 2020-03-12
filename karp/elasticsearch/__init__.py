@@ -15,6 +15,6 @@ def init_es(host):
         sniff_timeout=10,
     )
     index_module = EsIndex(es)
-    search_module = EsSearch(es)
+    search_module = EsSearch(es, index_module)
     search.init(search_module)
     indexer.init(index_module)

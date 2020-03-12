@@ -1,6 +1,10 @@
-import elasticsearch.helpers  # pyre-ignore
 from datetime import datetime
+
+import elasticsearch.helpers  # pyre-ignore
+
 from karp.indexmgr.index import IndexInterface
+from karp.util.notifier import Notifier
+from .es_observer import OnPublish
 
 
 def _create_es_mapping(config):
@@ -57,6 +61,13 @@ def _create_es_mapping(config):
 class EsIndex(IndexInterface):
     def __init__(self, es):
         self.es = es
+        self.publish_notifier = Notifier()
+
+    def register_publish_observer(self, on_publish: OnPublish):
+        self.publish_notifier.register(on_publish)
+
+    def unregister_publish_observer(self, on_publish: OnPublish):
+        self.publish_notifier.unregister(on_publish)
 
     def create_index(self, resource_id, config):
         mapping = _create_es_mapping(config)
@@ -89,6 +100,7 @@ class EsIndex(IndexInterface):
             self.es.indices.delete_alias(name=alias_name, index="*")
 
         self.es.indices.put_alias(name=alias_name, index=index_name)
+        self.publish_notifier.notify(alias_name=alias_name, index_name=index_name)
 
     def add_entries(self, resource_id, entries):
         index_to_es = []

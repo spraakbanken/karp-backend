@@ -12,6 +12,8 @@ from karp.query_dsl import basic_ast as ast, op, is_a
 # from karp import query_dsl
 from karp import search
 from karp.search.errors import IncompleteQuery, UnsupportedQuery, UnsupportedField
+from .index import EsIndex
+from .es_observer import OnPublish
 
 
 logger = logging.getLogger("karp")
@@ -538,11 +540,37 @@ def create_es_query(node: ast.Node):
 
 
 class EsSearch(search.SearchInterface):
-    def __init__(self, es: elasticsearch.Elasticsearch):
+    class UpdateFieldsOnPublish(OnPublish):
+        def __init__(self, outer):
+            self.outer = outer
+
+        def update(self, *, alias_name: str, index_name: str, **kwargs):
+            self.outer.on_publish_resource(alias_name, index_name)
+
+    def __init__(self, es: elasticsearch.Elasticsearch, es_index: EsIndex):
         self.es: elasticsearch.Elasticsearch = es
         analyzed_fields, sortable_fields = self._init_field_mapping()
         self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
         self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
+        self.update_fields_on_publish = EsSearch.UpdateFieldsOnPublish(self)
+        es_index.register_publish_observer(self.update_fields_on_publish)
+
+    @staticmethod
+    def get_analyzed_fields_from_mapping(
+        properties: Dict[str, Dict[str, Dict[str, Any]]]
+    ) -> List[str]:
+        analyzed_fields = []
+
+        for prop_name, prop_values in properties.items():
+            if "properties" in prop_values:
+                res = EsSearch.get_analyzed_fields_from_mapping(
+                    prop_values["properties"]
+                )
+                analyzed_fields.extend([prop_name + "." + prop for prop in res])
+            else:
+                if prop_values["type"] == "text":
+                    analyzed_fields.append(prop_name)
+        return analyzed_fields
 
     def _init_field_mapping(
         self,
@@ -552,20 +580,6 @@ class EsSearch(search.SearchInterface):
         currently the only information we need is if a field is analyzed (i.e. text)
         or not.
         """
-
-        def parse_mapping(
-            properties: Dict[str, Dict[str, Union[str, Dict[str, Any]]]]
-        ) -> List[str]:
-            analyzed_fields = []
-
-            for prop_name, prop_values in properties.items():
-                if "properties" in prop_values:
-                    res = parse_mapping(prop_values["properties"])
-                    analyzed_fields.extend([prop_name + "." + prop for prop in res])
-                else:
-                    if prop_values["type"] == "text":
-                        analyzed_fields.append(prop_name)
-            return analyzed_fields
 
         field_mapping: Dict[str, List[str]] = {}
         sortable_fields = {}
@@ -586,13 +600,23 @@ class EsSearch(search.SearchInterface):
                 and "entry" in mapping[index]["mappings"]
                 and "properties" in mapping[index]["mappings"]["entry"]
             ):
-                field_mapping[alias] = parse_mapping(
+                field_mapping[alias] = EsSearch.get_analyzed_fields_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
-                sortable_fields[alias] = create_sortable_map(
+                sortable_fields[alias] = EsSearch.create_sortable_map_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
         return field_mapping, sortable_fields
+
+    def _get_index_mappings(
+        self, index: Optional[str] = None
+    ) -> Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]]:
+        if index is not None:
+            kwargs = {"index": index}
+        else:
+            kwargs = {}
+
+        return self.es.indices.get_mapping(**kwargs)
 
     def _get_all_aliases(self) -> List[Tuple[str, str]]:
         """
@@ -758,36 +782,61 @@ class EsSearch(search.SearchInterface):
             result.append({"value": bucket["key"], "count": bucket["doc_count"]})
         return result
 
+    def on_publish_resource(self, alias_name: str, index_name: str):
+        mapping = self._get_index_mappings(index=index_name)
+        if (
+            "mappings" in mapping[index_name]
+            and "entry" in mapping[index_name]["mappings"]
+            and "properties" in mapping[index_name]["mappings"]["entry"]
+        ):
+            self.analyzed_fields[
+                alias_name
+            ] = EsSearch.get_analyzed_fields_from_mapping(
+                mapping[index_name]["mappings"]["entry"]["properties"]
+            )
+            self.sortable_fields[
+                alias_name
+            ] = EsSearch.create_sortable_map_from_mapping(
+                mapping[index_name]["mappings"]["entry"]["properties"]
+            )
 
-def create_sortable_map(properties: Dict) -> Dict[str, List[str]]:
-    sortable_map = {}
+    @staticmethod
+    def create_sortable_map_from_mapping(properties: Dict) -> Dict[str, List[str]]:
+        sortable_map = {}
 
-    def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):
-        if "properties" in prop_value:
-            for ext_name, ext_value in prop_value["properties"].items():
-                ext_base_name = f"{base_name}.{ext_name}"
-                parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
-            return
-        if prop_value["type"] in ["boolean", "date", "double", "keyword", "long", "ip"]:
-            sort_map[base_name] = [prop_name]
-            sort_map[prop_name] = [prop_name]
-            return
-        if prop_value["type"] == "text":
-            if "fields" in prop_value:
-                for ext_name, ext_value in prop_value["fields"].items():
-                    parse_prop_value(
-                        sort_map, base_name, f"{base_name}.{ext_name}", ext_value
-                    )
-            return
+        def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):
+            if "properties" in prop_value:
+                for ext_name, ext_value in prop_value["properties"].items():
+                    ext_base_name = f"{base_name}.{ext_name}"
+                    parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
+                return
+            if prop_value["type"] in [
+                "boolean",
+                "date",
+                "double",
+                "keyword",
+                "long",
+                "ip",
+            ]:
+                sort_map[base_name] = [prop_name]
+                sort_map[prop_name] = [prop_name]
+                return
+            if prop_value["type"] == "text":
+                if "fields" in prop_value:
+                    for ext_name, ext_value in prop_value["fields"].items():
+                        parse_prop_value(
+                            sort_map, base_name, f"{base_name}.{ext_name}", ext_value
+                        )
+                return
 
-    for prop_name, prop_value in properties.items():
-        parse_prop_value(sortable_map, prop_name, prop_name, prop_value)
-        # if prop_value["type"] in ["boolean", "date", "double", "keyword", "long", "ip"]:
-        #     sortable_map[prop_name] = prop_name
-        # if prop_value["type"] == "text":
-        #     if "fields" in prop_value:
+        for prop_name, prop_value in properties.items():
+            parse_prop_value(sortable_map, prop_name, prop_name, prop_value)
+            # if prop_value["type"] in ["boolean", "date", "double", "keyword", "long", "ip"]:
+            #     sortable_map[prop_name] = prop_name
+            # if prop_value["type"] == "text":
+            #     if "fields" in prop_value:
 
-    return sortable_map
+        return sortable_map
 
 
 # def parse_sortable_fields(properties: Dict[str, Any]) -> Dict[str, List[str]]:
