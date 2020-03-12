@@ -3,7 +3,7 @@ from karp.resourcemgr.entrymetadata import EntryMetadata
 
 
 class IndexInterface:
-    def create_index(self, resource_id: str, config: Dict):
+    def create_index(self, resource_id: str, config: Dict) -> str:
         raise NotImplementedError()
 
     def publish_index(self, alias_name: str, index_name: str):
