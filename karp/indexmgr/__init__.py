@@ -17,7 +17,9 @@ indexer = IndexModule()
 _logger = logging.getLogger("karp")
 
 
-def pre_process_resource(resource_obj: Resource):
+def pre_process_resource(
+    resource_obj: Resource,
+) -> List[Tuple[str, EntryMetadata, Dict]]:
     metadata = resourcemgr.get_all_metadata(resource_obj)
     fields = resource_obj.config["fields"].items()
     entries = resource_obj.model.query.filter_by(deleted=False)
@@ -34,7 +36,7 @@ def pre_process_resource(resource_obj: Resource):
 def reindex(
     resource_id: str,
     version: Optional[int] = None,
-    search_entries: List[Tuple[str, int, Dict]] = (),
+    search_entries: Optional[List[Tuple[str, EntryMetadata, Dict]]] = None,
 ) -> None:
     """
     If `search_entries` is not given, they will be fetched from DB and processed using `transform_to_index_entry`

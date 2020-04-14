@@ -1,18 +1,18 @@
 import json
 
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from karp.database import ResourceDefinition
 
 
-class Resource(object):
+class Resource:
     def __init__(
         self,
         model,
         history_model,
         resource_def: ResourceDefinition,
         version: int,
-        config: Dict = None,
+        config: Optional[Dict] = None,
     ) -> None:
         self.model = model
         self.history_model = history_model
@@ -27,8 +27,11 @@ class Resource(object):
     def __repr__(self):
         return "ResourceConfig(config={})".format(json.dumps(self.config))
 
-    def default_sort(self) -> str:
-        return self.config["sort"]
+    def default_sort(self) -> List[str]:
+        default_sort = self.config["sort"]
+        if isinstance(default_sort, list):
+            return default_sort
+        return [default_sort]
 
     def get_fields(self) -> List[str]:
         return []

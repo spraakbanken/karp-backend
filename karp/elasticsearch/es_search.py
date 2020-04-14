@@ -1,15 +1,19 @@
 import logging
 import re
 import json
+
+import elasticsearch
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 from karp.query_dsl import basic_ast as ast, op, is_a
 
 # from karp import query_dsl
 from karp import search
-from karp.search.errors import IncompleteQuery, UnsupportedQuery
+from karp.search.errors import IncompleteQuery, UnsupportedQuery, UnsupportedField
+from .index import EsIndex
+from .es_observer import OnPublish
 
 
 logger = logging.getLogger("karp")
@@ -19,9 +23,9 @@ class EsQuery(search.Query):
     def __init__(self):
         super().__init__()
         self.query = None
-        self.resource_str = None
+        self.resource_str: Optional[str] = None
 
-    def parse_arguments(self, args, resource_str):
+    def parse_arguments(self, args, resource_str: str):
         super().parse_arguments(args, resource_str)
         self.resource_str = resource_str
         if not self.ast.is_empty():
@@ -536,30 +540,49 @@ def create_es_query(node: ast.Node):
 
 
 class EsSearch(search.SearchInterface):
-    def __init__(self, es):
-        self.es = es
-        self.analyzed_fields = self._init_field_mapping()
+    class UpdateFieldsOnPublish(OnPublish):
+        def __init__(self, outer):
+            self.outer = outer
 
-    def _init_field_mapping(self):
+        def update(self, *, alias_name: str, index_name: str, **kwargs):
+            self.outer.on_publish_resource(alias_name, index_name)
+
+    def __init__(self, es: elasticsearch.Elasticsearch, es_index: EsIndex):
+        self.es: elasticsearch.Elasticsearch = es
+        analyzed_fields, sortable_fields = self._init_field_mapping()
+        self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
+        self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
+        self.update_fields_on_publish = EsSearch.UpdateFieldsOnPublish(self)
+        es_index.register_publish_observer(self.update_fields_on_publish)
+
+    @staticmethod
+    def get_analyzed_fields_from_mapping(
+        properties: Dict[str, Dict[str, Dict[str, Any]]]
+    ) -> List[str]:
+        analyzed_fields = []
+
+        for prop_name, prop_values in properties.items():
+            if "properties" in prop_values:
+                res = EsSearch.get_analyzed_fields_from_mapping(
+                    prop_values["properties"]
+                )
+                analyzed_fields.extend([prop_name + "." + prop for prop in res])
+            else:
+                if prop_values["type"] == "text":
+                    analyzed_fields.append(prop_name)
+        return analyzed_fields
+
+    def _init_field_mapping(
+        self,
+    ) -> Tuple[Dict[str, List[str]], Dict[str, Dict[str, List[str]]]]:
         """
         Create a field mapping based on the mappings of elasticsearch
         currently the only information we need is if a field is analyzed (i.e. text)
         or not.
         """
 
-        def parse_mapping(properties):
-            analyzed_fields = []
-            for prop_name, prop_values in properties.items():
-                if "properties" in prop_values:
-                    res = parse_mapping(prop_values["properties"])
-                    analyzed_fields.extend([prop_name + "." + prop for prop in res])
-                else:
-                    if prop_values["type"] == "text":
-                        analyzed_fields.append(prop_name)
-            return analyzed_fields
-
-        field_mapping = {}
-
+        field_mapping: Dict[str, List[str]] = {}
+        sortable_fields = {}
         # Doesn't work for tests, can't find resource_definition
         # for resource in resourcemgr.get_available_resources():
         #     mapping = self.es.indices.get_mapping(index=resource.resource_id)
@@ -567,25 +590,43 @@ class EsSearch(search.SearchInterface):
         #         next(iter(mapping.values()))['mappings']['entry']['properties']
         #     )
         aliases = self._get_all_aliases()
-        mapping = self.es.indices.get_mapping()
+        mapping: Dict[
+            str, Dict[str, Dict[str, Dict[str, Dict]]]
+        ] = self.es.indices.get_mapping()
+        # print(f"mapping = {mapping}")
         for (alias, index) in aliases:
             if (
                 "mappings" in mapping[index]
                 and "entry" in mapping[index]["mappings"]
                 and "properties" in mapping[index]["mappings"]["entry"]
             ):
-                field_mapping[alias] = parse_mapping(
+                field_mapping[alias] = EsSearch.get_analyzed_fields_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
-        return field_mapping
+                sortable_fields[alias] = EsSearch.create_sortable_map_from_mapping(
+                    mapping[index]["mappings"]["entry"]["properties"]
+                )
+        return field_mapping, sortable_fields
 
-    def _get_all_aliases(self):
+    def _get_index_mappings(
+        self, index: Optional[str] = None
+    ) -> Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]]:
+        if index is not None:
+            kwargs = {"index": index}
+        else:
+            kwargs = {}
+
+        return self.es.indices.get_mapping(**kwargs)
+
+    def _get_all_aliases(self) -> List[Tuple[str, str]]:
         """
         :return: a list of tuples (alias_name, index_name)
         """
         result = self.es.cat.aliases(h="alias,index")
+        print(f"{result}")
         index_names = []
         for index_name in result.split("\n")[:-1]:
+            print(f"index_name = {index_name}")
             if index_name[0] != ".":
                 groups = re.search(r"([^ ]*) +(.*)", index_name).groups()
                 alias = groups[0]
@@ -660,7 +701,7 @@ class EsSearch(search.SearchInterface):
                     "distribution", "terms", field="_index", size=len(query.resources)
                 )
             if query.sort:
-                s = s.sort(*query.sort)
+                s = s.sort(*self.translate_sort_fields(query.resources, query.sort))
             logger.debug("s = {}".format(s.to_dict()))
             response = s.execute()
 
@@ -676,6 +717,34 @@ class EsSearch(search.SearchInterface):
                     result["distribution"][key.rsplit("_", 1)[0]] = value
 
             return result
+
+    def translate_sort_fields(
+        self, resources: List[str], sort_values: List[str]
+    ) -> List[str]:
+        """Translate sort field to ES sort fields.
+
+        Arguments:
+            sort_values {List[str]} -- values to sort by
+
+        Returns:
+            List[str] -- values that ES can sort by.
+        """
+        translated_sort_fields: Set[str] = set()
+        for sort_value in sort_values:
+            for resource_id in resources:
+                translated_sort_fields.update(
+                    self.translate_sort_field(resource_id, sort_value)
+                )
+
+        return list(translated_sort_fields)
+
+    def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
+        if sort_value in self.sortable_fields[resource_id]:
+            return self.sortable_fields[resource_id][sort_value]
+        else:
+            raise UnsupportedField(
+                f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
+            )
 
     def search_ids(self, args, resource_id: str, entry_ids: str):
         logger.info(
@@ -712,3 +781,65 @@ class EsSearch(search.SearchInterface):
         for bucket in response.aggregations.field_values.buckets:
             result.append({"value": bucket["key"], "count": bucket["doc_count"]})
         return result
+
+    def on_publish_resource(self, alias_name: str, index_name: str):
+        mapping = self._get_index_mappings(index=index_name)
+        if (
+            "mappings" in mapping[index_name]
+            and "entry" in mapping[index_name]["mappings"]
+            and "properties" in mapping[index_name]["mappings"]["entry"]
+        ):
+            self.analyzed_fields[
+                alias_name
+            ] = EsSearch.get_analyzed_fields_from_mapping(
+                mapping[index_name]["mappings"]["entry"]["properties"]
+            )
+            self.sortable_fields[
+                alias_name
+            ] = EsSearch.create_sortable_map_from_mapping(
+                mapping[index_name]["mappings"]["entry"]["properties"]
+            )
+
+    @staticmethod
+    def create_sortable_map_from_mapping(properties: Dict) -> Dict[str, List[str]]:
+        sortable_map = {}
+
+        def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):
+            if "properties" in prop_value:
+                for ext_name, ext_value in prop_value["properties"].items():
+                    ext_base_name = f"{base_name}.{ext_name}"
+                    parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
+                return
+            if prop_value["type"] in [
+                "boolean",
+                "date",
+                "double",
+                "keyword",
+                "long",
+                "ip",
+            ]:
+                sort_map[base_name] = [prop_name]
+                sort_map[prop_name] = [prop_name]
+                return
+            if prop_value["type"] == "text":
+                if "fields" in prop_value:
+                    for ext_name, ext_value in prop_value["fields"].items():
+                        parse_prop_value(
+                            sort_map, base_name, f"{base_name}.{ext_name}", ext_value
+                        )
+                return
+
+        for prop_name, prop_value in properties.items():
+            parse_prop_value(sortable_map, prop_name, prop_name, prop_value)
+            # if prop_value["type"] in ["boolean", "date", "double", "keyword", "long", "ip"]:
+            #     sortable_map[prop_name] = prop_name
+            # if prop_value["type"] == "text":
+            #     if "fields" in prop_value:
+
+        return sortable_map
+
+
+# def parse_sortable_fields(properties: Dict[str, Any]) -> Dict[str, List[str]]:
+#     for prop_name, prop_value in properties.items():
+#         if prop_value["type"] in ["boolean", "date", "double", "keyword", "long", "ip"]:
+#             return [prop_name]

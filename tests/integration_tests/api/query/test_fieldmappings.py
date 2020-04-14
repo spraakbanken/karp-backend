@@ -221,7 +221,7 @@ from tests.utils import get_json
 def test_build_query_field_mapping(
     client_with_entries_scope_session, resources, query, expected
 ):
-    args = {}
+    args = {"sort": "shut up"}
     if query:
         args["q"] = query
     q = search.build_query(args, resources)

@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 
 from .basic_ast import Ast
 from .errors import ParseError, SyntaxError
@@ -272,7 +272,7 @@ _lexer = KarpTNGLexer()
 _parser = KarpTNGParser()
 
 
-def parse(s: str) -> Ast:
+def parse(s: Optional[str]) -> Ast:
     if not s:
         return Ast()
     return Ast(_parser.parse(_lexer.tokenize(s)))
