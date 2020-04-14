@@ -1,7 +1,7 @@
 openapi: 3.0.2
 info:
   title: Karp API
-  version: 0.7.1
+  version: 0.8.0
   description: |
     Karp TNG
 
