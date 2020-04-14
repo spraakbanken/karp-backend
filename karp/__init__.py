@@ -5,6 +5,7 @@ import logging
 from flask import Flask  # pyre-ignore
 from flask_cors import CORS  # pyre-ignore
 from flask import request  # pyre-ignore
+import flask_reverse_proxy
 import werkzeug.exceptions
 
 from karp.errors import KarpError
@@ -106,6 +107,7 @@ def create_app(config_class=None):
 
     CORS(app)
 
+    app.wsgi_app = flask_reverse_proxy.ReverseProxied(app.wsgi_app)
     return app
 
 
