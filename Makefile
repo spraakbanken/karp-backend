@@ -101,13 +101,13 @@ docs/openapi.html: doc/karp_api_spec.yaml
 	touch $@
 
 bumpversion-patch: install-dev
-	${INVENV} bumpversion patch
+	${INVENV} bump2version patch
 
 bumpversion-minor: install-dev
-	${INVENV} bumpversion minor
+	${INVENV} bump2version minor
 
 bumpversion-major: install-dev
-	${INVENV} bumpversion major
+	${INVENV} bump2version major
 
 mkrelease-patch: bumpversion-patch prepare-release docs/openapi.html
 mkrelease-minor: bumpversion-minor prepare-release docs/openapi.html
