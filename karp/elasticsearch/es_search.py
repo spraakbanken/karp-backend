@@ -675,6 +675,14 @@ class EsSearch(search.SearchInterface):
                 if query.query is not None:
                     s = s.query(query.query)
                 s = s[query.from_ : query.from_ + query.size]
+                if query.sort:
+                    s = s.sort(*self.translate_sort_fields([resource], query.sort))
+                elif resource in query.sort_dict:
+                    s = s.sort(
+                        *self.translate_sort_fields(
+                            [resource], query.sort_dict[resource]
+                        )
+                    )
                 ms = ms.add(s)
 
             responses = ms.execute()
