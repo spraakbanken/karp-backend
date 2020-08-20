@@ -704,7 +704,7 @@ class EsSearch(search.SearchInterface):
                 s = s.sort(*self.translate_sort_fields(query.resources, query.sort))
             elif query.sort_dict:
                 for resource, sort in query.sort_dict.items():
-                    s = s.sort(*self.translate_sort_fields(resource, sort))
+                    s = s.sort(*self.translate_sort_fields([resource], sort))
             logger.debug("s = {}".format(s.to_dict()))
             response = s.execute()
 
