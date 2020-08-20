@@ -59,8 +59,8 @@ class Query:
         self.format = arg_get(args, "format")
         self.format_query = arg_get(args, "format_query")
         self.q = arg_get(args, "q") or ""
-        self.sort = arg_get(args, "sort", util_convert.str2list(",")) or []
-        self.sort_dict = {}
+        self.sort: List[str] = arg_get(args, "sort", util_convert.str2list(",")) or []
+        self.sort_dict: Dict[str, List[str]] = {}
         if not self.sort:
             if len(self.resources) == 1:
                 self.sort = resourcemgr.get_resource(self.resources[0]).default_sort()
