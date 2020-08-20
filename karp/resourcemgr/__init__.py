@@ -350,7 +350,7 @@ def get_refs(resource_id, version=None):
 
     all_other_resources = [
         resource_def
-        for resource_def in get_all_resources()
+        for resource_def in get_available_resources()
         if resource_def.resource_id != resource_id or resource_def.version != version
     ]
 
