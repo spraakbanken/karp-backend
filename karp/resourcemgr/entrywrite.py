@@ -92,15 +92,7 @@ def update_entry(
     kwargs = _src_entry_to_db_kwargs(
         entry, db_entry_json, resource.model, resource.config
     )
-    if resource.active and kwargs["entry_id"] != current_db_entry.entry_id:
-        _logger.debug(
-            "kwargs.entry_id = %s (%s), current_db_entry.entry_id = %s (%s). Equal? %s",
-            kwargs["entry_id"],
-            type(kwargs["entry_id"]),
-            current_db_entry.entry_id,
-            type(current_db_entry.entry_id),
-            kwargs["entry_id"] != current_db_entry.entry_id,
-        )
+    if resource.active and str(kwargs["entry_id"]) != current_db_entry.entry_id:
         indexmgr.delete_entry(resource_id, current_db_entry.entry_id)
     for key, value in kwargs.items():
         setattr(current_db_entry, key, value)
