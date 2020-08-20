@@ -60,10 +60,15 @@ class Query:
         self.format_query = arg_get(args, "format_query")
         self.q = arg_get(args, "q") or ""
         self.sort = arg_get(args, "sort", util_convert.str2list(",")) or []
+        self.sort_dict = {}
         if not self.sort:
-            for resource_id in self.resources:
-                resource = resourcemgr.get_resource(resource_id)
-                self.sort.extend(resource.default_sort())
+            if len(self.resources) == 1:
+                self.sort = resourcemgr.get_resource(self.resources[0]).default_sort()
+            else:
+                for resource_id in self.resources:
+                    self.sort_dict[resource_id] = resourcemgr.get_resource(
+                        resource_id
+                    ).default_sort()
         self.ast = query_dsl.parse(self.q)
         self._update_ast()
 
