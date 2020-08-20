@@ -93,6 +93,11 @@ def update_entry(
         entry, db_entry_json, resource.model, resource.config
     )
     if resource.active and kwargs["entry_id"] != current_db_entry.entry_id:
+        _logger.debug(
+            "kwargs.entry_id = %s, current_db_entry.entry_id = %s",
+            kwargs["entry_id"],
+            current_db_entry.entry_id,
+        )
         indexmgr.delete_entry(resource_id, current_db_entry.entry_id)
     for key, value in kwargs.items():
         setattr(current_db_entry, key, value)
