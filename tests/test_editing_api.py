@@ -214,6 +214,77 @@ def test_update_entry_id(es, client_with_data_f):
     assert 1 == len(entries["hits"])
 
 
+def test_update_via_get_doesnt_mess_up(es, client_with_data_f):
+    client = init(
+        client_with_data_f,
+        es,
+        [
+            {
+                "code": 1,
+                "name": "test1",
+                "population": 10,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            },
+            {
+                "code": 2,
+                "name": "test2",
+                "population": 5,
+                "larger_place": 1,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            },
+        ],
+    )
+
+    entries = get_json(client, "places/query")
+    assert len(entries["hits"]) == 2
+    entry_id = entries["hits"][0]["id"]
+    assert entry_id == "1"
+
+    response = client.get(
+        "places/%s/update" % entry_id,
+        data=json.dumps(
+            {
+                "entry": {
+                    "code": 4,
+                    "name": "test3",
+                    "population": 5,
+                    "area": 50000,
+                    "density": 5,
+                    "municipality": [2, 3],
+                },
+                "message": "changes",
+                "version": 1,
+            }
+        ),
+        content_type="application/json",
+    )
+    assert response.status_code == 400
+    # response_data = json.loads(response.data.decode())
+    # assert "newID" in response_data
+    # assert "4" == response_data["newID"]
+
+    # check that the old entry with old id has been removed
+    entries = get_json(client, "places/query")
+    assert 2 == len(entries["hits"])
+    # for val in entries["hits"]:
+    #     assert "entry" in val
+    #     entry = val["entry"]
+    #     print("entry = {}".format(entry))
+    #     if entry["code"] == 1:
+    #         assert "v_larger_place" not in entry
+    #         assert "larger_place" not in entry
+    #         assert "v_smaller_places" in entry
+    #         assert entry["v_smaller_places"][0]["code"] == 2
+    #     else:
+    #         assert entry["v_larger_place"]["code"] == 1
+    #         assert entry["v_larger_place"]["name"] == "test1"
+    #         assert "v_smaller_places" not in entry
+
+
 def test_refs(es, client_with_data_f):
     client = init(
         client_with_data_f,
