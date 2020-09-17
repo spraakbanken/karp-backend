@@ -3,8 +3,11 @@ from typing import List, Tuple
 
 import pytest
 
-from karp.elasticsearch import EsIndex, EsSearch
-from karp.elasticsearch.es_search import UnsupportedField
+from karp.infrastructure.elasticsearch6.es6_search_service import (
+    Es6SearchService,
+    UnsupportedField,
+    _create_es_mapping,
+)
 
 
 @pytest.fixture
@@ -185,7 +188,9 @@ def es_mock():
                         },
                         "lemma": {
                             "properties": {
-                                "DGP": {"type": "text",},
+                                "DGP": {
+                                    "type": "text",
+                                },
                                 "SMP": {
                                     "type": "text",
                                     "fields": {"raw": {"type": "keyword"}},
@@ -405,8 +410,8 @@ def es_mock():
 
 
 def test_create_empty(es_mock):
-    es_index_mock = mock.Mock(spec=EsIndex)
-    es_search = EsSearch(es_mock, es_index_mock)
+    es_index_mock = mock.Mock(spec=Es6SearchService)
+    es_search = Es6SearchService(es_mock, es_index_mock)
 
     assert "nordicon" in es_search.analyzed_fields
     assert "places" in es_search.analyzed_fields
@@ -417,7 +422,7 @@ def test_create_empty(es_mock):
 
 
 def test_translate_sort_fields(es_mock):
-    es_search = EsSearch(es_mock, mock.Mock())
+    es_search = Es6SearchService(es_mock, mock.Mock())
 
     result = es_search.translate_sort_fields(["places"], ["name"])
 
@@ -427,7 +432,7 @@ def test_translate_sort_fields(es_mock):
 
 
 def test_translate_sort_fields_raises(es_mock):
-    es_search = EsSearch(es_mock, mock.Mock())
+    es_search = Es6SearchService(es_mock, mock.Mock())
 
     with pytest.raises(UnsupportedField):
         es_search.translate_sort_fields(["places"], ["v_larger_place"])
@@ -508,7 +513,7 @@ def test_parse_mapping_empty(
     expected_mappings: List[Tuple[str, List[str]]],
     expected_non_mappings: List[str],
 ):
-    sortable_map = EsSearch.create_sortable_map_from_mapping(properties)
+    sortable_map = Es6SearchService.create_sortable_map_from_mapping(properties)
 
     for field, mapped_field in expected_mappings:
         assert field in sortable_map
@@ -516,3 +521,64 @@ def test_parse_mapping_empty(
 
     for non_field in expected_non_mappings:
         assert non_field not in sortable_map
+
+
+def test_create_es_mapping_empty():
+    config = {"fields": {}}
+    mapping = _create_es_mapping(config)
+
+    assert mapping == {"dynamic": False, "properties": {}}
+
+
+def test_create_es_mapping_string():
+    config = {"fields": {"test": {"type": "string"}}}
+    mapping = _create_es_mapping(config)
+
+    assert mapping == {
+        "dynamic": False,
+        "properties": {
+            "test": {"fields": {"raw": {"type": "keyword"}}, "type": "text"}
+        },
+    }
+
+
+def test_create_es_mapping_string_skip_raw():
+    config = {"fields": {"test": {"type": "string", "skip_raw": True}}}
+    mapping = _create_es_mapping(config)
+
+    assert mapping == {
+        "dynamic": False,
+        "properties": {"test": {"type": "text"}},
+    }
+
+
+def test_es_index_register_unregister_on_publish():
+    es_index = Es6SearchService(None)
+
+    on_publish = OnPublish()
+
+    es_index.register_publish_observer(on_publish)
+
+    assert on_publish in es_index.publish_notifier.observers
+
+    es_index.unregister_publish_observer(on_publish)
+
+    assert on_publish not in es_index.publish_notifier.observers
+
+
+def test_es_index_publish_notifies_observer():
+    es_mock = mock.Mock()
+    on_publish_mock = mock.Mock(spec=OnPublish)
+
+    es_index = Es6SearchService(es_mock)
+
+    es_index.register_publish_observer(on_publish_mock)
+
+    alias_name = "alias"
+    index_name = "index"
+
+    es_index.publish_index(alias_name, index_name)
+
+    assert on_publish_mock.mock_calls == [
+        mock.call.update(alias_name=alias_name, index_name=index_name)
+    ]

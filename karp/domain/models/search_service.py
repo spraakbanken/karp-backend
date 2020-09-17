@@ -1,10 +1,11 @@
-from typing import Optional, Callable, TypeVar, List, Dict
+from typing import Optional, Callable, TypeVar, List, Dict, Tuple
 
+from karp.resourcemgr.entrymetadata import EntryMetadata
 from karp.util import convert as util_convert
 
 from karp import query_dsl, resourcemgr
 
-from . import errors
+from karp.search import errors
 
 
 T = TypeVar("T", bool, int, str, List[str])
@@ -171,7 +172,33 @@ class Query:
         return "Query"
 
 
-class SearchInterface:
+class SearchService:
+    def create_index(self, resource_id: str, config: Dict) -> str:
+        raise NotImplementedError()
+
+    def publish_index(self, alias_name: str, index_name: str):
+        raise NotImplementedError()
+
+    def add_entries(
+        self, resource_id: str, entries: List[Tuple[str, EntryMetadata, Dict]]
+    ):
+        raise NotImplementedError()
+
+    def delete_entry(self, resource_id: str, entry_id: str):
+        raise NotImplementedError()
+
+    def create_empty_object(self):
+        raise NotImplementedError()
+
+    def assign_field(self, _index_entry, field_name: str, part):
+        raise NotImplementedError()
+
+    def create_empty_list(self):
+        raise NotImplementedError()
+
+    def add_to_list_field(self, elems: List, elem):
+        raise NotImplementedError()
+
     def build_query(self, args, resource_str: str) -> Query:
         query = Query()
         query.parse_arguments(args, resource_str)
@@ -185,23 +212,3 @@ class SearchInterface:
 
     def statistics(self, resource_id: str, field: str):
         raise NotImplementedError()
-
-
-# class KarpSearch(SearchInterface):
-#     def __init__(self):
-#         self.impl = SearchInterface()
-
-#     def init(self, impl: SearchInterface):
-#         self.impl = impl
-
-#     def build_query(self, args, resource_str: str) -> Query:
-#         return self.impl.build_query(args, resource_str)
-
-#     def search_with_query(self, query: Query):
-#         return self.impl.search_with_query(query)
-
-#     def search_ids(self, args, resource_id: str, entry_ids: str):
-#         return self.impl.search_ids(args, resource_id, entry_ids)
-
-#     def statistics(self, resource_id: str, field: str):
-#         return self.impl.statistics(resource_id, field)
