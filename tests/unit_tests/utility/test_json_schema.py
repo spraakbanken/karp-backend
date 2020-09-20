@@ -1,6 +1,6 @@
 # import json  # noqa: F401
 
-from karp.util.json_schema import create_entry_json_schema
+from karp.utility.json_schema import create_entry_json_schema
 
 CONFIG_PLACES = """{
   "resource_id": "places",
