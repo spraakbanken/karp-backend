@@ -1,17 +1,18 @@
-from typing import Tuple
+from karp.application import schemas
+from karp.application.context import Context
+from karp.domain.errors import RepositoryStatusError
+from karp.infrastructure.unit_of_work import unit_of_work
 
-from karp.database import db
 
-
-def check_database_status() -> Tuple[bool, str]:
-    is_database_working = True
-    output = "database is ok"
-
+def check_database_status(context: Context) -> schemas.SystemResponse:
+    print(f"context = {context!r}")
+    if context.resource_repo is None:
+        return schemas.SystemNotOk(message="No resource_repository is configured.")
     try:
         # to check database we will execute raw query
-        db.engine.execute("SELECT 1")
-    except Exception as e:
-        output = str(e)
-        is_database_working = False
+        with unit_of_work(using=context.resource_repo) as uw:
+            uw.check_status()
+    except RepositoryStatusError as e:
+        return schemas.SystemNotOk(message=str(e))
 
-    return is_database_working, output
+    return schemas.SystemOk()
