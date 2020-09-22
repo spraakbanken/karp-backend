@@ -51,7 +51,7 @@ ${VENV_NAME}/req.installed: deploy/requirements.txt
 	${INVENV} pip install -Ur $<
 	@touch $@
 
-${VENV_NAME}/req-dev.installed: setup.py setup.cfg tools/pip-requires
+${VENV_NAME}/req-dev.installed: setup.py setup.cfg requirements.txt
 	${INVENV} pip install -e .[dev]
 	@touch $@
 
@@ -76,7 +76,7 @@ test-w-coverage: install-dev clean-pyc
 test-log: install-dev clean-pyc lint-syntax-errors
 	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests > pytest.log
 
-prepare-release: venv setup.py tools/pip-requires setup.cfg
+prepare-release: venv setup.py requirements.txt setup.cfg
 	${INVENV} pip-compile --output-file=deploy/requirements.txt setup.py
 
 run-tests: lint type-check test
