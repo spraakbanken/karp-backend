@@ -15,3 +15,8 @@ flask-cors
 sb-json-tools>=0.5.2
 python-dotenv
 flask-reverse-proxy
+fastapi
+starlette
+pydantic
+sqlalchemy-utils
+sqlalchemy-json
