@@ -1,11 +1,21 @@
-def create_entry_json_schema(config):
+"""Utilities for working with json_schema."""
+from typing import Any, Dict
+
+
+def create_entry_json_schema(fields: Dict[str, Any]):
+    """Create json_schema from fields definition.
+
+    Args:
+        fields (Dict[str, Any]): the fields config to process
+
+    Returns:
+        Dict[str]: The json_schema to use.
+    """
     json_schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {},
     }
-
-    fields = config["fields"]
 
     def recursive_field(parent_schema, parent_field_name, parent_field_def):
         if parent_field_def.get("virtual", False):
