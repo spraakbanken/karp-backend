@@ -35,5 +35,5 @@ CONFIG_PLACES = """{
 
 
 def test_create_json_schema(json_schema_config):
-    json_schema = create_entry_json_schema(json_schema_config)
+    json_schema = create_entry_json_schema(json_schema_config["fields"])
     assert json_schema["type"] == "object"

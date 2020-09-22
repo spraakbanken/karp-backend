@@ -1,9 +1,23 @@
-from karp.auth.user import User
+import abc
+from enum import Enum
+from typing import List
+
+from karp.domain.models.user import User
 
 
-class Authenticator:
-    def authenticate(self, request):
+class PermissionLevel(str, Enum):
+    write = "write"
+    read = "read"
+    admin = "admin"
+
+
+class AuthService(abc.ABC):
+    @abc.abstractmethod
+    def authenticate(self, scheme: str, credentials: str) -> User:
         return User("dummy", {}, {})
 
-    def authorize(self, level, user, args):
+    @abc.abstractmethod
+    def authorize(
+        self, level: PermissionLevel, user: User, resource_ids: List[str]
+    ) -> bool:
         return True

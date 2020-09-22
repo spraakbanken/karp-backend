@@ -410,8 +410,7 @@ def es_mock():
 
 
 def test_create_empty(es_mock):
-    es_index_mock = mock.Mock(spec=Es6SearchService)
-    es_search = Es6SearchService(es_mock, es_index_mock)
+    es_search = Es6SearchService(es_mock)
 
     assert "nordicon" in es_search.analyzed_fields
     assert "places" in es_search.analyzed_fields
@@ -422,7 +421,7 @@ def test_create_empty(es_mock):
 
 
 def test_translate_sort_fields(es_mock):
-    es_search = Es6SearchService(es_mock, mock.Mock())
+    es_search = Es6SearchService(es_mock)
 
     result = es_search.translate_sort_fields(["places"], ["name"])
 
@@ -432,7 +431,7 @@ def test_translate_sort_fields(es_mock):
 
 
 def test_translate_sort_fields_raises(es_mock):
-    es_search = Es6SearchService(es_mock, mock.Mock())
+    es_search = Es6SearchService(es_mock)
 
     with pytest.raises(UnsupportedField):
         es_search.translate_sort_fields(["places"], ["v_larger_place"])
@@ -552,33 +551,3 @@ def test_create_es_mapping_string_skip_raw():
     }
 
 
-def test_es_index_register_unregister_on_publish():
-    es_index = Es6SearchService(None)
-
-    on_publish = OnPublish()
-
-    es_index.register_publish_observer(on_publish)
-
-    assert on_publish in es_index.publish_notifier.observers
-
-    es_index.unregister_publish_observer(on_publish)
-
-    assert on_publish not in es_index.publish_notifier.observers
-
-
-def test_es_index_publish_notifies_observer():
-    es_mock = mock.Mock()
-    on_publish_mock = mock.Mock(spec=OnPublish)
-
-    es_index = Es6SearchService(es_mock)
-
-    es_index.register_publish_observer(on_publish_mock)
-
-    alias_name = "alias"
-    index_name = "index"
-
-    es_index.publish_index(alias_name, index_name)
-
-    assert on_publish_mock.mock_calls == [
-        mock.call.update(alias_name=alias_name, index_name=index_name)
-    ]
