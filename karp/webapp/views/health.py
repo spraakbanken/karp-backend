@@ -4,17 +4,22 @@ Perform health checks on the server.
 Used to perform readiness and liveness probes on the server.
 """
 
-from flask import Blueprint, jsonify  # pyre-ignore
+from fastapi import APIRouter, Response, status
 
-from karp.system_monitor import check_database_status
+from karp.application import ctx, schemas
+from karp.application.services.system_monitor import check_database_status
 
-health_api = Blueprint("health_api", __name__)
+
+router = APIRouter()
 
 
-@health_api.route("/healthz", methods=["GET"])
-def perform_health_check():
-    status, msg = check_database_status()
-    if status:
-        return jsonify({"database": "ok"}), 200
-    else:
-        return jsonify({"database": msg}), 500
+@router.get("/healthz", response_model=schemas.SystemMonitorResponse)
+def perform_health_check(response: Response):
+    db_status = check_database_status(ctx)
+    if not db_status:
+        response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+    return {"database": db_status.message}
+
+
+def init_app(app):
+    app.include_router(router)
