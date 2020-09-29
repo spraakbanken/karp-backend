@@ -44,7 +44,7 @@ class SqlEntryRepository(
         #     history_model = create_history_entry_table(table_name)
         # history_model.create(bind=db.engine, checkfirst=True)
 
-        history_model = get_or_create_entry_history_model(table_name)
+        history_model = sql_models.get_or_create_entry_history_model(table_name)
 
         # runtime_table = db.get_table(runtime_table_name)
         # if runtime_table is None:
@@ -53,7 +53,7 @@ class SqlEntryRepository(
         #     )
 
         # runtime_table.create(bind=db.engine, checkfirst=True)
-        runtime_model = get_or_create_entry_runtime_model(
+        runtime_model = sql_models.get_or_create_entry_runtime_model(
             table_name, history_model, settings["config"]
         )
         return cls(
@@ -232,190 +232,12 @@ class SqlEntryRepositorySettings(EntryRepositorySettings):
 
 @create_entry_repository.register(SqlEntryRepositorySettings)
 def _(settings: SqlEntryRepositorySettings) -> SqlEntryRepository:
-    history_model = get_or_create_entry_history_model(settings.table_name)
+    history_model = sql_models.get_or_create_entry_history_model(settings.table_name)
 
-    #     mapped_class = db.map_class_to_some_table(
-    #         Entry,
-    #         history_model,
-    #         f"Entry_{table_name}",
-    #         properties={
-    #             "_id": table.c.id,
-    #             "_version": table.c.version,
-    #             "_entry_id": table.c.entry_id,
-    #             "_last_modified_by": table.c.user_id,
-    #             "_last_modified": table.c.timestamp,
-    #             "_body": table.c.body,
-    #             "_message": table.c.message,
-    #             "_op": table.c.op,
-    #         },
-    #     )
     runtime_table_name = f"runtime_{settings.table_name}"
 
-    runtime_model = get_or_create_entry_runtime_model(
+    runtime_model = sql_models.get_or_create_entry_runtime_model(
         runtime_table_name, history_model, settings.config
     )
     return SqlEntryRepository(history_model, runtime_model, settings.config)
 
-
-class_cache = {}
-
-
-def get_or_create_entry_history_model(resource_id: str) -> sql_models.BaseHistoryEntry:
-    table_name = create_history_table_name(resource_id)
-    if table_name in class_cache:
-        history_model = class_cache[table_name]
-        history_model.__table__.create(bind=db.engine, checkfirst=True)
-        return history_model
-
-    attributes = {
-        "__tablename__": table_name,
-        "__table_args__": None
-        # "mysql_character_set": "utf8mb4",
-    }
-
-    history_model = type(table_name, (db.Base, sql_models.BaseHistoryEntry), attributes)
-    history_model.__table__.create(bind=db.engine, checkfirst=True)
-    class_cache[table_name] = history_model
-    # table = db.Table(
-    #     table_name,
-    #     db.metadata,
-    #     db.Column("history_id", db.Integer, primary_key=True),
-    #     db.Column("id", db.UUIDType, nullable=False),
-    #     db.Column("entry_id", db.String(100), nullable=False),
-    #     db.Column("last_modified", db.Float, nullable=False),
-    #     db.Column("last_modified_by", db.Text, nullable=False),
-    #     db.Column("body", db.NestedMutableJson, nullable=False),
-    #     db.Column("status", db.Enum(EntryStatus), nullable=False),
-    #     db.Column("message", db.Text),
-    #     db.Column("op", db.Enum(EntryOp), nullable=False),
-    #     db.Column("discarded", db.Boolean, default=False),
-    #     db.UniqueConstraint(
-    #         "id", "last_modified", name="id_last_modified_unique_constraint"
-    #     ),
-    #     mysql_character_set="utf8mb4",
-    # )
-
-    # db.mapper(
-    #     Entry if not _use_aliased else db.aliased(Entry),
-    #     table,
-    #     properties={
-    #         "_id": table.c.id,
-    #         "_version": table.c.version,
-    #         "_entry_id": table.c.entry_id,
-    #         "_last_modified_by": table.c.user_id,
-    #         "_last_modified": table.c.timestamp,
-    #         "_body": table.c.body,
-    #         "_message": table.c.message,
-    #         "_op": table.c.op,
-    #     },
-    #     # non_primary=_non_primary,
-    # )
-    # if not _use_aliased:
-    #     _use_aliased = True
-    # table.create(db.engine, checkfirst=True)
-    return history_model
-
-
-def create_runtime_table_name(resource_id: str) -> str:
-    return f"runtime_{resource_id}"
-
-
-def create_history_table_name(resource_id: str) -> str:
-    return resource_id
-
-
-def get_or_create_entry_runtime_model(
-    resource_id: str, history_model: db.Table, config: Dict
-) -> sql_models.BaseRuntimeEntry:
-    table_name = create_runtime_table_name(resource_id)
-
-    if table_name in class_cache:
-        runtime_model = class_cache[table_name]
-        runtime_model.__table__.create(bind=db.engine, checkfirst=True)
-        for child_model in runtime_model.child_tables.values():
-            child_model.__table__.create(bind=db.engine, checkfirst=True)
-        return runtime_model
-
-    # history_table_name = create_history_table_name(resource_id)
-
-    foreign_key_constraint = db.ForeignKeyConstraint(
-        ("history_id",), (history_model.history_id,)
-    )
-
-    attributes = {
-        "__tablename__": table_name,
-        "__table_args__": (foreign_key_constraint,),
-    }
-    child_tables = {}
-
-    for field_name in config.get("referenceable", ()):
-        field = config["fields"][field_name]
-
-        if not field.get("collection"):
-            if field["type"] == "integer":
-                column_type = db.Integer()
-            elif field["type"] == "number":
-                column_type = db.Float()
-            elif field["type"] == "string":
-                column_type = db.String(128)
-            else:
-                raise NotImplementedError()
-            attributes[field_name] = db.Column(column_type)
-        else:
-            child_table_name = f"{table_name}_{field_name}"
-            attributes[field_name] = db.relationship(
-                child_table_name,
-                backref=table_name,
-                cascade="save-update,merge,delete,delete-orphan",
-            )
-            child_attributes = {
-                "__tablename__": child_table_name,
-                "__table_args__": (db.PrimaryKeyConstraint("entry_id", field_name),),
-                "entry_id": db.Column(
-                    db.String(100), db.ForeignKey(f"{table_name}.entry_id")
-                ),
-            }
-            if field["type"] == "object":
-                raise ValueError("not possible to reference lists of objects")
-            if field["type"] == "integer":
-                child_db_column_type = db.Integer()
-            elif field["type"] == "number":
-                child_db_column_type = db.Float()
-            elif field["type"] == "string":
-                child_db_column_type = db.String(100)
-            else:
-                raise NotImplementedError()
-            child_attributes[field_name] = db.Column(child_db_column_type)
-            child_class = type(child_table_name, (db.Base,), child_attributes)
-            child_tables[field_name] = child_class
-
-    runtime_model = type(
-        table_name,
-        (db.Base, sql_models.BaseRuntimeEntry),
-        attributes,
-    )
-    runtime_model.__table__.create(bind=db.engine, checkfirst=True)
-    runtime_model.child_tables = child_tables
-
-    for child_model in runtime_model.child_tables.values():
-        child_model.__table__.create(bind=db.engine, checkfirst=True)
-    class_cache[table_name] = runtime_model
-
-    return runtime_model
-    # print(f"attriubtes = {attributes}")
-    # table = db.Table(
-    #     table_name,
-    #     db.metadata,
-    #     # db.Column("entry_id", db.String(100), primary_key=True),
-    #     # db.Column("history_id", db.Integer, db.ForeignKey(history_model.c.history_id)),
-    #     # # db.Column(
-    #     # #     "history_id",
-    #     # #     db.Integer,
-    #     # #     db.ForeignKey(f"{history_model.name}.history_id"),
-    #     # # ),
-    #     # db.Column("id", db.UUIDType, nullable=False),
-    #     # db.Column("discarded", db.Boolean, nullable=False),
-    #     *attributes,
-    # )
-    # # table.create(db.engine, checkfirst=True)
-    # return table

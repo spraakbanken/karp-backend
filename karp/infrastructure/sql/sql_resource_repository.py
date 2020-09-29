@@ -10,7 +10,7 @@ from karp.domain.models.resource import (
     ResourceRepository,
 )
 
-from karp.infrastructure.sql import db
+from karp.infrastructure.sql import db, sql_models
 from karp.infrastructure.sql.sql_repository import SqlRepository
 
 _logger = logging.getLogger("karp")
@@ -19,14 +19,7 @@ _logger = logging.getLogger("karp")
 class SqlResourceRepository(ResourceRepository, SqlRepository):
     def __init__(self):
         super().__init__()
-        self.table = None
-        if self.table is None:
-            table_name = "resources"
-            table = db.get_table(table_name)
-            print(f"table = {table}")
-            if table is None:
-                table = create_table(table_name)
-            self.table = table
+        self.table = sql_models.ResourceDefinition
 
     def check_status(self):
         self._check_has_session()
@@ -116,7 +109,7 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
     def _resource_to_row(
         self, resource: Resource
     ) -> Tuple[
-        None, UUID, str, int, str, Dict, Optional[bool], float, str, str, ResourceOp
+        None, UUID, str, int, str, Dict, Optional[bool], float, str, str, ResourceOp, bool
     ]:
         return (
             None,
@@ -130,6 +123,7 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
             resource.last_modified_by,
             resource.message,
             resource.op,
+            resource.discarded,
         )
 
     def _row_to_resource(self, row) -> Optional[Resource]:
@@ -145,75 +139,9 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
                 is_published=row.is_published,
                 last_modified=row.last_modified,
                 last_modified_by=row.last_modified_by,
+                discarded=row.discarded,
             )
             if row
             else None
         )
 
-
-def create_table(table_name: str) -> db.Table:
-    table = db.Table(
-        table_name,
-        db.metadata,
-        db.Column(
-            "history_id",
-            db.Integer,
-            primary_key=True,
-            # autoincrement=True
-        ),
-        db.Column("id", db.UUIDType, nullable=False),
-        db.Column(
-            "resource_id",
-            db.String(64),
-            # primary_key=True,
-            nullable=False,
-        ),
-        db.Column(
-            "version",
-            db.Integer,
-            # primary_key=True,
-            # autoincrement=True,
-            nullable=False,
-        ),
-        db.Column(
-            "name",
-            db.String(64),
-            nullable=False,
-        ),
-        db.Column("config", db.NestedMutableJson, nullable=False),
-        db.Column("is_published", db.Boolean, index=True, nullable=True, default=None),
-        db.Column("last_modified", db.Float, nullable=False),
-        db.Column("last_modified_by", db.String, nullable=False),
-        db.Column("message", db.String, nullable=False),
-        db.Column("op", db.Enum(ResourceOp), nullable=False),
-        db.UniqueConstraint(
-            "resource_id", "version", name="resource_version_unique_constraint"
-        ),
-        # db.UniqueConstraint(
-        #     "resource_id", "is_active", name="resource_is_active_unique_constraint"
-        # ),
-        mysql_character_set="utf8mb4"
-        # extend_existing=True
-    )
-    # db.mapper(
-    #     Resource,
-    #     table,
-    #     properties={
-    #         "_id": table.c.id,
-    #         "_version": table.c.version,
-    #         "_name": table.c.name,
-    #         "_resource_id": table.c.resource_id,
-    #         # "_is_active": table.c.is_active,
-    #     },
-    # )
-
-    # @db.event.listens_for(Resource.is_active, "set", retval=True)
-    # def update_is_active(target, value, oldvalue, initiator):
-    #     if value:
-    #         value = True
-    #     else:
-    #         value = None
-    #     return value
-
-    # table.create(db.engine, checkfirst=True)
-    return table

@@ -8,7 +8,16 @@ from typing import Dict
 
 import pytest  # pyre-ignore
 
+from alembic.config import main as alembic_main
+
 from starlette.testclient import TestClient
+
+from karp.domain.models.resource import create_resource
+
+from karp.infrastructure.unit_of_work import unit_of_work
+from karp.infrastructure.sql import sql_entry_repository
+
+from karp.application import ctx
 
 from karp.webapp import main as webapp_main
 
@@ -16,9 +25,39 @@ from tests import common_data
 
 
 @pytest.fixture
-def fa_client():
+def db_setup():
+    alembic_main(["--raiseerr", "upgrade", "head"])
+    yield
+    alembic_main(["--raiseerr", "downgrade", "base"])
+
+
+@pytest.fixture
+def fa_client(db_setup):
     with TestClient(webapp_main.create_app()) as client:
         yield client
+
+
+@pytest.fixture(name="places")
+def fixture_places():
+    with open("tests/data/config/places.json") as fp:
+        places_config = json.load(fp)
+
+    resource = create_resource(places_config)
+
+    yield resource
+
+    if resource._entry_repository is not None:
+        resource._entry_repository.teardown()
+
+
+@pytest.fixture(name="fa_client_w_places")
+def fixture_fa_client_w_places(fa_client, places):
+    places.is_published = True
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        uw.put(places)
+
+    return fa_client
+
 # from dotenv import load_dotenv
 #
 # load_dotenv(dotenv_path=".env")

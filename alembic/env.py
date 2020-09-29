@@ -3,8 +3,10 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
-from karp.database import db
-from karp.migration_helper import entry_tables, history_tables, database_uri
+from karp.application import config as karp_config
+from karp.infrastructure.sql import db
+
+# from karp.migration_helper import entry_tables, history_tables, database_uri
 
 
 # this is the Alembic Config object, which provides
@@ -16,8 +18,8 @@ config = context.config
 fileConfig(config.config_file_name)
 
 
-def include_object(object, name, type_, reflected, compare_to):
-    return not (type_ == "table" and (name in entry_tables or name in history_tables))
+# def include_object(object, name, type_, reflected, compare_to):
+#     return not (type_ == "table" and (name in entry_tables or name in history_tables))
 
 
 def run_migrations_online():
@@ -28,7 +30,7 @@ def run_migrations_online():
 
     """
     alembic_config = config.get_section(config.config_ini_section)
-    alembic_config["sqlalchemy.url"] = database_uri
+    alembic_config["sqlalchemy.url"] = karp_config.DB_URL
 
     connectable = engine_from_config(
         alembic_config, prefix="sqlalchemy.", poolclass=pool.NullPool
@@ -38,7 +40,7 @@ def run_migrations_online():
         context.configure(
             connection=connection,
             target_metadata=db.metadata,
-            include_object=include_object,
+            # include_object=include_object,
             compare_type=True,
         )
 
