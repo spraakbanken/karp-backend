@@ -11,6 +11,7 @@ from karp.application import ctx
 from karp.webapp import schemas
 from karp.webapp.auth import get_current_user
 
+from karp import errors
 
 # from flask import Blueprint  # pyre-ignore
 # from flask import jsonify as flask_jsonify  # pyre-ignore
@@ -80,7 +81,7 @@ def update_entry(
             # force=force_update,
         )
         return {"newID": new_id}
-    except entrywrite.UpdateConflict as err:
+    except errors.UpdateConflict as err:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return err.error_obj
 

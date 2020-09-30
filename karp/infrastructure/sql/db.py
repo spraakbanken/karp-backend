@@ -20,6 +20,7 @@ from sqlalchemy import (
     and_,
     or_,
 )
+from sqlalchemy import exc
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.sql import insert, delete, update
 from sqlalchemy.engine import Engine

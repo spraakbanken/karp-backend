@@ -13,6 +13,7 @@ class ClientErrorCodes:
     ENTRY_NOT_CHANGED = 31
     ENTRY_NOT_VALID = 32
     VERSION_CONFLICT = 33
+    ENTRY_ID_MISMATCH = 34
     EXPIRED_JWT = 40
     NOT_PERMITTED = 41
     BAD_PARAMETER_FORMAT = 50
@@ -31,6 +32,10 @@ class KarpError(Exception):
         self.message = message
         self.code = code
         self.http_return_code = http_return_code
+
+
+class UserError(KarpError):
+    pass
 
 
 class ResourceNotFoundError(KarpError):
@@ -71,7 +76,9 @@ class ResourceConfigUpdateError(KarpError):
         """
         super().__init__(
             msg_fmt.format(
-                resource_id=resource_id, config_file=config_file.name, msg=msg,
+                resource_id=resource_id,
+                config_file=config_file.name,
+                msg=msg,
             ),
             ClientErrorCodes.RESOURCE_CONFIG_CANNOT_UPDATE,
         )
@@ -81,7 +88,7 @@ class EntryNotFoundError(KarpError):
     def __init__(
         self, resource_id, entry_id, entry_version=None, resource_version=None
     ):
-        msg = "Entry {entry_id} (version {entry_version}) not found. ID: {resource_id}, version: {resource_version}"
+        msg = "Entry '{entry_id}' (version {entry_version}) not found. resource_id: {resource_id}, version: {resource_version}"
         super().__init__(
             msg.format(
                 resource_id=resource_id,
@@ -102,6 +109,14 @@ class UpdateConflict(KarpError):
         self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}
 
 
+class EntryIdMismatch(UserError):
+    def __init__(self, new_entry_id: str, entry_id: str):
+        super().__init__(
+            f"entry_id '{new_entry_id}' does not equal '{entry_id}'",
+            code=ClientErrorCodes.ENTRY_ID_MISMATCH,
+        )
+
+
 class PluginNotFoundError(KarpError):
     def __init__(self, plugin_id: str, resource_id: str = None):
         super().__init__(
@@ -111,3 +126,10 @@ class PluginNotFoundError(KarpError):
             ClientErrorCodes.PLUGIN_DOES_NOT_EXIT,
         )
 
+
+class IntegrityError(UserError):
+    def __init__(self, key: str, value: str) -> None:
+        super().__init__(
+            f"The key '{key}' is not unique (value='{value}')",
+            code=ClientErrorCodes.DB_INTEGRITY_ERROR,
+        )
