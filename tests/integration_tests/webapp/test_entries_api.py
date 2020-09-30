@@ -1,7 +1,11 @@
 import json
-import pytest  # pyre-ignore
 import time
 from datetime import datetime, timezone
+
+import pytest  # pyre-ignore
+
+from karp.application import ctx, config
+from karp.infrastructure.unit_of_work import unit_of_work
 
 # import karp.resourcemgr.entryread as entryread
 from karp.errors import ClientErrorCodes
@@ -48,129 +52,387 @@ def test_add(fa_client_w_places):
     assert response.status_code == 201
     response_data = response.json()
     assert "newID" in response_data
-    assert "3" == response_data["newID"]
+    assert response_data["newID"] == "3"
 
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource("places")
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        entries = uw.entry_ids()
+        assert len(entries) == 1
+        assert entries[0] == "3"
     # entries = get_json(client, "places/query")
     # assert len(entries["hits"]) == 1
     # assert entries["hits"][0]["entry"]["name"] == "test3"
 
 
-# def test_add_existing(es, client_with_data_f):
-#     client = init(client_with_data_f, es, [])
+def test_add_existing(fa_client_w_places):
+    #     client = init(client_with_data_f, es, [])
 
-#     response = client.post(
-#         "places/add",
-#         data=json.dumps(
-#             {
-#                 "entry": {
-#                     "code": 3,
-#                     "name": "test3",
-#                     "population": 4,
-#                     "area": 50000,
-#                     "density": 5,
-#                     "municipality": [2, 3],
-#                 }
-#             }
-#         ),
-#         content_type="application/json",
-#     )
-#     assert 200 <= response.status_code < 300
+    response = fa_client_w_places.post(
+        "places/add",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            }
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    print(f"response = {response.json()}")
 
-#     response = client.post(
-#         "places/add",
-#         data=json.dumps(
-#             {
-#                 "entry": {
-#                     "code": 3,
-#                     "name": "test3",
-#                     "population": 4,
-#                     "area": 50000,
-#                     "density": 5,
-#                     "municipality": [2, 3],
-#                 }
-#             }
-#         ),
-#         content_type="application/json",
-#     )
-#     assert response.status_code == 400
-#     response_data = json.loads(response.data.decode())
+    assert response.status_code == 201
 
-#     assert "error" in response_data
-#     assert "errorCode" in response_data
-#     assert ClientErrorCodes.DB_INTEGRITY_ERROR == response_data["errorCode"]
-#     assert "Database error" in response_data["error"]
+    response = fa_client_w_places.post(
+        "places/add",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            }
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    assert response.status_code == 400
+    response_data = response.json()
 
-
-# def test_delete(es, client_with_data_f):
-#     client = init(
-#         client_with_data_f,
-#         es,
-#         [
-#             {
-#                 "code": 3,
-#                 "name": "test3",
-#                 "population": 4,
-#                 "area": 50000,
-#                 "density": 5,
-#                 "municipality": [2, 3],
-#             }
-#         ],
-#     )
-
-#     entries = get_json(client, "places/query")
-#     entry_id = entries["hits"][0]["id"]
-
-#     client.delete("places/%s/delete" % entry_id)
-
-#     entries = get_json(client, "places/query")
-#     assert len(entries["hits"]) == 0
+    assert "error" in response_data
+    assert "errorCode" in response_data
+    assert ClientErrorCodes.DB_INTEGRITY_ERROR == response_data["errorCode"]
+    if config.DB_DRIVER == "sqlite":
+        pass
+    else:
+        assert response_data["error"] == "The key 'entry_id' is not unique (value='3')"
 
 
-# def test_update(es, client_with_data_f):
-#     client = init(
-#         client_with_data_f,
-#         es,
-#         [
-#             {
-#                 "code": 3,
-#                 "name": "test3",
-#                 "population": 4,
-#                 "area": 50000,
-#                 "density": 5,
-#                 "municipality": [2, 3],
-#             }
-#         ],
-#     )
+def test_delete(fa_client_w_places):
+    response = fa_client_w_places.post(
+        "places/add",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            }
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    print(f"response = {response.json()}")
 
-#     entries = get_json(client, "places/query")
-#     entry_id = entries["hits"][0]["id"]
+    assert response.status_code == 201
 
-#     response = client.post(
-#         "places/%s/update" % entry_id,
-#         data=json.dumps(
-#             {
-#                 "entry": {
-#                     "code": 3,
-#                     "name": "test3",
-#                     "population": 5,
-#                     "area": 50000,
-#                     "density": 5,
-#                     "municipality": [2, 3],
-#                 },
-#                 "message": "changes",
-#                 "version": 1,
-#             }
-#         ),
-#         content_type="application/json",
-#     )
-#     response_data = json.loads(response.data.decode())
-#     assert "newID" in response_data
-#     assert "3" == response_data["newID"]
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource("places")
 
-#     entries = get_json(client, "places/query")
-#     assert len(entries["hits"]) == 1
-#     assert entries["hits"][0]["id"] == entry_id
-#     assert entries["hits"][0]["entry"]["population"] == 5
+    with unit_of_work(using=resource.entry_repository) as uw:
+        entries = uw.entry_ids()
+        assert len(entries) == 1
+        assert entries[0] == "3"
+
+    entry_id = response.json()["newID"]
+
+    response = fa_client_w_places.delete(
+        f"places/{entry_id}/delete", headers={"Authorization": "Bearer 1234"}
+    )
+
+    assert response.status_code == 200
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        assert len(uw.entry_ids()) == 0
+
+
+def test_delete_non_existing_fails(fa_client_w_places):
+
+    entry_id = "non_existing_id"
+
+    response = fa_client_w_places.delete(
+        f"places/{entry_id}/delete", headers={"Authorization": "Bearer 1234"}
+    )
+
+    assert response.status_code == 400
+
+    response_data = response.json()
+
+    assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_FOUND
+
+    assert (
+        response_data["error"]
+        == f"Entry '{entry_id}' (version latest) not found. resource_id: places, version: latest"
+    )
+
+
+def test_update_non_existing_fails(fa_client_w_places):
+    entry_id = "3"
+    response = fa_client_w_places.post(
+        f"places/{entry_id}/update",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 5,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            },
+            "message": "changes",
+            "version": 1,
+        },
+        headers={"Authorization": "Bearer 1234"},
+        #         ),
+        #         content_type="application/json",
+    )
+    assert response.status_code == 400
+    response_data = response.json()
+    assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_FOUND
+
+    assert (
+        response_data["error"]
+        == f"Entry '{entry_id}' (version 1) not found. resource_id: places, version: latest"
+    )
+
+
+def test_update_wo_changes_fails(fa_client_w_places):
+    response = fa_client_w_places.post(
+        "places/add",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            }
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    print(f"response = {response.json()}")
+
+    assert response.status_code == 201
+    entry_id = response.json()["newID"]
+
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource("places")
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        entries = uw.entry_ids()
+        assert len(entries) == 1
+        assert entries[0] == "3"
+        entry = uw.by_entry_id(entry_id)
+        assert entry.entry_id == entry_id
+        assert entry.body["population"] == 4
+
+    response = fa_client_w_places.post(
+        f"places/{entry_id}/update",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            },
+            "message": "changes",
+            "version": 1,
+        },
+        headers={"Authorization": "Bearer 1234"},
+        #         ),
+        #         content_type="application/json",
+    )
+    assert response.status_code == 400
+    response_data = response.json()
+    assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_CHANGED
+
+    assert response_data["error"] == "No changes made"
+
+
+def test_update_wrong_id(fa_client_w_places):
+    response = fa_client_w_places.post(
+        "places/add",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            }
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    print(f"response = {response.json()}")
+
+    assert response.status_code == 201
+    entry_id = response.json()["newID"]
+
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource("places")
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        entries = uw.entry_ids()
+        assert len(entries) == 1
+        assert entries[0] == "3"
+
+    response = fa_client_w_places.post(
+        f"places/{entry_id}/update",
+        json={
+            "entry": {
+                "code": 4,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            },
+            "message": "changes",
+            "version": 1,
+        },
+        headers={"Authorization": "Bearer 1234"},
+        #         ),
+        #         content_type="application/json",
+    )
+    assert response.status_code == 400
+    response_data = response.json()
+    assert response_data["errorCode"] == ClientErrorCodes.ENTRY_ID_MISMATCH
+
+    assert response_data["error"] == "entry_id '4' does not equal '3'"
+
+
+def test_update_wrong_version_fails(fa_client_w_places):
+    response = fa_client_w_places.post(
+        "places/add",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            }
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    print(f"response = {response.json()}")
+
+    assert response.status_code == 201
+    entry_id = response.json()["newID"]
+
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource("places")
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        entries = uw.entry_ids()
+        assert len(entries) == 1
+        assert entries[0] == "3"
+        entry = uw.by_entry_id(entry_id)
+        assert entry.entry_id == entry_id
+        assert entry.body["population"] == 4
+
+    response = fa_client_w_places.post(
+        f"places/{entry_id}/update",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 5,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            },
+            "message": "changes",
+            "version": 2,
+        },
+        headers={"Authorization": "Bearer 1234"},
+        #         ),
+        #         content_type="application/json",
+    )
+    assert response.status_code == 400
+    response_data = response.json()
+    assert response_data["errorCode"] == ClientErrorCodes.VERSION_CONFLICT
+
+    assert response_data["error"] == "Version conflict. Please update entry."
+    assert response_data["diff"] == [
+        {"type": "CHANGE", "field": "population", "before": 4, "after": 5}
+    ]
+
+
+def test_update(fa_client_w_places):
+    response = fa_client_w_places.post(
+        "places/add",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            }
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    print(f"response = {response.json()}")
+
+    assert response.status_code == 201
+    entry_id = response.json()["newID"]
+
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource("places")
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        entries = uw.entry_ids()
+        assert len(entries) == 1
+        assert entries[0] == "3"
+        entry = uw.by_entry_id(entry_id)
+        assert entry.entry_id == entry_id
+        assert entry.body["population"] == 4
+
+    response = fa_client_w_places.post(
+        f"places/{entry_id}/update",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 5,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            },
+            "message": "changes",
+            "version": 1,
+        },
+        headers={"Authorization": "Bearer 1234"},
+        #         ),
+        #         content_type="application/json",
+    )
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data["newID"] == "3"
+
+    #     entries = get_json(client, "places/query")
+    #     assert len(entries["hits"]) == 1
+    #     assert entries["hits"][0]["id"] == entry_id
+    #     assert entries["hits"][0]["entry"]["population"] == 5
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        assert len(uw.entry_ids()) == 1
+        entry = uw.by_entry_id(entry_id)
+        assert entry.entry_id == entry_id
+        assert entry.body["population"] == 5
 
 
 # def test_update_entry_id(es, client_with_data_f):

@@ -51,8 +51,8 @@ def fixture_places():
 
     yield resource
 
-    if resource._entry_repository is not None:
-        resource._entry_repository.teardown()
+    # if resource._entry_repository:
+    resource.entry_repository.teardown()
 
 
 @pytest.fixture(name="fa_client_w_places")
