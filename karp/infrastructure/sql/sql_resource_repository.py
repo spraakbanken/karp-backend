@@ -43,7 +43,7 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
         self._check_has_session()
         query = self._session.query(self.table)
         return [
-            row.resource_id for row in query.group_by(self.table.c.resource_id).all()
+            row.resource_id for row in query.group_by(self.table.resource_id).all()
         ]
 
     def resources_with_id(self, resource_id: str):
@@ -69,7 +69,7 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
         self._check_has_session()
         row = (
             self._session.query(self.table)
-            .order_by(self.table.c.version.desc())
+            .order_by(self.table.version.desc())
             .filter_by(resource_id=resource_id)
             .first()
         )
@@ -89,18 +89,18 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
         self._check_has_session()
         subq = (
             self._session.query(
-                self.table.c.resource_id,
-                db.func.max(self.table.c.last_modified).label("maxdate"),
+                self.table.resource_id,
+                db.func.max(self.table.last_modified).label("maxdate"),
             )
-            .group_by(self.table.c.resource_id)
+            .group_by(self.table.resource_id)
             .subquery("t2")
         )
         query = self._session.query(self.table).join(
             subq,
             db.and_(
-                self.table.c.resource_id == subq.c.resource_id,
-                self.table.c.last_modified == subq.c.maxdate,
-                self.table.c.is_published == True,
+                self.table.resource_id == subq.c.resource_id,
+                self.table.last_modified == subq.c.maxdate,
+                self.table.is_published == True,
             ),
         )
 
