@@ -1,21 +1,26 @@
-import json
-from flask import Blueprint  # pyre-ignore
-from flask import jsonify as flask_jsonify  # pyre-ignore
 
-import karp.resourcemgr as resourcemgr
+from fastapi import APIRouter
 
-conf_api = Blueprint("conf_api", __name__)
+from karp.application import ctx
+
+from karp.infrastructure.unit_of_work import unit_of_work
+# import karp.resourcemgr as resourcemgr
+
+# conf_api = Blueprint("conf_api", __name__)
+
+router = APIRouter()
 
 
-@conf_api.route("/resources", methods=["GET"])
+@router.get("/resources")
 def get_resources():
-    resources = resourcemgr.get_available_resources()
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resources = uw.get_published_resources()
+
     result = []
     for resource in resources:
         resource_obj = {"resource_id": resource.resource_id}
 
-        config_file = json.loads(resource.config_file)
-        protected_conf = config_file.get("protected")
+        protected_conf = resource.config.get("protected")
         if not protected_conf:
             protected = None
         elif protected_conf.get("admin"):
@@ -29,4 +34,8 @@ def get_resources():
             resource_obj["protected"] = protected
         result.append(resource_obj)
 
-    return flask_jsonify(result)
+    return result
+
+
+def init_app(app):
+    app.include_router(router)
