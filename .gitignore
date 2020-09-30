@@ -110,6 +110,9 @@ venv.bak/
 
 .idea
 
+# Sqlite databases
+*.sqlite
+
 # VS Code settings
 .vscode/
 
