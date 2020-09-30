@@ -11,11 +11,15 @@ import pytest  # pyre-ignore
 from alembic.config import main as alembic_main
 
 from starlette.testclient import TestClient
+from starlette.config import environ
+
+environ["TESTING"] = "True"
 
 from karp.domain.models.resource import create_resource
 
 from karp.infrastructure.unit_of_work import unit_of_work
 from karp.infrastructure.sql import sql_entry_repository
+from karp.infrastructure.testing import dummy_auth_service
 
 from karp.application import ctx
 
@@ -33,6 +37,7 @@ def db_setup():
 
 @pytest.fixture
 def fa_client(db_setup):
+    ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
 

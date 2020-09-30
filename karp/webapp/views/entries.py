@@ -16,7 +16,7 @@ from karp.webapp.auth import get_current_user
 # from flask import jsonify as flask_jsonify  # pyre-ignore
 # from flask import request  # pyre-ignore
 
-from karp.resourcemgr import entrywrite
+# from karp.resourcemgr import entrywrite
 
 # from karp.errors import KarpError
 # import karp.auth.auth as auth

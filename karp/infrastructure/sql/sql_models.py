@@ -82,8 +82,8 @@ def get_or_create_entry_history_model(resource_id: str) -> BaseHistoryEntry:
 
     attributes = {
         "__tablename__": history_table_name,
-        "__table_args__": BaseHistoryEntry.__table_args__,
-        "mysql_character_set": "utf8mb4",
+        "__table_args__": None,  # (BaseHistoryEntry.__table_args__,),
+        # "mysql_character_set": "utf8mb4",
     }
 
     sqlalchemy_class = type(history_table_name, (db.Base, BaseHistoryEntry), attributes)
