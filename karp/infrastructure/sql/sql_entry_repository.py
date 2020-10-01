@@ -105,7 +105,7 @@ class SqlEntryRepository(
 
         updt_stmt = db.update(self.runtime_model)
         updt_stmt = updt_stmt.where(self.runtime_model.entry_id == entry.entry_id)
-        updt_stmt = updt_stmt.values(self._entry_to_runtime_row(history_id, entry))
+        updt_stmt = updt_stmt.values(**self._entry_to_runtime_dict(history_id, entry))
 
         try:
             return self._session.execute(updt_stmt)
@@ -126,7 +126,8 @@ class SqlEntryRepository(
         self._check_has_session()
         try:
             ins_stmt = db.insert(self.history_model)
-            ins_stmt = ins_stmt.values(self._entry_to_history_row(entry))
+            history_row = self._entry_to_history_row(entry)
+            ins_stmt = ins_stmt.values(history_row)
             result = self._session.execute(ins_stmt)
             return result.lastrowid or result.returned_defaults["history_id"]
         except db.exc.IntegrityError as exc:
@@ -153,19 +154,18 @@ class SqlEntryRepository(
         #     self.runtime_table,
         #     self.history_model.c.history_id == self.runtime_table.c.history_id,
         # )
-        row = query.filter_by(entry_id=entry_id)\
-            .order_by(self.history_model.last_modified.desc())\
+        row = (
+            query.filter_by(entry_id=entry_id)
+            .order_by(self.history_model.version.desc())
             .first()
+        )
         return self._history_row_to_entry(row) if row else None
-        # .order_by(self.mapped_class._version.desc())
 
     def by_id(self, id: str) -> Optional[Entry]:
         self._check_has_session()
         query = self._session.query(self.history_model)
         return (
-            query.filter_by(id=id)
-            .order_by(self.history_model.last_modified.desc())
-            .first()
+            query.filter_by(id=id).order_by(self.history_model.version.desc()).first()
         )
 
     def history_by_entry_id(self, entry_id: str) -> List[Entry]:
@@ -206,7 +206,7 @@ class SqlEntryRepository(
             None,  # history_id
             entry.id,  # id
             entry.entry_id,  # entry_id
-            entry.version,
+            entry.version,  # version
             entry.last_modified,  # last_modified
             entry.last_modified_by,  # last_modified_by
             entry.body,  # body
@@ -215,6 +215,23 @@ class SqlEntryRepository(
             entry.op,  # op
             entry.discarded,
         )
+
+    def _entry_to_history_dict(
+        self, entry: Entry, history_id: Optional[int] = None
+    ) -> Dict:
+        return {
+            "history_id": history_id,
+            "id": entry.id,
+            "entry_id": entry.entry_id,
+            "version": entry.version,
+            "last_modified": entry.last_modified,
+            "last_modified_by": entry.last_modified_by,
+            "body": entry.body,
+            "status": entry.status,
+            "message": entry.message,
+            "op": entry.op,
+            "discarded": entry.discarded,
+        }
 
     def _history_row_to_entry(self, row) -> Entry:
         return Entry(
@@ -229,11 +246,6 @@ class SqlEntryRepository(
             discarded=row.discarded,
             version=row.version,
         )
-
-    def _entry_to_runtime_row(
-        self, history_id: int, entry: Entry
-    ) -> Tuple[str, int, UUID, bool]:
-        return (entry.entry_id, history_id, entry.id, entry.discarded)
 
     def _entry_to_runtime_dict(self, history_id: int, entry: Entry) -> Dict:
         _entry = {
@@ -270,4 +282,3 @@ def _(settings: SqlEntryRepositorySettings) -> SqlEntryRepository:
         runtime_table_name, history_model, settings.config
     )
     return SqlEntryRepository(history_model, runtime_model, settings.config)
-
