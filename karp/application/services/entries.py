@@ -291,6 +291,12 @@ def update_entry(
         if new_entry.entry_id != entry_id:
             raise EntryIdMismatch(new_entry.entry_id, entry_id)
 
+        new_entry._id = current_db_entry.id
+        print(f"new_entry.last_modified = {new_entry.last_modified}")
+        print(f"current_db_entry.last_modified = {current_db_entry.last_modified}")
+
+        new_entry.stamp(user_id, message=message)
+        print(f"new_entry.last_modified = {new_entry.last_modified}")
         uw.update(new_entry)
 
     return new_entry.entry_id
