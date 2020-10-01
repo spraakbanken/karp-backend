@@ -5,9 +5,6 @@ import pytest
 
 from karp.domain.errors import ConsistencyError, DiscardedEntityError, ConstraintsError
 from karp.domain.models.resource import Resource, ResourceOp, Release, create_resource
-from karp.domain.models.entry import Entry, EntryRepository
-
-from tests import common_data
 
 
 def test_create_resource_creates_resource():
@@ -237,31 +234,3 @@ def test_resource_has_entry_json_schema():
 
     assert json_schema["type"] == "object"
     assert "baseform" in json_schema["properties"]
-
-
-def test_resource_create_entry_from_raw():
-    resource = create_resource(
-        {
-            "resource_id": "places",
-            "resource_name": "Platser i Sverige",
-            "fields": {
-                "name": {"type": "string", "required": True},
-                "municipality": {
-                    "collection": True,
-                    "type": "number",
-                    "required": True,
-                },
-                "population": {"type": "number"},
-                "area": {"type": "number"},
-                "density": {"type": "number"},
-                "code": {"type": "number", "required": True},
-            },
-            "sort": "name",
-            "id": "code",
-        }
-    )
-
-    entry = resource.create_entry_from_dict(common_data.PLACES[0])
-
-    assert isinstance(entry, Entry)
-    assert entry.entry_id == "1"

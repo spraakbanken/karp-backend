@@ -13,6 +13,7 @@ from karp.domain.models.events import DomainEvent
 
 from karp.utility import unique_id
 from karp.utility import json_schema
+from karp.utility.container import create_field_getter
 
 
 class ResourceOp(enum.Enum):
@@ -209,11 +210,9 @@ class Resource(TimestampedVersionedEntity):
             )
         return self._entry_json_schema
 
-    def create_entry_from_dict(
-        self, raw: Dict, user: str = None, message: Optional[str] = None
-    ) -> Entry:
-        id_getter = create_id_getter(self.config["id"])
-        return create_entry(id_getter(raw), raw, last_modified_by=user, message=message)
+    @property
+    def id_getter(self):
+        return create_field_getter(self.config["id"])
 
 
 # ===== Entities =====
@@ -238,14 +237,6 @@ class Release(Entity):
     def description(self) -> str:
         """The description of this release."""
         return self._description
-
-
-# ===== Value objects ======
-def create_id_getter(id_field: str):
-    def getter(d: Dict):
-        return d[id_field]
-
-    return getter
 
 
 # ===== Factories =====
