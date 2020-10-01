@@ -18,6 +18,7 @@ from karp.errors import (
     UpdateConflict,
     EntryIdMismatch,
 )
+
 # from karp.database import db
 # import karp.indexmgr as indexmgr
 # import karp.resourcemgr.entrymetadata as entrymetadata
@@ -227,6 +228,8 @@ def add_entry(
         message=message,
         resource_version=resource_version,
     )[0]
+
+
 #
 # def preview_entry(resource_id, entry, resource_version=None):
 #     resource = get_resource(resource_id, version=resource_version)
@@ -291,6 +294,8 @@ def update_entry(
         uw.update(new_entry)
 
     return new_entry.entry_id
+
+
 # def update_entry(
 #     resource_id: str,
 #     entry_id: str,
@@ -398,6 +403,10 @@ def add_entries(
     List
         List of the id's of the created entries.
     """
+    if not isinstance(resource_id, str):
+        raise ValueError(
+            f"'resource_id' must be of type 'str', were '{type(resource_id)}'"
+        )
     with unit_of_work(using=ctx.resource_repo) as uw:
         resource = uw.get_active_resource(resource_id)
 
@@ -420,6 +429,8 @@ def add_entries(
             print("after uw.put")
     print("after db commit")
     return created_db_entries
+
+
 # def add_entries(
 #     resource_id: str,
 #     entries: List[Dict],
@@ -549,6 +560,8 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
 
         entry.discard(user=user_id)
         uw.update(entry)
+
+
 # def delete_entry(resource_id: str, entry_id: str, user_id: str):
 #     resource = get_resource(resource_id)
 #     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
