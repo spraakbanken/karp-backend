@@ -93,8 +93,8 @@ class TimestampedEntity(Entity):
     def __init__(
         self,
         entity_id,
-        last_modified=_now,
-        last_modified_by=_unknown_user,
+        last_modified: float = _now,
+        last_modified_by: str = _unknown_user,
         discarded: bool = False,
     ) -> None:
         super().__init__(entity_id, discarded=discarded)
@@ -111,7 +111,7 @@ class TimestampedEntity(Entity):
         return self._last_modified
 
     @last_modified.setter
-    def last_modified(self, timestamp):
+    def last_modified(self, timestamp: float):
         self._check_not_discarded()
         self._last_modified = timestamp
 
@@ -125,7 +125,7 @@ class TimestampedEntity(Entity):
         self._check_not_discarded()
         self._last_modified_by = user
 
-    def stamp(self, user, *, timestamp=_now):
+    def stamp(self, user, *, timestamp: float = _now):
         self._check_not_discarded()
         self._last_modified_by = user
         self._last_modified = monotonic_utc_now() if timestamp is _now else timestamp
@@ -160,8 +160,8 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
     def __init__(
         self,
         entity_id,
-        last_modified=_now,
-        last_modified_by=_unknown_user,
+        last_modified: float = _now,
+        last_modified_by: str = _unknown_user,
         discarded: bool = False,
         *,
         version: int,
@@ -180,7 +180,7 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
         return self._last_modified
 
     @last_modified.setter
-    def last_modified(self, timestamp):
+    def last_modified(self, timestamp: float):
         self._check_not_discarded()
         self._last_modified = timestamp
 
@@ -190,11 +190,11 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
         return self._last_modified_by
 
     @last_modified_by.setter
-    def last_modified_by(self, user):
+    def last_modified_by(self, user: str):
         self._check_not_discarded()
         self._last_modified_by = user
 
-    def stamp(self, user, *, timestamp=_now, increment_version=True):
+    def stamp(self, user, *, timestamp: float = _now, increment_version: bool = True):
         self._check_not_discarded()
         event = TimestampedVersionedEntity.Stamped(
             timestamp=timestamp,
