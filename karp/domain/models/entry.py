@@ -120,6 +120,9 @@ class Entry(TimestampedVersionedEntity):
         self._message = message
         self._op = EntryOp.UPDATED
 
+    def __repr__(self) -> str:
+        return f"Entry(id={self._id}, entry_id={self._entry_id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"
+
 
 # === Factories ===
 def create_entry(
@@ -146,13 +149,13 @@ def create_entry(
 
 # === Repository ===
 class EntryRepository(metaclass=abc.ABCMeta):
-    class Repository:
-        def __init_subclass__(cls) -> None:
-            print(f"Setting EntryRepository.repository = {cls}")
-            EntryRepository.repository = cls
+    # class Repository:
+    #     def __init_subclass__(cls) -> None:
+    #         print(f"Setting EntryRepository.repository = {cls}")
+    #         EntryRepository.repository = cls
 
-        def by_id(id: UUID):
-            raise NotImplementedError()
+    #     def by_id(id: UUID):
+    #         raise NotImplementedError()
 
     _registry = {}
     type = None
