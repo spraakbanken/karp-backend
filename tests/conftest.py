@@ -28,15 +28,29 @@ from karp.webapp import main as webapp_main
 from tests import common_data
 
 
-@pytest.fixture
-def db_setup():
+@pytest.fixture(name="db_setup")
+def fixture_db_setup():
     alembic_main(["--raiseerr", "upgrade", "head"])
     yield
     alembic_main(["--raiseerr", "downgrade", "base"])
 
 
-@pytest.fixture
-def fa_client(db_setup):
+@pytest.fixture(name="db_setup_scope_module", scope="module")
+def fixture_db_setup_scope_module():
+    alembic_main(["--raiseerr", "upgrade", "head"])
+    yield
+    alembic_main(["--raiseerr", "downgrade", "base"])
+
+
+@pytest.fixture(name="fa_client")
+def fixture_fa_client(db_setup):
+    ctx.auth_service = dummy_auth_service.DummyAuthService()
+    with TestClient(webapp_main.create_app()) as client:
+        yield client
+
+
+@pytest.fixture(name="fa_client_scope_module", scope="module")
+def fixture_fa_client_scope_module(db_setup_scope_module):
     ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
@@ -55,6 +69,19 @@ def fixture_places():
     resource.entry_repository.teardown()
 
 
+@pytest.fixture(name="places_scope_module", scope="module")
+def fixture_places_scope_module():
+    with open("tests/data/config/places.json") as fp:
+        places_config = json.load(fp)
+
+    resource = create_resource(places_config)
+
+    yield resource
+
+    # if resource._entry_repository:
+    resource.entry_repository.teardown()
+
+
 @pytest.fixture(name="fa_client_w_places")
 def fixture_fa_client_w_places(fa_client, places):
     places.is_published = True
@@ -62,6 +89,18 @@ def fixture_fa_client_w_places(fa_client, places):
         uw.put(places)
 
     return fa_client
+
+
+@pytest.fixture(name="fa_client_w_places_scope_module", scope="module")
+def fixture_fa_client_w_places_scope_module(
+    fa_client_scope_module, places_scope_module
+):
+    places_scope_module.is_published = True
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        uw.put(places_scope_module)
+
+    return fa_client_scope_module
+
 
 # from dotenv import load_dotenv
 #
