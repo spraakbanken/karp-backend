@@ -214,24 +214,20 @@ class SqlEntryRepository(
         limit: int = 100,
     ):
         self._check_has_session()
-        #     timestamp_field = resource_obj.history_model.timestamp
         query = self._session.query(self.history_model)
         if user_id:
             query = query.filter_by(last_modified_by=user_id)
         if entry_id:
             query = query.filter_by(entry_id=entry_id)
-        #
-        #     version_field = resource_obj.history_model.version
-        # if entry_id and from_version:
-        #     query = query.filter(self.history_model.version >= from_version)
-        #     elif from_date is not None:
-        if from_date is not None:
+        if entry_id and from_version:
+            query = query.filter(self.history_model.version >= from_version)
+        elif from_date is not None:
             query = query.filter(self.history_model.last_modified >= from_date)
         if entry_id and to_version:
             query = query.filter(self.history_model.version < to_version)
         elif to_date is not None:
             query = query.filter(self.history_model.last_modified <= to_date)
-        #
+
         paged_query = query.limit(limit).offset(offset)
         total = query.count()
         return [self._history_row_to_entry(row) for row in paged_query], total
