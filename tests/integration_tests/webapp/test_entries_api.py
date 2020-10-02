@@ -9,6 +9,7 @@ from karp.infrastructure.unit_of_work import unit_of_work
 
 # import karp.resourcemgr.entryread as entryread
 from karp.errors import ClientErrorCodes
+
 # from tests.utils import get_json
 
 # from tests.integration_tests.common_fixtures import (
@@ -433,6 +434,30 @@ def test_update(fa_client_w_places):
         entry = uw.by_entry_id(entry_id)
         assert entry.entry_id == entry_id
         assert entry.body["population"] == 5
+
+
+def test_update_several_times(fa_client_w_places):
+    response = fa_client_w_places.post(
+        "places/add",
+        json={"entry": {"code": 3, "name": "a", "municipality": [1]}},
+        headers={"Authorization": "Bearer 1234"},
+    )
+    assert response.status_code == 201
+    new_id = response.json()["newID"]
+    time.sleep(1)
+    for i in range(2, 10):
+        response = fa_client_w_places.post(
+            f"places/{new_id}/update",
+            json={
+                "entry": {"code": 3, "name": "a" * i, "municipality": [1]},
+                "message": "changes",
+                "version": i - 1,
+            },
+            headers={"Authorization": "Bearer 1234"},
+        )
+        print(f"i = {i}: response = {response.json()}")
+        assert response.status_code == 200
+        time.sleep(1)
 
 
 # def test_update_entry_id(es, client_with_data_f):

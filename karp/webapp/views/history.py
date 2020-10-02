@@ -20,38 +20,52 @@ from karp.webapp.auth import get_current_user
 router = APIRouter()
 #
 #
-# @history_api.route("/<resource_id>/<entry_id>/diff", methods=["GET", "POST"])
+@router.get("/{resource_id}/{entry_id}/diff")
+@router.post("/{resource_id}/{entry_id}/diff")
 # @auth.auth.authorization("ADMIN")
-# def get_diff(resource_id, entry_id):
-#     from_version = request.args.get("from_version")
-#     to_version = request.args.get("to_version")
-#     from_date_str = request.args.get("from_date")
-#     to_date_str = request.args.get("to_date")
-#     from_date = None
-#     to_date = None
-#     try:
-#         if from_date_str:
-#             from_date = float(from_date_str)
-#         if to_date_str:
-#             to_date = float(to_date_str)
-#     except ValueError:
-#         raise errors.KarpError("Wrong date format", code=50)
-#
-#     diff_parameters = {
-#         "from_date": from_date,
-#         "to_date": to_date,
-#         "from_version": from_version,
-#         "to_version": to_version,
-#         "entry": request.get_json(),
-#     }
-#
-#     diff, from_version, to_version = entryread.diff(
-#         resourcemgr.get_resource(resource_id), entry_id, **diff_parameters
-#     )
-#     result = {"diff": diff, "from_version": from_version}
-#     if to_version:
-#         result["to_version"] = to_version
-#     return jsonify(result)
+def get_diff(
+    resource_id: str,
+    entry_id: str,
+    from_version: Optional[int] = None,
+    to_version: Optional[int] = None,
+    from_date: Optional[float] = None,
+    to_date: Optional[float] = None,
+):
+    #     from_version = request.args.get("from_version")
+    #     to_version = request.args.get("to_version")
+    #     from_date_str = request.args.get("from_date")
+    #     to_date_str = request.args.get("to_date")
+    #     from_date = None
+    #     to_date = None
+    #     try:
+    #         if from_date_str:
+    #             from_date = float(from_date_str)
+    #         if to_date_str:
+    #             to_date = float(to_date_str)
+    #     except ValueError:
+    #         raise errors.KarpError("Wrong date format", code=50)
+    #
+    #     diff_parameters = {
+    #         "from_date": from_date,
+    #         "to_date": to_date,
+    #         "from_version": from_version,
+    #         "to_version": to_version,
+    #         "entry": request.get_json(),
+    #     }
+    #
+    diff, from_version, to_version = entries.diff(
+        resource_id,
+        entry_id,
+        from_version=from_version,
+        to_version=to_version,
+        from_date=from_date,
+        to_date=to_date,
+    )
+
+    result = {"diff": diff, "from_version": from_version}
+    if to_version:
+        result["to_version"] = to_version
+    return result
 
 
 @router.get(

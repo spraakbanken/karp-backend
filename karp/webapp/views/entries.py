@@ -70,6 +70,7 @@ def update_entry(
     #     message = data.get("message")
     #     if not (version and entry and message):
     #         raise KarpError("Missing version, entry or message")
+    print(f"update: data = {data}")
     try:
         new_id = entries.update_entry(
             resource_id,

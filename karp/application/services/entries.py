@@ -240,9 +240,6 @@ def update_entry(
     with unit_of_work(using=resource.entry_repository) as uw:
         current_db_entry = uw.by_entry_id(entry_id)
 
-        #     current_db_entry = resource.model.query.filter_by(
-        #         entry_id=entry_id, deleted=False
-        #     ).first()
         if not current_db_entry:
             raise EntryNotFoundError(
                 resource_id,
@@ -274,92 +271,17 @@ def update_entry(
         if new_entry.entry_id != entry_id:
             raise EntryIdMismatch(new_entry.entry_id, entry_id)
 
-        new_entry._id = current_db_entry.id
-        print(f"new_entry.last_modified = {new_entry.last_modified}")
+        current_db_entry.body = entry
         print(f"current_db_entry.last_modified = {current_db_entry.last_modified}")
 
-        new_entry.stamp(user_id, message=message)
-        print(f"new_entry.last_modified = {new_entry.last_modified}")
-        uw.update(new_entry)
+        current_db_entry.stamp(user_id, message=message)
+        print(f"new_entry.last_modified = {current_db_entry.last_modified}")
+        print(f"new_entry.version = {current_db_entry.version}")
+        uw.update(current_db_entry)
 
-    return new_entry.entry_id
+    return current_db_entry.entry_id
 
 
-# def update_entry(
-#     resource_id: str,
-#     entry_id: str,
-#     version: int,
-#     entry: Dict,
-#     user_id: str,
-#     message: str = None,
-#     resource_version: int = None,
-#     force: bool = False,
-# ):
-#     resource = get_resource(resource_id, version=resource_version)
-#
-#     schema = _compile_schema(resource.entry_json_schema)
-#     _validate_entry(schema, entry)
-#
-#     current_db_entry = resource.model.query.filter_by(
-#         entry_id=entry_id, deleted=False
-#     ).first()
-#     if not current_db_entry:
-#         raise EntryNotFoundError(
-#             resource_id,
-#             entry_id,
-#             entry_version=version,
-#             resource_version=resource_version,
-#         )
-#
-#     diff = jsondiff.compare(json.loads(current_db_entry.body), entry)
-#     if not diff:
-#         raise KarpError("No changes made", ClientErrorCodes.ENTRY_NOT_CHANGED)
-#
-#     db_entry_json = json.dumps(entry)
-#     db_id = current_db_entry.id
-#     latest_history_entry = (
-#         resource.history_model.query.filter_by(entry_id=db_id)
-#         .order_by(resource.history_model.version.desc())
-#         .first()
-#     )
-#     if not force and latest_history_entry.version > version:
-#         raise UpdateConflict(diff)
-#     history_entry = resource.history_model(
-#         entry_id=db_id,
-#         user_id=user_id,
-#         body=db_entry_json,
-#         version=latest_history_entry.version + 1,
-#         op="UPDATE",
-#         message=message,
-#         timestamp=datetime.now(timezone.utc).timestamp(),
-#     )
-#
-#     kwargs = _src_entry_to_db_kwargs(
-#         entry, db_entry_json, resource.model, resource.config
-#     )
-#     if resource.active and str(kwargs["entry_id"]) != current_db_entry.entry_id:
-#         indexmgr.delete_entry(resource_id, current_db_entry.entry_id)
-#     for key, value in kwargs.items():
-#         setattr(current_db_entry, key, value)
-#
-#     db.session.add(history_entry)
-#     db.session.commit()
-#
-#     if resource.active:
-#         index_entry_json = _src_entry_to_index_entry(resource, entry)
-#         indexmgr.add_entries(
-#             resource_id,
-#             [
-#                 (
-#                     current_db_entry.entry_id,
-#                     entrymetadata.EntryMetadata.init_from_model(history_entry),
-#                     index_entry_json,
-#                 )
-#             ],
-#         )
-#     return current_db_entry.entry_id
-#
-#
 # def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
 #     with open(data) as fp:
 #         objs = []

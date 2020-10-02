@@ -148,7 +148,8 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
 
     class Stamped(VersionedEntity.Stamped, TimestampedEntity.Stamped):
         def __init__(self, *, increment_version: bool = True, **kwargs):
-            super().__init__(increment_version=increment_version, **kwargs)
+            super().__init__(**kwargs)
+            self.increment_version = increment_version
 
         def mutate(self, obj):
             obj._validate_event_applicability(self)
