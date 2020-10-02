@@ -47,11 +47,11 @@ ${VENV_NAME}/venv.created:
 	${INVENV} pip install pip-tools
 	@touch $@
 
-${VENV_NAME}/req.installed: deploy/requirements.txt
+${VENV_NAME}/req.installed: requirements.txt
 	${INVENV} pip install -Ur $<
 	@touch $@
 
-${VENV_NAME}/req-dev.installed: setup.py setup.cfg requirements.txt
+${VENV_NAME}/req-dev.installed: ${VENV_NAME}/req.installed setup.py setup.cfg
 	${INVENV} pip install -e .[dev]
 	@touch $@
 
