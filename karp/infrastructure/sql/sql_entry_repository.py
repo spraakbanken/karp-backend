@@ -147,18 +147,21 @@ class SqlEntryRepository(
         return [row.entry_id for row in query.all()]
         # return [row.entry_id for row in query.filter_by(discarded=False).all()]
 
-    def by_entry_id(self, entry_id: str) -> Optional[Entry]:
+    def by_entry_id(
+        self, entry_id: str, *, version: Optional[int] = None
+    ) -> Optional[Entry]:
         self._check_has_session()
         query = self._session.query(self.history_model)
         # query = query.join(
         #     self.runtime_table,
         #     self.history_model.c.history_id == self.runtime_table.c.history_id,
         # )
-        row = (
-            query.filter_by(entry_id=entry_id)
-            .order_by(self.history_model.version.desc())
-            .first()
-        )
+        query = query.filter_by(entry_id=entry_id)
+        if version:
+            query = query.filter_by(version=version)
+        else:
+            query = query.order_by(self.history_model.version.desc())
+        row = query.first()
         return self._history_row_to_entry(row) if row else None
 
     def by_id(self, id: str) -> Optional[Entry]:
@@ -198,6 +201,40 @@ class SqlEntryRepository(
         # result = query.filter_by(larger_place=7).all()
         print(f"result = {result}")
         return result
+
+    def get_history(
+        self,
+        user_id: Optional[str] = None,
+        entry_id: Optional[str] = None,
+        from_date: Optional[float] = None,
+        to_date: Optional[float] = None,
+        from_version: Optional[int] = None,
+        to_version: Optional[int] = None,
+        offset: int = 0,
+        limit: int = 100,
+    ):
+        self._check_has_session()
+        #     timestamp_field = resource_obj.history_model.timestamp
+        query = self._session.query(self.history_model)
+        if user_id:
+            query = query.filter_by(last_modified_by=user_id)
+        if entry_id:
+            query = query.filter_by(entry_id=entry_id)
+        #
+        #     version_field = resource_obj.history_model.version
+        # if entry_id and from_version:
+        #     query = query.filter(self.history_model.version >= from_version)
+        #     elif from_date is not None:
+        if from_date is not None:
+            query = query.filter(self.history_model.last_modified >= from_date)
+        if entry_id and to_version:
+            query = query.filter(self.history_model.version < to_version)
+        elif to_date is not None:
+            query = query.filter(self.history_model.last_modified <= to_date)
+        #
+        paged_query = query.limit(limit).offset(offset)
+        total = query.count()
+        return [self._history_row_to_entry(row) for row in paged_query], total
 
     def _entry_to_history_row(
         self, entry: Entry

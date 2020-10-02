@@ -19,6 +19,7 @@ from sqlalchemy import (
     func,
     and_,
     or_,
+    JSON,
 )
 from sqlalchemy import exc
 from sqlalchemy.exc import SQLAlchemyError

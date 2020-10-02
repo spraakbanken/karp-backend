@@ -129,91 +129,74 @@ _logger = logging.getLogger("karp")
 #     )
 #
 #
-# def get_history(
-#     resource_id: str,
-#     user_id: Optional[str] = None,
-#     entry_id: Optional[str] = None,
-#     from_date: Optional[int] = None,
-#     to_date: Optional[int] = None,
-#     from_version: Optional[int] = None,
-#     to_version: Optional[int] = None,
-#     current_page: Optional[int] = 0,
-#     page_size: Optional[int] = 100,
-# ):
-#     resource_obj = get_resource(resource_id)
-#     timestamp_field = resource_obj.history_model.timestamp
-#     query = resource_obj.history_model.query
-#     if user_id:
-#         query = query.filter_by(user_id=user_id)
-#     if entry_id:
-#         current_entry = resource_obj.model.query.filter_by(entry_id=entry_id).first()
-#         query = query.filter_by(entry_id=current_entry.id)
-#
-#     version_field = resource_obj.history_model.version
-#     if entry_id and from_version:
-#         query = query.filter(version_field >= from_version)
-#     elif from_date is not None:
-#         query = query.filter(timestamp_field >= from_date)
-#     if entry_id and to_version:
-#         query = query.filter(version_field < to_version)
-#     elif to_date is not None:
-#         query = query.filter(timestamp_field <= to_date)
-#
-#     paged_query = query.limit(page_size).offset(current_page * page_size)
-#     total = query.count()
-#
-#     result = []
-#     for history_entry in paged_query:
-#         # TODO fix this, entry_id in history refers to the "normal" id in non-history table
-#         entry_id = (
-#             resource_obj.model.query.filter_by(id=history_entry.entry_id)
-#             .first()
-#             .entry_id
-#         )
-#         # TODO fix this, we should get the diff in another way, probably store the diffs directly in the database
-#         entry_version = history_entry.version
-#         if entry_version > 1:
-#             previous_body = json.loads(
-#                 resource_obj.history_model.query.filter_by(
-#                     entry_id=history_entry.entry_id, version=entry_version - 1
-#                 )
-#                 .first()
-#                 .body
-#             )
-#         else:
-#             previous_body = {}
-#         history_diff = jsondiff.compare(previous_body, json.loads(history_entry.body))
-#         result.append(
-#             {
-#                 "timestamp": history_entry.timestamp,
-#                 "message": history_entry.message if history_entry.message else "",
-#                 "entry_id": entry_id,
-#                 "version": entry_version,
-#                 "op": history_entry.op,
-#                 "user_id": history_entry.user_id,
-#                 "diff": history_diff,
-#             }
-#         )
-#
-#     return result, total
-#
-#
-# def get_entry_history(resource_id, entry_id, version):
-#     resource_obj = get_resource(resource_id)
-#     db_id = resource_obj.model.query.filter_by(entry_id=entry_id).first().id
-#     result = resource_obj.history_model.query.filter_by(
-#         entry_id=db_id, version=version
-#     ).first()
-#     return {
-#         "id": entry_id,
-#         "resource": resource_id,
-#         "version": version,
-#         "entry": json.loads(result.body),
-#         "last_modified_by": result.user_id,
-#         "last_modified": result.timestamp,
-#     }
-#
-#
+def get_history(
+    resource_id: str,
+    user_id: Optional[str] = None,
+    entry_id: Optional[str] = None,
+    from_date: Optional[float] = None,
+    to_date: Optional[float] = None,
+    from_version: Optional[int] = None,
+    to_version: Optional[int] = None,
+    current_page: int = 0,
+    page_size: int = 100,
+):
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource(resource_id)
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        paged_query, total = uw.get_history(
+            entry_id=entry_id,
+            user_id=user_id,
+            from_date=from_date,
+            to_date=to_date,
+            from_version=from_version,
+            to_version=to_version,
+            offset=current_page * page_size,
+            limit=page_size,
+        )
+    result = []
+    for history_entry in paged_query:
+        # TODO fix this, we should get the diff in another way, probably store the diffs directly in the database
+        entry_version = history_entry.version
+        if entry_version > 1:
+            previous_entry = uw.by_entry_id(
+                history_entry.entry_id, version=entry_version - 1
+            )
+            previous_body = previous_entry.body
+        else:
+            previous_body = {}
+        history_diff = jsondiff.compare(previous_body, history_entry.body)
+        result.append(
+            {
+                "timestamp": history_entry.last_modified,
+                "message": history_entry.message if history_entry.message else "",
+                "entry_id": history_entry.entry_id,
+                "version": entry_version,
+                "op": history_entry.op,
+                "user_id": history_entry.last_modified_by,
+                "diff": history_diff,
+            }
+        )
+
+    return result, total
+
+
+def get_entry_history(resource_id: str, entry_id: str, version: int):
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource(resource_id)
+    with unit_of_work(using=resource.entry_repository) as uw:
+        result = uw.by_entry_id(entry_id, version=version)
+
+    return {
+        "id": entry_id,
+        "resource": resource_id,
+        "version": version,
+        "entry": result.body,
+        "last_modified_by": result.last_modified_by,
+        "last_modified": result.last_modified,
+    }
+
+
 def add_entry(
     resource_id: str,
     entry: Dict,

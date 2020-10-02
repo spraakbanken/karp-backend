@@ -57,9 +57,9 @@ class BaseHistoryEntry:
     id = db.Column(db.UUIDType, nullable=False)
     entry_id = db.Column(db.String(100), nullable=False)
     version = db.Column(db.Integer, nullable=False)
-    last_modified = db.Column(db.Float, nullable=False)
+    last_modified = db.Column(db.Float(53), nullable=False)
     last_modified_by = db.Column(db.String(100), nullable=False)
-    body = db.Column(db.NestedMutableJson, nullable=False)
+    body = db.Column(db.JSON, nullable=False)
     status = db.Column(db.Enum(EntryStatus), nullable=False)
     message = db.Column(db.Text(length=120))
     op = db.Column(db.Enum(EntryOp), nullable=False)
@@ -72,6 +72,7 @@ class BaseHistoryEntry:
 
 
 # Dynamic models
+
 
 def get_or_create_entry_history_model(resource_id: str) -> BaseHistoryEntry:
     history_table_name = create_history_table_name(resource_id)

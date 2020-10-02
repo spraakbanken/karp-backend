@@ -16,7 +16,10 @@ places = [
 
 
 def get_helper(client, url):
-    response = client.get(url)
+    response = client.get(
+        url,
+        headers={"Authorization": "Bearer 1234"},
+    )
     assert response.status_code == 200
     return response.json()
 

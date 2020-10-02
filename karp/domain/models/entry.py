@@ -3,7 +3,7 @@ import abc
 import enum
 from functools import singledispatch
 import logging
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 from uuid import UUID
 from abc import abstractclassmethod
 
@@ -233,7 +233,9 @@ class EntryRepository(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def by_entry_id(self, entry_id: str) -> Optional[Entry]:
+    def by_entry_id(
+        self, entry_id: str, *, version: Optional[int] = None
+    ) -> Optional[Entry]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -244,6 +246,20 @@ class EntryRepository(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def by_referencable(self, **kwargs) -> List[Entry]:
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def get_history(
+        self,
+        user_id: Optional[str] = None,
+        entry_id: Optional[str] = None,
+        from_date: Optional[float] = None,
+        to_date: Optional[float] = None,
+        from_version: Optional[int] = None,
+        to_version: Optional[int] = None,
+        offset: int = 0,
+        limit: int = 100,
+    ) -> Tuple[List[Entry], int]:
+        return [], 0
 
 
 class EntryRepositorySettings:
