@@ -135,6 +135,7 @@ def test_diff_against_nothing(fa_history_data_client):
 
 def test_historical_entry(fa_history_data_client):
     response_data = get_helper(fa_history_data_client, "places/4/2/history")
+    print(f"got data")
     assert datetime.now(timezone.utc).timestamp() > response_data["last_modified"]
     assert "user2" == response_data["last_modified_by"]
     assert "id" in response_data

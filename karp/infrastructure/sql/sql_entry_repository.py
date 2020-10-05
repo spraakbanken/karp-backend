@@ -122,6 +122,15 @@ class SqlEntryRepository(
                 key = "UNKNOWN"
             raise errors.IntegrityError(key, value)
 
+    def move(self, entry: Entry, *, old_entry_id: str):
+        self._check_has_session()
+
+        del_stmt = db.delete(self.runtime_model)
+        del_stmt = del_stmt.where(self.runtime_model.entry_id == old_entry_id)
+        self._session.execute(del_stmt)
+
+        return self.put(entry)
+
     def _insert_history(self, entry: Entry):
         self._check_has_session()
         try:
@@ -164,12 +173,34 @@ class SqlEntryRepository(
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
-    def by_id(self, id: str) -> Optional[Entry]:
+    def by_id(
+        self,
+        id: str,
+        *,
+        version: Optional[int] = None,
+        after_date: Optional[float] = None,
+        before_date: Optional[float] = None,
+        oldest_first: bool = False,
+    ) -> Optional[Entry]:
         self._check_has_session()
         query = self._session.query(self.history_model)
-        return (
-            query.filter_by(id=id).order_by(self.history_model.version.desc()).first()
-        )
+        query = query.filter_by(id=id)
+        if version:
+            query = query.filter_by(version=version)
+        elif after_date:
+            query = query.filter(
+                self.history_model.last_modified >= after_date
+            ).order_by(self.history_model.last_modified)
+        elif before_date:
+            query = query.filter(
+                self.history_model.last_modified <= before_date
+            ).order_by(self.history_model.last_modified.desc())
+        elif oldest_first:
+            query = query.order_by(self.history_model.last_modified)
+        else:
+            query = query.order_by(self.history_model.last_modified.desc())
+        row = query.first()
+        return self._history_row_to_entry(row) if row else None
 
     def history_by_entry_id(self, entry_id: str) -> List[Entry]:
         self._check_has_session()
@@ -181,10 +212,16 @@ class SqlEntryRepository(
 
     def teardown(self):
         """Use for testing purpose."""
+        print("starting teardown")
         for child_model in self.runtime_model.child_tables.values():
+            print(f"droping child_model {child_model} ...")
             child_model.__table__.drop(bind=db.engine)
+        print("droping runtime_model ...")
         self.runtime_model.__table__.drop(bind=db.engine)
+        print("droping history_model ...")
         self.history_model.__table__.drop(bind=db.engine)
+        print("dropped history_model")
+
         # db.metadata.drop_all(
         #     bind=db.engine, tables=[self.runtime_model, self.history_model]
         # )
@@ -230,7 +267,7 @@ class SqlEntryRepository(
 
         paged_query = query.limit(limit).offset(offset)
         total = query.count()
-        return [self._history_row_to_entry(row) for row in paged_query], total
+        return [self._history_row_to_entry(row) for row in paged_query.all()], total
 
     def _entry_to_history_row(
         self, entry: Entry

@@ -229,6 +229,10 @@ class EntryRepository(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
+    def move(self, entry: Entry, *, old_entry_id: str):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def entry_ids(self) -> List[str]:
         raise NotImplementedError()
 

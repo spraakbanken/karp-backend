@@ -259,6 +259,7 @@ def test_update_wo_changes_fails(fa_client_w_places):
     assert response_data["error"] == "No changes made"
 
 
+@pytest.mark.skip()
 def test_update_wrong_id(fa_client_w_places):
     response = fa_client_w_places.post(
         "places/add",
@@ -496,9 +497,16 @@ def test_update_entry_id(fa_client_w_places):
     assert "newID" in response_data
     assert "4" == response_data["newID"]
 
-#     # check that the old entry with old id has been removed
-#     entries = get_json(client, "places/query")
-#     assert 1 == len(entries["hits"])
+    #     # check that the old entry with old id has been removed
+    #     entries = get_json(client, "places/query")
+    #     assert 1 == len(entries["hits"])
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.by_resource_id("places")
+
+    with unit_of_work(using=resource.entry_repository) as uw:
+        resource_ids = uw.entry_ids()
+        assert "3" not in resource_ids
+        assert "4" in resource_ids
 
 
 # def test_refs(es, client_with_data_f):

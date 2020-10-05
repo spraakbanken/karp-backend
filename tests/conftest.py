@@ -37,8 +37,10 @@ def fixture_db_setup():
 
 @pytest.fixture(name="db_setup_scope_module", scope="module")
 def fixture_db_setup_scope_module():
+    print("running alembic upgrade ...")
     alembic_main(["--raiseerr", "upgrade", "head"])
     yield
+    print("running alembic downgrade ...")
     alembic_main(["--raiseerr", "downgrade", "base"])
 
 
@@ -54,6 +56,7 @@ def fixture_fa_client_scope_module(db_setup_scope_module):
     ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
+        print("releasing testclient")
 
 
 @pytest.fixture(name="places")
@@ -77,7 +80,7 @@ def fixture_places_scope_module():
     resource = create_resource(places_config)
 
     yield resource
-
+    print("cleaning up places")
     # if resource._entry_repository:
     resource.entry_repository.teardown()
 

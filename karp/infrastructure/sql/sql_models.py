@@ -35,13 +35,27 @@ class ResourceDefinition(db.Base):
     )
 
     def __repr__(self):
-        return """<Resource(resource_id='{}',
-                            version='{}',
-                            timestamp='{}',
-                            active='{}',
-                            deleted='{}')
-                >""".format(
-            self.resource_id, self.version, self.timestamp, self.active, self.deleted
+        return """<Resource(
+                    history_id={},
+                    id={},
+                    resource_id={},
+                    version={},
+                    name={},
+                    config={},
+                    is_published={},
+                    last_modified={},
+                    last_modified_by={},
+                ) > """.format(
+            self.history_id,
+            self.id,
+            self.resource_id,
+            self.version,
+            self.name,
+            self.config,
+            self.is_published,
+            self.last_modified,
+            self.last_modified_by,
+            self.discarded,
         )
 
 

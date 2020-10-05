@@ -86,51 +86,75 @@ def diff(
 ) -> Tuple[Any, int, Optional[int]]:
     with unit_of_work(using=ctx.resource_repo) as uw:
         resource = uw.get_active_resource(resource_id)
-#     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
-#
-#     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
-#     timestamp_field = resource_obj.history_model.timestamp
-#
-#     if from_version:
-#         obj1_query = query.filter_by(version=from_version)
-#     elif from_date is not None:
-#         obj1_query = query.filter(timestamp_field >= from_date).order_by(
-#             timestamp_field
-#         )
-#     else:
-#         obj1_query = query.order_by(timestamp_field)
-#     if to_version:
-#         obj2_query = query.filter_by(version=to_version)
-#     elif to_date is not None:
-#         obj2_query = query.filter(timestamp_field <= to_date).order_by(
-#             timestamp_field.desc()
-#         )
-#     else:
-#         obj2_query = None
-#
-#     obj1 = obj1_query.first()
-#     obj1_body = json.loads(obj1.body) if obj1 else None
-#
-#     if obj2_query:
-#         obj2 = obj2_query.first()
-#         obj2_body = json.loads(obj2.body) if obj2 else None
-#     elif entry is not None:
-#         obj2 = None
-#         obj2_body = entry
-#     else:
-#         obj2 = query.order_by(timestamp_field.desc()).first()
-#         obj2_body = json.loads(obj2.body) if obj2 else None
-#
-#     if not obj1_body or not obj2_body:
-#         raise errors.KarpError("diff impossible!")
-#
-#     return (
-#         jsondiff.compare(obj1_body, obj2_body),
-#         obj1.version,
-#         obj2.version if obj2 else None,
-#     )
-#
-#
+
+    with unit_of_work(using=resource.entry_repository) as entries_uw:
+        db_entry = entries_uw.by_entry_id(entry_id)
+
+        #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
+        #
+        #     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
+        #     timestamp_field = resource_obj.history_model.timestamp
+        #
+        if from_version:
+            obj1 = entries_uw.by_id(db_entry.id, version=from_version)
+        elif from_date is not None:
+            obj1 = entries_uw.by_id(db_entry.id, after_date=from_date)
+        else:
+            obj1 = entries_uw.by_id(db_entry.id, oldest_first=True)
+
+        obj1_body = obj1.body if obj1 else None
+
+        if to_version:
+            obj2 = entries_uw.by_id(db_entry.id, version=to_version)
+            obj2_body = obj2.body
+        elif to_date is not None:
+            obj2 = entries_uw.by_id(db_entry.id, before_date=to_date)
+            obj2_body = obj2.body
+        elif entry is not None:
+            obj2 = None
+            obj2_body = entry
+        else:
+            obj2 = db_entry
+            obj2_body = db_entry.body
+
+    #     elif from_date is not None:
+    #         obj1_query = query.filter(timestamp_field >= from_date).order_by(
+    #             timestamp_field
+    #         )
+    #     else:
+    #         obj1_query = query.order_by(timestamp_field)
+    #     if to_version:
+    #         obj2_query = query.filter_by(version=to_version)
+    #     elif to_date is not None:
+    #         obj2_query = query.filter(timestamp_field <= to_date).order_by(
+    #             timestamp_field.desc()
+    #         )
+    #     else:
+    #         obj2_query = None
+    #
+    #     obj1 = obj1_query.first()
+    #     obj1_body = json.loads(obj1.body) if obj1 else None
+    #
+    #     if obj2_query:
+    #         obj2 = obj2_query.first()
+    #         obj2_body = json.loads(obj2.body) if obj2 else None
+    #     elif entry is not None:
+    #         obj2 = None
+    #         obj2_body = entry
+    #     else:
+    #         obj2 = query.order_by(timestamp_field.desc()).first()
+    #         obj2_body = json.loads(obj2.body) if obj2 else None
+    #
+    if not obj1_body or not obj2_body:
+        raise KarpError("diff impossible!")
+    #
+    return (
+        jsondiff.compare(obj1_body, obj2_body),
+        obj1.version,
+        obj2.version if obj2 else None,
+    )
+
+
 def get_history(
     resource_id: str,
     user_id: Optional[str] = None,
@@ -185,8 +209,10 @@ def get_history(
 
 def get_entry_history(resource_id: str, entry_id: str, version: int):
     with unit_of_work(using=ctx.resource_repo) as uw:
-        resource = uw.get_active_resource(resource_id)
+        print("getting resource")
+        resource = uw.by_resource_id(resource_id)
     with unit_of_work(using=resource.entry_repository) as uw:
+        print("getting entry")
         result = uw.by_entry_id(entry_id, version=version)
 
     return {
@@ -266,20 +292,16 @@ def update_entry(
             print("version conflict")
             raise UpdateConflict(diff)
 
-        new_entry = resource.create_entry_from_dict(
-            entry, user=user_id, message=message
-        )
-
-        if new_entry.entry_id != entry_id:
-            raise EntryIdMismatch(new_entry.entry_id, entry_id)
+        id_getter = resource.id_getter()
+        new_entry_id = id_getter(entry)
 
         current_db_entry.body = entry
-        print(f"current_db_entry.last_modified = {current_db_entry.last_modified}")
-
         current_db_entry.stamp(user_id, message=message)
-        print(f"new_entry.last_modified = {current_db_entry.last_modified}")
-        print(f"new_entry.version = {current_db_entry.version}")
-        uw.update(current_db_entry)
+        if new_entry_id != entry_id:
+            current_db_entry.entry_id = new_entry_id
+            uw.move(current_db_entry, old_entry_id=entry_id)
+        else:
+            uw.update(current_db_entry)
 
     return current_db_entry.entry_id
 
