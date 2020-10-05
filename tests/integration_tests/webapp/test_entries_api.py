@@ -444,7 +444,6 @@ def test_update_several_times(fa_client_w_places):
     )
     assert response.status_code == 201
     new_id = response.json()["newID"]
-    time.sleep(1)
     for i in range(2, 10):
         response = fa_client_w_places.post(
             f"places/{new_id}/update",
@@ -457,49 +456,45 @@ def test_update_several_times(fa_client_w_places):
         )
         print(f"i = {i}: response = {response.json()}")
         assert response.status_code == 200
-        time.sleep(1)
 
 
-# def test_update_entry_id(es, client_with_data_f):
-#     client = init(
-#         client_with_data_f,
-#         es,
-#         [
-#             {
-#                 "code": 3,
-#                 "name": "test3",
-#                 "population": 4,
-#                 "area": 50000,
-#                 "density": 5,
-#                 "municipality": [2, 3],
-#             }
-#         ],
-#     )
+def test_update_entry_id(fa_client_w_places):
+    response = fa_client_w_places.post(
+        "places/add",
+        json={
+            "entry": {
+                "code": 3,
+                "name": "test3",
+                "population": 4,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            }
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    assert response.status_code == 201
+    entry_id = response.json()["newID"]
 
-#     entries = get_json(client, "places/query")
-#     entry_id = entries["hits"][0]["id"]
-
-#     response = client.post(
-#         "places/%s/update" % entry_id,
-#         data=json.dumps(
-#             {
-#                 "entry": {
-#                     "code": 4,
-#                     "name": "test3",
-#                     "population": 5,
-#                     "area": 50000,
-#                     "density": 5,
-#                     "municipality": [2, 3],
-#                 },
-#                 "message": "changes",
-#                 "version": 1,
-#             }
-#         ),
-#         content_type="application/json",
-#     )
-#     response_data = json.loads(response.data.decode())
-#     assert "newID" in response_data
-#     assert "4" == response_data["newID"]
+    response = fa_client_w_places.post(
+        "places/%s/update" % entry_id,
+        json={
+            "entry": {
+                "code": 4,
+                "name": "test3",
+                "population": 5,
+                "area": 50000,
+                "density": 5,
+                "municipality": [2, 3],
+            },
+            "message": "changes",
+            "version": 1,
+        },
+        headers={"Authorization": "Bearer 1234"},
+    )
+    response_data = response.json()
+    assert "newID" in response_data
+    assert "4" == response_data["newID"]
 
 #     # check that the old entry with old id has been removed
 #     entries = get_json(client, "places/query")

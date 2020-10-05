@@ -1,4 +1,4 @@
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple, Any
 import json
 import collections
 import logging
@@ -75,15 +75,17 @@ _logger = logging.getLogger("karp")
 #     return cls.query.filter_by(entry_id=entry_id).first()
 #
 #
-# def diff(
-#     resource_obj: Resource,
-#     entry_id: str,
-#     from_version: int = None,
-#     to_version: int = None,
-#     from_date: Optional[int] = None,
-#     to_date: Optional[int] = None,
-#     entry: Optional[Dict] = None,
-# ):
+def diff(
+    resource_id: str,
+    entry_id: str,
+    from_version: Optional[int] = None,
+    to_version: Optional[int] = None,
+    from_date: Optional[float] = None,
+    to_date: Optional[float] = None,
+    entry: Optional[Dict] = None,
+) -> Tuple[Any, int, Optional[int]]:
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.get_active_resource(resource_id)
 #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
 #
 #     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
