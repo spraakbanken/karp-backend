@@ -2,7 +2,7 @@
 import abc
 import enum
 from uuid import UUID
-from typing import Callable, Dict, Any, Optional, List
+from typing import Callable, Dict, Any, Optional, List, Union
 
 from karp.domain import constraints
 from karp.domain.errors import ConfigurationError, RepositoryStatusError
@@ -296,7 +296,15 @@ class ResourceRepository(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def resource_ids(self):
+    def resource_ids(self) -> List[Resource]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def by_id(self, id: Union[UUID, str]) -> Optional[Resource]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def by_resource_id(self, resource_id: str) -> Optional[Resource]:
         raise NotImplementedError()
 
     @abc.abstractmethod

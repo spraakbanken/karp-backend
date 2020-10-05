@@ -2,16 +2,15 @@ from karp import errors
 
 
 class DomainError(errors.KarpError):
-    """Base exception for domain errors.
-    """
+    """Base exception for domain errors."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
 class ConfigurationError(DomainError):
-    """Raised when a problem with the system configuration is detected.
-    """
+    """Raised when a problem with the system configuration is detected."""
+
     pass
 
 
@@ -41,6 +40,12 @@ class RepositoryStatusError(RepositoryError):
     pass
 
 
+class IntegrityError(RepositoryError):
+    """Raised when a ..."""
+
+    pass
+
+
 class SearchError(DomainError):
     def __init__(self, message, *args, **kwargs):
         if not args:
@@ -61,5 +66,6 @@ class UnsupportedQuery(SearchError):
 class UnsupportedField(SearchError):
     def __init__(self, message: str) -> None:
         super().__init__(
-            message, errors.ClientErrorCodes.SEARCH_UNSUPPORTED_FIELD,
+            message,
+            errors.ClientErrorCodes.SEARCH_UNSUPPORTED_FIELD,
         )

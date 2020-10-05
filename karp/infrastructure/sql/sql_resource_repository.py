@@ -1,9 +1,9 @@
 """SQL Resource Repository"""
 import logging
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Union
 from uuid import UUID
 
-from karp.domain.errors import RepositoryStatusError
+from karp.domain.errors import RepositoryStatusError, IntegrityError
 from karp.domain.models.resource import (
     Resource,
     ResourceOp,
@@ -31,8 +31,17 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
 
     def put(self, resource: Resource):
         self._check_has_session()
+        # Check if resource exists
+        existing_resource = self.by_resource_id(resource.resource_id)
+        if existing_resource:
+            if not existing_resource.discarded:
+                if existing_resource.id != resource.id:
+                    raise IntegrityError(
+                        f"Resource with resource_id '{resource.resource_id}' already exists."
+                    )
         if resource.version is None:
             resource._version = self.get_latest_version(resource.resource_id) + 1
+
         self._session.execute(
             db.insert(self.table, values=self._resource_to_row(resource))
         )
@@ -42,9 +51,20 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
     def resource_ids(self) -> List[str]:
         self._check_has_session()
         query = self._session.query(self.table)
-        return [
-            row.resource_id for row in query.group_by(self.table.resource_id).all()
-        ]
+        return [row.resource_id for row in query.group_by(self.table.resource_id).all()]
+
+    def by_id(self, id: Union[UUID, str]) -> Optional[Resource]:
+        pass
+
+    def by_resource_id(self, resource_id: str) -> Optional[Resource]:
+        self._check_has_session()
+        query = self._session.query(self.table)
+        row = (
+            query.filter_by(resource_id=resource_id)
+            .order_by(self.table.version.desc())
+            .first()
+        )
+        return self._row_to_resource(row) if row else None
 
     def resources_with_id(self, resource_id: str):
         pass
@@ -82,7 +102,9 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
         query = self._session.query(self.table)
         return [
             self._row_to_resource(row)
-            for row in query.filter_by(resource_id=resource_id).all()
+            for row in query.filter_by(resource_id=resource_id)
+            .order_by(self.table.version.desc())
+            .all()
         ]
 
     def get_published_resources(self) -> List[Resource]:
@@ -109,7 +131,18 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
     def _resource_to_row(
         self, resource: Resource
     ) -> Tuple[
-        None, UUID, str, int, str, Dict, Optional[bool], float, str, str, ResourceOp, bool
+        None,
+        UUID,
+        str,
+        int,
+        str,
+        Dict,
+        Optional[bool],
+        float,
+        str,
+        str,
+        ResourceOp,
+        bool,
     ]:
         return (
             None,
@@ -126,22 +159,17 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
             resource.discarded,
         )
 
-    def _row_to_resource(self, row) -> Optional[Resource]:
-        return (
-            Resource(
-                entity_id=row.id,
-                resource_id=row.resource_id,
-                version=row.version,
-                name=row.name,
-                config=row.config,
-                message=row.message,
-                op=row.op,
-                is_published=row.is_published,
-                last_modified=row.last_modified,
-                last_modified_by=row.last_modified_by,
-                discarded=row.discarded,
-            )
-            if row
-            else None
+    def _row_to_resource(self, row) -> Resource:
+        return Resource(
+            entity_id=row.id,
+            resource_id=row.resource_id,
+            version=row.version,
+            name=row.name,
+            config=row.config,
+            message=row.message,
+            op=row.op,
+            is_published=row.is_published,
+            last_modified=row.last_modified,
+            last_modified_by=row.last_modified_by,
+            discarded=row.discarded,
         )
-
