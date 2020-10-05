@@ -41,10 +41,10 @@ def add_entry(
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
     print("calling entrywrite")
-    new_id = entries.add_entry(
+    new_entry = entries.add_entry(
         resource_id, data.entry, user.identifier, message=data.message
     )
-    return {"newID": new_id}
+    return {"newID": new_entry.entry_id}
 
 
 @router.post("/{resource_id}/{entry_id}/update")

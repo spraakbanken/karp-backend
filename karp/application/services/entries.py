@@ -19,6 +19,7 @@ from karp.errors import (
     EntryIdMismatch,
 )
 
+from karp.domain.models.entry import Entry
 # from karp.database import db
 # import karp.indexmgr as indexmgr
 # import karp.resourcemgr.entrymetadata as entrymetadata
@@ -231,7 +232,7 @@ def add_entry(
     user_id: str,
     message: str = None,
     resource_version: int = None,
-):
+) -> Entry:
     return add_entries(
         resource_id,
         [entry],
@@ -321,7 +322,7 @@ def add_entries(
     user_id: str,
     message: str = None,
     resource_version: int = None,
-):
+) -> List[Entry]:
     """
     Add entries to DB and INDEX (if present and resource is active).
 
@@ -358,11 +359,10 @@ def add_entries(
             entry = resource.create_entry_from_dict(
                 entry_raw, user=user_id, message=message
             )
-            print("before uw.put")
             uw.put(entry)
-            created_db_entries.append(entry.entry_id)
-            print("after uw.put")
-    print("after db commit")
+            created_db_entries.append(entry)
+
+
     return created_db_entries
 
 
