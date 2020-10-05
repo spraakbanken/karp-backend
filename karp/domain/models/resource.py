@@ -212,7 +212,16 @@ class Resource(TimestampedVersionedEntity):
 
     @property
     def id_getter(self):
-        return create_field_getter(self.config["id"])
+        return create_field_getter(self.config["id"], str)
+
+    def create_entry_from_dict(self, entry_raw: Dict, *, user: str, message: Optional[str] = None) -> Entry:
+        self._check_not_discarded()
+        return create_entry(
+            self.id_getter(entry_raw),
+            entry_raw,
+            last_modified_by=user,
+            message=message,
+        )
 
 
 # ===== Entities =====

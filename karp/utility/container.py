@@ -1,4 +1,4 @@
-from typing import Dict, List, Callable, Optional, TypeVar
+from typing import Any, Dict, List, Callable, Optional, TypeVar
 
 
 T = TypeVar("T", bool, int, str, List[str])
@@ -16,3 +16,14 @@ def arg_get(
     if convert is None:
         return arg
     return convert(arg)
+
+
+def create_field_getter(
+    field: str,
+    convert: Optional[Callable[[Any], Any]] = None
+) -> Callable[[Dict], Any]:
+    def getter(d: Dict):
+        result = d[field]
+        return convert(result) if convert else result
+
+    return getter
