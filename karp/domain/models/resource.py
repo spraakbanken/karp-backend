@@ -2,7 +2,7 @@
 import abc
 import enum
 from uuid import UUID
-from typing import Dict, Any, Optional, List
+from typing import Callable, Dict, Any, Optional, List
 
 from karp.domain import constraints
 from karp.domain.errors import ConfigurationError, RepositoryStatusError
@@ -210,14 +210,17 @@ class Resource(TimestampedVersionedEntity):
             )
         return self._entry_json_schema
 
-    @property
-    def id_getter(self):
+    # @property
+    def id_getter(self) -> Callable[[Dict], str]:
         return create_field_getter(self.config["id"], str)
 
-    def create_entry_from_dict(self, entry_raw: Dict, *, user: str, message: Optional[str] = None) -> Entry:
+    def create_entry_from_dict(
+        self, entry_raw: Dict, *, user: str, message: Optional[str] = None
+    ) -> Entry:
         self._check_not_discarded()
+        id_getter = self.id_getter()
         return create_entry(
-            self.id_getter(entry_raw),
+            id_getter(entry_raw),
             entry_raw,
             last_modified_by=user,
             message=message,
