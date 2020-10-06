@@ -1,7 +1,9 @@
 """SQL repository for entries."""
+import collections
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
+from _pytest._code.code import filter_traceback
 
 import regex
 
@@ -32,8 +34,8 @@ class SqlEntryRepository(
 ):
     def __init__(
         self,
-        history_model: db.Base,
-        runtime_model: db.Base,
+        history_model,
+        runtime_model,
         resource_config: Dict,
         # mapped_class: Any
     ):
@@ -226,18 +228,58 @@ class SqlEntryRepository(
         #     bind=db.engine, tables=[self.runtime_model, self.history_model]
         # )
 
-    def by_referencable(self, **kwargs) -> List[Entry]:
+    def by_referencable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
         query = self._session.query(self.runtime_model)
-        result = query.filter_by(**kwargs).all()
-        # query = self._session.query(self.history_model)
-        # query = query.join(
-        #     self.runtime_table,
-        #     self.history_model.c.history_id == self.runtime_table.c.history_id,
-        # )
-        # result = query.filter_by(larger_place=7).all()
-        print(f"result = {result}")
-        return result
+        query = self._session.query(self.runtime_model, self.history_model).filter(
+            self.runtime_model.history_id == self.history_model.history_id
+        )
+        if filters is None:
+            if kwargs is None:
+                raise RuntimeError("")
+            else:
+                filters = kwargs
+
+        joined_filters = []
+        simple_filters = {}
+
+        for filter_key in filters.keys():
+            tmp = collections.defaultdict(dict)
+            if filter_key in self.resource_config[
+                "referenceable"
+            ] and self.resource_config["fields"][filter_key].get("collection"):
+                print(f"collection field: {filter_key}")
+                # child_cls = self.runtime_model.child_tables[filter_key]
+                # tmp[child_cls.__tablename__][filter_key] = filters[filter_key]
+                # print(f"tmp.values() = {tmp.values()}")
+                joined_filters.append({filter_key: filters[filter_key]})
+                # query = query.filter(
+                #     getattr(self.runtime_model, filter_key).any(filters[filter_key])
+                # )
+            else:
+                simple_filters[filter_key] = filters[filter_key]
+            # joined_filters.extend(tmp.values())
+
+        query = query.filter_by(**simple_filters)
+
+        for child_filters in joined_filters:
+            print(f"list(child_filters.keys())[0] = {list(child_filters.keys())[0]}")
+            child_cls = self.runtime_model.child_tables[list(child_filters.keys())[0]]
+            child_query = self._session.query(child_cls).filter_by(**child_filters)
+            for child_e in child_query:
+                print(f"child hit = {child_e}")
+            query = query.join(child_cls).filter_by(**child_filters)
+        # result = query.filter_by(**kwargs).all()
+        # # query = self._session.query(self.history_model)
+        # # query = query.join(
+        # #     self.runtime_table,
+        # #     self.history_model.c.history_id == self.runtime_table.c.history_id,
+        # # )
+        # # result = query.filter_by(larger_place=7).all()
+        # print(f"result = {result}")
+        # return result
+        # return query.all()
+        return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
 
     def get_history(
         self,
@@ -304,6 +346,7 @@ class SqlEntryRepository(
         }
 
     def _history_row_to_entry(self, row) -> Entry:
+        print(f"row = {row!r}")
         return Entry(
             entry_id=row.entry_id,
             body=row.body,

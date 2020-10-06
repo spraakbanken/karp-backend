@@ -53,17 +53,21 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
         query = self._session.query(self.table)
         return [row.resource_id for row in query.group_by(self.table.resource_id).all()]
 
-    def by_id(self, id: Union[UUID, str]) -> Optional[Resource]:
+    def by_id(
+        self, id: Union[UUID, str], *, version: Optional[int] = None
+    ) -> Optional[Resource]:
         pass
 
-    def by_resource_id(self, resource_id: str) -> Optional[Resource]:
+    def by_resource_id(
+        self, resource_id: str, *, version: Optional[int] = None
+    ) -> Optional[Resource]:
         self._check_has_session()
-        query = self._session.query(self.table)
-        row = (
-            query.filter_by(resource_id=resource_id)
-            .order_by(self.table.version.desc())
-            .first()
-        )
+        query = self._session.query(self.table).filter_by(resource_id=resource_id)
+        if version:
+            query = query.filter_by(version=version)
+        else:
+            query = query.order_by(self.table.version.desc())
+        row = query.first()
         return self._row_to_resource(row) if row else None
 
     def resources_with_id(self, resource_id: str):

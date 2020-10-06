@@ -300,11 +300,15 @@ class ResourceRepository(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def by_id(self, id: Union[UUID, str]) -> Optional[Resource]:
+    def by_id(
+        self, id: Union[UUID, str], *, version: Optional[int] = None
+    ) -> Optional[Resource]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def by_resource_id(self, resource_id: str) -> Optional[Resource]:
+    def by_resource_id(
+        self, resource_id: str, *, version: Optional[int] = None
+    ) -> Optional[Resource]:
         raise NotImplementedError()
 
     @abc.abstractmethod

@@ -4,97 +4,104 @@ from typing import Dict, List, Tuple, Optional
 import collections
 import logging
 
-from .index import IndexModule
-import karp.resourcemgr as resourcemgr
-import karp.resourcemgr.entryread as entryread
-import karp.network as network
-from karp.resourcemgr.resource import Resource
-from karp import errors
-from karp.resourcemgr.entrymetadata import EntryMetadata
+from karp.domain.models.entry import Entry
+from karp.domain.models.resource import Resource, ResourceRepository
+from karp.domain.models.search_service import SearchService
 
-indexer = IndexModule()
+# from .index import IndexModule
+# import karp.resourcemgr as resourcemgr
+# import karp.resourcemgr.entryread as entryread
+# import karp.network as network
+# from karp.resourcemgr.resource import Resource
+# from karp import errors
+# from karp.resourcemgr.entrymetadata import EntryMetadata
 
-_logger = logging.getLogger("karp")
+# indexer = IndexModule()
 
-
-def pre_process_resource(
-    resource_obj: Resource,
-) -> List[Tuple[str, EntryMetadata, Dict]]:
-    metadata = resourcemgr.get_all_metadata(resource_obj)
-    fields = resource_obj.config["fields"].items()
-    entries = resource_obj.model.query.filter_by(deleted=False)
-    return [
-        (
-            entry.entry_id,
-            metadata[entry.id],
-            transform_to_index_entry(resource_obj, json.loads(entry.body), fields),
-        )
-        for entry in entries
-    ]
+logger = logging.getLogger("karp")
 
 
-def reindex(
-    resource_id: str,
-    version: Optional[int] = None,
-    search_entries: Optional[List[Tuple[str, EntryMetadata, Dict]]] = None,
-) -> None:
-    """
-    If `search_entries` is not given, they will be fetched from DB and processed using `transform_to_index_entry`
-    If `search_entries` is given, they most have the same format as the output from `pre_process_resource`
-    """
-    resource_obj = resourcemgr.get_resource(resource_id, version=version)
-    try:
-        index_name = indexer.impl.create_index(resource_id, resource_obj.config)
-    except NotImplementedError:
-        _logger.error("No Index module is loaded. Check your configurations...")
-        sys.exit(errors.NoIndexModuleConfigured)
-    if not search_entries:
-        search_entries = pre_process_resource(resource_obj)
-    add_entries(index_name, search_entries, update_refs=False)
-    indexer.impl.publish_index(resource_id, index_name)
+# def pre_process_resource(
+#     resource_obj: Resource,
+# ) -> List[Tuple[str, EntryMetadata, Dict]]:
+#     metadata = resourcemgr.get_all_metadata(resource_obj)
+#     fields = resource_obj.config["fields"].items()
+#     entries = resource_obj.model.query.filter_by(deleted=False)
+#     return [
+#         (
+#             entry.entry_id,
+#             metadata[entry.id],
+#             transform_to_index_entry(resource_obj, json.loads(entry.body), fields),
+#         )
+#         for entry in entries
+#     ]
 
 
-def publish_index(resource_id: str, version: Optional[int] = None) -> None:
-    reindex(resource_id, version=version)
-    if version:
-        resourcemgr.publish_resource(resource_id, version)
+# def reindex(
+#     resource_id: str,
+#     version: Optional[int] = None,
+#     search_entries: Optional[List[Tuple[str, EntryMetadata, Dict]]] = None,
+# ) -> None:
+#     """
+#     If `search_entries` is not given, they will be fetched from DB and processed using `transform_to_index_entry`
+#     If `search_entries` is given, they most have the same format as the output from `pre_process_resource`
+#     """
+#     resource_obj = resourcemgr.get_resource(resource_id, version=version)
+#     try:
+#         index_name = indexer.impl.create_index(resource_id, resource_obj.config)
+#     except NotImplementedError:
+#         _logger.error("No Index module is loaded. Check your configurations...")
+#         sys.exit(errors.NoIndexModuleConfigured)
+#     if not search_entries:
+#         search_entries = pre_process_resource(resource_obj)
+#     add_entries(index_name, search_entries, update_refs=False)
+#     indexer.impl.publish_index(resource_id, index_name)
 
 
-def add_entries(
-    resource_id: str,
-    entries: List[Tuple[str, EntryMetadata, Dict]],
-    update_refs: bool = True,
-) -> None:
-    indexer.impl.add_entries(resource_id, entries)
-    if update_refs:
-        _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
+# def publish_index(resource_id: str, version: Optional[int] = None) -> None:
+#     reindex(resource_id, version=version)
+#     if version:
+#         resourcemgr.publish_resource(resource_id, version)
 
 
-def delete_entry(resource_id: str, entry_id: str) -> None:
-    indexer.impl.delete_entry(resource_id, entry_id)
-    _update_references(resource_id, [entry_id])
+# def add_entries(
+#     resource_id: str,
+#     entries: List[Tuple[str, EntryMetadata, Dict]],
+#     update_refs: bool = True,
+# ) -> None:
+#     indexer.impl.add_entries(resource_id, entries)
+#     if update_refs:
+#         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
-def _update_references(resource_id: str, entry_ids: List[str]) -> None:
-    add = collections.defaultdict(list)
-    for src_entry_id in entry_ids:
-        refs = network.get_referenced_entries(resource_id, None, src_entry_id)
-        for field_ref in refs:
-            ref_resource_id = field_ref["resource_id"]
-            ref_resource = resourcemgr.get_resource(
-                ref_resource_id, version=(field_ref["resource_version"])
-            )
-            body = transform_to_index_entry(
-                ref_resource, field_ref["entry"], ref_resource.config["fields"].items()
-            )
-            metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
-            add[ref_resource_id].append(((field_ref["entry_id"]), metadata, body))
-    for ref_resource_id, ref_entries in add.items():
-        indexer.impl.add_entries(ref_resource_id, ref_entries)
+# def delete_entry(resource_id: str, entry_id: str) -> None:
+#     indexer.impl.delete_entry(resource_id, entry_id)
+#     _update_references(resource_id, [entry_id])
+
+
+# def _update_references(resource_id: str, entry_ids: List[str]) -> None:
+#     add = collections.defaultdict(list)
+#     for src_entry_id in entry_ids:
+#         refs = network.get_referenced_entries(resource_id, None, src_entry_id)
+#         for field_ref in refs:
+#             ref_resource_id = field_ref["resource_id"]
+#             ref_resource = resourcemgr.get_resource(
+#                 ref_resource_id, version=(field_ref["resource_version"])
+#             )
+#             body = transform_to_index_entry(
+#                 ref_resource, field_ref["entry"], ref_resource.config["fields"].items()
+#             )
+#             metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
+#             add[ref_resource_id].append(((field_ref["entry_id"]), metadata, body))
+#     for ref_resource_id, ref_entries in add.items():
+#         indexer.impl.add_entries(ref_resource_id, ref_entries)
 
 
 def transform_to_index_entry(
-    resource: resourcemgr.Resource, src_entry: Dict, fields: Tuple[str, Dict]
+    resource: Resource,
+    resource_repo: ResourceRepository,
+    indexer: SearchService,
+    src_entry: Entry,
 ):
     """
     TODO This is very slow (for resources with references) because of db-lookups everywhere in the code
@@ -102,37 +109,39 @@ def transform_to_index_entry(
     TODO somehow get the needed entries in bulk after transforming some entries and insert them into
     TODO the transformed entries afterward. Very tricky.
     """
-    index_entry = indexer.impl.create_empty_object()
-    _transform_to_index_entry(resource, src_entry, index_entry, fields)
+    index_entry = indexer.create_empty_object()
+    _transform_to_index_entry(
+        resource,
+        resource_repo,
+        indexer,
+        src_entry.body,
+        index_entry,
+        resource.config["fields"].items(),
+    )
     return index_entry
 
 
 def _evaluate_function(
-    function_conf: Dict, src_entry: Dict, src_resource: resourcemgr.Resource
+    resource_repo: ResourceRepository,
+    indexer: SearchService,
+    function_conf: Dict,
+    src_entry: Dict,
+    src_resource: Resource,
 ):
     if "multi_ref" in function_conf:
         function_conf = function_conf["multi_ref"]
         target_field = function_conf["field"]
         if "resource_id" in function_conf:
-            target_resource = resourcemgr.get_resource(
-                function_conf["resource_id"], function_conf["resource_version"]
+            target_resource = resource_repo.by_resource_id(
+                function_conf["resource_id"], version=function_conf["resource_version"]
             )
         else:
             target_resource = src_resource
 
         if "test" in function_conf:
             operator, args = list(function_conf["test"].items())[0]
-            filters = {"deleted": False}
-            if operator == "equals":
-                for arg in args:
-                    if "self" in arg:
-                        filters[target_field] = src_entry[arg["self"]]
-                    else:
-                        raise NotImplementedError()
-                target_entries = entryread.get_entries_by_column(
-                    target_resource, filters
-                )
-            elif operator == "contains":
+            if operator in ["equals", "contains"]:
+                filters = {"deleted": False}
                 for arg in args:
                     if "self" in arg:
                         filters[target_field] = src_entry[arg["self"]]
@@ -170,34 +179,44 @@ def _evaluate_function(
 
 
 def _transform_to_index_entry(
-    resource: resourcemgr.Resource, _src_entry: Dict, _index_entry, fields
+    resource: Resource,
+    resource_repo: ResourceRepository,
+    indexer: SearchService,
+    _src_entry: Dict,
+    _index_entry,
+    fields,
 ):
     for field_name, field_conf in fields:
         if field_conf.get("virtual", False):
             res = _evaluate_function(field_conf["function"], _src_entry, resource)
             if res:
-                indexer.impl.assign_field(_index_entry, "v_" + field_name, res)
+                indexer.assign_field(_index_entry, "v_" + field_name, res)
         elif field_conf.get("ref", {}):
             ref_field = field_conf["ref"]
             if ref_field.get("resource_id"):
-                ref_resource = resourcemgr.get_resource(
+                ref_resource = resource_repo.by_resource_id(
                     ref_field["resource_id"], version=ref_field["resource_version"]
                 )
                 if ref_field["field"].get("collection"):
                     ref_objs = []
                     for ref_id in _src_entry[field_name]:
-                        ref_entry_body = entryread.get_entry_by_entry_id(
-                            ref_resource, str(ref_id)
+                        ref_entry_body = ref_resource.entry_repository.by_entry_id(
+                            str(ref_id)
                         )
                         if ref_entry_body:
-                            ref_entry = {field_name: json.loads(ref_entry_body.body)}
+                            ref_entry = {field_name: ref_entry_body.body}
                             ref_index_entry = {}
                             list_of_sub_fields = ((field_name, ref_field["field"]),)
                             _transform_to_index_entry(
-                                resource, ref_entry, ref_index_entry, list_of_sub_fields
+                                resource,
+                                resource_repo,
+                                indexer,
+                                ref_entry,
+                                ref_index_entry,
+                                list_of_sub_fields,
                             )
                             ref_objs.append(ref_index_entry[field_name])
-                    indexer.impl.assign_field(_index_entry, "v_" + field_name, ref_objs)
+                    indexer.assign_field(_index_entry, "v_" + field_name, ref_objs)
                 else:
                     raise NotImplementedError()
             else:
@@ -208,23 +227,30 @@ def _transform_to_index_entry(
                     ref_id = [ref_id]
 
                 for elem in ref_id:
-                    ref = entryread.get_entry_by_entry_id(resource, str(elem))
+                    ref = resource.entry_repository.by_entry_id(str(elem))
                     if ref:
-                        ref_entry = {field_name: json.loads(ref.body)}
+                        ref_entry = {field_name: ref.body}
                         ref_index_entry = {}
                         list_of_sub_fields = ((field_name, ref_field["field"]),)
                         _transform_to_index_entry(
-                            resource, ref_entry, ref_index_entry, list_of_sub_fields
+                            resource,
+                            resource_repo,
+                            indexer,
+                            ref_entry,
+                            ref_index_entry,
+                            list_of_sub_fields,
                         )
-                        indexer.impl.assign_field(
+                        indexer.assign_field(
                             _index_entry, "v_" + field_name, ref_index_entry[field_name]
                         )
 
         if field_conf["type"] == "object":
-            field_content = indexer.impl.create_empty_object()
+            field_content = indexer.create_empty_object()
             if field_name in _src_entry:
                 _transform_to_index_entry(
                     resource,
+                    resource_repo,
+                    indexer,
                     _src_entry[field_name],
                     field_content,
                     field_conf["fields"].items(),
@@ -233,4 +259,4 @@ def _transform_to_index_entry(
             field_content = _src_entry.get(field_name)
 
         if field_content:
-            indexer.impl.assign_field(_index_entry, field_name, field_content)
+            indexer.assign_field(_index_entry, field_name, field_content)
