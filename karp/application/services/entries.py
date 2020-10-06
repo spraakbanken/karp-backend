@@ -362,6 +362,7 @@ def add_entries(
             uw.put(entry)
             created_db_entries.append(entry)
 
+    ctx.search_service.add_entries(resource, created_db_entries)
 
     return created_db_entries
 

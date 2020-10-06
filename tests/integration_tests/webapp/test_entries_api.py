@@ -1,6 +1,7 @@
 import json
 import time
 from datetime import datetime, timezone
+from unittest import mock
 
 import pytest  # pyre-ignore
 
@@ -35,20 +36,22 @@ def init(client, es_status_code, entries):
 def test_add(fa_client_w_places):
     # client = init(client_with_data_f, es, [])
 
-    response = fa_client_w_places.post(
-        "places/add",
-        json={
-            "entry": {
-                "code": 3,
-                "name": "test3",
-                "population": 4,
-                "area": 50000,
-                "density": 5,
-                "municipality": [2, 3],
-            }
-        },
-        headers={"Authorization": "Bearer FAKETOKEN"},
-    )
+    with mock.patch("karp.application.ctx.search_service") as search_service_mock:
+        response = fa_client_w_places.post(
+            "places/add",
+            json={
+                "entry": {
+                    "code": 3,
+                    "name": "test3",
+                    "population": 4,
+                    "area": 50000,
+                    "density": 5,
+                    "municipality": [2, 3],
+                }
+            },
+            headers={"Authorization": "Bearer FAKETOKEN"},
+        )
+    search_service_mock.assert_called_once()
     print(f"response. = {response.json()}")
     assert response.status_code == 201
     response_data = response.json()
