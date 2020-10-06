@@ -16,10 +16,11 @@ __version__ = "0.8.1"
 def create_app() -> FastAPI:
     app = FastAPI(title="Karp API", redoc_url="/", version=__version__)
 
-    from karp.application import ctx
-    from karp.infrastructure.sql.sql_resource_repository import SqlResourceRepository
+    from karp.application.services.contexts import init_context
 
-    ctx.resource_repo = SqlResourceRepository()
+    load_infrastructure()
+    init_context()
+
     load_modules(app)
     from karp.errors import KarpError
 
@@ -33,9 +34,17 @@ def create_app() -> FastAPI:
     return app
 
 
+def load_infrastructure():
+    for ep in entry_points()["karp.infrastructure"]:
+        logger.info("Loading module: %s", ep.name)
+        print("Loading module: %s" % ep.name)
+        ep.load()
+
+
 def load_modules(app=None):
     for ep in entry_points()["karp.modules"]:
         logger.info("Loading module: %s", ep.name)
+        print("Loading module: %s" % ep.name)
         mod = ep.load()
         if app:
             init_app = getattr(mod, "init_app", None)

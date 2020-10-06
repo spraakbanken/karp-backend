@@ -12,18 +12,31 @@ import elasticsearch.helpers  # pyre-ignore
 
 # from karp import query_dsl
 from karp.domain.models import search_service
+from karp.domain.models.entry import Entry
+from karp.domain.models.resource import Resource
 from karp.domain.errors import (
     UnsupportedField,
     # IncompleteQuery,
     # UnsupportedQuery,
 )
 from .es_query import EsQuery
+from . import config
 
 logger = logging.getLogger("karp")
 
 
-class Es6SearchService(search_service.SearchService):
-    def __init__(self, es: elasticsearch.Elasticsearch):
+class Es6SearchService(
+    search_service.SearchService, search_service_type="es6_search_service"
+):
+    def __init__(self, es: Optional[elasticsearch.Elasticsearch] = None):
+        if es is None:
+            es = elasticsearch.Elasticsearch(
+                hosts=config.ELASTICSEARCH_HOST,
+                sniff_on_start=True,
+                sniff_on_connection_fail=True,
+                sniffer_timeout=60,
+                sniff_timeout=10,
+            )
         self.es: elasticsearch.Elasticsearch = es
         analyzed_fields, sortable_fields = self._init_field_mapping()
         self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
@@ -61,16 +74,16 @@ class Es6SearchService(search_service.SearchService):
 
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
-    def add_entries(self, resource_id, entries):
+    def add_entries(self, resource: Resource, entries: List[Entry]):
         index_to_es = []
-        for (entry_id, metadata, entry) in entries:
-            entry.update(metadata.to_dict())
+        for entry in entries:
+            # entry.update(metadata.to_dict())
             index_to_es.append(
                 {
-                    "_index": resource_id,
-                    "_id": entry_id,
+                    "_index": resource.resource_id,
+                    "_id": entry.id,
                     "_type": "entry",
-                    "_source": entry,
+                    "_source": entry.body,
                 }
             )
 
@@ -214,7 +227,7 @@ class Es6SearchService(search_service.SearchService):
 
                 if query.query is not None:
                     s = s.query(query.query)
-                s = s[query.from_: query.from_ + query.size]
+                s = s[query.from_ : query.from_ + query.size]
                 if query.sort:
                     s = s.sort(*self.translate_sort_fields([resource], query.sort))
                 elif resource in query.sort_dict:
@@ -242,7 +255,7 @@ class Es6SearchService(search_service.SearchService):
             if query.query is not None:
                 s = s.query(query.query)
 
-            s = s[query.from_: query.from_ + query.size]
+            s = s[query.from_ : query.from_ + query.size]
 
             if query.lexicon_stats:
                 s.aggs.bucket(

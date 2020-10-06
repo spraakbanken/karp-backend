@@ -16,7 +16,7 @@ from karp.domain.models.entity import TimestampedVersionedEntity
 from karp.utility import unique_id
 
 
-_logger = logging.getLogger("karp")
+logger = logging.getLogger("karp")
 
 
 class EntryOp(enum.Enum):
@@ -179,13 +179,8 @@ class EntryRepository(metaclass=abc.ABCMeta):
         #     raise RuntimeError(f"A default EntryRepository is already set. Default type is {cls._registry[None]!r}")
         cls.type = repository_type
         cls._registry[repository_type] = cls
-        if is_default:
-            if None in cls._registry:
-                _logger.warn(
-                    "Setting default EntryRepository type to '%s'", repository_type
-                )
-            cls._registry[None] = repository_type
-        if None not in cls._registry:
+        if is_default or None not in cls._registry:
+            logger.info("Setting default EntryRepository type to '%s'", repository_type)
             cls._registry[None] = repository_type
 
     @classmethod

@@ -14,6 +14,9 @@ from starlette.testclient import TestClient
 from starlette.config import environ
 
 environ["TESTING"] = "True"
+environ["ELASTICSEARCH_HOST"] = "localhost:9201"
+
+import elasticsearch_test  # pyre-ignore
 
 from karp.domain.models.resource import create_resource
 
@@ -21,7 +24,7 @@ from karp.infrastructure.unit_of_work import unit_of_work
 from karp.infrastructure.sql import sql_entry_repository
 from karp.infrastructure.testing import dummy_auth_service
 
-from karp.application import ctx
+from karp.application import ctx, config
 
 from karp.webapp import main as webapp_main
 
@@ -45,7 +48,8 @@ def fixture_db_setup_scope_module():
 
 
 @pytest.fixture(name="fa_client")
-def fixture_fa_client(db_setup):
+def fixture_fa_client(db_setup, es):
+    assert es == "run"
     ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
@@ -86,7 +90,8 @@ def fixture_places_scope_module():
 
 
 @pytest.fixture(name="fa_client_w_places")
-def fixture_fa_client_w_places(fa_client, places):
+def fixture_fa_client_w_places(fa_client, places, es):
+    assert es == "run"
     places.is_published = True
     with unit_of_work(using=ctx.resource_repo) as uw:
         uw.put(places)
@@ -109,7 +114,6 @@ def fixture_fa_client_w_places_scope_module(
 #
 # load_dotenv(dotenv_path=".env")
 #
-# import elasticsearch_test  # pyre-ignore
 #
 # from karp.infrastructure.sql.sql_models import db
 # from karp import create_app  # noqa: E402
@@ -355,15 +359,17 @@ def fixture_fa_client_w_places_scope_module(
 #     return app.test_cli_runner()
 #
 #
-# @pytest.fixture(name="es", scope="session")
-# def fixture_es():
-#     if not strtobool(os.environ.get("ELASTICSEARCH_ENABLED", "false")):
-#         pytest.skip("Elasticsearch disabled.")
-#     else:
-#         if not os.environ.get("ES_HOME"):
-#             raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
-#         with elasticsearch_test.ElasticsearchTest(port=9201):
-#             yield "run"
+@pytest.fixture(name="es", scope="session")
+def fixture_es():
+    if not config.TEST_ELASTICSEARCH_ENABLED:
+        yield "no_es"
+    else:
+        if not config.TEST_ES_HOME:
+            raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
+        with elasticsearch_test.ElasticsearchTest(
+            port=9201, es_path=config.TEST_ES_HOME
+        ):
+            yield "run"
 
 
 @pytest.fixture
