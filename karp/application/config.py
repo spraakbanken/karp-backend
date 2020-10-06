@@ -1,6 +1,7 @@
 import os
 import logging
 from distutils.util import strtobool
+from pathlib import Path
 
 from sqlalchemy.engine.url import URL, make_url
 
@@ -49,7 +50,13 @@ ELASTICSEARCH_HOST = config(
 #         if "ELASTICSEARCH_HOST" in os.environ
 #         else None
 #     )
-#     ELASTICSEARCH_ENABLED = strtobool(os.environ.get("ELASTICSEARCH_ENABLED", "n"))
+TEST_ELASTICSEARCH_ENABLED = config(
+    "TEST_ELASTICSEARCH_ENABLED", cast=bool, default=False
+)
+
+SEARCH_CONTEXT = config("SEARCH_CONTEXT", default=None)
+
+TEST_ES_HOME = config("TEST_ES_HOME", cast=Path, default=None)
 #     # CONSOLE_LOG_LEVEL = logging.getLevelName(
 #     #     os.environ.get("CONSOLE_LOG_LEVEL", "INFO")
 #     # )
