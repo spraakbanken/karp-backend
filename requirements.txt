@@ -20,3 +20,4 @@ starlette
 pydantic
 sqlalchemy-utils
 sqlalchemy-json
+uvicorn
