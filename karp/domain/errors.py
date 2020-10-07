@@ -1,3 +1,4 @@
+from email import message
 from karp import errors
 
 
@@ -43,7 +44,10 @@ class RepositoryStatusError(RepositoryError):
 class IntegrityError(RepositoryError):
     """Raised when a ..."""
 
-    pass
+    def __init__(self, message: str, **kwargs) -> None:
+        if "code" not in kwargs:
+            kwargs["code"] = errors.ClientErrorCodes.DB_INTEGRITY_ERROR
+        super().__init__(message, **kwargs)
 
 
 class SearchError(DomainError):

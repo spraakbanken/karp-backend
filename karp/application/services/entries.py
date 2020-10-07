@@ -20,6 +20,7 @@ from karp.errors import (
 )
 
 from karp.domain.models.entry import Entry
+
 # from karp.database import db
 # import karp.indexmgr as indexmgr
 # import karp.resourcemgr.entrymetadata as entrymetadata
@@ -495,7 +496,7 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
             raise EntryNotFoundError(resource_id, entry_id)
 
         entry.discard(user=user_id)
-        uw.update(entry)
+        uw.delete(entry)
 
 
 # def delete_entry(resource_id: str, entry_id: str, user_id: str):

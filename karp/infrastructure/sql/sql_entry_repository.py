@@ -87,11 +87,8 @@ class SqlEntryRepository(
         runtime_entry = self.runtime_model(
             **self._entry_to_runtime_dict(history_id, entry)
         )
-        # ins_stmt = db.insert(self.runtime_model)
-        # ins_stmt = ins_stmt.values(**self._entry_to_runtime_dict(history_id, entry))
         try:
             return self._session.add(runtime_entry)
-            # return self._session.execute(ins_stmt)
         except db.exc.IntegrityError as exc:
             logger.exception(exc)
             match = DUPLICATE_PROG.search(str(exc))
@@ -103,39 +100,56 @@ class SqlEntryRepository(
             else:
                 value = "UNKNOWN"
                 key = "UNKNOWN"
-            raise errors.IntegrityError(key, value)
+            raise errors.IntegrityError(key=key, value=value)
 
     def update(self, entry: Entry):
         self._check_has_session()
         history_id = self._insert_history(entry)
 
-        updt_stmt = db.update(self.runtime_model)
-        updt_stmt = updt_stmt.where(self.runtime_model.entry_id == entry.entry_id)
-        updt_stmt = updt_stmt.values(**self._entry_to_runtime_dict(history_id, entry))
+        current_db_entry = (
+            self._session.query(self.runtime_model)
+            .filter_by(entry_id=entry.entry_id)
+            .first()
+        )
 
-        try:
-            return self._session.execute(updt_stmt)
-        except db.exc.IntegrityError as exc:
-            logger.exception(exc)
-            match = DUPLICATE_PROG.search(str(exc))
-            if match:
-                value = match.group(1)
-                key = match.group(2)
-                if key == "PRIMARY":
-                    key = "entry_id"
-            else:
-                value = "UNKNOWN"
-                key = "UNKNOWN"
-            raise errors.IntegrityError(key, value)
+        if not current_db_entry:
+            raise errors.EntryNotFoundError("", entry.entry_id)
+
+        runtime_dict = self._entry_to_runtime_dict(history_id, entry)
+        for key, value in runtime_dict.items():
+            setattr(current_db_entry, key, value)
+
+    @classmethod
+    def primary_key(cls):
+        return "entry_id"
 
     def move(self, entry: Entry, *, old_entry_id: str):
         self._check_has_session()
 
-        del_stmt = db.delete(self.runtime_model)
-        del_stmt = del_stmt.where(self.runtime_model.entry_id == old_entry_id)
-        self._session.execute(del_stmt)
+        db_entry = (
+            self._session.query(self.runtime_model)
+            .filter_by(entry_id=old_entry_id)
+            .first()
+        )
+        if not db_entry:
+            raise errors.EntryNotFoundError("", entry.entry_id)
+        db_entry.discarded = True
 
         return self.put(entry)
+
+    def delete(self, entry: Entry):
+        self._check_has_session()
+
+        self._insert_history(entry)
+
+        db_entry = (
+            self._session.query(self.runtime_model)
+            .filter_by(entry_id=entry.entry_id)
+            .first()
+        )
+        if not db_entry:
+            raise errors.EntryNotFoundError("", entry.entry_id)
+        db_entry.discarded = True
 
     def _insert_history(self, entry: Entry):
         self._check_has_session()

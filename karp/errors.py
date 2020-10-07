@@ -1,4 +1,4 @@
-from typing import IO
+from typing import IO, Optional
 
 
 NoIndexModuleConfigured = 10
@@ -128,8 +128,18 @@ class PluginNotFoundError(KarpError):
 
 
 class IntegrityError(UserError):
-    def __init__(self, key: str, value: str) -> None:
+    def __init__(
+        self,
+        message: Optional[str] = None,
+        *,
+        key: Optional[str] = None,
+        value: Optional[str] = None,
+    ) -> None:
+        if message is None:
+            message = ""
+        if key and value:
+            message = f"The key '{key}' is not unique (value='{value}')."
         super().__init__(
-            f"The key '{key}' is not unique (value='{value}')",
+            message,
             code=ClientErrorCodes.DB_INTEGRITY_ERROR,
         )

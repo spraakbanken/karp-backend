@@ -112,7 +112,7 @@ def test_add_existing(fa_client_w_places):
     if config.DB_DRIVER == "sqlite":
         pass
     else:
-        assert response_data["error"] == "The key 'entry_id' is not unique (value='3')"
+        assert response_data["error"] == "The key 'entry_id' is not unique (value='3')."
 
 
 def test_delete(fa_client_w_places):

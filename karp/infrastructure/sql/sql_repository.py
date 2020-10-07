@@ -1,9 +1,17 @@
 """Base class for SQL repositories."""
 from enum import Enum
+import logging
 from typing import Optional
+
+import regex
+
+from karp import errors
 
 from karp.infrastructure import unit_of_work
 from karp.infrastructure.sql import db
+
+
+logger = logging.getLogger("karp")
 
 
 class SqlRepository:
@@ -27,6 +35,9 @@ _create_new = object()
 @unit_of_work.create_unit_of_work.register(SqlRepository)
 def _(repo: SqlRepository, *, session=_create_new):
     return SqlUnitOfWork(repo, session=session)
+
+
+DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 
 
 class SqlUnitOfWork:
@@ -75,7 +86,24 @@ class SqlUnitOfWork:
 
     def commit(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
-        self._session.commit()
+        try:
+            self._session.commit()
+        except db.exc.IntegrityError as err:
+            logger.exception(err)
+            str_err = str(err)
+            print(f"str(err) = {str_err}")
+            if "Duplicate entry" in str_err:
+                match = DUPLICATE_PROG.search(str_err)
+                if match:
+                    value = match.group(1)
+                    key = match.group(2)
+                    if key == "PRIMARY":
+                        key = self.primary_key()
+                else:
+                    value = "UNKNOWN"
+                    key = "UNKNOWN"
+                raise errors.IntegrityError(key=key, value=value) from err
+            raise errors.IntegrityError("Unknown integrity error") from err
 
     def abort(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
