@@ -207,7 +207,7 @@ class SqlEntryRepository(
         query = query.filter_by(id=id)
         if version:
             query = query.filter_by(version=version)
-        elif after_date:
+        elif after_date is not None:
             query = query.filter(
                 self.history_model.last_modified >= after_date
             ).order_by(self.history_model.last_modified)

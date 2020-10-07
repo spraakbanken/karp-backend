@@ -111,7 +111,7 @@ def fixture_fa_client_w_places(fa_client, places_published, es):
 
 @pytest.fixture(name="fa_client_w_places_scope_module", scope="module")
 def fixture_fa_client_w_places_scope_module(
-    fa_client_scope_module, places_scope_module
+    fa_client_scope_module, places_scope_module, es
 ):
     places_scope_module.is_published = True
     with unit_of_work(using=ctx.resource_repo) as uw:

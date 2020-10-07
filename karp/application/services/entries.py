@@ -86,6 +86,9 @@ def diff(
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
 ) -> Tuple[Any, int, Optional[int]]:
+    print(
+        f"entries::diff({resource_id}, {entry_id}, {from_version}, {to_version}, {from_date}, {to_date}, {entry})"
+    )
     with unit_of_work(using=ctx.resource_repo) as uw:
         resource = uw.get_active_resource(resource_id)
 

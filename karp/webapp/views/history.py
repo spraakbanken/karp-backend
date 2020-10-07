@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Dict, Optional
 
 from fastapi import APIRouter, Query, Security, HTTPException, status
 
@@ -30,6 +30,7 @@ def get_diff(
     to_version: Optional[int] = None,
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
+    entry: Optional[Dict] = None,
 ):
     #     from_version = request.args.get("from_version")
     #     to_version = request.args.get("to_version")
@@ -60,6 +61,7 @@ def get_diff(
         to_version=to_version,
         from_date=from_date,
         to_date=to_date,
+        entry=entry,
     )
 
     result = {"diff": diff, "from_version": from_version}
