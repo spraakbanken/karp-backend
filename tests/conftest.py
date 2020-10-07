@@ -49,7 +49,6 @@ def fixture_db_setup_scope_module():
 
 @pytest.fixture(name="fa_client")
 def fixture_fa_client(db_setup, es):
-    assert es == "run"
     ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
@@ -91,7 +90,6 @@ def fixture_places_scope_module():
 
 @pytest.fixture(name="fa_client_w_places")
 def fixture_fa_client_w_places(fa_client, places, es):
-    assert es == "run"
     places.is_published = True
     with unit_of_work(using=ctx.resource_repo) as uw:
         uw.put(places)

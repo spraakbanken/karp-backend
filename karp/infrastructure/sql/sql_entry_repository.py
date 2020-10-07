@@ -231,9 +231,9 @@ class SqlEntryRepository(
     def by_referencable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
         query = self._session.query(self.runtime_model)
-        query = self._session.query(self.runtime_model, self.history_model).filter(
-            self.runtime_model.history_id == self.history_model.history_id
-        )
+        # query = self._session.query(self.runtime_model, self.history_model).filter(
+        #     self.runtime_model.history_id == self.history_model.history_id
+        # )
         if filters is None:
             if kwargs is None:
                 raise RuntimeError("")
@@ -244,7 +244,7 @@ class SqlEntryRepository(
         simple_filters = {}
 
         for filter_key in filters.keys():
-            tmp = collections.defaultdict(dict)
+            # tmp = collections.defaultdict(dict)
             if filter_key in self.resource_config[
                 "referenceable"
             ] and self.resource_config["fields"][filter_key].get("collection"):
@@ -278,8 +278,8 @@ class SqlEntryRepository(
         # # result = query.filter_by(larger_place=7).all()
         # print(f"result = {result}")
         # return result
-        # return query.all()
-        return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
+        return query.all()
+        # return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
 
     def get_history(
         self,
