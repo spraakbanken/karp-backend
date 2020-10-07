@@ -25,6 +25,7 @@ from karp.infrastructure.sql import sql_entry_repository
 from karp.infrastructure.testing import dummy_auth_service
 
 from karp.application import ctx, config
+from karp.application.services import contexts
 
 from karp.webapp import main as webapp_main
 
@@ -48,7 +49,7 @@ def fixture_db_setup_scope_module():
 
 
 @pytest.fixture(name="fa_client")
-def fixture_fa_client(db_setup, es):
+def fixture_fa_client(db_setup):
     ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
@@ -88,11 +89,22 @@ def fixture_places_scope_module():
     resource.entry_repository.teardown()
 
 
-@pytest.fixture(name="fa_client_w_places")
-def fixture_fa_client_w_places(fa_client, places, es):
+@pytest.fixture(name="context")
+def fixture_context(db_setup, es):
+    contexts.init_context()
+
+
+@pytest.fixture(name="places_published")
+def fixture_places_published(places, context):
     places.is_published = True
     with unit_of_work(using=ctx.resource_repo) as uw:
         uw.put(places)
+
+    return places
+
+
+@pytest.fixture(name="fa_client_w_places")
+def fixture_fa_client_w_places(fa_client, places_published, es):
 
     return fa_client
 
