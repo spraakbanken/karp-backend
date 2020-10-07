@@ -84,10 +84,14 @@ class SqlEntryRepository(
 
         history_id = self._insert_history(entry)
 
-        ins_stmt = db.insert(self.runtime_model)
-        ins_stmt = ins_stmt.values(**self._entry_to_runtime_dict(history_id, entry))
+        runtime_entry = self.runtime_model(
+            **self._entry_to_runtime_dict(history_id, entry)
+        )
+        # ins_stmt = db.insert(self.runtime_model)
+        # ins_stmt = ins_stmt.values(**self._entry_to_runtime_dict(history_id, entry))
         try:
-            return self._session.execute(ins_stmt)
+            return self._session.add(runtime_entry)
+            # return self._session.execute(ins_stmt)
         except db.exc.IntegrityError as exc:
             logger.exception(exc)
             match = DUPLICATE_PROG.search(str(exc))
@@ -230,10 +234,10 @@ class SqlEntryRepository(
 
     def by_referencable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
-        query = self._session.query(self.runtime_model)
-        # query = self._session.query(self.runtime_model, self.history_model).filter(
-        #     self.runtime_model.history_id == self.history_model.history_id
-        # )
+        # query = self._session.query(self.runtime_model)
+        query = self._session.query(self.runtime_model, self.history_model).filter(
+            self.runtime_model.history_id == self.history_model.history_id
+        )
         if filters is None:
             if kwargs is None:
                 raise RuntimeError("")
@@ -256,6 +260,8 @@ class SqlEntryRepository(
                 # query = query.filter(
                 #     getattr(self.runtime_model, filter_key).any(filters[filter_key])
                 # )
+                # query = self._session.query(self.runtime_model.child_tables[filter_key])
+                # return query.all()
             else:
                 simple_filters[filter_key] = filters[filter_key]
             # joined_filters.extend(tmp.values())
@@ -278,8 +284,8 @@ class SqlEntryRepository(
         # # result = query.filter_by(larger_place=7).all()
         # print(f"result = {result}")
         # return result
-        return query.all()
-        # return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
+        # return query.all()
+        return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
 
     def get_history(
         self,
@@ -371,8 +377,12 @@ class SqlEntryRepository(
             field_val = entry.body.get(field_name)
             if field_val is None:
                 continue
-            if self.resource_config["fields"][field_name].get("collection", False):
-                pass
+            if self.resource_config["fields"][field_name].get("collection"):
+                child_table = self.runtime_model.child_tables[field_name]
+                for elem in field_val:
+                    if field_name not in _entry:
+                        _entry[field_name] = []
+                    _entry[field_name].append(child_table(**{field_name: elem}))
             else:
                 _entry[field_name] = field_val
         return _entry
