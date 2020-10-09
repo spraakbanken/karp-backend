@@ -21,3 +21,5 @@ pydantic
 sqlalchemy-utils
 sqlalchemy-json
 uvicorn
+tabulate
+typer

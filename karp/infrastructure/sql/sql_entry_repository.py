@@ -246,6 +246,16 @@ class SqlEntryRepository(
         #     bind=db.engine, tables=[self.runtime_model, self.history_model]
         # )
 
+    def all_entries(self) -> List[Entry]:
+        self._check_has_session()
+
+        query = (
+            self._session.query(self.runtime_model, self.history_model)
+            .filter(self.runtime_model.history_id == self.history_model.history_id)
+            .filter_by(discarded=False)
+        )
+        return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
+
     def by_referencable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
         # query = self._session.query(self.runtime_model)

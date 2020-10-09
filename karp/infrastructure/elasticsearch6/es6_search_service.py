@@ -226,6 +226,7 @@ class Es6SearchService(
 
     def search_with_query(self, query: EsQuery):
         logger.info("search_with_query called with query={}".format(query))
+        print("search_with_query called with query={}".format(query))
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
 
@@ -319,7 +320,7 @@ class Es6SearchService(
                 f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
             )
 
-    def search_ids(self, args, resource_id: str, entry_ids: str):
+    def search_ids(self, resource_id: str, entry_ids: str):
         logger.info(
             "Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:"
         )

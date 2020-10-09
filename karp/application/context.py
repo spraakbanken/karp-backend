@@ -13,7 +13,7 @@ class Context:
         self,
         resource_repo: ResourceRepository = None,
         search_service: SearchService = None,
-        auth_service: AuthService = None
+        auth_service: AuthService = None,
     ):
         self.resource_repo = resource_repo
         self.search_service = search_service

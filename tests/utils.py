@@ -3,7 +3,7 @@ import json
 from typing import Dict
 
 
-def get_json(client, path: str):
+def get_json(client, path: str, **kwargs):
     """Call the get on the client with the given path.
 
     Assert that the status_code is ok.
@@ -16,7 +16,8 @@ def get_json(client, path: str):
     Returns:
         [type] -- [description]
     """
-    response = client.get(path)
+    response = client.get(path, **kwargs)
+    print(f"response status code: {response.status_code}")
     assert 200 <= response.status_code < 300
     return response.json()
 

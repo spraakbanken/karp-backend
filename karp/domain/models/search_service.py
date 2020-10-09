@@ -80,7 +80,7 @@ class SearchService:
     def search_with_query(self, query: Query):
         raise NotImplementedError()
 
-    def search_ids(self, args, resource_id: str, entry_ids: str):
+    def search_ids(self, resource_id: str, entry_ids: str):
         raise NotImplementedError()
 
     def statistics(self, resource_id: str, field: str):

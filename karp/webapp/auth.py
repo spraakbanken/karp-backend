@@ -25,7 +25,7 @@ def get_current_user(
         # code=ClientErrorCodes.NOT_PERMITTED,
     )
     try:
-        print("Calling auth_service")
+        print("webapp.views.get_current_user: Calling auth_service")
         user = ctx.auth_service.authenticate(
             credentials.scheme, credentials.credentials
         )

@@ -9,6 +9,7 @@ class ClientErrorCodes:
     RESOURCE_NOT_PUBLISHED = 21
     RESOURCE_CONFIG_NOT_VALID = 22
     RESOURCE_CONFIG_CANNOT_UPDATE = 23
+    RESOURCE_ALREADY_PUBLISHED = 24
     ENTRY_NOT_FOUND = 30
     ENTRY_NOT_CHANGED = 31
     ENTRY_NOT_VALID = 32
@@ -81,6 +82,14 @@ class ResourceConfigUpdateError(KarpError):
                 msg=msg,
             ),
             ClientErrorCodes.RESOURCE_CONFIG_CANNOT_UPDATE,
+        )
+
+
+class ResourceAlreadyPublished(KarpError):
+    def __init__(self, resource_id: str):
+        super().__init__(
+            f"Resource '{resource_id}' already published",
+            code=ClientErrorCodes.RESOURCE_ALREADY_PUBLISHED,
         )
 
 

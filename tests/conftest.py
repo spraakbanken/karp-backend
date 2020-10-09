@@ -83,12 +83,26 @@ def fixture_places_scope_module():
 
     yield resource
     print("cleaning up places")
-    # if resource._entry_repository:
+    resource.entry_repository.teardown()
+
+
+@pytest.fixture(name="municipalities_scope_module", scope="module")
+def fixture_municipalities_scope_module():
+    with open("tests/data/config/municipalities.json") as fp:
+        resource = resources.create_new_resource_from_file(fp)
+
+    yield resource
+    print("cleaning up municipalities")
     resource.entry_repository.teardown()
 
 
 @pytest.fixture(name="context")
 def fixture_context(db_setup, es):
+    contexts.init_context()
+
+
+@pytest.fixture(name="context_scope_module", scope="module")
+def fixture_context_scope_module(db_setup_scope_module, es):
     contexts.init_context()
 
 
@@ -101,6 +115,22 @@ def fixture_places_published(places, context):
     return places
 
 
+@pytest.fixture(name="places_published_scope_module", scope="module")
+def fixture_places_published_scope_module(places_scope_module, context_scope_module):
+    resources.publish_resource(places_scope_module.resource_id)
+
+    return places_scope_module
+
+
+@pytest.fixture(name="municipalities_published_scope_module", scope="module")
+def fixture_municipalities_published_scope_module(
+    municipalities_scope_module, context_scope_module
+):
+    resources.publish_resource(municipalities_scope_module.resource_id)
+
+    return municipalities_scope_module
+
+
 @pytest.fixture(name="fa_client_w_places")
 def fixture_fa_client_w_places(fa_client, places_published, es):
 
@@ -109,20 +139,19 @@ def fixture_fa_client_w_places(fa_client, places_published, es):
 
 @pytest.fixture(name="fa_client_w_places_scope_module", scope="module")
 def fixture_fa_client_w_places_scope_module(
-    fa_client_scope_module, places_scope_module, es
+    fa_client_scope_module, places_published_scope_module, es
 ):
-    resources.publish_resource(places_scope_module.resource_id)
 
     return fa_client_scope_module
 
 
 @pytest.fixture(name="fa_client_w_places_w_municipalities_scope_module", scope="module")
 def fixture_fa_client_w_places_w_municipalities_scope_module(
-    fa_client_scope_module, places_scope_module, es
+    fa_client_scope_module,
+    places_published_scope_module,
+    municipalities_published_scope_module,
+    es,
 ):
-    places_scope_module.is_published = True
-    with unit_of_work(using=ctx.resource_repo) as uw:
-        uw.put(places_scope_module)
 
     return fa_client_scope_module
 

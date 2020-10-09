@@ -1,4 +1,4 @@
-from typing import BinaryIO, Tuple, Dict, List, Optional
+from typing import IO, Tuple, Dict, List, Optional
 import json
 import logging
 import collections
@@ -10,6 +10,11 @@ from sqlalchemy.sql import func
 import fastjsonschema  # pyre-ignore
 
 from sb_json_tools import jsondiff
+
+from karp.domain.models.resource import Resource
+from karp.domain.services import indexing
+
+from karp import errors
 
 from karp.application import ctx
 
@@ -39,8 +44,9 @@ resource_versions = {}  # Dict[str, int]
 field_translations = {}  # Dict[str, Dict[str, List[str]]]
 
 
-# def get_available_resources() -> List[database.ResourceDefinition]:
-#     return database.ResourceDefinition.query.filter_by(active=True)
+def get_published_resources() -> List[Resource]:
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        return uw.get_published_resources()
 
 
 def get_field_translations(resource_id: str) -> Optional[Dict]:
@@ -83,18 +89,18 @@ def get_field_translations(resource_id: str) -> Optional[Dict]:
 #     return database.ResourceDefinition.query.all()
 
 
-# def check_resource_published(resource_ids: List[str]) -> None:
-#     published_resources = [
-#         resource_def.resource_id for resource_def in get_available_resources()
-#     ]
-#     for resource_id in resource_ids:
-#         if resource_id not in published_resources:
-#             raise KarpError(
-#                 'Resource is not searchable: "{resource_id}"'.format(
-#                     resource_id=resource_id
-#                 ),
-#                 ClientErrorCodes.RESOURCE_NOT_PUBLISHED,
-#             )
+def check_resource_published(resource_ids: List[str]) -> None:
+    published_resources = [
+        resource.resource_id for resource in get_published_resources()
+    ]
+    for resource_id in resource_ids:
+        if resource_id not in published_resources:
+            raise errors.KarpError(
+                'Resource is not searchable: "{resource_id}"'.format(
+                    resource_id=resource_id
+                ),
+                errors.ClientErrorCodes.RESOURCE_NOT_PUBLISHED,
+            )
 
 
 # def create_and_update_caches(id: str, version: int, config: Dict) -> None:
@@ -148,8 +154,8 @@ def get_field_translations(resource_id: str) -> Optional[Dict]:
 #     return _read_and_process_resources_from_dir(config_dir, create_new_resource)
 
 
-# def create_new_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
-#     return create_new_resource(config_file)
+def create_new_resource_from_file(config_file: IO) -> Resource:
+    return create_new_resource(config_file)
 
 
 # def update_resource_from_dir(config_dir: str) -> List[Tuple[str, int]]:
@@ -160,7 +166,21 @@ def get_field_translations(resource_id: str) -> Optional[Dict]:
 #     return update_resource(config_file)
 
 
-# def create_new_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:
+def create_new_resource(config_file: IO, config_dir=None) -> Resource:
+    print("loading config with json ...")
+    config = json.load(config_file)
+    print("creating resource ...")
+    resource = Resource.from_dict(config)
+
+    print("resource created. setting up unit_of_work")
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        print("adding resource to ctx.resource_repo ...")
+        uw.put(resource)
+
+    print("done! returning ...")
+    return resource
+
+
 #     config = load_and_validate_config(config_file)
 
 #     resource_id = config["resource_id"]
@@ -306,7 +326,21 @@ def get_field_translations(resource_id: str) -> Optional[Dict]:
 #     return resource_id, resource_def.version
 
 
-# def publish_resource(resource_id, version):
+def publish_resource(resource_id: str, version: Optional[int] = None):
+    print(f"publishing '{resource_id}' ...")
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.by_resource_id(resource_id)
+        if resource.is_published:
+            print(f"'{resource_id}' already published!")
+            raise errors.ResourceAlreadyPublished(resource_id)
+        resource.is_published = True
+        resource.stamp(user="Local admin", message="Publishing")
+        uw.update(resource)
+    print("indexing ...")
+    indexing.publish_index(ctx.search_service, ctx.resource_repo, resource)
+    print("index published")
+
+
 #     resource = database.get_resource_definition(resource_id, version)
 #     old_active = database.get_active_resource_definition(resource_id)
 #     if old_active:
@@ -343,66 +377,6 @@ def get_field_translations(resource_id: str) -> Optional[Dict]:
 #     resource_def.config_file = json.dumps(config)
 #     # db.session.update(resource_def)
 #     db.session.commit()
-
-
-# def get_refs(resource_id, version=None):
-#     """
-#     Goes through all other resource configs finding resources and fields that refer to this resource
-#     """
-#     resource_backrefs = collections.defaultdict(lambda: collections.defaultdict(dict))
-#     resource_refs = collections.defaultdict(lambda: collections.defaultdict(dict))
-
-#     src_resource = get_resource(resource_id, version=version)
-
-#     all_other_resources = [
-#         resource_def
-#         for resource_def in get_available_resources()
-#         if resource_def.resource_id != resource_id or resource_def.version != version
-#     ]
-
-#     for field_name, field in src_resource.config["fields"].items():
-#         if "ref" in field:
-#             if "resource_id" not in field["ref"]:
-#                 resource_backrefs[resource_id][version][field_name] = field
-#                 resource_refs[resource_id][version][field_name] = field
-#             else:
-#                 resource_refs[field["ref"]["resource_id"]][
-#                     field["ref"]["resource_version"]
-#                 ][field_name] = field
-#         elif "function" in field and "multi_ref" in field["function"]:
-#             virtual_field = field["function"]["multi_ref"]
-#             ref_field = virtual_field["field"]
-#             if "resource_id" in virtual_field:
-#                 resource_backrefs[virtual_field["resource_id"]][
-#                     virtual_field["resource_version"]
-#                 ][ref_field] = None
-#             else:
-#                 resource_backrefs[resource_id][version][ref_field] = None
-
-#     for resource_def in all_other_resources:
-#         other_resource = get_resource(
-#             resource_def.resource_id, version=resource_def.version
-#         )
-#         for field_name, field in other_resource.config["fields"].items():
-#             ref = field.get("ref")
-#             if (
-#                 ref
-#                 and ref.get("resource_id") == resource_id
-#                 and ref.get("resource_version") == version
-#             ):
-#                 resource_backrefs[resource_def.resource_id][resource_def.version][
-#                     field_name
-#                 ] = field
-
-#     def flatten_dict(ref_dict):
-#         ref_list = []
-#         for ref_resource_id, versions in ref_dict.items():
-#             for ref_version, field_names in versions.items():
-#                 for field_name, field in field_names.items():
-#                     ref_list.append((ref_resource_id, ref_version, field_name, field))
-#         return ref_list
-
-#     return flatten_dict(resource_refs), flatten_dict(resource_backrefs)
 
 
 # def is_protected(resource_id, level):

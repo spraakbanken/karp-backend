@@ -1,3 +1,4 @@
+from karp.domain.models.resource import Resource
 from typing import Optional, Dict, List, Tuple, Any
 import json
 import collections
@@ -20,6 +21,7 @@ from karp.errors import (
 )
 
 from karp.domain.models.entry import Entry
+from karp.domain.services import indexing
 
 # from karp.database import db
 # import karp.indexmgr as indexmgr
@@ -348,7 +350,7 @@ def add_entries(
             f"'resource_id' must be of type 'str', were '{type(resource_id)}'"
         )
     with unit_of_work(using=ctx.resource_repo) as uw:
-        resource = uw.get_active_resource(resource_id)
+        resource = uw.by_resource_id(resource_id)
 
     # resource = get_resource(resource_id, version=resource_version)
     # resource_conf = resource.config
@@ -366,7 +368,12 @@ def add_entries(
             uw.put(entry)
             created_db_entries.append(entry)
 
-    ctx.search_service.add_entries(resource, created_db_entries)
+    indexing.add_entries(
+        ctx.resource_repo,
+        ctx.search_service,
+        resource,
+        created_db_entries,
+    )
 
     return created_db_entries
 
@@ -501,6 +508,8 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
         entry.discard(user=user_id)
         uw.delete(entry)
 
+    ctx.search_service.delete_entry(resource, entry)
+
 
 # def delete_entry(resource_id: str, entry_id: str, user_id: str):
 #     resource = get_resource(resource_id)
@@ -521,6 +530,12 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
 #     indexmgr.delete_entry(resource_id, entry.entry_id)
 #
 #
+def _src_entry_to_index_entry(resource: Resource, src_entry: Entry) -> Dict:
+    return indexing.transform_to_index_entry(
+        ctx.resource_repo, ctx.search_service, resource, src_entry
+    )
+
+
 # def _src_entry_to_index_entry(resource: Resource, src_entry: Dict):
 #     """
 #     Make a "src entry" into an "index entry"

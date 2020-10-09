@@ -1,9 +1,9 @@
-
 from fastapi import APIRouter
 
-from karp.application import ctx
+from karp.application.services import resources
 
 from karp.infrastructure.unit_of_work import unit_of_work
+
 # import karp.resourcemgr as resourcemgr
 
 # conf_api = Blueprint("conf_api", __name__)
@@ -13,11 +13,8 @@ router = APIRouter()
 
 @router.get("/resources")
 def get_resources():
-    with unit_of_work(using=ctx.resource_repo) as uw:
-        resources = uw.get_published_resources()
-
     result = []
-    for resource in resources:
+    for resource in resources.get_published_resources():
         resource_obj = {"resource_id": resource.resource_id}
 
         protected_conf = resource.config.get("protected")
