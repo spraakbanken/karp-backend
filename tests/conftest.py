@@ -25,7 +25,7 @@ from karp.infrastructure.sql import sql_entry_repository
 from karp.infrastructure.testing import dummy_auth_service
 
 from karp.application import ctx, config
-from karp.application.services import contexts
+from karp.application.services import contexts, entries, resources
 
 from karp.webapp import main as webapp_main
 
@@ -49,7 +49,7 @@ def fixture_db_setup_scope_module():
 
 
 @pytest.fixture(name="fa_client")
-def fixture_fa_client(db_setup):
+def fixture_fa_client(db_setup, es):
     ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
@@ -79,9 +79,7 @@ def fixture_places():
 @pytest.fixture(name="places_scope_module", scope="module")
 def fixture_places_scope_module():
     with open("tests/data/config/places.json") as fp:
-        places_config = json.load(fp)
-
-    resource = create_resource(places_config)
+        resource = resources.create_new_resource_from_file(fp)
 
     yield resource
     print("cleaning up places")
@@ -113,6 +111,15 @@ def fixture_fa_client_w_places(fa_client, places_published, es):
 def fixture_fa_client_w_places_scope_module(
     fa_client_scope_module, places_scope_module, es
 ):
+    resources.publish_resource(places_scope_module.resource_id)
+
+    return fa_client_scope_module
+
+
+@pytest.fixture(name="fa_client_w_places_w_municipalities_scope_module", scope="module")
+def fixture_fa_client_w_places_w_municipalities_scope_module(
+    fa_client_scope_module, places_scope_module, es
+):
     places_scope_module.is_published = True
     with unit_of_work(using=ctx.resource_repo) as uw:
         uw.put(places_scope_module)
@@ -133,36 +140,7 @@ def fixture_fa_client_w_places_scope_module(
 # from karp.database import ResourceDefinition  # noqa: E402
 #
 #
-# CONFIG_PLACES = """{
-#   "resource_id": "places",
-#   "resource_name": "Platser i Sverige",
-#   "fields": {
-#     "name": {
-#       "type": "string",
-#       "required": true
-#     },
-#     "municipality": {
-#       "collection": true,
-#       "type": "number",
-#       "required": true
-#     },
-#     "population": {
-#       "type": "number"
-#     },
-#     "area": {
-#       "type": "number"
-#     },
-#     "density": {
-#       "type": "number"
-#     },
-#     "code": {
-#       "type": "number",
-#       "required": true
-#     }
-#   },
-#   "sort": "name",
-#   "id": "code"
-# }"""
+
 #
 #
 # class ConfigTest(Config):
@@ -387,19 +365,6 @@ def json_schema_config():
     return json.loads(common_data.CONFIG_PLACES)
 
 
-# def init(client, es_status_code, entries: Dict):
-#     if es_status_code == "skip":
-#         pytest.skip("elasticsearch disabled")
-#     client_with_data = client(use_elasticsearch=True)
-#
-#     for resource, _entries in entries.items():
-#         for entry in _entries:
-#             client_with_data.post(
-#                 "{resource}/add".format(resource=resource),
-#                 data=json.dumps({"entry": entry}),
-#                 content_type="application/json",
-#             )
-#     return client_with_data
 #
 #
 # @pytest.fixture(scope="session")

@@ -1,7 +1,30 @@
-from tests.utils import get_json
+import pytest
+
+from karp.application.services import entries, resources
+
+from tests.common_data import PLACES
+from tests.utils import get_json, add_entries
 
 
-def test_stats(client_with_entries_scope_session):
-    entries = get_json(client_with_entries_scope_session, "places/stats/area")
+@pytest.fixture(scope="module", name="fa_stats_data_client")
+def fixture_fa_stats_data_client(fa_client_w_places_scope_module):
+    add_entries(
+        fa_client_w_places_scope_module,
+        {
+            "places": PLACES,
+        },
+    )
+
+    return fa_client_w_places_scope_module
+
+
+def test_stats(fa_stats_data_client):
+    response = fa_stats_data_client.get(
+        "places/stats/area",
+        headers={"Authorization": "Bearer 1234"},
+    )
+    assert response.status_code == 200
+
+    entries = response.json()
 
     assert len(entries) == 4

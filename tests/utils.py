@@ -1,5 +1,6 @@
 """Handle calls and json convertions."""
 import json
+from typing import Dict
 
 
 def get_json(client, path: str):
@@ -17,4 +18,16 @@ def get_json(client, path: str):
     """
     response = client.get(path)
     assert 200 <= response.status_code < 300
-    return json.loads(response.data.decode())
+    return response.json()
+
+
+def add_entries(client, entries: Dict):
+    for resource, _entries in entries.items():
+        for entry in _entries:
+            response = client.post(
+                f"{resource}/add",
+                json={"entry": entry},
+                headers={"Authorization": "Bearer 1234"},
+            )
+            assert response.status_code == 201
+    return client

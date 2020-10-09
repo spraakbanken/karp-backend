@@ -43,6 +43,7 @@ class Es6SearchService(
         self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
 
     def create_index(self, resource_id, config):
+        print("creating es mapping ...")
         mapping = _create_es_mapping(config)
 
         properties = mapping["properties"]
@@ -63,15 +64,19 @@ class Es6SearchService(
 
         date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
         index_name = resource_id + "_" + date
+        print(f"creating index '{index_name}' ...")
         result = self.es.indices.create(index=index_name, body=body)
         if "error" in result:
+            print("failed to create index")
             raise RuntimeError("failed to create index")
+        print("index created")
         return index_name
 
-    def publish_index(self, alias_name, index_name):
+    def publish_index(self, alias_name: str, index_name: str):
         if self.es.indices.exists_alias(name=alias_name):
             self.es.indices.delete_alias(name=alias_name, index="*")
 
+        self.on_publish_resource(alias_name, index_name)
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
     def add_entries(self, resource: Resource, entries: List[Entry]):
@@ -89,8 +94,10 @@ class Es6SearchService(
 
         elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
-    def delete_entry(self, resource_id, entry_id):
-        self.es.delete(index=resource_id, doc_type="entry", id=entry_id, refresh=True)
+    def delete_entry(self, resource: Resource, entry: Entry):
+        self.es.delete(
+            index=resource.resource_id, doc_type="entry", id=entry.id, refresh=True
+        )
 
     def create_empty_object(self):
         return {}
@@ -457,6 +464,7 @@ def _create_es_mapping(config):
         parent_schema["properties"][parent_field_name] = result
 
     for field_name, field_def in fields.items():
+        print(f"creating mapping for field '{field_name}'")
         recursive_field(es_mapping, field_name, field_def)
 
     return es_mapping
