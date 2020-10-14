@@ -1,4 +1,3 @@
-from email import message
 from karp import errors
 
 
@@ -34,11 +33,17 @@ class ConstraintsError(DomainError, ValueError):
 
 
 class RepositoryError(DomainError):
-    pass
+    def __init__(self, message: str, **kwargs):
+        if "code" not in kwargs:
+            kwargs["code"] = errors.ClientErrorCodes.DB_GENERAL_ERROR
+        super().__init__(message, **kwargs)
 
 
 class RepositoryStatusError(RepositoryError):
-    pass
+    def __init__(self, message: str, **kwargs):
+        if "code" not in kwargs:
+            kwargs["code"] = errors.ClientErrorCodes.DB_GENERAL_ERROR
+        super().__init__(message, **kwargs)
 
 
 class IntegrityError(RepositoryError):
@@ -48,6 +53,15 @@ class IntegrityError(RepositoryError):
         if "code" not in kwargs:
             kwargs["code"] = errors.ClientErrorCodes.DB_INTEGRITY_ERROR
         super().__init__(message, **kwargs)
+
+
+class NonExistingField(RepositoryError):
+    """Raised when a field doesn't exist in a repo."""
+
+    def __init__(self, field: str, **kwargs):
+        if "code" not in kwargs:
+            kwargs["code"] = errors.ClientErrorCodes.DB_GENERAL_ERROR
+        super().__init__(f"Field '{field}' doesn't exist.", **kwargs)
 
 
 class SearchError(DomainError):
