@@ -25,9 +25,9 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
         self._check_has_session()
         try:
             self._session.execute("SELECT 1")
-        except db.SQLAlchemyError as e:
-            _logger.exception(str(e))
-            raise RepositoryStatusError()
+        except db.SQLAlchemyError as err:
+            _logger.exception(str(err))
+            raise RepositoryStatusError() from err
 
     @classmethod
     def primary_key(cls):

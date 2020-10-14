@@ -1,33 +1,18 @@
-CONFIG_PLACES = """{
-  "resource_id": "places",
-  "resource_name": "Platser i Sverige",
-  "fields": {
-    "name": {
-      "type": "string",
-      "required": true
+CONFIG_PLACES = {
+    "resource_id": "places",
+    "resource_name": "Platser i Sverige",
+    "fields": {
+        "name": {"type": "string", "required": True},
+        "municipality": {"collection": True, "type": "number", "required": True},
+        "population": {"type": "number"},
+        "area": {"type": "number"},
+        "density": {"type": "number"},
+        "code": {"type": "number", "required": True},
     },
-    "municipality": {
-      "collection": true,
-      "type": "number",
-      "required": true
-    },
-    "population": {
-      "type": "number"
-    },
-    "area": {
-      "type": "number"
-    },
-    "density": {
-      "type": "number"
-    },
-    "code": {
-      "type": "number",
-      "required": true
-    }
-  },
-  "sort": "name",
-  "id": "code"
-}"""
+    "sort": "name",
+    "id": "code",
+    "referenceable": ["name", "municipality", "code"],
+}
 
 
 PLACES = [

@@ -1,5 +1,6 @@
 """SQL repository for entries."""
 import collections
+from karp.domain.errors import NonExistingField, RepositoryError
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
@@ -27,6 +28,7 @@ logger = logging.getLogger("karp")
 
 DUPLICATE_PATTERN = r"Duplicate entry '(.+)' for key '(\w+)'"
 DUPLICATE_PROG = regex.compile(DUPLICATE_PATTERN)
+NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 
 
 class SqlEntryRepository(
@@ -290,7 +292,14 @@ class SqlEntryRepository(
                 simple_filters[filter_key] = filters[filter_key]
             # joined_filters.extend(tmp.values())
 
-        query = query.filter_by(**simple_filters)
+        try:
+            query = query.filter_by(**simple_filters)
+        except db.exc.InvalidRequestError as exc:
+            match = NO_PROPERTY_PATTERN.search(str(exc))
+            if match:
+                raise NonExistingField(match.group(1)) from exc
+            else:
+                raise RepositoryError("Unknown invalid request") from exc
 
         for child_filters in joined_filters:
             print(f"list(child_filters.keys())[0] = {list(child_filters.keys())[0]}")

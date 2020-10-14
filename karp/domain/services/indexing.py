@@ -231,7 +231,7 @@ def _evaluate_function(
         if "test" in function_conf:
             operator, args = list(function_conf["test"].items())[0]
             if operator in ["equals", "contains"]:
-                filters = {"deleted": False}
+                filters = {"discarded": False}
                 for arg in args:
                     if "self" in arg:
                         filters[target_field] = src_entry[arg["self"]]
@@ -297,9 +297,12 @@ def _transform_to_index_entry(
                 if ref_field["field"].get("collection"):
                     ref_objs = []
                     for ref_id in _src_entry[field_name]:
-                        ref_entry_body = ref_resource.entry_repository.by_entry_id(
-                            str(ref_id)
-                        )
+                        with unit_of_work(
+                            using=ref_resource.entry_repository
+                        ) as ref_resource_entries_uw:
+                            ref_entry_body = ref_resource_entries_uw.by_entry_id(
+                                str(ref_id)
+                            )
                         if ref_entry_body:
                             ref_entry = {field_name: ref_entry_body.body}
                             ref_index_entry = {}
@@ -324,7 +327,10 @@ def _transform_to_index_entry(
                     ref_id = [ref_id]
 
                 for elem in ref_id:
-                    ref = resource.entry_repository.by_entry_id(str(elem))
+                    with unit_of_work(
+                        using=resource.entry_repository
+                    ) as resource_entries_uw:
+                        ref = resource_entries_uw.by_entry_id(str(elem))
                     if ref:
                         ref_entry = {field_name: ref.body}
                         ref_index_entry = {}

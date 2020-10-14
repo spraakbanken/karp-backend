@@ -1,6 +1,5 @@
 # pylint: disable=wrong-import-position,missing-function-docstring
 """Pytest entry point."""
-from distutils.util import strtobool
 import json
 import os
 import time
@@ -34,8 +33,10 @@ from tests import common_data
 
 @pytest.fixture(name="db_setup")
 def fixture_db_setup():
+    print("running alembic upgrade ...")
     alembic_main(["--raiseerr", "upgrade", "head"])
     yield
+    print("running alembic downgrade ...")
     alembic_main(["--raiseerr", "downgrade", "base"])
 
 
@@ -50,6 +51,13 @@ def fixture_db_setup_scope_module():
 
 @pytest.fixture(name="fa_client")
 def fixture_fa_client(db_setup, es):
+    ctx.auth_service = dummy_auth_service.DummyAuthService()
+    with TestClient(webapp_main.create_app()) as client:
+        yield client
+
+
+@pytest.fixture(name="fa_client_wo_db")
+def fixture_fa_client_wo_db():
     ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
@@ -77,7 +85,7 @@ def fixture_places():
 
 
 @pytest.fixture(name="places_scope_module", scope="module")
-def fixture_places_scope_module():
+def fixture_places_scope_module(context_scope_module):
     with open("tests/data/config/places.json") as fp:
         resource = resources.create_new_resource_from_file(fp)
 
@@ -87,7 +95,7 @@ def fixture_places_scope_module():
 
 
 @pytest.fixture(name="municipalities_scope_module", scope="module")
-def fixture_municipalities_scope_module():
+def fixture_municipalities_scope_module(context_scope_module):
     with open("tests/data/config/municipalities.json") as fp:
         resource = resources.create_new_resource_from_file(fp)
 
@@ -107,7 +115,7 @@ def fixture_context_scope_module(db_setup_scope_module, es):
 
 
 @pytest.fixture(name="places_published")
-def fixture_places_published(places, context):
+def fixture_places_published(places):
     places.is_published = True
     with unit_of_work(using=ctx.resource_repo) as uw:
         uw.put(places)
@@ -116,16 +124,14 @@ def fixture_places_published(places, context):
 
 
 @pytest.fixture(name="places_published_scope_module", scope="module")
-def fixture_places_published_scope_module(places_scope_module, context_scope_module):
+def fixture_places_published_scope_module(places_scope_module):
     resources.publish_resource(places_scope_module.resource_id)
 
     return places_scope_module
 
 
 @pytest.fixture(name="municipalities_published_scope_module", scope="module")
-def fixture_municipalities_published_scope_module(
-    municipalities_scope_module, context_scope_module
-):
+def fixture_municipalities_published_scope_module(municipalities_scope_module):
     resources.publish_resource(municipalities_scope_module.resource_id)
 
     return municipalities_scope_module
@@ -391,7 +397,7 @@ def fixture_es():
 
 @pytest.fixture
 def json_schema_config():
-    return json.loads(common_data.CONFIG_PLACES)
+    return common_data.CONFIG_PLACES
 
 
 #

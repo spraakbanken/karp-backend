@@ -1,6 +1,6 @@
 import collections
 from karp.infrastructure.unit_of_work import unit_of_work
-from typing import Dict, Any, Iterator, Optional
+from typing import Dict, Any, Iterator, Optional, Tuple, List
 import json
 
 from karp.domain.models.resource import Resource, ResourceRepository
@@ -22,10 +22,10 @@ def get_referenced_entries(
 
     with unit_of_work(using=resource.entry_repository) as uw:
         src_entry = uw.by_entry_id(entry_id, version=version)
-    if not src_entry:
-        raise EntryNotFoundError(
-            resource.resource_id, entry_id, resource_version=version
-        )
+        if not src_entry:
+            raise EntryNotFoundError(
+                resource.resource_id, entry_id, resource_version=resource.version
+            )
 
     with unit_of_work(using=resource_repo) as resources_uw:
         for (
@@ -68,7 +68,9 @@ def get_referenced_entries(
                         )
 
 
-def get_refs(resource_repo: ResourceRepository, resource_id, version=None):
+def get_refs(
+    resource_repo: ResourceRepository, resource_id, version=None
+) -> Tuple[List[Tuple[str, int, str, Dict]], List[Tuple[str, int, str, Dict]]]:
     """
     Goes through all other resource configs finding resources and fields that refer to this resource
     """
