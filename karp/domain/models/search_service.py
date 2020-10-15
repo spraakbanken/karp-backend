@@ -71,8 +71,8 @@ class SearchService:
     def create_empty_object(self) -> IndexEntry:
         return IndexEntry()
 
-    def assign_field(self, _index_entry, field_name: str, part):
-        raise NotImplementedError()
+    def assign_field(self, _index_entry: IndexEntry, field_name: str, part):
+        _index_entry.entry[field_name] = part
 
     def create_empty_list(self):
         raise NotImplementedError()

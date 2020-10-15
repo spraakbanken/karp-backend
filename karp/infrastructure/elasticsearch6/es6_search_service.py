@@ -99,12 +99,6 @@ class Es6SearchService(
             index=resource.resource_id, doc_type="entry", id=entry.id, refresh=True
         )
 
-    def create_empty_object(self):
-        return {}
-
-    def assign_field(self, _index_entry, field_name, part):
-        _index_entry[field_name] = part
-
     def create_empty_list(self):
         return []
 
