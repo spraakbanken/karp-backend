@@ -28,3 +28,24 @@ def test_assign_field_adds_field_to_index_entry(es6_search):
 
     es6_search.assign_field(index_entry, "field", {})
     assert index_entry.entry["field"] == {}
+
+
+def test_create_empty_list_returns_list(es6_search):
+
+    index_list = es6_search.create_empty_list()
+
+    assert isinstance(index_list, list)
+    assert index_list == []
+
+
+def test_add_to_list_field_adds_to_list(es6_search):
+
+    index_list = es6_search.create_empty_list()
+
+    es6_search.add_to_list_field(index_list, "a")
+
+    assert index_list == ["a"]
+
+    es6_search.add_to_list_field(index_list, {"b": "c"})
+
+    assert index_list == ["a", {"b": "c"}]

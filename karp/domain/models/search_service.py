@@ -74,11 +74,11 @@ class SearchService:
     def assign_field(self, _index_entry: IndexEntry, field_name: str, part):
         _index_entry.entry[field_name] = part
 
-    def create_empty_list(self):
-        raise NotImplementedError()
+    def create_empty_list(self) -> List:
+        return []
 
     def add_to_list_field(self, elems: List, elem):
-        raise NotImplementedError()
+        elems.append(elem)
 
     def build_query(self, args, resource_str: str) -> Query:
         query = Query()

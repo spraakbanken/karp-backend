@@ -99,12 +99,6 @@ class Es6SearchService(
             index=resource.resource_id, doc_type="entry", id=entry.id, refresh=True
         )
 
-    def create_empty_list(self):
-        return []
-
-    def add_to_list_field(self, elems, elem):
-        elems.append(elem)
-
     @staticmethod
     def get_analyzed_fields_from_mapping(
         properties: Dict[str, Dict[str, Dict[str, Any]]]
