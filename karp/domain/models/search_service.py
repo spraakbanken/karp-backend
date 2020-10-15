@@ -1,6 +1,8 @@
 from typing import Optional, Callable, TypeVar, List, Dict, Tuple
 import logging
 
+import attr
+
 from karp.domain.errors import ConfigurationError
 
 from karp.domain.models.query import Query
@@ -8,6 +10,12 @@ from karp.domain.models.entry import Entry
 
 
 logger = logging.getLogger("karp")
+
+
+@attr.s(auto_attribs=True)
+class IndexEntry:
+    id: str = attr.Factory(str)
+    entry: Dict = attr.Factory(dict)
 
 
 class SearchService:
@@ -54,14 +62,14 @@ class SearchService:
     def publish_index(self, alias_name: str, index_name: str):
         raise NotImplementedError()
 
-    def add_entries(self, resource_id: str, entries: List[Entry]):
+    def add_entries(self, resource_id: str, entries: List[IndexEntry]):
         raise NotImplementedError()
 
     def delete_entry(self, resource_id: str, entry_id: str):
         raise NotImplementedError()
 
-    def create_empty_object(self):
-        raise NotImplementedError()
+    def create_empty_object(self) -> IndexEntry:
+        return IndexEntry()
 
     def assign_field(self, _index_entry, field_name: str, part):
         raise NotImplementedError()
