@@ -11,8 +11,9 @@ from karp.domain.models.auth_service import (
 
 class DummyAuthService(AuthService):
     def __init__(self):
-        if config.TESTING or config.DEBUG:
-            raise RuntimeError("Don't use this in production!")
+        pass
+        # if False or config.TESTING or config.DEBUG:
+        #     raise RuntimeError("Don't use this in production!")
 
     def authenticate(self, scheme: str, credentials: str) -> User:
         return User("dummy", {}, {})

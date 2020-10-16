@@ -24,11 +24,13 @@ def get_json(client, path: str, **kwargs):
 
 def add_entries(client, entries: Dict):
     for resource, _entries in entries.items():
+        print(f"add_entries resource='{resource}'")
         for entry in _entries:
             response = client.post(
                 f"{resource}/add",
                 json={"entry": entry},
                 headers={"Authorization": "Bearer 1234"},
             )
+            print(f"response = {response.json()}")
             assert response.status_code == 201
     return client

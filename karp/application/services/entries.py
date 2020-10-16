@@ -368,12 +368,14 @@ def add_entries(
             uw.put(entry)
             created_db_entries.append(entry)
 
-    indexing.add_entries(
-        ctx.resource_repo,
-        ctx.search_service,
-        resource,
-        created_db_entries,
-    )
+    if resource.is_published:
+        print(f"services.entries.add_entries: indexing entries ...")
+        indexing.add_entries(
+            ctx.resource_repo,
+            ctx.search_service,
+            resource,
+            created_db_entries,
+        )
 
     return created_db_entries
 

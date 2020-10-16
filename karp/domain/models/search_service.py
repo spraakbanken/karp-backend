@@ -17,6 +17,9 @@ class IndexEntry:
     id: str = attr.Factory(str)
     entry: Dict = attr.Factory(dict)
 
+    def __bool__(self) -> bool:
+        return bool(self.entry)
+
 
 class SearchService:
     _registry = {}
@@ -72,6 +75,8 @@ class SearchService:
         return IndexEntry()
 
     def assign_field(self, _index_entry: IndexEntry, field_name: str, part):
+        if isinstance(part, IndexEntry):
+            part = part.entry
         _index_entry.entry[field_name] = part
 
     def create_empty_list(self) -> List:

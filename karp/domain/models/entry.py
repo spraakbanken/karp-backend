@@ -251,7 +251,7 @@ class EntryRepository(metaclass=abc.ABCMeta):
         return
 
     @abc.abstractmethod
-    def by_referencable(self, **kwargs) -> List[Entry]:
+    def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         raise NotImplementedError()
 
     @abc.abstractmethod

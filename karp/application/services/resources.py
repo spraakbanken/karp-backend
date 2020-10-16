@@ -327,7 +327,7 @@ def create_new_resource(config_file: IO, config_dir=None) -> Resource:
 
 
 def publish_resource(resource_id: str, version: Optional[int] = None):
-    print(f"publishing '{resource_id}' ...")
+    print(f"publish_resource resource_id='{resource_id}' ...")
     with unit_of_work(using=ctx.resource_repo) as uw:
         resource = uw.by_resource_id(resource_id)
         if resource.is_published:
@@ -336,7 +336,7 @@ def publish_resource(resource_id: str, version: Optional[int] = None):
         resource.is_published = True
         resource.stamp(user="Local admin", message="Publishing")
         uw.update(resource)
-    print("indexing ...")
+    print("calling indexing.publish_index ...")
     indexing.publish_index(ctx.search_service, ctx.resource_repo, resource)
     print("index published")
 

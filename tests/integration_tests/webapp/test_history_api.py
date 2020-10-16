@@ -25,7 +25,7 @@ def get_helper(client, url):
 
 
 @pytest.fixture(name="fa_history_data_client", scope="module")
-def fixture_fa_history_data_client(fa_client_w_places_scope_module):
+def fixture_fa_history_data_client(fa_client_w_places_w_municipalities_scope_module):
     for entry in places[0:2]:
         entries.add_entry("places", entry, "user1", message="Add it")
         time.sleep(1)
@@ -56,7 +56,7 @@ def fixture_fa_history_data_client(fa_client_w_places_scope_module):
             message="Change it",
         )
         time.sleep(1)
-    return fa_client_w_places_scope_module
+    return fa_client_w_places_w_municipalities_scope_module
 
 
 def test_empty_user_history(fa_history_data_client):

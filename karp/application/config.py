@@ -60,9 +60,11 @@ TEST_ES_HOME = config("TEST_ES_HOME", cast=Path, default=None)
 #     # CONSOLE_LOG_LEVEL = logging.getLevelName(
 #     #     os.environ.get("CONSOLE_LOG_LEVEL", "INFO")
 #     # )
-#     CONSOLE_LOG_LEVEL = getattr(
-#         logging, os.environ.get("CONSOLE_LOG_LEVEL", "INFO"), logging.INFO
-#     )
+def get_loglevel(loglevel: str) -> int:
+    return getattr(logging, loglevel.upper(), logging.WARNING)
+
+
+CONSOLE_LOG_LEVEL = config("CONSOLE_LOG_LEVEL", cast=get_loglevel, default="INFO")
 #     LOG_TO_SLACK = strtobool(os.environ.get("LOG_TO_SLACK", "n"))
 #     SLACK_SECRET = os.environ.get("SLACK_SECRET")
 #     JWT_AUTH = strtobool(os.environ.get("JWT_AUTH", "n"))

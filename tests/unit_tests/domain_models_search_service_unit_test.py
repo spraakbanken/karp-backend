@@ -42,3 +42,9 @@ def test_add_to_list_field_adds_to_list():
     search.add_to_list_field(index_list, {"b": "c"})
 
     assert index_list == ["a", {"b": "c"}]
+
+
+def test_empty_index_entry_evaluates_to_false():
+    index_entry = IndexEntry()
+
+    assert not index_entry

@@ -77,18 +77,20 @@ class Es6SearchService(
             self.es.indices.delete_alias(name=alias_name, index="*")
 
         self.on_publish_resource(alias_name, index_name)
+        print(f"publishing '{alias_name}' => '{index_name}'")
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
-    def add_entries(self, resource: Resource, entries: List[Entry]):
+    def add_entries(self, index_name: str, entries: List[search_service.IndexEntry]):
         index_to_es = []
         for entry in entries:
+            assert isinstance(entry, search_service.IndexEntry)
             # entry.update(metadata.to_dict())
             index_to_es.append(
                 {
-                    "_index": resource.resource_id,
+                    "_index": index_name,
                     "_id": entry.id,
                     "_type": "entry",
-                    "_source": entry.body,
+                    "_source": entry.entry,
                 }
             )
 
@@ -96,7 +98,10 @@ class Es6SearchService(
 
     def delete_entry(self, resource: Resource, entry: Entry):
         self.es.delete(
-            index=resource.resource_id, doc_type="entry", id=entry.id, refresh=True
+            index=resource.resource_id,
+            doc_type="entry",
+            id=entry.entry_id,
+            refresh=True,
         )
 
     @staticmethod

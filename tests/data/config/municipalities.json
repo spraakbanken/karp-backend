@@ -103,6 +103,13 @@
   },
   "id": "code",
   "field_mapping": {
-    "population": ["population.value.total"]
-  }
+    "population": [
+      "population.value.total"
+    ]
+  },
+  "referenceable": [
+    "code",
+    "name",
+    "state"
+  ]
 }

@@ -1,4 +1,5 @@
 import collections
+from karp.domain.models.entry import Entry
 from karp.infrastructure.unit_of_work import unit_of_work
 from typing import Dict, Any, Iterator, Optional, Tuple, List
 import json
@@ -38,14 +39,8 @@ def get_referenced_entries(
                 ref_resource_id, version=version
             )
             with unit_of_work(using=other_resource.entry_repository) as entries_uw:
-                for entry in uw.by_referencable({field_name: entry_id}):
-                    yield _create_ref(
-                        ref_resource_id,
-                        ref_resource_version,
-                        entry.id,
-                        entry.entry_id,
-                        entry.body,
-                    )
+                for entry in uw.by_referenceable({field_name: entry_id}):
+                    yield _create_ref(ref_resource_id, ref_resource_version, entry)
 
         # src_body = json.loads(src_entry.body)
         for (ref_resource_id, ref_resource_version, field_name, field) in resource_refs:
@@ -53,19 +48,16 @@ def get_referenced_entries(
             if not field.get("collection", False):
                 ids = [ids]
             ref_resource = resources_uw.by_resource_id(ref_resource_id)
-            with unit_of_work(using=ref_resource.entry_repository) as entries_uw:
-                for ref_entry_id in ids:
-                    entry = entries_uw.by_entry_id(
-                        ref_entry_id, version=ref_resource_version
-                    )
-                    if entry:
-                        yield _create_ref(
-                            ref_resource_id,
-                            ref_resource_version,
-                            entry.id,
-                            entry.entry_id,
-                            entry.body,
+            if ref_resource:
+                with unit_of_work(using=ref_resource.entry_repository) as entries_uw:
+                    for ref_entry_id in ids:
+                        entry = entries_uw.by_entry_id(
+                            ref_entry_id, version=ref_resource_version
                         )
+                        if entry:
+                            yield _create_ref(
+                                ref_resource_id, ref_resource_version, entry
+                            )
 
 
 def get_refs(
@@ -133,12 +125,10 @@ def get_refs(
 
 
 def _create_ref(
-    resource_id: str, resource_version: int, _id: int, entry_id: str, entry_body: Dict
+    resource_id: str, resource_version: int, entry: Entry
 ) -> Dict[str, Any]:
     return {
         "resource_id": resource_id,
         "resource_version": resource_version,
-        "id": _id,
-        "entry_id": entry_id,
-        "entry": entry_body,
+        "entry": entry,
     }

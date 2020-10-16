@@ -5,16 +5,17 @@ from typing import Dict, List, Tuple, Optional
 import collections
 import logging
 
-from karp.domain.models.entry import Entry
+from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.resource import Resource, ResourceRepository
-from karp.domain.models.search_service import SearchService
+from karp.domain.models.search_service import IndexEntry, SearchService
 from karp.domain.services import network
 
 # from .index import IndexModule
 # import karp.resourcemgr as resourcemgr
 # import karp.resourcemgr.entryread as entryread
 # from karp.resourcemgr.resource import Resource
-# from karp import errors
+from karp import errors
+
 # from karp.resourcemgr.entrymetadata import EntryMetadata
 
 # indexer = IndexModule()
@@ -42,10 +43,10 @@ def pre_process_resource(
     resource: Resource,
     resource_repo: ResourceRepository,
     indexer: SearchService,
-) -> List[Dict]:
+) -> List[IndexEntry]:
     with unit_of_work(using=resource.entry_repository) as uw:
         index_entries = [
-            transform_to_index_entry(resource, resource_repo, indexer, entry)
+            transform_to_index_entry(resource_repo, indexer, resource, entry)
             for entry in uw.all_entries()
         ]
     return index_entries
@@ -85,7 +86,7 @@ def reindex(
     indexer: SearchService,
     resource_repo: ResourceRepository,
     resource: Resource,
-    search_entries: Optional[List[Dict]] = None,
+    search_entries: Optional[List[IndexEntry]] = None,
 ):
     print("creating index ...")
     index_name = indexer.create_index(resource.resource_id, resource.config)
@@ -94,14 +95,15 @@ def reindex(
         print("preprocessing entries ...")
         search_entries = pre_process_resource(resource, resource_repo, indexer)
     print(f"adding entries to '{index_name}' ...")
-    add_entries(
-        resource_repo,
-        indexer,
-        resource,
-        search_entries,
-        index_name=index_name,
-        update_refs=False,
-    )
+    # add_entries(
+    #     resource_repo,
+    #     indexer,
+    #     resource,
+    #     search_entries,
+    #     index_name=index_name,
+    #     update_refs=False,
+    # )
+    indexer.add_entries(index_name, search_entries)
     print("publishing ...")
     indexer.publish_index(resource.resource_id, index_name)
 
@@ -148,7 +150,7 @@ def add_entries(
         ],
     )
     if update_refs:
-        _update_references(resource_repo, resource, entries)
+        _update_references(resource_repo, indexer, resource, entries)
 
 
 # def delete_entry(resource_id: str, entry_id: str) -> None:
@@ -173,7 +175,8 @@ def _update_references(
                 ref_resource = resources_uw.by_resource_id(
                     ref_resource_id, version=(field_ref["resource_version"])
                 )
-                body = transform_to_index_entry(
+
+                ref_index_entry = transform_to_index_entry(
                     resource_repo,
                     indexer,
                     ref_resource,
@@ -181,7 +184,7 @@ def _update_references(
                     # ref_resource.config["fields"].items(),
                 )
                 # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
-                add[ref_resource_id].append(((field_ref["entry_id"]), metadata, body))
+                add[ref_resource_id].append(ref_index_entry)
     for ref_resource_id, ref_entries in add.items():
         indexer.add_entries(ref_resource_id, ref_entries)
 
@@ -191,14 +194,16 @@ def transform_to_index_entry(
     indexer: SearchService,
     resource: Resource,
     src_entry: Entry,
-) -> Dict:
+) -> IndexEntry:
     """
     TODO This is very slow (for resources with references) because of db-lookups everywhere in the code
     TODO We can pre-fetch the needed entries (same code that only looks for refs?) or
     TODO somehow get the needed entries in bulk after transforming some entries and insert them into
     TODO the transformed entries afterward. Very tricky.
     """
+    print(f"transforming entry_id={src_entry.entry_id}")
     index_entry = indexer.create_empty_object()
+    index_entry.id = src_entry.entry_id
     _transform_to_index_entry(
         resource,
         resource_repo,
@@ -240,9 +245,10 @@ def _evaluate_function(
                 # target_entries = entryread.get_entries_by_column(
                 #     target_resource, filters
                 # )
-                target_entries = target_resource.entry_repository.by_referencable(
-                    filters
-                )
+                with unit_of_work(
+                    using=target_resource.entry_repository
+                ) as target_entries_uw:
+                    target_entries = target_entries_uw.by_referenceable(filters)
             else:
                 raise NotImplementedError()
         else:
@@ -260,7 +266,7 @@ def _evaluate_function(
                 index_entry,
                 list_of_sub_fields,
             )
-            indexer.add_to_list_field(res, index_entry["tmp"])
+            indexer.add_to_list_field(res, index_entry.entry["tmp"])
     elif "plugin" in function_conf:
         plugin_id = function_conf["plugin"]
         import karp.pluginmanager as plugins
@@ -278,44 +284,51 @@ def _transform_to_index_entry(
     resource_repo: ResourceRepository,
     indexer: SearchService,
     _src_entry: Dict,
-    _index_entry,
+    _index_entry: IndexEntry,
     fields,
 ):
     for field_name, field_conf in fields:
-        if field_conf.get("virtual", False):
+        if field_conf.get("virtual"):
+            print("found virtual field")
             res = _evaluate_function(
                 resource_repo, indexer, field_conf["function"], _src_entry, resource
             )
+            print(f"res = {res}")
             if res:
                 indexer.assign_field(_index_entry, "v_" + field_name, res)
-        elif field_conf.get("ref", {}):
+        elif field_conf.get("ref"):
             ref_field = field_conf["ref"]
             if ref_field.get("resource_id"):
                 ref_resource = resource_repo.by_resource_id(
                     ref_field["resource_id"], version=ref_field["resource_version"]
                 )
+                # if not ref_resource:
+                #     raise errors.ResourceNotFoundError(
+                #         ref_field["resource_id"], ref_field["resource_version"]
+                #     )
                 if ref_field["field"].get("collection"):
                     ref_objs = []
-                    for ref_id in _src_entry[field_name]:
-                        with unit_of_work(
-                            using=ref_resource.entry_repository
-                        ) as ref_resource_entries_uw:
-                            ref_entry_body = ref_resource_entries_uw.by_entry_id(
-                                str(ref_id)
-                            )
-                        if ref_entry_body:
-                            ref_entry = {field_name: ref_entry_body.body}
-                            ref_index_entry = {}
-                            list_of_sub_fields = ((field_name, ref_field["field"]),)
-                            _transform_to_index_entry(
-                                resource,
-                                resource_repo,
-                                indexer,
-                                ref_entry,
-                                ref_index_entry,
-                                list_of_sub_fields,
-                            )
-                            ref_objs.append(ref_index_entry[field_name])
+                    if ref_resource:
+                        for ref_id in _src_entry[field_name]:
+                            with unit_of_work(
+                                using=ref_resource.entry_repository
+                            ) as ref_resource_entries_uw:
+                                ref_entry_body = ref_resource_entries_uw.by_entry_id(
+                                    str(ref_id)
+                                )
+                            if ref_entry_body:
+                                ref_entry = {field_name: ref_entry_body.body}
+                                ref_index_entry = indexer.create_empty_object()
+                                list_of_sub_fields = ((field_name, ref_field["field"]),)
+                                _transform_to_index_entry(
+                                    resource,
+                                    resource_repo,
+                                    indexer,
+                                    ref_entry,
+                                    ref_index_entry,
+                                    list_of_sub_fields,
+                                )
+                                ref_objs.append(ref_index_entry.entry[field_name])
                     indexer.assign_field(_index_entry, "v_" + field_name, ref_objs)
                 else:
                     raise NotImplementedError()
@@ -333,7 +346,7 @@ def _transform_to_index_entry(
                         ref = resource_entries_uw.by_entry_id(str(elem))
                     if ref:
                         ref_entry = {field_name: ref.body}
-                        ref_index_entry = {}
+                        ref_index_entry = indexer.create_empty_object()
                         list_of_sub_fields = ((field_name, ref_field["field"]),)
                         _transform_to_index_entry(
                             resource,
@@ -344,10 +357,13 @@ def _transform_to_index_entry(
                             list_of_sub_fields,
                         )
                         indexer.assign_field(
-                            _index_entry, "v_" + field_name, ref_index_entry[field_name]
+                            _index_entry,
+                            "v_" + field_name,
+                            ref_index_entry.entry[field_name],
                         )
 
         if field_conf["type"] == "object":
+            print("found field with type 'object'")
             field_content = indexer.create_empty_object()
             if field_name in _src_entry:
                 _transform_to_index_entry(
