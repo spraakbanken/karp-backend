@@ -2,10 +2,9 @@ import pytest  # pyre-ignore
 
 from elasticsearch_dsl.query import Bool, Exists, Match, Range, Regexp  # pyre-ignore
 
-from karp import search
-from karp.elasticsearch.es_search import EsQuery
+from karp.infrastructure.elasticsearch6.es_query import EsQuery
 
-from tests.utils import get_json
+from karp.application import ctx
 
 
 # @pytest.mark.parametrize(
@@ -162,7 +161,11 @@ from tests.utils import get_json
             "missing|state",
             Bool(
                 should=[
-                    Bool(must_not=[Exists(field="state"),]),
+                    Bool(
+                        must_not=[
+                            Exists(field="state"),
+                        ]
+                    ),
                     Bool(must_not=[Exists(field="v_municipality.state")]),
                 ]
             ),
@@ -173,8 +176,16 @@ from tests.utils import get_json
             # missing(or(or(state, v_municipality.state), name)) => missing(or(state, v_municipality.state, name))
             Bool(
                 should=[
-                    Bool(must_not=[Exists(field="state"),]),
-                    Bool(must_not=[Exists(field="name"),]),
+                    Bool(
+                        must_not=[
+                            Exists(field="state"),
+                        ]
+                    ),
+                    Bool(
+                        must_not=[
+                            Exists(field="name"),
+                        ]
+                    ),
                     Bool(must_not=[Exists(field="v_municipality.state")]),
                 ]
             ),
@@ -219,12 +230,12 @@ from tests.utils import get_json
     ],
 )
 def test_build_query_field_mapping(
-    client_with_entries_scope_session, resources, query, expected
+    fa_client_w_places_w_municipalities_scope_module, resources, query, expected
 ):
     args = {"sort": "shut up"}
     if query:
         args["q"] = query
-    q = search.build_query(args, resources)
+    q = ctx.search_service.build_query(args, resources)
 
     print("q = {q}".format(q=q))
     assert isinstance(q, EsQuery)
