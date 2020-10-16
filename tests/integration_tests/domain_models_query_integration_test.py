@@ -2,17 +2,18 @@ from itertools import zip_longest
 
 import pytest  # pyre-ignore
 
-from karp import search
+from karp.domain.models.query import Query
+from karp.domain import errors
 from karp.query_dsl import op
 
 
 @pytest.fixture
 def query():
-    return search.Query()
+    return Query()
 
 
 def test_empty_arg_and_empty_resource_str(query):
-    with pytest.raises(search.errors.IncompleteQuery):
+    with pytest.raises(errors.IncompleteQuery):
         query.parse_arguments({}, None)
 
 
@@ -34,7 +35,7 @@ def _test_nodes(r, facit):
 
 
 def test_rewrite_ast(client_with_entries_scope_session):
-    q = search.Query()
+    q = Query()
     q.parse_arguments({"q": "equals|state|X", "sort": "Y"}, "places")
     expected = [
         (op.EQUALS, None),
