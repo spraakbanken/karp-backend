@@ -17,6 +17,8 @@ def get_referenced_entries(
     version: Optional[int],
     entry_id: str,
 ) -> Iterator[Dict[str, Any]]:
+    print(f"network.get_referenced_entries: resource={resource.resource_id}")
+    print(f"network.get_referenced_entries: entry_id={entry_id}")
     resource_refs, resource_backrefs = get_refs(
         resource_repo, resource.resource_id, version=version
     )
@@ -39,7 +41,7 @@ def get_referenced_entries(
                 ref_resource_id, version=version
             )
             with unit_of_work(using=other_resource.entry_repository) as entries_uw:
-                for entry in uw.by_referenceable({field_name: entry_id}):
+                for entry in entries_uw.by_referenceable({field_name: entry_id}):
                     yield _create_ref(ref_resource_id, ref_resource_version, entry)
 
         # src_body = json.loads(src_entry.body)

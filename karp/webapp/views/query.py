@@ -46,8 +46,8 @@ def query(
     resources: str = Path(...),  # , regex=r"^\w+(,\w+)*$"),
     q: Optional[str] = Query(None),
     from_: int = Query(0, alias="from"),
-    # size: int = Query(25),
-    # lexicon_stats: bool = Query(True),
+    size: int = Query(25),
+    lexicon_stats: bool = Query(True),
     # include_fields: Optional[List[str]] = Query(None),
     user: User = Security(get_current_user, scopes=["read"]),
 ):
@@ -63,6 +63,9 @@ def query(
     try:
         args = {
             "from": from_,
+            "q": q,
+            "size": size,
+            "lexicon_stats": str(lexicon_stats),
         }
         q = ctx.search_service.build_query(args, resources)
         print("query::q={q}".format(q=q))

@@ -90,6 +90,11 @@ class SearchService:
         query.parse_arguments(args, resource_str)
         return query
 
+    def build_query_parsed(self, args, resource_str: str) -> Query:
+        query = Query()
+        query.parse_arguments(args, resource_str)
+        return query
+
     def search_with_query(self, query: Query):
         raise NotImplementedError()
 

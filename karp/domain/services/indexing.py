@@ -222,17 +222,29 @@ def _evaluate_function(
     src_entry: Dict,
     src_resource: Resource,
 ):
+    print(f"indexing._evaluate_function src_resource={src_resource.resource_id}")
+    print(f"indexing._evaluate_function src_entry={src_entry}")
     if "multi_ref" in function_conf:
         function_conf = function_conf["multi_ref"]
         target_field = function_conf["field"]
-        target_resource = None
         if "resource_id" in function_conf:
+            print(
+                f"indexing._evaluate_function: trying to find '{function_conf['resource_id']}'"
+            )
             target_resource = resource_repo.by_resource_id(
                 function_conf["resource_id"], version=function_conf["resource_version"]
             )
-        if target_resource is None:
+            if target_resource is None:
+                logger.warning(
+                    "Didn't find the resource with resource_id='%s'",
+                    function_conf["resource_id"],
+                )
+                return indexer.create_empty_list()
+        else:
             target_resource = src_resource
-
+        print(
+            f"indexing._evaluate_function target_resource={target_resource.resource_id}"
+        )
         if "test" in function_conf:
             operator, args = list(function_conf["test"].items())[0]
             if operator in ["equals", "contains"]:
