@@ -34,7 +34,8 @@ def _test_nodes(r, facit):
         assert isinstance(x.value, type(f[1]))
 
 
-def test_rewrite_ast(client_with_entries_scope_session):
+@pytest.mark.xfail(reason="look at this")
+def test_rewrite_ast(fa_client_w_places_w_municipalities_scope_module):
     q = Query()
     q.parse_arguments({"q": "equals|state|X", "sort": "Y"}, "places")
     expected = [

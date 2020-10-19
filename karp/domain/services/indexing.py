@@ -204,6 +204,9 @@ def transform_to_index_entry(
     print(f"transforming entry_id={src_entry.entry_id}")
     index_entry = indexer.create_empty_object()
     index_entry.id = src_entry.entry_id
+    indexer.assign_field(index_entry, "_entry_version", src_entry.version)
+    indexer.assign_field(index_entry, "_last_modified", src_entry.last_modified)
+    indexer.assign_field(index_entry, "_last_modified_by", src_entry.last_modified_by)
     _transform_to_index_entry(
         resource,
         resource_repo,

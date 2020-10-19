@@ -115,7 +115,7 @@ def fixture_context_scope_module(db_setup_scope_module, es):
 
 
 @pytest.fixture(name="places_published")
-def fixture_places_published(places):
+def fixture_places_published(places, db_setup):
     places.is_published = True
     with unit_of_work(using=ctx.resource_repo) as uw:
         uw.put(places)

@@ -1,9 +1,19 @@
+from enum import Enum
 from typing import Dict, List, Optional
+
 from karp import query_dsl  # , resourcemgr
 from karp.domain import errors
 
 from karp.util import convert as util_convert
 from karp.utility.container import arg_get
+
+
+class Format(str, Enum):
+    json = "json"
+    csv = "csv"
+    xml = "xml"
+    lmf = "lmf?"
+    tsb = "tsb"
 
 
 class Query:
@@ -43,14 +53,14 @@ class Query:
         self.q = arg_get(args, "q") or ""
         self.sort: List[str] = arg_get(args, "sort", util_convert.str2list(",")) or []
         self.sort_dict: Dict[str, List[str]] = {}
-#         if not self.sort:
-#             if len(self.resources) == 1:
-#                 self.sort = resourcemgr.get_resource(self.resources[0]).default_sort()
-#             else:
-#                 for resource_id in self.resources:
-#                     self.sort_dict[resource_id] = resourcemgr.get_resource(
-#                         resource_id
-#                     ).default_sort()
+        #         if not self.sort:
+        #             if len(self.resources) == 1:
+        #                 self.sort = resourcemgr.get_resource(self.resources[0]).default_sort()
+        #             else:
+        #                 for resource_id in self.resources:
+        #                     self.sort_dict[resource_id] = resourcemgr.get_resource(
+        #                         resource_id
+        #                     ).default_sort()
         self.ast = query_dsl.parse(self.q)
         self._update_ast()
 

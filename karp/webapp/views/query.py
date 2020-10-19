@@ -43,7 +43,7 @@ def get_entries_by_id(
 # @router.get("/{resources}/query")
 @router.get("/query/{resources}")
 def query(
-    resources: str = Path(...),  # , regex=r"^\w+(,\w+)*$"),
+    resources: str = Path(..., regex=r"^\w+(,\w+)*$"),
     q: Optional[str] = Query(None),
     from_: int = Query(0, alias="from"),
     size: int = Query(25),
@@ -67,47 +67,59 @@ def query(
             "size": size,
             "lexicon_stats": str(lexicon_stats),
         }
-        q = ctx.search_service.build_query(args, resources)
-        print("query::q={q}".format(q=q))
-        response = ctx.search_service.search_with_query(q)
-    except errors.KarpError as e:
+        search_query = ctx.search_service.build_query(args, resources)
+        print(f"webapp.views.query.query:search_query={search_query}")
+        response = ctx.search_service.search_with_query(search_query)
+    except errors.KarpError as err:
         _logger.exception(
-            "Error occured when calling 'query' with resources='{}' and q='{}'. e.msg='{}".format(
-                resources, q, e.message
-            )
+            "Error occured when calling 'query' with resources='%s' and q='%s'. e.msg='%s'",
+            resources,
+            q,
+            err.message,
         )
         raise
     return response
 
 
 # @router.get("/{resources}/query_split")
-# @router.get("/query_split/{resources}")
-# def query_split(
-#     resources: str,
-#     user: User = Security(get_current_user, scopes=["read"]),
-# ):
-#     print("query_split called with resources={}".format(resources))
-#     if not ctx.auth_service.authorize(PermissionLevel.read, user, [resource_id]):
-#         raise HTTPException(
-#             status_code=status.HTTP_401_UNAUTHORIZED,
-#             detail="Not enough permissions",
-#             headers={"WWW-Authenticate": 'Bearer scope="read"'},
-#         )
-#     resource_list = resources.split(",")
-#     resourcemgr.check_resource_published(resource_list)
-#     try:
-#         query = search.build_query(request.args, resources)
-#         query.split_results = True
-#         print("query={}".format(query))
-#         response = search.search_with_query(query)
-#     except errors.KarpError as e:
-#         _logger.exception(
-#             "Error occured when calling 'query' with resources='{}' and q='{}'. msg='{}'".format(
-#                 resources, request.args.get("q"), e.message
-#             )
-#         )
-#         raise
-#     return flask_jsonify(response), 200
+@router.get("/query_split/{resources}")
+def query_split(
+    resources: str = Path(...),
+    q: Optional[str] = Query(None),
+    from_: int = Query(0, alias="from"),
+    size: int = Query(25),
+    lexicon_stats: bool = Query(True),
+    user: User = Security(get_current_user, scopes=["read"]),
+):
+    print("webapp.views.query.query_split: called with resources={}".format(resources))
+    resource_list = resources.split(",")
+    if not ctx.auth_service.authorize(PermissionLevel.read, user, resource_list):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": 'Bearer scope="read"'},
+        )
+    resources_service.check_resource_published(resource_list)
+    try:
+        args = {
+            "from": from_,
+            "q": q,
+            "size": size,
+            "lexicon_stats": str(lexicon_stats),
+        }
+        search_query = ctx.search_service.build_query(args, resources)
+        query.split_results = True
+        print(f"webapp.views.query.query_split:search_query={search_query}")
+        response = ctx.search_service.search_with_query(search_query)
+    except errors.KarpError as err:
+        _logger.exception(
+            "Error occured when calling 'query_split' with resources='%s' and q='%s'. msg='%s'",
+            resources,
+            q,
+            err.message,
+        )
+        raise
+    return response
 
 
 def init_app(app):

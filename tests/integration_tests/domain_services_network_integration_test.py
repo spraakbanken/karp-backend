@@ -63,7 +63,7 @@ def test_no_refs_1(
 def test_no_refs_2(
     places_published_scope_module, municipalities_published_scope_module
 ):
-    entries.add_entries("places", places[0:2], "test", resource_version=1)
+    entries.add_entries("places", places[1:2], "test", resource_version=1)
 
     referenced_entries = list(
         get_referenced_entries(ctx.resource_repo, places_published_scope_module, 1, "3")
@@ -78,26 +78,26 @@ def test_no_refs_2(
 def test_internal_ref(
     places_published_scope_module, municipalities_published_scope_module
 ):
-    entries.add_entries("places", places[1:3], "test", resource_version=1)
+    entries.add_entries("places", places[2:3], "test", resource_version=1)
 
     referenced_entries = list(
         get_referenced_entries(ctx.resource_repo, places_published_scope_module, 1, "5")
     )
     assert len(referenced_entries) == 1
-    assert referenced_entries[0]["entry_id"] == "4"
+    assert referenced_entries[0]["entry"].entry_id == "4"
 
 
 def test_external_ref(
     places_published_scope_module, municipalities_published_scope_module
 ):
-    entries.add_entries("places", places, "test", resource_version=1)
+    # entries.add_entries("places", places, "test", resource_version=1)
     entries.add_entries("municipalities", municipalities, "test", resource_version=1)
 
     referenced_entries = list(
         get_referenced_entries(ctx.resource_repo, places_published_scope_module, 1, "3")
     )
     assert len(referenced_entries) == 1
-    assert referenced_entries[0]["entry_id"] == "1"
+    assert referenced_entries[0]["entry"].entry_id == "1"
 
     referenced_entries = list(
         get_referenced_entries(ctx.resource_repo, places_published_scope_module, 1, "4")
@@ -108,9 +108,13 @@ def test_external_ref(
         for entry in referenced_entries
         if entry["resource_id"] == "municipalities"
     ]
-    assert ref_municipalities[0]["entry_id"] in ["2", "3"]
-    assert ref_municipalities[1]["entry_id"] in ["2", "3"]
-    assert ref_municipalities[0]["entry_id"] != ref_municipalities[1]["id"]
+    assert ref_municipalities[0]["entry"].entry_id in ["2", "3"]
+    assert ref_municipalities[1]["entry"].entry_id in ["2", "3"]
+    assert (
+        ref_municipalities[0]["entry"].entry_id
+        != ref_municipalities[1]["entry"].entry_id
+    )
+    assert ref_municipalities[0]["entry"].entry_id != ref_municipalities[1]["entry"].id
 
     referenced_entries = list(
         get_referenced_entries(ctx.resource_repo, places_published_scope_module, 1, "5")
@@ -121,37 +125,50 @@ def test_external_ref(
         for entry in referenced_entries
         if entry["resource_id"] == "municipalities"
     ]
-    assert ref_municipalities[0]["entry_id"] in ["2", "3"]
-    assert ref_municipalities[1]["entry_id"] in ["2", "3"]
-    assert ref_municipalities[0]["entry_id"] != ref_municipalities[1]["id"]
+    assert ref_municipalities[0]["entry"].entry_id in ["2", "3"]
+    assert ref_municipalities[1]["entry"].entry_id in ["2", "3"]
+    assert (
+        ref_municipalities[0]["entry"].entry_id
+        != ref_municipalities[1]["entry"].entry_id
+    )
 
 
 def test_virtual_internal_ref(
     places_published_scope_module, municipalities_published_scope_module
 ):
 
-    entries.add_entries("places", places[1:3], "test", resource_version=1)
+    # entries.add_entries("places", places[1:3], "test", resource_version=1)
 
     referenced_entries = list(
         get_referenced_entries(ctx.resource_repo, places_published_scope_module, 1, "4")
     )
-    assert 1 == len(referenced_entries)
-    assert referenced_entries[0]["entry_id"] == "5"
+    assert len(referenced_entries) == 3
+    assert referenced_entries[0]["resource_id"] == "places"
+    assert referenced_entries[0]["entry"].entry_id == "5"
+
+    assert referenced_entries[1]["resource_id"] == "municipalities"
+    assert referenced_entries[1]["entry"].entry_id == "2"
+
+    assert referenced_entries[2]["resource_id"] == "municipalities"
+    assert referenced_entries[2]["entry"].entry_id == "3"
 
 
 def test_virtual_external_ref(
     places_published_scope_module, municipalities_published_scope_module
 ):
-    entries.add_entries("places", places[0:1], "test", resource_version=1)
-    entries.add_entries(
-        "municipalities", municipalities[0:1], "test", resource_version=1
-    )
+    # entries.add_entries("places", places[0:1], "test", resource_version=1)
+    # entries.add_entries(
+    #     "municipalities", municipalities[0:1], "test", resource_version=1
+    # )
 
     referenced_entries = list(
         get_referenced_entries(
             ctx.resource_repo, municipalities_published_scope_module, 1, "1"
         )
     )
-    assert 1 == len(referenced_entries)
+    assert len(referenced_entries) == 2
     assert referenced_entries[0]["resource_id"] == "places"
-    assert referenced_entries[0]["entry_id"] == "3"
+    assert referenced_entries[0]["entry"].entry_id == "3"
+
+    assert referenced_entries[1]["resource_id"] == "places"
+    assert referenced_entries[1]["entry"].entry_id == "3"

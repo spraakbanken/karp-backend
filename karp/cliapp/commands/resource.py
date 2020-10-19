@@ -36,55 +36,31 @@ def create(config: Path):
 
 
 @subapp.command()
-@click.option(
-    "--config",
-    default=None,
-    help="A JSON file containing settings for one resource",
-    required=False,
-)
-@click.option(
-    "--config-dir",
-    default=None,
-    help="A directory containing config files for resource and optionally plugin settings",
-    required=False,
-)
 @cli_error_handler
 @cli_timer
 def update(config: Path):
     if config.is_file():
         with open(config) as fp:
-            new_resource = resourcemgr.update_resource_from_file(fp)
+            new_resource = resources.update_resource_from_file(fp)
         new_resources = [new_resource]
     elif config.is_dir():
-        new_resources = resourcemgr.update_resource_from_dir(config_dir)
+        new_resources = resources.update_resource_from_dir(config_dir)
     else:
-        click.echo("Must give either --config or --config-dir")
-        raise click.exceptions.Exit(3)  # Usage error
+        typer.echo("Must give either --config or --config-dir")
+        raise typer.Exit(3)  # Usage error
     for (resource_id, version) in new_resources:
         if version is None:
-            click.echo(
-                "Nothing to do for resource '{resource_id}'".format(
-                    resource_id=resource_id
-                )
-            )
+            typer.echo(f"Nothing to do for resource '{resource_id}'")
         else:
-            click.echo(
-                "Updated version {version} of resource '{resource_id}'".format(
-                    version=version, resource_id=resource_id
-                )
-            )
+            typer.echo(f"Updated version {version} of resource '{resource_id}'")
 
 
 @subapp.command("import")
 @cli_error_handler
 @cli_timer
 def import_resource(resource_id: str, version: Optional[int], data: Path):
-    count = entrywrite.add_entries_from_file(resource_id, version, data)
-    click.echo(
-        "Added {count} entries to {resource_id}, version {version}".format(
-            count=count, version=version, resource_id=resource_id
-        )
-    )
+    count = entries.add_entries_from_file(resource_id, version, data)
+    typer.echo(f"Added {count} entries to {resource_id}, version {version}")
 
 
 @subapp.command()
