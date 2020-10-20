@@ -55,14 +55,6 @@ def update(config: Path):
             typer.echo(f"Updated version {version} of resource '{resource_id}'")
 
 
-@subapp.command("import")
-@cli_error_handler
-@cli_timer
-def import_resource(resource_id: str, version: Optional[int], data: Path):
-    count = entries.add_entries_from_file(resource_id, version, data)
-    typer.echo(f"Added {count} entries to {resource_id}, version {version}")
-
-
 @subapp.command()
 @cli_error_handler
 @cli_timer
@@ -156,19 +148,22 @@ def list_resources(
     )
 
 
+@subapp.command()
 # @cli.command("show")
 # @click.option("--version", default=None, type=int)
 # @click.argument("resource_id")
-# @cli_error_handler
-# @cli_timer
-# def show_resource(resource_id, version):
+@cli_error_handler
+@cli_timer
+def show(resource_id: str, version: Optional[int] = None):
+    with unit_of_work(using=ctx.resource_repo) as uw:
+        resource = uw.by_resource_id(resource_id, version=version)
 #     if version:
 #         resource = database.get_resource_definition(resource_id, version)
 #     else:
 #         resource = database.get_active_or_latest_resource_definition(resource_id)
-#     if not resource:
-#         click.echo(
-#             "Can't find resource '{resource_id}', version '{version}'".format(
+    if not resource:
+        typer.echo(
+            f"Can't find resource '{resource_id}'{, version '{version}'"  # .format(
 #                 resource_id=resource_id,
 #                 version=version if version else "active or latest",
 #             )
@@ -200,12 +195,18 @@ def list_resources(
 #     click.echo("updated permissions")
 
 
-def export_resource():
-    pass
+@subapp.command()
+@cli_error_handler
+@cli_timer
+def export():
+    raise NotImplementedError()
 
 
-def delete_resource():
-    pass
+@subapp.command()
+@cli_error_handler
+@cli_timer
+def delete():
+    raise NotImplementedError()
 
 
 def init_app(app):
