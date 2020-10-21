@@ -51,6 +51,9 @@ jobs:
           pip install -e .[elasticsearch7]
       - name: Test with pytest
         run: make test-w-coverage
+        env:
+          DB_DRIVER: sqlite
+          DB_DATABASE: karp
   test_w_sql:
     name: Test with SQL
     runs-on: ubuntu-latest
@@ -77,3 +80,7 @@ jobs:
         run: make lint-no-fail
       - name: Test with pytest
         run: make test-w-coverage
+        env:
+          DB_DRIVER: sqlite
+          DB_DATABASE: karp
+
