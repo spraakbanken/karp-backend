@@ -2,7 +2,7 @@ from karp.domain.models.resource import create_resource
 from karp.domain.models.entry import Entry
 from karp.domain.services import entry_lifecycle
 
-from tests import common_data
+from karp.tests import common_data
 
 
 def test_resource_create_entry_from_raw():

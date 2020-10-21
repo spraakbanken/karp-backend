@@ -6,8 +6,8 @@ import pytest  # pyre-ignore
 # import time
 
 
-from tests.common_data import MUNICIPALITIES, PLACES
-from tests.utils import get_json, add_entries
+from karp.tests.common_data import MUNICIPALITIES, PLACES
+from karp.tests.utils import get_json, add_entries
 
 
 @pytest.fixture(scope="module", name="fa_query_data_client")

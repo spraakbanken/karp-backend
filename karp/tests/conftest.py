@@ -28,7 +28,7 @@ from karp.application.services import contexts, entries, resources
 
 from karp.webapp import main as webapp_main
 
-from tests import common_data
+from karp.tests import common_data
 
 
 @pytest.fixture(name="db_setup")
@@ -73,7 +73,7 @@ def fixture_fa_client_scope_module(db_setup_scope_module):
 
 @pytest.fixture(name="places")
 def fixture_places():
-    with open("tests/data/config/places.json") as fp:
+    with open("karp/tests/data/config/places.json") as fp:
         places_config = json.load(fp)
 
     resource = create_resource(places_config)
@@ -86,7 +86,7 @@ def fixture_places():
 
 @pytest.fixture(name="places_scope_module", scope="module")
 def fixture_places_scope_module(context_scope_module):
-    with open("tests/data/config/places.json") as fp:
+    with open("karp/tests/data/config/places.json") as fp:
         resource = resources.create_new_resource_from_file(fp)
 
     yield resource
@@ -96,7 +96,7 @@ def fixture_places_scope_module(context_scope_module):
 
 @pytest.fixture(name="municipalities_scope_module", scope="module")
 def fixture_municipalities_scope_module(context_scope_module):
-    with open("tests/data/config/municipalities.json") as fp:
+    with open("karp/tests/data/config/municipalities.json") as fp:
         resource = resources.create_new_resource_from_file(fp)
 
     yield resource
@@ -266,8 +266,8 @@ def fixture_fa_client_w_places_w_municipalities_scope_module(
 #         app = next(app_f(**kwargs))
 #         with app.app_context():
 #             for file in [
-#                 "tests/data/config/places.json",
-#                 "tests/data/config/municipalities.json",
+#                 "karp/tests/data/config/places.json",
+#                 "karp/tests/data/config/municipalities.json",
 #             ]:
 #                 with open(file) as fp:
 #                     resource, version = resourcemgr.create_new_resource_from_file(fp)
@@ -285,8 +285,8 @@ def fixture_fa_client_w_places_w_municipalities_scope_module(
 #         app = next(app_f_scope_module(**kwargs))
 #         with app.app_context():
 #             for file in [
-#                 "tests/data/config/places.json",
-#                 "tests/data/config/municipalities.json",
+#                 "karp/tests/data/config/places.json",
+#                 "karp/tests/data/config/municipalities.json",
 #             ]:
 #                 with open(file) as fp:
 #                     resource, version = resourcemgr.create_new_resource_from_file(fp)
@@ -304,8 +304,8 @@ def fixture_fa_client_w_places_w_municipalities_scope_module(
 #         app = next(app_f_scope_session(**kwargs))
 #         with app.app_context():
 #             for file in [
-#                 "tests/data/config/places.json",
-#                 "tests/data/config/municipalities.json",
+#                 "karp/tests/data/config/places.json",
+#                 "karp/tests/data/config/municipalities.json",
 #             ]:
 #                 with open(file) as fp:
 #                     resource, version = resourcemgr.create_new_resource(fp)
@@ -320,9 +320,9 @@ def fixture_fa_client_w_places_w_municipalities_scope_module(
 # @pytest.fixture(name="app_with_data")
 # def fixture_app_with_data(app):
 #     with app.app_context():
-#         with open("tests/data/config/places.json") as fp:
+#         with open("karp/tests/data/config/places.json") as fp:
 #             resourcemgr.create_new_resource_from_file(fp)
-#         with open("tests/data/config/municipalities.json") as fp:
+#         with open("karp/tests/data/config/municipalities.json") as fp:
 #             resourcemgr.create_new_resource_from_file(fp)
 #     return app
 #
@@ -330,9 +330,9 @@ def fixture_fa_client_w_places_w_municipalities_scope_module(
 # @pytest.fixture(name="app_with_data_scope_module", scope="module")
 # def fixture_app_with_data_scope_module(app_scope_module):
 #     with app_scope_module.app_context():
-#         with open("tests/data/config/places.json") as fp:
+#         with open("karp/tests/data/config/places.json") as fp:
 #             resourcemgr.create_new_resource_from_file(fp)
-#         with open("tests/data/config/municipalities.json") as fp:
+#         with open("karp/tests/data/config/municipalities.json") as fp:
 #             resourcemgr.create_new_resource_from_file(fp)
 #
 #     return app_scope_module

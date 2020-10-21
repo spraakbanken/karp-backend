@@ -2,7 +2,7 @@ import json
 
 import pytest  # pyre-ignore
 
-from tests.utils import get_json
+from karp.tests.utils import get_json
 
 
 @pytest.mark.parametrize("endpoint", ["query", "query_split"])

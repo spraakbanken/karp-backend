@@ -1,6 +1,6 @@
 from karp.application.services.entries import add_entries
 
-from tests import common_data
+from karp.tests import common_data
 
 
 def test_add_municipality(

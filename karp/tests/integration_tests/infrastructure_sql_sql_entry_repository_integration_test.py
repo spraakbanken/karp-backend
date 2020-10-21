@@ -4,7 +4,7 @@ import pytest
 from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
 from karp.domain.errors import NonExistingField
 
-from tests import common_data
+from karp.tests import common_data
 
 
 def test_by_referenceable_w_nonexisting_field_raises():

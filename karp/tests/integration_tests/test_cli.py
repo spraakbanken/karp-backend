@@ -21,7 +21,7 @@ def fixture_cliapp(context):
 
 def test_resource_lifecycle(cliapp):
     result = runner.invoke(
-        cliapp, ["resource", "create", "tests/data/config/places.json"]
+        cliapp, ["resource", "create", "karp/tests/data/config/places.json"]
     )
     print(result.stdout)
     assert result.exit_code == 0

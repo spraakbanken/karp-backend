@@ -65,16 +65,16 @@ run-dev: install-dev
 	${INVENV} python wsgi.py
 
 lint-syntax-errors: install-dev
-	${INVENV} flake8 karp tests setup.py run.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
+	${INVENV} flake8 karp karp/tests setup.py run.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
 
 test: install-dev clean-pyc
-	${INVENV} pytest -vv tests/unit_tests
+	${INVENV} pytest -vv karp/tests/unit_tests
 
 test-w-coverage: install-dev clean-pyc
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests
 
 test-log: install-dev clean-pyc lint-syntax-errors
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing tests > pytest.log
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests > pytest.log
 
 prepare-release: venv setup.py requirements.txt setup.cfg
 	${INVENV} pip-compile --output-file=deploy/requirements.txt setup.py
@@ -88,10 +88,10 @@ tox-to-log:
 	tox > tox.log
 
 lint: install-dev
-	${INVENV} pylint --rcfile=.pylintrc --load-plugins "pylint_flask" karp tests setup.py run.py wsgi.py
+	${INVENV} pylint --rcfile=.pylintrc --load-plugins "pylint_flask" karp karp/tests setup.py run.py wsgi.py
 
 lint-no-fail: install-dev
-	${INVENV} pylint --rcfile=.pylintrc --load-plugins "pylint_flask" --exit-zero karp tests setup.py run.py wsgi.py
+	${INVENV} pylint --rcfile=.pylintrc --load-plugins "pylint_flask" --exit-zero karp karp/tests setup.py run.py wsgi.py
 
 type-check:
 	pyre check

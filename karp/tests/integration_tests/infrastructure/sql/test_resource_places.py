@@ -6,7 +6,7 @@ from karp.domain.models.entry import EntryRepository, create_entry
 from karp.infrastructure.sql import sql_entry_repository
 from karp.infrastructure.unit_of_work import unit_of_work
 
-from tests import common_data
+from karp.tests import common_data
 
 # from tests.integration_tests.common_fixtures import fixture_places
 

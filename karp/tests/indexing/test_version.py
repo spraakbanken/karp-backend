@@ -3,7 +3,7 @@
 import time
 from karp.utility.time import utc_now
 
-from tests.utils import get_json
+from karp.tests.utils import get_json
 
 
 # def init(fa_client_w_places_w_municipalities_scope_module, es_status_code):
