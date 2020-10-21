@@ -36,8 +36,8 @@ jobs:
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
-          echo "ELASTICSEARCH_ENABLED=True" >> .env
-          echo "ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
+          echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
+          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
           cat .env
           # pip install -e .[elasticsearch6]
       - name: Install Elasticsearch 7
@@ -45,8 +45,8 @@ jobs:
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
-          echo "ELASTICSEARCH_ENABLED=True" >> .env
-          echo "ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
+          echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
+          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
           cat .env
           pip install -e .[elasticsearch7]
       - name: Test with pytest
@@ -80,6 +80,7 @@ jobs:
         run: make lint-no-fail
       - name: Test with pytest
         run: make test-w-coverage
+        continue-on-error: true
         env:
           DB_DRIVER: sqlite
           DB_DATABASE: karp
