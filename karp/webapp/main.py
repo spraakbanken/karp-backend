@@ -13,16 +13,17 @@ from fastapi.responses import JSONResponse
 __version__ = "0.8.1"
 
 
-def create_app() -> FastAPI:
+def create_app(*, with_context: bool = True) -> FastAPI:
     app = FastAPI(title="Karp API", redoc_url="/", version=__version__)
 
     from karp.application.logger import setup_logging
 
     logger = setup_logging()
 
-    from karp.application.services.contexts import init_context
+    if with_context:
+        from karp.application.services.contexts import init_context
 
-    init_context()
+        init_context()
 
     load_modules(app)
     from karp.errors import KarpError

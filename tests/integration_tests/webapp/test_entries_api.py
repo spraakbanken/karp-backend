@@ -1,7 +1,7 @@
-import json
-import time
-from datetime import datetime, timezone
-from unittest import mock
+# import json
+# import time
+# from datetime import datetime, timezone
+# from unittest import mock
 
 import pytest  # pyre-ignore
 
@@ -19,18 +19,18 @@ from karp.errors import ClientErrorCodes
 # )
 
 
-def init(client, es_status_code, entries):
-    if es_status_code == "skip":
-        pytest.skip("elasticsearch disabled")
-    client_with_data = client(use_elasticsearch=True)
+# def init(client, es_status_code, entries):
+#     if es_status_code == "skip":
+#         pytest.skip("elasticsearch disabled")
+#     client_with_data = client(use_elasticsearch=True)
 
-    for entry in entries:
-        client_with_data.post(
-            "places/add",
-            data=json.dumps({"entry": entry}),
-            content_type="application/json",
-        )
-    return client_with_data
+#     for entry in entries:
+#         client_with_data.post(
+#             "places/add",
+#             data=json.dumps({"entry": entry}),
+#             content_type="application/json",
+#         )
+#     return client_with_data
 
 
 def test_add(fa_client_w_places):

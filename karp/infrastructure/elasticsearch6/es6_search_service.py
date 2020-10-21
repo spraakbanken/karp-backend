@@ -96,11 +96,21 @@ class Es6SearchService(
 
         elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
-    def delete_entry(self, resource: Resource, entry: Entry):
+    def delete_entry(
+        self,
+        resource: Resource,
+        *,
+        entry_id: Optional[str] = None,
+        entry: Optional[Entry] = None,
+    ):
+        if not entry and not entry_id:
+            raise ValueError("Must give either 'entry' or 'entry_id'.")
+        if entry:
+            entry_id = entry.entry_id
         self.es.delete(
             index=resource.resource_id,
             doc_type="entry",
-            id=entry.entry_id,
+            id=entry_id,
             refresh=True,
         )
 

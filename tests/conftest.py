@@ -59,7 +59,7 @@ def fixture_fa_client(db_setup, es):
 @pytest.fixture(name="fa_client_wo_db")
 def fixture_fa_client_wo_db():
     ctx.auth_service = dummy_auth_service.DummyAuthService()
-    with TestClient(webapp_main.create_app()) as client:
+    with TestClient(webapp_main.create_app(with_context=False)) as client:
         yield client
 
 

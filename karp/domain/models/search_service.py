@@ -1,3 +1,4 @@
+from karp.domain.models.resource import Resource
 from typing import Optional, Callable, TypeVar, List, Dict, Tuple
 import logging
 
@@ -68,7 +69,13 @@ class SearchService:
     def add_entries(self, resource_id: str, entries: List[IndexEntry]):
         raise NotImplementedError()
 
-    def delete_entry(self, resource_id: str, entry_id: str):
+    def delete_entry(
+        self,
+        resource: Resource,
+        *,
+        entry_id: Optional[str] = None,
+        entry: Optional[Entry] = None,
+    ):
         raise NotImplementedError()
 
     def create_empty_object(self) -> IndexEntry:

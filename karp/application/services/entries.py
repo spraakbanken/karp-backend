@@ -309,6 +309,12 @@ def update_entry(
             uw.move(current_db_entry, old_entry_id=entry_id)
         else:
             uw.update(current_db_entry)
+    if resource.is_published:
+        if new_entry_id != entry_id:
+            ctx.search_service.delete_entry(resource, entry_id=entry_id)
+        indexing.add_entries(
+            ctx.resource_repo, ctx.search_service, resource, [current_db_entry]
+        )
 
     return current_db_entry.entry_id
 
@@ -510,7 +516,7 @@ def delete_entry(resource_id: str, entry_id: str, user_id: str):
         entry.discard(user=user_id)
         uw.delete(entry)
 
-    ctx.search_service.delete_entry(resource, entry)
+    ctx.search_service.delete_entry(resource, entry=entry)
 
 
 # def delete_entry(resource_id: str, entry_id: str, user_id: str):

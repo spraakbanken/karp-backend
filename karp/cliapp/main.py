@@ -45,9 +45,10 @@ def load_commands(app=None):
             init_app = getattr(mod, "init_app", None)
             if init_app:
                 init_app(app)
-        return mod
 
+
+cliapp = create_app()
 
 if __name__ == "__main__":
-    cliapp = create_app()
+    # cliapp = create_app()
     cliapp()
