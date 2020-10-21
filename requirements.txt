@@ -1,6 +1,4 @@
-flask
 sqlalchemy
-flask-sqlalchemy
 #mysqlclient
 gunicorn
 click
@@ -11,10 +9,7 @@ alembic
 slack-log-utils
 pyjwt
 cryptography
-flask-cors
 sb-json-tools>=0.5.2
-python-dotenv
-flask-reverse-proxy
 fastapi
 starlette
 pydantic
