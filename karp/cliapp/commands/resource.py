@@ -47,7 +47,7 @@ def update(config: Path):
             new_resource = resources.update_resource_from_file(fp)
         new_resources = [new_resource]
     elif config.is_dir():
-        new_resources = resources.update_resource_from_dir(config_dir)
+        new_resources = resources.update_resource_from_dir(config)
     else:
         typer.echo("Must give either --config or --config-dir")
         raise typer.Exit(3)  # Usage error
