@@ -15,22 +15,30 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           # pip install -Ur requirements-dev.txt
           make install-dev
+
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
           make lint-syntax-errors
+
       - name: Lint with pylint
         run: |
           make lint-no-fail
+
+      - name: Lint for security issues (with bandit)
+        run: make lint-security-issues
+
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es-version, '6')
         run: |
@@ -41,6 +49,7 @@ jobs:
           echo "SEARCH_CONTEXT=es6_search_service" >> .env
           cat .env
           # pip install -e .[elasticsearch6]
+
       - name: Install Elasticsearch 7
         if: startsWith( matrix.es-version, '7')
         run: |
@@ -50,11 +59,13 @@ jobs:
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
           cat .env
           pip install -e .[elasticsearch7]
+
       - name: Test with pytest
         run: make test-w-coverage
         env:
           DB_DRIVER: sqlite
           DB_DATABASE: karp
+
   test_w_sql:
     name: Test with SQL
     runs-on: ubuntu-latest
@@ -65,6 +76,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:

@@ -67,6 +67,9 @@ run-dev: install-dev
 lint-syntax-errors: install-dev
 	${INVENV} flake8 karp karp/tests setup.py run.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
 
+lint-security-issues: install-dev
+	${INVENV} bandit -r -ll karp
+
 test: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/unit_tests
 
