@@ -49,6 +49,15 @@ def fixture_db_setup_scope_module():
     alembic_main(["--raiseerr", "downgrade", "base"])
 
 
+@pytest.fixture(name="db_setup_scope_session", scope="session")
+def fixture_db_setup_scope_session():
+    print("running alembic upgrade ...")
+    alembic_main(["--raiseerr", "upgrade", "head"])
+    yield
+    print("running alembic downgrade ...")
+    alembic_main(["--raiseerr", "downgrade", "base"])
+
+
 @pytest.fixture(name="fa_client")
 def fixture_fa_client(db_setup, es):
     ctx.auth_service = dummy_auth_service.DummyAuthService()
@@ -65,6 +74,14 @@ def fixture_fa_client_wo_db():
 
 @pytest.fixture(name="fa_client_scope_module", scope="module")
 def fixture_fa_client_scope_module(db_setup_scope_module):
+    ctx.auth_service = dummy_auth_service.DummyAuthService()
+    with TestClient(webapp_main.create_app()) as client:
+        yield client
+        print("releasing testclient")
+
+
+@pytest.fixture(name="fa_client_scope_session", scope="session")
+def fixture_fa_client_scope_session(db_setup_scope_session):
     ctx.auth_service = dummy_auth_service.DummyAuthService()
     with TestClient(webapp_main.create_app()) as client:
         yield client
@@ -111,6 +128,11 @@ def fixture_context(db_setup, es):
 
 @pytest.fixture(name="context_scope_module", scope="module")
 def fixture_context_scope_module(db_setup_scope_module, es):
+    contexts.init_context()
+
+
+@pytest.fixture(name="context_scope_module", scope="session")
+def fixture_context_scope_session(db_setup_scope_session, es):
     contexts.init_context()
 
 
