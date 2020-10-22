@@ -131,7 +131,7 @@ def fixture_context_scope_module(db_setup_scope_module, es):
     contexts.init_context()
 
 
-@pytest.fixture(name="context_scope_module", scope="session")
+@pytest.fixture(name="context_scope_session", scope="session")
 def fixture_context_scope_session(db_setup_scope_session, es):
     contexts.init_context()
 
