@@ -1,6 +1,7 @@
 from typing import IO, Tuple, Dict, List, Optional
 import json
 import logging
+from pathlib import Path
 import collections
 import os
 import re
@@ -156,6 +157,9 @@ def check_resource_published(resource_ids: List[str]) -> None:
 
 def create_new_resource_from_file(config_file: IO) -> Resource:
     return create_new_resource(config_file)
+
+def create_resource_from_path(config: Path) -> List[Resource]:
+    return []
 
 
 # def update_resource_from_dir(config_dir: str) -> List[Tuple[str, int]]:
