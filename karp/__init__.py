@@ -5,7 +5,9 @@ import logging
 from flask import Flask  # pyre-ignore
 from flask_cors import CORS  # pyre-ignore
 from flask import request  # pyre-ignore
-from werkzeug.middleware.proxy_fix import ProxyFix
+
+# from werkzeug.middleware.proxy_fix import ProxyFix
+import flask_reverse_proxy
 import werkzeug.exceptions
 
 from karp.errors import KarpError
@@ -106,9 +108,9 @@ def create_app(config_class=None):
         auth.auth.set_authenticator(Authenticator())
 
     CORS(app)
-    app = ProxyFix(app, x_for=1, x_host=1)
+    # app = ProxyFix(app, x_for=1, x_host=1)
 
-    # app.wsgi_app = flask_reverse_proxy.ReverseProxied(app.wsgi_app)
+    app.wsgi_app = flask_reverse_proxy.ReverseProxied(app.wsgi_app)
     return app
 
 
