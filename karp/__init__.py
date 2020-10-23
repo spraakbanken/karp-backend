@@ -5,8 +5,7 @@ import logging
 from flask import Flask  # pyre-ignore
 from flask_cors import CORS  # pyre-ignore
 from flask import request  # pyre-ignore
-import flask_reverse_proxy
-from flask_reverse_proxy_fix.middleware import ReverseProxyPrefixFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 import werkzeug.exceptions
 
 from karp.errors import KarpError
@@ -26,7 +25,7 @@ def create_app(config_class=None):
 
     logger = setup_logging(app)
 
-    ReverseProxyPrefixFix(app)
+    app = ProxyFix(app, x_for=1, x_host=1)
 
     from .api import (
         health_api,
