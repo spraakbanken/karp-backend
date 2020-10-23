@@ -20,14 +20,14 @@ _logger = logging.getLogger("karp")
 query_api = Blueprint("query_api", __name__)
 
 
-@query_api.route("/<resource_id>/<entry_ids>")
+@query_api.route("/entries/<resource_id>/<entry_ids>")
 @auth.auth.authorization("READ")
 def get_entries_by_id(resource_id: str, entry_ids: str):
     response = search.search_ids(request.args, resource_id, entry_ids)
     return flask_jsonify(response)
 
 
-@query_api.route("/<resources>/query", methods=["GET"])
+# @query_api.route("/<resources>/query", methods=["GET"])
 @query_api.route("/query/<resources>", methods=["GET"])
 @auth.auth.authorization("READ")
 def query(resources: str):
@@ -48,7 +48,7 @@ def query(resources: str):
     return flask_jsonify(response), 200
 
 
-@query_api.route("/<resources>/query_split", methods=["GET"])
+# @query_api.route("/<resources>/query_split", methods=["GET"])
 @query_api.route("/query_split/<resources>", methods=["GET"])
 @auth.auth.authorization("READ")
 def query_split(resources: str):

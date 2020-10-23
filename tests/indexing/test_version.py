@@ -18,7 +18,7 @@ def test_add(es, client_with_data_f):
         "places/add", data=json.dumps({"entry": entry}), content_type="application/json"
     )
 
-    result = get_json(client, "places/query")
+    result = get_json(client, "/query/places")
     assert result["hits"][0]["version"] == 1
 
 
@@ -36,7 +36,7 @@ def test_no_changes_update(es, client_with_data_f):
         content_type="application/json",
     )
 
-    result = get_json(client, "places/query")
+    result = get_json(client, "/query/places")
     assert result["hits"][0]["version"] == 1
 
 
@@ -55,10 +55,10 @@ def test_update(es, client_with_data_f):
         content_type="application/json",
     )
 
-    result = get_json(client, "places/query")
+    result = get_json(client, "/query/places")
     assert result["hits"][0]["version"] == 2
 
-    result = get_json(client, "places/query_split")
+    result = get_json(client, "/query_split/places")
     assert result["hits"]["places"][0]["version"] == 2
 
 
@@ -125,7 +125,7 @@ def test_reindex(es, client_with_data_f):
 
         indexmgr.publish_index("places")
 
-    result = get_json(client, "places/query")
+    result = get_json(client, "/query/places")
     assert result["hits"][0]["version"] == 9
     assert len(result["hits"]) == 1
 
@@ -166,5 +166,5 @@ def test_force_update(es, client_with_data_f):
 
     assert response.status_code == 200
 
-    result = get_json(client, "places/1")
+    result = get_json(client, "/entries/places/1")
     assert result["hits"][0]["entry"]["name"] == "1"

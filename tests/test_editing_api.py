@@ -45,7 +45,7 @@ def test_add(es, client_with_data_f):
     assert "newID" in response_data
     assert "3" == response_data["newID"]
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert len(entries["hits"]) == 1
     assert entries["hits"][0]["entry"]["name"] == "test3"
 
@@ -112,12 +112,12 @@ def test_delete(es, client_with_data_f):
         ],
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     entry_id = entries["hits"][0]["id"]
 
     client.delete("places/%s/delete" % entry_id)
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert len(entries["hits"]) == 0
 
 
@@ -137,7 +137,7 @@ def test_update(es, client_with_data_f):
         ],
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     entry_id = entries["hits"][0]["id"]
 
     response = client.post(
@@ -162,7 +162,7 @@ def test_update(es, client_with_data_f):
     assert "newID" in response_data
     assert "3" == response_data["newID"]
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert len(entries["hits"]) == 1
     assert entries["hits"][0]["id"] == entry_id
     assert entries["hits"][0]["entry"]["population"] == 5
@@ -184,7 +184,7 @@ def test_update_entry_id(es, client_with_data_f):
         ],
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     entry_id = entries["hits"][0]["id"]
 
     response = client.post(
@@ -210,7 +210,7 @@ def test_update_entry_id(es, client_with_data_f):
     assert "4" == response_data["newID"]
 
     # check that the old entry with old id has been removed
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert 1 == len(entries["hits"])
 
 
@@ -239,7 +239,7 @@ def test_update_via_get_doesnt_mess_up(es, client_with_data_f):
         ],
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert len(entries["hits"]) == 2
     entry_id = entries["hits"][0]["id"]
     assert entry_id == "1"
@@ -268,7 +268,7 @@ def test_update_via_get_doesnt_mess_up(es, client_with_data_f):
     # assert "4" == response_data["newID"]
 
     # check that the old entry with old id has been removed
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert 2 == len(entries["hits"])
     # for val in entries["hits"]:
     #     assert "entry" in val
@@ -310,7 +310,7 @@ def test_refs(es, client_with_data_f):
         ],
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert len(entries["hits"]) == 2
     for val in entries["hits"]:
         assert "entry" in val
@@ -391,7 +391,7 @@ def test_external_refs(es, client_with_data_f):
         content_type="application/json",
     )
 
-    entries = get_json(client, "municipalities/query")
+    entries = get_json(client, "/query/municipalities")
     for val in entries["hits"]:
         assert "entry" in val
         entry = val["entry"]
@@ -406,7 +406,7 @@ def test_external_refs(es, client_with_data_f):
             assert 2 in place_codes
             assert 3 in place_codes
 
-    places_entries = get_json(client, "places/query")
+    places_entries = get_json(client, "/query/places")
     for val in places_entries["hits"]:
         assert "entry" in val
         entry = val["entry"]
@@ -446,7 +446,7 @@ def test_update_refs(es, client_with_data_f):
         ],
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert len(entries["hits"]) == 2
     for val in entries["hits"]:
         assert "entry" in val
@@ -458,7 +458,7 @@ def test_update_refs(es, client_with_data_f):
 
     client.delete("/places/6/delete")
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert len(entries["hits"]) == 1
     entry = entries["hits"][0]
     assert "v_smaller_places" not in entry
@@ -481,7 +481,7 @@ def test_update_refs2(es, client_with_data_f):
         content_type="application/json",
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     assert len(entries["hits"]) == 1
     assert entries["hits"][0]["id"] == "3"
     assert entries["hits"][0]["entry"]["municipality"] == [2]
@@ -506,7 +506,7 @@ def test_last_modified(es, client_with_data_f):
 
     after_add = datetime.now(timezone.utc).timestamp()
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     hit = entries["hits"][0]
     assert "dummy" == hit["last_modified_by"]
     assert before_add < hit["last_modified"]
@@ -528,7 +528,7 @@ def test_last_modified(es, client_with_data_f):
 
     after_update = datetime.now(timezone.utc).timestamp()
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "/query/places")
     hit = entries["hits"][0]
     assert "dummy" == hit["last_modified_by"]
     assert after_add < hit["last_modified"]

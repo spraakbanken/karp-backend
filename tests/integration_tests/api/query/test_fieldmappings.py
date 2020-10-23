@@ -162,7 +162,11 @@ from tests.utils import get_json
             "missing|state",
             Bool(
                 should=[
-                    Bool(must_not=[Exists(field="state"),]),
+                    Bool(
+                        must_not=[
+                            Exists(field="state"),
+                        ]
+                    ),
                     Bool(must_not=[Exists(field="v_municipality.state")]),
                 ]
             ),
@@ -173,8 +177,16 @@ from tests.utils import get_json
             # missing(or(or(state, v_municipality.state), name)) => missing(or(state, v_municipality.state, name))
             Bool(
                 should=[
-                    Bool(must_not=[Exists(field="state"),]),
-                    Bool(must_not=[Exists(field="name"),]),
+                    Bool(
+                        must_not=[
+                            Exists(field="state"),
+                        ]
+                    ),
+                    Bool(
+                        must_not=[
+                            Exists(field="name"),
+                        ]
+                    ),
                     Bool(must_not=[Exists(field="v_municipality.state")]),
                 ]
             ),

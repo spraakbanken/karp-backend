@@ -26,7 +26,7 @@ tags:
   - name: Inflection
   - name: Configuration
 paths:
-  '/{resources}/query':
+  '/query/{resources}':
     get:
       tags:
         - Querying
@@ -58,7 +58,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  '/{resource}/{entry_ids}':
+  '/entries/{resource}/{entry_ids}':
     get:
       tags:
         - Querying
@@ -81,7 +81,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  '/{resources}/query_split':
+  '/query_split/{resources}':
     get:
       tags:
         - Querying
@@ -201,7 +201,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GeneralError'
-  '/{resource}/stats/{field}':
+  '/stats/{resource}/{field}':
     get:
       tags:
         - Statistics

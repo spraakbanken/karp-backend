@@ -102,7 +102,7 @@ def _test_against_entries_general(
 
 
 def test_query_no_q(client_with_entries_scope_session):
-    entries = get_json(client_with_entries_scope_session, "places/query")
+    entries = get_json(client_with_entries_scope_session, "/query/places")
 
     names = extract_names(entries)
 
@@ -145,7 +145,7 @@ def test_query_no_q(client_with_entries_scope_session):
 def test_and(
     client_with_entries_scope_session, queries: List[str], expected_result: List[str]
 ):
-    query = "places/query?q=and||{queries}".format(queries="||".join(queries))
+    query = "/query/places?q=and||{queries}".format(queries="||".join(queries))
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -192,7 +192,7 @@ def test_and(
 def test_contains(
     client_with_entries_scope_session, field: str, value, expected_result: List[str]
 ):
-    query = "places/query?q=contains|{field}|{value}".format(field=field, value=value)
+    query = "/query/places?q=contains|{field}|{value}".format(field=field, value=value)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -208,7 +208,7 @@ def test_contains_and_separate_calls(
 ):
     names = set()
     for field, value in zip(fields, values):
-        query = "places/query?q=contains|{field}|{value}".format(
+        query = "/query/places?q=contains|{field}|{value}".format(
             field=field, value=value
         )
         entries = get_json(client_with_entries_scope_session, query)
@@ -264,7 +264,7 @@ def test_contains_and_separate_calls(
 def test_endswith(
     client_with_entries_scope_session, field: str, value, expected_result: List[str]
 ):
-    query = "places/query?q=endswith|{field}|{value}".format(field=field, value=value)
+    query = "/query/places?q=endswith|{field}|{value}".format(field=field, value=value)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -303,7 +303,7 @@ def test_endswith(
 def test_equals(
     client_with_entries_scope_session, field: str, value, expected_result: List[str]
 ):
-    query = "places/query?q=equals|{field}|{value}".format(field=field, value=value)
+    query = "/query/places?q=equals|{field}|{value}".format(field=field, value=value)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -357,7 +357,7 @@ def test_equals(
 def test_exists(
     client_with_entries_scope_session, field: str, expected_result: List[str]
 ):
-    query = "places/query?q=exists|{field}".format(field=field)
+    query = "/query/places?q=exists|{field}".format(field=field)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -391,7 +391,7 @@ def test_exists(
 def test_freergxp(
     client_with_entries_scope_session, field: str, expected_result: List[str]
 ):
-    query = "places/query?q=freergxp|{field}".format(field=field)
+    query = "/query/places?q=freergxp|{field}".format(field=field)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -438,7 +438,7 @@ def test_freergxp(
 def test_freetext(
     client_with_entries_scope_session, field: str, expected_result: List[str]
 ):
-    query = "places/query?q=freetext|{field}".format(field=field)
+    query = "/query/places?q=freetext|{field}".format(field=field)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -483,7 +483,7 @@ def test_freetext(
     ],
 )
 def test_gt(client_with_entries_scope_session, field, value):
-    query = "places/query?q=gt|{field}|{value}".format(field=field, value=value[0])
+    query = "/query/places?q=gt|{field}|{value}".format(field=field, value=value[0])
     _test_against_entries(
         client_with_entries_scope_session, query, field, lambda x: value[-1] < x
     )
@@ -514,7 +514,7 @@ def test_gt(client_with_entries_scope_session, field, value):
     ],
 )
 def test_gte(client_with_entries_scope_session, field, value):
-    query = "places/query?q=gte|{field}|{value}".format(field=field, value=value[0])
+    query = "/query/places?q=gte|{field}|{value}".format(field=field, value=value[0])
     _test_against_entries(
         client_with_entries_scope_session, query, field, lambda x: value[-1] <= x
     )
@@ -545,7 +545,7 @@ def test_gte(client_with_entries_scope_session, field, value):
     ],
 )
 def test_lt(client_with_entries_scope_session, field, value):
-    query = "places/query?q=lt|{field}|{value}".format(field=field, value=value[0])
+    query = "/query/places?q=lt|{field}|{value}".format(field=field, value=value[0])
     _test_against_entries(
         client_with_entries_scope_session, query, field, lambda x: x < value[-1]
     )
@@ -576,7 +576,7 @@ def test_lt(client_with_entries_scope_session, field, value):
     ],
 )
 def test_lte(client_with_entries_scope_session, field, value):
-    query = "places/query?q=lte|{field}|{value}".format(field=field, value=value[0])
+    query = "/query/places?q=lte|{field}|{value}".format(field=field, value=value[0])
     _test_against_entries(
         client_with_entries_scope_session, query, field, lambda x: x <= value[-1]
     )
@@ -612,7 +612,7 @@ def test_binary_range_1st_arg_and(
     value: Tuple,
     expected_result: List[str],
 ):
-    query = "places/query?q={op}||and|{field1}|{field2}||{value}".format(
+    query = "/query/places?q={op}||and|{field1}|{field2}||{value}".format(
         op=op, field1=fields[0], field2=fields[1], value=value[0]
     )
     if not expected_result:
@@ -722,7 +722,7 @@ def test_binary_range_1st_arg_or(
     value: Tuple,
     expected_result: List[str],
 ):
-    query = "places/query?q={op}||or|{field1}|{field2}||{value}".format(
+    query = "/query/places?q={op}||or|{field1}|{field2}||{value}".format(
         op=op, field1=fields[0], field2=fields[1], value=value[0]
     )
     if not expected_result:
@@ -789,7 +789,7 @@ def test_binary_range_1st_arg_or(
 def test_and_gt_lt(
     client_with_entries_scope_session, field, lower, upper, expected_n_hits
 ):
-    query = "places/query?q=and||gt|{field}|{lower}||lt|{field}|{upper}".format(
+    query = "/query/places?q=and||gt|{field}|{lower}||lt|{field}|{upper}".format(
         field=field, lower=lower[0], upper=upper[0]
     )
     _test_against_entries(
@@ -828,7 +828,7 @@ def test_and_gt_lt(
 def test_missing(
     client_with_entries_scope_session, field: str, expected_result: List[str]
 ):
-    query = "places/query?q=missing|{field}".format(field=field)
+    query = "/query/places?q=missing|{field}".format(field=field)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -846,7 +846,7 @@ def test_missing(
 def test_not(
     client_with_entries_scope_session, queries: str, expected_result: List[str]
 ):
-    query = "places/query?q=not||{queries}".format(queries=queries)
+    query = "/query/places?q=not||{queries}".format(queries=queries)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -863,7 +863,7 @@ def test_not(
 def test_or(
     client_with_entries_scope_session, queries: List[str], expected_result: List[str]
 ):
-    query = "places/query?q=or||{queries}".format(queries="||".join(queries))
+    query = "/query/places?q=or||{queries}".format(queries="||".join(queries))
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -890,7 +890,7 @@ def test_or(
 def test_regexp(
     client_with_entries_scope_session, field: str, value, expected_result: List[str]
 ):
-    query = "places/query?q=regexp|{field}|{value}".format(field=field, value=value)
+    query = "/query/places?q=regexp|{field}|{value}".format(field=field, value=value)
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
@@ -916,13 +916,15 @@ def test_regexp(
 def test_startswith(
     client_with_entries_scope_session, field: str, value, expected_result: List[str]
 ):
-    query = "places/query?q=startswith|{field}|{value}".format(field=field, value=value)
+    query = "/query/places?q=startswith|{field}|{value}".format(
+        field=field, value=value
+    )
     _test_path(client_with_entries_scope_session, query, expected_result)
 
 
 @pytest.mark.xfail(reason="no protected stuff")
 def test_protected(client_with_data_scope_module):
-    response = client_with_data_scope_module.get("/municipalities/query")
+    response = client_with_data_scope_module.get("//query/municipalities")
     names = response
     assert "403 FORBIDDEN" in names
 
@@ -982,7 +984,7 @@ def test_protected(client_with_data_scope_module):
 
 
 def test_resource_not_existing(client_with_entries_scope_session):
-    response = client_with_entries_scope_session.get("/asdf/query")
+    response = client_with_entries_scope_session.get("/query/asdf")
     assert response.status_code == 400
     assert (
         'Resource is not searchable: "asdf"'
