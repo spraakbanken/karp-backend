@@ -25,8 +25,6 @@ def create_app(config_class=None):
 
     logger = setup_logging(app)
 
-    app = ProxyFix(app, x_for=1, x_host=1)
-
     from .api import (
         health_api,
         edit_api,
@@ -108,6 +106,7 @@ def create_app(config_class=None):
         auth.auth.set_authenticator(Authenticator())
 
     CORS(app)
+    app = ProxyFix(app, x_for=1, x_host=1)
 
     # app.wsgi_app = flask_reverse_proxy.ReverseProxied(app.wsgi_app)
     return app
