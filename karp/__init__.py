@@ -6,6 +6,7 @@ from flask import Flask  # pyre-ignore
 from flask_cors import CORS  # pyre-ignore
 from flask import request  # pyre-ignore
 import flask_reverse_proxy
+from flask_reverse_proxy_fix.middleware import ReverseProxyPrefixFix
 import werkzeug.exceptions
 
 from karp.errors import KarpError
@@ -24,6 +25,8 @@ def create_app(config_class=None):
         app.config.from_object(os.getenv("KARP_CONFIG"))
 
     logger = setup_logging(app)
+
+    ReverseProxyPrefixFix(app)
 
     from .api import (
         health_api,
@@ -107,7 +110,7 @@ def create_app(config_class=None):
 
     CORS(app)
 
-    app.wsgi_app = flask_reverse_proxy.ReverseProxied(app.wsgi_app)
+    # app.wsgi_app = flask_reverse_proxy.ReverseProxied(app.wsgi_app)
     return app
 
 

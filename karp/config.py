@@ -25,6 +25,7 @@ class Config:
     LOG_TO_SLACK = strtobool(os.environ.get("LOG_TO_SLACK", "n"))
     SLACK_SECRET = os.environ.get("SLACK_SECRET")
     JWT_AUTH = strtobool(os.environ.get("JWT_AUTH", "n"))
+    REVERSE_PROXY_PATH = os.environ.get("REVERSE_PROXY_PATH")
 
 
 class ProductionConfig(Config):
