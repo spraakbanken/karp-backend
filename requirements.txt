@@ -11,10 +11,12 @@ pyjwt
 cryptography
 sb-json-tools>=0.5.2
 fastapi
-starlette
+#starlette
+paradigmextract
 pydantic
 sqlalchemy-utils
 sqlalchemy-json
 uvicorn
 tabulate
 typer
+
