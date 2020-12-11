@@ -1,6 +1,6 @@
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
-from paradigmextract import morphparser
+from paradigmextract import morphparser, paradigm as pe_paradigm
 
 from karp.domain.models.entry import Entry, EntryOp, EntryStatus
 
@@ -11,10 +11,13 @@ class MorphologicalEntry(Entry):
     def __init__(
         self,
         *args,
+        form_msds: List[Tuple[str, Any]],
+        var_insts: List[List[Tuple[str, Any]]],
+        pos: str,
         **kwargs
     ):
         super().__init__(*args, **kwargs)
-        self.paradigm = None
+        self.paradigm = pe_paradigm.Paradigm(form_msds, var_insts, self.entry_id, uuid=self.id)
         self.tags = ()
 
     
@@ -22,6 +25,7 @@ class MorphologicalEntry(Entry):
         # for now, assume wordform is the baseform
         variables = morphparser.eval_baseform(self.paradigm, wordform, self.tags)
         if variables is None:
+            print("early exit")
             return []
         res = []
         table = self.paradigm(*variables)
@@ -34,7 +38,9 @@ class MorphologicalEntry(Entry):
 
 
 def create_morphological_entry(
-    entry_id: str
+    entry_id: str,*,
+    pos: str,
+    form_msds: List[Tuple[str, Any]],var_insts: List[List[Tuple[str, Any]]]
 ) -> MorphologicalEntry:
     return MorphologicalEntry(
         entity_id=unique_id.make_unique_id(),
@@ -44,4 +50,7 @@ def create_morphological_entry(
         op=EntryOp.ADDED,
         status=EntryStatus.IN_PROGRESS,
         version=1,
+        form_msds=form_msds,
+        var_insts=var_insts,
+        pos=pos,
     )
