@@ -12,7 +12,7 @@ cryptography
 sb-json-tools>=0.5.2
 fastapi
 #starlette
-paradigmextract
+paradigmextract>=0.1.0
 pydantic
 sqlalchemy-utils
 sqlalchemy-json

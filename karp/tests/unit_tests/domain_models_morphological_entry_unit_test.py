@@ -200,3 +200,97 @@ def test_morph_entry_inflect_ab():
     )
 
     inflection_table = morph_entry.get_inflection_table("")
+
+
+def test_morph_entry_inflect_vb_2a_känna():
+    morph_entry = create_morphological_entry(
+        "vb_2a_känna",
+        pos="vb",
+        form_msds=[
+            ("1+ner", "pres ind aktiv"),
+            ("1+nes", "pres ind s-form"),
+            ("1+ns", "pres ind s-form"),
+            ("1+de", "pret ind aktiv"),
+            ("1+des", "pret ind s-form"),
+            ("1+n", "imper"),
+            ("1+na", "inf aktiv"),
+            ("1+nas", "inf s-form"),
+            ("1+t", "sup aktiv"),
+            ("1+ts", "sup s-form"),
+        ],
+        var_insts=[[("1", "kän")]],
+    )
+
+    inflection_table = morph_entry.get_inflection_table("bränna")
+
+    assert inflection_table == [
+        ("pres ind aktiv", "bränner"),
+        ("pres ind s-form", "brännes"),
+        ("pres ind s-form", "bränns"),
+        ("pret ind aktiv", "brände"),
+        ("pret ind s-form", "brändes"),
+        ("imper", "bränn"),
+        ("inf aktiv", "bränna"),
+        ("inf s-form", "brännas"),
+        ("sup aktiv", "bränt"),
+        ("sup s-form", "bränts"),
+    ]
+
+
+def test_morph_entry_inflect_vb_1a_laga():
+    morph_entry = create_morphological_entry(
+        "vb_1a_laga",
+        pos="vb",
+        form_msds=[
+            ("1+r", "pres ind aktiv"),
+            ("1+s", "pres ind s-form"),
+            ("1+de", "pret ind aktiv"),
+            ("1+des", "pret ind s-form"),
+            ("1", "imper"),
+            ("1", "inf aktiv"),
+            ("1+s", "inf s-form"),
+            ("1+t", "sup aktiv"),
+            ("1+ts", "sup s-form"),
+        ],
+        var_insts=[[("1", "laga")]],
+    )
+
+    inflection_table = morph_entry.get_inflection_table("jobba")
+
+    assert inflection_table == [
+        ("pres ind aktiv", "jobbar"),
+        ("pres ind s-form", "jobbas"),
+        ("pret ind aktiv", "jobbade"),
+        ("pret ind s-form", "jobbades"),
+        ("imper", "jobba"),
+        ("inf aktiv", "jobba"),
+        ("inf s-form", "jobbas"),
+        ("sup aktiv", "jobbat"),
+        ("sup s-form", "jobbats"),
+    ]
+
+
+def test_morph_entry_vb_1s_andas():
+    morph_entry = create_morphological_entry(
+        "vb_1s_andas",
+        pos="vb",
+        form_msds=[
+            ("1+2", "pres ind s-form"),
+            ("1+de+2", "pret ind s-form"),
+            ("1+2", "imper"),
+            ("1+2", "inf s-form"),
+            ("1+t+2", "sup s-form"),
+        ],
+        var_insts=[[("1", "anda")], [("2", "s")]],
+        # var_insts=[[("1", "anda"), ("2", "s")]],
+    )
+
+    inflection_table = morph_entry.get_inflection_table("fightas")
+
+    assert inflection_table == [
+        ("pres ind s-form", "fightas"),
+        ("pret ind s-form", "fightades"),
+        ("imper", "fightas"),
+        ("inf s-form", "fightas"),
+        ("sup s-form", "fightats"),
+    ]

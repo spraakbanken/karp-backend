@@ -14,16 +14,18 @@ class MorphologicalEntry(Entry):
         form_msds: List[Tuple[str, Any]],
         var_insts: List[List[Tuple[str, Any]]],
         pos: str,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(*args, **kwargs)
-        self.paradigm = pe_paradigm.Paradigm(form_msds, var_insts, self.entry_id, uuid=self.id)
-        self.tags = ()
+        self.paradigm = pe_paradigm.Paradigm(
+            form_msds, var_insts, self.entry_id, uuid=self.id
+        )
+        self.tags = ("inf aktiv", "inf s-form") if pos in ["vb", "vbm"] else ()
 
-    
     def get_inflection_table(self, wordform: str) -> List[Tuple[str, str]]:
         # for now, assume wordform is the baseform
         variables = morphparser.eval_baseform(self.paradigm, wordform, self.tags)
+        print(f"variables = {variables}")
         if variables is None:
             print("early exit")
             return []
@@ -38,9 +40,11 @@ class MorphologicalEntry(Entry):
 
 
 def create_morphological_entry(
-    entry_id: str,*,
+    entry_id: str,
+    *,
     pos: str,
-    form_msds: List[Tuple[str, Any]],var_insts: List[List[Tuple[str, Any]]]
+    form_msds: List[Tuple[str, Any]],
+    var_insts: List[List[Tuple[str, Any]]],
 ) -> MorphologicalEntry:
     return MorphologicalEntry(
         entity_id=unique_id.make_unique_id(),
