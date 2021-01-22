@@ -1,5 +1,7 @@
 import pytest
 
+from paradigmextract import morphparser
+
 from karp.domain.models.morphological_entry import (
     MorphologicalEntry,
     create_morphological_entry,
@@ -281,12 +283,19 @@ def test_morph_entry_vb_1s_andas():
             ("1+2", "inf s-form"),
             ("1+t+2", "sup s-form"),
         ],
-        var_insts=[[("1", "anda")], [("2", "s")]],
+        var_insts=[[("1", "anda"), ("2", "s")]],
         # var_insts=[[("1", "anda"), ("2", "s")]],
     )
 
+    assert morph_entry.tags == ("inf aktiv", "inf s-form")
+
     inflection_table = morph_entry.get_inflection_table("fightas")
 
+    variables = morphparser.eval_baseform(
+        morph_entry.paradigm, "fightas", morph_entry.tags
+    )
+
+    assert variables == ["fighta", "s"]
     assert inflection_table == [
         ("pres ind s-form", "fightas"),
         ("pret ind s-form", "fightades"),
