@@ -87,3 +87,12 @@ class UnsupportedField(SearchError):
             message,
             errors.ClientErrorCodes.SEARCH_UNSUPPORTED_FIELD,
         )
+
+
+class AuthError(DomainError):
+    """Raised when there is an error with authentication or authorizing."""
+
+    def __init__(self, message: str, **kwargs) -> None:
+        if "code" not in kwargs:
+            kwargs["code"] = errors.ClientErrorCodes.AUTH_GENERAL_ERROR
+        super().__init__(message, **kwargs)
