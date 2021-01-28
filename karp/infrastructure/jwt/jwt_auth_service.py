@@ -1,23 +1,21 @@
 """Module for jwt-based authentication."""
+from pathlib import Path
 import time
+
+import jwt
 import jwt.exceptions as jwte  # pyre-ignore
 
-from .authenticator import Authenticator
-from karp import get_resource_string
-from karp.auth.user import User
-import karp.resourcemgr as resourcemgr
+from karp.application import ctx, config
 from karp.errors import KarpError, ClientErrorCodes
 
 jwt_key = get_resource_string("auth/pubkey.pem")
 
+def load_jwt_key(path: Path) -> str:
+    with open(path) as fp:
+        return fp.read()
 
-class JWTAuthenticator(Authenticator):
-    def authenticate(self, request):
-        auth_header = request.headers.get("Authorization")
-        auth_token = None
-        if auth_header:
-            auth_token = auth_header.split(" ")[1]
-        if auth_token:
+
+jwt_key = load_jwt_key(config.JWT_AUTH_PUBKEY_PATH)
             try:
                 user_token = jwt.decode(auth_token, key=jwt_key, algorithms=["RS256"])
             except jwte.ExpiredSignatureError:
