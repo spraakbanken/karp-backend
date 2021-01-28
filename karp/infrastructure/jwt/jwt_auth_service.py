@@ -5,6 +5,7 @@ import time
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
 
+from karp.domain.models.auth_service import AuthService, PermissionLevel
 from karp.application import ctx, config
 from karp.errors import KarpError, ClientErrorCodes
 
@@ -16,12 +17,17 @@ def load_jwt_key(path: Path) -> str:
 
 
 jwt_key = load_jwt_key(config.JWT_AUTH_PUBKEY_PATH)
+
+
+class JWTAuthenticator(AuthService):
+    def __init__(self) -> None:
+        print("JWTAuthenticator created")
+
+    def authenticate(self, _scheme: str, credentials: str) -> User:
+        print("JWTAuthenticator.authenticate: called")
+
             try:
-                user_token = jwt.decode(auth_token, key=jwt_key, algorithms=["RS256"])
-            except jwte.ExpiredSignatureError:
-                raise KarpError(
-                    "The given jwt have expired", ClientErrorCodes.EXPIRED_JWT
-                )
+            user_token = jwt.decode(credentials, key=jwt_key, algorithms=["RS256"])
 
             # TODO check code, but this should't be needed since it seems like the JWT-lib checks expiration
             if user_token["exp"] < time.time():
