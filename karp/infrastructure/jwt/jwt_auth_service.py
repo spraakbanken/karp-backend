@@ -6,10 +6,15 @@ import jwt
 import jwt.exceptions as jwte  # pyre-ignore
 
 from karp.domain.models.auth_service import AuthService, PermissionLevel
+from karp.domain.models.user import User
+from karp.domain.errors import AuthError
 from karp.application import ctx, config
+
+from karp.infrastructure.unit_of_work import unit_of_work
+
+# import karp.resourcemgr as resourcemgr
 from karp.errors import KarpError, ClientErrorCodes
 
-jwt_key = get_resource_string("auth/pubkey.pem")
 
 def load_jwt_key(path: Path) -> str:
     with open(path) as fp:
@@ -26,23 +31,27 @@ class JWTAuthenticator(AuthService):
     def authenticate(self, _scheme: str, credentials: str) -> User:
         print("JWTAuthenticator.authenticate: called")
 
-            try:
+        try:
             user_token = jwt.decode(credentials, key=jwt_key, algorithms=["RS256"])
+        except jwte.ExpiredSignatureError as exc:
+            raise AuthError(
+                "The given jwt have expired", code=ClientErrorCodes.EXPIRED_JWT
+            ) from exc
+        except jwte.DecodeError as exc:
+            raise AuthError("General JWT error") from exc
 
-            # TODO check code, but this should't be needed since it seems like the JWT-lib checks expiration
-            if user_token["exp"] < time.time():
-                raise KarpError(
-                    "The given jwt have expired", ClientErrorCodes.EXPIRED_JWT
-                )
+        # TODO check code, but this should't be needed since it seems like the JWT-lib checks expiration
+        if user_token["exp"] < time.time():
+            raise AuthError(
+                "The given jwt have expired", code=ClientErrorCodes.EXPIRED_JWT
+            )
 
-            lexicon_permissions = {}
-            if "scope" in user_token and "lexica" in user_token["scope"]:
-                lexicon_permissions = user_token["scope"]["lexica"]
-            return User(user_token["sub"], lexicon_permissions, user_token["levels"])
+        lexicon_permissions = {}
+        if "scope" in user_token and "lexica" in user_token["scope"]:
+            lexicon_permissions = user_token["scope"]["lexica"]
+        return User(user_token["sub"], lexicon_permissions, user_token["levels"])
 
-        return None
-
-    def authorize(self, level, user, args):
+    def authorize(self, level: PermissionLevel, user: User, args):
         if "resource_id" in args:
             resource_ids = [args["resource_id"]]
         elif "resource_ids" in args:
@@ -52,12 +61,14 @@ class JWTAuthenticator(AuthService):
         else:
             return True
 
-        for resource_id in resource_ids:
-            if resourcemgr.is_protected(resource_id, level):
-                if (
-                    not user
-                    or not user.permissions.get(resource_id)
-                    or user.permissions[resource_id] < user.levels[level]
-                ):
-                    return False
+        with unit_of_work(using=ctx.resource_repo) as resources_uw:
+            for resource_id in resource_ids:
+                resource = resources_uw.by_resource_id(resource_id)
+                if resource.is_protected(resource_id, level):
+                    if (
+                        not user
+                        or not user.permissions.get(resource_id)
+                        or user.permissions[resource_id] < user.levels[level]
+                    ):
+                        return False
         return True
