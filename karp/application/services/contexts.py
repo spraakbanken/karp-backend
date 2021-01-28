@@ -11,6 +11,8 @@ from karp.application import config
 from karp.domain.models.search_service import SearchService
 
 from karp.infrastructure.sql.sql_resource_repository import SqlResourceRepository
+from karp.infrastructure.testing.dummy_auth_service import DummyAuthService
+from karp.infrastructure.jwt.jwt_auth_service import JWTAuthenticator
 
 
 logger = logging.getLogger("karp")
@@ -21,6 +23,11 @@ def init_context():
 
     ctx.resource_repo = SqlResourceRepository()
     ctx.search_service = SearchService.create(config.SEARCH_CONTEXT)
+    if config.DEBUG:
+        logger.warn("Running in DEBUG mode")
+        ctx.auth_service = DummyAuthService()
+    else:
+        ctx.auth_service = JWTAuthenticator()
 
 
 def load_infrastructure():
