@@ -1,4 +1,4 @@
-import jwt
+"""Module for jwt-based authentication."""
 import time
 import jwt.exceptions as jwte  # pyre-ignore
 
