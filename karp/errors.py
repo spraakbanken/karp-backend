@@ -1,10 +1,12 @@
+import enum
 from typing import IO, Optional
 
 
 NoIndexModuleConfigured = 10
 
 
-class ClientErrorCodes:
+class ClientErrorCodes(enum.Enum):
+    UNKNOWN_ERROR = 1
     RESOURCE_DOES_NOT_EXIST = 20
     RESOURCE_NOT_PUBLISHED = 21
     RESOURCE_CONFIG_NOT_VALID = 22
@@ -17,6 +19,7 @@ class ClientErrorCodes:
     ENTRY_ID_MISMATCH = 34
     EXPIRED_JWT = 40
     NOT_PERMITTED = 41
+    AUTH_GENERAL_ERROR = 49
     BAD_PARAMETER_FORMAT = 50
     DB_GENERAL_ERROR = 60
     DB_INTEGRITY_ERROR = 61
@@ -28,10 +31,12 @@ class ClientErrorCodes:
 
 
 class KarpError(Exception):
-    def __init__(self, message: str, code: int = None, http_return_code: int = 400):
+    def __init__(
+        self, message: str, code: ClientErrorCodes = None, http_return_code: int = 400
+    ):
         super().__init__(message)
         self.message = message
-        self.code = code
+        self.code = code or ClientErrorCodes.UNKNOWN_ERROR
         self.http_return_code = http_return_code
 
 
