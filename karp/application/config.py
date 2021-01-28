@@ -69,7 +69,7 @@ CONSOLE_LOG_LEVEL = config("CONSOLE_LOG_LEVEL", cast=get_loglevel, default="INFO
 #     SLACK_SECRET = os.environ.get("SLACK_SECRET")
 #     JWT_AUTH = strtobool(os.environ.get("JWT_AUTH", "n"))
 
-
+JWT_AUTH_PUBKEY_PATH = config("JWT_AUTH_PUBKEY_PATH", cast=Path, default=None)
 # class ProductionConfig(Config):
 #     def __init__(self):
 #         self.SQLALCHEMY_DATABASE_URI = MYSQL_FORMAT.format(
