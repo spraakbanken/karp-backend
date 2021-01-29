@@ -1,11 +1,10 @@
-import enum
 from typing import IO, Optional
 
 
 NoIndexModuleConfigured = 10
 
 
-class ClientErrorCodes(enum.Enum):
+class ClientErrorCodes:
     UNKNOWN_ERROR = 1
     RESOURCE_DOES_NOT_EXIST = 20
     RESOURCE_NOT_PUBLISHED = 21
