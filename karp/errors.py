@@ -30,9 +30,7 @@ class ClientErrorCodes:
 
 
 class KarpError(Exception):
-    def __init__(
-        self, message: str, code: ClientErrorCodes = None, http_return_code: int = 400
-    ):
+    def __init__(self, message: str, code: int = None, http_return_code: int = 400):
         super().__init__(message)
         self.message = message
         self.code = code or ClientErrorCodes.UNKNOWN_ERROR
