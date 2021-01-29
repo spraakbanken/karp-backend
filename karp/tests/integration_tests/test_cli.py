@@ -1,10 +1,8 @@
-from karp.application import context
 from pathlib import Path
 from typer.testing import CliRunner
 
 import pytest
 
-from karp.cliapp.main import create_app
 
 from karp.infrastructure.unit_of_work import unit_of_work
 
@@ -15,6 +13,7 @@ runner = CliRunner()
 
 @pytest.fixture(name="cliapp")
 def fixture_cliapp(context):
+    from karp.cliapp.main import create_app
     cliapp = create_app()
     yield cliapp
 
