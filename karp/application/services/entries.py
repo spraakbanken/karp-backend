@@ -1,3 +1,4 @@
+from pathlib import Path
 from karp.domain.models.resource import Resource
 from typing import Optional, Dict, List, Tuple, Any
 import json
@@ -7,6 +8,7 @@ from datetime import datetime, timezone
 
 import fastjsonschema  # pyre-ignore
 from sb_json_tools import jsondiff
+import json_streams
 
 # from karp.resourcemgr import get_resource
 # from .resource import Resource
@@ -319,13 +321,15 @@ def update_entry(
     return current_db_entry.entry_id
 
 
-# def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
-#     with open(data) as fp:
-#         objs = []
-#         for line in fp:
-#             objs.append(json.loads(line))
-#         add_entries(resource_id, objs, user_id="local_admin", resource_version=version)
-#     return len(objs)
+def add_entries_from_file(
+    resource_id: str, version: int, filename: Path
+) -> List[Entry]:
+    return add_entries(
+        resource_id,
+        json_streams.load_from_file(filename),
+        user_id="local_admin",
+        resource_version=version,
+    )
 
 
 def add_entries(
