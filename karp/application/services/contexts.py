@@ -23,7 +23,7 @@ def init_context():
 
     ctx.resource_repo = SqlResourceRepository()
     ctx.search_service = SearchService.create(config.SEARCH_CONTEXT)
-    if config.DEBUG:
+    if config.DEBUG or config.TESTING:
         logger.warn("Running in DEBUG mode")
         ctx.auth_service = DummyAuthService()
     else:
