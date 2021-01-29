@@ -25,6 +25,10 @@ def create_app():
     ):
         pass
 
+    from karp.application.services.contexts import init_context
+
+    init_context()
+
     load_commands(app)
 
     return app
