@@ -321,6 +321,10 @@ def update_entry(
     return current_db_entry.entry_id
 
 
+def update_entries(*args, **kwargs):
+    return []
+
+
 def add_entries_from_file(
     resource_id: str, version: int, filename: Path
 ) -> List[Entry]:

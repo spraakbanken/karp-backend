@@ -34,7 +34,7 @@ def import_resource(resource_id: str, version: Optional[int], data: Path):
 @cli_timer
 def update_entries(resource_id: str, data: Path):
     updated_entries = entries.update_entries(
-        resource, json_streams.load_from_file(data)
+        resource_id, json_streams.load_from_file(data)
     )
 
 
