@@ -10,6 +10,7 @@ from karp.domain.models import event_handler
 from karp.domain.models.entity import Entity, TimestampedVersionedEntity
 from karp.domain.models.entry import Entry, EntryRepository, create_entry
 from karp.domain.models.events import DomainEvent
+from karp.domain.models.auth_service import PermissionLevel
 
 from karp.utility import unique_id
 from karp.utility import json_schema
@@ -225,6 +226,13 @@ class Resource(TimestampedVersionedEntity):
             last_modified_by=user,
             message=message,
         )
+
+    def is_protected(self, level: PermissionLevel):
+        """
+        Level can be READ, WRITE or ADMIN
+        """
+        protection = self.config.get("protected", {})
+        return level == "WRITE" or level == "ADMIN" or protection.get("read")
 
 
 # ===== Entities =====

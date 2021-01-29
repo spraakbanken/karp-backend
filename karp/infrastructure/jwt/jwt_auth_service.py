@@ -1,6 +1,7 @@
 """Module for jwt-based authentication."""
 from pathlib import Path
 import time
+from typing import List
 
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
@@ -40,35 +41,20 @@ class JWTAuthenticator(AuthService):
         except jwte.DecodeError as exc:
             raise AuthError("General JWT error") from exc
 
-        # TODO check code, but this should't be needed since it seems like the JWT-lib checks expiration
-        if user_token["exp"] < time.time():
-            raise AuthError(
-                "The given jwt have expired", code=ClientErrorCodes.EXPIRED_JWT
-            )
-
         lexicon_permissions = {}
         if "scope" in user_token and "lexica" in user_token["scope"]:
             lexicon_permissions = user_token["scope"]["lexica"]
         return User(user_token["sub"], lexicon_permissions, user_token["levels"])
 
-    def authorize(self, level: PermissionLevel, user: User, args):
-        if "resource_id" in args:
-            resource_ids = [args["resource_id"]]
-        elif "resource_ids" in args:
-            resource_ids = args["resource_id"].split(",")
-        elif "resources" in args:
-            resource_ids = args["resources"].split(",")
-        else:
-            return True
+    def authorize(self, level: PermissionLevel, user: User, resource_ids: List[str]):
 
         with unit_of_work(using=ctx.resource_repo) as resources_uw:
             for resource_id in resource_ids:
                 resource = resources_uw.by_resource_id(resource_id)
-                if resource.is_protected(resource_id, level):
-                    if (
-                        not user
-                        or not user.permissions.get(resource_id)
-                        or user.permissions[resource_id] < user.levels[level]
-                    ):
-                        return False
+                if resource.is_protected(resource_id, level) and (
+                    not user
+                    or not user.permissions.get(resource_id)
+                    or user.permissions[resource_id] < user.levels[level]
+                ):
+                    return False
         return True
