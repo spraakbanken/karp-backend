@@ -1,5 +1,6 @@
 """Unit tests for JWTAuthenticator"""
 import datetime
+from pathlib import Path
 
 import pytest
 
@@ -11,7 +12,7 @@ from karp.domain.errors import AuthError
 from karp.infrastructure.jwt.jwt_auth_service import JWTAuthenticator
 
 
-with open("./karp/tests/data/private_key.pem") as fp:
+with open(Path(__file__).parent / ".." / "data/private_key.pem") as fp:
     jwt_private_key = fp.read()
 
 
