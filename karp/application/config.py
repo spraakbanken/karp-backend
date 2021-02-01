@@ -71,7 +71,7 @@ CONSOLE_LOG_LEVEL = config("CONSOLE_LOG_LEVEL", cast=get_loglevel, default="INFO
 
 if TESTING:
     print("Using testing jwt key")
-    JWT_AUTH_PUBKEY_PATH = Path(__file__).parent / "../tests/data/pubkey.pem")
+    JWT_AUTH_PUBKEY_PATH = Path(__file__).parent / "../tests/data/pubkey.pem"
 else:
     JWT_AUTH_PUBKEY_PATH = config("JWT_AUTH_PUBKEY_PATH", cast=Path, default=None)
 # class ProductionConfig(Config):
