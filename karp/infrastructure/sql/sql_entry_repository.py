@@ -4,7 +4,6 @@ from karp.domain.errors import NonExistingField, RepositoryError
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
-from _pytest._code.code import filter_traceback
 
 import regex
 
