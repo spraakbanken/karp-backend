@@ -13,7 +13,7 @@ config = StarletteConfig(".env")
 DEBUG = config("DEBUG", cast=bool, default=False)
 TESTING = config("TESTING", cast=bool, default=False)
 
-DB_DRIVER = config("DB_DRIVER", default="mysql")
+DB_DRIVER = config("DB_DRIVER", default="mysql+pysql")
 DB_HOST = config("DB_HOST", default=None)
 DB_PORT = config("DB_PORT", cast=int, default=None)
 DB_USER = config("DB_USER", default=None)
@@ -31,6 +31,7 @@ DB_URL = config(
         host=DB_HOST,
         port=DB_PORT,
         database=DB_DATABASE,
+        query={"charset": "utf8mb4"},
     ),
 )
 
