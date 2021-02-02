@@ -20,4 +20,5 @@ uvicorn
 tabulate
 typer
 json_streams
+importlib_metadata; python < "3.8"
 
