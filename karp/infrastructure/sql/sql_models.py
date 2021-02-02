@@ -120,7 +120,7 @@ def get_or_create_entry_runtime_model(
         return runtime_model
 
     foreign_key_constraint = db.ForeignKeyConstraint(
-        ("history_id",), (history_model.history_id,)
+        ["history_id"], [f"{history_model.__tablename__}.history_id"]
     )
 
     attributes = {
