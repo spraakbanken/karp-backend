@@ -91,7 +91,7 @@ class SqlEntryRepository(
         try:
             return self._session.add(runtime_entry)
         except db.exc.IntegrityError as exc:
-            logger.exception(exc)
+            # logger.exception(exc)
             match = DUPLICATE_PROG.search(str(exc))
             if match:
                 value = match.group(1)
@@ -101,7 +101,7 @@ class SqlEntryRepository(
             else:
                 value = "UNKNOWN"
                 key = "UNKNOWN"
-            raise errors.IntegrityError(key=key, value=value)
+            raise errors.IntegrityError(key=key, value=value) from exc
 
     def update(self, entry: Entry):
         self._check_has_session()
