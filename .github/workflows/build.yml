@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v1
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -38,6 +38,7 @@ jobs:
           python -m pip install --upgrade pip
           # pip install -Ur requirements-dev.txt
           make install-dev
+          make install-mysql
 
       # - name: Lint with flake8
       #   run: |
@@ -99,19 +100,20 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8, 3.9]
 
     steps:
       - uses: actions/checkout@v1
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           make install-dev
+          make install-mysql
       # - name: Lint with flake8
       #   run: |
       #     # stop the build if there are Python syntax errors or undefined names
@@ -120,7 +122,6 @@ jobs:
         run: make lint-no-fail
       - name: Test with pytest
         run: make test-w-coverage
-        continue-on-error: true
         env:
           DB_DATABASE: karp
           DB_USER: karp

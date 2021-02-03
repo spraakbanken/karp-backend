@@ -55,6 +55,9 @@ ${VENV_NAME}/req-dev.installed: ${VENV_NAME}/req.installed setup.py setup.cfg
 	${INVENV} pip install -e .[dev]
 	@touch $@
 
+install-mysql: venv
+	${INVENV} pip install -e .[mysql]
+
 init-db:
 	${INVENV} alembic upgrade head
 
