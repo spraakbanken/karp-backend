@@ -60,7 +60,9 @@ class ResourceDefinition(db.Base):
 
 
 class BaseRuntimeEntry:
-    entry_id = db.Column(db.String(100), primary_key=True)
+    entry_id = db.Column(
+        db.String(100, collation="utf8mb4_swedish_ci"), primary_key=True
+    )
     history_id = db.Column(db.Integer, nullable=False)
     id = db.Column(db.UUIDType, nullable=False)
     discarded = db.Column(db.Boolean, nullable=False)
