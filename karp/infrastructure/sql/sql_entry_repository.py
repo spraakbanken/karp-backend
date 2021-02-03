@@ -400,7 +400,7 @@ class SqlEntryRepository(
 
     def _entry_to_runtime_dict(self, history_id: int, entry: Entry) -> Dict:
         _entry = {
-            "entry_id": entry.entry_id,
+            "entry_id": entry.id,
             "history_id": history_id,
             "id": entry.id,
             "discarded": entry.discarded,

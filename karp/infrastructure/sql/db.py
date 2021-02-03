@@ -41,7 +41,7 @@ from sqlalchemy_json import NestedMutableJson
 
 from karp.application import config
 
-engine = sqlalchemy.create_engine(config.DB_URL)
+engine = sqlalchemy.create_engine(config.DB_URL, echo=True)
 
 print(f"Engine created for {config.DB_URL}")
 metadata = MetaData()
