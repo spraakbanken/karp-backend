@@ -6,11 +6,23 @@ jobs:
   test_w_es:
     name: Test with Elasticsearch
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mariadb:10.3
+        ports:
+          - 3306
+        env:
+          MYSQL_ROOT_PASSWORD: testing
+          MYSQL_DATABASE: karp
+          MYSQL_PASSWORD: testing
+          MYSQL_USER: karp
+        options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
+
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7, 3.8]
-        es-version: [6.5.4, 6.8.3]
+        python-version: [3.6, 3.7, 3.8, 3.9]
+        es-version: [6.8.3]
         # es-version: [6.8.3, 7.3.2]
 
     steps:
@@ -63,12 +75,27 @@ jobs:
       - name: Test with pytest
         run: make test-w-coverage
         env:
-          DB_DRIVER: sqlite
           DB_DATABASE: karp
+          DB_USER: karp
+          DB_PASSWORD: testing
+          DB_HOST: 127.0.0.1
+          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
 
   test_w_sql:
     name: Test with SQL
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mariadb:10.3
+        ports:
+          - 3306
+        env:
+          MYSQL_ROOT_PASSWORD: testing
+          MYSQL_DATABASE: karp
+          MYSQL_PASSWORD: testing
+          MYSQL_USER: karp
+        options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
+
     strategy:
       max-parallel: 4
       matrix:
@@ -95,6 +122,8 @@ jobs:
         run: make test-w-coverage
         continue-on-error: true
         env:
-          DB_DRIVER: sqlite
           DB_DATABASE: karp
-
+          DB_USER: karp
+          DB_PASSWORD: testing
+          DB_HOST: 127.0.0.1
+          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
