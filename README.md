@@ -40,7 +40,7 @@ export ELASTICSEARCH_HOST=localhost:9200
 
 1. `source <VENV_NAME>/bin/activate` and then:
 2. `karp-cli create --config tests/data/config/places.json`
-3. `karp-cli import --resource_id places --version 1 --data tests/data/places.jsonl`
+3. `karp-cli entries import --resource_id places --version 1 --data tests/data/places.jsonl`
 4. Do the same for `municipalities`
 5. `karp-cli publish --resource_id places --version 1`
 6. `karp-cli publish --resource_id municipalities --version 1`

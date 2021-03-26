@@ -125,21 +125,6 @@ def update_resource(config, config_dir):
             )
 
 
-@cli.command("import")
-@click.option("--resource_id", default=None, help="", required=True)
-@click.option("--version", default=None, help="", required=True)
-@click.option("--data", default=None, help="", required=True)
-@cli_error_handler
-@cli_timer
-def import_resource(resource_id, version, data):
-    count = entrywrite.add_entries_from_file(resource_id, version, data)
-    click.echo(
-        "Added {count} entries to {resource_id}, version {version}".format(
-            count=count, version=version, resource_id=resource_id
-        )
-    )
-
-
 @cli.command("publish")
 @click.option("--resource_id", default=None, help="", required=True)
 @click.option("--version", default=None, help="", required=True)
@@ -289,3 +274,46 @@ def export_resource():
 
 def delete_resource():
     pass
+
+
+@cli.group("entries")
+def entries():
+    pass
+
+
+@entries.command("import")
+@click.option("--resource_id", default=None, help="", required=True)
+@click.option("--version", default=None, help="", required=True)
+@click.option("--data", default=None, help="", required=True)
+@cli_error_handler
+@cli_timer
+def import_resource(resource_id, version, data):
+    count = entrywrite.add_entries_from_file(resource_id, version, data)
+    click.echo(
+        "Added {count} entries to {resource_id}, version {version}".format(
+            count=count, version=version, resource_id=resource_id
+        )
+    )
+
+
+@entries.command("update")
+@click.option("--resource_id", default=None, help="", required=True)
+@click.option("--version", default=None, help="", required=False, type=int)
+@click.option("--data", default=None, help="", required=True)
+@cli_error_handler
+@cli_timer
+def update_entries(resource_id, version, data):
+    result = entrywrite.update_entries(
+        resource_id=resource_id,
+        entries=json_streams.load_from_file(data),
+        user_id="local admin",
+        message="update by admin",
+        resource_version=version,
+    )
+
+    if result["failure"]:
+        click.echo(f"{len(result['success'])} entries were successfully updated.")
+        click.echo(f"There were {len(result['failure'])} errors:")
+        click.echo(tabulate(result["failure"]))
+    else:
+        click.echo(f"All {len(result['success'])} entries were successfully updated.")

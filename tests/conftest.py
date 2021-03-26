@@ -69,6 +69,7 @@ class ConfigTest(Config):
     CONSOLE_LOG_LEVEL = "WARNING"
 
     def __init__(self, use_elasticsearch=False):
+        print(f"use_elasticsearch: {use_elasticsearch}")
         if use_elasticsearch:
             self.ELASTICSEARCH_ENABLED = True
             self.ELASTICSEARCH_HOST = "http://localhost:9201"
@@ -241,6 +242,7 @@ def client_with_data_f_scope_module(app_with_data_f_scope_module):
 @pytest.fixture(name="client_with_data_f_scope_session", scope="session")
 def fixture_client_with_data_f_scope_session(app_with_data_f_scope_session):
     def fun(**kwargs):
+        print(f"client_with_data_f_scope_session: kwargs = {kwargs}")
         app_with_data = app_with_data_f_scope_session(**kwargs)
         return app_with_data.test_client()
 
@@ -256,6 +258,16 @@ def fixture_client_with_data_scope_module(app_with_data_scope_module):
 def runner(app_f):
     app = next(app_f())
     return app.test_cli_runner()
+
+
+@pytest.fixture(name="cli_scope_session", scope="session")
+def fixture_cli_scope_session(app_with_data_f_scope_session):
+    def fun(**kwargs):
+        app = app_with_data_f_scope_session(**kwargs)
+
+        return app.test_cli_runner()
+
+    return fun
 
 
 @pytest.fixture(name="es", scope="session")
@@ -402,6 +414,7 @@ def init(client, es_status_code, entries: Dict):
 
 @pytest.fixture(scope="session")
 def client_with_entries_scope_session(es, client_with_data_f_scope_session):
+    print("client_with_entries_scope_session: init client")
     client_with_data = init(
         client_with_data_f_scope_session,
         es,
