@@ -2,8 +2,11 @@ import logging
 import time
 import click
 import pickle
+from pathlib import Path
 
 from flask.cli import FlaskGroup  # pyre-ignore
+import json_streams
+from tabulate import tabulate
 import dotenv
 
 dotenv.load_dotenv(".env", verbose=True)
@@ -52,7 +55,12 @@ def cli_timer(func):
     return func_wrapper
 
 
-@cli.command("create")
+@cli.group("resource")
+def resource():
+    pass
+
+
+@resource.command("create")
 @click.option(
     "--config",
     default=None,
@@ -85,7 +93,7 @@ def create_resource(config, config_dir):
         )
 
 
-@cli.command("update")
+@resource.command("update")
 @click.option(
     "--config",
     default=None,
@@ -125,7 +133,7 @@ def update_resource(config, config_dir):
             )
 
 
-@cli.command("publish")
+@resource.command("publish")
 @click.option("--resource_id", default=None, help="", required=True)
 @click.option("--version", default=None, help="", required=True)
 @cli_error_handler
@@ -143,7 +151,7 @@ def publish_resource(resource_id, version):
         )
 
 
-@cli.command("reindex")
+@resource.command("reindex")
 @click.option("--resource_id", default=None, help="", required=True)
 @cli_error_handler
 @cli_timer
@@ -160,7 +168,7 @@ def reindex_resource(resource_id):
         click.echo("No active version of {resource_id}".format(resource_id=resource_id))
 
 
-@cli.command("pre_process")
+@resource.command("pre_process")
 @click.option("--resource_id", required=True)
 @click.option("--version", required=True)
 @click.option("--filename", required=True)
@@ -173,7 +181,7 @@ def pre_process_resource(resource_id, version, filename):
         pickle.dump(processed, fp)
 
 
-@cli.command("publish_preprocessed")
+@resource.command("publish_preprocessed")
 @click.option("--resource_id", required=True)
 @click.option("--version", required=True)
 @click.option("--data", required=True)
@@ -189,7 +197,7 @@ def index_processed(resource_id, version, data):
             click.echo("Something wrong with file")
 
 
-@cli.command("reindex_preprocessed")
+@resource.command("reindex_preprocessed")
 @click.option("--resource_id", required=True)
 @click.option("--data", required=True)
 @cli_error_handler
@@ -203,7 +211,7 @@ def reindex_preprocessed(resource_id, data):
             click.echo("Something wrong with file")
 
 
-@cli.command("list")
+@resource.command("list")
 @click.option("--show-active/--show-all", default=False)
 @cli_error_handler
 @cli_timer
@@ -213,18 +221,10 @@ def list_resources(show_active):
     else:
         resources = resourcemgr.get_all_resources()
 
-    click.echo("resource_id version active")
-    for resource in resources:
-        click.echo(
-            "{resource_id} {version} {active}".format(
-                resource_id=resource.resource_id,
-                version=resource.version,
-                active="y" if resource.active else "n",
-            )
-        )
+    click.echo(tabulate(resources, headers=["resource_id", "version", "active"]))
 
 
-@cli.command("show")
+@resource.command("show")
 @click.option("--version", default=None, type=int)
 @click.argument("resource_id")
 @cli_error_handler
@@ -255,7 +255,7 @@ def show_resource(resource_id, version):
     )
 
 
-@cli.command("set_permissions")
+@resource.command("set_permissions")
 @click.option("--resource_id", required=True)
 @click.option("--version", required=True)
 @click.option("--level", required=True)
@@ -274,6 +274,9 @@ def export_resource():
 
 def delete_resource():
     pass
+
+
+# Entries commands
 
 
 @cli.group("entries")
@@ -317,3 +320,30 @@ def update_entries(resource_id, version, data):
         click.echo(tabulate(result["failure"]))
     else:
         click.echo(f"All {len(result['success'])} entries were successfully updated.")
+
+
+@entries.command("delete")
+@click.option(
+    "--resource_id",
+    default=None,
+    help="The resource to delete entries from",
+    required=True,
+)
+@click.option("--version", default=None, help="", required=False, type=int)
+@click.option("--data", default=None, help="", required=True)
+@cli_error_handler
+@cli_timer
+def delete_entries(resource_id: str, version: int, data: Path):
+    result = entrywrite.delete_entries(
+        resource_id=resource_id,
+        entry_ids=json_streams.load_from_file(data),
+        user_id="local admin",
+        resource_version=version,
+    )
+
+    if result["failure"]:
+        click.echo(f"{len(result['success'])} entries were successfully deleted.")
+        click.echo(f"There were {len(result['failure'])} errors:")
+        click.echo(tabulate(result["failure"]))
+    else:
+        click.echo(f"All {len(result['success'])} entries were successfully deleted.")

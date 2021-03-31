@@ -2,13 +2,19 @@ import json
 import fastjsonschema  # pyre-ignore
 import logging
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, List, Iterable, Optional
 
 from sqlalchemy import exc as sql_exception
 
 from sb_json_tools import jsondiff
 
-from karp.errors import KarpError, ClientErrorCodes, EntryNotFoundError, UpdateConflict
+from karp.errors import (
+    KarpError,
+    ClientErrorCodes,
+    EntryNotFoundError,
+    UpdateConflict,
+    ResourceNotFoundError,
+)
 from karp.resourcemgr import get_resource
 from karp.database import db
 import karp.indexmgr as indexmgr
@@ -38,6 +44,43 @@ def preview_entry(resource_id, entry, resource_version=None):
     resource = get_resource(resource_id, version=resource_version)
     entry_json = _validate_and_prepare_entry(resource, entry)
     return entry_json
+
+
+def update_entries(
+    resource_id: str,
+    entries: Iterable[Dict],
+    *,
+    user_id: str,
+    message: str,
+    resource_version: Optional[int] = None
+) -> Dict[str, List]:
+    result = {
+        "success": [],
+        "failure": [],
+    }
+    for obj in entries:
+        try:
+            succ_id = update_entry(
+                resource_id=resource_id,
+                entry_id=obj["entry_id"],
+                version=obj.get("version", 0),
+                entry=obj["entry"],
+                user_id=user_id,
+                message=message,
+                resource_version=resource_version,
+                force=True,
+            )
+            result["success"].append(succ_id)
+        except ResourceNotFoundError:
+            raise
+        except KarpError as exc:
+            result["failure"].append(
+                {
+                    "entry": obj,
+                    "error": exc.message,
+                }
+            )
+    return result
 
 
 def update_entry(
@@ -237,6 +280,36 @@ def _src_entry_to_db_kwargs(entry, entry_json, resource_model, resource_conf):
     else:
         kwargs["entry_id"] = "TODO"  # generate id for resources that are missing it
     return kwargs
+
+
+def delete_entries(
+    resource_id: str,
+    entry_ids: Iterable[str],
+    user_id: str,  # resource_version: int
+) -> Dict[str, List]:
+    result = {
+        "success": [],
+        "failure": [],
+    }
+    for entry_id in entry_ids:
+        try:
+            succ_id = delete_entry(
+                resource_id=resource_id,
+                entry_id=entry_id,
+                user_id=user_id,
+                # resource_version=resource_version,
+            )
+            result["success"].append(succ_id)
+        except ResourceNotFoundError:
+            raise
+        except KarpError as exc:
+            result["failure"].append(
+                {
+                    "entry_id": entry_id,
+                    "error": exc.message,
+                }
+            )
+    return result
 
 
 def delete_entry(resource_id: str, entry_id: str, user_id: str):

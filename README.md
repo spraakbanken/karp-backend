@@ -39,11 +39,11 @@ export ELASTICSEARCH_HOST=localhost:9200
 ## Create test resources
 
 1. `source <VENV_NAME>/bin/activate` and then:
-2. `karp-cli create --config tests/data/config/places.json`
+2. `karp-cli resource create --config tests/data/config/places.json`
 3. `karp-cli entries import --resource_id places --version 1 --data tests/data/places.jsonl`
 4. Do the same for `municipalities`
-5. `karp-cli publish --resource_id places --version 1`
-6. `karp-cli publish --resource_id municipalities --version 1`
+5. `karp-cli resource publish --resource_id places --version 1`
+6. `karp-cli resource publish --resource_id municipalities --version 1`
 
 ## Pre-processing data before publishing
 
@@ -53,12 +53,12 @@ Do `create` and `import` on both machines, with the same data. Use
 machine 1 to preprocess and use result on machine 2.
 
 1. Create resource and import data as usual.
-2. Run `karp-cli preprocess --resource_id places --version 2 --filename places_preprocessed`
+2. Run `karp-cli resource preprocess --resource_id places --version 2 --filename places_preprocessed`
 
    `places_preprocessed` will contain a pickled dataset containing everything that is needed
 
-3. Run `karp-cli publish_preprocessed --resource_id places --version 2 --data places_preprocessed`
-4. Alternatively run `karp-cli reindex_preprocessed --resource_id places --data places_preprocessed`
+3. Run `karp-cli resource publish_preprocessed --resource_id places --version 2 --data places_preprocessed`
+4. Alternatively run `karp-cli resource reindex_preprocessed --resource_id places --data places_preprocessed`
    , if the resource was already published.
 
 ## Technologies

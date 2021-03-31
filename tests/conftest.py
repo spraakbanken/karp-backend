@@ -415,6 +415,7 @@ def init(client, es_status_code, entries: Dict):
 @pytest.fixture(scope="session")
 def client_with_entries_scope_session(es, client_with_data_f_scope_session):
     print("client_with_entries_scope_session: init client")
+    print(f"es status: {es}")
     client_with_data = init(
         client_with_data_f_scope_session,
         es,
