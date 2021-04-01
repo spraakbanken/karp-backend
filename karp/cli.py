@@ -325,7 +325,7 @@ def update_entries(resource_id, version, data):
     help="The resource to delete entries from",
     required=True,
 )
-@click.option("--version", default=None, help="", required=False, type=int)
+# @click.option("--version", default=None, help="", required=False, type=int)
 @click.option("--data", default=None, help="", required=True)
 @cli_error_handler
 @cli_timer
@@ -334,7 +334,7 @@ def delete_entries(resource_id: str, version: int, data: Path):
         resource_id=resource_id,
         entry_ids=json_streams.load_from_file(data),
         user_id="local admin",
-        resource_version=version,
+        # resource_version=version,
     )
 
     if result["failure"]:
