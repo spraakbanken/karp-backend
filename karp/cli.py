@@ -291,12 +291,8 @@ def entries():
 @cli_error_handler
 @cli_timer
 def import_resource(resource_id, version, data):
-    count = entrywrite.add_entries_from_file(resource_id, version, data)
-    click.echo(
-        "Added {count} entries to {resource_id}, version {version}".format(
-            count=count, version=version, resource_id=resource_id
-        )
-    )
+    entry_ids = entrywrite.add_entries_from_file(resource_id, version, data)
+    click.echo(f"Added {len(entry_ids)} entries to {resource_id}, version {version}")
 
 
 @entries.command("update")
