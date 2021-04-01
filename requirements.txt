@@ -1,5 +1,5 @@
 flask
-json-streams
+json-streams>=0.3.1
 sqlalchemy
 flask-sqlalchemy
 mysqlclient
@@ -17,3 +17,4 @@ sb-json-tools>=0.5.2
 python-dotenv
 flask-reverse-proxy
 tabulate
+
