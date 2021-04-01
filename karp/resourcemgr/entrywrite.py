@@ -2,11 +2,13 @@ import json
 import fastjsonschema  # pyre-ignore
 import logging
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, List, Iterable, Optional
 
 from sqlalchemy import exc as sql_exception
 
 from sb_json_tools import jsondiff
+import json_streams
 
 from karp.errors import (
     KarpError,
@@ -158,22 +160,22 @@ def update_entry(
     return current_db_entry.entry_id
 
 
-def add_entries_from_file(resource_id: str, version: int, data: str) -> int:
-    with open(data) as fp:
-        objs = []
-        for line in fp:
-            objs.append(json.loads(line))
-        add_entries(resource_id, objs, user_id="local_admin", resource_version=version)
-    return len(objs)
+def add_entries_from_file(resource_id: str, version: int, data: Path) -> List[str]:
+    return add_entries(
+        resource_id,
+        json_streams.load_from_file(data),
+        user_id="local_admin",
+        resource_version=version,
+    )
 
 
 def add_entries(
     resource_id: str,
-    entries: List[Dict],
+    entries: Iterable[Dict],
     user_id: str,
     message: str = None,
     resource_version: int = None,
-):
+) -> List[str]:
     """
     Add entries to DB and INDEX (if present and resource is active).
 
