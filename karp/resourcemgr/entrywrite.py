@@ -44,8 +44,7 @@ def add_entry(
 
 def preview_entry(resource_id, entry, resource_version=None):
     resource = get_resource(resource_id, version=resource_version)
-    entry_json = _validate_and_prepare_entry(resource, entry)
-    return entry_json
+    return _validate_and_prepare_entry(resource, entry)
 
 
 def update_entries(
@@ -258,8 +257,7 @@ def add_entries(
 
 def _src_entry_to_db_entry(entry, entry_json, resource_model, resource_conf):
     kwargs = _src_entry_to_db_kwargs(entry, entry_json, resource_model, resource_conf)
-    db_entry = resource_model(**kwargs)
-    return db_entry
+    return resource_model(**kwargs)
 
 
 def _src_entry_to_db_kwargs(entry, entry_json, resource_model, resource_conf):
@@ -350,8 +348,7 @@ def _validate_and_prepare_entry(resource, entry):
 
 def _compile_schema(json_schema):
     try:
-        validate_entry = fastjsonschema.compile(json_schema)
-        return validate_entry
+        return fastjsonschema.compile(json_schema)
     except fastjsonschema.JsonSchemaDefinitionException as e:
         raise RuntimeError(e)
 
