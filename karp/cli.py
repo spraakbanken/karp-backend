@@ -329,7 +329,7 @@ def update_entries(resource_id, version, data):
 @click.option("--data", default=None, help="", required=True)
 @cli_error_handler
 @cli_timer
-def delete_entries(resource_id: str, version: int, data: Path):
+def delete_entries(resource_id: str, data: Path):
     result = entrywrite.delete_entries(
         resource_id=resource_id,
         entry_ids=json_streams.load_from_file(data),
