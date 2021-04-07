@@ -46,6 +46,11 @@ class ResourceDefinition(db.Model):
             self.resource_id, self.version, self.timestamp, self.active, self.deleted
         )
 
+    def __iter__(self):
+        yield self.resource_id
+        yield self.version
+        yield "y" if self.active else "n"
+
 
 class BaseEntry:
     id = db.Column(db.Integer, primary_key=True)
@@ -83,9 +88,9 @@ class BaseHistory:
 
 class DummyHistory(db.Model, BaseHistory):
     """
-        This table is created so that Alembic can help us autodetect what changes have been made to
-        the concrete resource history tables (s.a. places_1_history)
-        """
+    This table is created so that Alembic can help us autodetect what changes have been made to
+    the concrete resource history tables (s.a. places_1_history)
+    """
 
     pass
 
@@ -106,7 +111,14 @@ def get_or_create_history_model(resource_id, version):
         "__table_args__": (foreign_key_constraint,) + BaseHistory.__table_args__,
     }
 
-    sqlalchemy_class = type(history_table_name, (db.Model, BaseHistory,), attributes)
+    sqlalchemy_class = type(
+        history_table_name,
+        (
+            db.Model,
+            BaseHistory,
+        ),
+        attributes,
+    )
     class_cache[history_table_name] = sqlalchemy_class
 
     return sqlalchemy_class
@@ -210,7 +222,14 @@ def get_or_create_resource_model(config, version):
                 child_class = type(child_table_name, (db.Model,), child_attributes)
                 child_tables[field_name] = child_class
 
-        sqlalchemy_class = type(resource_id, (db.Model, BaseEntry,), attributes)
+        sqlalchemy_class = type(
+            resource_id,
+            (
+                db.Model,
+                BaseEntry,
+            ),
+            attributes,
+        )
         sqlalchemy_class.child_tables = child_tables
 
         class_cache[table_name] = sqlalchemy_class
