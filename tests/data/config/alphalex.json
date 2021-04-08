@@ -1,0 +1,30 @@
+{
+    "resource_id": "alphalex",
+    "resource_name": "alphalex",
+    "fields": {
+        "etymology": {
+            "type": "object",
+            "fields": {
+                "language": {
+                    "type": "string"
+                },
+                "form": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "collection": true
+        },
+        "lemgram": {
+            "type": "string",
+            "required": true
+        }
+    },
+    "sort": "lemgram",
+    "protected": {
+        "read": false
+    },
+    "id": "lemgram"
+}

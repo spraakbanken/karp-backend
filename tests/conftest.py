@@ -21,6 +21,7 @@ import karp.resourcemgr as resourcemgr  # noqa: E402
 import karp.indexmgr as indexmgr  # noqa: E402
 from karp.database import ResourceDefinition  # noqa: E402
 
+from tests import common_data
 
 CONFIG_PLACES = """{
   "resource_id": "places",
@@ -404,11 +405,12 @@ def init(client, es_status_code, entries: Dict):
 
     for resource, _entries in entries.items():
         for entry in _entries:
-            client_with_data.post(
+            resp = client_with_data.post(
                 "{resource}/add".format(resource=resource),
                 data=json.dumps({"entry": entry}),
                 content_type="application/json",
             )
+            assert resp < 300, resp
     return client_with_data
 
 
@@ -419,7 +421,7 @@ def client_with_entries_scope_session(es, client_with_data_f_scope_session):
     client_with_data = init(
         client_with_data_f_scope_session,
         es,
-        {"places": PLACES, "municipalities": MUNICIPALITIES},
+        {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
     )
     time.sleep(5)
     return client_with_data
