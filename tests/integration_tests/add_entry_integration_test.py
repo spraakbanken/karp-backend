@@ -20,4 +20,4 @@ def test_config_with_field_both_object_and_collection(
         data=json.dumps({"entry": entry}),
         content_type="application/json",
     )
-    assert resp < 300, resp
+    assert resp.status_code < 300, resp

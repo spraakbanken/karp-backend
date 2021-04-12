@@ -184,6 +184,7 @@ def fixture_app_with_data_f_scope_session(app_f_scope_session):
             for file in [
                 "tests/data/config/places.json",
                 "tests/data/config/municipalities.json",
+                "tests/data/config/alphalex.json",
             ]:
                 with open(file) as fp:
                     resource, version = resourcemgr.create_new_resource(fp)
@@ -410,7 +411,7 @@ def init(client, es_status_code, entries: Dict):
                 data=json.dumps({"entry": entry}),
                 content_type="application/json",
             )
-            assert resp < 300, resp
+            assert resp.status_code < 300, resp
     return client_with_data
 
 

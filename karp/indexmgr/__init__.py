@@ -220,9 +220,43 @@ def _transform_to_index_entry(
                             _index_entry, "v_" + field_name, ref_index_entry[field_name]
                         )
 
+        # elif field_conf.get("collection"):
+        #     field_content = indexer.impl.create_empty_list()
+        #     if field_name in _src_entry:
+
+        #         for subfield in _src_entry[field_name]:
+        #             if field_conf["type"] == "object":
+        #                 subfield_content = indexer.impl.create_empty_object()
+        #                 _transform_to_index_entry(
+        #                     resource,
+        #                     subfield,
+        #                     subfield_content,
+        #                     field_conf["fields"].items(),
+        #                 )
+        #                 field_content.append(subfield_content)
+        #             else:
+        #                 raise NotImplementedError(f"field_name = {field_name}")
         if field_conf["type"] == "object":
+            # if field_conf.get("collection"):
+            #     field_content = indexer.impl.create_empty_list()
+            #     if field_name in _src_entry:
+            #         for subfield in _src_entry[field_name]:
+            #             if isinstance(subfield, dict):
+            #                 subfield_content = indexer.impl.create_empty_object()
+            #                 _transform_to_index_entry(
+            #                     resource,
+            #                     subfield,
+            #                     subfield_content,
+            #                     field_conf["fields"].items(),
+            #                 )
+            #             else:
+            #                 subfield_content = subfield
+            #             field_content.append(subfield_content)
+            # else:
             field_content = indexer.impl.create_empty_object()
             if field_name in _src_entry:
+                # if isinstance(_src_entry[field_name], list):
+                #     assert False, field_name
                 _transform_to_index_entry(
                     resource,
                     _src_entry[field_name],
