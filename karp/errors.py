@@ -115,7 +115,7 @@ class PluginNotFoundError(KarpError):
 class ValidationError(KarpError):
     def __init__(self, message: str, err: Exception, obj: Dict):
         super().__init__(
-            {"message": message, "error": err, "object": obj},
+            {"message": message, "error": str(err), "object": obj},
             code=ClientErrorCodes.ENTRY_NOT_VALID,
             http_return_code=400,
         )
