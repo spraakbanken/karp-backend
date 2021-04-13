@@ -1,4 +1,4 @@
-from typing import IO
+from typing import Dict, IO
 
 
 NoIndexModuleConfigured = 10
@@ -26,7 +26,7 @@ class ClientErrorCodes:
 
 
 class KarpError(Exception):
-    def __init__(self, message: str, code: int = None, http_return_code: int = 400):
+    def __init__(self, message, code: int = None, http_return_code: int = 400):
         super().__init__(message)
         self.message = message
         self.code = code
@@ -71,7 +71,9 @@ class ResourceConfigUpdateError(KarpError):
         """
         super().__init__(
             msg_fmt.format(
-                resource_id=resource_id, config_file=config_file.name, msg=msg,
+                resource_id=resource_id,
+                config_file=config_file.name,
+                msg=msg,
             ),
             ClientErrorCodes.RESOURCE_CONFIG_CANNOT_UPDATE,
         )
@@ -111,3 +113,11 @@ class PluginNotFoundError(KarpError):
             ClientErrorCodes.PLUGIN_DOES_NOT_EXIT,
         )
 
+
+class ValidationError(KarpError):
+    def __init__(self, message: str, err: Exception, obj: Dict):
+        super().__init__(
+            {"message": message, "error": err, "object": obj},
+            code=ClientErrorCodes.ENTRY_NOT_VALID,
+            http_return_code=400,
+        )

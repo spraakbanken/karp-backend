@@ -16,6 +16,7 @@ from karp.errors import (
     EntryNotFoundError,
     UpdateConflict,
     ResourceNotFoundError,
+    ValidationError,
 )
 from karp.resourcemgr import get_resource
 from karp.database import db
@@ -362,4 +363,4 @@ def _validate_entry(schema, json_obj):
                 entry=json.dumps(json_obj, indent=2), message=e.message
             )
         )
-        raise KarpError("entry not valid", ClientErrorCodes.ENTRY_NOT_VALID)
+        raise ValidationError("entry not valid", err=e, obj=json_obj) from e
