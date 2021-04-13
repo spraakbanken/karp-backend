@@ -94,7 +94,12 @@ def create_app(config_class=None):
                 raise error
             logger.error(error_str)
             logger.exception("unhandled exception")
-            return json.dumps({"error": "unknown error", "errorCode": 0}), 400
+            return (
+                json.dumps(
+                    {"error": "unknown error", "errorCode": 0, "error": str(error)}
+                ),
+                400,
+            )
 
     import karp.auth.auth as auth
 
