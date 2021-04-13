@@ -107,9 +107,7 @@ class UpdateConflict(KarpError):
 class PluginNotFoundError(KarpError):
     def __init__(self, plugin_id: str, resource_id: str = None):
         super().__init__(
-            "Plugin '{plugin_id}' not found, referenced by '{resource_id}'".format(
-                plugin_id=plugin_id, resource_id=resource_id if resource_id else "..."
-            ),
+            f"Plugin '{plugin_id}' not found, referenced by '{resource_id or '...'}'",
             ClientErrorCodes.PLUGIN_DOES_NOT_EXIT,
         )
 
