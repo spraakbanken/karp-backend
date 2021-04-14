@@ -96,7 +96,11 @@ def create_app(config_class=None):
             logger.exception("unhandled exception")
             return (
                 json.dumps(
-                    {"error": "unknown error", "errorCode": 0, "error": str(error)}
+                    {
+                        "error": "unknown error",
+                        "errorCode": 0,
+                        "debug": str(error),
+                    }  # TODO: remove debug field
                 ),
                 400,
             )
