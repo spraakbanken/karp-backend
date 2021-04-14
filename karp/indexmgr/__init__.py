@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Dict, List, Tuple, Optional
+from typing import Any, Dict, List, Tuple, Optional
 import collections
 import logging
 
@@ -172,99 +172,112 @@ def _evaluate_function(
 def _transform_to_index_entry(
     resource: resourcemgr.Resource, _src_entry: Dict, _index_entry, fields
 ):
+    print(
+        f"_transform_to_index_entry_173: _src_entry = '{_src_entry}', _index_entry = '{_index_entry}', fields = '{fields}'"
+    )
     for field_name, field_conf in fields:
-        if field_conf.get("virtual", False):
+        print(
+            f"_transform_to_index_entry_173: field_name = '{field_name}' field_conf = (virtual: '{field_conf.get('virtual')}', collection: '{field_conf.get('collection')}', type: '{field_conf['type']}')"
+        )
+        field_content = None
+        if field_conf.get("virtual"):
             res = _evaluate_function(field_conf["function"], _src_entry, resource)
             if res:
                 indexer.impl.assign_field(_index_entry, "v_" + field_name, res)
-        elif field_conf.get("ref", {}):
-            ref_field = field_conf["ref"]
-            if ref_field.get("resource_id"):
-                ref_resource = resourcemgr.get_resource(
-                    ref_field["resource_id"], version=ref_field["resource_version"]
-                )
-                if ref_field["field"].get("collection"):
-                    ref_objs = []
-                    for ref_id in _src_entry[field_name]:
-                        ref_entry_body = entryread.get_entry_by_entry_id(
-                            ref_resource, str(ref_id)
+        elif field_conf.get("collection"):
+            field_content = indexer.impl.create_empty_list()
+            if field_name in _src_entry:
+                for subfield in _src_entry[field_name]:
+                    if field_conf["type"] == "object":
+                        subfield_content = indexer.impl.create_empty_object()
+                        print(
+                            f"_transform_to_index_entry_173: calling _transform_to_index_entry_173(..., {subfield}, ...)"
                         )
-                        if ref_entry_body:
-                            ref_entry = {field_name: json.loads(ref_entry_body.body)}
-                            ref_index_entry = {}
-                            list_of_sub_fields = ((field_name, ref_field["field"]),)
-                            _transform_to_index_entry(
-                                resource, ref_entry, ref_index_entry, list_of_sub_fields
-                            )
-                            ref_objs.append(ref_index_entry[field_name])
-                    indexer.impl.assign_field(_index_entry, "v_" + field_name, ref_objs)
-                else:
-                    raise NotImplementedError()
-            else:
-                ref_id = _src_entry.get(field_name)
-                if not ref_id:
-                    continue
-                if not ref_field["field"].get("collection", False):
-                    ref_id = [ref_id]
-
-                for elem in ref_id:
-                    ref = entryread.get_entry_by_entry_id(resource, str(elem))
-                    if ref:
-                        ref_entry = {field_name: json.loads(ref.body)}
-                        ref_index_entry = {}
-                        list_of_sub_fields = ((field_name, ref_field["field"]),)
                         _transform_to_index_entry(
-                            resource, ref_entry, ref_index_entry, list_of_sub_fields
+                            resource,
+                            subfield,
+                            subfield_content,
+                            field_conf["fields"].items(),
                         )
-                        indexer.impl.assign_field(
-                            _index_entry, "v_" + field_name, ref_index_entry[field_name]
-                        )
+                        indexer.impl.add_to_list_field(field_content, subfield_content)
+                    else:
+                        indexer.impl.add_to_list_field(field_content, subfield)
 
-        # elif field_conf.get("collection"):
-        #     field_content = indexer.impl.create_empty_list()
-        #     if field_name in _src_entry:
-
-        #         for subfield in _src_entry[field_name]:
-        #             if field_conf["type"] == "object":
-        #                 subfield_content = indexer.impl.create_empty_object()
-        #                 _transform_to_index_entry(
-        #                     resource,
-        #                     subfield,
-        #                     subfield_content,
-        #                     field_conf["fields"].items(),
-        #                 )
-        #                 field_content.append(subfield_content)
-        #             else:
-        #                 raise NotImplementedError(f"field_name = {field_name}")
-        if field_conf["type"] == "object":
-            # if field_conf.get("collection"):
-            #     field_content = indexer.impl.create_empty_list()
-            #     if field_name in _src_entry:
-            #         for subfield in _src_entry[field_name]:
-            #             if isinstance(subfield, dict):
-            #                 subfield_content = indexer.impl.create_empty_object()
-            #                 _transform_to_index_entry(
-            #                     resource,
-            #                     subfield,
-            #                     subfield_content,
-            #                     field_conf["fields"].items(),
-            #                 )
-            #             else:
-            #                 subfield_content = subfield
-            #             field_content.append(subfield_content)
-            # else:
+        elif field_conf["type"] == "object":
             field_content = indexer.impl.create_empty_object()
             if field_name in _src_entry:
-                # if isinstance(_src_entry[field_name], list):
-                #     assert False, field_name
+                print(
+                    f"_transform_to_index_entry_173: calling _transform_to_index_entry_173(..., {_src_entry[field_name]}, ...)"
+                )
                 _transform_to_index_entry(
                     resource,
                     _src_entry[field_name],
                     field_content,
                     field_conf["fields"].items(),
                 )
-        else:
-            field_content = _src_entry.get(field_name)
+        elif field_conf["type"] in ("integer", "string", "number"):
+            if field_name in _src_entry:
+                field_content = _src_entry[field_name]
 
         if field_content:
             indexer.impl.assign_field(_index_entry, field_name, field_content)
+
+        # Handle ref
+        if field_conf.get("ref") and field_name in _src_entry:
+            res = _resolve_ref(resource, _src_entry, field_conf["ref"], field_name)
+            if res:
+                indexer.impl.assign_field(_index_entry, f"v_{field_name}", res)
+
+
+def _resolve_ref(
+    resource: resourcemgr.Resource, src_entry: Dict, ref_conf: Dict, field_name: str
+) -> Optional[Any]:
+    print(
+        f"_resolve_ref: src_entry = '{src_entry}', ref_conf = '{ref_conf}', field_name = '{field_name}'"
+    )
+    assert field_name in src_entry
+    res = None
+    if "resource_id" in ref_conf:
+        ref_resource = resourcemgr.get_resource(
+            ref_conf["resource_id"], version=ref_conf.get("resource_version")
+        )
+    else:
+        ref_resource = resource
+
+    if ref_conf["field"].get("collection"):
+        res = indexer.impl.create_empty_list()
+        for ref_id in src_entry[field_name]:
+            ref_entry_body = entryread.get_entry_by_entry_id(ref_resource, str(ref_id))
+            if ref_entry_body:
+                ref_entry = json.loads(ref_entry_body.body)
+                if ref_conf["field"]["type"] == "object":
+                    ref_index_entry = indexer.impl.create_empty_object()
+                    for ref_field_name, _ref_field_conf in ref_conf["field"][
+                        "fields"
+                    ].items():
+                        indexer.impl.assign_field(
+                            ref_index_entry,
+                            ref_field_name,
+                            ref_entry[ref_field_name],
+                        )
+
+                    indexer.impl.add_to_list_field(res, ref_index_entry)
+
+    #     raise NotImplementedError()
+    else:
+
+        ref = entryread.get_entry_by_entry_id(ref_resource, str(src_entry[field_name]))
+        if ref:
+            ref_entry = {field_name: json.loads(ref.body)}
+            # ref_entry = json.loads(ref.body)
+            print(f"_resolve_ref: ref_entry = '{ref_entry}'")
+            ref_index_entry = {}
+            list_of_sub_fields = ((field_name, ref_conf["field"]),)
+            print("_resolve_ref: calling _transform_to_index_entry_173 ...")
+            _transform_to_index_entry(
+                resource, ref_entry, ref_index_entry, list_of_sub_fields
+            )
+            print(f"_resolve_ref: ref_index_entry = '{ref_index_entry}'")
+            res = ref_index_entry[field_name]
+
+    return res
