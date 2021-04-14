@@ -13,7 +13,7 @@ from starlette.testclient import TestClient
 from starlette.config import environ
 
 environ["TESTING"] = "True"
-environ["ELASTICSEARCH_HOST"] = "localhost:9201"
+environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 
 import elasticsearch_test  # pyre-ignore
 
@@ -412,7 +412,7 @@ def fixture_es():
         if not config.TEST_ES_HOME:
             raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
         with elasticsearch_test.ElasticsearchTest(
-            port=9201, es_path=config.TEST_ES_HOME
+            port=9202, es_path=config.TEST_ES_HOME
         ):
             yield "run"
 
