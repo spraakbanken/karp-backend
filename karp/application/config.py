@@ -24,7 +24,7 @@ if TESTING is True:
 DB_URL = config(
     "DB_URL",
     cast=make_url,
-    default=URL(
+    default=URL.create(
         drivername=DB_DRIVER,
         username=DB_USER,
         password=DB_PASSWORD,
