@@ -1,4 +1,4 @@
-.PHONY: test test-log pytest build-dev run-tests clean clean-pyc help lint lint-syntax-errors
+.PHONY: test test-log pytest build-dev run-tests clean clean-pyc help lint lint-syntax-errors test-w-coverage unit-test unit-test-w-coverage integration-test integration-test-w-coverage test-all test-all-w-coverage
 .DEFAULT: test
 
 PYTHON = python3
@@ -73,11 +73,20 @@ lint-syntax-errors: install-dev
 lint-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
 
-test: install-dev clean-pyc
+test: unit-test
+test-all: unit-test integration-test
+test-all-w-coverage: unit-test-w-coverage integration-test-w-coverage
+unit-test: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/unit_tests
 
-test-w-coverage: install-dev clean-pyc
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests
+unit-test-w-coverage: install-dev clean-pyc
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/unit_tests
+
+integration-test: install-dev clean-pyc
+	${INVENV} pytest -vv karp/tests/integration_tests
+
+integration-test-w-coverage: install-dev clean-pyc
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/integration_tests
 
 test-log: install-dev clean-pyc lint-syntax-errors
 	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests > pytest.log
