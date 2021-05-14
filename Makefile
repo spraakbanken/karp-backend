@@ -82,7 +82,7 @@ lint-security-issues: install-dev
 
 test: run-unit-tests
 run-all-tests: run-unit-tests run-integration-tests
-run-all-tests-w-coverage: run-unit-tests-w-coverage run-integrations-test-w-coverage
+run-all-tests-w-coverage: run-unit-tests-w-coverage run-integrations-tests-w-coverage
 run-unit-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/unit_tests
 
