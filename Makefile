@@ -1,4 +1,4 @@
-.PHONY: test test-log pytest build-dev run-tests clean clean-pyc help lint lint-syntax-errors test-w-coverage unit-test unit-test-w-coverage integration-test integration-test-w-coverage test-all test-all-w-coverage
+.PHONY: test test-log pytest build-dev run-tests clean clean-pyc help lint lint-syntax-errors run-all-tests-w-coverage run-unit-tests run-unit-tests-w-coverage run-integration-tests run-integration-tests-w-coverage run-all-tests run-all-tests-w-coverage
 .DEFAULT: test
 
 PYTHON = python3
@@ -44,11 +44,12 @@ install-dev: venv ${VENV_NAME}/req-dev.installed
 ${VENV_NAME}/venv.created:
 	@python3 -c "import sys; assert sys.version_info >= (3, 6)" || echo "Python >= 3.6 is needed"
 	test -d ${VENV_NAME} || python3 -m venv ${VENV_NAME}
-	${INVENV} pip install pip-tools
+	${INVENV} pip install pip-tools wheel
 	@touch $@
 
 ${VENV_NAME}/req.installed: requirements.txt
 	${INVENV} pip install -Ur $<
+	${INVENV} pip install -e .
 	@touch $@
 
 ${VENV_NAME}/req-dev.installed: ${VENV_NAME}/req.installed setup.py setup.cfg
@@ -79,19 +80,19 @@ lint-syntax-errors: install-dev
 lint-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
 
-test: unit-test
-test-all: unit-test integration-test
-test-all-w-coverage: unit-test-w-coverage integration-test-w-coverage
-unit-test: install-dev clean-pyc
+test: run-unit-tests
+run-all-tests: run-unit-tests run-integration-tests
+run-all-tests-w-coverage: run-unit-tests-w-coverage run-integrations-test-w-coverage
+run-unit-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/unit_tests
 
-unit-test-w-coverage: install-dev clean-pyc
+run-unit-tests-w-coverage: install-dev clean-pyc
 	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/unit_tests
 
-integration-test: install-dev clean-pyc
+run-integration-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/integration_tests
 
-integration-test-w-coverage: install-dev clean-pyc
+run-integration-tests-w-coverage: install-dev clean-pyc
 	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/integration_tests
 
 test-log: install-dev clean-pyc lint-syntax-errors
@@ -99,8 +100,6 @@ test-log: install-dev clean-pyc lint-syntax-errors
 
 prepare-release: venv setup.py requirements.txt setup.cfg
 	${INVENV} pip-compile --output-file=deploy/requirements.txt setup.py
-
-run-tests: lint type-check test
 
 tox:
 	tox

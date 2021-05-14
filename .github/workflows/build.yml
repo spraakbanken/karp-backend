@@ -75,7 +75,7 @@ jobs:
           pip install -e .[elasticsearch7]
 
       - name: Test with pytest
-        run: make test-w-coverage
+        run: make run-all-tests-w-coverage
         env:
           DB_TEST_DATABASE: karp
           DB_USER: karp
@@ -123,7 +123,7 @@ jobs:
       - name: Lint with pylint
         run: make lint-no-fail
       - name: Test with pytest
-        run: make test-w-coverage
+        run: make run-all-tests-w-coverage
         env:
           DB_TEST_DATABASE: karp
           DB_USER: karp
