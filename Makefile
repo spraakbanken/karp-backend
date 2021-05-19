@@ -77,7 +77,7 @@ run-dev: install-dev
 lint-syntax-errors: install-dev
 	${INVENV} flake8 karp karp/tests setup.py run.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
 
-lint-security-issues: install-dev
+check-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
 
 test: run-unit-tests
@@ -108,10 +108,19 @@ tox-to-log:
 	tox > tox.log
 
 lint: install-dev
-	${INVENV} pylint --rcfile=.pylintrc --load-plugins "pylint_flask" karp karp/tests setup.py run.py wsgi.py
+	${INVENV} pylint --rcfile=pylintrc --load-plugins "pylint_flask" karp karp/tests setup.py run.py wsgi.py
 
 lint-no-fail: install-dev
-	${INVENV} pylint --rcfile=.pylintrc --load-plugins "pylint_flask" --exit-zero karp karp/tests setup.py run.py wsgi.py
+	${INVENV} pylint --rcfile=pylintrc --load-plugins "pylint_flask" --exit-zero karp karp/tests setup.py run.py wsgi.py
+
+check-pylint: install-dev
+	${INVENV} pylint --rcfile=pylintrc  karp
+
+check-mypy: install-dev
+	${INVENV} mypy karp wsgi.py run.py
+
+check-pylint-refactorings: install-dev
+	${INVENV} pylint --disable=C,W,E --enable=R karp
 
 type-check:
 	pyre check

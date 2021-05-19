@@ -47,11 +47,15 @@ jobs:
       #     make lint-syntax-errors
 
       - name: Lint with pylint
-        run: |
-          make lint-no-fail
+        run: make check-pylint
+        continue-on-error: true
+
+      - name: Type check
+        run: make check-mypy
+        continue-on-error: true
 
       - name: Lint for security issues (with bandit)
-        run: make lint-security-issues
+        run: make check-security-issues
 
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es-version, '6')
