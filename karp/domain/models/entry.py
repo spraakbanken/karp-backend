@@ -250,9 +250,9 @@ class EntryRepository(metaclass=abc.ABCMeta):
         """Use for testing purpose."""
         return
 
-    @abc.abstractmethod
-    def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
-        raise NotImplementedError()
+    # @abc.abstractmethod
+    # def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
+    #     raise NotImplementedError()
 
     @abc.abstractmethod
     def get_history(

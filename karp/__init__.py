@@ -1,7 +1,4 @@
-import os
 import pkg_resources
-import json
-import logging
 
 # from flask import Flask  # pyre-ignore
 # from flask_cors import CORS  # pyre-ignore
@@ -9,10 +6,8 @@ import logging
 # import flask_reverse_proxy
 # import werkzeug.exceptions
 
-from karp.errors import KarpError
-import karp.util.logging.slack as slack_logging
 
-__version__ = "__version__ = '0.8.1'"
+__version__ = "0.8.1"
 
 
 # TODO handle settings correctly

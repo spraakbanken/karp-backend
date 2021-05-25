@@ -36,13 +36,13 @@ class SqlEntryRepository(
     def __init__(
         self,
         history_model,
-        runtime_model,
+        # runtime_model,
         resource_config: Dict,
         # mapped_class: Any
     ):
         super().__init__()
         self.history_model = history_model
-        self.runtime_model = runtime_model
+        # self.runtime_model = runtime_model
         self.resource_config = resource_config
         # self.mapped_class = mapped_class
 
@@ -67,12 +67,12 @@ class SqlEntryRepository(
         #     )
 
         # runtime_table.create(bind=db.engine, checkfirst=True)
-        runtime_model = sql_models.get_or_create_entry_runtime_model(
+        # runtime_model = sql_models.get_or_create_entry_runtime_model(
             table_name, history_model, settings["config"]
         )
         return cls(
             history_model=history_model,
-            runtime_model=runtime_model,
+            # runtime_model=runtime_model,
             resource_config=settings["config"],
         )
 
@@ -85,40 +85,40 @@ class SqlEntryRepository(
 
         history_id = self._insert_history(entry)
 
-        runtime_entry = self.runtime_model(
-            **self._entry_to_runtime_dict(history_id, entry)
-        )
-        try:
-            return self._session.add(runtime_entry)
-        except db.exc.IntegrityError as exc:
+        # runtime_entry = self.runtime_model(
+        #     **self._entry_to_runtime_dict(history_id, entry)
+        # )
+        # try:
+        #     return self._session.add(runtime_entry)
+        # except db.exc.IntegrityError as exc:
             # logger.exception(exc)
-            match = DUPLICATE_PROG.search(str(exc))
-            if match:
-                value = match.group(1)
-                key = match.group(2)
-                if key == "PRIMARY":
-                    key = "entry_id"
-            else:
-                value = "UNKNOWN"
-                key = "UNKNOWN"
-            raise errors.IntegrityError(key=key, value=value) from exc
+#             match = DUPLICATE_PROG.search(str(exc))
+#             if match:
+#                 value = match.group(1)
+#                 key = match.group(2)
+#                 if key == "PRIMARY":
+#                     key = "entry_id"
+#             else:
+#                 value = "UNKNOWN"
+#                 key = "UNKNOWN"
+#             raise errors.IntegrityError(key=key, value=value) from exc
 
     def update(self, entry: Entry):
         self._check_has_session()
         history_id = self._insert_history(entry)
 
-        current_db_entry = (
-            self._session.query(self.runtime_model)
-            .filter_by(entry_id=entry.entry_id)
-            .first()
-        )
-
-        if not current_db_entry:
-            raise errors.EntryNotFoundError("", entry.entry_id)
-
-        runtime_dict = self._entry_to_runtime_dict(history_id, entry)
-        for key, value in runtime_dict.items():
-            setattr(current_db_entry, key, value)
+#         current_db_entry = (
+#             self._session.query(self.runtime_model)
+#             .filter_by(entry_id=entry.entry_id)
+#             .first()
+#         )
+#
+#         if not current_db_entry:
+#             raise errors.EntryNotFoundError("", entry.entry_id)
+#
+#         runtime_dict = self._entry_to_runtime_dict(history_id, entry)
+#         for key, value in runtime_dict.items():
+#             setattr(current_db_entry, key, value)
 
     @classmethod
     def primary_key(cls):
@@ -234,11 +234,11 @@ class SqlEntryRepository(
     def teardown(self):
         """Use for testing purpose."""
         print("starting teardown")
-        for child_model in self.runtime_model.child_tables.values():
-            print(f"droping child_model {child_model} ...")
-            child_model.__table__.drop(bind=db.engine)
-        print("droping runtime_model ...")
-        self.runtime_model.__table__.drop(bind=db.engine)
+#         for child_model in self.runtime_model.child_tables.values():
+#             print(f"droping child_model {child_model} ...")
+#             child_model.__table__.drop(bind=db.engine)
+#         print("droping runtime_model ...")
+#         self.runtime_model.__table__.drop(bind=db.engine)
         print("droping history_model ...")
         self.history_model.__table__.drop(bind=db.engine)
         print("dropped history_model")

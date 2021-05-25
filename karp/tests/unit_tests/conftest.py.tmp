@@ -1,0 +1,28 @@
+import pytest
+
+from starlette.testclient import TestClient
+from starlette.config import environ
+
+environ["TESTING"] = "True"
+
+
+from karp.application import ctx
+
+from karp.infrastructure.testing import dummy_auth_service
+
+from karp.webapp import main as webapp_main
+
+from karp.tests import common_data
+
+
+@pytest.fixture(name="fa_client_wo_db")
+def fixture_fa_client_wo_db():
+    ctx.auth_service = dummy_auth_service.DummyAuthService()
+    with TestClient(webapp_main.create_app(with_context=False)) as client:
+        yield client
+
+
+@pytest.fixture
+def json_schema_config():
+    return common_data.CONFIG_PLACES
+

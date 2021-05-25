@@ -107,18 +107,24 @@ class Resource(TimestampedVersionedEntity):
 
     def __init__(
         self,
-        resource_id: str,
+        *,
+        resource_id: unique_id.UniqueId,
         name: str,
+        short_name: str,
         config: Dict[str, Any],
         message: str,
-        op: ResourceOp,
-        *args,
+        version: int = 1,
+        op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
         entry_repository: EntryRepository = None,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
-        self._resource_id = resource_id
+        super().__init__(
+            entity_id=resource_id,
+            version=version,
+            **kwargs
+        )
+        self.short_name = short_name
         self._name = name
         self.is_published = is_published
         self.config = config
