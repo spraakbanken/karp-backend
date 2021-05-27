@@ -1,6 +1,6 @@
-
 from .adapters import FakeUnitOfWork, FakeResourceRepository
 from karp.services import handlers
+from karp.domain import events
 from karp.domain.commands import CreateResource
 from karp.utility.unique_id import make_unique_id
 
@@ -14,8 +14,8 @@ def test_create_resource_creates_resource():
         "fields": {"baseform": {"type": "string", "required": True}},
     }
     message = "test_resource added"
-#     with mock.patch("karp.utility.time.utc_now", return_value=12345):
-#         resource = create_resource(conf)
+    #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
+    #         resource = create_resource(conf)
 
     uow = FakeUnitOfWork(FakeResourceRepository())
 
@@ -25,6 +25,7 @@ def test_create_resource_creates_resource():
         name=resource_name,
         config=conf,
         message=message,
+        created_by="kristoff@example.com",
     )
 
     handlers.create_resource(cmd, uow)
@@ -37,10 +38,13 @@ def test_create_resource_creates_resource():
     assert uow.repo[0].name == resource_name
 
     assert uow.repo[0].config == conf
+    assert uow.repo[0].last_modified_by == "kristoff@example.com"
 
     assert uow.was_committed
 
-    assert uow.repo[0].events[-1] == events.ResourceCreated()
+    assert uow.repo[0].events[-1] == events.ResourceCreated(
+        id=id_, resource_id=resource_id, name=resource_name, config=conf
+    )
 
     # assert isinstance(resource, Resource)
     # assert resource.id == uuid.UUID(str(resource.id), version=4)
@@ -58,6 +62,3 @@ def test_create_resource_creates_resource():
     # assert int(resource.last_modified) == 12345
     # assert resource.message == "Resource added."
     # assert resource.op == ResourceOp.ADDED
-
-
-

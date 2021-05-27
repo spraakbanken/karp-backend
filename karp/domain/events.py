@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Dict
 import uuid
 
 
@@ -9,3 +10,6 @@ class Event:
 @dataclass
 class ResourceCreated(Event):
     id: uuid.UUID
+    resource_id: str
+    name: str
+    config: Dict

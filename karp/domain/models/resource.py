@@ -4,7 +4,7 @@ import enum
 from uuid import UUID
 from typing import Callable, Dict, Any, Optional, List, Union
 
-from karp.domain import constraints
+from karp.domain import constraints, events
 from karp.domain.errors import ConfigurationError, RepositoryStatusError
 from karp.domain.models import event_handler
 from karp.domain.models.entity import Entity, TimestampedVersionedEntity
@@ -119,11 +119,7 @@ class Resource(TimestampedVersionedEntity):
         entry_repository: EntryRepository = None,
         **kwargs,
     ):
-        super().__init__(
-            entity_id=entity_id,
-            version=version,
-            **kwargs
-        )
+        super().__init__(entity_id=entity_id, version=version, **kwargs)
         self._resource_id = resource_id
         self._name = name
         self.is_published = is_published
@@ -133,6 +129,15 @@ class Resource(TimestampedVersionedEntity):
         self._releases = []
         self._entry_repository = entry_repository
         self._entry_json_schema = None
+        self.events = []
+        self.events.append(
+            events.ResourceCreated(
+                id=self._id,
+                resource_id=self._resource_id,
+                name=self._name,
+                config=self.config,
+            )
+        )
 
     @property
     def resource_id(self):

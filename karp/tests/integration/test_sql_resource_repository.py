@@ -27,8 +27,8 @@ def fixture_resource_repo(db_setup_scope_module):
 
 def test_sql_resource_repo_empty(resource_repo):
     with unit_of_work(using=resource_repo) as uw:
-        assert uw.resource_ids() == []
-        assert uw.history_by_resource_id("test_id") == []
+        assert uw.repo.resource_ids() == []
+        assert uw.repo.history_by_resource_id("test_id") == []
 
 
 def test_sql_resource_repo_put_resource(resource_repo):
@@ -74,6 +74,7 @@ def test_sql_resource_repo_put_resource(resource_repo):
     assert test_lex.id == resource.id
     assert test_lex.name == resource_name
     assert test_lex.version == expected_version
+
 
 #     # Update resource
 #     with unit_of_work(using=resource_repo) as uw:
@@ -158,7 +159,7 @@ def test_sql_resource_repo_putting_already_existing_resource_id_raises(resource_
     handlers.create_resource(cmd, uow)
 
     assert len(uow.repo.resource_ids()) == 1
-    res = uow.by_resource_id(resource_id)
+    res = uow.repo.by_resource_id(resource_id)
 
     assert res.id == id_
 
@@ -188,8 +189,6 @@ def test_sql_resource_repo_update_resource(resource_repo):
     resource_id = "test_id"
     resource_name = "Test"
     resource_config = {
-        "resource_id": resource_id,
-        "resource_name": resource_name,
         "a": "b",
     }
     id_ = uuid.uuid4()
@@ -215,37 +214,29 @@ def test_sql_resource_repo_update_resource(resource_repo):
     resource_id_history = uow.repo.history_by_resource_id(resource_id)
     assert len(resource_id_history) == 1
 
-    cmd = UpdateResourceConfig(
+    cmd = UpdateResource(
         resource_id=resource_id,
         name=resource_name,
-        config=resource_config,
+        config={"a": "changed", "c": "added"},
         message="change config",
-        last_modified_by="Test user"
+        last_modified_by="Test user",
     )
     # session = db.SessionLocal()
     uow = unit_of_work(using=resource_repo)  # , session=session)
 
-    handlers.create_resource(cmd, uow)
-    with unit_of_work(using=resource_repo) as uw:
-        resource = uw.resource_with_id_and_version(resource_id, resource_version)
+    handlers.update_resource(cmd, uow)
+    resource = uow.repo.resource_with_id_and_version(resource_id, resource_version)
 
-        assert resource.config == expected_config
-        resource.config["c"] = "added"
-        resource.config["a"] = "changed"
-        resource.is_published = True
-        resource.stamp(user="Test user", message="change config")
-        uw.update(resource)
-        assert resource.version == 2
+    assert resource.version == 2
 
     resource_version += 1
 
-    with unit_of_work(using=resource_repo) as uw:
-        lex = uw.by_resource_id(resource_id)
+    lex = uow.repo.by_resource_id(resource_id)
 
-        assert lex is not None
-        assert lex.resource_id == resource_id
-        assert lex.version == resource_version
-        assert uw.get_latest_version(resource_id) == resource_version
+    assert lex is not None
+    assert lex.resource_id == resource_id
+    assert lex.version == resource_version
+    assert uow.repo.get_latest_version(resource_id) == resource_version
 
 
 def test_sql_resource_repo_put_another_version(resource_repo):

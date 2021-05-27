@@ -5,7 +5,7 @@ from functools import singledispatch
 
 class UnitOfWork(abc.ABC):
     @abc.abstractmethod
-    def __enter__(self):
+    def __enter__(self) -> "UnitOfWork":
         pass
 
     @abc.abstractmethod
