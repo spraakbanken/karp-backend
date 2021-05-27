@@ -309,7 +309,7 @@ class ResourceRepository(metaclass=abc.ABCMeta):
     def put(self, resource: Resource):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def resource_ids(self) -> List[Resource]:
         raise NotImplementedError()
 
@@ -325,18 +325,18 @@ class ResourceRepository(metaclass=abc.ABCMeta):
     ) -> Optional[Resource]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def resources_with_id(self, resource_id: str):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def resource_with_id_and_version(self, resource_id: str, version: int):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def get_active_resource(self, resource_id: str) -> Optional[Resource]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def get_published_resources(self) -> List[Resource]:
         raise NotImplementedError()

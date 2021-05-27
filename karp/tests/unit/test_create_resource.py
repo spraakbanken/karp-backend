@@ -29,14 +29,14 @@ def test_create_resource_creates_resource():
 
     handlers.create_resource(cmd, uow)
 
-    assert len(uow.resources) == 1
+    assert len(uow.repo) == 1
 
-    assert uow.resources[0].id == id_
-    assert uow.resources[0].resource_id == resource_id
+    assert uow.repo[0].id == id_
+    assert uow.repo[0].resource_id == resource_id
 
-    assert uow.resources[0].name == resource_name
+    assert uow.repo[0].name == resource_name
 
-    assert uow.resources[0].config == conf
+    assert uow.repo[0].config == conf
 
     assert uow.was_committed
 
