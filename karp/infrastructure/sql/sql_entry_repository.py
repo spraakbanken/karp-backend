@@ -68,8 +68,8 @@ class SqlEntryRepository(
 
         # runtime_table.create(bind=db.engine, checkfirst=True)
         # runtime_model = sql_models.get_or_create_entry_runtime_model(
-            table_name, history_model, settings["config"]
-        )
+        #     table_name, history_model, settings["config"]
+        # )
         return cls(
             history_model=history_model,
             # runtime_model=runtime_model,

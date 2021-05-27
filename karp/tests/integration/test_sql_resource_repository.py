@@ -4,12 +4,15 @@ import uuid
 
 import pytest
 
+from karp.domain.commands import CreateResource
 from karp.domain.models.resource import ResourceOp, create_resource, Resource
 
 from karp.domain.errors import IntegrityError
 
 # from karp.domain.models.lexical_resource import LexicalResource
 from karp.infrastructure.unit_of_work import unit_of_work
+from karp.services import handlers
+from karp.infrastructure.sql import db
 from karp.infrastructure.sql.sql_resource_repository import SqlResourceRepository
 
 
@@ -36,61 +39,68 @@ def test_sql_resource_repo_put_resource(resource_repo):
         "resource_name": resource_name,
         "a": "b",
     }
-    resource = create_resource(resource_config)
+    message = "add resource"
+    # resource = create_resource(resource_config)
+    id_ = uuid.uuid4()
+    cmd = CreateResource(
+        id=id_,
+        resource_id=resource_id,
+        name=resource_name,
+        config=resource_config,
+        message=message,
+    )
+    session = db.SessionLocal()
+    uow = unit_of_work(using=resource_repo, session=session)
+
+    handlers.create_resource(cmd, uow)
 
     expected_version = 1
 
-    with unit_of_work(using=resource_repo) as uw:
-        uw.put(resource)
-        uw.commit()
+    assert uow.repo.resource_ids() == [resource_id]
 
-    with unit_of_work(using=resource_repo) as uw:
-        assert uw.resource_ids() == [resource_id]
+    resource = uow.repo.by_id(id_)
+    assert resource.version == expected_version
+    assert resource.message == message
+    assert resource.op == ResourceOp.ADDED
 
-        assert resource.version == expected_version
-        assert resource.message == "Resource added."
-        assert resource.op == ResourceOp.ADDED
+    resource_id_history = uow.repo.history_by_resource_id(resource_id)
+    assert len(resource_id_history) == 1
 
-    with unit_of_work(using=resource_repo) as uw:
-        resource_id_history = uw.history_by_resource_id(resource_id)
-        assert len(resource_id_history) == 1
+    test_lex = uow.repo.by_resource_id(resource_id)
 
-    with unit_of_work(using=resource_repo) as uw:
-        test_lex = uw.by_resource_id(resource_id)
+    assert isinstance(test_lex, Resource)
+    assert isinstance(test_lex.config, dict)
+    assert test_lex.resource_id == resource_id
+    assert test_lex.id == resource.id
+    assert test_lex.name == resource_name
+    assert test_lex.version == expected_version
 
-        assert isinstance(test_lex, Resource)
-        assert isinstance(test_lex.config, dict)
-        assert test_lex.resource_id == resource_id
-        assert test_lex.id == resource.id
-        assert test_lex.name == resource_name
-        assert test_lex.version == expected_version
-
-    # Update resource
-    with unit_of_work(using=resource_repo) as uw:
-        resource.config["c"] = "added"
-        resource.config["a"] = "changed"
-        resource.is_published = True
-        resource.stamp(user="Test user", message="change config")
-        uw.update(resource)
-        assert resource.version == 2
-
-    with unit_of_work(using=resource_repo) as uw:
-        test_lex = uw.by_resource_id(resource_id)
-
-        assert test_lex is not None
-        assert test_lex.config["a"] == "changed"
-        assert test_lex.config["c"] == "added"
-        assert test_lex.is_published is True
-        assert test_lex.version == 2
-        assert uw.get_latest_version(resource_id) == test_lex.version
-
-    # Test history
-    with unit_of_work(using=resource_repo) as uw:
-        resource_id_history = uw.history_by_resource_id(resource_id)
-
-        assert len(resource_id_history) == 2
-        assert resource_id_history[0].version == 2
-        assert resource_id_history[1].version == 1
+#     # Update resource
+#     with unit_of_work(using=resource_repo) as uw:
+#         resource.config["c"] = "added"
+#         resource.config["a"] = "changed"
+#         resource.is_published = True
+#         resource.stamp(user="Test user", message="change config")
+#         uw.update(resource)
+#         assert resource.version == 2
+#
+#     with unit_of_work(using=resource_repo) as uw:
+#         test_lex = uw.by_resource_id(resource_id)
+#
+#         assert test_lex is not None
+#         assert test_lex.config["a"] == "changed"
+#         assert test_lex.config["c"] == "added"
+#         assert test_lex.is_published is True
+#         assert test_lex.version == 2
+#         assert uw.get_latest_version(resource_id) == test_lex.version
+#
+#     # Test history
+#     with unit_of_work(using=resource_repo) as uw:
+#         resource_id_history = uw.history_by_resource_id(resource_id)
+#
+#         assert len(resource_id_history) == 2
+#         assert resource_id_history[0].version == 2
+#         assert resource_id_history[1].version == 1
 
 
 # def test_sql_resource_repo_put_lexical_resource(resource_repo):
@@ -133,22 +143,39 @@ def test_sql_resource_repo_putting_already_existing_resource_id_raises(resource_
         "resource_name": resource_name,
         "a": "b",
     }
-    resource = create_resource(resource_config)
+    id_ = uuid.uuid4()
+    message = "hhh"
+    cmd = CreateResource(
+        id=id_,
+        resource_id=resource_id,
+        name=resource_name,
+        config=resource_config,
+        message=message,
+    )
+    # session = db.SessionLocal()
+    uow = unit_of_work(using=resource_repo)  # , session=session)
 
-    with unit_of_work(using=resource_repo) as uw:
-        uw.put(resource)
-        assert len(uw.resource_ids()) == 1
-        res = uw.by_resource_id(resource_id)
+    handlers.create_resource(cmd, uow)
 
-        assert res.id == resource.id
+    assert len(uow.repo.resource_ids()) == 1
+    res = uow.by_resource_id(resource_id)
 
-    resource = create_resource(
-        {"resource_id": resource_id, "resource_name": resource_name, "a": "b"}
+    assert res.id == id_
+
+    # resource = create_resource(
+    #     {"resource_id": resource_id, "resource_name": resource_name, "a": "b"}
+    # )
+    cmd = CreateResource(
+        id=uuid.uuid4(),
+        resource_id=resource_id,
+        name=resource_name,
+        config=resource_config,
+        message=message,
     )
 
+    uow = unit_of_work(using=resource_repo)
     with pytest.raises(IntegrityError) as exc_info:
-        with unit_of_work(using=resource_repo) as uw:
-            uw.put(resource)
+        handlers.create_resource(cmd, uow)
 
     assert "Resource with resource_id 'test_id' already exists." in str(exc_info)
 
@@ -165,21 +192,40 @@ def test_sql_resource_repo_update_resource(resource_repo):
         "resource_name": resource_name,
         "a": "b",
     }
-    resource = create_resource(resource_config)
+    id_ = uuid.uuid4()
+    message = "hhh"
+    cmd = CreateResource(
+        id=id_,
+        resource_id=resource_id,
+        name=resource_name,
+        config=resource_config,
+        message=message,
+    )
+    # session = db.SessionLocal()
+    uow = unit_of_work(using=resource_repo)  # , session=session)
+
+    handlers.create_resource(cmd, uow)
 
     expected_version = 1
 
-    with unit_of_work(using=resource_repo) as uw:
-        uw.put(resource)
-        uw.commit()
-        assert uw.resource_ids() == [resource_id]
+    assert uow.repo.resource_ids() == [resource_id]
+    resource = uow.repo.by_id(id_)
 
-        assert resource.version == expected_version
-        assert resource.message == "Resource added."
-        assert resource.op == ResourceOp.ADDED
-        resource_id_history = uw.history_by_resource_id(resource_id)
-        assert len(resource_id_history) == 1
+    assert resource.version == expected_version
+    resource_id_history = uow.repo.history_by_resource_id(resource_id)
+    assert len(resource_id_history) == 1
 
+    cmd = UpdateResourceConfig(
+        resource_id=resource_id,
+        name=resource_name,
+        config=resource_config,
+        message="change config",
+        last_modified_by="Test user"
+    )
+    # session = db.SessionLocal()
+    uow = unit_of_work(using=resource_repo)  # , session=session)
+
+    handlers.create_resource(cmd, uow)
     with unit_of_work(using=resource_repo) as uw:
         resource = uw.resource_with_id_and_version(resource_id, resource_version)
 

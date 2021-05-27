@@ -59,12 +59,16 @@ class SqlUnitOfWork(unit_of_work.UnitOfWork):
         self._repo.set_session(self._session)
         self._state = SqlUnitOfWork.State.initialized
 
+    @property
+    def repo(self):
+        return self._repo
+
     def __enter__(self):
         return self.begin()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if exc_type is None:
-            self.commit()
+            # self.commit()
             if self._session_is_created_here:
                 self.close()
             return False
@@ -106,6 +110,10 @@ class SqlUnitOfWork(unit_of_work.UnitOfWork):
             raise errors.IntegrityError("Unknown integrity error") from err
 
     def abort(self):
+        self._check_state(expected_state=SqlUnitOfWork.State.begun)
+        self._session.rollback()
+
+    def rollback(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         self._session.rollback()
 

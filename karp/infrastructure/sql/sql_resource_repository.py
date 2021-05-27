@@ -62,7 +62,9 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
     def by_id(
         self, id: Union[UUID, str], *, version: Optional[int] = None
     ) -> Optional[Resource]:
-        pass
+        self._check_has_session()
+        row = self._session.query(self.table).filter_by(id=id).first()
+        return self._row_to_resource(row) if row else None
 
     def by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None

@@ -1,7 +1,7 @@
 
 from karp.domain.model import Resource
-from karp.domain.commands import CreateResourceCommand
-from karp.services import CreateResourceHandler
+from karp.domain.commands import CreateResource
+from karp.services import handlers
 from karp.adapters.orm import SqlAlchemy
 from karp.utility.unique_id import make_unique_id
 
@@ -14,7 +14,7 @@ def test_load_a_persisted_resource():
 
     resource_id = make_unique_id()
 
-    cmd = CreateResourceCommand(
+    cmd = CreateResource(
         resource_id=resource_id,
         resource_short_name="lex",
         resource_name="Lex",
@@ -22,7 +22,7 @@ def test_load_a_persisted_resource():
         config={"sort": "form"},
     )
     handler = CreateResourceHandler(db.unit_of_work_manager)
-    handler.handle(cmd)
+    handlers.create_resource(cmd, uow)
 
     resources = db.get_session().query(Resource).all()
 

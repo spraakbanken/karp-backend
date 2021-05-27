@@ -40,6 +40,8 @@ def test_create_resource_creates_resource():
 
     assert uow.was_committed
 
+    assert uow.repo[0].events[-1] == events.ResourceCreated()
+
     # assert isinstance(resource, Resource)
     # assert resource.id == uuid.UUID(str(resource.id), version=4)
     # assert resource.version == 1
