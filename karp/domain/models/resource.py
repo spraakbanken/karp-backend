@@ -108,9 +108,9 @@ class Resource(TimestampedVersionedEntity):
     def __init__(
         self,
         *,
-        resource_id: unique_id.UniqueId,
+        entity_id: unique_id.UniqueId,
+        resource_id: str,
         name: str,
-        short_name: str,
         config: Dict[str, Any],
         message: str,
         version: int = 1,
@@ -120,11 +120,11 @@ class Resource(TimestampedVersionedEntity):
         **kwargs,
     ):
         super().__init__(
-            entity_id=resource_id,
+            entity_id=entity_id,
             version=version,
             **kwargs
         )
-        self.short_name = short_name
+        self._resource_id = resource_id
         self._name = name
         self.is_published = is_published
         self.config = config

@@ -6,8 +6,8 @@ from karp.utility.unique_id import make_unique_id
 
 
 def test_create_resource_creates_resource():
-    resource_id = make_unique_id()
-    short_name = "test_resource"
+    id_ = make_unique_id()
+    resource_id = "test_resource"
     resource_name = "Test resource"
     conf = {
         "sort": ["baseform"],
@@ -21,8 +21,8 @@ def test_create_resource_creates_resource():
 
     handler = CreateResourceHandler(uow)
     cmd = CreateResourceCommand(
+        id=id_,
         resource_id=resource_id,
-        short_name=short_name,
         name=resource_name,
         config=conf,
         message=message,
@@ -32,10 +32,10 @@ def test_create_resource_creates_resource():
 
     assert len(uow.resources) == 1
 
-    assert uow.resources[0].id == resource_id
+    assert uow.resources[0].id == id_
+    assert uow.resources[0].resource_id == resource_id
 
     assert uow.resources[0].name == resource_name
-    assert uow.resources[0].short_name == short_name
 
     assert uow.resources[0].config == conf
 

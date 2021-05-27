@@ -5,8 +5,8 @@ from pydantic import BaseModel
 
 
 class CreateResourceCommand(BaseModel):
-    resource_id: UUID
+    id: UUID
+    resource_id: str
     name: str
-    short_name: str
     config: Dict
     message: str

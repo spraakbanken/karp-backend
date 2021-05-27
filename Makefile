@@ -80,11 +80,17 @@ lint-syntax-errors: install-dev
 check-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
 
-test: run-unit-tests
-run-all-tests: run-unit-tests run-integration-tests
+test: unit-tests
+run-all-tests: unit-tests run-integration-tests
 run-all-tests-w-coverage: run-unit-tests-w-coverage run-integration-tests-w-coverage
-run-unit-tests: install-dev clean-pyc
-	${INVENV} pytest -vv karp/tests/quick_tests
+
+.PHONY: unit-tests 
+unit-tests: install-dev clean-pyc
+	${INVENV} pytest -vv karp/tests/unit
+
+.PHONY: integration-tests 
+integration-tests: install-dev clean-pyc
+	${INVENV} pytest -vv karp/tests/integration
 
 run-slow-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/quick_tests karp/tests/slow_tests

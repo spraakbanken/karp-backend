@@ -11,9 +11,9 @@ class CreateResourceHandler:
     def handle(self, cmd: CreateResourceCommand):
         # reporter = IssueReporter(cmd.reporter_name, cmd.reporter_email)
         resource = Resource(
+            entity_id=cmd.id,
             resource_id=cmd.resource_id,
             name=cmd.name,
-            short_name=cmd.short_name,
             config=cmd.config,
             message=cmd.message,
         )
