@@ -1,1 +1,1 @@
-from .resource_commands import CreateResourceCommand
+from .resource_commands import CreateResource

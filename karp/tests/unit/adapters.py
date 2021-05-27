@@ -1,4 +1,5 @@
-from karp.domain.ports import ResourceRepository, UnitOfWorkManager, UnitOfWork
+from karp.domain.ports import ResourceRepository
+from karp.infrastructure.unit_of_work import UnitOfWork
 
 
 class FakeResourceRepository(ResourceRepository):
@@ -19,10 +20,10 @@ class FakeResourceRepository(ResourceRepository):
         return self.resources[idx]
 
 
-class FakeUnitOfWork(UnitOfWork, UnitOfWorkManager):
+class FakeUnitOfWork(UnitOfWork):
 
-    def __init__(self):
-        self._resources = FakeResourceRepository()
+    def __init__(self, repo):
+        self._repo = repo
 
     def start(self):
         self.was_committed = False
@@ -30,6 +31,8 @@ class FakeUnitOfWork(UnitOfWork, UnitOfWorkManager):
         return self
 
     def __enter__(self):
+        self.was_committed = False
+        self.was_rolled_back = False
         return self
 
     def __exit__(self, type, value, traceback):
@@ -44,5 +47,5 @@ class FakeUnitOfWork(UnitOfWork, UnitOfWorkManager):
         self.was_rolled_back = True
 
     @property
-    def resources(self):
-        return self._resources
+    def repo(self):
+        return self._repo

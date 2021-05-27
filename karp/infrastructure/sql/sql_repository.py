@@ -14,7 +14,7 @@ from karp.infrastructure.sql import db
 logger = logging.getLogger("karp")
 
 
-class SqlRepository:
+class SqlRepository():
     def __init__(self) -> None:
         self._session: Optional[db.Session] = None
 
@@ -40,7 +40,7 @@ def _(repo: SqlRepository, *, session=_create_new):
 DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 
 
-class SqlUnitOfWork:
+class SqlUnitOfWork(unit_of_work.UnitOfWork):
     class State(Enum):
         initialized = 0
         begun = 1

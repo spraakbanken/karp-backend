@@ -1,7 +1,7 @@
 
-from .adapters import FakeUnitOfWork
-from karp.services import CreateResourceHandler
-from karp.domain.commands import CreateResourceCommand
+from .adapters import FakeUnitOfWork, FakeResourceRepository
+from karp.services import handlers
+from karp.domain.commands import CreateResource
 from karp.utility.unique_id import make_unique_id
 
 
@@ -17,10 +17,9 @@ def test_create_resource_creates_resource():
 #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
 #         resource = create_resource(conf)
 
-    uow = FakeUnitOfWork()
+    uow = FakeUnitOfWork(FakeResourceRepository())
 
-    handler = CreateResourceHandler(uow)
-    cmd = CreateResourceCommand(
+    cmd = CreateResource(
         id=id_,
         resource_id=resource_id,
         name=resource_name,
@@ -28,7 +27,7 @@ def test_create_resource_creates_resource():
         message=message,
     )
 
-    handler.handle(cmd)
+    handlers.create_resource(cmd, uow)
 
     assert len(uow.resources) == 1
 
