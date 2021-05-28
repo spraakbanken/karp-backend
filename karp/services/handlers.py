@@ -1,7 +1,7 @@
 from karp.domain import commands, model, errors
 
 # from karp.domain.model import Issue, IssueReporter
-from karp.infrastructure.unit_of_work import UnitOfWork
+from karp.infrastructure.unit_of_work import UnitOfWork, unit_of_work
 
 
 def create_resource(cmd: commands.CreateResource, uow: UnitOfWork):
@@ -13,6 +13,7 @@ def create_resource(cmd: commands.CreateResource, uow: UnitOfWork):
         message=cmd.message,
         last_modified=cmd.timestamp,
         last_modified_by=cmd.created_by,
+        entry_repository_type=cmd.entry_repository_type,
     )
 
     with uow:
@@ -42,4 +43,24 @@ def update_resource(cmd: commands.UpdateResource, uow: UnitOfWork):
                 timestamp=cmd.timestamp,
             )
             uow.repo.update(resource)
+        uow.commit()
+
+
+# Entry handlers
+
+
+def add_entry(cmd: commands.AddEntry, uow: UnitOfWork):
+    with uow:
+        resource = uow.repo.by_resource_id(cmd.resource_id)
+        with unit_of_work(using=resource.entry_repository) as uow2:
+            entry = model.Entry(
+                entity_id=cmd.id,
+                entry_id=cmd.entry_id,
+                body=cmd.body,
+                message=cmd.message,
+                last_modified=cmd.timestamp,
+                last_modified_by=cmd.user,
+            )
+            uow2.repo.put(entry)
+            uow2.commit()
         uow.commit()

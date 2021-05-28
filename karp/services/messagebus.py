@@ -64,4 +64,5 @@ EVENT_HANDLERS = {
 COMMAND_HANDLERS = {
     commands.CreateResource: handlers.create_resource,
     commands.UpdateResource: handlers.update_resource,
+    commands.AddEntry: handlers.add_entry,
 }

@@ -1,5 +1,5 @@
 from karp.domain import repository
-from karp.infrastructure.unit_of_work import UnitOfWork
+from karp.infrastructure.unit_of_work import UnitOfWork, create_unit_of_work
 
 
 class FakeResourceRepository(repository.ResourceRepository):
@@ -28,10 +28,7 @@ class FakeResourceRepository(repository.ResourceRepository):
         return len(self.resources)
 
 
-class FakeEntryRepository(
-    repository.EntryRepository,
-    repository_type="fake"
-):
+class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
     def __init__(self):
         super().__init__()
         self.entries = set()
@@ -92,3 +89,8 @@ class FakeUnitOfWork(UnitOfWork):
     @property
     def repo(self):
         return self._repo
+
+
+@create_unit_of_work.register(FakeEntryRepository)
+def _(repo: FakeEntryRepository):
+    return FakeUnitOfWork(repo)

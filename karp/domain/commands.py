@@ -1,16 +1,18 @@
 from uuid import UUID
-from typing import Dict
+from typing import Dict, Optional
+import uuid
 
 from pydantic import BaseModel, Field
 
 from karp.utility.time import utc_now
 
-
+# pylint: disable=unsubscriptable-object
 class Command(BaseModel):
     timestamp: float = Field(default_factory=utc_now)
 
 
 # Resource commands
+
 
 class CreateResource(Command):
     id: UUID
@@ -19,6 +21,7 @@ class CreateResource(Command):
     config: Dict
     message: str
     created_by: str
+    entry_repository_type: Optional[str] = None
 
 
 class UpdateResource(Command):
@@ -33,7 +36,8 @@ class UpdateResource(Command):
 # Entry commands
 class AddEntry(Command):
     resource_id: str
+    id: uuid.UUID
     entry_id: str
-    body: str
+    body: Dict
     user: str
     message: str

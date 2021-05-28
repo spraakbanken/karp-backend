@@ -43,13 +43,14 @@ class Entry(TimestampedVersionedEntity):
         entry_id: str,
         body: Dict,
         message: str,
-        status: EntryStatus,  # IN-PROGRESS, IN-REVIEW, OK, PUBLISHED
-        op: EntryOp,
+        status: EntryStatus = EntryStatus.IN_PROGRESS,  # IN-PROGRESS, IN-REVIEW, OK, PUBLISHED
+        op: EntryOp = EntryOp.ADDED,
+        version: int = 1,
         *pos,
         **kwargs,
         # version: int = 0
     ):
-        super().__init__(*pos, **kwargs)
+        super().__init__(*pos, version=version, **kwargs)
         self._entry_id = entry_id
         self._body = body
         self._op = op

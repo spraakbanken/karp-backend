@@ -1,13 +1,13 @@
 import pytest
 
-from .adapters import FakeUnitOfWork, FakeEntryRepository
+from .adapters import FakeUnitOfWork, FakeEntryRepository, FakeResourceRepository
 from karp.services import messagebus
 from karp.domain import events, errors, commands
 from karp.utility.unique_id import make_unique_id
 
 
-class TestCreateEntry:
-    def test_create_entry(self):
+class TestAddEntry:
+    def test_add_entry(self):
         id_ = make_unique_id()
         entry_id = "test_entry"
         entry_name = "Test entry"
@@ -19,28 +19,43 @@ class TestCreateEntry:
         #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
         #         entry = create_entry(conf)
 
-        uow = FakeUnitOfWork(FakeEntryRepository())
+        uow = FakeUnitOfWork(FakeResourceRepository())
 
-        cmd = commands.AddEntry(
-            id=id_,
-            entry_id=entry_id,
-            name=entry_name,
+        cmd = commands.CreateResource(
+            id=make_unique_id(),
+            resource_id="test_id",
+            name="Test",
             config=conf,
             message=message,
             created_by="kristoff@example.com",
+            entry_repository_type="fake",
+        )
+        messagebus.handle(cmd, uow)
+
+        cmd = commands.AddEntry(
+            resource_id="test_id",
+            id=id_,
+            entry_id=entry_id,
+            name=entry_name,
+            body=conf,
+            message=message,
+            user="kristoff@example.com",
         )
 
         messagebus.handle(cmd, uow)
 
         assert len(uow.repo) == 1
 
-        assert uow.repo[0].id == id_
-        assert uow.repo[0].entry_id == entry_id
+        resource = uow.repo.by_resource_id("test_id")
 
-        assert uow.repo[0].name == entry_name
+        assert len(resource.entry_repository) == 1
 
-        assert uow.repo[0].config == conf
-        assert uow.repo[0].last_modified_by == "kristoff@example.com"
+        entry = resource.entry_repository.by_id(id_)
+        assert entry.id == id_
+        assert entry.entry_id == entry_id
+
+        assert entry.body == conf
+        assert entry.last_modified_by == "kristoff@example.com"
 
         assert uow.was_committed
 

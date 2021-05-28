@@ -116,6 +116,7 @@ class Resource(TimestampedVersionedEntity):
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
+        entry_repository_type: Optional[str] = None,
         # entry_repository: EntryRepository = None,
         **kwargs,
     ):
@@ -127,7 +128,8 @@ class Resource(TimestampedVersionedEntity):
         self._message = message
         self._op = op
         self._releases = []
-        # self._entry_repository = entry_repository
+        self._entry_repository = None
+        self.entry_repository_type = entry_repository_type
         self._entry_json_schema = None
         self.events = []
         self.events.append(
@@ -163,20 +165,24 @@ class Resource(TimestampedVersionedEntity):
     def op(self):
         return self._op
 
-#     @property
-#     def entry_repository(self) -> EntryRepository:
-#         if self._entry_repository is None:
-#             self._entry_repository = EntryRepository.create(
-#                 None, {"table_name": self._resource_id, "config": self.config}
-#             )
-#         return self._entry_repository
+    @property
+    def entry_repository(self):
+        from karp.domain.repository import EntryRepository
+
+        if self._entry_repository is None:
+            self._entry_repository = EntryRepository.create(
+                self.entry_repository_type,
+                {"table_name": self._resource_id, "config": self.config},
+            )
+        return self._entry_repository
 
     def stamp(
-        self, *,
+        self,
+        *,
         user: str,
         timestamp: float,
         message: str = None,
-        increment_version: bool = True
+        increment_version: bool = True,
     ):
         self._check_not_discarded()
 
@@ -199,12 +205,7 @@ class Resource(TimestampedVersionedEntity):
             )
         )
 
-    def add_new_release(
-        self, *,
-        name: str,
-        user: str,
-        description: str
-    ):
+    def add_new_release(self, *, name: str, user: str, description: str):
         self._check_not_discarded()
         event = Resource.NewReleaseAdded(
             entity_id=self.id,
@@ -327,5 +328,3 @@ def create_resource(config: Dict) -> Resource:
 
 
 # ===== Repository =====
-
-
