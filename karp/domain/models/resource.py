@@ -8,7 +8,7 @@ from karp.domain import constraints, events
 from karp.domain.errors import ConfigurationError, RepositoryStatusError
 from karp.domain.models import event_handler
 from karp.domain.models.entity import Entity, TimestampedVersionedEntity
-from karp.domain.models.entry import Entry, EntryRepository, create_entry
+from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
 from karp.domain.models.auth_service import PermissionLevel
 
@@ -116,7 +116,7 @@ class Resource(TimestampedVersionedEntity):
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
-        entry_repository: EntryRepository = None,
+        # entry_repository: EntryRepository = None,
         **kwargs,
     ):
         super().__init__(entity_id=entity_id, version=version, **kwargs)
@@ -127,7 +127,7 @@ class Resource(TimestampedVersionedEntity):
         self._message = message
         self._op = op
         self._releases = []
-        self._entry_repository = entry_repository
+        # self._entry_repository = entry_repository
         self._entry_json_schema = None
         self.events = []
         self.events.append(
@@ -163,13 +163,13 @@ class Resource(TimestampedVersionedEntity):
     def op(self):
         return self._op
 
-    @property
-    def entry_repository(self) -> EntryRepository:
-        if self._entry_repository is None:
-            self._entry_repository = EntryRepository.create(
-                None, {"table_name": self._resource_id, "config": self.config}
-            )
-        return self._entry_repository
+#     @property
+#     def entry_repository(self) -> EntryRepository:
+#         if self._entry_repository is None:
+#             self._entry_repository = EntryRepository.create(
+#                 None, {"table_name": self._resource_id, "config": self.config}
+#             )
+#         return self._entry_repository
 
     def stamp(
         self, *,

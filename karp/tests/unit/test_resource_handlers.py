@@ -34,13 +34,14 @@ class TestCreateResource:
 
         assert len(uow.repo) == 1
 
-        assert uow.repo[0].id == id_
-        assert uow.repo[0].resource_id == resource_id
+        resource = uow.repo.by_id(id_)
+        assert resource.id == id_
+        assert resource.resource_id == resource_id
 
-        assert uow.repo[0].name == resource_name
+        assert resource.name == resource_name
 
-        assert uow.repo[0].config == conf
-        assert uow.repo[0].last_modified_by == "kristoff@example.com"
+        assert resource.config == conf
+        assert resource.last_modified_by == "kristoff@example.com"
 
         assert uow.was_committed
 

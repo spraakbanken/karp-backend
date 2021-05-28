@@ -10,6 +10,8 @@ class Command(BaseModel):
     timestamp: float = Field(default_factory=utc_now)
 
 
+# Resource commands
+
 class CreateResource(Command):
     id: UUID
     resource_id: str
@@ -26,3 +28,12 @@ class UpdateResource(Command):
     config: Dict
     message: str
     user: str
+
+
+# Entry commands
+class AddEntry(Command):
+    resource_id: str
+    entry_id: str
+    body: str
+    user: str
+    message: str
