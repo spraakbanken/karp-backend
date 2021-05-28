@@ -14,10 +14,7 @@ Message = Union[commands.Command, events.Event]
 logger = logging.getLogger("karp")
 
 
-def handle(
-    message: Message,
-    uow: unit_of_work.UnitOfWork
-):
+def handle(message: Message, uow: unit_of_work.UnitOfWork):
     queue = [message]
     while queue:
         message = queue.pop(0)
@@ -65,4 +62,5 @@ EVENT_HANDLERS = {
 
 COMMAND_HANDLERS = {
     commands.CreateResource: handlers.create_resource,
+    commands.UpdateResource: handlers.update_resource,
 }

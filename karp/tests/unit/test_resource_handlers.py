@@ -1,12 +1,13 @@
+import pytest
+
 from .adapters import FakeUnitOfWork, FakeResourceRepository
 from karp.services import messagebus
-from karp.domain import events
-from karp.domain.commands import CreateResource
+from karp.domain import events, errors, commands
 from karp.utility.unique_id import make_unique_id
 
 
 class TestCreateResource:
-    def test_create_resource_creates_resource(self):
+    def test_create_resource(self):
         id_ = make_unique_id()
         resource_id = "test_resource"
         resource_name = "Test resource"
@@ -20,7 +21,7 @@ class TestCreateResource:
 
         uow = FakeUnitOfWork(FakeResourceRepository())
 
-        cmd = CreateResource(
+        cmd = commands.CreateResource(
             id=id_,
             resource_id=resource_id,
             name=resource_name,
@@ -43,6 +44,31 @@ class TestCreateResource:
 
         assert uow.was_committed
 
+    def test_create_resource_with_same_resource_id_raises(self):
+        uow = FakeUnitOfWork(FakeResourceRepository())
+        messagebus.handle(
+            commands.CreateResource(
+                id=make_unique_id(),
+                resource_id="r1",
+                name="R1",
+                config={"fields": {}},
+                message="added",
+                created_by="user",
+            ),
+            uow=uow,
+        )
+        with pytest.raises(errors.IntegrityError):
+            messagebus.handle(
+                commands.CreateResource(
+                    id=make_unique_id(),
+                    resource_id="r1",
+                    name="R1",
+                    config={"fields": {}},
+                    message="added",
+                    created_by="user",
+                ),
+                uow=uow,
+            )
         # assert uow.repo[0].events[-1] == events.ResourceCreated(
         #     id=id_, resource_id=resource_id, name=resource_name, config=conf
         # )
@@ -63,3 +89,36 @@ class TestCreateResource:
     # assert int(resource.last_modified) == 12345
     # assert resource.message == "Resource added."
     # assert resource.op == ResourceOp.ADDED
+
+
+class TestUpdateResource:
+    def test_update_resource(self):
+        uow = FakeUnitOfWork(FakeResourceRepository())
+        id_ = make_unique_id()
+        messagebus.handle(
+            commands.CreateResource(
+                id=id_,
+                resource_id="r1",
+                name="R1",
+                config={"a": "b"},
+                message="added",
+                created_by="user",
+            ),
+            uow=uow,
+        )
+        messagebus.handle(
+            commands.UpdateResource(
+                resource_id="r1",
+                name="R1",
+                config={"a": "changed", "b": "added"},
+                message="added",
+                user="user",
+            ),
+            uow=uow,
+        )
+
+        resource = uow.repo.by_id(id_)
+        assert resource is not None
+        assert resource.config["a"] == "changed"
+        assert resource.config["b"] == "added"
+        assert resource.version == 2

@@ -3,7 +3,6 @@ from karp.infrastructure.unit_of_work import UnitOfWork
 
 
 class FakeResourceRepository(repository.ResourceRepository):
-
     def __init__(self):
         super().__init__()
         self.resources = []
@@ -17,10 +16,10 @@ class FakeResourceRepository(repository.ResourceRepository):
     def get(self, id):
         return self.resources[id]
 
-    def _by_id(self, id):
+    def _by_id(self, id, *, version=None):
         return next((r for r in self.resources if r.id == id), None)
 
-    def _by_resource_id(self, resource_id):
+    def _by_resource_id(self, resource_id, *, version=None):
         return next((r for r in self.resources if r.resource_id == resource_id), None)
 
     def __len__(self):
@@ -31,7 +30,6 @@ class FakeResourceRepository(repository.ResourceRepository):
 
 
 class FakeUnitOfWork(UnitOfWork):
-
     def __init__(self, repo):
         self._repo = repo
 
