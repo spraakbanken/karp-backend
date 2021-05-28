@@ -6,24 +6,23 @@ from pydantic import BaseModel, Field
 from karp.utility.time import utc_now
 
 
-class Command:
-    pass
+class Command(BaseModel):
+    timestamp: float = Field(default_factory=utc_now)
 
 
-class CreateResource(BaseModel, Command):
+class CreateResource(Command):
     id: UUID
     resource_id: str
     name: str
     config: Dict
     message: str
     created_by: str
-    created_at: float = Field(default_factory=utc_now)
 
 
-class UpdateResource(BaseModel, Command):
+class UpdateResource(Command):
     resource_id: str
+    version: int
     name: str
     config: Dict
     message: str
     user: str
-    modified_at: float = Field(default_factory=utc_now)

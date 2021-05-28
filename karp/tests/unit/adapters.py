@@ -13,6 +13,10 @@ class FakeResourceRepository(repository.ResourceRepository):
     def _put(self, resource):
         self.resources.append(resource)
 
+    def _update(self, resource):
+        r = self._by_id(resource.id)
+        r = resource
+
     def get(self, id):
         return self.resources[id]
 

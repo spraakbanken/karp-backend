@@ -109,10 +109,11 @@ class TestUpdateResource:
         messagebus.handle(
             commands.UpdateResource(
                 resource_id="r1",
+                version=1,
                 name="R1",
                 config={"a": "changed", "b": "added"},
-                message="added",
-                user="user",
+                message="changed",
+                user="bob",
             ),
             uow=uow,
         )

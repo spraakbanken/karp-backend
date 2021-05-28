@@ -32,6 +32,12 @@ class ConstraintsError(DomainError, ValueError):
     pass
 
 
+class ResourceNotFound(DomainError):
+    """Raised when a resource is missing."""
+    def __init__(self, resource, **kwargs):
+        super().__init__(f"Resource '{resource.resource_id}' not found.", **kwargs)
+
+
 class RepositoryError(DomainError):
     def __init__(self, message: str, **kwargs):
         if "code" not in kwargs:

@@ -58,6 +58,7 @@ def handle_command(
 
 EVENT_HANDLERS = {
     events.ResourceCreated: [],
+    events.ResourceUpdated: [],
 }
 
 COMMAND_HANDLERS = {

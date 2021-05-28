@@ -6,6 +6,8 @@ from . import errors, model
 
 
 class Repository(abc.ABC):
+    EntityNotFound = RuntimeError
+
     def __init__(self):
         self.seen = set()
 
@@ -13,8 +15,18 @@ class Repository(abc.ABC):
         self._put(entity)
         self.seen.add(entity)
 
+    def update(self, entity):
+        existing_entity = self.by_id(entity.id)
+        if not existing_entity:
+            raise self.EntityNotFound(entity)
+        self._update(entity)
+
     @abc.abstractmethod
     def _put(self, entity):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _update(self, entity):
         raise NotImplementedError()
 
     def by_id(
@@ -33,6 +45,8 @@ class Repository(abc.ABC):
 
 
 class ResourceRepository(Repository):
+    EntityNotFound = errors.ResourceNotFound
+
     @abc.abstractmethod
     def check_status(self):
         raise errors.RepositoryStatusError()

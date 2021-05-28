@@ -11,6 +11,7 @@ def create_resource(cmd: commands.CreateResource, uow: UnitOfWork):
         name=cmd.name,
         config=cmd.config,
         message=cmd.message,
+        last_modified=cmd.timestamp,
         last_modified_by=cmd.created_by,
     )
 
@@ -25,17 +26,20 @@ def create_resource(cmd: commands.CreateResource, uow: UnitOfWork):
 
 
 def update_resource(cmd: commands.UpdateResource, uow: UnitOfWork):
-    resource = model.Resource(
-        entity_id=cmd.id,
-        resource_id=cmd.resource_id,
-        name=cmd.name,
-        config=cmd.config,
-        message=cmd.message,
-        last_modified_by=cmd.created_by,
-    )
-
     with uow:
         resource = uow.repo.by_resource_id(cmd.resource_id)
-        resource
-        uow.repo.put(resource)
+        found_changes = False
+        if resource.name != cmd.name:
+            resource.name = cmd.name
+            found_changes = True
+        if resource.config != cmd.config:
+            resource.config = cmd.config
+            found_changes = True
+        if found_changes:
+            resource.stamp(
+                user=cmd.user,
+                message=cmd.message,
+                timestamp=cmd.timestamp,
+            )
+            uow.repo.update(resource)
         uow.commit()

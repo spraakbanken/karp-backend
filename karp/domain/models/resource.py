@@ -136,6 +136,9 @@ class Resource(TimestampedVersionedEntity):
                 resource_id=self._resource_id,
                 name=self._name,
                 config=self.config,
+                timestamp=self._last_modified,
+                user=self._last_modified_by,
+                message=self._message,
             )
         )
 
@@ -168,20 +171,40 @@ class Resource(TimestampedVersionedEntity):
             )
         return self._entry_repository
 
-    def stamp(self, *, user: str, message: str = None, increment_version: bool = True):
+    def stamp(
+        self, *,
+        user: str,
+        timestamp: float,
+        message: str = None,
+        increment_version: bool = True
+    ):
         self._check_not_discarded()
-        event = Resource.Stamped(
-            entity_id=self.id,
-            entity_version=self.version,
-            entity_last_modified=self.last_modified,
-            user=user,
-            message=message,
-            increment_version=increment_version,
-        )
-        event.mutate(self)
-        event_handler.publish(event)
 
-    def add_new_release(self, *, name: str, user: str, description: str):
+        self._last_modified = timestamp
+        self._last_modified_by = user
+        self._message = message or "Updated"
+        self._op = ResourceOp.UPDATED
+        if increment_version:
+            self._version += 1
+        self.events.append(
+            events.ResourceUpdated(
+                id=self.id,
+                resource_id=self.resource_id,
+                name=self.name,
+                config=self.config,
+                version=self.version,
+                timestamp=self.last_modified,
+                user=user,
+                message=message,
+            )
+        )
+
+    def add_new_release(
+        self, *,
+        name: str,
+        user: str,
+        description: str
+    ):
         self._check_not_discarded()
         event = Resource.NewReleaseAdded(
             entity_id=self.id,
