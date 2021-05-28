@@ -1,50 +1,51 @@
 from .adapters import FakeUnitOfWork, FakeResourceRepository
-from karp.services import handlers
+from karp.services import messagebus
 from karp.domain import events
 from karp.domain.commands import CreateResource
 from karp.utility.unique_id import make_unique_id
 
 
-def test_create_resource_creates_resource():
-    id_ = make_unique_id()
-    resource_id = "test_resource"
-    resource_name = "Test resource"
-    conf = {
-        "sort": ["baseform"],
-        "fields": {"baseform": {"type": "string", "required": True}},
-    }
-    message = "test_resource added"
-    #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
-    #         resource = create_resource(conf)
+class TestCreateResource:
+    def test_create_resource_creates_resource(self):
+        id_ = make_unique_id()
+        resource_id = "test_resource"
+        resource_name = "Test resource"
+        conf = {
+            "sort": ["baseform"],
+            "fields": {"baseform": {"type": "string", "required": True}},
+        }
+        message = "test_resource added"
+        #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
+        #         resource = create_resource(conf)
 
-    uow = FakeUnitOfWork(FakeResourceRepository())
+        uow = FakeUnitOfWork(FakeResourceRepository())
 
-    cmd = CreateResource(
-        id=id_,
-        resource_id=resource_id,
-        name=resource_name,
-        config=conf,
-        message=message,
-        created_by="kristoff@example.com",
-    )
+        cmd = CreateResource(
+            id=id_,
+            resource_id=resource_id,
+            name=resource_name,
+            config=conf,
+            message=message,
+            created_by="kristoff@example.com",
+        )
 
-    handlers.create_resource(cmd, uow)
+        messagebus.handle(cmd, uow)
 
-    assert len(uow.repo) == 1
+        assert len(uow.repo) == 1
 
-    assert uow.repo[0].id == id_
-    assert uow.repo[0].resource_id == resource_id
+        assert uow.repo[0].id == id_
+        assert uow.repo[0].resource_id == resource_id
 
-    assert uow.repo[0].name == resource_name
+        assert uow.repo[0].name == resource_name
 
-    assert uow.repo[0].config == conf
-    assert uow.repo[0].last_modified_by == "kristoff@example.com"
+        assert uow.repo[0].config == conf
+        assert uow.repo[0].last_modified_by == "kristoff@example.com"
 
-    assert uow.was_committed
+        assert uow.was_committed
 
-    assert uow.repo[0].events[-1] == events.ResourceCreated(
-        id=id_, resource_id=resource_id, name=resource_name, config=conf
-    )
+        # assert uow.repo[0].events[-1] == events.ResourceCreated(
+        #     id=id_, resource_id=resource_id, name=resource_name, config=conf
+        # )
 
     # assert isinstance(resource, Resource)
     # assert resource.id == uuid.UUID(str(resource.id), version=4)

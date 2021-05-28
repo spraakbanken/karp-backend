@@ -1,22 +1,26 @@
-from karp.domain.models.resource import ResourceRepository
+from karp.domain import repository
 from karp.infrastructure.unit_of_work import UnitOfWork
 
 
-class FakeResourceRepository(ResourceRepository):
+class FakeResourceRepository(repository.ResourceRepository):
 
     def __init__(self):
+        super().__init__()
         self.resources = []
 
-    def put(self, resource):
+    def check_status(self):
+        pass
+
+    def _put(self, resource):
         self.resources.append(resource)
 
     def get(self, id):
         return self.resources[id]
 
-    def by_id(self, id):
+    def _by_id(self, id):
         return next((r for r in self.resources if r.id == id), None)
 
-    def by_resource_id(self, resource_id):
+    def _by_resource_id(self, resource_id):
         return next((r for r in self.resources if r.resource_id == resource_id), None)
 
     def __len__(self):
@@ -41,12 +45,12 @@ class FakeUnitOfWork(UnitOfWork):
         self.was_rolled_back = False
         return self
 
-    def __exit__(self, type, value, traceback):
-        self.exn_type = type
-        self.exn = value
-        self.traceback = traceback
+    # def __exit__(self, type, value, traceback):
+    #     self.exn_type = type
+    #     self.exn = value
+    #     self.traceback = traceback
 
-    def commit(self):
+    def _commit(self):
         self.was_committed = True
 
     def rollback(self):

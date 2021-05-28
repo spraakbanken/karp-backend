@@ -1,19 +1,28 @@
 """Unit of Work"""
 import abc
 from functools import singledispatch
+from typing import Iterable
+
+from karp.domain import repository
 
 
 class UnitOfWork(abc.ABC):
-    @abc.abstractmethod
     def __enter__(self) -> "UnitOfWork":
         pass
 
-    @abc.abstractmethod
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.rollback()
+
+    def commit(self):
+        self._commit()
+
+    def collect_new_events(self) -> Iterable:
+        for entity in self.repo.seen:
+            while entity.events:
+                yield entity.events.pop(0)
 
     @abc.abstractmethod
-    def commit(self):
+    def _commit(self):
         pass
 
     @abc.abstractmethod
@@ -22,7 +31,7 @@ class UnitOfWork(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def repo(self):
+    def repo(self) -> repository.Repository:
         pass
 
 
