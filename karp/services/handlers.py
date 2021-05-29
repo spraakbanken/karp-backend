@@ -51,16 +51,27 @@ def update_resource(cmd: commands.UpdateResource, uow: UnitOfWork):
 
 def add_entry(cmd: commands.AddEntry, uow: UnitOfWork):
     with uow:
-        resource = uow.repo.by_resource_id(cmd.resource_id)
-        with unit_of_work(using=resource.entry_repository) as uow2:
-            entry = model.Entry(
-                entity_id=cmd.id,
-                entry_id=cmd.entry_id,
-                body=cmd.body,
-                message=cmd.message,
-                last_modified=cmd.timestamp,
-                last_modified_by=cmd.user,
+        # resource = uow.repo.by_resource_id(cmd.resource_id)
+        # with unit_of_work(using=resource.entry_repository) as uow2:
+        existing_entry = uow.repo.by_entry_id(cmd.entry_id)
+        if (
+            existing_entry
+            and not existing_entry.discarded
+            and existing_entry.id != cmd.id
+        ):
+            raise errors.IntegrityError(
+                f"An entry with entry_id '{cmd.entry_id}' already exists."
             )
-            uow2.repo.put(entry)
-            uow2.commit()
+        entry = model.Entry(
+            entity_id=cmd.id,
+            entry_id=cmd.entry_id,
+            resource_id=cmd.resource_id,
+            body=cmd.body,
+            message=cmd.message,
+            last_modified=cmd.timestamp,
+            last_modified_by=cmd.user,
+        )
+        # uow2.repo.put(entry)
+        # uow2.commit()
+        uow.repo.put(entry)
         uow.commit()

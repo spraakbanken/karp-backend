@@ -16,6 +16,7 @@ class Entity:
         self._id = entity_id
         self._discarded = discarded
         self._root = aggregate_root
+        self.events = []
 
     @property
     def id(self):

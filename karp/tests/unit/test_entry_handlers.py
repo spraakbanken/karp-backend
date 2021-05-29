@@ -19,18 +19,18 @@ class TestAddEntry:
         #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
         #         entry = create_entry(conf)
 
-        uow = FakeUnitOfWork(FakeResourceRepository())
+        uow = FakeUnitOfWork(FakeEntryRepository())
 
-        cmd = commands.CreateResource(
-            id=make_unique_id(),
-            resource_id="test_id",
-            name="Test",
-            config=conf,
-            message=message,
-            created_by="kristoff@example.com",
-            entry_repository_type="fake",
-        )
-        messagebus.handle(cmd, uow)
+        # cmd = commands.CreateResource(
+        #     id=make_unique_id(),
+        #     resource_id="test_id",
+        #     name="Test",
+        #     config=conf,
+        #     message=message,
+        #     created_by="kristoff@example.com",
+        #     entry_repository_type="fake",
+        # )
+        # messagebus.handle(cmd, uow)
 
         cmd = commands.AddEntry(
             resource_id="test_id",
@@ -46,11 +46,11 @@ class TestAddEntry:
 
         assert len(uow.repo) == 1
 
-        resource = uow.repo.by_resource_id("test_id")
+        # resource = uow.repo.by_resource_id("test_id")
 
-        assert len(resource.entry_repository) == 1
+        # assert len(resource.entry_repository) == 1
 
-        entry = resource.entry_repository.by_id(id_)
+        entry = uow.repo.by_id(id_)
         assert entry.id == id_
         assert entry.entry_id == entry_id
 
@@ -60,15 +60,17 @@ class TestAddEntry:
         assert uow.was_committed
 
     def test_create_entry_with_same_entry_id_raises(self):
+        resource_id = "abc"
         uow = FakeUnitOfWork(FakeEntryRepository())
         messagebus.handle(
             commands.AddEntry(
                 id=make_unique_id(),
                 entry_id="r1",
+                resource_id=resource_id,
                 name="R1",
-                config={"fields": {}},
+                body={"fields": {}},
                 message="added",
-                created_by="user",
+                user="user",
             ),
             uow=uow,
         )
@@ -77,10 +79,11 @@ class TestAddEntry:
                 commands.AddEntry(
                     id=make_unique_id(),
                     entry_id="r1",
+                    resource_id=resource_id,
                     name="R1",
-                    config={"fields": {}},
+                    body={"fields": {}},
                     message="added",
-                    created_by="user",
+                    user="user",
                 ),
                 uow=uow,
             )
@@ -108,16 +111,17 @@ class TestAddEntry:
 
 class TestUpdateEntry:
     def test_update_entry(self):
+        resource_id = "abc"
         uow = FakeUnitOfWork(FakeEntryRepository())
         id_ = make_unique_id()
         messagebus.handle(
             commands.AddEntry(
                 id=id_,
                 entry_id="r1",
-                name="R1",
-                config={"a": "b"},
+                resource_id=resource_id,
+                body={"a": "b"},
                 message="added",
-                created_by="user",
+                user="user",
             ),
             uow=uow,
         )
@@ -125,8 +129,8 @@ class TestUpdateEntry:
             commands.UpdateEntry(
                 entry_id="r1",
                 version=1,
-                name="R1",
-                config={"a": "changed", "b": "added"},
+                resource_id=resource_id,
+                body={"a": "changed", "b": "added"},
                 message="changed",
                 user="bob",
             ),
