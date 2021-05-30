@@ -53,6 +53,7 @@ class TestAddEntry:
         entry = uow.repo.by_id(id_)
         assert entry.id == id_
         assert entry.entry_id == entry_id
+        assert entry.resource_id == "test_id"
 
         assert entry.body == conf
         assert entry.last_modified_by == "kristoff@example.com"

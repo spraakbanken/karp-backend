@@ -1,7 +1,7 @@
 # from functools import singledispatch
 
 # from karp.application.config import Config
-from karp.domain.models.resource import ResourceRepository
+from karp.domain import repository  # ResourceRepository
 from karp.domain.models.auth_service import AuthService
 
 # from karp.domain.services.auth.auth import Auth
@@ -11,7 +11,7 @@ from karp.domain.models.search_service import SearchService
 class Context:
     def __init__(
         self,
-        resource_repo: ResourceRepository = None,
+        resource_repo: repository.ResourceRepository = None,
         search_service: SearchService = None,
         auth_service: AuthService = None,
     ):
