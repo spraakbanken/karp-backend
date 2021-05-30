@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 from karp.utility.time import utc_now
 
 # pylint: disable=unsubscriptable-object
+
+
 class Command(BaseModel):
     timestamp: float = Field(default_factory=utc_now)
 
@@ -37,6 +39,14 @@ class UpdateResource(Command):
 class AddEntry(Command):
     resource_id: str
     id: uuid.UUID
+    entry_id: str
+    body: Dict
+    user: str
+    message: str
+
+
+class UpdateEntry(Command):
+    resource_id: str
     entry_id: str
     body: Dict
     user: str

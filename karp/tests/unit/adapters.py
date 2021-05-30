@@ -1,5 +1,6 @@
+from karp import bootstrap
 from karp.domain import repository
-from karp.infrastructure.unit_of_work import UnitOfWork, create_unit_of_work
+from karp.services import unit_of_work
 
 
 class FakeResourceRepository(repository.ResourceRepository):
@@ -61,10 +62,7 @@ class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
         return cls()
 
 
-class FakeUnitOfWork(UnitOfWork):
-    def __init__(self, repo):
-        self._repo = repo
-
+class FakeUnitOfWork(unit_of_work.UnitOfWork):
     def start(self):
         self.was_committed = False
         self.was_rolled_back = False
@@ -86,11 +84,22 @@ class FakeUnitOfWork(UnitOfWork):
     def rollback(self):
         self.was_rolled_back = True
 
+
+class FakeResourceUnitOfWork(FakeUnitOfWork):
+    def __init__(self):
+        self.resources = FakeResourceRepository()
+
     @property
     def repo(self):
         return self._repo
 
 
-@create_unit_of_work.register(FakeEntryRepository)
+@unit_of_work.create_unit_of_work.register(FakeEntryRepository)
 def _(repo: FakeEntryRepository):
     return FakeUnitOfWork(repo)
+
+
+def bootstrap_test_app():
+    return bootstrap.bootstrap(
+        resource_uow=FakeResourceUnitOfWork()
+    )

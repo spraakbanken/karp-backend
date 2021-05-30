@@ -1,6 +1,6 @@
 import pytest
 
-from .adapters import FakeUnitOfWork, FakeResourceRepository
+from .adapters import bootstrap_test_app
 from karp.services import messagebus
 from karp.domain import events, errors, commands
 from karp.utility.unique_id import make_unique_id
@@ -8,6 +8,7 @@ from karp.utility.unique_id import make_unique_id
 
 class TestCreateResource:
     def test_create_resource(self):
+        bus = bootstrap_test_app()
         id_ = make_unique_id()
         resource_id = "test_resource"
         resource_name = "Test resource"
@@ -19,7 +20,7 @@ class TestCreateResource:
         #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
         #         resource = create_resource(conf)
 
-        uow = FakeUnitOfWork(FakeResourceRepository())
+        # uow = FakeUnitOfWork(FakeResourceRepository())
 
         cmd = commands.CreateResource(
             id=id_,
@@ -30,11 +31,11 @@ class TestCreateResource:
             created_by="kristoff@example.com",
         )
 
-        messagebus.handle(cmd, uow)
+        bus.handle(cmd)
 
-        assert len(uow.repo) == 1
+        assert len(bus.resource_uow.resources) == 1
 
-        resource = uow.repo.by_id(id_)
+        resource = bus.resource_uow.resources.by_id(id_)
         assert resource.id == id_
         assert resource.resource_id == resource_id
 
@@ -43,11 +44,12 @@ class TestCreateResource:
         assert resource.config == conf
         assert resource.last_modified_by == "kristoff@example.com"
 
-        assert uow.was_committed
+        assert bus.resource_uow.was_committed
 
     def test_create_resource_with_same_resource_id_raises(self):
-        uow = FakeUnitOfWork(FakeResourceRepository())
-        messagebus.handle(
+        # uow = FakeUnitOfWork(FakeResourceRepository())
+        bus = bootstrap_test_app()
+        bus.handle(
             commands.CreateResource(
                 id=make_unique_id(),
                 resource_id="r1",
@@ -56,10 +58,9 @@ class TestCreateResource:
                 message="added",
                 created_by="user",
             ),
-            uow=uow,
         )
         with pytest.raises(errors.IntegrityError):
-            messagebus.handle(
+            bus.handle(
                 commands.CreateResource(
                     id=make_unique_id(),
                     resource_id="r1",
@@ -68,7 +69,6 @@ class TestCreateResource:
                     message="added",
                     created_by="user",
                 ),
-                uow=uow,
             )
         # assert uow.repo[0].events[-1] == events.ResourceCreated(
         #     id=id_, resource_id=resource_id, name=resource_name, config=conf
@@ -94,9 +94,10 @@ class TestCreateResource:
 
 class TestUpdateResource:
     def test_update_resource(self):
-        uow = FakeUnitOfWork(FakeResourceRepository())
+        bus = bootstrap_test_app()
+        # uow = FakeUnitOfWork(FakeResourceRepository())
         id_ = make_unique_id()
-        messagebus.handle(
+        bus.handle(
             commands.CreateResource(
                 id=id_,
                 resource_id="r1",
@@ -104,10 +105,9 @@ class TestUpdateResource:
                 config={"a": "b"},
                 message="added",
                 created_by="user",
-            ),
-            uow=uow,
+            )
         )
-        messagebus.handle(
+        bus.handle(
             commands.UpdateResource(
                 resource_id="r1",
                 version=1,
@@ -116,11 +116,11 @@ class TestUpdateResource:
                 message="changed",
                 user="bob",
             ),
-            uow=uow,
         )
 
-        resource = uow.repo.by_id(id_)
+        resource = bus.resource_uow.resources.by_id(id_)
         assert resource is not None
         assert resource.config["a"] == "changed"
         assert resource.config["b"] == "added"
         assert resource.version == 2
+        assert bus.resource_uow.was_committed

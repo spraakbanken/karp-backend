@@ -1,6 +1,6 @@
 import pytest
 
-from .adapters import FakeUnitOfWork, FakeEntryRepository, FakeResourceRepository
+from .adapters import FakeUnitOfWork, FakeEntryRepository, FakeResourceRepository, bootstrap_test_app
 from karp.services import messagebus
 from karp.domain import events, errors, commands
 from karp.utility.unique_id import make_unique_id
@@ -8,6 +8,7 @@ from karp.utility.unique_id import make_unique_id
 
 class TestAddEntry:
     def test_add_entry(self):
+        bus = bootstrap_test_app()
         id_ = make_unique_id()
         entry_id = "test_entry"
         entry_name = "Test entry"
@@ -19,7 +20,7 @@ class TestAddEntry:
         #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
         #         entry = create_entry(conf)
 
-        uow = FakeUnitOfWork(FakeEntryRepository())
+        # uow = FakeUnitOfWork(FakeEntryRepository())
 
         # cmd = commands.CreateResource(
         #     id=make_unique_id(),
@@ -42,9 +43,9 @@ class TestAddEntry:
             user="kristoff@example.com",
         )
 
-        messagebus.handle(cmd, uow)
+        bus.handle(cmd)
 
-        assert len(uow.repo) == 1
+        assert len(bus.resource_uow.resources) == 1
 
         # resource = uow.repo.by_resource_id("test_id")
 

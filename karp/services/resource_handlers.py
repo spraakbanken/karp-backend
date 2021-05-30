@@ -12,14 +12,16 @@ import fastjsonschema  # pyre-ignore
 
 from sb_json_tools import jsondiff
 
+from karp.domain import commands, model
+from . import context
 from karp.domain.models.resource import Resource
-from karp.domain.services import indexing
+# from karp.domain.services import indexing
 
 from karp import errors
 
 from karp.application import ctx
 
-from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.infrastructure.unit_of_work import unit_of_work
 
 # from karp import get_resource_string
 # from karp.database import db
@@ -168,6 +170,31 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 
 # def update_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
 #     return update_resource(config_file)
+
+
+def create_resource(
+    cmd: commands.CreateResource,
+    ctx: context.Context
+):
+    with ctx.resource_uow as uow:
+        existing_resource = uow.resources.by_resource_id(cmd.resource_id)
+        if existing_resource and existing_resource.id != cmd.id:
+            raise errors.IntegrityError(
+                f"Resource with '{cmd.resource_id}' already exists."
+            )
+        resource = model.Resource(
+            entity_id=cmd.id,
+            resource_id=cmd.resource_id,
+            name=cmd.name,
+            config=cmd.config,
+            message=cmd.message,
+            last_modified=cmd.timestamp,
+            last_modified_by=cmd.created_by,
+            entry_repository_type=cmd.entry_repository_type,
+        )
+        uow.resources.put(resource)
+        uow.commit()
+
 
 
 def create_new_resource(config_file: IO, config_dir=None) -> Resource:
