@@ -33,9 +33,9 @@ class TestCreateResource:
 
         bus.handle(cmd)
 
-        assert len(bus.resource_uow.resources) == 1
+        assert len(bus.ctx.resource_uow.resources) == 1
 
-        resource = bus.resource_uow.resources.by_id(id_)
+        resource = bus.ctx.resource_uow.resources.by_id(id_)
         assert resource.id == id_
         assert resource.resource_id == resource_id
 
@@ -44,7 +44,7 @@ class TestCreateResource:
         assert resource.config == conf
         assert resource.last_modified_by == "kristoff@example.com"
 
-        assert bus.resource_uow.was_committed
+        assert bus.ctx.resource_uow.was_committed
 
     def test_create_resource_with_same_resource_id_raises(self):
         # uow = FakeUnitOfWork(FakeResourceRepository())
@@ -118,9 +118,9 @@ class TestUpdateResource:
             ),
         )
 
-        resource = bus.resource_uow.resources.by_id(id_)
+        resource = bus.ctx.resource_uow.resources.by_id(id_)
         assert resource is not None
         assert resource.config["a"] == "changed"
         assert resource.config["b"] == "added"
         assert resource.version == 2
-        assert bus.resource_uow.was_committed
+        assert bus.ctx.resource_uow.was_committed

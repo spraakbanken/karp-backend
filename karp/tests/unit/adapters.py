@@ -1,3 +1,4 @@
+from typing import List
 from karp import bootstrap
 from karp.domain import repository
 from karp.services import unit_of_work
@@ -62,7 +63,7 @@ class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
         return cls()
 
 
-class FakeUnitOfWork(unit_of_work.UnitOfWork):
+class FakeUnitOfWork:
     def start(self):
         self.was_committed = False
         self.was_rolled_back = False
@@ -85,13 +86,22 @@ class FakeUnitOfWork(unit_of_work.UnitOfWork):
         self.was_rolled_back = True
 
 
-class FakeResourceUnitOfWork(FakeUnitOfWork):
+class FakeEntryUnitOfWork(FakeUnitOfWork, unit_of_work.EntryUnitOfWork):
     def __init__(self):
-        self.resources = FakeResourceRepository()
+        self._entries = FakeEntryRepository()
 
     @property
-    def repo(self):
-        return self._repo
+    def entries(self) -> repository.EntryRepository:
+        return self._entries
+
+
+class FakeResourceUnitOfWork(FakeUnitOfWork, unit_of_work.ResourceUnitOfWork):
+    def __init__(self):
+        self._resources = FakeResourceRepository()
+
+    @property
+    def resources(self) -> repository.ResourceRepository:
+        return self._resources
 
 
 @unit_of_work.create_unit_of_work.register(FakeEntryRepository)
@@ -99,7 +109,8 @@ def _(repo: FakeEntryRepository):
     return FakeUnitOfWork(repo)
 
 
-def bootstrap_test_app():
+def bootstrap_test_app(entry_uow_keys: List[str] = None):
     return bootstrap.bootstrap(
-        resource_uow=FakeResourceUnitOfWork()
+        resource_uow=FakeResourceUnitOfWork(),
+        entry_uows={key: FakeEntryUnitOfWork() for key in entry_uow_keys or []},
     )

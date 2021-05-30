@@ -22,15 +22,18 @@ from karp.errors import (
     EntryIdMismatch,
 )
 
+from karp.domain import commands, model, errors
 from karp.domain.models.entry import Entry
-from karp.domain.services import indexing
+from . import context
+
+# from karp.domain.services import indexing
 
 # from karp.database import db
 # import karp.indexmgr as indexmgr
 # import karp.resourcemgr.entrymetadata as entrymetadata
-from karp.application import ctx
+# from karp.application import ctx
 
-from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.infrastructure.unit_of_work import unit_of_work
 
 
 _logger = logging.getLogger("karp")
@@ -248,6 +251,34 @@ def add_entry(
         message=message,
         resource_version=resource_version,
     )[0]
+
+
+def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):
+    with ctx.entry_uows[cmd.resource_id] as uow:
+        # resource = uow.repo.by_resource_id(cmd.resource_id)
+        # with unit_of_work(using=resource.entry_repository) as uow2:
+        existing_entry = uow.repo.by_entry_id(cmd.entry_id)
+        if (
+            existing_entry
+            and not existing_entry.discarded
+            and existing_entry.id != cmd.id
+        ):
+            raise errors.IntegrityError(
+                f"An entry with entry_id '{cmd.entry_id}' already exists."
+            )
+        entry = model.Entry(
+            entity_id=cmd.id,
+            entry_id=cmd.entry_id,
+            resource_id=cmd.resource_id,
+            body=cmd.body,
+            message=cmd.message,
+            last_modified=cmd.timestamp,
+            last_modified_by=cmd.user,
+        )
+        # uow2.repo.put(entry)
+        # uow2.commit()
+        uow.repo.put(entry)
+        uow.commit()
 
 
 #

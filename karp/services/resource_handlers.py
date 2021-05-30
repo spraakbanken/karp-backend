@@ -12,14 +12,15 @@ import fastjsonschema  # pyre-ignore
 
 from sb_json_tools import jsondiff
 
-from karp.domain import commands, model
+from karp.domain import commands, model, errors
 from . import context
 from karp.domain.models.resource import Resource
+
 # from karp.domain.services import indexing
 
-from karp import errors
+# from karp import errors
 
-from karp.application import ctx
+# from karp.application import ctx
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 
@@ -160,6 +161,7 @@ def check_resource_published(resource_ids: List[str]) -> None:
 def create_new_resource_from_file(config_file: IO) -> Resource:
     return create_new_resource(config_file)
 
+
 def create_resource_from_path(config: Path) -> List[Resource]:
     return []
 
@@ -172,10 +174,7 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 #     return update_resource(config_file)
 
 
-def create_resource(
-    cmd: commands.CreateResource,
-    ctx: context.Context
-):
+def create_resource(cmd: commands.CreateResource, ctx: context.Context):
     with ctx.resource_uow as uow:
         existing_resource = uow.resources.by_resource_id(cmd.resource_id)
         if existing_resource and existing_resource.id != cmd.id:
@@ -194,7 +193,6 @@ def create_resource(
         )
         uow.resources.put(resource)
         uow.commit()
-
 
 
 def create_new_resource(config_file: IO, config_dir=None) -> Resource:
@@ -269,6 +267,26 @@ def create_new_resource(config_file: IO, config_dir=None) -> Resource:
 #                 config["fields"][field_name] = field_conf
 
 #     return config
+
+
+def update_resource(cmd: commands.UpdateResource, ctx: context.Context):
+    with ctx.resource_uow as uow:
+        resource = uow.repo.by_resource_id(cmd.resource_id)
+        found_changes = False
+        if resource.name != cmd.name:
+            resource.name = cmd.name
+            found_changes = True
+        if resource.config != cmd.config:
+            resource.config = cmd.config
+            found_changes = True
+        if found_changes:
+            resource.stamp(
+                user=cmd.user,
+                message=cmd.message,
+                timestamp=cmd.timestamp,
+            )
+            uow.repo.update(resource)
+        uow.commit()
 
 
 # def update_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:

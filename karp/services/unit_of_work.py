@@ -8,7 +8,7 @@ from karp.domain import repository
 
 class UnitOfWork(abc.ABC):
     def __enter__(self) -> "UnitOfWork":
-        pass
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.rollback()
@@ -33,6 +33,39 @@ class UnitOfWork(abc.ABC):
     @abc.abstractmethod
     def repo(self) -> repository.Repository:
         pass
+
+
+class ResourceUnitOfWork(UnitOfWork):
+    @property
+    @abc.abstractmethod
+    def resources(self) -> repository.ResourceRepository:
+        pass
+
+    @property
+    def repo(self):
+        return self.resources
+
+
+class EntryUnitOfWork(UnitOfWork):
+    @property
+    @abc.abstractmethod
+    def entries(self) -> repository.EntryRepository:
+        pass
+
+    @property
+    def repo(self):
+        return self.entries
+
+
+class EntriesUnitOfWork(UnitOfWork):
+    @property
+    @abc.abstractmethod
+    def entries(self) -> repository.EntryRepository:
+        pass
+
+    @property
+    def repo(self):
+        return self.entries
 
 
 def unit_of_work(*, using, **kwargs) -> UnitOfWork:

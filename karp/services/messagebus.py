@@ -17,11 +17,10 @@ logger = logging.getLogger("karp")
 class MessageBus:
     def __init__(
         self,
-        resource_uow: unit_of_work.ResourceUnitOfWork
+        resource_uow: unit_of_work.ResourceUnitOfWork,
+        entry_uows: unit_of_work.EntriesUnitOfWork,
     ):
-        self.ctx = context.Context(
-            resource_uow=resource_uow
-        )
+        self.ctx = context.Context(resource_uow=resource_uow, entry_uows=entry_uows)
         self.queue = []
 
     def handle(self, message: Message):
@@ -64,6 +63,6 @@ EVENT_HANDLERS = {
 COMMAND_HANDLERS = {
     commands.CreateResource: resource_handlers.create_resource,
     commands.UpdateResource: resource_handlers.update_resource,
-    commands.AddEntry: entry_handlers.add_entry,
+    commands.AddEntry: entry_handlers.add_entry_tmp,
     commands.UpdateEntry: entry_handlers.update_entry,
 }
