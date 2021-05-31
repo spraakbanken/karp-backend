@@ -1,10 +1,13 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, SecurityScopes
 
-from karp.application import ctx
+from karp import bootstrap
 
 # from karp.auth.auth import auth
 from karp.errors import ClientErrorCodes, KarpError
+
+
+bus = bootstrap.bootstrap()
 
 
 auth_scheme = HTTPBearer()
@@ -25,8 +28,8 @@ def get_current_user(
         # code=ClientErrorCodes.NOT_PERMITTED,
     )
     try:
-        print("webapp.views.get_current_user: Calling auth_service")
-        user = ctx.auth_service.authenticate(
+        print("webapp.app_config.get_current_user: Calling auth_service")
+        user = bus.ctx.auth_service.authenticate(
             credentials.scheme, credentials.credentials
         )
         if user is None:
