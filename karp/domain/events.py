@@ -27,3 +27,13 @@ class ResourceUpdated(Event):
     config: Dict
     user: str
     message: str
+
+
+@dataclass
+class EntryAdded(Event):
+    id: uuid.UUID
+    resource_id: str
+    entry_id: str
+    body: Dict
+    message: str
+    user: str

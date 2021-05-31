@@ -7,7 +7,7 @@ from typing import Dict, Optional, List, Tuple
 from uuid import UUID
 from abc import abstractclassmethod
 
-from karp.domain import constraints
+from karp.domain import constraints, events
 from karp.domain.errors import ConfigurationError
 from karp.domain.common import _now, _unknown_user
 from karp.domain.models import event_handler
@@ -59,6 +59,15 @@ class Entry(TimestampedVersionedEntity):
         self.resource_id = resource_id
         self._status = status
         self.resource_id = resource_id
+        self.publish(events.EntryAdded(
+            resource_id=resource_id,
+            id=self.id,
+            entry_id=self.entry_id,
+            body=self.body,
+            message=self.message,
+            user=self.last_modified_by,
+            timestamp=self.last_modified,
+        ))
 
     @property
     def entry_id(self):

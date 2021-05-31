@@ -18,6 +18,9 @@ class Entity:
         self._root = aggregate_root
         self.events = []
 
+    def publish(self, event):
+        self.events.append(event)
+
     @property
     def id(self):
         """A unique identifier for the entity."""
