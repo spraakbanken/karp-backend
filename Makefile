@@ -84,11 +84,15 @@ test: unit-tests
 run-all-tests: unit-tests run-integration-tests
 run-all-tests-w-coverage: run-unit-tests-w-coverage run-integration-tests-w-coverage
 
-.PHONY: unit-tests 
+.PHONY: unit-tests
 unit-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/unit
 
-.PHONY: integration-tests 
+.PHONY: e2e-tests
+e2e-tests: install-dev clean-pyc
+	${INVENV} pytest -vv karp/tests/e2e
+
+.PHONY: integration-tests
 integration-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/integration
 
