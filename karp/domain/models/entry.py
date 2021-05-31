@@ -133,6 +133,8 @@ def create_entry(
     entry_id: str,
     body: Dict,
     *,
+    entity_id: unique_id.UniqueId,
+    resource_id: str,
     last_modified_by: str = None,
     message: Optional[str] = None,
 ) -> Entry:
@@ -144,9 +146,11 @@ def create_entry(
         message="Entry added." if not message else message,
         status=EntryStatus.IN_PROGRESS,
         op=EntryOp.ADDED,
-        entity_id=unique_id.make_unique_id(),
+        # entity_id=unique_id.make_unique_id(),
         version=1,
         last_modified_by="Unknown user" if not last_modified_by else last_modified_by,
+        resource_id=resource_id,
+        entity_id=entity_id,
     )
     return entry
 

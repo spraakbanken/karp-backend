@@ -251,15 +251,22 @@ class Resource(TimestampedVersionedEntity):
         return create_field_getter(self.config["id"], str)
 
     def create_entry_from_dict(
-        self, entry_raw: Dict, *, user: str, message: Optional[str] = None
+        self,
+        entry_raw: Dict,
+        *,
+        user: str,
+        entity_id: unique_id.UniqueId,
+        message: Optional[str] = None,
     ) -> Entry:
         self._check_not_discarded()
         id_getter = self.id_getter()
         return create_entry(
             id_getter(entry_raw),
             entry_raw,
+            resource_id=self.resource_id,
             last_modified_by=user,
             message=message,
+            entity_id=entity_id,
         )
 
     def is_protected(self, level: PermissionLevel):

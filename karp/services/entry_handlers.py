@@ -238,19 +238,37 @@ def get_entry_history(resource_id: str, entry_id: str, version: int):
 
 
 def add_entry(
-    resource_id: str,
-    entry: Dict,
-    user_id: str,
-    message: str = None,
-    resource_version: int = None,
+    cmd: commands.AddEntry,
+    ctx: context.Context,
 ) -> Entry:
-    return add_entries(
-        resource_id,
-        [entry],
-        user_id,
-        message=message,
-        resource_version=resource_version,
-    )[0]
+    print(f"event_handlers.add_entry: cmd = {cmd}")
+    with ctx.resource_uow:
+        resource = ctx.resource_uow.resources.by_resource_id(cmd.resource_id)
+
+    if not resource:
+        raise errors.ResourceNotFound(cmd.resource_id)
+
+    validate_entry = _compile_schema(resource.entry_json_schema)
+
+    with ctx.entry_uows.get(cmd.resource_id) as uw:
+        existing_entry = uw.repo.by_entry_id(cmd.entry_id)
+        if (
+            existing_entry
+            and not existing_entry.discarded
+            and existing_entry.id != cmd.id
+        ):
+            raise errors.IntegrityError(
+                f"An entry with entry_id '{cmd.entry_id}' already exists."
+            )
+
+        _validate_entry(validate_entry, cmd.entry)
+
+        entry = resource.create_entry_from_dict(
+            cmd.entry, user=cmd.user, message=cmd.message, entity_id=cmd.id
+        )
+        uw.entries.put(entry)
+        uw.commit()
+    return entry
 
 
 def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):
@@ -335,9 +353,9 @@ def update_entry(
         current_db_entry.stamp(cmd.user, message=cmd.message)
         if new_entry_id != cmd.entry_id:
             current_db_entry.entry_id = new_entry_id
-            uw.move(current_db_entry, old_entry_id=cmd.entry_id)
+            uw.entries.move(current_db_entry, old_entry_id=cmd.entry_id)
         else:
-            uw.update(current_db_entry)
+            uw.entries.update(current_db_entry)
         uw.commit()
     # if resource.is_published:
     #     if new_entry_id != entry_id:
@@ -365,11 +383,8 @@ def add_entries_from_file(
 
 
 def add_entries(
-    resource_id: str,
-    entries: List[Dict],
-    user_id: str,
-    message: str = None,
-    resource_version: int = None,
+    cmd: commands.AddEntries,
+    ctx: context.Context,
 ) -> List[Entry]:
     """
     Add entries to DB and INDEX (if present and resource is active).
@@ -387,37 +402,42 @@ def add_entries(
     List
         List of the id's of the created entries.
     """
-    if not isinstance(resource_id, str):
-        raise ValueError(
-            f"'resource_id' must be of type 'str', were '{type(resource_id)}'"
-        )
-    with unit_of_work(using=ctx.resource_repo) as uw:
-        resource = uw.by_resource_id(resource_id)
+    print(f"event_handlers.add_entries: cmd = {cmd}")
 
+    if not isinstance(cmd.resource_id, str):
+        raise ValueError(
+            f"'resource_id' must be of type 'str', were '{type(cmd.resource_id)}'"
+        )
+    with ctx.resource_uow:
+        resource = ctx.resource_uow.resources.by_resource_id(cmd.resource_id)
+
+    if not resource:
+        raise errors.ResourceNotFound(cmd.resource_id)
     # resource = get_resource(resource_id, version=resource_version)
     # resource_conf = resource.config
 
     validate_entry = _compile_schema(resource.entry_json_schema)
 
     created_db_entries = []
-    with unit_of_work(using=resource.entry_repository) as uw:
-        for entry_raw in entries:
+    with ctx.entry_uows.get(cmd.resource_id) as uw:
+        for entry_raw, id in zip(cmd.entries, cmd.ids):
             _validate_entry(validate_entry, entry_raw)
 
             entry = resource.create_entry_from_dict(
-                entry_raw, user=user_id, message=message
+                entry_raw, user=cmd.user, message=cmd.message, entity_id=id
             )
-            uw.put(entry)
+            uw.entries.put(entry)
             created_db_entries.append(entry)
+        uw.commit()
 
-    if resource.is_published:
-        print(f"services.entries.add_entries: indexing entries ...")
-        indexing.add_entries(
-            ctx.resource_repo,
-            ctx.search_service,
-            resource,
-            created_db_entries,
-        )
+    # if resource.is_published:
+    #     print(f"services.entries.add_entries: indexing entries ...")
+    #     indexing.add_entries(
+    #         ctx.resource_repo,
+    #         ctx.search_service,
+    #         resource,
+    #         created_db_entries,
+    #     )
 
     return created_db_entries
 

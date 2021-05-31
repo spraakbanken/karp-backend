@@ -1,3 +1,4 @@
+from typing import Dict, Optional
 import pytest
 
 from .adapters import bootstrap_test_app
@@ -6,21 +7,39 @@ from karp.domain import events, errors, commands
 from karp.utility.unique_id import make_unique_id
 
 
-def make_create_resource_command(resource_id: str) -> commands.CreateResource:
+def make_create_resource_command(
+    resource_id: str, config: Optional[Dict] = None
+) -> commands.CreateResource:
+    config = config or {
+        "fields": {},
+        "id": "id",
+    }
     return commands.CreateResource(
         id=make_unique_id(),
         resource_id=resource_id,
         name=resource_id.upper(),
-        config={
-            "fields": {},
-            "id": "id",
-        },
+        config=config,
         message="create resource",
         created_by="kristoff@example.com",
     )
 
 
 class TestAddEntry:
+    def test_cannot_add_entry_to_nonexistent_resource(self):
+        bus = bootstrap_test_app()
+        with pytest.raises(errors.ResourceNotFound):
+            bus.handle(
+                commands.AddEntry(
+                    id=make_unique_id(),
+                    resource_id="non_existent",
+                    entry_id="a",
+                    version=3,
+                    entry={},
+                    user="kristoff@example.com",
+                    message="update",
+                )
+            )
+
     def test_add_entry(self):
         resource_id = "test_id"
         bus = bootstrap_test_app([resource_id])
@@ -30,6 +49,7 @@ class TestAddEntry:
         conf = {
             "sort": ["baseform"],
             "fields": {"baseform": {"type": "string", "required": True}},
+            "id": "baseform",
         }
         message = "test_entry added"
         #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
@@ -37,23 +57,24 @@ class TestAddEntry:
 
         # uow = FakeUnitOfWork(FakeEntryRepository())
 
-        cmd = commands.CreateResource(
-            id=make_unique_id(),
-            resource_id=resource_id,
-            name="Test",
-            config=conf,
-            message=message,
-            created_by="kristoff@example.com",
-            entry_repository_type="fake",
-        )
-        bus.handle(cmd)
+        # cmd = commands.CreateResource(
+        #     id=make_unique_id(),
+        #     resource_id=resource_id,
+        #     name="Test",
+        #     config=conf,
+        #     message=message,
+        #     created_by="kristoff@example.com",
+        #     entry_repository_type="fake",
+        # )
+        # bus.handle(cmd)
+        bus.handle(make_create_resource_command(resource_id, config=conf))
 
         cmd = commands.AddEntry(
             resource_id=resource_id,
             id=id_,
             entry_id=entry_id,
             name=entry_name,
-            body=conf,
+            entry={"baseform": entry_id},
             message=message,
             user="kristoff@example.com",
         )
@@ -72,7 +93,7 @@ class TestAddEntry:
         assert entry.entry_id == entry_id
         assert entry.resource_id == "test_id"
 
-        assert entry.body == conf
+        assert entry.body == {"baseform": entry_id}
         assert entry.last_modified_by == "kristoff@example.com"
 
         assert uow.was_committed
@@ -80,13 +101,14 @@ class TestAddEntry:
     def test_create_entry_with_same_entry_id_raises(self):
         resource_id = "abc"
         bus = bootstrap_test_app([resource_id])
+        bus.handle(make_create_resource_command(resource_id))
         bus.handle(
             commands.AddEntry(
                 id=make_unique_id(),
                 entry_id="r1",
                 resource_id=resource_id,
                 name="R1",
-                body={"fields": {}},
+                entry={"id": "r1"},
                 message="added",
                 user="user",
             ),
@@ -98,7 +120,7 @@ class TestAddEntry:
                     entry_id="r1",
                     resource_id=resource_id,
                     name="R1",
-                    body={"fields": {}},
+                    entry={"id": "r1"},
                     message="added",
                     user="user",
                 ),
@@ -134,11 +156,9 @@ class TestUpdateEntry:
         bus.handle(
             commands.AddEntry(
                 id=id_,
+                entry_id="r1",
                 resource_id=resource_id,
-                body={
-                    "id": "r1",
-                    "a": "b"
-                },
+                entry={"id": "r1", "a": "b"},
                 message="added",
                 user="user",
             ),
@@ -148,7 +168,7 @@ class TestUpdateEntry:
                 entry_id="r1",
                 version=1,
                 resource_id=resource_id,
-                entry={"a": "changed", "b": "added"},
+                entry={"id": "r1", "a": "changed", "b": "added"},
                 message="changed",
                 user="bob",
             ),
@@ -157,8 +177,8 @@ class TestUpdateEntry:
         uow = bus.ctx.entry_uows.get(resource_id)
         entry = uow.repo.by_id(id_)
         assert entry is not None
-        assert entry.config["a"] == "changed"
-        assert entry.config["b"] == "added"
+        assert entry.body["a"] == "changed"
+        assert entry.body["b"] == "added"
         assert entry.version == 2
         assert uow.was_committed
 
