@@ -131,7 +131,7 @@ class EntryRepository(Repository):
         return cls._registry[None]
 
     @classmethod
-    def create(cls, repository_type: Optional[str], settings: Dict):
+    def create(cls, repository_type: Optional[str], settings: Dict, **kwargs):
         print(f"_registry={cls._registry}")
         if repository_type is None:
             repository_type = cls._registry[None]
@@ -141,7 +141,8 @@ class EntryRepository(Repository):
             raise errors.ConfigurationError(
                 f"Can't create an EntryRepository with type '{repository_type}'"
             )
-        return repository_cls.from_dict(settings)
+        print(f"kwargs = {kwargs}")
+        return repository_cls.from_dict(settings, **kwargs)
 
     @classmethod
     def create_repository_settings(

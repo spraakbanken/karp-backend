@@ -10,11 +10,12 @@ import regex
 from karp.domain.models.entry import (
     Entry,
     EntryOp,
-    EntryRepositorySettings,
+    # EntryRepositorySettings,
     EntryStatus,
-    EntryRepository,
-    create_entry_repository,
+    # EntryRepository,
+    # create_entry_repository,
 )
+from karp.domain import repository
 
 from karp.infrastructure.sql import db
 from karp.infrastructure.sql import sql_models
@@ -31,23 +32,33 @@ NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 
 
 class SqlEntryRepository(
-    EntryRepository, SqlRepository, repository_type="sql_v1", is_default=True
+    repository.EntryRepository, SqlRepository, repository_type="sql_v1", is_default=True
 ):
     def __init__(
         self,
         history_model,
         # runtime_model,
         resource_config: Dict,
+        resource_id: str,
         # mapped_class: Any
+        session=None,
     ):
         super().__init__()
         self.history_model = history_model
         # self.runtime_model = runtime_model
         self.resource_config = resource_config
         # self.mapped_class = mapped_class
+        self._session = session
+        self.resource_id = resource_id
 
     @classmethod
-    def from_dict(cls, settings: Dict):
+    def from_dict(
+        cls,
+        settings: Dict,
+        *,
+        resource_id: str,
+        session=None,
+    ):
         try:
             table_name = settings["table_name"]
         except KeyError:
@@ -66,6 +77,8 @@ class SqlEntryRepository(
         #         runtime_table_name, history_model, settings["config"]
         #     )
 
+        if session:
+            history_model.__table__.create(bind=session.bind, checkfirst=True)
         # runtime_table.create(bind=db.engine, checkfirst=True)
         # runtime_model = sql_models.get_or_create_entry_runtime_model(
         #     table_name, history_model, settings["config"]
@@ -74,13 +87,15 @@ class SqlEntryRepository(
             history_model=history_model,
             # runtime_model=runtime_model,
             resource_config=settings["config"],
+            resource_id=resource_id,
+            session=session,
         )
 
     @classmethod
     def _create_repository_settings(cls, resource_id: str) -> Dict:
         return {"table_name": resource_id}
 
-    def put(self, entry: Entry):
+    def _put(self, entry: Entry):
         self._check_has_session()
 
         history_id = self._insert_history(entry)
@@ -91,34 +106,35 @@ class SqlEntryRepository(
         # try:
         #     return self._session.add(runtime_entry)
         # except db.exc.IntegrityError as exc:
-            # logger.exception(exc)
-#             match = DUPLICATE_PROG.search(str(exc))
-#             if match:
-#                 value = match.group(1)
-#                 key = match.group(2)
-#                 if key == "PRIMARY":
-#                     key = "entry_id"
-#             else:
-#                 value = "UNKNOWN"
-#                 key = "UNKNOWN"
-#             raise errors.IntegrityError(key=key, value=value) from exc
+        # logger.exception(exc)
 
-    def update(self, entry: Entry):
+    #             match = DUPLICATE_PROG.search(str(exc))
+    #             if match:
+    #                 value = match.group(1)
+    #                 key = match.group(2)
+    #                 if key == "PRIMARY":
+    #                     key = "entry_id"
+    #             else:
+    #                 value = "UNKNOWN"
+    #                 key = "UNKNOWN"
+    #             raise errors.IntegrityError(key=key, value=value) from exc
+
+    def _update(self, entry: Entry):
         self._check_has_session()
         history_id = self._insert_history(entry)
 
-#         current_db_entry = (
-#             self._session.query(self.runtime_model)
-#             .filter_by(entry_id=entry.entry_id)
-#             .first()
-#         )
-#
-#         if not current_db_entry:
-#             raise errors.EntryNotFoundError("", entry.entry_id)
-#
-#         runtime_dict = self._entry_to_runtime_dict(history_id, entry)
-#         for key, value in runtime_dict.items():
-#             setattr(current_db_entry, key, value)
+    #         current_db_entry = (
+    #             self._session.query(self.runtime_model)
+    #             .filter_by(entry_id=entry.entry_id)
+    #             .first()
+    #         )
+    #
+    #         if not current_db_entry:
+    #             raise errors.EntryNotFoundError("", entry.entry_id)
+    #
+    #         runtime_dict = self._entry_to_runtime_dict(history_id, entry)
+    #         for key, value in runtime_dict.items():
+    #             setattr(current_db_entry, key, value)
 
     @classmethod
     def primary_key(cls):
@@ -173,11 +189,11 @@ class SqlEntryRepository(
 
     def entry_ids(self) -> List[str]:
         self._check_has_session()
-        query = self._session.query(self.runtime_model).filter_by(discarded=False)
+        query = self._session.query(self.history_model).filter_by(discarded=False)
         return [row.entry_id for row in query.all()]
         # return [row.entry_id for row in query.filter_by(discarded=False).all()]
 
-    def by_entry_id(
+    def _by_entry_id(
         self, entry_id: str, *, version: Optional[int] = None
     ) -> Optional[Entry]:
         self._check_has_session()
@@ -194,7 +210,7 @@ class SqlEntryRepository(
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
-    def by_id(
+    def _by_id(
         self,
         id: str,
         *,
@@ -234,13 +250,13 @@ class SqlEntryRepository(
     def teardown(self):
         """Use for testing purpose."""
         print("starting teardown")
-#         for child_model in self.runtime_model.child_tables.values():
-#             print(f"droping child_model {child_model} ...")
-#             child_model.__table__.drop(bind=db.engine)
-#         print("droping runtime_model ...")
-#         self.runtime_model.__table__.drop(bind=db.engine)
+        #         for child_model in self.runtime_model.child_tables.values():
+        #             print(f"droping child_model {child_model} ...")
+        #             child_model.__table__.drop(bind=db.engine)
+        #         print("droping runtime_model ...")
+        #         self.runtime_model.__table__.drop(bind=db.engine)
         print("droping history_model ...")
-        self.history_model.__table__.drop(bind=db.engine)
+        self.history_model.__table__.drop(bind=self._session.bind)
         print("dropped history_model")
 
         # db.metadata.drop_all(
@@ -396,6 +412,7 @@ class SqlEntryRepository(
             last_modified_by=row.last_modified_by,
             discarded=row.discarded,
             version=row.version,
+            resource_id=self.resource_id,
         )
 
     def _entry_to_runtime_dict(self, history_id: int, entry: Entry) -> Dict:
@@ -421,19 +438,19 @@ class SqlEntryRepository(
 
 
 # ===== Value objects =====
-class SqlEntryRepositorySettings(EntryRepositorySettings):
-    def __init__(self, *, table_name: str, config: Dict):
-        self.table_name = table_name
-        self.config = config
+# class SqlEntryRepositorySettings(EntryRepositorySettings):
+#     def __init__(self, *, table_name: str, config: Dict):
+#         self.table_name = table_name
+#         self.config = config
 
 
-@create_entry_repository.register(SqlEntryRepositorySettings)
-def _(settings: SqlEntryRepositorySettings) -> SqlEntryRepository:
-    history_model = sql_models.get_or_create_entry_history_model(settings.table_name)
+# @create_entry_repository.register(SqlEntryRepositorySettings)
+# def _(settings: SqlEntryRepositorySettings) -> SqlEntryRepository:
+#     history_model = sql_models.get_or_create_entry_history_model(settings.table_name)
 
-    runtime_table_name = f"runtime_{settings.table_name}"
+#     runtime_table_name = f"runtime_{settings.table_name}"
 
-    runtime_model = sql_models.get_or_create_entry_runtime_model(
-        runtime_table_name, history_model, settings.config
-    )
-    return SqlEntryRepository(history_model, runtime_model, settings.config)
+#     runtime_model = sql_models.get_or_create_entry_runtime_model(
+#         runtime_table_name, history_model, settings.config
+#     )
+#     return SqlEntryRepository(history_model, runtime_model, settings.config)

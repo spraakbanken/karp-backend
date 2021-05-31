@@ -94,7 +94,7 @@ def get_or_create_entry_history_model(resource_id: str) -> BaseHistoryEntry:
     history_table_name = create_history_table_name(resource_id)
     if history_table_name in class_cache:
         history_model = class_cache[history_table_name]
-        history_model.__table__.create(bind=db.engine, checkfirst=True)
+        # history_model.__table__.create(bind=db.engine, checkfirst=True)
         return history_model
 
     attributes = {
@@ -104,7 +104,7 @@ def get_or_create_entry_history_model(resource_id: str) -> BaseHistoryEntry:
     }
 
     sqlalchemy_class = type(history_table_name, (db.Base, BaseHistoryEntry), attributes)
-    sqlalchemy_class.__table__.create(bind=db.engine, checkfirst=True)
+    # sqlalchemy_class.__table__.create(bind=db.engine, checkfirst=True)
     class_cache[history_table_name] = sqlalchemy_class
     return sqlalchemy_class
 

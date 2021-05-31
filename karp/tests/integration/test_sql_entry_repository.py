@@ -3,29 +3,41 @@ import pytest
 from karp.domain.models.entry import (
     create_entry,
     Entry,
-    EntryRepository,
+    # EntryRepository,
 )
+from karp.domain import repository
 
-from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.infrastructure.unit_of_work import unit_of_work
 from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
+from karp.utility import unique_id
 
 
-@pytest.fixture(name="entry_repo", scope="session")
-def fixture_entry_repo():
-    entry_repo = EntryRepository.create(
-        "sql_v1", {"table_name": "test_name", "config": {}}
+@pytest.fixture(name="entry_repo")
+def fixture_entry_repo(sqlite_session_factory):
+    # entry_repo = EntryRepository.create(
+    #     "sql_v1", {"table_name": "test_name", "config": {}}
+    # )
+    # assert isinstance(entry_repo, SqlEntryRepository)
+    session = sqlite_session_factory()
+    entry_repo = SqlEntryRepository.from_dict(
+        {"table_name": "test_name", "config": {}},
+        session=session,
+        resource_id="test_name",
     )
-    assert isinstance(entry_repo, SqlEntryRepository)
     assert entry_repo.type == "sql_v1"
     yield entry_repo
 
     entry_repo.teardown()
 
 
-@pytest.fixture(name="entry_repo2", scope="session")
-def fixture_entry_repo2():
-    entry_repo = EntryRepository.create(
-        None, {"table_name": "test_name2", "config": {}}
+@pytest.fixture(name="entry_repo2")
+def fixture_entry_repo2(sqlite_session_factory):
+    session = sqlite_session_factory()
+    entry_repo = repository.EntryRepository.create(
+        None,
+        {"table_name": "test_name2", "config": {}},
+        session=session,
+        resource_id="test_name2",
     )
     assert isinstance(entry_repo, SqlEntryRepository)
     assert entry_repo.type == "sql_v1"
@@ -35,14 +47,19 @@ def fixture_entry_repo2():
 
 
 def test_create_entry_repository(entry_repo):
-    with unit_of_work(using=entry_repo) as uw:
-        uw.entry_ids() == []
+    assert entry_repo.entry_ids() == []
 
 
 def test_put_entry_to_entry_repo(entry_repo):
-    with unit_of_work(using=entry_repo) as uw:
-        entry = create_entry("a", {})
-        uw.put(entry)
+    entity_id = unique_id.make_unique_id()
+    entry_id = "a"
+    entry = create_entry(
+        body={}, entry_id=entry_id, entity_id=entity_id, resource_id="test_name"
+    )
+    entry_repo.put(entry)
+
+    assert entry_repo.by_id(entity_id).entry_id == entry_id
+    assert entry_repo.by_entry_id(entry_id).id == entity_id
 
 
 #         uw.commit()
@@ -58,16 +75,8 @@ def test_put_entry_to_entry_repo(entry_repo):
 #         assert entry_copy_from_str.id == entry.id
 
 
-def test_entry_repo_by_entry_id(entry_repo):
-    with unit_of_work(using=entry_repo) as uw:
-        entry = uw.by_entry_id("a")
-
-        assert entry.entry_id == "a"
-
-
 def test_create_entry_repository2(entry_repo2):
-    with unit_of_work(using=entry_repo2) as uw:
-        uw.entry_ids() == []
+    assert entry_repo2.entry_ids() == []
 
 
 # def test_put_entry_to_entry_repo2(entry_repo2):
