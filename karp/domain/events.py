@@ -37,3 +37,13 @@ class EntryAdded(Event):
     body: Dict
     message: str
     user: str
+
+
+@dataclass
+class EntryDiscarded(Event):
+    id: uuid.UUID
+    resource_id: str
+    entry_id: str
+    version: int
+    message: str
+    user: str

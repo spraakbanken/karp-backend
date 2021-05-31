@@ -32,11 +32,6 @@ class EntryStatus(enum.Enum):
 
 
 class Entry(TimestampedVersionedEntity):
-    class Discarded(TimestampedVersionedEntity.Discarded):
-        def mutate(self, entry):
-            super().mutate(entry)
-            entry._op = EntryOp.DELETED
-            entry._message = "Entry deleted." if self.message is None else self.message
 
     def __init__(
         self,
@@ -110,16 +105,30 @@ class Entry(TimestampedVersionedEntity):
         """The message for the latest operation of this entry."""
         return self._message
 
-    def discard(self, *, user: str, message: str = None):
-        event = Entry.Discarded(
-            entity_id=self.id,
-            entity_last_modified=self.last_modified,
+    def discard(
+        self,
+        *,
+        user: str,
+        timestamp: float,
+        message: str = None,
+    ):
+        self._op = EntryOp.DELETED
+        self._message = message or "Entry deleted."
+        self._discarded = True
+        self._last_modified_by = user
+        self._last_modified = timestamp
+        self._version += 1
+        self.publish(events.EntryDiscarded(
+            id=self.id,
+            entry_id=self.entry_id,
+            timestamp=self.last_modified,
             user=user,
             message=message,
-            entity_version=self.version,
-        )
-        event.mutate(self)
-        event_handler.publish(event)
+            version=self.version,
+            resource_id=self.resource_id,
+        ))
+        # event.mutate(self)
+        # event_handler.publish(event)
 
     def stamp(
         self,

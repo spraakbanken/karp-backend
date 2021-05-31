@@ -4,10 +4,9 @@ from karp.tests import common_data
 from karp.utility import unique_id
 
 
-def test_new_entry_has_event():
-    entity_id = unique_id.make_unique_id(),
-    entry = model.Entry(
-        entity_id=entity_id,
+def random_entry():
+    return model.Entry(
+        entity_id=unique_id.make_unique_id(),
         entry_id="a",
         body={},
         resource_id="b",
@@ -15,14 +14,37 @@ def test_new_entry_has_event():
         last_modified_by="kristoff@example.com",
         last_modified=12345.67,
     )
+
+
+def test_new_entry_has_event():
+    entry = random_entry()
     assert entry.events[-1] == events.EntryAdded(
-        id=entity_id,
-        entry_id="a",
-        resource_id="b",
-        body={},
-        user="kristoff@example.com",
-        timestamp=12345.67,
-        message="add"
+        id=entry.id,
+        entry_id=entry.entry_id,
+        resource_id=entry.resource_id,
+        body=entry.body,
+        user=entry.last_modified_by,
+        timestamp=entry.last_modified,
+        message=entry.message,
+    )
+
+
+def test_discarded_entry_has_event():
+    entry = random_entry()
+    entry.discard(
+        user="alice@example.org",
+        message="bad",
+        timestamp=123.45
+    )
+    assert entry.discarded
+    assert entry.events[-1] == events.EntryDiscarded(
+        id=entry.id,
+        entry_id=entry.entry_id,
+        resource_id=entry.resource_id,
+        user=entry.last_modified_by,
+        timestamp=entry.last_modified,
+        message=entry.message,
+        version=2,
     )
 
 
