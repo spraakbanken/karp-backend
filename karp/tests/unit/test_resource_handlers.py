@@ -70,6 +70,7 @@ class TestCreateResource:
                     created_by="user",
                 ),
             )
+        assert bus.ctx.resource_uow.was_rolled_back
         # assert uow.repo[0].events[-1] == events.ResourceCreated(
         #     id=id_, resource_id=resource_id, name=resource_name, config=conf
         # )
