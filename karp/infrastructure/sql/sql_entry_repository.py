@@ -56,11 +56,10 @@ class SqlEntryRepository(
         cls,
         settings: Dict,
         *,
-        resource_id: str,
         session=None,
     ):
         try:
-            table_name = settings["table_name"]
+            table_name = settings.get("table_name") or settings["resource_id"]
         except KeyError:
             raise ValueError("Missing 'table_name' in settings.")
 
@@ -87,7 +86,7 @@ class SqlEntryRepository(
             history_model=history_model,
             # runtime_model=runtime_model,
             resource_config=settings["config"],
-            resource_id=resource_id,
+            resource_id=settings["resource_id"],
             session=session,
         )
 

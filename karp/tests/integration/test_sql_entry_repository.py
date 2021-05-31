@@ -20,9 +20,8 @@ def fixture_entry_repo(sqlite_session_factory):
     # assert isinstance(entry_repo, SqlEntryRepository)
     session = sqlite_session_factory()
     entry_repo = SqlEntryRepository.from_dict(
-        {"table_name": "test_name", "config": {}},
+        {"table_name": "test_name", "config": {}, "resource_id": "test_name"},
         session=session,
-        resource_id="test_name",
     )
     assert entry_repo.type == "sql_v1"
     yield entry_repo
@@ -35,9 +34,8 @@ def fixture_entry_repo2(sqlite_session_factory):
     session = sqlite_session_factory()
     entry_repo = repository.EntryRepository.create(
         None,
-        {"table_name": "test_name2", "config": {}},
+        {"table_name": "test_name2", "config": {}, "resource_id": "test_name2"},
         session=session,
-        resource_id="test_name2",
     )
     assert isinstance(entry_repo, SqlEntryRepository)
     assert entry_repo.type == "sql_v1"
