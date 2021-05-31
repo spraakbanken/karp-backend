@@ -304,9 +304,10 @@ class Release(Entity):
 # ===== Factories =====
 
 
-def create_resource(config: Dict) -> Resource:
+def create_resource(config: Dict, entity_id: unique_id.UniqueId = None) -> Resource:
     resource_id = config.pop("resource_id")
     resource_name = config.pop("resource_name")
+    entity_id = entity_id or unique_id.make_unique_id()
     #     if "entry_repository_type" not in config:
     #         config["entry_repository_type"] = EntryRepository.get_default_repository_type()
     #     entry_repository_settings = config.get(
@@ -323,12 +324,12 @@ def create_resource(config: Dict) -> Resource:
     #     )
 
     resource = Resource(
-        resource_id,
-        resource_name,
-        config,
+        entity_id=entity_id,
+        resource_id=resource_id,
+        name=resource_name,
+        config=config,
         message="Resource added.",
         op=ResourceOp.ADDED,
-        entity_id=unique_id.make_unique_id(),
         version=1,
     )
     return resource
