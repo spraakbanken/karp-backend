@@ -6,6 +6,20 @@ from karp.domain import events, errors, commands
 from karp.utility.unique_id import make_unique_id
 
 
+def make_create_resource_command(resource_id: str) -> commands.CreateResource:
+    return commands.CreateResource(
+        id=make_unique_id(),
+        resource_id=resource_id,
+        name=resource_id.upper(),
+        config={
+            "fields": {},
+            "id": "id",
+        },
+        message="create resource",
+        created_by="kristoff@example.com",
+    )
+
+
 class TestAddEntry:
     def test_add_entry(self):
         resource_id = "test_id"
@@ -52,6 +66,7 @@ class TestAddEntry:
 
         # assert len(resource.entry_repository) == 1
 
+        uow = bus.ctx.entry_uows.get(resource_id)
         entry = uow.repo.by_id(id_)
         assert entry.id == id_
         assert entry.entry_id == entry_id
@@ -63,8 +78,8 @@ class TestAddEntry:
         assert uow.was_committed
 
     def test_create_entry_with_same_entry_id_raises(self):
-        bus = bootstrap_test_app()
         resource_id = "abc"
+        bus = bootstrap_test_app([resource_id])
         bus.handle(
             commands.AddEntry(
                 id=make_unique_id(),
@@ -112,15 +127,18 @@ class TestAddEntry:
 
 class TestUpdateEntry:
     def test_update_entry(self):
-        bus = bootstrap_test_app()
         resource_id = "abc"
+        bus = bootstrap_test_app([resource_id])
         id_ = make_unique_id()
+        bus.handle(make_create_resource_command(resource_id))
         bus.handle(
             commands.AddEntry(
                 id=id_,
-                entry_id="r1",
                 resource_id=resource_id,
-                body={"a": "b"},
+                body={
+                    "id": "r1",
+                    "a": "b"
+                },
                 message="added",
                 user="user",
             ),
@@ -130,14 +148,30 @@ class TestUpdateEntry:
                 entry_id="r1",
                 version=1,
                 resource_id=resource_id,
-                body={"a": "changed", "b": "added"},
+                entry={"a": "changed", "b": "added"},
                 message="changed",
                 user="bob",
             ),
         )
 
-        entry = bus.entry_uows[resource_id].repo.by_id(id_)
+        uow = bus.ctx.entry_uows.get(resource_id)
+        entry = uow.repo.by_id(id_)
         assert entry is not None
         assert entry.config["a"] == "changed"
         assert entry.config["b"] == "added"
         assert entry.version == 2
+        assert uow.was_committed
+
+    def test_cannot_update_entry_in_nonexistent_resource(self):
+        bus = bootstrap_test_app()
+        with pytest.raises(errors.ResourceNotFound):
+            bus.handle(
+                commands.UpdateEntry(
+                    resource_id="non_existent",
+                    entry_id="a",
+                    version=3,
+                    entry={},
+                    user="kristoff@example.com",
+                    message="update",
+                )
+            )

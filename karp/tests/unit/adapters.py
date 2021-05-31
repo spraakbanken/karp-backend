@@ -112,5 +112,5 @@ def _(repo: FakeEntryRepository):
 def bootstrap_test_app(entry_uow_keys: List[str] = None):
     return bootstrap.bootstrap(
         resource_uow=FakeResourceUnitOfWork(),
-        entry_uows={key: FakeEntryUnitOfWork() for key in entry_uow_keys or []},
+        entry_uows=unit_of_work.EntriesUnitOfWork(((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])),
     )

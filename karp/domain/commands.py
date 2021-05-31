@@ -39,7 +39,6 @@ class UpdateResource(Command):
 class AddEntry(Command):
     resource_id: str
     id: uuid.UUID
-    entry_id: str
     body: Dict
     user: str
     message: str
@@ -48,6 +47,9 @@ class AddEntry(Command):
 class UpdateEntry(Command):
     resource_id: str
     entry_id: str
-    body: Dict
+    version: int
+    entry: Dict
     user: str
     message: str
+    resource_version: Optional[int] = None
+    force: bool = False

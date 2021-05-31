@@ -58,14 +58,21 @@ class EntryUnitOfWork(UnitOfWork):
 
 
 class EntriesUnitOfWork(UnitOfWork):
-    @property
-    @abc.abstractmethod
-    def entries(self) -> repository.EntryRepository:
-        pass
+    def __init__(self, entry_uows=None):
+        self.entry_uows = {key: uow for key, uow in entry_uows} if entry_uows else {}
+
+    def get(self, resource_id: str) -> EntryUnitOfWork:
+        return self.entry_uows.get(resource_id)
 
     @property
     def repo(self):
-        return self.entries
+        return self
+
+    def _commit(self):
+        pass
+
+    def rollback(self):
+        pass
 
 
 def unit_of_work(*, using, **kwargs) -> UnitOfWork:

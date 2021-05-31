@@ -254,7 +254,7 @@ def add_entry(
 
 
 def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):
-    with ctx.entry_uows[cmd.resource_id] as uow:
+    with ctx.entry_uows.get(cmd.resource_id) as uow:
         # resource = uow.repo.by_resource_id(cmd.resource_id)
         # with unit_of_work(using=resource.entry_repository) as uow2:
         existing_entry = uow.repo.by_entry_id(cmd.entry_id)
@@ -289,34 +289,30 @@ def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):
 
 
 def update_entry(
-    resource_id: str,
-    entry_id: str,
-    version: int,
-    entry: Dict,
-    user_id: str,
-    message: str = None,
-    resource_version: int = None,
-    force: bool = False,
+    cmd: commands.UpdateEntry,
+    ctx: context.Context,
 ) -> str:
-    with unit_of_work(using=ctx.resource_repo) as uw:
-        resource = uw.get_active_resource(resource_id)
+    with ctx.resource_uow:
+        resource = ctx.resource_uow.resources.by_resource_id(cmd.resource_id)
     #     resource = get_resource(resource_id, version=resource_version)
 
+    if not resource:
+        raise errors.ResourceNotFound(cmd.resource_id)
     schema = _compile_schema(resource.entry_json_schema)
-    _validate_entry(schema, entry)
+    _validate_entry(schema, cmd.entry)
 
-    with unit_of_work(using=resource.entry_repository) as uw:
-        current_db_entry = uw.by_entry_id(entry_id)
+    with ctx.entry_uows.get(cmd.resource_id) as uw:
+        current_db_entry = uw.entries.by_entry_id(cmd.entry_id)
 
         if not current_db_entry:
-            raise EntryNotFoundError(
-                resource_id,
-                entry_id,
-                entry_version=version,
-                resource_version=resource_version,
+            raise errors.EntryNotFoundError(
+                cmd.resource_id,
+                cmd.entry_id,
+                entry_version=cmd.version,
+                resource_version=resource.version,
             )
 
-        diff = jsondiff.compare(current_db_entry.body, entry)
+        diff = jsondiff.compare(current_db_entry.body, cmd.entry)
         if not diff:
             raise KarpError("No changes made", ClientErrorCodes.ENTRY_NOT_CHANGED)
 
@@ -327,29 +323,30 @@ def update_entry(
         #         .order_by(resource.history_model.version.desc())
         #         .first()
         #     )
-        print(f"({current_db_entry.version}, {version})")
-        if not force and current_db_entry.version != version:
+        print(f"({current_db_entry.version}, {cmd.version})")
+        if not cmd.force and current_db_entry.version != cmd.version:
             print("version conflict")
-            raise UpdateConflict(diff)
+            raise errors.UpdateConflict(diff)
 
         id_getter = resource.id_getter()
-        new_entry_id = id_getter(entry)
+        new_entry_id = id_getter(cmd.entry)
 
-        current_db_entry.body = entry
-        current_db_entry.stamp(user_id, message=message)
-        if new_entry_id != entry_id:
+        current_db_entry.body = cmd.entry
+        current_db_entry.stamp(cmd.user, message=cmd.message)
+        if new_entry_id != cmd.entry_id:
             current_db_entry.entry_id = new_entry_id
-            uw.move(current_db_entry, old_entry_id=entry_id)
+            uw.move(current_db_entry, old_entry_id=cmd.entry_id)
         else:
             uw.update(current_db_entry)
-    if resource.is_published:
-        if new_entry_id != entry_id:
-            ctx.search_service.delete_entry(resource, entry_id=entry_id)
-        indexing.add_entries(
-            ctx.resource_repo, ctx.search_service, resource, [current_db_entry]
-        )
+        uw.commit()
+    # if resource.is_published:
+    #     if new_entry_id != entry_id:
+    #         ctx.search_service.delete_entry(resource, entry_id=entry_id)
+    #     indexing.add_entries(
+    #         ctx.resource_repo, ctx.search_service, resource, [current_db_entry]
+    #     )
 
-    return current_db_entry.entry_id
+    # return current_db_entry.entry_id
 
 
 def update_entries(*args, **kwargs):

@@ -34,8 +34,8 @@ class ConstraintsError(DomainError, ValueError):
 
 class ResourceNotFound(DomainError):
     """Raised when a resource is missing."""
-    def __init__(self, resource, **kwargs):
-        super().__init__(f"Resource '{resource.resource_id}' not found.", **kwargs)
+    def __init__(self, resource_id, **kwargs):
+        super().__init__(f"Resource '{resource_id}' not found.", **kwargs)
 
 
 class RepositoryError(DomainError):
