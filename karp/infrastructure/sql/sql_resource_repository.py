@@ -7,8 +7,8 @@ from karp.domain.errors import RepositoryStatusError, IntegrityError
 from karp.domain.models.resource import (
     Resource,
     ResourceOp,
-    ResourceRepository,
 )
+from karp.domain import repository
 
 from karp.infrastructure.sql import db, sql_models
 from karp.infrastructure.sql.sql_repository import SqlRepository
@@ -16,10 +16,11 @@ from karp.infrastructure.sql.sql_repository import SqlRepository
 _logger = logging.getLogger("karp")
 
 
-class SqlResourceRepository(ResourceRepository, SqlRepository):
-    def __init__(self):
+class SqlResourceRepository(repository.ResourceRepository, SqlRepository):
+    def __init__(self, session=None):
         super().__init__()
         self.table = sql_models.ResourceDefinition
+        self._session = session
 
     def check_status(self):
         self._check_has_session()
@@ -33,7 +34,7 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
     def primary_key(cls):
         return "resource_id"
 
-    def put(self, resource: Resource):
+    def _put(self, resource: Resource):
         self._check_has_session()
         # Check if resource exists
         existing_resource = self.by_resource_id(resource.resource_id)
@@ -52,21 +53,26 @@ class SqlResourceRepository(ResourceRepository, SqlRepository):
             db.insert(self.table, values=self._resource_to_row(resource))
         )
 
-    update = put
+    _update = _put
 
     def resource_ids(self) -> List[str]:
         self._check_has_session()
         query = self._session.query(self.table)
         return [row.resource_id for row in query.group_by(self.table.resource_id).all()]
 
-    def by_id(
+    def _by_id(
         self, id: Union[UUID, str], *, version: Optional[int] = None
     ) -> Optional[Resource]:
         self._check_has_session()
-        row = self._session.query(self.table).filter_by(id=id).first()
+        query = self._session.query(self.table).filter_by(id=id)
+        if version:
+            query = query.filter_by(version=version)
+        else:
+            query = query.order_by(self.table.version.desc())
+        row = query.first()
         return self._row_to_resource(row) if row else None
 
-    def by_resource_id(
+    def _by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
     ) -> Optional[Resource]:
         self._check_has_session()

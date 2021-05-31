@@ -41,14 +41,14 @@ from sqlalchemy_json import NestedMutableJson
 
 from karp.application import config
 
-engine = sqlalchemy.create_engine(config.DB_URL, echo=True)
+# engine = sqlalchemy.create_engine(config.DB_URL, echo=True)
 
 print(f"Engine created for {config.DB_URL}")
 metadata = MetaData()
 
 Base = declarative_base(metadata=metadata)
 
-SessionLocal = sessionmaker(bind=engine)
+# SessionLocal = sessionmaker(bind=engine)
 
 
 @attr.s(auto_attribs=True)

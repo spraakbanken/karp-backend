@@ -7,14 +7,14 @@ import regex
 
 from karp import errors
 
-from karp.infrastructure import unit_of_work
+from karp.services import unit_of_work
 from karp.infrastructure.sql import db
 
 
 logger = logging.getLogger("karp")
 
 
-class SqlRepository():
+class SqlRepository:
     def __init__(self) -> None:
         self._session: Optional[db.Session] = None
 
@@ -32,9 +32,9 @@ class SqlRepository():
 _create_new = object()
 
 
-@unit_of_work.create_unit_of_work.register(SqlRepository)
-def _(repo: SqlRepository, *, session=_create_new):
-    return SqlUnitOfWork(repo, session=session)
+# @unit_of_work.create_unit_of_work.register(SqlRepository)
+# def _(repo: SqlRepository, *, session=_create_new):
+#     return SqlUnitOfWork(repo, session=session)
 
 
 DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
