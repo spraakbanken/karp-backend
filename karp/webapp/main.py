@@ -24,9 +24,10 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     #     from karp.application.services.contexts import init_context
 
     #     init_context()
-
+    from . import entries_api
     from . import resources_api
 
+    entries_api.init_app(app)
     resources_api.init_app(app)
     # load_modules(app)
     from karp.errors import KarpError

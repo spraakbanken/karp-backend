@@ -1,7 +1,7 @@
 import logging
 from typing import List, Union
 
-from karp.domain import commands, events
+from karp.domain import commands, events, auth_service as authenticator
 
 from karp.services import entry_handlers, resource_handlers
 
@@ -19,8 +19,11 @@ class MessageBus:
         self,
         resource_uow: unit_of_work.ResourceUnitOfWork,
         entry_uows: unit_of_work.EntriesUnitOfWork,
+        auth_service: authenticator.AuthService,
     ):
-        self.ctx = context.Context(resource_uow=resource_uow, entry_uows=entry_uows)
+        self.ctx = context.Context(
+            resource_uow=resource_uow, entry_uows=entry_uows, auth_service=auth_service
+        )
         self.queue = []
 
     def handle(self, message: Message):

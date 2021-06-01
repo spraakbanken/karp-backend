@@ -2,14 +2,17 @@ from os import stat
 from fastapi import APIRouter, Security, HTTPException, status, Response
 from starlette import responses
 
+from karp.domain import commands
 from karp.domain.models.user import User
-from karp.domain.models.auth_service import PermissionLevel
-from karp.application.services import entries
+from karp.domain.auth_service import PermissionLevel
 
-from karp.application import ctx
+# from karp.application.services import entries
+
+# from karp.application import ctx
 
 from karp.webapp import schemas
-from karp.webapp.auth import get_current_user
+
+# from karp.webapp.auth import get_current_user
 
 from karp import errors
 
@@ -22,6 +25,8 @@ from karp import errors
 # from karp.errors import KarpError
 # import karp.auth.auth as auth
 # from karp.util import convert
+from karp.utility import unique_id
+from .app_config import bus, get_current_user
 
 # edit_api = Blueprint("edit_api", __name__)
 
@@ -34,17 +39,29 @@ def add_entry(
     data: schemas.EntryAdd,
     user: User = Security(get_current_user, scopes=["write"]),
 ):
-    if not ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not bus.ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
     print("calling entrywrite")
-    new_entry = entries.add_entry(
-        resource_id, data.entry, user.identifier, message=data.message
+    id_ = unique_id.make_unique_id()
+    entry_id = None
+    bus.handle(
+        commands.AddEntry(
+            resource_id=resource_id,
+            entry_id=entry_id,
+            id=id_,
+            user=user.identifier,
+            message=data.message,
+            entry=data.entry,
+        )
     )
-    return {"newID": new_entry.entry_id}
+    # new_entry = entries.add_entry(
+    #     resource_id, data.entry, user.identifier, message=data.message
+    # )
+    return {"newID": entry_id, "uuid": id_}
 
 
 @router.post("/{resource_id}/{entry_id}/update")

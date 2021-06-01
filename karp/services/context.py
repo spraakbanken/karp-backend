@@ -4,7 +4,7 @@ from typing import Dict
 
 # from karp.application.config import Config
 from karp.domain import repository  # ResourceRepository
-from karp.domain.models.auth_service import AuthService
+from karp.domain.auth_service import AuthService
 
 # from karp.domain.services.auth.auth import Auth
 from karp.domain.models.search_service import SearchService
@@ -31,8 +31,7 @@ class Context:
         return f"Context(resource_repo={self.resource_repo!r})"
 
     def collect_new_events(self):
-        for uow in [self.resource_uow]:
-            yield from uow.collect_new_events()
+        yield from self.resource_uow.collect_new_events()
 
 
 # @singledispatch

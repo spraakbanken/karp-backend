@@ -3,7 +3,7 @@ from typing import List
 from karp.application import config
 
 from karp.domain.models.user import User
-from karp.domain.models.auth_service import (
+from karp.domain.auth_service import (
     AuthService,
     PermissionLevel,
 )

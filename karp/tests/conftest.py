@@ -27,7 +27,7 @@ import elasticsearch_test  # pyre-ignore
 
 # # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
-# from karp.infrastructure.testing import dummy_auth_service
+from karp.infrastructure.testing import dummy_auth_service
 from karp import errors as karp_errors
 from karp.domain import model, commands, errors
 
@@ -123,6 +123,11 @@ def fixture_fa_client():  # db_setup, es):
 #     with TestClient(webapp_main.create_app()) as client:
 #         yield client
 #         print("releasing testclient")
+
+
+@pytest.fixture(name="use_dummy_authenticator")
+def fixture_use_dummy_authenticator():
+    app_config.bus.ctx.auth_service = dummy_auth_service.DummyAuthService()
 
 
 # @pytest.fixture(name="fa_client_scope_session", scope="session")

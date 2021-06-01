@@ -6,12 +6,12 @@ from typing import List
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
 
-from karp.domain.models.auth_service import AuthService, PermissionLevel
+from karp.domain.auth_service import AuthService, PermissionLevel
 from karp.domain.models.user import User
 from karp.domain.errors import AuthError
-from karp.application import ctx, config
+from karp.application import config
 
-from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.infrastructure.unit_of_work import unit_of_work
 
 # import karp.resourcemgr as resourcemgr
 from karp.errors import KarpError, ClientErrorCodes

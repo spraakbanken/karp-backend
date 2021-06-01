@@ -5,8 +5,10 @@
 
 import pytest  # pyre-ignore
 
-from karp.application import ctx, config
-from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.application import ctx, config
+# from karp.infrastructure.unit_of_work import unit_of_work
+
+from karp.webapp import app_config
 
 # import karp.resourcemgr.entryread as entryread
 from karp.errors import ClientErrorCodes
@@ -31,12 +33,15 @@ from karp.errors import ClientErrorCodes
 #             content_type="application/json",
 #         )
 #     return client_with_data
+pytestmark = pytest.mark.usefixtures("use_dummy_authenticator")
 
 
-def test_add(fa_client_w_places):
+@pytest.mark.usefixtures("places_published")
+@pytest.mark.usefixtures("main_db")
+def test_add(fa_client):  # fa_client_w_places):
     # client = init(client_with_data_f, es, [])
 
-    response = fa_client_w_places.post(
+    response = fa_client.post(
         "places/add",
         json={
             "entry": {
@@ -56,11 +61,11 @@ def test_add(fa_client_w_places):
     assert "newID" in response_data
     assert response_data["newID"] == "3"
 
-    with unit_of_work(using=ctx.resource_repo) as uw:
-        resource = uw.get_active_resource("places")
+    with app_config.bus.ctx.resource_uow as uw:
+        resource = uw.resources.get_active_resource("places")
 
-    with unit_of_work(using=resource.entry_repository) as uw:
-        entries = uw.entry_ids()
+    with app_config.bus.ctx.entries_uow.get("places") as uw:
+        entries = uw.entries.entry_ids()
         assert len(entries) == 1
         assert entries[0] == "3"
     # entries = get_json(client, "places/query")

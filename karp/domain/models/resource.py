@@ -11,7 +11,7 @@ from karp.domain.models import event_handler
 from karp.domain.models.entity import Entity, TimestampedVersionedEntity
 from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
-from karp.domain.models.auth_service import PermissionLevel
+from karp.domain.auth_service import PermissionLevel
 
 from karp.utility import unique_id
 from karp.utility import json_schema
