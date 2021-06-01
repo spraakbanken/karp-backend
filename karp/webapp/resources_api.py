@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 
-from karp.application.services import resources
+# from karp.application.services import resources
 
-from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.infrastructure.unit_of_work import unit_of_work
 
 # import karp.resourcemgr as resourcemgr
 
