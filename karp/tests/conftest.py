@@ -1,37 +1,41 @@
-# pylint: disable=wrong-import-position,missing-function-docstring
 """Pytest entry point."""
-# import json
-# import os
-# import time
-# from typing import Dict
+
+# pylint: disable=wrong-import-position,missing-function-docstring
+
+import json
+import os
+import time
+from typing import Dict
 
 import pytest  # pyre-ignore
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# from alembic.config import main as alembic_main
+from alembic.config import main as alembic_main
 
-# from starlette.testclient import TestClient
-# from starlette.config import environ
+from starlette.testclient import TestClient
+from starlette.config import environ
 
-# environ["TESTING"] = "True"
-# environ["ELASTICSEARCH_HOST"] = "localhost:9202"
+environ["TESTING"] = "True"
+environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 
-# import elasticsearch_test  # pyre-ignore
+import elasticsearch_test  # pyre-ignore
 
 # from karp.domain.models.resource import create_resource
 
-# from karp.infrastructure.unit_of_work import unit_of_work
+# # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
 # from karp.infrastructure.testing import dummy_auth_service
 
-# from karp.application import ctx, config
-# from karp.application.services import contexts, entries, resources
+# # from karp.application import ctx, config
+# # from karp.application.services import contexts, entries, resources
 
 # from karp.webapp import main as webapp_main
 
 # from karp.tests import common_data
+
+
 from karp.infrastructure.sql.db import metadata
 
 
