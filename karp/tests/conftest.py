@@ -39,8 +39,8 @@ import elasticsearch_test  # pyre-ignore
 from karp.infrastructure.sql.db import metadata
 
 
-@pytest.fixture
-def in_memory_sqlite_db():
+@pytest.fixture(name="in_memory_sqlite_db")
+def fixture_in_memory_sqlite_db():
     engine = create_engine("sqlite:///:memory:")
     metadata.create_all(engine)
     return engine
