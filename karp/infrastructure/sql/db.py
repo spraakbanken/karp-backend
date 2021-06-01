@@ -43,7 +43,7 @@ from karp.application import config
 
 # engine = sqlalchemy.create_engine(config.DB_URL, echo=True)
 
-print(f"Engine created for {config.DB_URL}")
+print(f"Creating metatdata")
 metadata = MetaData()
 
 Base = declarative_base(metadata=metadata)

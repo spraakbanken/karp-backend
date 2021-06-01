@@ -1,5 +1,10 @@
-def test_get_resources(fa_client_w_places):
-    response = fa_client_w_places.get("/resources")
+import pytest
+
+
+@pytest.mark.usefixtures("places_published")
+@pytest.mark.usefixtures("main_db")
+def test_get_resources(fa_client):
+    response = fa_client.get("/resources")
 
     assert response.status_code == 200
 

@@ -125,3 +125,44 @@ class TestUpdateResource:
         assert resource.config["b"] == "added"
         assert resource.version == 2
         assert bus.ctx.resource_uow.was_committed
+
+
+class TestPublishResource:
+    def test_publish_resource(self):
+        bus = bootstrap_test_app()
+        id_ = make_unique_id()
+        resource_id = "test_resource"
+        resource_name = "Test resource"
+        conf = {
+            "sort": ["baseform"],
+            "fields": {"baseform": {"type": "string", "required": True}},
+        }
+        message = "test_resource added"
+        #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
+        #         resource = create_resource(conf)
+
+        # uow = FakeUnitOfWork(FakeResourceRepository())
+
+        bus.handle(
+            commands.CreateResource(
+                id=id_,
+                resource_id=resource_id,
+                name=resource_name,
+                config=conf,
+                message=message,
+                created_by="kristoff@example.com",
+            )
+        )
+
+        bus.handle(
+            commands.PublishResource(
+                resource_id=resource_id,
+                message=message,
+                user="kristoff@example.com",
+            )
+        )
+
+        resource = bus.ctx.resource_uow.resources.by_id(id_)
+        assert resource.is_published
+        assert resource.version == 2
+        assert bus.ctx.resource_uow.was_committed

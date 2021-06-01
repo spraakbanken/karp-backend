@@ -35,6 +35,12 @@ class UpdateResource(Command):
     user: str
 
 
+class PublishResource(Command):
+    resource_id: str
+    message: str
+    user: str
+
+
 # Entry commands
 class AddEntry(Command):
     resource_id: str

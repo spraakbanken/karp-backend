@@ -16,6 +16,7 @@ from alembic.config import main as alembic_main
 
 from starlette.testclient import TestClient
 from starlette.config import environ
+from tenacity import retry, stop_after_delay
 
 environ["TESTING"] = "True"
 environ["ELASTICSEARCH_HOST"] = "localhost:9202"
@@ -27,11 +28,16 @@ import elasticsearch_test  # pyre-ignore
 # # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
 # from karp.infrastructure.testing import dummy_auth_service
+from karp import errors as karp_errors
+from karp.domain import model, commands, errors
 
-# # from karp.application import ctx, config
+from karp.application import config
+
 # # from karp.application.services import contexts, entries, resources
 
-# from karp.webapp import main as webapp_main
+from karp.webapp import app_config, main as webapp_main
+
+from karp.utility import unique_id
 
 # from karp.tests import common_data
 
@@ -60,6 +66,25 @@ def sqlite_session_factory(in_memory_sqlite_db):
 #     alembic_main(["--raiseerr", "downgrade", "base"])
 
 
+@retry(stop=stop_after_delay(10))
+def wait_for_main_db_to_come_up(engine):
+    return engine.connect()
+
+
+@pytest.fixture(scope="session")
+def main_db():
+    print(f"creating engine uri = {config.DB_URL}")
+    engine = create_engine(config.DB_URL)
+    wait_for_main_db_to_come_up(engine)
+    metadata.create_all(bind=engine)
+    # print("running alembic upgrade ...")
+    # alembic_main(["--raiseerr", "upgrade", "head"])
+    # yield engine
+    # print("running alembic downgrade ...")
+    # alembic_main(["--raiseerr", "downgrade", "base"])
+    return engine
+
+
 # @pytest.fixture(name="db_setup_scope_module", scope="module")
 # def fixture_db_setup_scope_module():
 #     print("running alembic upgrade ...")
@@ -78,11 +103,11 @@ def sqlite_session_factory(in_memory_sqlite_db):
 #     alembic_main(["--raiseerr", "downgrade", "base"])
 
 
-# @pytest.fixture(name="fa_client")
-# def fixture_fa_client(db_setup, es):
-#     ctx.auth_service = dummy_auth_service.DummyAuthService()
-#     with TestClient(webapp_main.create_app()) as client:
-#         yield client
+@pytest.fixture(name="fa_client")
+def fixture_fa_client():  # db_setup, es):
+    # ctx.auth_service = dummy_auth_service.DummyAuthService()
+    with TestClient(webapp_main.create_app()) as client:
+        yield client
 
 
 # @pytest.fixture(name="fa_client_wo_db")
@@ -108,17 +133,17 @@ def sqlite_session_factory(in_memory_sqlite_db):
 #         print("releasing testclient")
 
 
-# @pytest.fixture(name="places")
-# def fixture_places():
-#     with open("karp/tests/data/config/places.json") as fp:
-#         places_config = json.load(fp)
+@pytest.fixture(name="resource_places", scope="session")
+def fixture_resource_places():
+    with open("karp/tests/data/config/places.json") as fp:
+        places_config = json.load(fp)
 
-#     resource = create_resource(places_config)
+    resource = model.Resource.from_dict(places_config)
 
-#     yield resource
+    yield resource
 
-#     # if resource._entry_repository:
-#     resource.entry_repository.teardown()
+    # if resource._entry_repository:
+    # resource.entry_repository.teardown()
 
 
 # @pytest.fixture(name="places_scope_module", scope="module")
@@ -156,13 +181,39 @@ def sqlite_session_factory(in_memory_sqlite_db):
 #     contexts.init_context()
 
 
-# @pytest.fixture(name="places_published")
-# def fixture_places_published(places, db_setup):
-#     places.is_published = True
-#     with unit_of_work(using=ctx.resource_repo) as uw:
-#         uw.put(places)
+@pytest.fixture(name="places_published", scope="session")
+def fixture_places_published(resource_places):  # , db_setup):
+    try:
+        app_config.bus.handle(
+            commands.CreateResource(
+                id=resource_places.id,
+                resource_id=resource_places.resource_id,
+                name=resource_places.name,
+                config=resource_places.config,
+                created_by=resource_places.last_modified_by,
+                message=resource_places.message,
+            )
+        )
+    except errors.IntegrityError:
+        pass
+    try:
+        app_config.bus.handle(
+            commands.PublishResource(
+                resource_id=resource_places.resource_id,
+                name=resource_places.name,
+                config=resource_places.config,
+                user=resource_places.last_modified_by,
+                message=resource_places.message,
+            )
+        )
+    except karp_errors.ResourceAlreadyPublished:
+        pass
+    # resource_places.is_published = True
+    # with app_config.bus.ctx.resource_uow as uow:
+    #     uow.resources.put(resource_places)
+    #     uow.commit()
 
-#     return places
+    return resource_places
 
 
 # @pytest.fixture(name="places_published_scope_module", scope="module")

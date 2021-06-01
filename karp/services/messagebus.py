@@ -62,6 +62,7 @@ EVENT_HANDLERS = {
 
 COMMAND_HANDLERS = {
     commands.CreateResource: resource_handlers.create_resource,
+    commands.PublishResource: resource_handlers.publish_resource,
     commands.UpdateResource: resource_handlers.update_resource,
     commands.AddEntry: entry_handlers.add_entry,
     commands.UpdateEntry: entry_handlers.update_entry,

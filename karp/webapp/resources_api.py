@@ -1,12 +1,13 @@
 from fastapi import APIRouter
 
-# from karp.application.services import resources
+from karp.services import resource_views
+
+from . import app_config
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 
 # import karp.resourcemgr as resourcemgr
 
-# conf_api = Blueprint("conf_api", __name__)
 
 router = APIRouter()
 
@@ -14,7 +15,7 @@ router = APIRouter()
 @router.get("/resources")
 def get_resources():
     result = []
-    for resource in resources.get_published_resources():
+    for resource in resource_views.get_published_resources(app_config.bus.ctx):
         resource_obj = {"resource_id": resource.resource_id}
 
         protected_conf = resource.config.get("protected")

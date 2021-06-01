@@ -72,9 +72,9 @@ class Resource(TimestampedVersionedEntity):
         #     )
 
         resource = cls(
-            resource_id,
-            resource_name,
-            config,
+            resource_id=resource_id,
+            name=resource_name,
+            config=config,
             message="Resource added.",
             op=ResourceOp.ADDED,
             entity_id=unique_id.make_unique_id(),
@@ -122,7 +122,7 @@ class Resource(TimestampedVersionedEntity):
         self._message = message
         self._op = op
         self._releases = []
-        self._entry_repository = None
+        # self._entry_repository = None
         self.entry_repository_type = entry_repository_type
         self._entry_json_schema = None
         self.events = []
@@ -164,16 +164,16 @@ class Resource(TimestampedVersionedEntity):
     def op(self):
         return self._op
 
-    @property
-    def entry_repository(self):
-        from karp.domain.repository import EntryRepository
+    # @property
+    # def entry_repository(self):
+    #     from karp.domain.repository import EntryRepository
 
-        if self._entry_repository is None:
-            self._entry_repository = EntryRepository.create(
-                self.entry_repository_type,
-                {"table_name": self._resource_id, "config": self.config},
-            )
-        return self._entry_repository
+    #     if self._entry_repository is None:
+    #         self._entry_repository = EntryRepository.create(
+    #             self.entry_repository_type,
+    #             {"table_name": self._resource_id, "config": self.config},
+    #         )
+    #     return self._entry_repository
 
     def stamp(
         self,

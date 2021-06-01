@@ -18,7 +18,7 @@ from karp.domain.models.resource import Resource
 
 # from karp.domain.services import indexing
 
-# from karp import errors
+from karp import errors as karp_errors
 
 # from karp.application import ctx
 
@@ -46,11 +46,6 @@ history_models = {}  # Dict
 resource_configs = {}  # Dict
 resource_versions = {}  # Dict[str, int]
 field_translations = {}  # Dict[str, Dict[str, List[str]]]
-
-
-def get_published_resources() -> List[Resource]:
-    with unit_of_work(using=ctx.resource_repo) as uw:
-        return uw.get_published_resources()
 
 
 def get_field_translations(resource_id: str) -> Optional[Dict]:
@@ -375,19 +370,20 @@ def update_resource(cmd: commands.UpdateResource, ctx: context.Context):
 #     return resource_id, resource_def.version
 
 
-def publish_resource(resource_id: str, version: Optional[int] = None):
-    print(f"publish_resource resource_id='{resource_id}' ...")
-    with unit_of_work(using=ctx.resource_repo) as uw:
-        resource = uw.by_resource_id(resource_id)
+def publish_resource(cmd: commands.PublishResource, ctx: context.Context):
+    print(f"publish_resource resource_id='{cmd.resource_id}' ...")
+    with ctx.resource_uow as uw:
+        resource = uw.resources.by_resource_id(cmd.resource_id)
         if resource.is_published:
-            print(f"'{resource_id}' already published!")
-            raise errors.ResourceAlreadyPublished(resource_id)
+            print(f"'{cmd.resource_id}' already published!")
+            raise karp_errors.ResourceAlreadyPublished(cmd.resource_id)
         resource.is_published = True
-        resource.stamp(user="Local admin", message="Publishing")
-        uw.update(resource)
-    print("calling indexing.publish_index ...")
-    indexing.publish_index(ctx.search_service, ctx.resource_repo, resource)
-    print("index published")
+        resource.stamp(user=cmd.user, message=cmd.message)
+        uw.resources.update(resource)
+        uw.commit()
+    # print("calling indexing.publish_index ...")
+    # indexing.publish_index(ctx.search_service, ctx.resource_repo, resource)
+    # print("index published")
 
 
 #     resource = database.get_resource_definition(resource_id, version)

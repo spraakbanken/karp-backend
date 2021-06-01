@@ -20,12 +20,15 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
     logger = setup_logging()
 
-    if with_context:
-        from karp.application.services.contexts import init_context
+    # if with_context:
+    #     from karp.application.services.contexts import init_context
 
-        init_context()
+    #     init_context()
 
-    load_modules(app)
+    from . import resources_api
+
+    resources_api.init_app(app)
+    # load_modules(app)
     from karp.errors import KarpError
 
     @app.exception_handler(KarpError)

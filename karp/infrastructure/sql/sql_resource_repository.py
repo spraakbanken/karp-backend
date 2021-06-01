@@ -16,9 +16,10 @@ from karp.infrastructure.sql.sql_repository import SqlRepository
 _logger = logging.getLogger("karp")
 
 
-class SqlResourceRepository(repository.ResourceRepository, SqlRepository):
+class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
     def __init__(self, session=None):
-        super().__init__()
+        repository.ResourceRepository.__init__(self)
+        SqlRepository.__init__(self)
         self.table = sql_models.ResourceDefinition
         self._session = session
 

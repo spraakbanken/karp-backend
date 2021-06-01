@@ -14,7 +14,7 @@ DEBUG = config("DEBUG", cast=bool, default=False)
 TESTING = config("TESTING", cast=bool, default=False)
 
 DB_DRIVER = config("DB_DRIVER", default="mysql+pymysql")
-DB_HOST = config("DB_HOST", default=None)
+DB_HOST = config("DB_HOST", default="localhost")
 DB_PORT = config("DB_PORT", cast=int, default=None)
 DB_USER = config("DB_USER", default=None)
 DB_PASSWORD = config("DB_PASSWORD", cast=str, default=None)

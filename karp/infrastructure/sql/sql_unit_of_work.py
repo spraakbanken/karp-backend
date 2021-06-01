@@ -75,6 +75,7 @@ class SqlUnitOfWork:  # (unit_of_work.UnitOfWork):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         # try:
         self._session.commit()
+        # self._state = SqlUnitOfWork.State.initialized
         # except db.exc.IntegrityError as err:
         #     logger.exception(err)
         #     str_err = str(err)
@@ -95,10 +96,12 @@ class SqlUnitOfWork:  # (unit_of_work.UnitOfWork):
     def abort(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         self._session.rollback()
+        self._state = SqlUnitOfWork.State.initialized
 
     def rollback(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         self._session.rollback()
+        self._state = SqlUnitOfWork.State.initialized
 
     def close(self):
         self._session.close()
