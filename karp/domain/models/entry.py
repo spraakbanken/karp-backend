@@ -113,6 +113,7 @@ class Entry(TimestampedVersionedEntity):
         timestamp: float,
         message: str = None,
     ):
+        self._check_not_discarded()
         self._op = EntryOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = True

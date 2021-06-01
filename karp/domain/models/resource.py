@@ -1,6 +1,7 @@
 """LexicalResource"""
 import abc
 import enum
+from karp.utility.time import utc_now
 from uuid import UUID
 from typing import Callable, Dict, Any, Optional, List, Union
 
@@ -21,6 +22,9 @@ class ResourceOp(enum.Enum):
     ADDED = "ADDED"
     UPDATED = "UPDATED"
     DELETED = "DELETED"
+
+
+_now = object()
 
 
 class Resource(TimestampedVersionedEntity):
@@ -78,16 +82,6 @@ class Resource(TimestampedVersionedEntity):
             **kwargs,
         )
         return resource
-
-    class Discarded(TimestampedVersionedEntity.Discarded):
-        def mutate(self, obj):
-            super().mutate(obj)
-
-    class Stamped(TimestampedVersionedEntity.Stamped):
-        def mutate(self, obj):
-            super().mutate(obj)
-            obj._message = self.message
-            obj._op = ResourceOp.UPDATED
 
     class NewReleaseAdded(DomainEvent):
         def mutate(self, obj):
@@ -152,6 +146,11 @@ class Resource(TimestampedVersionedEntity):
     def name(self):
         return self._name
 
+    @name.setter
+    def name(self, name):
+        self._check_not_discarded()
+        self._name = name
+
     @property
     def message(self):
         return self._message
@@ -180,13 +179,13 @@ class Resource(TimestampedVersionedEntity):
         self,
         *,
         user: str,
-        timestamp: float,
+        timestamp: float = None,
         message: str = None,
         increment_version: bool = True,
     ):
         self._check_not_discarded()
 
-        self._last_modified = timestamp
+        self._last_modified = timestamp or utc_now()
         self._last_modified_by = user
         self._message = message or "Updated"
         self._op = ResourceOp.UPDATED
@@ -200,8 +199,8 @@ class Resource(TimestampedVersionedEntity):
                 config=self.config,
                 version=self.version,
                 timestamp=self.last_modified,
-                user=user,
-                message=message,
+                user=self.last_modified_by,
+                message=self.message,
             )
         )
 
@@ -225,18 +224,26 @@ class Resource(TimestampedVersionedEntity):
         self._check_not_discarded()
         pass
 
-    def discard(self, *, user: str, message: str):
+    def discard(self, *, user: str, message: str, timestamp: float = None):
         self._check_not_discarded()
-        event = Resource.Discarded(
-            entity_id=self.id,
-            entity_version=self.version,
-            entity_last_modified=self.last_modified,
-            user=user,
-            message=message,
+        self._op = ResourceOp.DELETED
+        self._message = message or "Entry deleted."
+        self._discarded = True
+        self._last_modified_by = user
+        self._last_modified = timestamp or utc_now()
+        self._version += 1
+        self.publish(
+            events.ResourceDiscarded(
+                id=self.id,
+                version=self.version,
+                timestamp=self.last_modified,
+                user=self.last_modified_by,
+                message=self.message,
+                resource_id=self.resource_id,
+                name=self.name,
+                config=self.config,
+            )
         )
-
-        event.mutate(self)
-        event_handler.publish(event)
 
     @property
     def entry_json_schema(self) -> Dict:

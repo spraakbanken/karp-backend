@@ -19,6 +19,17 @@ class ResourceCreated(Event):
 
 
 @dataclass
+class ResourceDiscarded(Event):
+    id: uuid.UUID
+    resource_id: str
+    name: str
+    config: Dict
+    user: str
+    message: str
+    version: int
+
+
+@dataclass
 class ResourceUpdated(Event):
     id: uuid.UUID
     resource_id: str

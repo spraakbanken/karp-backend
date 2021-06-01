@@ -3,8 +3,22 @@ import uuid
 
 import pytest
 
+from karp.domain import events, model, errors
+
 from karp.domain.errors import ConsistencyError, DiscardedEntityError, ConstraintsError
 from karp.domain.models.resource import Resource, ResourceOp, Release, create_resource
+from karp.utility import unique_id
+
+
+def random_resource():
+    return model.Resource(
+        entity_id=unique_id.make_unique_id(),
+        resource_id="resource",
+        name="Resource",
+        config={"fields": {"wf": {"type" "string"}, "id": "wf"}},
+        message="Resource add",
+        last_modified_by="kristoff@example.com",
+    )
 
 
 def test_create_resource_creates_resource():
@@ -35,6 +49,15 @@ def test_create_resource_creates_resource():
     assert int(resource.last_modified) == 12345
     assert resource.message == "Resource added."
     assert resource.op == ResourceOp.ADDED
+    assert resource.events[-1] == events.ResourceCreated(
+        timestamp=resource.last_modified,
+        id=resource.id,
+        resource_id=resource.resource_id,
+        name=resource.name,
+        config=resource.config,
+        user=resource.last_modified_by,
+        message=resource.message,
+    )
 
 
 def test_resource_stamp_changes_last_modified_and_version():
@@ -58,6 +81,16 @@ def test_resource_stamp_changes_last_modified_and_version():
     assert resource.last_modified > previous_last_modified
     assert resource.last_modified_by == "Test"
     assert resource.version == (previous_version + 1)
+    assert resource.events[-1] == events.ResourceUpdated(
+        timestamp=resource.last_modified,
+        id=resource.id,
+        resource_id=resource.resource_id,
+        name=resource.name,
+        config=resource.config,
+        user=resource.last_modified_by,
+        message=resource.message,
+        version=resource.version,
+    )
 
 
 def test_resource_add_new_release_creates_release():
@@ -234,3 +267,29 @@ def test_resource_has_entry_json_schema():
 
     assert json_schema["type"] == "object"
     assert "baseform" in json_schema["properties"]
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        # ("resource_id", "new..1"),
+        # ("config", {"b": "r"}),
+        ("name", "New name"),
+    ],
+)
+def test_discarded_resource_has_event(field, value):
+    resource = random_resource()
+    resource.discard(user="alice@example.org", message="bad", timestamp=123.45)
+    assert resource.discarded
+    assert resource.events[-1] == events.ResourceDiscarded(
+        id=resource.id,
+        resource_id=resource.resource_id,
+        user=resource.last_modified_by,
+        timestamp=resource.last_modified,
+        message=resource.message,
+        version=2,
+        name=resource.name,
+        config=resource.config,
+    )
+    with pytest.raises(errors.DiscardedEntityError):
+        setattr(resource, field, value)
