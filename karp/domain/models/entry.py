@@ -32,7 +32,6 @@ class EntryStatus(enum.Enum):
 
 
 class Entry(TimestampedVersionedEntity):
-
     def __init__(
         self,
         *,
@@ -54,15 +53,17 @@ class Entry(TimestampedVersionedEntity):
         self.resource_id = resource_id
         self._status = status
         self.resource_id = resource_id
-        self.publish(events.EntryAdded(
-            resource_id=resource_id,
-            id=self.id,
-            entry_id=self.entry_id,
-            body=self.body,
-            message=self.message,
-            user=self.last_modified_by,
-            timestamp=self.last_modified,
-        ))
+        self.publish(
+            events.EntryAdded(
+                resource_id=resource_id,
+                id=self.id,
+                entry_id=self.entry_id,
+                body=self.body,
+                message=self.message,
+                user=self.last_modified_by,
+                timestamp=self.last_modified,
+            )
+        )
 
     @property
     def entry_id(self):
@@ -118,15 +119,17 @@ class Entry(TimestampedVersionedEntity):
         self._last_modified_by = user
         self._last_modified = timestamp
         self._version += 1
-        self.publish(events.EntryDiscarded(
-            id=self.id,
-            entry_id=self.entry_id,
-            timestamp=self.last_modified,
-            user=user,
-            message=message,
-            version=self.version,
-            resource_id=self.resource_id,
-        ))
+        self.publish(
+            events.EntryDiscarded(
+                id=self.id,
+                entry_id=self.entry_id,
+                timestamp=self.last_modified,
+                user=user,
+                message=message,
+                version=self.version,
+                resource_id=self.resource_id,
+            )
+        )
         # event.mutate(self)
         # event_handler.publish(event)
 
@@ -141,6 +144,18 @@ class Entry(TimestampedVersionedEntity):
         super().stamp(user, timestamp=timestamp, increment_version=increment_version)
         self._message = message
         self._op = EntryOp.UPDATED
+        self.publish(
+            events.EntryUpdated(
+                timestamp=self.last_modified,
+                id=self.id,
+                resource_id=self.resource_id,
+                entry_id=self.entry_id,
+                body=self.body,
+                message=self.message,
+                user=self.last_modified_by,
+                version=self.version,
+            )
+        )
 
     def __repr__(self) -> str:
         return f"Entry(id={self._id}, entry_id={self._entry_id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"

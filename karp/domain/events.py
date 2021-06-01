@@ -40,6 +40,17 @@ class EntryAdded(Event):
 
 
 @dataclass
+class EntryUpdated(Event):
+    id: uuid.UUID
+    resource_id: str
+    entry_id: str
+    body: Dict
+    message: str
+    user: str
+    version: int
+
+
+@dataclass
 class EntryDiscarded(Event):
     id: uuid.UUID
     resource_id: str
