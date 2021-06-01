@@ -14,7 +14,7 @@ DEBUG = config("DEBUG", cast=bool, default=False)
 TESTING = config("TESTING", cast=bool, default=False)
 
 DB_DRIVER = config("DB_DRIVER", default="mysql+pymysql")
-DB_HOST = config("DB_HOST", default="localhost")
+DB_HOST = config("DB_HOST", default=None)
 DB_PORT = config("DB_PORT", cast=int, default=None)
 DB_USER = config("DB_USER", default=None)
 DB_PASSWORD = config("DB_PASSWORD", cast=str, default=None)
@@ -22,6 +22,8 @@ DB_DATABASE = config("DB_DATABASE", default=None)
 DB_TEST_DATABASE = config("DB_TEST_DATABASE", default=None)
 if TESTING is True:
     DB_DATABASE = DB_TEST_DATABASE or f"test_{DB_DATABASE}"
+if DB_DRIVER != "sqlite" and not DB_HOST:
+    DB_HOST = "localhost"
 DB_URL = config(
     "DB_URL",
     cast=make_url,
