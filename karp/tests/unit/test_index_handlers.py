@@ -1,4 +1,4 @@
-from karp.domain.services.indexing import transform_to_index_entry
+from karp.services import index_handlers
 
 
 def test_transform_to_index_entry():

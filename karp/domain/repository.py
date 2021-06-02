@@ -1,5 +1,6 @@
 import abc
 import logging
+import typing
 from typing import Dict, List, Optional, Union, Tuple
 import uuid
 
@@ -7,34 +8,36 @@ from . import errors, model
 
 logger = logging.getLogger("karp")
 
+EntityType = typing.TypeVar("EntityType")
 
-class Repository(abc.ABC):
+
+class Repository(typing.Generic[EntityType], abc.ABC):
     EntityNotFound = RuntimeError
 
     def __init__(self):
         self.seen = set()
 
-    def put(self, entity):
+    def put(self, entity: EntityType):
         self._put(entity)
         self.seen.add(entity)
 
-    def update(self, entity):
+    def update(self, entity: EntityType):
         existing_entity = self.by_id(entity.id)
         if not existing_entity:
             raise self.EntityNotFound(entity)
         self._update(entity)
 
     @abc.abstractmethod
-    def _put(self, entity):
+    def _put(self, entity: EntityType):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def _update(self, entity):
+    def _update(self, entity: EntityType):
         raise NotImplementedError()
 
     def by_id(
         self, id: Union[uuid.UUID, str], *, version: Optional[int] = None
-    ) -> Optional[model.Entity]:
+    ) -> Optional[EntityType]:
         entity = self._by_id(id, version=version)
         if entity:
             self.seen.add(entity)
@@ -43,16 +46,16 @@ class Repository(abc.ABC):
     @abc.abstractmethod
     def _by_id(
         self, id: Union[uuid.UUID, str], *, version: Optional[int] = None
-    ) -> Optional[model.Entity]:
+    ) -> Optional[EntityType]:
         raise NotImplementedError()
 
 
-class ResourceRepository(Repository):
+class ResourceRepository(Repository[model.Resource]):
     EntityNotFound = errors.ResourceNotFound
 
     @abc.abstractmethod
     def check_status(self):
-        raise errors.RepositoryStatusError()
+        pass
 
     # @abc.abstractmethod
     # def resource_ids(self) -> List[Resource]:
@@ -89,7 +92,7 @@ class ResourceRepository(Repository):
     #     raise NotImplementedError()
 
 
-class EntryRepository(Repository):
+class EntryRepository(Repository[model.Entry]):
     # class Repository:
     #     def __init_subclass__(cls) -> None:
     #         print(f"Setting EntryRepository.repository = {cls}")

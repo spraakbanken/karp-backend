@@ -46,6 +46,9 @@ class TestCreateResource:
 
         assert bus.ctx.resource_uow.was_committed
 
+        assert bus.ctx.index_uow.repo.indicies[resource_id].created
+        assert bus.ctx.index_uow.was_committed
+
     def test_create_resource_with_same_resource_id_raises(self):
         # uow = FakeUnitOfWork(FakeResourceRepository())
         bus = bootstrap_test_app()
@@ -166,3 +169,5 @@ class TestPublishResource:
         assert resource.is_published
         assert resource.version == 2
         assert bus.ctx.resource_uow.was_committed
+        assert bus.ctx.index_uow.repo.indicies[resource_id].published
+        assert bus.ctx.index_uow.was_committed

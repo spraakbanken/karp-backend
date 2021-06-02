@@ -1,9 +1,9 @@
 import logging
-from typing import List, Union
+from typing import Callable, Dict, List, Type, Union
 
 from karp.domain import commands, events, auth_service as authenticator
 
-from karp.services import entry_handlers, resource_handlers
+from karp.services import entry_handlers, resource_handlers, index_handlers
 
 from . import context, unit_of_work
 
@@ -20,9 +20,13 @@ class MessageBus:
         resource_uow: unit_of_work.ResourceUnitOfWork,
         entry_uows: unit_of_work.EntriesUnitOfWork,
         auth_service: authenticator.AuthService,
+        index_uow: unit_of_work.IndexUnitOfWork,
     ):
         self.ctx = context.Context(
-            resource_uow=resource_uow, entry_uows=entry_uows, auth_service=auth_service
+            resource_uow=resource_uow,
+            entry_uows=entry_uows,
+            auth_service=auth_service,
+            index_uow=index_uow,
         )
         self.queue = []
 
@@ -58,12 +62,13 @@ class MessageBus:
             raise
 
 
-EVENT_HANDLERS = {
-    events.ResourceCreated: [],
+EVENT_HANDLERS: Dict[Type[events.Event], List[Callable]] = {
+    events.ResourceCreated: [index_handlers.create_index],
+    events.ResourcePublished: [index_handlers.publish_index],
     events.ResourceUpdated: [],
 }
 
-COMMAND_HANDLERS = {
+COMMAND_HANDLERS: Dict[Type[commands.Command], Callable] = {
     commands.CreateResource: resource_handlers.create_resource,
     commands.PublishResource: resource_handlers.publish_resource,
     commands.UpdateResource: resource_handlers.update_resource,

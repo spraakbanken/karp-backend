@@ -1,6 +1,8 @@
+from dataclasses import dataclass
+import typing
 from typing import List
 from karp import bootstrap
-from karp.domain import repository
+from karp.domain import index, repository
 from karp.services import unit_of_work
 
 
@@ -63,6 +65,24 @@ class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
         return cls()
 
 
+class FakeIndex(index.Index, index_type="fake"):
+    @dataclass
+    class Index:
+        config: typing.Dict
+        created: bool = True
+        published: bool = False
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.indicies = {}
+
+    def create_index(self, resource_id: str, config: typing.Dict):
+        self.indicies[resource_id] = FakeIndex.Index(config=config)
+
+    def publish_index(self, alias_name: str, index_name: str = None):
+        self.indicies[alias_name].published = True
+
+
 class FakeUnitOfWork:
     def start(self):
         self.was_committed = False
@@ -91,7 +111,7 @@ class FakeEntryUnitOfWork(FakeUnitOfWork, unit_of_work.EntryUnitOfWork):
         self._entries = FakeEntryRepository()
 
     @property
-    def entries(self) -> repository.EntryRepository:
+    def repo(self) -> repository.EntryRepository:
         return self._entries
 
 
@@ -100,8 +120,17 @@ class FakeResourceUnitOfWork(FakeUnitOfWork, unit_of_work.ResourceUnitOfWork):
         self._resources = FakeResourceRepository()
 
     @property
-    def resources(self) -> repository.ResourceRepository:
+    def repo(self) -> repository.ResourceRepository:
         return self._resources
+
+
+class FakeIndexUnitOfWork(FakeUnitOfWork, unit_of_work.IndexUnitOfWork):
+    def __init__(self):
+        self._index = FakeIndex()
+
+    @property
+    def repo(self) -> index.Index:
+        return self._index
 
 
 @unit_of_work.create_unit_of_work.register(FakeEntryRepository)
@@ -112,5 +141,8 @@ def _(repo: FakeEntryRepository):
 def bootstrap_test_app(entry_uow_keys: List[str] = None):
     return bootstrap.bootstrap(
         resource_uow=FakeResourceUnitOfWork(),
-        entry_uows=unit_of_work.EntriesUnitOfWork(((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])),
+        entry_uows=unit_of_work.EntriesUnitOfWork(
+            ((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])
+        ),
+        index_uow=FakeIndexUnitOfWork(),
     )

@@ -8,6 +8,7 @@ def bootstrap(
     resource_uow: unit_of_work.ResourceUnitOfWork = None,
     entry_uows: unit_of_work.EntriesUnitOfWork = None,
     authservice: auth_service.AuthService = None,
+    index_uow: unit_of_work.IndexUnitOfWork = None,
 ) -> messagebus.MessageBus:
     if authservice is None:
         authservice = jwt_auth_service.JWTAuthenticator()
@@ -16,5 +17,8 @@ def bootstrap(
     if entry_uows is None:
         entry_uows = unit_of_work.EntriesUnitOfWork()
     return messagebus.MessageBus(
-        resource_uow=resource_uow, entry_uows=entry_uows, auth_service=authservice
+        resource_uow=resource_uow,
+        entry_uows=entry_uows,
+        auth_service=authservice,
+        index_uow=index_uow,
     )

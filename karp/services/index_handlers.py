@@ -1,14 +1,21 @@
 import json
-from karp.infrastructure.unit_of_work import unit_of_work
+from karp.services import context
+
+# from karp.infrastructure.unit_of_work import unit_of_work
 import sys
 from typing import Dict, List, Tuple, Optional
 import collections
 import logging
 
+from karp.domain import events
 from karp.domain.models.entry import Entry, create_entry
-from karp.domain.models.resource import Resource, ResourceRepository
-from karp.domain.models.search_service import IndexEntry, SearchService
-from karp.domain.services import network
+from karp.domain.models.resource import Resource
+from karp.domain.repository import ResourceRepository
+from karp.domain.index import IndexEntry, Index
+
+from karp.services import context
+
+# from karp.domain.services import network
 
 # from .index import IndexModule
 # import karp.resourcemgr as resourcemgr
@@ -42,7 +49,7 @@ logger = logging.getLogger("karp")
 def pre_process_resource(
     resource: Resource,
     resource_repo: ResourceRepository,
-    indexer: SearchService,
+    indexer: Index,
 ) -> List[IndexEntry]:
     with unit_of_work(using=resource.entry_repository) as uw:
         index_entries = [
@@ -82,11 +89,15 @@ def pre_process_resource(
 #         search_entries = pre_process_resource(resource_obj)
 #     add_entries(index_name, search_entries, update_refs=False)
 #     indexer.impl.publish_index(resource_id, index_name)
+# def reindex(
+#     indexer: Index,
+#     resource_repo: ResourceRepository,
+#     resource: Resource,
+#     search_entries: Optional[List[IndexEntry]] = None,
+# ):
 def reindex(
-    indexer: SearchService,
-    resource_repo: ResourceRepository,
-    resource: Resource,
-    search_entries: Optional[List[IndexEntry]] = None,
+    evt: events.ResourcePublished,
+    ctx: context.Context,
 ):
     print("creating index ...")
     index_name = indexer.create_index(resource.resource_id, resource.config)
@@ -110,15 +121,22 @@ def reindex(
 
 # def publish_index(resource_id: str, version: Optional[int] = None) -> None:
 def publish_index(
-    indexer: SearchService,
-    resource_repo: ResourceRepository,
-    resource: Resource,
-    version: Optional[int] = None,
+    evt: events.ResourcePublished,
+    ctx: context.Context,
 ) -> None:
     print("calling reindex ...")
-    reindex(indexer, resource_repo, resource)
+    # reindex(evt, ctx)
+    with ctx.index_uow:
+        ctx.index_uow.repo.publish_index(evt.resource_id)
+        ctx.index_uow.commit()
     # if version:
     #     resourcemgr.publish_resource(resource_id, version)
+
+
+def create_index(evt: events.ResourceCreated, ctx: context.Context):
+    with ctx.index_uow:
+        ctx.index_uow.repo.create_index(evt.resource_id, evt.config)
+        ctx.index_uow.commit()
 
 
 # def add_entries(
@@ -133,7 +151,7 @@ def publish_index(
 
 def add_entries(
     resource_repo: ResourceRepository,
-    indexer: SearchService,
+    indexer: Index,
     resource: Resource,
     entries: List[Entry],
     *,
@@ -160,7 +178,7 @@ def add_entries(
 
 def _update_references(
     resource_repo: ResourceRepository,
-    indexer: SearchService,
+    indexer: Index,
     resource: Resource,
     entries: List[Entry],
 ) -> None:
@@ -191,7 +209,7 @@ def _update_references(
 
 def transform_to_index_entry(
     resource_repo: ResourceRepository,
-    indexer: SearchService,
+    indexer: Index,
     resource: Resource,
     src_entry: Entry,
 ) -> IndexEntry:
@@ -220,7 +238,7 @@ def transform_to_index_entry(
 
 def _evaluate_function(
     resource_repo: ResourceRepository,
-    indexer: SearchService,
+    indexer: Index,
     function_conf: Dict,
     src_entry: Dict,
     src_resource: Resource,
@@ -297,7 +315,7 @@ def _evaluate_function(
 def _transform_to_index_entry(
     resource: Resource,
     resource_repo: ResourceRepository,
-    indexer: SearchService,
+    indexer: Index,
     _src_entry: Dict,
     _index_entry: IndexEntry,
     fields,

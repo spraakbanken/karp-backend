@@ -53,7 +53,7 @@ class Entry(TimestampedVersionedEntity):
         self.resource_id = resource_id
         self._status = status
         self.resource_id = resource_id
-        self.publish(
+        self._publish(
             events.EntryAdded(
                 resource_id=resource_id,
                 id=self.id,
@@ -120,7 +120,7 @@ class Entry(TimestampedVersionedEntity):
         self._last_modified_by = user
         self._last_modified = timestamp
         self._version += 1
-        self.publish(
+        self._publish(
             events.EntryDiscarded(
                 id=self.id,
                 entry_id=self.entry_id,
@@ -145,7 +145,7 @@ class Entry(TimestampedVersionedEntity):
         super().stamp(user, timestamp=timestamp, increment_version=increment_version)
         self._message = message
         self._op = EntryOp.UPDATED
-        self.publish(
+        self._publish(
             events.EntryUpdated(
                 timestamp=self.last_modified,
                 id=self.id,

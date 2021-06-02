@@ -1,10 +1,12 @@
 import collections
 from karp.domain.models.entry import Entry
-from karp.infrastructure.unit_of_work import unit_of_work
+
+# from karp.infrastructure.unit_of_work import unit_of_work
 from typing import Dict, Any, Iterator, Optional, Tuple, List
 import json
 
-from karp.domain.models.resource import Resource, ResourceRepository
+from karp.domain.models.resource import Resource
+from karp.domain.repository import ResourceRepository
 
 # from karp.resourcemgr import get_resource
 # import karp.resourcemgr.entryread as entryread

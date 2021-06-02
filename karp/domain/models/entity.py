@@ -18,7 +18,7 @@ class Entity:
         self._root = aggregate_root
         self.events = []
 
-    def publish(self, event):
+    def _publish(self, event):
         self.events.append(event)
 
     @property

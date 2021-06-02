@@ -125,7 +125,7 @@ class SqlResourceUnitOfWork(SqlUnitOfWork, unit_of_work.ResourceUnitOfWork):
         return super().__enter__()
 
     @property
-    def resources(self) -> SqlResourceRepository:
+    def repo(self) -> SqlResourceRepository:
         if self._resources is None:
             raise RuntimeError("No resources")
         return self._resources
@@ -146,7 +146,7 @@ class SqlEntryUnitOfWork(SqlUnitOfWork, unit_of_work.EntryUnitOfWork):
         return super().__enter__()
 
     @property
-    def entries(self) -> SqlEntryRepository:
+    def repo(self) -> SqlEntryRepository:
         if self._entries is None:
             raise RuntimeError("No resources")
         return self._entries

@@ -372,15 +372,17 @@ def update_resource(cmd: commands.UpdateResource, ctx: context.Context):
 
 def publish_resource(cmd: commands.PublishResource, ctx: context.Context):
     print(f"publish_resource resource_id='{cmd.resource_id}' ...")
-    with ctx.resource_uow as uw:
-        resource = uw.resources.by_resource_id(cmd.resource_id)
-        if resource.is_published:
-            print(f"'{cmd.resource_id}' already published!")
-            raise karp_errors.ResourceAlreadyPublished(cmd.resource_id)
-        resource.is_published = True
-        resource.stamp(user=cmd.user, message=cmd.message)
-        uw.resources.update(resource)
-        uw.commit()
+    with ctx.resource_uow:
+        resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
+        if not resource:
+            raise errors.ResourceNotFound(cmd.resource_id)
+        # if resource.is_published:
+        #     print(f"'{cmd.resource_id}' already published!")
+        #     raise karp_errors.ResourceAlreadyPublished(cmd.resource_id)
+        # resource.is_published = True
+        resource.publish(user=cmd.user, message=cmd.message, timestamp=cmd.timestamp)
+        ctx.resource_uow.repo.update(resource)
+        ctx.resource_uow.commit()
     # print("calling indexing.publish_index ...")
     # indexing.publish_index(ctx.search_service, ctx.resource_repo, resource)
     # print("index published")

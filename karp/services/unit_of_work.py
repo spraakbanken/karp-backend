@@ -1,12 +1,16 @@
 """Unit of Work"""
 import abc
 from functools import singledispatch
-from typing import Iterable
+import typing
 
-from karp.domain import repository
+from karp.domain import index, network, repository
+
+RepositoryType = typing.TypeVar(
+    "RepositoryType", repository.Repository, index.Index, network.Network
+)
 
 
-class UnitOfWork(abc.ABC):
+class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
     def __enter__(self) -> "UnitOfWork":
         return self
 
@@ -16,7 +20,7 @@ class UnitOfWork(abc.ABC):
     def commit(self):
         self._commit()
 
-    def collect_new_events(self) -> Iterable:
+    def collect_new_events(self) -> typing.Iterable:
         for entity in self.repo.seen:
             while entity.events:
                 yield entity.events.pop(0)
@@ -31,38 +35,34 @@ class UnitOfWork(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def repo(self) -> repository.Repository:
+    def repo(self) -> RepositoryType:
         pass
 
 
-class ResourceUnitOfWork(UnitOfWork):
+class ResourceUnitOfWork(UnitOfWork[repository.ResourceRepository]):
     @property
-    @abc.abstractmethod
     def resources(self) -> repository.ResourceRepository:
-        pass
+        return self.repo
 
+
+class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
     @property
-    def repo(self):
-        return self.resources
-
-
-class EntryUnitOfWork(UnitOfWork):
-    @property
-    @abc.abstractmethod
     def entries(self) -> repository.EntryRepository:
-        pass
+        return self.repo
 
-    @property
-    def repo(self):
-        return self.entries
+
+class IndexUnitOfWork(UnitOfWork[index.Index]):
+    pass
 
 
 class EntriesUnitOfWork(UnitOfWork):
     def __init__(self, entry_uows=None):
-        self.entry_uows = {key: uow for key, uow in entry_uows} if entry_uows else {}
+        self.entry_uows: typing.Dict[str, EntryUnitOfWork] = (
+            {key: uow for key, uow in entry_uows} if entry_uows else {}
+        )
 
     def get(self, resource_id: str) -> EntryUnitOfWork:
-        return self.entry_uows.get(resource_id)
+        return self.entry_uows[resource_id]
 
     @property
     def repo(self):

@@ -1,3 +1,4 @@
+import abc
 from karp.domain.models.resource import Resource
 from typing import Optional, Callable, TypeVar, List, Dict, Tuple
 import logging
@@ -28,7 +29,7 @@ class QueryRequest(pydantic.BaseModel):
     q: str
 
 
-class Index:
+class Index(abc.ABC):
     _registry = {}
 
     def __init_subclass__(
@@ -36,9 +37,7 @@ class Index:
     ) -> None:
         super().__init_subclass__(**kwargs)
         if index_type is None:
-            raise RuntimeError(
-                "Unallowed index_type: index_type = None"
-            )
+            raise RuntimeError("Unallowed index_type: index_type = None")
         if index_type in cls._registry:
             raise RuntimeError(
                 f"An Index with type '{index_type}' already exists: {cls._registry[index_type]!r}"
@@ -46,9 +45,7 @@ class Index:
         index_type = index_type.lower()
         cls._registry[index_type] = cls
         if is_default or None not in cls._registry:
-            logger.info(
-                "Setting default Index type to '%s'", index_type
-            )
+            logger.info("Setting default Index type to '%s'", index_type)
             cls._registry[None] = index_type
 
     @classmethod
@@ -61,16 +58,16 @@ class Index:
         try:
             index_cls = cls._registry[index_type]
         except KeyError:
-            raise ConfigurationError(
-                f"Can't create a Index of type '{index_type}'"
-            )
+            raise ConfigurationError(f"Can't create a Index of type '{index_type}'")
         return index_cls()
 
-    def create_index(self, resource_id: str, config: Dict) -> str:
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def create_index(self, resource_id: str, config: Dict):
+        pass
 
-    def publish_index(self, alias_name: str, index_name: str):
-        raise NotImplementedError()
+    @abc.abstractmethod
+    def publish_index(self, alias_name: str, index_name: str = None):
+        pass
 
     def add_entries(self, resource_id: str, entries: List[IndexEntry]):
         raise NotImplementedError()

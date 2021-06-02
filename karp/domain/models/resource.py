@@ -125,8 +125,7 @@ class Resource(TimestampedVersionedEntity):
         # self._entry_repository = None
         self.entry_repository_type = entry_repository_type
         self._entry_json_schema = None
-        self.events = []
-        self.events.append(
+        self._publish(
             events.ResourceCreated(
                 id=self._id,
                 resource_id=self._resource_id,
@@ -191,7 +190,7 @@ class Resource(TimestampedVersionedEntity):
         self._op = ResourceOp.UPDATED
         if increment_version:
             self._version += 1
-        self.events.append(
+        self._publish(
             events.ResourceUpdated(
                 id=self.id,
                 resource_id=self.resource_id,
@@ -200,6 +199,33 @@ class Resource(TimestampedVersionedEntity):
                 version=self.version,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
+                message=self.message,
+            )
+        )
+
+    def publish(
+        self,
+        *,
+        user: str,
+        message: str,
+        timestamp: float = None,
+    ):
+        self._check_not_discarded()
+        self._last_modified = timestamp or utc_now()
+        self._last_modified_by = user
+        self._message = message or "Published"
+        self._op = ResourceOp.UPDATED
+        self._version += 1
+        self.is_published = True
+        self._publish(
+            events.ResourcePublished(
+                id=self.id,
+                resource_id=self.resource_id,
+                timestamp=self.last_modified,
+                user=self.last_modified_by,
+                version=self.version,
+                name=self.name,
+                config=self.config,
                 message=self.message,
             )
         )
@@ -232,7 +258,7 @@ class Resource(TimestampedVersionedEntity):
         self._last_modified_by = user
         self._last_modified = timestamp or utc_now()
         self._version += 1
-        self.publish(
+        self._publish(
             events.ResourceDiscarded(
                 id=self.id,
                 version=self.version,

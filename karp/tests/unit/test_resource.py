@@ -293,3 +293,21 @@ def test_discarded_resource_has_event(field, value):
     )
     with pytest.raises(errors.DiscardedEntityError):
         setattr(resource, field, value)
+
+
+def test_published_resource_has_event():
+    resource = random_resource()
+    previous_version = resource.version
+    resource.publish(user="kristoff@example.com", message="publish")
+    assert resource.is_published
+    assert resource.version == (previous_version + 1)
+    assert resource.events[-1] == events.ResourcePublished(
+        id=resource.id,
+        resource_id=resource.resource_id,
+        user=resource.last_modified_by,
+        timestamp=resource.last_modified,
+        version=resource.version,
+        config=resource.config,
+        name=resource.name,
+        message=resource.message,
+    )
