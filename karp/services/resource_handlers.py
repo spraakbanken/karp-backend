@@ -186,7 +186,12 @@ def create_resource(cmd: commands.CreateResource, ctx: context.Context):
             last_modified_by=cmd.created_by,
             entry_repository_type=cmd.entry_repository_type,
         )
-        uow.resources.put(resource)
+
+        entry_repo_uow = ctx.entry_uow_factory.create(cmd.entry_repository_type)
+        resource.entry_repository_type = entry_repo_uow.repo.type
+        resource.entry_repository_settings = entry_repo_uow.repo.settings
+
+        uow.repo.put(resource)
         uow.commit()
 
 

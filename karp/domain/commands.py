@@ -45,7 +45,7 @@ class PublishResource(Command):
 class AddEntry(Command):
     resource_id: str
     id: unique_id.UniqueId
-    entry_id: str
+    # entry_id: str
     entry: Dict
     user: str
     message: str
