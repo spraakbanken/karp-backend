@@ -3,7 +3,9 @@ from typing import Optional, Callable, TypeVar, List, Dict, Tuple
 import logging
 
 import attr
+import pydantic
 
+from karp.domain import errors, model
 from karp.domain.errors import ConfigurationError
 
 from karp.domain.models.query import Query
@@ -22,43 +24,47 @@ class IndexEntry:
         return bool(self.entry)
 
 
-class SearchService:
+class QueryRequest(pydantic.BaseModel):
+    q: str
+
+
+class Index:
     _registry = {}
 
     def __init_subclass__(
-        cls, search_service_type: str, is_default: bool = False, **kwargs
+        cls, index_type: str, is_default: bool = False, **kwargs
     ) -> None:
         super().__init_subclass__(**kwargs)
-        if search_service_type is None:
+        if index_type is None:
             raise RuntimeError(
-                "Unallowed search_service_type: search_service_type = None"
+                "Unallowed index_type: index_type = None"
             )
-        if search_service_type in cls._registry:
+        if index_type in cls._registry:
             raise RuntimeError(
-                f"An SearchService with type '{search_service_type}' already exists: {cls._registry[search_service_type]!r}"
+                f"An Index with type '{index_type}' already exists: {cls._registry[index_type]!r}"
             )
-        search_service_type = search_service_type.lower()
-        cls._registry[search_service_type] = cls
+        index_type = index_type.lower()
+        cls._registry[index_type] = cls
         if is_default or None not in cls._registry:
             logger.info(
-                "Setting default SearchService type to '%s'", search_service_type
+                "Setting default Index type to '%s'", index_type
             )
-            cls._registry[None] = search_service_type
+            cls._registry[None] = index_type
 
     @classmethod
-    def create(cls, search_service_type: Optional[str]):
-        if search_service_type is None:
-            search_service_type = cls._registry[None]
+    def create(cls, index_type: Optional[str]):
+        if index_type is None:
+            index_type = cls._registry[None]
         else:
-            search_service_type = search_service_type.lower()
+            index_type = index_type.lower()
 
         try:
-            search_service_cls = cls._registry[search_service_type]
+            index_cls = cls._registry[index_type]
         except KeyError:
             raise ConfigurationError(
-                f"Can't create a SearchService of type '{search_service_type}'"
+                f"Can't create a Index of type '{index_type}'"
             )
-        return search_service_cls()
+        return index_cls()
 
     def create_index(self, resource_id: str, config: Dict) -> str:
         raise NotImplementedError()
