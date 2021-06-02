@@ -2,13 +2,14 @@
 import logging
 from typing import Optional, List, Tuple, Dict, Union
 from uuid import UUID
+import typing
 
 from karp.domain.errors import RepositoryStatusError, IntegrityError
 from karp.domain.models.resource import (
     Resource,
     ResourceOp,
 )
-from karp.domain import repository
+from karp.domain import model, repository
 
 from karp.infrastructure.sql import db, sql_models
 from karp.infrastructure.sql.sql_repository import SqlRepository
@@ -126,7 +127,7 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
             .all()
         ]
 
-    def get_published_resources(self) -> List[Resource]:
+    def _get_published_resources(self) -> typing.List[model.Resource]:
         self._check_has_session()
         subq = (
             self._session.query(
