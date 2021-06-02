@@ -3,17 +3,18 @@ from karp.services import context
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 import sys
+import typing
 from typing import Dict, List, Tuple, Optional
 import collections
 import logging
 
-from karp.domain import events
+from karp.domain import events, model, errors, index
 from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.resource import Resource
 from karp.domain.repository import ResourceRepository
 from karp.domain.index import IndexEntry, Index
 
-from karp.services import context
+from karp.services import context, network_handlers
 
 # from karp.domain.services import network
 
@@ -21,7 +22,7 @@ from karp.services import context
 # import karp.resourcemgr as resourcemgr
 # import karp.resourcemgr.entryread as entryread
 # from karp.resourcemgr.resource import Resource
-from karp import errors
+from karp import errors as karp_errors
 
 # from karp.resourcemgr.entrymetadata import EntryMetadata
 
@@ -134,6 +135,7 @@ def publish_index(
 
 
 def create_index(evt: events.ResourceCreated, ctx: context.Context):
+    print(f"index_handlers.create_index: evt = {evt}")
     with ctx.index_uow:
         ctx.index_uow.repo.create_index(evt.resource_id, evt.config)
         ctx.index_uow.commit()
@@ -149,70 +151,136 @@ def create_index(evt: events.ResourceCreated, ctx: context.Context):
 #         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
+def add_entry(
+    evt: events.EntryAdded,
+    ctx: context.Context,
+):
+    with ctx.index_uow:
+        entry = model.Entry(
+            entity_id=evt.id,
+            entry_id=evt.entry_id,
+            resource_id=evt.resource_id,
+            body=evt.body,
+            message=evt.message,
+            last_modified=evt.timestamp,
+            last_modified_by=evt.user,
+        )
+        add_entries(evt.resource_id, [entry], ctx)
+        ctx.index_uow.commit()
+
+
+def update_entry(
+    evt: events.EntryUpdated,
+    ctx: context.Context,
+):
+    with ctx.index_uow:
+        entry = model.Entry(
+            entity_id=evt.id,
+            entry_id=evt.entry_id,
+            resource_id=evt.resource_id,
+            body=evt.body,
+            message=evt.message,
+            last_modified=evt.timestamp,
+            last_modified_by=evt.user,
+            version=evt.version,
+        )
+        add_entries(evt.resource_id, [entry], ctx)
+        ctx.index_uow.commit()
+
+    # def add_entries(
+    #     resource_repo: ResourceRepository,
+    #     indexer: Index,
+    #     resource: Resource,
+    #     entries: List[Entry],
+    #     *,
+    #     update_refs: bool = True,
+    #     index_name: Optional[str] = None,
+    # ) -> None:
+
+
 def add_entries(
-    resource_repo: ResourceRepository,
-    indexer: Index,
-    resource: Resource,
-    entries: List[Entry],
+    resource_id: str,
+    entries: typing.List[model.Entry],
+    ctx: context.Context,
     *,
     update_refs: bool = True,
-    index_name: Optional[str] = None,
-) -> None:
+    index_name: typing.Optional[str] = None,
+):
     if not index_name:
-        index_name = resource.resource_id
-    indexer.add_entries(
-        index_name,
-        [
-            transform_to_index_entry(resource_repo, indexer, resource, entry)
-            for entry in entries
-        ],
-    )
-    if update_refs:
-        _update_references(resource_repo, indexer, resource, entries)
+        index_name = resource_id
+    with ctx.index_uow:
+        with ctx.resource_uow:
+            resource = ctx.resource_uow.repo.by_resource_id(resource_id)
+            if not resource:
+                raise errors.ResourceNotFound(resource_id)
+            ctx.index_uow.repo.add_entries(
+                index_name,
+                [transform_to_index_entry(resource, entry, ctx) for entry in entries],
+            )
+            if update_refs:
+                _update_references(resource, entries, ctx)
+            ctx.resource_uow.commit()
+        ctx.index_uow.commit()
 
 
-# def delete_entry(resource_id: str, entry_id: str) -> None:
-#     indexer.impl.delete_entry(resource_id, entry_id)
-#     _update_references(resource_id, [entry_id])
+def delete_entry(evt: events.EntryDiscarded, ctx: context.Context):
+    with ctx.index_uow:
+        ctx.index_uow.repo.delete_entry(evt.resource_id, entry_id=evt.entry_id)
+        with ctx.resource_uow:
+            resource = ctx.resource_uow.repo.by_resource_id(evt.resource_id)
+            if not resource:
+                raise errors.ResourceNotFound(evt.resource_id)
+            with ctx.entry_uows.get(evt.resource_id) as uow:
+                entry = uow.repo.by_entry_id(evt.entry_id)
+                _update_references(resource, [entry], ctx)
+                uow.commit()
+            ctx.resource_uow.commit()
+        ctx.index_uow.commit()
 
 
 def _update_references(
-    resource_repo: ResourceRepository,
-    indexer: Index,
-    resource: Resource,
+    # resource_id: str,
+    # resource_repo: ResourceRepository,
+    # indexer: Index,
+    resource: model.Resource,
     entries: List[Entry],
+    ctx: context.Context,
 ) -> None:
     add = collections.defaultdict(list)
-    with unit_of_work(using=resource_repo) as resources_uw:
+    with ctx.resource_uow:
         for src_entry in entries:
-            refs = network.get_referenced_entries(
-                resource_repo, resource, None, src_entry.entry_id
+            refs = network_handlers.get_referenced_entries(
+                resource, None, src_entry.entry_id, ctx
             )
             for field_ref in refs:
                 ref_resource_id = field_ref["resource_id"]
-                ref_resource = resources_uw.by_resource_id(
+                ref_resource = ctx.resource_uow.repo.by_resource_id(
                     ref_resource_id, version=(field_ref["resource_version"])
                 )
+                if ref_resource:
+                    ref_index_entry = transform_to_index_entry(
+                        # resource_repo,
+                        # indexer,
+                        ref_resource,
+                        field_ref["entry"],
+                        # ref_resource.config["fields"].items(),
+                        ctx,
+                    )
+                    # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
+                    add[ref_resource_id].append(ref_index_entry)
 
-                ref_index_entry = transform_to_index_entry(
-                    resource_repo,
-                    indexer,
-                    ref_resource,
-                    field_ref["entry"],
-                    # ref_resource.config["fields"].items(),
-                )
-                # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
-                add[ref_resource_id].append(ref_index_entry)
     for ref_resource_id, ref_entries in add.items():
-        indexer.add_entries(ref_resource_id, ref_entries)
+        ctx.index_uow.repo.add_entries(ref_resource_id, ref_entries)
 
 
 def transform_to_index_entry(
-    resource_repo: ResourceRepository,
-    indexer: Index,
-    resource: Resource,
-    src_entry: Entry,
-) -> IndexEntry:
+    # resource_id: str,
+    # resource_repo: ResourceRepository,
+    # indexer: Index,
+    resource: model.Resource,
+    src_entry: model.Entry,
+    ctx: context.Context,
+) -> index.IndexEntry:
     """
     TODO This is very slow (for resources with references) because of db-lookups everywhere in the code
     TODO We can pre-fetch the needed entries (same code that only looks for refs?) or
@@ -220,28 +288,34 @@ def transform_to_index_entry(
     TODO the transformed entries afterward. Very tricky.
     """
     print(f"transforming entry_id={src_entry.entry_id}")
-    index_entry = indexer.create_empty_object()
+    index_entry = ctx.index_uow.repo.create_empty_object()
     index_entry.id = src_entry.entry_id
-    indexer.assign_field(index_entry, "_entry_version", src_entry.version)
-    indexer.assign_field(index_entry, "_last_modified", src_entry.last_modified)
-    indexer.assign_field(index_entry, "_last_modified_by", src_entry.last_modified_by)
+    ctx.index_uow.repo.assign_field(index_entry, "_entry_version", src_entry.version)
+    ctx.index_uow.repo.assign_field(
+        index_entry, "_last_modified", src_entry.last_modified
+    )
+    ctx.index_uow.repo.assign_field(
+        index_entry, "_last_modified_by", src_entry.last_modified_by
+    )
     _transform_to_index_entry(
         resource,
-        resource_repo,
-        indexer,
+        # resource_repo,
+        # indexer,
         src_entry.body,
         index_entry,
         resource.config["fields"].items(),
+        ctx,
     )
     return index_entry
 
 
 def _evaluate_function(
-    resource_repo: ResourceRepository,
-    indexer: Index,
-    function_conf: Dict,
-    src_entry: Dict,
-    src_resource: Resource,
+    # resource_repo: ResourceRepository,
+    # indexer: Index,
+    function_conf: typing.Dict,
+    src_entry: typing.Dict,
+    src_resource: model.Resource,
+    ctx: context.Context,
 ):
     print(f"indexing._evaluate_function src_resource={src_resource.resource_id}")
     print(f"indexing._evaluate_function src_entry={src_entry}")
@@ -252,7 +326,7 @@ def _evaluate_function(
             print(
                 f"indexing._evaluate_function: trying to find '{function_conf['resource_id']}'"
             )
-            target_resource = resource_repo.by_resource_id(
+            target_resource = ctx.resource_uow.repo.by_resource_id(
                 function_conf["resource_id"], version=function_conf["resource_version"]
             )
             if target_resource is None:
@@ -260,7 +334,7 @@ def _evaluate_function(
                     "Didn't find the resource with resource_id='%s'",
                     function_conf["resource_id"],
                 )
-                return indexer.create_empty_list()
+                return ctx.index_uow.repo.create_empty_list()
         else:
             target_resource = src_resource
         print(
@@ -278,28 +352,29 @@ def _evaluate_function(
                 # target_entries = entryread.get_entries_by_column(
                 #     target_resource, filters
                 # )
-                with unit_of_work(
-                    using=target_resource.entry_repository
+                with ctx.entry_uows.get(
+                    target_resource.resource_id
                 ) as target_entries_uw:
-                    target_entries = target_entries_uw.by_referenceable(filters)
+                    target_entries = target_entries_uw.repo.by_referenceable(filters)
             else:
                 raise NotImplementedError()
         else:
             raise NotImplementedError()
 
-        res = indexer.create_empty_list()
+        res = ctx.index_uow.repo.create_empty_list()
         for entry in target_entries:
-            index_entry = indexer.create_empty_object()
+            index_entry = ctx.index_uow.repo.create_empty_object()
             list_of_sub_fields = (("tmp", function_conf["result"]),)
             _transform_to_index_entry(
                 target_resource,
-                resource_repo,
-                indexer,
+                # resource_repo,
+                # indexer,
                 {"tmp": entry.body},
                 index_entry,
                 list_of_sub_fields,
+                ctx,
             )
-            indexer.add_to_list_field(res, index_entry.entry["tmp"])
+            ctx.index_uow.repo.add_to_list_field(res, index_entry.entry["tmp"])
     elif "plugin" in function_conf:
         plugin_id = function_conf["plugin"]
         import karp.pluginmanager as plugins
@@ -313,26 +388,25 @@ def _evaluate_function(
 
 
 def _transform_to_index_entry(
-    resource: Resource,
-    resource_repo: ResourceRepository,
-    indexer: Index,
-    _src_entry: Dict,
-    _index_entry: IndexEntry,
+    resource: model.Resource,
+    # resource_repo: ResourceRepository,
+    # indexer: Index,
+    _src_entry: typing.Dict,
+    _index_entry: index.IndexEntry,
     fields,
+    ctx: context.Context,
 ):
     for field_name, field_conf in fields:
         if field_conf.get("virtual"):
             print("found virtual field")
-            res = _evaluate_function(
-                resource_repo, indexer, field_conf["function"], _src_entry, resource
-            )
+            res = _evaluate_function(field_conf["function"], _src_entry, resource, ctx)
             print(f"res = {res}")
             if res:
-                indexer.assign_field(_index_entry, "v_" + field_name, res)
+                ctx.index_uow.repo.assign_field(_index_entry, "v_" + field_name, res)
         elif field_conf.get("ref"):
             ref_field = field_conf["ref"]
             if ref_field.get("resource_id"):
-                ref_resource = resource_repo.by_resource_id(
+                ref_resource = ctx.resource_uow.repo.by_resource_id(
                     ref_field["resource_id"], version=ref_field["resource_version"]
                 )
                 # if not ref_resource:
@@ -343,26 +417,34 @@ def _transform_to_index_entry(
                     ref_objs = []
                     if ref_resource:
                         for ref_id in _src_entry[field_name]:
-                            with unit_of_work(
-                                using=ref_resource.entry_repository
+                            with ctx.entry_uows.get(
+                                ref_resource.resource_id
                             ) as ref_resource_entries_uw:
-                                ref_entry_body = ref_resource_entries_uw.by_entry_id(
-                                    str(ref_id)
+                                ref_entry_body = (
+                                    ref_resource_entries_uw.repo.by_entry_id(
+                                        str(ref_id)
+                                    )
                                 )
+                                ref_resource_entries_uw.commit()
                             if ref_entry_body:
                                 ref_entry = {field_name: ref_entry_body.body}
-                                ref_index_entry = indexer.create_empty_object()
+                                ref_index_entry = (
+                                    ctx.index_uow.repo.create_empty_object()
+                                )
                                 list_of_sub_fields = ((field_name, ref_field["field"]),)
                                 _transform_to_index_entry(
                                     resource,
-                                    resource_repo,
-                                    indexer,
+                                    # resource_repo,
+                                    # indexer,
                                     ref_entry,
                                     ref_index_entry,
                                     list_of_sub_fields,
+                                    ctx,
                                 )
                                 ref_objs.append(ref_index_entry.entry[field_name])
-                    indexer.assign_field(_index_entry, "v_" + field_name, ref_objs)
+                    ctx.index_uow.repo.assign_field(
+                        _index_entry, "v_" + field_name, ref_objs
+                    )
                 else:
                     raise NotImplementedError()
             else:
@@ -373,23 +455,25 @@ def _transform_to_index_entry(
                     ref_id = [ref_id]
 
                 for elem in ref_id:
-                    with unit_of_work(
-                        using=resource.entry_repository
+                    with ctx.entry_uows.get(
+                        resource.resource_id
                     ) as resource_entries_uw:
-                        ref = resource_entries_uw.by_entry_id(str(elem))
+                        ref = resource_entries_uw.repo.by_entry_id(str(elem))
+                        resource_entries_uw.commit()
                     if ref:
                         ref_entry = {field_name: ref.body}
-                        ref_index_entry = indexer.create_empty_object()
+                        ref_index_entry = ctx.index_uow.repo.create_empty_object()
                         list_of_sub_fields = ((field_name, ref_field["field"]),)
                         _transform_to_index_entry(
                             resource,
-                            resource_repo,
-                            indexer,
+                            # resource_repo,
+                            # indexer,
                             ref_entry,
                             ref_index_entry,
                             list_of_sub_fields,
+                            ctx,
                         )
-                        indexer.assign_field(
+                        ctx.index_uow.repo.assign_field(
                             _index_entry,
                             "v_" + field_name,
                             ref_index_entry.entry[field_name],
@@ -397,18 +481,19 @@ def _transform_to_index_entry(
 
         if field_conf["type"] == "object":
             print("found field with type 'object'")
-            field_content = indexer.create_empty_object()
+            field_content = ctx.index_uow.repo.create_empty_object()
             if field_name in _src_entry:
                 _transform_to_index_entry(
                     resource,
-                    resource_repo,
-                    indexer,
+                    # resource_repo,
+                    # indexer,
                     _src_entry[field_name],
                     field_content,
                     field_conf["fields"].items(),
+                    ctx,
                 )
         else:
             field_content = _src_entry.get(field_name)
 
         if field_content:
-            indexer.assign_field(_index_entry, field_name, field_content)
+            ctx.index_uow.repo.assign_field(_index_entry, field_name, field_content)

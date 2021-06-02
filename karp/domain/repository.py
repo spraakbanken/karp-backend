@@ -87,9 +87,16 @@ class ResourceRepository(Repository[model.Resource]):
     # def get_active_resource(self, resource_id: str) -> Optional[Resource]:
     #     raise NotImplementedError()
 
-    # @abc.abstractmethod
-    # def get_published_resources(self) -> List[Resource]:
-    #     raise NotImplementedError()
+    def get_published_resources(self) -> typing.List[model.Resource]:
+        published_resources = []
+        for resource in self._get_published_resources():
+            self.seen.add(resource)
+            published_resources.append(resource)
+        return published_resources
+
+    @abc.abstractmethod
+    def _get_published_resources(self) -> typing.Iterable[model.Resource]:
+        raise NotImplementedError()
 
 
 class EntryRepository(Repository[model.Entry]):

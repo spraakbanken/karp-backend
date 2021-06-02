@@ -25,7 +25,7 @@ class IndexEntry:
         return bool(self.entry)
 
 
-class QueryRequest(pydantic.BaseModel):
+class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
     q: str
 
 
@@ -69,17 +69,19 @@ class Index(abc.ABC):
     def publish_index(self, alias_name: str, index_name: str = None):
         pass
 
+    @abc.abstractmethod
     def add_entries(self, resource_id: str, entries: List[IndexEntry]):
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def delete_entry(
         self,
-        resource: Resource,
+        resource_id: str,
         *,
         entry_id: Optional[str] = None,
-        entry: Optional[Entry] = None,
+        # entry: Optional[Entry] = None,
     ):
-        raise NotImplementedError()
+        pass
 
     def create_empty_object(self) -> IndexEntry:
         return IndexEntry()

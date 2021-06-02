@@ -309,9 +309,9 @@ def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):
 def update_entry(
     cmd: commands.UpdateEntry,
     ctx: context.Context,
-) -> str:
+):
     with ctx.resource_uow:
-        resource = ctx.resource_uow.resources.by_resource_id(cmd.resource_id)
+        resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
     #     resource = get_resource(resource_id, version=resource_version)
 
     if not resource:
@@ -320,10 +320,10 @@ def update_entry(
     _validate_entry(schema, cmd.entry)
 
     with ctx.entry_uows.get(cmd.resource_id) as uw:
-        current_db_entry = uw.entries.by_entry_id(cmd.entry_id)
+        current_db_entry = uw.repo.by_entry_id(cmd.entry_id)
 
         if not current_db_entry:
-            raise errors.EntryNotFoundError(
+            raise errors.EntryNotFound(
                 cmd.resource_id,
                 cmd.entry_id,
                 entry_version=cmd.version,
@@ -353,9 +353,9 @@ def update_entry(
         current_db_entry.stamp(cmd.user, message=cmd.message)
         if new_entry_id != cmd.entry_id:
             current_db_entry.entry_id = new_entry_id
-            uw.entries.move(current_db_entry, old_entry_id=cmd.entry_id)
+            uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
         else:
-            uw.entries.update(current_db_entry)
+            uw.repo.update(current_db_entry)
         uw.commit()
     # if resource.is_published:
     #     if new_entry_id != entry_id:
@@ -557,22 +557,31 @@ def add_entries(
 #     return kwargs
 
 
-def delete_entry(resource_id: str, entry_id: str, user_id: str):
-    with unit_of_work(using=ctx.resource_repo) as uw:
-        resource = uw.get_active_resource(resource_id)
+# def delete_entry(resource_id: str, entry_id: str, user_id: str):
+def delete_entry(cmd: commands.DeleteEntry, ctx: context.Context):
+    # with ctx.resource_uow:
+    #     resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
 
-    with unit_of_work(using=resource.entry_repository) as uw:
-        entry = uw.by_entry_id(entry_id)
+    with ctx.entry_uows.get(cmd.resource_id) as uw:
+        entry = uw.repo.by_entry_id(cmd.entry_id)
 
         #     resource = get_resource(resource_id)
         #     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
         if not entry:
-            raise EntryNotFoundError(resource_id, entry_id)
+            raise errors.EntryNotFound(
+                resource_id=cmd.resource_id,
+                entry_id=cmd.entry_id,
+                entry_version=cmd.version,
+            )
 
-        entry.discard(user=user_id)
-        uw.delete(entry)
+        entry.discard(
+            user=cmd.user,
+            message=cmd.message,
+            timestamp=cmd.timestamp,
+        )
+        uw.repo.update(entry)
 
-    ctx.search_service.delete_entry(resource, entry=entry)
+    # ctx.search_service.delete_entry(resource, entry=entry)
 
 
 # def delete_entry(resource_id: str, entry_id: str, user_id: str):

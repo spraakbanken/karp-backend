@@ -59,6 +59,14 @@ class AddEntries(Command):
     message: str
 
 
+class DeleteEntry(Command):
+    resource_id: str
+    entry_id: str
+    version: int
+    user: str
+    message: str
+
+
 class UpdateEntry(Command):
     resource_id: str
     entry_id: str

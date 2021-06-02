@@ -66,6 +66,9 @@ EVENT_HANDLERS: Dict[Type[events.Event], List[Callable]] = {
     events.ResourceCreated: [index_handlers.create_index],
     events.ResourcePublished: [index_handlers.publish_index],
     events.ResourceUpdated: [],
+    events.EntryAdded: [index_handlers.add_entry],
+    events.EntryDiscarded: [index_handlers.delete_entry],
+    events.EntryUpdated: [index_handlers.update_entry],
 }
 
 COMMAND_HANDLERS: Dict[Type[commands.Command], Callable] = {
@@ -73,5 +76,6 @@ COMMAND_HANDLERS: Dict[Type[commands.Command], Callable] = {
     commands.PublishResource: resource_handlers.publish_resource,
     commands.UpdateResource: resource_handlers.update_resource,
     commands.AddEntry: entry_handlers.add_entry,
+    commands.DeleteEntry: entry_handlers.delete_entry,
     commands.UpdateEntry: entry_handlers.update_entry,
 }

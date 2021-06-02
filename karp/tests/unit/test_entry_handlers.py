@@ -98,6 +98,12 @@ class TestAddEntry:
 
         assert uow.was_committed
 
+        assert (
+            bus.ctx.index_uow.repo.indicies[resource_id].entries[entry_id].id
+            == entry_id
+        )
+        assert bus.ctx.index_uow.was_committed
+
     def test_create_entry_with_same_entry_id_raises(self):
         resource_id = "abc"
         bus = bootstrap_test_app([resource_id])
@@ -181,6 +187,13 @@ class TestUpdateEntry:
         assert entry.body["b"] == "added"
         assert entry.version == 2
         assert uow.was_committed
+        assert (
+            bus.ctx.index_uow.repo.indicies[resource_id]
+            .entries[entry.entry_id]
+            .entry["_entry_version"]
+            == entry.version
+        )
+        assert bus.ctx.index_uow.was_committed
 
     def test_cannot_update_entry_in_nonexistent_resource(self):
         bus = bootstrap_test_app()
@@ -195,3 +208,40 @@ class TestUpdateEntry:
                     message="update",
                 )
             )
+
+
+class TestDeleteEntry:
+    def test_can_delete_entry(self):
+        resource_id = "abc"
+        bus = bootstrap_test_app([resource_id])
+        id_ = make_unique_id()
+        bus.handle(make_create_resource_command(resource_id))
+        bus.handle(
+            commands.AddEntry(
+                id=id_,
+                entry_id="r1",
+                resource_id=resource_id,
+                entry={"id": "r1", "a": "b"},
+                message="added",
+                user="user",
+            ),
+        )
+        bus.handle(
+            commands.DeleteEntry(
+                entry_id="r1",
+                version=1,
+                resource_id=resource_id,
+                message="deleted",
+                user="bob",
+            ),
+        )
+
+        uow = bus.ctx.entry_uows.get(resource_id)
+        entry = uow.repo.by_id(id_)
+        assert entry.version == 2
+        assert entry.discarded
+        assert uow.was_committed
+        assert (
+            entry.entry_id not in bus.ctx.index_uow.repo.indicies[resource_id].entries
+        )
+        assert bus.ctx.index_uow.was_committed

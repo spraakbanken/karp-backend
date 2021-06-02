@@ -8,6 +8,21 @@ class DomainError(errors.KarpError):
         super().__init__(*args, **kwargs)
 
 
+class EntryNotFound(DomainError):
+    def __init__(
+        self,
+        entry_id: str,
+        resource_id: str,
+        entry_version: int,
+        resource_version: int = None,
+        **kwargs,
+    ):
+        super().__init__(
+            f"Entry '{entry_id}' (version={entry_version}) not found int resource '{resource_id}' (version={resource_version})",
+            **kwargs,
+        )
+
+
 class ConfigurationError(DomainError):
     """Raised when a problem with the system configuration is detected."""
 
@@ -34,6 +49,7 @@ class ConstraintsError(DomainError, ValueError):
 
 class ResourceNotFound(DomainError):
     """Raised when a resource is missing."""
+
     def __init__(self, resource_id, **kwargs):
         super().__init__(f"Resource '{resource_id}' not found.", **kwargs)
 

@@ -1,8 +1,8 @@
-from dataclasses import dataclass
+import dataclasses
 import typing
 from typing import List
 from karp import bootstrap
-from karp.domain import index, repository
+from karp.domain import index, repository, model
 from karp.services import unit_of_work
 
 
@@ -30,6 +30,9 @@ class FakeResourceRepository(repository.ResourceRepository):
 
     def __len__(self):
         return len(self.resources)
+
+    def _get_published_resources(self) -> typing.Iterable[model.Resource]:
+        return (res for res in self.resources if res.is_published)
 
 
 class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
@@ -66,9 +69,12 @@ class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
 
 
 class FakeIndex(index.Index, index_type="fake"):
-    @dataclass
+    @dataclasses.dataclass
     class Index:
         config: typing.Dict
+        entries: typing.Dict[str, index.IndexEntry] = dataclasses.field(
+            default_factory=dict
+        )
         created: bool = True
         published: bool = False
 
@@ -81,6 +87,19 @@ class FakeIndex(index.Index, index_type="fake"):
 
     def publish_index(self, alias_name: str, index_name: str = None):
         self.indicies[alias_name].published = True
+
+    def add_entries(self, resource_id: str, entries: typing.List[index.IndexEntry]):
+        for entry in entries:
+            self.indicies[resource_id].entries[entry.id] = entry
+
+    def delete_entry(
+        self,
+        resource_id: str,
+        *,
+        entry_id: typing.Optional[str],
+        # entry: typing.Optional[model.Entry]
+    ):
+        del self.indicies[resource_id].entries[entry_id]
 
 
 class FakeUnitOfWork:
@@ -104,6 +123,9 @@ class FakeUnitOfWork:
 
     def rollback(self):
         self.was_rolled_back = True
+
+    def collect_new_events(self):
+        return []
 
 
 class FakeEntryUnitOfWork(FakeUnitOfWork, unit_of_work.EntryUnitOfWork):

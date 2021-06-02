@@ -1,12 +1,14 @@
 import collections
+import typing
 from karp.domain.models.entry import Entry
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 from typing import Dict, Any, Iterator, Optional, Tuple, List
 import json
 
-from karp.domain.models.resource import Resource
+from karp.domain import model
 from karp.domain.repository import ResourceRepository
+from karp.services import context
 
 # from karp.resourcemgr import get_resource
 # import karp.resourcemgr.entryread as entryread
@@ -14,36 +16,37 @@ from karp.errors import EntryNotFoundError
 
 
 def get_referenced_entries(
-    resource_repo: ResourceRepository,
-    resource: Resource,
-    version: Optional[int],
+    resource: model.Resource,
+    version: typing.Optional[int],
     entry_id: str,
-) -> Iterator[Dict[str, Any]]:
+    ctx: context.Context,
+) -> typing.Iterator[typing.Dict[str, typing.Any]]:
     print(f"network.get_referenced_entries: resource={resource.resource_id}")
     print(f"network.get_referenced_entries: entry_id={entry_id}")
     resource_refs, resource_backrefs = get_refs(
-        resource_repo, resource.resource_id, version=version
+        resource.resource_id, version=version, ctx=ctx
     )
 
-    with unit_of_work(using=resource.entry_repository) as uw:
-        src_entry = uw.by_entry_id(entry_id, version=version)
+    with ctx.entry_uows.get(resource.resource_id) as uw:
+        src_entry = uw.repo.by_entry_id(entry_id, version=version)
         if not src_entry:
             raise EntryNotFoundError(
                 resource.resource_id, entry_id, resource_version=resource.version
             )
+        uw.commit()
 
-    with unit_of_work(using=resource_repo) as resources_uw:
+    with ctx.resource_uow:
         for (
             ref_resource_id,
             ref_resource_version,
             field_name,
             field,
         ) in resource_backrefs:
-            other_resource = resources_uw.by_resource_id(
+            other_resource = ctx.resource_uow.repo.by_resource_id(
                 ref_resource_id, version=version
             )
-            with unit_of_work(using=other_resource.entry_repository) as entries_uw:
-                for entry in entries_uw.by_referenceable({field_name: entry_id}):
+            with ctx.entry_uows.get(other_resource.resource_id) as entries_uw:
+                for entry in entries_uw.repo.by_referenceable({field_name: entry_id}):
                     yield _create_ref(ref_resource_id, ref_resource_version, entry)
 
         # src_body = json.loads(src_entry.body)
@@ -51,11 +54,11 @@ def get_referenced_entries(
             ids = src_entry.body.get(field_name)
             if not field.get("collection", False):
                 ids = [ids]
-            ref_resource = resources_uw.by_resource_id(ref_resource_id)
+            ref_resource = ctx.resource_uow.repo.by_resource_id(ref_resource_id)
             if ref_resource:
-                with unit_of_work(using=ref_resource.entry_repository) as entries_uw:
+                with ctx.entry_uows.get(ref_resource.resource_id) as entries_uw:
                     for ref_entry_id in ids:
-                        entry = entries_uw.by_entry_id(
+                        entry = entries_uw.repo.by_entry_id(
                             ref_entry_id, version=ref_resource_version
                         )
                         if entry:
@@ -65,7 +68,7 @@ def get_referenced_entries(
 
 
 def get_refs(
-    resource_repo: ResourceRepository, resource_id, version=None
+    resource_id, ctx: context.Context, version=None
 ) -> Tuple[List[Tuple[str, int, str, Dict]], List[Tuple[str, int, str, Dict]]]:
     """
     Goes through all other resource configs finding resources and fields that refer to this resource
@@ -73,12 +76,12 @@ def get_refs(
     resource_backrefs = collections.defaultdict(lambda: collections.defaultdict(dict))
     resource_refs = collections.defaultdict(lambda: collections.defaultdict(dict))
 
-    with unit_of_work(using=resource_repo) as uw:
-        src_resource = uw.by_resource_id(resource_id, version=version)
+    with ctx.resource_uow as uw:
+        src_resource = uw.repo.by_resource_id(resource_id, version=version)
 
         all_other_resources = [
             resource
-            for resource in uw.get_published_resources()
+            for resource in uw.repo.get_published_resources()
             if resource.resource_id != resource_id
             # or resource_def.version != version
         ]

@@ -74,6 +74,10 @@ class EntriesUnitOfWork(UnitOfWork):
     def rollback(self):
         pass
 
+    def collect_new_events(self) -> typing.Iterable:
+        for uow in self.entry_uows.values():
+            yield from uow.collect_new_events()
+
 
 def unit_of_work(*, using, **kwargs) -> UnitOfWork:
     return create_unit_of_work(using, **kwargs)

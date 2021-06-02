@@ -16,14 +16,14 @@ class Context:
     def __init__(
         self,
         resource_uow: unit_of_work.ResourceUnitOfWork,
-        entry_uows: Dict[str, unit_of_work.EntryUnitOfWork] = None,
+        entry_uows: unit_of_work.EntriesUnitOfWork = None,
         resource_repo: repository.ResourceRepository = None,
         search_service: index.Index = None,
         auth_service: AuthService = None,
         index_uow: unit_of_work.IndexUnitOfWork = None,
     ):
         self.resource_uow = resource_uow
-        self.entry_uows = entry_uows or {}
+        self.entry_uows = entry_uows
         self.resource_repo = resource_repo
         self.search_service = search_service
         self.auth_service = auth_service
@@ -34,6 +34,8 @@ class Context:
 
     def collect_new_events(self):
         yield from self.resource_uow.collect_new_events()
+        yield from self.entry_uows.collect_new_events()
+        # yield from self.index_uow.collect_new_events()
 
 
 # @singledispatch
