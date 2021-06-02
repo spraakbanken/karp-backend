@@ -9,6 +9,7 @@ def bootstrap(
     entry_uows: unit_of_work.EntriesUnitOfWork = None,
     authservice: auth_service.AuthService = None,
     index_uow: unit_of_work.IndexUnitOfWork = None,
+    raise_on_all_errors: bool = False,
 ) -> messagebus.MessageBus:
     if authservice is None:
         authservice = jwt_auth_service.JWTAuthenticator()
@@ -21,4 +22,5 @@ def bootstrap(
         entry_uows=entry_uows,
         auth_service=authservice,
         index_uow=index_uow,
+        raise_on_all_errors=raise_on_all_errors
     )

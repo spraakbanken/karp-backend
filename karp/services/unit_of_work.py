@@ -11,7 +11,7 @@ RepositoryType = typing.TypeVar(
 
 
 class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
-    def __enter__(self) -> "UnitOfWork":
+    def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -55,7 +55,7 @@ class IndexUnitOfWork(UnitOfWork[index.Index]):
     pass
 
 
-class EntriesUnitOfWork(UnitOfWork):
+class EntriesUnitOfWork:
     def __init__(self, entry_uows=None):
         self.entry_uows: typing.Dict[str, EntryUnitOfWork] = (
             {key: uow for key, uow in entry_uows} if entry_uows else {}

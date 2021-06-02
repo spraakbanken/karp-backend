@@ -15,6 +15,7 @@ class Repository(typing.Generic[EntityType], abc.ABC):
     EntityNotFound = RuntimeError
 
     def __init__(self):
+        print("init seen")
         self.seen = set()
 
     def put(self, entity: EntityType):
@@ -25,6 +26,7 @@ class Repository(typing.Generic[EntityType], abc.ABC):
         existing_entity = self.by_id(entity.id)
         if not existing_entity:
             raise self.EntityNotFound(entity)
+        self.seen.add(entity)
         self._update(entity)
 
     @abc.abstractmethod

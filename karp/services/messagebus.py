@@ -21,6 +21,7 @@ class MessageBus:
         entry_uows: unit_of_work.EntriesUnitOfWork,
         auth_service: authenticator.AuthService,
         index_uow: unit_of_work.IndexUnitOfWork,
+        raise_on_all_errors: bool = False,
     ):
         self.ctx = context.Context(
             resource_uow=resource_uow,
@@ -28,6 +29,7 @@ class MessageBus:
             auth_service=auth_service,
             index_uow=index_uow,
         )
+        self.raise_on_all_errors = raise_on_all_errors
         self.queue = []
 
     def handle(self, message: Message):
@@ -49,6 +51,8 @@ class MessageBus:
                 self.queue.extend(self.ctx.collect_new_events())
             except Exception:
                 logger.exception("Exception handling event %s", event)
+                if self.raise_on_all_errors:
+                    raise
                 continue
 
     def handle_command(self, command: commands.Command):

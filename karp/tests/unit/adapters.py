@@ -124,9 +124,6 @@ class FakeUnitOfWork:
     def rollback(self):
         self.was_rolled_back = True
 
-    def collect_new_events(self):
-        return []
-
 
 class FakeEntryUnitOfWork(FakeUnitOfWork, unit_of_work.EntryUnitOfWork):
     def __init__(self):
@@ -167,4 +164,5 @@ def bootstrap_test_app(entry_uow_keys: List[str] = None):
             ((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])
         ),
         index_uow=FakeIndexUnitOfWork(),
+        raise_on_all_errors=True,
     )
