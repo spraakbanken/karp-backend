@@ -12,7 +12,7 @@ import fastjsonschema  # pyre-ignore
 
 from sb_json_tools import jsondiff
 
-from karp.domain import commands, model, errors
+from karp.domain import commands, model, errors, events
 from . import context
 from karp.domain.models.resource import Resource
 
@@ -176,25 +176,40 @@ def create_resource(cmd: commands.CreateResource, ctx: context.Context):
             raise errors.IntegrityError(
                 f"Resource with '{cmd.resource_id}' already exists."
             )
-        resource = model.Resource(
+        resource = model.create_resource(
             entity_id=cmd.id,
             resource_id=cmd.resource_id,
-            name=cmd.name,
             config=cmd.config,
             message=cmd.message,
-            last_modified=cmd.timestamp,
-            last_modified_by=cmd.created_by,
-            entry_repository_type=cmd.entry_repository_type,
+            created_at=cmd.timestamp,
+            created_by=cmd.created_by,
+            name=cmd.name,
         )
 
         entry_repo_uow = ctx.entry_uow_factory.create(
-            cmd.entry_repository_type, cmd.entry_repository_settings
+            resource_id=cmd.resource_id,
+            entry_repository_type=cmd.entry_repository_type,
+            entry_repository_settings=cmd.entry_repository_settings,
         )
         resource.entry_repository_type = entry_repo_uow.repo.type
         resource.entry_repository_settings = entry_repo_uow.repo.settings
 
+        ctx.entry_uows.set_uow(cmd.resource_id, entry_repo_uow)
+
         uow.repo.put(resource)
         uow.commit()
+
+
+def setup_existing_resources(evt: events.AppStarted, ctx: context.Context):
+    with ctx.resource_uow:
+        for resource_id in ctx.resource_uow.repo.resource_ids():
+            resource = ctx.resource_uow.repo.by_resource_id(resource_id)
+            entry_repo_uow = ctx.entry_uow_factory.create(
+                resource_id=resource_id,
+                entry_repository_type=resource.entry_repository_type,
+                entry_repository_settings=resource.entry_repository_settings,
+            )
+            ctx.entry_uows.set_uow(resource_id, entry_repo_uow)
 
 
 def create_new_resource(config_file: IO, config_dir=None) -> Resource:

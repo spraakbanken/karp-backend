@@ -5,7 +5,6 @@ import uuid
 import pytest
 
 from karp.domain import model
-from karp.domain.commands import CreateResource
 from karp.domain.models.resource import ResourceOp, create_resource, Resource
 
 from karp.domain.errors import IntegrityError
@@ -43,16 +42,25 @@ def test_sql_resource_repo_put_resource(resource_repo):
     message = "add resource"
     # resource = create_resource(resource_config)
     id_ = unique_id.make_unique_id()
-    resource = model.Resource(
+    resource = model.create_resource(
         entity_id=id_,
         resource_id=resource_id,
-        name=resource_name,
         config=resource_config,
         message=message,
+        created_by="kristoff@example.com",
     )
 
+    # assert resource_repo._resource_to_row(resource) == (
+    #     None,
+    #     resource.id,
+    #     resource_id,
+    #     1,
+    # )
     resource_repo.put(resource)
     expected_version = 1
+    # assert resource.config == {}
+    assert resource.entry_repository_type == "sql_v1"
+    assert resource.entry_repository_settings == {"table_name": resource_id}
 
     assert resource_repo.resource_ids() == [resource_id]
 

@@ -34,6 +34,9 @@ class FakeResourceRepository(repository.ResourceRepository):
     def _get_published_resources(self) -> typing.Iterable[model.Resource]:
         return (res for res in self.resources if res.is_published)
 
+    def resource_ids(self) -> typing.Iterable[str]:
+        return (res.resource_id for res in self.resources)
+
 
 class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
     def __init__(self):
@@ -125,7 +128,9 @@ class FakeUnitOfWork:
         self.was_rolled_back = True
 
 
-class FakeEntryUnitOfWork(FakeUnitOfWork, unit_of_work.EntryUnitOfWork):
+class FakeEntryUnitOfWork(
+    FakeUnitOfWork, unit_of_work.EntryUnitOfWork, entry_repository_type="fake_entries"
+):
     def __init__(self):
         self._entries = FakeEntryRepository()
 
@@ -143,7 +148,9 @@ class FakeResourceUnitOfWork(FakeUnitOfWork, unit_of_work.ResourceUnitOfWork):
         return self._resources
 
 
-class FakeIndexUnitOfWork(FakeUnitOfWork, unit_of_work.IndexUnitOfWork):
+class FakeIndexUnitOfWork(
+    FakeUnitOfWork, unit_of_work.IndexUnitOfWork, index_type="fake_index"
+):
     def __init__(self):
         self._index = FakeIndex()
 
@@ -154,7 +161,7 @@ class FakeIndexUnitOfWork(FakeUnitOfWork, unit_of_work.IndexUnitOfWork):
 
 class FakeEntryUowFactory(unit_of_work.EntryUowFactory):
     def create(
-        self, entry_repository_type, entry_repository_settings
+        self, resource_id, entry_repository_type, entry_repository_settings
     ) -> unit_of_work.EntryUnitOfWork:
         entry_uow = FakeEntryUnitOfWork()
         if entry_repository_type:

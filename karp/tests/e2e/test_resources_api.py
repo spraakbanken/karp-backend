@@ -1,5 +1,7 @@
 import pytest
 
+# pytestmark = pytest.mark.usefixtures("use_main_index")
+
 
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")

@@ -1,13 +1,19 @@
 import logging
 from typing import Callable, Dict, List, Type, Union
+import typing
 
 from karp.domain import commands, events, auth_service as authenticator
 
-from karp.services import entry_handlers, resource_handlers, index_handlers
+from karp.services import (
+    entry_handlers,
+    resource_handlers,
+    index_handlers,
+    infrastructure_handlers,
+)
 
 from . import context, unit_of_work
 
-
+# pylint: disable=unsubscriptable-object
 Message = Union[commands.Command, events.Event]
 
 
@@ -69,7 +75,9 @@ class MessageBus:
 
 
 EVENT_HANDLERS: Dict[Type[events.Event], List[Callable]] = {
+    events.AppStarted: [resource_handlers.setup_existing_resources],
     events.ResourceCreated: [index_handlers.create_index],
+    events.ResourceLoaded: [],
     events.ResourcePublished: [index_handlers.publish_index],
     events.ResourceUpdated: [],
     events.EntryAdded: [index_handlers.add_entry],

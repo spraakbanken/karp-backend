@@ -41,7 +41,12 @@ class TestCreateResource:
 
         assert resource.name == resource_name
 
-        assert resource.config == conf
+        expected_config = {
+            "entry_repository_type": "fake",
+            "entry_repository_settings": {},
+        }
+        expected_config.update(conf)
+        assert resource.config == expected_config
         assert resource.last_modified_by == "kristoff@example.com"
 
         assert bus.ctx.resource_uow.was_committed

@@ -18,7 +18,7 @@ class Entity:
         self._root = aggregate_root
         self.events = []
 
-    def _publish(self, event):
+    def queue_event(self, event):
         self.events.append(event)
 
     @property

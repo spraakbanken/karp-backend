@@ -1,11 +1,19 @@
 from dataclasses import dataclass
+import typing
 from typing import Dict
 import uuid
+from karp.utility import time, unique_id
 
 
 @dataclass
 class Event:
     timestamp: float
+
+
+@dataclass
+class AppStarted(Event):
+    def __init__(self):
+        self.timestamp = time.utc_now()
 
 
 @dataclass
@@ -16,6 +24,17 @@ class ResourceCreated(Event):
     config: Dict
     user: str
     message: str
+
+
+@dataclass
+class ResourceLoaded(Event):
+    id: uuid.UUID
+    resource_id: str
+    name: str
+    config: Dict
+    user: str
+    message: str
+    version: int
 
 
 @dataclass

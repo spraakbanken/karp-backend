@@ -11,13 +11,12 @@ from karp.utility import unique_id
 
 
 def random_resource():
-    return model.Resource(
+    return model.create_resource(
         entity_id=unique_id.make_unique_id(),
         resource_id="resource",
-        name="Resource",
         config={"fields": {"wf": {"type" "string"}, "id": "wf"}},
         message="Resource add",
-        last_modified_by="kristoff@example.com",
+        created_by="kristoff@example.com",
     )
 
 
@@ -31,7 +30,7 @@ def test_create_resource_creates_resource():
         "fields": {"baseform": {"type": "string", "required": True}},
     }
     with mock.patch("karp.utility.time.utc_now", return_value=12345):
-        resource = create_resource(conf)
+        resource = create_resource(conf, created_by="kristoff@example.com")
 
     assert isinstance(resource, Resource)
     assert resource.id == uuid.UUID(str(resource.id), version=4)
@@ -71,7 +70,7 @@ def test_resource_stamp_changes_last_modified_and_version():
         "entry_repository_type": None,
         "entry_repository_settings": {},
     }
-    resource = create_resource(conf)
+    resource = create_resource(conf, created_by="kristoff@example.com")
 
     previous_last_modified = resource.last_modified
     previous_version = resource.version
@@ -102,7 +101,8 @@ def test_resource_add_new_release_creates_release():
             "fields": {"baseform": {"type": "string", "required": True}},
             "entry_repository_type": None,
             "entry_repository_settings": {},
-        }
+        },
+        created_by="kristoff@example.com",
     )
 
     previous_last_modified = resource.last_modified
@@ -129,7 +129,8 @@ def test_resource_release_with_name_on_discarded_raises_discarded_entity_error()
             "fields": {"baseform": {"type": "string", "required": True}},
             "entry_repository_type": None,
             "entry_repository_settings": {},
-        }
+        },
+        created_by="kristoff@example.com",
     )
 
     resource.discard(user="Test", message="Discard")
@@ -149,7 +150,8 @@ def test_resource_add_new_release_on_discarded_raises_discarded_entity_error():
             "fields": {"baseform": {"type": "string", "required": True}},
             "entry_repository_type": None,
             "entry_repository_settings": {},
-        }
+        },
+        created_by="kristoff@example.com",
     )
 
     resource.discard(user="Test", message="Discard")
@@ -169,7 +171,8 @@ def test_resource_add_new_release_with_invalid_name_raises_constraints_error():
             "fields": {"baseform": {"type": "string", "required": True}},
             "entry_repository_type": None,
             "entry_repository_settings": {},
-        }
+        },
+        created_by="kristoff@example.com",
     )
 
     with pytest.raises(ConstraintsError):
@@ -185,7 +188,8 @@ def test_resource_new_release_added_with_wrong_version_raises_consistency_error(
             "fields": {"baseform": {"type": "string", "required": True}},
             "entry_repository_type": None,
             "entry_repository_settings": {},
-        }
+        },
+        created_by="kristoff@example.com",
     )
     event = Resource.NewReleaseAdded(
         entity_id=resource.id,
@@ -204,7 +208,8 @@ def test_resource_new_release_added_with_wrong_last_modified_raises_consistency_
             "fields": {"baseform": {"type": "string", "required": True}},
             "entry_repository_type": None,
             "entry_repository_settings": {},
-        }
+        },
+        created_by="kristoff@example.com",
     )
     event = Resource.NewReleaseAdded(
         entity_id=resource.id, entity_version=resource.version, entity_last_modified=2
@@ -234,7 +239,8 @@ def test_release_created_w_resource_has_id():
             "fields": {"baseform": {"type": "string", "required": True}},
             "entry_repository_type": None,
             "entry_repository_settings": {},
-        }
+        },
+        created_by="kristoff@example.com",
     )
     release = Release(
         entity_id="e",
@@ -260,7 +266,8 @@ def test_resource_has_entry_json_schema():
             "fields": {"baseform": {"type": "string", "required": True}},
             "entry_repository_type": None,
             "entry_repository_settings": {},
-        }
+        },
+        created_by="kristoff@example.com",
     )
 
     json_schema = resource.entry_json_schema

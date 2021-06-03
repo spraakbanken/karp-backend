@@ -8,3 +8,7 @@ def length_gt_zero(attribute, value):
             f"'{attribute}' has to be non-empty. Got {attribute}='{value}'"
         )
     return value
+
+
+def valid_resource_id(name: str):
+    return length_gt_zero("resource_id", name)

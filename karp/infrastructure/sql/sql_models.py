@@ -1,12 +1,13 @@
 from typing import Dict
 
+from karp.domain import model
 from karp.domain.models.entry import EntryOp, EntryStatus
 from karp.domain.models.resource import ResourceOp
 
 from karp.infrastructure.sql import db
 
 
-class ResourceDefinition(db.Base):
+class ResourceDTO(db.Base):
     __tablename__ = "resources"
     history_id = db.Column(db.Integer, primary_key=True)
     id = db.Column(db.UUIDType, nullable=False)
@@ -35,7 +36,7 @@ class ResourceDefinition(db.Base):
     )
 
     def __repr__(self):
-        return """<Resource(
+        return """<ResourceDTO(
                     history_id={},
                     id={},
                     resource_id={},
@@ -56,6 +57,37 @@ class ResourceDefinition(db.Base):
             self.last_modified,
             self.last_modified_by,
             self.discarded,
+        )
+
+    def to_entity(self) -> model.Resource:
+        return model.Resource(
+            entity_id=self.id,
+            resource_id=self.resource_id,
+            version=self.version,
+            name=self.name,
+            config=self.config,
+            is_published=self.is_published,
+            last_modified=self.last_modified,
+            last_modified_by=self.last_modified_by,
+            discarded=self.discarded,
+            message=self.message,
+        )
+
+    @staticmethod
+    def from_entity(resource: model.Resource) -> "ResourceDTO":
+        return ResourceDTO(
+            history_id=None,
+            id=resource.id,
+            resource_id=resource.resource_id,
+            version=resource.version,
+            name=resource.name,
+            config=resource.config,
+            is_published=resource.is_published,
+            last_modified=resource.last_modified,
+            last_modified_by=resource.last_modified_by,
+            message=resource.message,
+            op=resource.op,
+            discarded=resource.discarded,
         )
 
 

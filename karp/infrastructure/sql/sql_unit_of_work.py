@@ -131,7 +131,12 @@ class SqlResourceUnitOfWork(SqlUnitOfWork, unit_of_work.ResourceUnitOfWork):
         return self._resources
 
 
-class SqlEntryUnitOfWork(SqlUnitOfWork, unit_of_work.EntryUnitOfWork):
+class SqlEntryUnitOfWork(
+    SqlUnitOfWork,
+    unit_of_work.EntryUnitOfWork,
+    entry_repository_type="sql_v1",
+    is_default=True,
+):
     def __init__(self, repo_settings: Dict, session_factory=DEFAULT_SESSION_FACTORY):
         super().__init__()
         self.session_factory = session_factory
@@ -148,5 +153,9 @@ class SqlEntryUnitOfWork(SqlUnitOfWork, unit_of_work.EntryUnitOfWork):
     @property
     def repo(self) -> SqlEntryRepository:
         if self._entries is None:
-            raise RuntimeError("No resources")
+            raise RuntimeError("No entries")
         return self._entries
+
+
+# @unit_of_work.create_entry_unit_of_work.register(SqlEntryRepository)
+# def _()

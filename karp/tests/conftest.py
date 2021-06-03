@@ -31,11 +31,10 @@ from karp.infrastructure.testing import dummy_auth_service
 from karp import errors as karp_errors
 from karp.domain import model, commands, errors
 
-from karp.application import config
+from karp import config
 
 # # from karp.application.services import contexts, entries, resources
 
-from karp.webapp import app_config, main as webapp_main
 
 from karp.utility import unique_id
 
@@ -104,8 +103,11 @@ def main_db():
 
 
 @pytest.fixture(name="fa_client")
-def fixture_fa_client():  # db_setup, es):
+def fixture_fa_client(use_main_index):  # db_setup, es):
     # ctx.auth_service = dummy_auth_service.DummyAuthService()
+    print(f"use_main_index = {use_main_index}")
+    from karp.webapp import app_config, main as webapp_main
+
     with TestClient(webapp_main.create_app()) as client:
         yield client
 
@@ -127,6 +129,8 @@ def fixture_fa_client():  # db_setup, es):
 
 @pytest.fixture(name="use_dummy_authenticator")
 def fixture_use_dummy_authenticator():
+    from karp.webapp import app_config, main as webapp_main
+
     app_config.bus.ctx.auth_service = dummy_auth_service.DummyAuthService()
 
 
@@ -139,7 +143,7 @@ def fixture_use_dummy_authenticator():
 
 
 @pytest.fixture(name="resource_places", scope="session")
-def fixture_resource_places():
+def fixture_resource_places(use_main_index):
     with open("karp/tests/data/config/places.json") as fp:
         places_config = json.load(fp)
 
@@ -188,6 +192,8 @@ def fixture_resource_places():
 
 @pytest.fixture(name="places_published", scope="session")
 def fixture_places_published(resource_places):  # , db_setup):
+    from karp.webapp import app_config, main as webapp_main
+
     try:
         app_config.bus.handle(
             commands.CreateResource(
@@ -480,17 +486,19 @@ def fixture_places_published(resource_places):  # , db_setup):
 # #     return app.test_cli_runner()
 # #
 # #
-# @pytest.fixture(name="es", scope="session")
-# def fixture_es():
-#     if not config.TEST_ELASTICSEARCH_ENABLED:
-#         yield "no_es"
-#     else:
-#         if not config.TEST_ES_HOME:
-#             raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
-#         with elasticsearch_test.ElasticsearchTest(
-#             port=9202, es_path=config.TEST_ES_HOME
-#         ):
-#             yield "run"
+@pytest.fixture(name="use_main_index", scope="session")
+def fixture_use_main_index():
+    print("fixture: use_main_index")
+    if not config.TEST_ELASTICSEARCH_ENABLED:
+        print("don't use elasticsearch")
+        pytest.skip()
+    else:
+        if not config.TEST_ES_HOME:
+            raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
+        with elasticsearch_test.ElasticsearchTest(
+            port=9202, es_path=config.TEST_ES_HOME
+        ):
+            yield "run"
 
 
 @pytest.fixture

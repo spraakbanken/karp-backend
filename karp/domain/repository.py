@@ -59,9 +59,9 @@ class ResourceRepository(Repository[model.Resource]):
     def check_status(self):
         pass
 
-    # @abc.abstractmethod
-    # def resource_ids(self) -> List[Resource]:
-    #     raise NotImplementedError()
+    @abc.abstractmethod
+    def resource_ids(self) -> typing.Iterable[str]:
+        raise NotImplementedError()
 
     def by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None

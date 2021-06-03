@@ -14,18 +14,18 @@ from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
 from karp.domain.auth_service import PermissionLevel
 
-from karp.utility import unique_id
+from karp.utility import unique_id, time
 from karp.utility import json_schema
 from karp.utility.container import create_field_getter
+
+
+# pylint: disable=unsubscriptable-object
 
 
 class ResourceOp(enum.Enum):
     ADDED = "ADDED"
     UPDATED = "UPDATED"
     DELETED = "DELETED"
-
-
-_now = object()
 
 
 class Resource(TimestampedVersionedEntity):
@@ -55,18 +55,22 @@ class Resource(TimestampedVersionedEntity):
 
     @classmethod
     def from_dict(cls, config: Dict, **kwargs):
+        from karp.domain import repository
+
         resource_id = config.pop("resource_id")
         resource_name = config.pop("resource_name")
-        #     if "entry_repository_type" not in config:
-        #         config["entry_repository_type"] = EntryRepository.get_default_repository_type()
-        #     entry_repository_settings = config.get(
-        #         "entry_repository_settings")
-        #     if entry_repository_settings is None:
-        #         entry_repository_settings = EntryRepository.create_repository_settings(
-        #             config["entry_repository_type"],
-        #             resource_id
-        #         )
-        #
+        if "entry_repository_type" not in config:
+            config[
+                "entry_repository_type"
+            ] = repository.EntryRepository.get_default_repository_type()
+        entry_repository_settings = config.get("entry_repository_settings")
+        if entry_repository_settings is None:
+            entry_repository_settings = (
+                repository.EntryRepository.create_repository_settings(
+                    config["entry_repository_type"], resource_id
+                )
+            )
+
         #     entry_repository = EntryRepository.create(
         #         config["entry_repository_type"],
         #         entry_repository_settings
@@ -81,6 +85,17 @@ class Resource(TimestampedVersionedEntity):
             entity_id=unique_id.make_unique_id(),
             version=1,
             **kwargs,
+        )
+        resource.queue_event(
+            events.ResourceCreated(
+                id=resource.id,
+                resource_id=resource.resource_id,
+                name=resource.name,
+                config=resource.config,
+                timestamp=resource.last_modified,
+                user=resource.last_modified_by,
+                message=resource.message,
+            )
         )
         return resource
 
@@ -111,8 +126,8 @@ class Resource(TimestampedVersionedEntity):
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
-        entry_repository_type: typing.Optional[str] = None,
-        entry_repository_settings: typing.Optional[typing.Dict] = None,
+        # entry_repository_type: typing.Optional[str] = None,
+        # entry_repository_settings: typing.Optional[typing.Dict] = None,
         # entry_repository: EntryRepository = None,
         **kwargs,
     ):
@@ -125,24 +140,42 @@ class Resource(TimestampedVersionedEntity):
         self._op = op
         self._releases = []
         # self._entry_repository = None
-        self.entry_repository_type = entry_repository_type
-        self.entry_repository_settings = entry_repository_settings
+        # self.entry_repository_type = entry_repository_type
+        # self.entry_repository_settings = entry_repository_settings
         self._entry_json_schema = None
-        self._publish(
-            events.ResourceCreated(
-                id=self._id,
-                resource_id=self._resource_id,
-                name=self._name,
-                config=self.config,
-                timestamp=self._last_modified,
-                user=self._last_modified_by,
-                message=self._message,
+        if not self.events or not isinstance(self.events[-1], events.ResourceCreated):
+            self.queue_event(
+                events.ResourceLoaded(
+                    id=self._id,
+                    resource_id=self._resource_id,
+                    name=self._name,
+                    config=self.config,
+                    timestamp=self._last_modified,
+                    user=self._last_modified_by,
+                    message=self._message,
+                    version=self.version,
+                )
             )
-        )
 
     @property
     def resource_id(self):
         return self._resource_id
+
+    @property
+    def entry_repository_type(self) -> str:
+        return self.config["entry_repository_type"]
+
+    @entry_repository_type.setter
+    def entry_repository_type(self, entry_repository_type: str):
+        self.config["entry_repository_type"] = entry_repository_type
+
+    @property
+    def entry_repository_settings(self) -> typing.Dict:
+        return self.config["entry_repository_settings"]
+
+    @entry_repository_settings.setter
+    def entry_repository_settings(self, entry_repository_settings: typing.Dict):
+        self.config["entry_repository_settings"] = entry_repository_settings
 
     @property
     def name(self):
@@ -193,7 +226,7 @@ class Resource(TimestampedVersionedEntity):
         self._op = ResourceOp.UPDATED
         if increment_version:
             self._version += 1
-        self._publish(
+        self.queue_event(
             events.ResourceUpdated(
                 id=self.id,
                 resource_id=self.resource_id,
@@ -220,7 +253,7 @@ class Resource(TimestampedVersionedEntity):
         self._op = ResourceOp.UPDATED
         self._version += 1
         self.is_published = True
-        self._publish(
+        self.queue_event(
             events.ResourcePublished(
                 id=self.id,
                 resource_id=self.resource_id,
@@ -261,7 +294,7 @@ class Resource(TimestampedVersionedEntity):
         self._last_modified_by = user
         self._last_modified = timestamp or utc_now()
         self._version += 1
-        self._publish(
+        self.queue_event(
             events.ResourceDiscarded(
                 id=self.id,
                 version=self.version,
@@ -340,19 +373,38 @@ class Release(Entity):
 # ===== Factories =====
 
 
-def create_resource(config: Dict, entity_id: unique_id.UniqueId = None) -> Resource:
-    resource_id = config.pop("resource_id")
-    resource_name = config.pop("resource_name")
+def create_resource(
+    config: Dict,
+    created_by: str,
+    created_at: float = None,
+    entity_id: unique_id.UniqueId = None,
+    resource_id: typing.Optional[str] = None,
+    message: typing.Optional[str] = None,
+    name: typing.Optional[str] = None,
+) -> Resource:
+    from karp.domain import repository
+
+    resource_id_in_config = config.pop("resource_id", None)
+    resource_id = resource_id or resource_id_in_config
+    if not resource_id:
+        raise ValueError("resource_id is missing")
+    if not constraints.valid_resource_id(resource_id):
+        raise ValueError(f"resource_id is not valid: value='{resource_id}")
+    name_in_config = config.pop("resource_name", None)
+    resource_name = name or name_in_config or resource_id
     entity_id = entity_id or unique_id.make_unique_id()
-    #     if "entry_repository_type" not in config:
-    #         config["entry_repository_type"] = EntryRepository.get_default_repository_type()
-    #     entry_repository_settings = config.get(
-    #         "entry_repository_settings")
-    #     if entry_repository_settings is None:
-    #         entry_repository_settings = EntryRepository.create_repository_settings(
-    #             config["entry_repository_type"],
-    #             resource_id
-    #         )
+    if "entry_repository_type" not in config:
+        config[
+            "entry_repository_type"
+        ] = repository.EntryRepository.get_default_repository_type()
+    entry_repository_settings = config.get("entry_repository_settings")
+    if entry_repository_settings is None:
+        entry_repository_settings = (
+            repository.EntryRepository.create_repository_settings(
+                config["entry_repository_type"], resource_id
+            )
+        )
+        config["entry_repository_settings"] = entry_repository_settings
     #
     #     entry_repository = EntryRepository.create(
     #         config["entry_repository_type"],
@@ -364,9 +416,22 @@ def create_resource(config: Dict, entity_id: unique_id.UniqueId = None) -> Resou
         resource_id=resource_id,
         name=resource_name,
         config=config,
-        message="Resource added.",
+        message=message or "Resource added.",
         op=ResourceOp.ADDED,
         version=1,
+        last_modified=created_at or time.utc_now(),
+        last_modified_by=created_by,
+    )
+    resource.queue_event(
+        events.ResourceCreated(
+            id=resource.id,
+            resource_id=resource.resource_id,
+            name=resource.name,
+            config=resource.config,
+            timestamp=resource.last_modified,
+            user=resource.last_modified_by,
+            message=resource.message,
+        )
     )
     return resource
 
