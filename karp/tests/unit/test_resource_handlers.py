@@ -42,8 +42,8 @@ class TestCreateResource:
         assert resource.name == resource_name
 
         expected_config = {
-            "entry_repository_type": "fake",
-            "entry_repository_settings": {},
+            "entry_repository_type": "fake_entries",
+            "entry_repository_settings": None,
         }
         expected_config.update(conf)
         assert resource.config == expected_config
