@@ -175,6 +175,10 @@ class EntryRepository(Repository[model.Entry]):
     def _create_repository_settings(cls, resource_id: str):
         raise NotImplementedError()
 
+    def __init__(self):
+        super().__init__()
+        self.settings = {}
+
     # @abc.abstractmethod
     def move(self, entry: model.Entry, *, old_entry_id: str):
         raise NotImplementedError()

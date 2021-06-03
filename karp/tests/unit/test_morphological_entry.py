@@ -12,7 +12,7 @@ from karp.domain.models.entry import Entry
 
 def test_morph_entry_has_entry_id():
     morph_entry = create_morphological_entry(
-        "pn_test", pos="pn", form_msds=[], var_insts=[]
+        "pn_test", pos="pn", form_msds=[], var_insts=[], resource_id="m"
     )
 
     assert isinstance(morph_entry, Entry)
@@ -22,7 +22,7 @@ def test_morph_entry_has_entry_id():
 
 def test_morph_entry_has_function_get_inflection_table():
     morph_entry = create_morphological_entry(
-        "pn_test", pos="pn", form_msds=[], var_insts=[]
+        "pn_test", pos="pn", form_msds=[], var_insts=[], resource_id="m"
     )
 
     assert getattr(morph_entry, "get_inflection_table")
@@ -61,6 +61,7 @@ def test_morph_entry_inflect_av_1_blå():
             ("1+astes", "super def masc gen"),
         ],
         var_insts=[[("1", "blå")]],
+        resource_id="m",
     )
 
     inflection_table = morph_entry.get_inflection_table("grå")
@@ -97,7 +98,7 @@ def test_morph_entry_inflect_av_1_blå():
 
 def test_morph_entry_inflect_av_1_höger():
     morph_entry = create_morphological_entry(
-        "av_1_höger", pos="av", form_msds=[], var_insts=[]
+        "av_1_höger", pos="av", form_msds=[], var_insts=[], resource_id="m"
     )
 
     inflection_table = morph_entry.get_inflection_table("höger")
@@ -116,6 +117,7 @@ def test_morph_entry_inflect_nn_0n_ansvar():
             ("1+ets", "sg def gen"),
         ],
         var_insts=[[("1", "ansvar")]],
+        resource_id="m",
     )
 
     inflection_table = morph_entry.get_inflection_table("apa")
@@ -143,6 +145,7 @@ def test_morph_entry_inflect_nn_3u_son():
             ("1+ö+2+ernas", "pl def gen"),
         ],
         var_insts=[[("1", "s"), ("2", "n")]],
+        resource_id="m",
     )
 
     inflection_table = morph_entry.get_inflection_table("styrelseledamot")
@@ -166,6 +169,7 @@ def test_morph_entry_inflect_nn_2u_bövel():
         pos="nn",
         form_msds=[("1+e+2", "sg indef nom")],
         var_insts=[[("1", "böv"), ("2", "l")]],
+        resource_id="m",
     )
     inflection_table = morph_entry.get_inflection_table("sommar")
 
@@ -183,6 +187,7 @@ def test_morph_entry_inflect_nn_0n_syre():
             ("1+ts", "sg def gen"),
         ],
         var_insts=[[("1", "syre")]],
+        resource_id="m",
     )
 
     inflection_table = morph_entry.get_inflection_table("vete")
@@ -198,7 +203,7 @@ def test_morph_entry_inflect_nn_0n_syre():
 @pytest.mark.skip(reason="How shall it be used.")
 def test_morph_entry_inflect_ab():
     morph_entry = create_morphological_entry(
-        "ab_1_illa", pos="ab", form_msds=[("")], var_insts=[]
+        "ab_1_illa", pos="ab", form_msds=[("")], var_insts=[], resource_id="m"
     )
 
     inflection_table = morph_entry.get_inflection_table("")
@@ -221,6 +226,7 @@ def test_morph_entry_inflect_vb_2a_känna():
             ("1+ts", "sup s-form"),
         ],
         var_insts=[[("1", "kän")]],
+        resource_id="m",
     )
 
     inflection_table = morph_entry.get_inflection_table("bränna")
@@ -255,6 +261,7 @@ def test_morph_entry_inflect_vb_1a_laga():
             ("1+ts", "sup s-form"),
         ],
         var_insts=[[("1", "laga")]],
+        resource_id="m",
     )
 
     inflection_table = morph_entry.get_inflection_table("jobba")
@@ -284,6 +291,7 @@ def test_morph_entry_vb_1s_andas():
             ("1+t+2", "sup s-form"),
         ],
         var_insts=[[("1", "anda"), ("2", "s")]],
+        resource_id="m"
         # var_insts=[[("1", "anda"), ("2", "s")]],
     )
 

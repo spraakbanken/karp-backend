@@ -79,6 +79,14 @@ class EntriesUnitOfWork:
             yield from uow.collect_new_events()
 
 
+class EntryUowFactory(abc.ABC):
+    @abc.abstractmethod
+    def create(
+        self, entry_repository_type, entry_repository_settings
+    ) -> EntryUnitOfWork:
+        raise NotImplementedError
+
+
 def unit_of_work(*, using, **kwargs) -> UnitOfWork:
     return create_unit_of_work(using, **kwargs)
 

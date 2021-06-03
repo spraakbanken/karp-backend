@@ -21,6 +21,7 @@ class Context:
         search_service: index.Index = None,
         auth_service: AuthService = None,
         index_uow: unit_of_work.IndexUnitOfWork = None,
+        entry_uow_factory: unit_of_work.EntryUowFactory = None,
     ):
         self.resource_uow = resource_uow
         self.entry_uows = entry_uows
@@ -28,6 +29,7 @@ class Context:
         self.search_service = search_service
         self.auth_service = auth_service
         self.index_uow = index_uow
+        self.entry_uow_factory = entry_uow_factory
 
     def __repr__(self):
         return f"Context(resource_repo={self.resource_repo!r})"

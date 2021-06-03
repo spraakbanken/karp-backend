@@ -152,9 +152,16 @@ class FakeIndexUnitOfWork(FakeUnitOfWork, unit_of_work.IndexUnitOfWork):
         return self._index
 
 
-@unit_of_work.create_unit_of_work.register(FakeEntryRepository)
-def _(repo: FakeEntryRepository):
-    return FakeUnitOfWork(repo)
+class FakeEntryUowFactory(unit_of_work.EntryUowFactory):
+    def create(
+        self, entry_repository_type, entry_repository_settings
+    ) -> unit_of_work.EntryUnitOfWork:
+        entry_uow = FakeEntryUnitOfWork()
+        if entry_repository_type:
+            entry_uow.repo.type = entry_repository_type
+        if entry_repository_settings:
+            entry_uow.repo.settings = entry_repository_settings
+        return entry_uow
 
 
 def bootstrap_test_app(entry_uow_keys: List[str] = None):
@@ -164,5 +171,6 @@ def bootstrap_test_app(entry_uow_keys: List[str] = None):
             ((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])
         ),
         index_uow=FakeIndexUnitOfWork(),
+        entry_uow_factory=FakeEntryUowFactory(),
         raise_on_all_errors=True,
     )

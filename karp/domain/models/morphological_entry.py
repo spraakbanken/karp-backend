@@ -53,10 +53,12 @@ def create_morphological_entry(
     pos: str,
     form_msds: List[Tuple[str, Any]],
     var_insts: List[List[Tuple[str, Any]]],
+    resource_id: str,
 ) -> MorphologicalEntry:
     return MorphologicalEntry(
         entity_id=unique_id.make_unique_id(),
         entry_id=entry_id,
+        resource_id=resource_id,
         body={},
         message="",
         op=EntryOp.ADDED,

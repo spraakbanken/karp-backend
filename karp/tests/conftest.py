@@ -39,7 +39,7 @@ from karp.webapp import app_config, main as webapp_main
 
 from karp.utility import unique_id
 
-# from karp.tests import common_data
+from karp.tests import common_data
 
 
 from karp.infrastructure.sql.db import metadata
@@ -493,9 +493,9 @@ def fixture_places_published(resource_places):  # , db_setup):
 #             yield "run"
 
 
-# @pytest.fixture
-# def json_schema_config():
-#     return common_data.CONFIG_PLACES
+@pytest.fixture
+def json_schema_config():
+    return common_data.CONFIG_PLACES
 
 
 # #

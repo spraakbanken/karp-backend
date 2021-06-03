@@ -248,17 +248,18 @@ def add_entry(
     if not resource:
         raise errors.ResourceNotFound(cmd.resource_id)
 
+    entry_id = resource.id_getter()(cmd.entry)
     validate_entry = _compile_schema(resource.entry_json_schema)
 
     with ctx.entry_uows.get(cmd.resource_id) as uw:
-        existing_entry = uw.repo.by_entry_id(cmd.entry_id)
+        existing_entry = uw.repo.by_entry_id(entry_id)
         if (
             existing_entry
             and not existing_entry.discarded
             and existing_entry.id != cmd.id
         ):
             raise errors.IntegrityError(
-                f"An entry with entry_id '{cmd.entry_id}' already exists."
+                f"An entry with entry_id '{entry_id}' already exists."
             )
 
         _validate_entry(validate_entry, cmd.entry)

@@ -1,6 +1,7 @@
 """LexicalResource"""
 import abc
 import enum
+import typing
 from karp.utility.time import utc_now
 from uuid import UUID
 from typing import Callable, Dict, Any, Optional, List, Union
@@ -110,7 +111,8 @@ class Resource(TimestampedVersionedEntity):
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
-        entry_repository_type: Optional[str] = None,
+        entry_repository_type: typing.Optional[str] = None,
+        entry_repository_settings: typing.Optional[typing.Dict] = None,
         # entry_repository: EntryRepository = None,
         **kwargs,
     ):
@@ -124,6 +126,7 @@ class Resource(TimestampedVersionedEntity):
         self._releases = []
         # self._entry_repository = None
         self.entry_repository_type = entry_repository_type
+        self.entry_repository_settings = entry_repository_settings
         self._entry_json_schema = None
         self._publish(
             events.ResourceCreated(
