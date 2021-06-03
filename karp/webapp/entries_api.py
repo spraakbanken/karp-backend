@@ -25,6 +25,7 @@ from karp import errors
 # from karp.errors import KarpError
 # import karp.auth.auth as auth
 # from karp.util import convert
+from karp.services import entry_views
 from karp.utility import unique_id
 from .app_config import bus, get_current_user
 
@@ -47,11 +48,9 @@ def add_entry(
         )
     print("calling entrywrite")
     id_ = unique_id.make_unique_id()
-    entry_id = None
     bus.handle(
         commands.AddEntry(
             resource_id=resource_id,
-            entry_id=entry_id,
             id=id_,
             user=user.identifier,
             message=data.message,
@@ -61,7 +60,8 @@ def add_entry(
     # new_entry = entries.add_entry(
     #     resource_id, data.entry, user.identifier, message=data.message
     # )
-    return {"newID": entry_id, "uuid": id_}
+    entry = entry_views.get_by_id(resource_id, id_, bus.ctx)
+    return {"newID": entry.entry_id, "uuid": id_}
 
 
 @router.post("/{resource_id}/{entry_id}/update")

@@ -151,7 +151,7 @@ def fixture_resource_places(use_main_index):
     with open("karp/tests/data/config/places.json") as fp:
         places_config = json.load(fp)
 
-    resource = model.Resource.from_dict(places_config)
+    resource = model.create_resource(places_config, created_by="local admin")
 
     yield resource
 
@@ -495,7 +495,8 @@ def fixture_use_main_index():
     print("fixture: use_main_index")
     if not config.TEST_ELASTICSEARCH_ENABLED:
         print("don't use elasticsearch")
-        pytest.skip()
+        # pytest.skip()
+        yield "using sql"
     else:
         if not config.TEST_ES_HOME:
             raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")

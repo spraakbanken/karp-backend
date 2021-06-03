@@ -90,6 +90,7 @@ class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
         cls,
         entry_repository_type: typing.Optional[str],
         settings: typing.Dict,
+        resource_config: typing.Dict,
         **kwargs,
     ):
         print(f"_registry={cls._registry}")
@@ -102,7 +103,7 @@ class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
                 f"Can't create an EntryUnitOfWork with type '{entry_repository_type}'"
             ) from err
         print(f"kwargs = {kwargs}")
-        return uow_cls.from_dict(settings, **kwargs)
+        return uow_cls.from_dict(settings, resource_config, **kwargs)
 
     @property
     def entries(self) -> repository.EntryRepository:
@@ -215,6 +216,7 @@ class DefaultEntryUowFactory(EntryUowFactory):
         return EntryUnitOfWork.create(
             entry_repository_type=entry_repository_type,
             settings=entry_repository_settings,
+            resource_config=resource_config,
         )
         # return create_entry_unit_of_work(entry_repository)
 

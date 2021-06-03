@@ -1,8 +1,8 @@
 """SQL repository for entries."""
-import collections
 from karp.domain.errors import NonExistingField, RepositoryError
 import logging
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
+import typing
 from uuid import UUID
 
 import regex
@@ -55,6 +55,7 @@ class SqlEntryRepository(
     def from_dict(
         cls,
         settings: Dict,
+        resource_config: typing.Dict,
         *,
         session=None,
     ):
@@ -85,14 +86,17 @@ class SqlEntryRepository(
         return cls(
             history_model=history_model,
             # runtime_model=runtime_model,
-            resource_config=settings["config"],
+            resource_config=resource_config,
             resource_id=settings["resource_id"],
             session=session,
         )
 
     @classmethod
-    def _create_repository_settings(cls, resource_id: str) -> Dict:
-        return {"table_name": resource_id}
+    def _create_repository_settings(cls, resource_id: str, resource_config: typing.Dict) -> typing.Dict:
+        return {
+            "table_name": resource_id,
+            "resource_id": resource_id,
+        }
 
     def _put(self, entry: Entry):
         self._check_has_session()

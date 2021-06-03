@@ -65,7 +65,7 @@ def test_add(fa_client):  # fa_client_w_places):
     with app_config.bus.ctx.resource_uow as uw:
         resource = uw.repo.get_active_resource("places")
 
-    with app_config.bus.ctx.entries_uow.get("places") as uw:
+    with app_config.bus.ctx.entry_uows.get("places") as uw:
         entries = uw.repo.entry_ids()
         assert len(entries) == 1
         assert entries[0] == "3"

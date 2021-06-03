@@ -53,7 +53,7 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
             resource._version = self.get_latest_version(resource.resource_id) + 1
 
         # self._session.execute(
-        #     db.insert(self.table, values=self._resource_to_row(resource))
+        #     db.insert(self.table).values(**self._resource_to_dict(resource))
         # )
         resource_dto = ResourceDTO.from_entity(resource)
         self._session.add(resource_dto)
@@ -155,6 +155,21 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
             if resource_dto is not None
         ]
 
+    def _resource_to_dict(self, resource: Resource) -> typing.Dict:
+        return {
+            "history_id": None,
+            "id": resource.id,
+            "resource_id": resource.resource_id,
+            "version": resource.version,
+            "name": resource.name,
+            "config": resource.config,
+            "is_published": resource.is_published,
+            "last_modified": resource.last_modified,
+            "last_modified_by": resource.last_modified_by,
+            "message": resource.message,
+            "op": resource.op,
+            "discarded": resource.discarded,
+        }
     # def _resource_to_row(
     #     self, resource: Resource
     # ) -> Tuple[

@@ -138,16 +138,17 @@ class SqlEntryUnitOfWork(
     entry_repository_type="sql_v1",
     is_default=True,
 ):
-    def __init__(self, repo_settings: Dict, session_factory=DEFAULT_SESSION_FACTORY):
+    def __init__(self, repo_settings: Dict, resource_config: typing.Dict, session_factory=DEFAULT_SESSION_FACTORY):
         super().__init__()
         self.session_factory = session_factory
         self._entries = None
         self.repo_settings = repo_settings
+        self.resource_config = resource_config
 
     def __enter__(self):
         self._session = self.session_factory()
         self._entries = SqlEntryRepository.from_dict(
-            self.repo_settings, session=self._session
+            self.repo_settings, self.resource_config, session=self._session
         )
         return super().__enter__()
 
@@ -158,8 +159,8 @@ class SqlEntryUnitOfWork(
         return self._entries
 
     @classmethod
-    def from_dict(cls, settings: typing.Dict, **kwargs):
-        return cls(repo_settings=settings, **kwargs)
+    def from_dict(cls, settings: typing.Dict, resource_config, **kwargs):
+        return cls(repo_settings=settings, resource_config=resource_config,**kwargs)
 
     def collect_new_events(self) -> typing.Iterable:
         if self._entries:
@@ -168,5 +169,26 @@ class SqlEntryUnitOfWork(
             return []
 
 
+class SqlIndexUnitOfWork(unit_of_work.IndexUnitOfWork, index_type="sql_index"):
+    @classmethod
+    def from_dict(cls, **kwargs):
+        print(f"SqlIndexUnitOfWork.from_dict: kwargs = {kwargs}")
+        return cls()
+
+    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+        self.session_factory = session_factory
+        self._index = None
+
+    def _commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+    @property
+    def repo(self):
+        if not self._index:
+            raise RuntimeError()
+        return self._index
 # @unit_of_work.create_entry_unit_of_work.register(SqlEntryRepository)
 # def _()

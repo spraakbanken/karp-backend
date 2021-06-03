@@ -166,7 +166,7 @@ class EntryRepository(Repository[model.Entry]):
         if repository_type is None:
             repository_type = cls.get_default_repository_type()
         repository_cls = cls._registry[repository_type]
-        return repository_cls._create_repository_settings(resource_id)
+        return repository_cls._create_repository_settings(resource_id, resource_config)
 
     @classmethod
     @abc.abstractmethod
@@ -175,7 +175,7 @@ class EntryRepository(Repository[model.Entry]):
 
     @classmethod
     @abc.abstractmethod
-    def _create_repository_settings(cls, resource_id: str):
+    def _create_repository_settings(cls, resource_id: str, resource_config: typing.Dict):
         raise NotImplementedError()
 
     def __init__(self):
