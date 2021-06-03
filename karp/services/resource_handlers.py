@@ -188,11 +188,11 @@ def create_resource(cmd: commands.CreateResource, ctx: context.Context):
 
         entry_repo_uow = ctx.entry_uow_factory.create(
             resource_id=cmd.resource_id,
-            entry_repository_type=cmd.entry_repository_type,
+            resource_config=resource.config,
             entry_repository_settings=cmd.entry_repository_settings,
         )
-        resource.entry_repository_type = entry_repo_uow.repo.type
-        resource.entry_repository_settings = entry_repo_uow.repo.settings
+        resource.entry_repository_type = entry_repo_uow.type
+        resource.entry_repository_settings = entry_repo_uow.repo_settings
 
         ctx.entry_uows.set_uow(cmd.resource_id, entry_repo_uow)
 
@@ -206,7 +206,7 @@ def setup_existing_resources(evt: events.AppStarted, ctx: context.Context):
             resource = ctx.resource_uow.repo.by_resource_id(resource_id)
             entry_repo_uow = ctx.entry_uow_factory.create(
                 resource_id=resource_id,
-                entry_repository_type=resource.entry_repository_type,
+                resource_config=resource.config,
                 entry_repository_settings=resource.entry_repository_settings,
             )
             ctx.entry_uows.set_uow(resource_id, entry_repo_uow)

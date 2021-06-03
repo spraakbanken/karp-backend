@@ -15,6 +15,7 @@
 #     )
 #     search_service = Es6SearchService(es)
 #     ctx.search_service = search_service
-from . import es6_index
+from . import es6_index, es6_unit_of_work
+
 
 print("es6 loaded")

@@ -42,6 +42,7 @@ from karp.tests import common_data
 
 
 from karp.infrastructure.sql.db import metadata
+from karp.infrastructure.sql import sql_models
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
@@ -144,6 +145,8 @@ def fixture_use_dummy_authenticator():
 
 @pytest.fixture(name="resource_places", scope="session")
 def fixture_resource_places(use_main_index):
+    from karp.webapp import app_config
+
     with open("karp/tests/data/config/places.json") as fp:
         places_config = json.load(fp)
 

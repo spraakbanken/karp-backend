@@ -58,7 +58,7 @@ class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
     ) -> None:
         super().__init_subclass__(**kwargs)
         print(
-            f"""IndexUnitOfWork.__init_subclass__ called with:
+            f"""EntryUnitOfWork.__init_subclass__ called with:
             entry_repository_type={entry_repository_type} and
             is_default={is_default}"""
         )
@@ -68,7 +68,7 @@ class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
             )
         if entry_repository_type in cls._registry:
             raise RuntimeError(
-                f"An IndexUnitOfWork with type '{entry_repository_type}' already exists: {cls._registry[entry_repository_type]!r}"
+                f"An EntryUnitOfWork with type '{entry_repository_type}' already exists: {cls._registry[entry_repository_type]!r}"
             )
 
         # if is_default and None in cls._registry:
@@ -77,7 +77,7 @@ class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
         cls._registry[entry_repository_type] = cls
         if is_default or None not in cls._registry:
             logger.info(
-                "Setting default EntryRepository type to '%s'", entry_repository_type
+                "Setting default EntryUnitOfWork type to '%s'", entry_repository_type
             )
             cls._registry[None] = entry_repository_type
 
@@ -99,7 +99,7 @@ class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
             uow_cls = cls._registry[entry_repository_type]
         except KeyError as err:
             raise errors.ConfigurationError(
-                f"Can't create an EntryRepository with type '{entry_repository_type}'"
+                f"Can't create an EntryUnitOfWork with type '{entry_repository_type}'"
             ) from err
         print(f"kwargs = {kwargs}")
         return uow_cls.from_dict(settings, **kwargs)
@@ -134,7 +134,7 @@ class IndexUnitOfWork(UnitOfWork[index.Index]):
         cls.type = index_type
         cls._registry[index_type] = cls
         if is_default or None not in cls._registry:
-            logger.info("Setting default EntryRepository type to '%s'", index_type)
+            logger.info("Setting default IndexUnitOfWork type to '%s'", index_type)
             cls._registry[None] = index_type
 
     @classmethod
@@ -142,7 +142,9 @@ class IndexUnitOfWork(UnitOfWork[index.Index]):
         return cls._registry[None]
 
     @classmethod
-    def create(cls, index_type: typing.Optional[str], settings: typing.Dict, **kwargs):
+    def create(
+        cls, index_type: typing.Optional[str], **kwargs
+    ):  # , settings: typing.Dict, **kwargs):
         print(f"_registry={cls._registry}")
         if index_type is None:
             index_type = cls._registry[None]
@@ -150,10 +152,10 @@ class IndexUnitOfWork(UnitOfWork[index.Index]):
             uow_cls = cls._registry[index_type]
         except KeyError as err:
             raise errors.ConfigurationError(
-                f"Can't create an EntryRepository with type '{index_type}'"
+                f"Can't create an IndexUnitOfWork with type '{index_type}'"
             ) from err
         print(f"kwargs = {kwargs}")
-        return uow_cls.from_dict(settings, **kwargs)
+        return uow_cls.from_dict(**kwargs)
 
 
 class EntriesUnitOfWork:
@@ -185,7 +187,7 @@ class EntryUowFactory(abc.ABC):
     def create(
         self,
         resource_id: str,
-        entry_repository_type: typing.Optional[str],
+        resource_config: typing.Dict,
         entry_repository_settings: typing.Optional[typing.Dict],
     ) -> EntryUnitOfWork:
         raise NotImplementedError
@@ -195,13 +197,16 @@ class DefaultEntryUowFactory(EntryUowFactory):
     def create(
         self,
         resource_id: str,
-        entry_repository_type: typing.Optional[str],
+        resource_config: typing.Dict,
         entry_repository_settings: typing.Optional[typing.Dict],
     ) -> EntryUnitOfWork:
+        entry_repository_type = resource_config["entry_repository_type"]
         if not entry_repository_settings:
             entry_repository_settings = (
                 repository.EntryRepository.create_repository_settings(
-                    resource_id=resource_id, repository_type=entry_repository_type
+                    resource_id=resource_id,
+                    repository_type=entry_repository_type,
+                    resource_config=resource_config,
                 )
             )
         # entry_repository = repository.EntryRepository.create(

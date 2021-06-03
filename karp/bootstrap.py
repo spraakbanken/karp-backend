@@ -33,7 +33,7 @@ def bootstrap(
     if entry_uow_factory is None:
         entry_uow_factory = unit_of_work.DefaultEntryUowFactory()
     if index_uow is None:
-        index_uow = index.Index.create(config.SEARCH_CONTEXT)
+        index_uow = unit_of_work.IndexUnitOfWork.create(config.SEARCH_CONTEXT)
     bus = messagebus.MessageBus(
         resource_uow=resource_uow,
         entry_uows=entry_uows,

@@ -1,6 +1,7 @@
 import enum
 import logging
 from typing import Dict
+import typing
 
 import regex
 
@@ -155,6 +156,16 @@ class SqlEntryUnitOfWork(
         if self._entries is None:
             raise RuntimeError("No entries")
         return self._entries
+
+    @classmethod
+    def from_dict(cls, settings: typing.Dict, **kwargs):
+        return cls(repo_settings=settings, **kwargs)
+
+    def collect_new_events(self) -> typing.Iterable:
+        if self._entries:
+            return super().collect_new_events()
+        else:
+            return []
 
 
 # @unit_of_work.create_entry_unit_of_work.register(SqlEntryRepository)

@@ -401,7 +401,7 @@ def create_resource(
     if entry_repository_settings is None:
         entry_repository_settings = (
             repository.EntryRepository.create_repository_settings(
-                config["entry_repository_type"], resource_id
+                config["entry_repository_type"], resource_id, config
             )
         )
         config["entry_repository_settings"] = entry_repository_settings

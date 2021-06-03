@@ -116,3 +116,6 @@ venv.bak/
 # VS Code settings
 .vscode/
 
+jwtRS256.key
+jwtRS256.key.pub
+pubkey.pem

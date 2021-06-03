@@ -131,8 +131,9 @@ class FakeUnitOfWork:
 class FakeEntryUnitOfWork(
     FakeUnitOfWork, unit_of_work.EntryUnitOfWork, entry_repository_type="fake_entries"
 ):
-    def __init__(self):
+    def __init__(self, settings: typing.Dict):
         self._entries = FakeEntryRepository()
+        self.repo_settings = settings
 
     @property
     def repo(self) -> repository.EntryRepository:
@@ -161,13 +162,16 @@ class FakeIndexUnitOfWork(
 
 class FakeEntryUowFactory(unit_of_work.EntryUowFactory):
     def create(
-        self, resource_id, entry_repository_type, entry_repository_settings
+        self,
+        resource_id: str,
+        resource_config: typing.Dict,
+        entry_repository_settings,
     ) -> unit_of_work.EntryUnitOfWork:
-        entry_uow = FakeEntryUnitOfWork()
-        if entry_repository_type:
-            entry_uow.repo.type = entry_repository_type
+        entry_uow = FakeEntryUnitOfWork(entry_repository_settings)
+        if "entry_repository_type" in resource_config:
+            entry_uow.repo.type = resource_config["entry_repository_type"]
         if entry_repository_settings:
-            entry_uow.repo.settings = entry_repository_settings
+            entry_uow.repo_settings = entry_repository_settings
         return entry_uow
 
 
@@ -175,7 +179,7 @@ def bootstrap_test_app(entry_uow_keys: List[str] = None):
     return bootstrap.bootstrap(
         resource_uow=FakeResourceUnitOfWork(),
         entry_uows=unit_of_work.EntriesUnitOfWork(
-            ((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])
+            # ((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])
         ),
         index_uow=FakeIndexUnitOfWork(),
         entry_uow_factory=FakeEntryUowFactory(),

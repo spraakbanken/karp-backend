@@ -158,7 +158,10 @@ class EntryRepository(Repository[model.Entry]):
 
     @classmethod
     def create_repository_settings(
-        cls, repository_type: Optional[str], resource_id: str
+        cls,
+        repository_type: Optional[str],
+        resource_id: str,
+        resource_config: typing.Dict,
     ) -> Dict:
         if repository_type is None:
             repository_type = cls.get_default_repository_type()
