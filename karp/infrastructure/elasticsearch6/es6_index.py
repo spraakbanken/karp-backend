@@ -11,7 +11,7 @@ import elasticsearch.helpers  # pyre-ignore
 # from karp.query_dsl import basic_ast as ast, op, is_a
 
 # from karp import query_dsl
-from karp.domain.models import search_service
+from karp.domain import index
 from karp.domain.models.entry import Entry
 from karp.domain.models.resource import Resource
 from karp.domain.errors import (
@@ -20,18 +20,16 @@ from karp.domain.errors import (
     # UnsupportedQuery,
 )
 from .es_query import EsQuery
-from . import config
+from . import es_config
 
 logger = logging.getLogger("karp")
 
 
-class Es6SearchService(
-    search_service.SearchService, search_service_type="es6_search_service"
-):
+class Es6Index(index.Index, index_type="es6_index"):
     def __init__(self, es: Optional[elasticsearch.Elasticsearch] = None):
         if es is None:
             es = elasticsearch.Elasticsearch(
-                hosts=config.ELASTICSEARCH_HOST,
+                hosts=es_config.ELASTICSEARCH_HOST,
                 sniff_on_start=True,
                 sniff_on_connection_fail=True,
                 sniffer_timeout=60,
@@ -80,10 +78,10 @@ class Es6SearchService(
         print(f"publishing '{alias_name}' => '{index_name}'")
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
-    def add_entries(self, index_name: str, entries: List[search_service.IndexEntry]):
+    def add_entries(self, index_name: str, entries: List[index.IndexEntry]):
         index_to_es = []
         for entry in entries:
-            assert isinstance(entry, search_service.IndexEntry)
+            assert isinstance(entry, index.IndexEntry)
             # entry.update(metadata.to_dict())
             index_to_es.append(
                 {
@@ -122,7 +120,7 @@ class Es6SearchService(
 
         for prop_name, prop_values in properties.items():
             if "properties" in prop_values:
-                res = Es6SearchService.get_analyzed_fields_from_mapping(
+                res = Es6Index.get_analyzed_fields_from_mapping(
                     prop_values["properties"]
                 )
                 analyzed_fields.extend([prop_name + "." + prop for prop in res])
@@ -159,14 +157,10 @@ class Es6SearchService(
                 and "entry" in mapping[index]["mappings"]
                 and "properties" in mapping[index]["mappings"]["entry"]
             ):
-                field_mapping[
-                    alias
-                ] = Es6SearchService.get_analyzed_fields_from_mapping(
+                field_mapping[alias] = Es6Index.get_analyzed_fields_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
-                sortable_fields[
-                    alias
-                ] = Es6SearchService.create_sortable_map_from_mapping(
+                sortable_fields[alias] = Es6Index.create_sortable_map_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
         return field_mapping, sortable_fields
@@ -174,11 +168,7 @@ class Es6SearchService(
     def _get_index_mappings(
         self, index: Optional[str] = None
     ) -> Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]]:
-        if index is not None:
-            kwargs = {"index": index}
-        else:
-            kwargs = {}
-
+        kwargs = {"index": index} if index is not None else {}
         return self.es.indices.get_mapping(**kwargs)
 
     def _get_all_aliases(self) -> List[Tuple[str, str]]:
@@ -368,12 +358,12 @@ class Es6SearchService(
         ):
             self.analyzed_fields[
                 alias_name
-            ] = Es6SearchService.get_analyzed_fields_from_mapping(
+            ] = Es6Index.get_analyzed_fields_from_mapping(
                 mapping[index_name]["mappings"]["entry"]["properties"]
             )
             self.sortable_fields[
                 alias_name
-            ] = Es6SearchService.create_sortable_map_from_mapping(
+            ] = Es6Index.create_sortable_map_from_mapping(
                 mapping[index_name]["mappings"]["entry"]["properties"]
             )
 
