@@ -28,6 +28,9 @@ logger = logging.getLogger("karp")
 class Es6Index(index.Index, index_type="es6_index"):
     def __init__(self, es: Optional[elasticsearch.Elasticsearch] = None):
         if es is None:
+            logger.info(
+                "Connecting to Elasticsearch with url=%s", es_config.ELASTICSEARCH_HOST
+            )
             es = elasticsearch.Elasticsearch(
                 hosts=es_config.ELASTICSEARCH_HOST,
                 sniff_on_start=True,

@@ -1,4 +1,5 @@
 import abc
+import typing
 from karp.domain.models.resource import Resource
 from typing import Optional, Callable, TypeVar, List, Dict, Tuple
 import logging
@@ -26,7 +27,11 @@ class IndexEntry:
 
 
 class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
-    q: str
+    resource_ids: typing.List[str]
+    q: typing.Optional[str] = None
+    from_: int = 0
+    to: int = 25
+    lexicon_stats: bool = True
 
 
 class Index(abc.ABC):

@@ -32,5 +32,5 @@ def add_entries(client, entries: Dict):
                 headers={"Authorization": "Bearer 1234"},
             )
             print(f"response = {response.json()}")
-            assert response.status_code == 201
+            assert response.status_code == 201, response.json()
     return client

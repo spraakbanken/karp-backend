@@ -46,8 +46,8 @@ def test_add(fa_client):  # fa_client):
         "places/add",
         json={
             "entry": {
-                "code": 3,
-                "name": "test3",
+                "code": 203,
+                "name": "test203",
                 "population": 4,
                 "area": 50000,
                 "density": 5,
@@ -60,7 +60,7 @@ def test_add(fa_client):  # fa_client):
     assert response.status_code == 201
     response_data = response.json()
     assert "newID" in response_data
-    assert response_data["newID"] == "3"
+    assert response_data["newID"] == "203"
 
     from karp.webapp import app_config
 
@@ -70,7 +70,7 @@ def test_add(fa_client):  # fa_client):
     with app_config.bus.ctx.entry_uows.get("places") as uw:
         entries = uw.repo.entry_ids()
         assert len(entries) == 1
-        assert entries[0] == "3"
+        assert entries[0] == "203"
     # entries = get_json(client, "places/query")
     # assert len(entries["hits"]) == 1
     # assert entries["hits"][0]["entry"]["name"] == "test3"
@@ -80,7 +80,7 @@ def test_add(fa_client):  # fa_client):
 @pytest.mark.usefixtures("main_db")
 def test_adding_existing_fails(fa_client):
     #     client = init(fa_client, es, [])
-    entry_id = 4
+    entry_id = 204
     entry_name = f"test{entry_id}"
     response = fa_client.post(
         "places/add",
@@ -130,7 +130,7 @@ def test_adding_existing_fails(fa_client):
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
 def test_delete(fa_client):
-    entry_id = 5
+    entry_id = 205
     entry_name = f"test{entry_id}"
     response = fa_client.post(
         "places/add",
@@ -222,7 +222,7 @@ def test_update_non_existing_fails(fa_client):
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
 def test_update_wo_changes_fails(fa_client):
-    entry_id = 6
+    entry_id = 206
     entry_name = f"test{entry_id}"
     response = fa_client.post(
         "places/add",
@@ -324,7 +324,7 @@ def test_update_wrong_id(fa_client):
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
 def test_update_wrong_version_fails(fa_client):
-    entry_id = 7
+    entry_id = 207
     response = fa_client.post(
         "places/add",
         json={
@@ -374,7 +374,7 @@ def test_update_wrong_version_fails(fa_client):
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
 def test_update(fa_client):
-    entry_id = 8
+    entry_id = 208
     entry_name = f"test{entry_id}"
     response = fa_client.post(
         "places/add",
@@ -430,7 +430,7 @@ def test_update(fa_client):
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
 def test_update_several_times(fa_client):
-    entry_id = 9
+    entry_id = 209
     response = fa_client.post(
         "places/add",
         json={"entry": {"code": entry_id, "name": "a", "municipality": [1]}},
@@ -454,7 +454,7 @@ def test_update_several_times(fa_client):
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
 def test_update_entry_id(fa_client):
-    entry_id = 10
+    entry_id = 210
     response = fa_client.post(
         "places/add",
         json={
@@ -723,7 +723,7 @@ def test_update_refs2(es, fa_client):
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
 def test_last_modified(fa_client):
-    entry_id = 12
+    entry_id = 212
     before_add = utc_now()
 
     # time.sleep(1)

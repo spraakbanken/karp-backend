@@ -10,14 +10,16 @@ from karp.tests.common_data import MUNICIPALITIES, PLACES
 from karp.tests.utils import get_json, add_entries
 
 
-@pytest.fixture(scope="module", name="fa_query_data_client")
-def fixture_fa_query_data_client(fa_client_w_places_w_municipalities_scope_module):
+@pytest.fixture(scope="session", name="fa_query_data_client")
+@pytest.mark.usefixtures("places_published")
+@pytest.mark.usefixtures("main_db")
+def fixture_fa_query_data_client(fa_client, municipalites_published):
     add_entries(
-        fa_client_w_places_w_municipalities_scope_module,
+        fa_client,
         {"places": PLACES, "municipalities": MUNICIPALITIES},
     )
 
-    return fa_client_w_places_w_municipalities_scope_module
+    return fa_client
 
 
 def extract_names(entries):

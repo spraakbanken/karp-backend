@@ -170,14 +170,16 @@ def fixture_resource_places(use_main_index):
 #     resource.entry_repository.teardown()
 
 
-# @pytest.fixture(name="municipalities_scope_module", scope="module")
-# def fixture_municipalities_scope_module(context_scope_module):
-#     with open("karp/tests/data/config/municipalities.json") as fp:
-#         resource = resources.create_new_resource_from_file(fp)
+@pytest.fixture(name="resource_municipalities", scope="session")
+def fixture_resource_municipalities(use_main_index):
+    with open("karp/tests/data/config/municipalities.json") as fp:
+        municipalities_config = json.load(fp)
 
-#     yield resource
-#     print("cleaning up municipalities")
-#     resource.entry_repository.teardown()
+    resource = model.create_resource(municipalities_config, created_by="local admin")
+
+    yield resource
+    # print("cleaning up municipalities")
+    # resource.entry_repository.teardown()
 
 
 # @pytest.fixture(name="context")
@@ -230,6 +232,43 @@ def fixture_places_published(resource_places):  # , db_setup):
     #     uow.commit()
 
     return resource_places
+
+
+@pytest.fixture(name="municipalites_published", scope="session")
+def fixture_municipalites_published(resource_municipalities):  # , db_setup):
+    from karp.webapp import app_config, main as webapp_main
+
+    try:
+        app_config.bus.handle(
+            commands.CreateResource(
+                id=resource_municipalities.id,
+                resource_id=resource_municipalities.resource_id,
+                name=resource_municipalities.name,
+                config=resource_municipalities.config,
+                created_by=resource_municipalities.last_modified_by,
+                message=resource_municipalities.message,
+            )
+        )
+    except errors.IntegrityError:
+        pass
+    try:
+        app_config.bus.handle(
+            commands.PublishResource(
+                resource_id=resource_municipalities.resource_id,
+                name=resource_municipalities.name,
+                config=resource_municipalities.config,
+                user=resource_municipalities.last_modified_by,
+                message=resource_municipalities.message,
+            )
+        )
+    except karp_errors.ResourceAlreadyPublished:
+        pass
+    # resource_municipalites.is_published = True
+    # with app_config.bus.ctx.resource_uow as uow:
+    #     uow.resources.put(resource_municipalites)
+    #     uow.commit()
+
+    return resource_municipalities
 
 
 # @pytest.fixture(name="places_published_scope_module", scope="module")
