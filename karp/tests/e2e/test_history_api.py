@@ -1,17 +1,17 @@
-import json
+# import json
 import pytest  # pyre-ignore
 from datetime import datetime, timezone
 import time
 import re
 
 # import karp.resourcemgr.entrywrite as entrywrite
-from karp.application.services import entries
+# from karp.application.services import entries
 
 places = [
-    {"code": 3, "name": "a", "municipality": [1]},
-    {"code": 4, "name": "b", "municipality": [2, 3]},
-    {"code": 5, "name": "c", "municipality": [2, 3], "larger_place": 4},
-    {"code": 6, "name": "c", "municipality": [1], "larger_place": 5},
+    {"code": 103, "name": "a", "municipality": [1]},
+    {"code": 104, "name": "b", "municipality": [2, 3]},
+    {"code": 105, "name": "c", "municipality": [2, 3], "larger_place": 4},
+    {"code": 106, "name": "c", "municipality": [1], "larger_place": 5},
 ]
 
 
@@ -24,43 +24,67 @@ def get_helper(client, url):
     return response.json()
 
 
+def username(name: str) -> str:
+    return f"{__name__}-{name}"
+
+
 @pytest.fixture(name="fa_history_data_client", scope="session")
 def fixture_fa_history_data_client(fa_client):
     for entry in places[0:2]:
-        entries.add_entry("places", entry, "user1", message="Add it")
+        fa_client.post(
+            "/places/add",
+            json={"entry": entry, "message": "Add it"},
+            headers={"Authorization": "Bearer user1"},
+        )
+        # entries.add_entry("places", entry, "user1", message="Add it")
         time.sleep(1)
     for entry in places[2:]:
-        entries.add_entry("places", entry, "user2", message="Add it")
+        fa_client.post(
+            "/places/add",
+            json={"entry": entry, "message": "Add it"},
+            headers={"Authorization": "Bearer user2"},
+        )
+        # entries.add_entry("places", entry, "user2", message="Add it")
         time.sleep(1)
     for entry in places[0:2]:
         changed_entry = entry.copy()
         changed_entry["name"] = entry["name"] + entry["name"]
-        entries.update_entry(
-            "places",
-            str(entry["code"]),
-            1,
-            changed_entry,
-            "user2",
-            message="Change it",
+        fa_client.post(
+            f"/places/{entry['code']}/update",
+            json={"entry": changed_entry, "message": "change it", "version": 1},
+            headers={"Authorization": "Bearer user2"},
         )
+        # entries.update_entry(
+        #     "places",
+        #     str(entry["code"]),
+        #     1,
+        #     changed_entry,
+        #     "user2",
+        #     message="Change it",
+        # )
         time.sleep(1)
     for entry in places[2:]:
         changed_entry = entry.copy()
         changed_entry["name"] = entry["name"] + entry["name"]
-        entries.update_entry(
-            "places",
-            str(entry["code"]),
-            1,
-            changed_entry,
-            "user1",
-            message="Change it",
+        fa_client.post(
+            f"/places/{entry['code']}/update",
+            json={"entry": changed_entry, "message": "change it", "version": 1},
+            headers={"Authorization": "Bearer user1"},
         )
+        # entries.update_entry(
+        #     "places",
+        #     str(entry["code"]),
+        #     1,
+        #     changed_entry,
+        #     "user1",
+        #     message="Change it",
+        # )
         time.sleep(1)
     return fa_client
 
 
 def test_empty_user_history(fa_history_data_client):
-    response_data = get_helper(fa_history_data_client, "places/history?user_id=user3")
+    response_data = get_helper(fa_history_data_client, "/places/history?user_id=user3")
     assert len(response_data["history"]) == 0
     assert response_data["total"] == 0
 
@@ -104,26 +128,26 @@ def test_user_history_to_date(fa_history_data_client):
 
 
 def test_entry_id(fa_history_data_client):
-    response_data = get_helper(fa_history_data_client, "places/history?entry_id=3")
+    response_data = get_helper(fa_history_data_client, "places/history?entry_id=103")
     assert 2 == len(response_data["history"])
     for history_entry in response_data["history"]:
-        assert "3" == history_entry["entry_id"]
+        assert "103" == history_entry["entry_id"]
 
 
 def test_entry_id_and_user_id(fa_history_data_client):
     response_data = get_helper(
-        fa_history_data_client, "places/history?entry_id=3&user_id=user2"
+        fa_history_data_client, "places/history?entry_id=103&user_id=user2"
     )
     assert 1 == len(response_data["history"])
     history_entry = response_data["history"][0]
-    assert "3" == history_entry["entry_id"]
+    assert "103" == history_entry["entry_id"]
     assert "user2" == history_entry["user_id"]
     assert "UPDATED" == history_entry["op"]
 
 
 def test_diff_against_nothing(fa_history_data_client):
     response_data = get_helper(
-        fa_history_data_client, "places/history?entry_id=3&to_version=2"
+        fa_history_data_client, "places/history?entry_id=103&to_version=2"
     )
     assert 1 == len(response_data["history"])
     history_entry = response_data["history"][0]
@@ -134,11 +158,11 @@ def test_diff_against_nothing(fa_history_data_client):
 
 
 def test_historical_entry(fa_history_data_client):
-    response_data = get_helper(fa_history_data_client, "places/4/2/history")
+    response_data = get_helper(fa_history_data_client, "places/104/2/history")
     print(f"got data")
     assert datetime.now(timezone.utc).timestamp() > response_data["last_modified"]
     assert "user2" == response_data["last_modified_by"]
-    assert "id" in response_data
+    assert "entry_id" in response_data
     assert "resource" in response_data
     assert "bb" == response_data["entry"]["name"]
     assert "version" in response_data

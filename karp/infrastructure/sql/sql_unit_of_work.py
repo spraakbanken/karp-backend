@@ -68,11 +68,12 @@ class SqlUnitOfWork:  # (unit_of_work.UnitOfWork):
 
     def _check_state(self, expected_state):
         if self._state != expected_state:
-            logger.warning(
-                "State conflict. unit_of_work is in state '%s' and not '%s'",
-                self._state,
-                expected_state,
-            )
+            pass
+            # logger.warning(
+            #     "State conflict. unit_of_work is in state '%s' and not '%s'",
+            #     self._state,
+            #     expected_state,
+            # )
             # raise RuntimeError(
             #     f"State conflict. unit_of_work is in state '{self._state!s}' and not '{expected_state!s}'"
             # )

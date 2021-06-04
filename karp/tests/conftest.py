@@ -105,7 +105,7 @@ def main_db():
 #     alembic_main(["--raiseerr", "downgrade", "base"])
 
 
-@pytest.fixture(name="fa_client")
+@pytest.fixture(name="fa_client", scope="session")
 def fixture_fa_client(use_main_index):  # db_setup, es):
     # ctx.auth_service = dummy_auth_service.DummyAuthService()
     print(f"use_main_index = {use_main_index}")

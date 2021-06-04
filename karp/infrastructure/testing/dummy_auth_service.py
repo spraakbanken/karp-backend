@@ -16,7 +16,7 @@ class DummyAuthService(AuthService):
         #     raise RuntimeError("Don't use this in production!")
 
     def authenticate(self, scheme: str, credentials: str) -> User:
-        return User("dummy", {}, {})
+        return User(credentials or "dummy", {}, {})
 
     def authorize(
         self, level: PermissionLevel, user: User, resource_ids: List[str]

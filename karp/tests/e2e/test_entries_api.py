@@ -192,7 +192,7 @@ def test_delete_non_existing_fails(fa_client):
 def test_update_non_existing_fails(fa_client):
     entry_id = "non-existent"
     response = fa_client.post(
-        f"places/{entry_id}/update",
+        f"/places/{entry_id}/update",
         json={
             "entry": {
                 "code": 3,

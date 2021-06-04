@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Optional, Dict
+import typing
 from pydantic import BaseModel
 
 
@@ -31,6 +32,11 @@ class PermissionLevel(str, Enum):
 
 class Entry(BaseModel):
     entry_id: str
+    resource: str
+    version: int
+    entry: typing.Dict
+    last_modified_by: str
+    last_modified: float
 
 
 class EntryBase(BaseModel):

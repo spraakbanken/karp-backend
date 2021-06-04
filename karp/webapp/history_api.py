@@ -1,14 +1,15 @@
+from karp.webapp import schemas
 from typing import Dict, Optional
 
 from fastapi import APIRouter, Query, Security, HTTPException, status
 
+from karp.domain import auth_service, model
 from karp.domain.models.user import User
-from karp.domain.models.auth_service import PermissionLevel
 
-from karp.application import ctx
-from karp.application.services import entries
 
-from karp.webapp.auth import get_current_user
+from karp.services import entry_views
+from karp.utility import unique_id
+from .app_config import bus, get_current_user
 
 # from flask import Blueprint, jsonify, request  # pyre-ignore
 
@@ -17,9 +18,11 @@ from karp.webapp.auth import get_current_user
 # import karp.resourcemgr as resourcemgr
 # import karp.errors as errors
 
+# pylint: disable=unsubscriptable-object
+
 router = APIRouter()
-#
-#
+
+
 @router.get("/{resource_id}/{entry_id}/diff")
 @router.post("/{resource_id}/{entry_id}/diff")
 # @auth.auth.authorization("ADMIN")
@@ -85,14 +88,15 @@ def get_history(
     current_page: int = Query(0),
     page_size: int = Query(100),
 ):
-    if not ctx.auth_service.authorize(PermissionLevel.admin, user, [resource_id]):
+    if not bus.ctx.auth_service.authorize(
+        auth_service.PermissionLevel.admin, user, [resource_id]
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="admin"'},
         )
-    history, total = entries.get_history(
-        resource_id,
+    history_request = entry_views.EntryHistoryRequest(
         page_size=page_size,
         current_page=current_page,
         from_date=from_date,
@@ -102,18 +106,34 @@ def get_history(
         from_version=from_version,
         to_version=to_version,
     )
+    history, total = entry_views.get_history(
+        resource_id,
+        history_request,
+        ctx=bus.ctx,
+    )
     return {"history": history, "total": total}
 
 
-@router.get("/{resource_id}/{entry_id}/{version}/history")
+@router.get("/{resource_id}/{entry_id}/{version}/history", response_model=schemas.Entry)
 # @auth.auth.authorization("ADMIN")
 def get_history_for_entry(
     resource_id: str,
     entry_id: str,
     version: int,
-    user: User = Security(get_current_user, scopes=["admin"]),
+    user: User = Security(get_current_user, scopes=["read"]),
 ):
-    historical_entry = entries.get_entry_history(resource_id, entry_id, version)
+    if not bus.ctx.auth_service.authorize(
+        auth_service.PermissionLevel.admin, user, [resource_id]
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": 'Bearer scope="read"'},
+        )
+    historical_entry = entry_views.get_entry_history(
+        resource_id, entry_id, version=version, ctx=bus.ctx
+    )
+
     return historical_entry
 
 
