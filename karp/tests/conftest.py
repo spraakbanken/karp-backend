@@ -76,13 +76,14 @@ def main_db():
     print(f"creating engine uri = {config.DB_URL}")
     engine = create_engine(config.DB_URL)
     wait_for_main_db_to_come_up(engine)
-    # metadata.create_all(bind=engine)
-    print("running alembic upgrade ...")
-    alembic_main(["--raiseerr", "upgrade", "head"])
+    metadata.create_all(bind=engine)
+    # print("running alembic upgrade ...")
+    # alembic_main(["--raiseerr", "upgrade", "head"])
     yield engine
-    print("running alembic downgrade ...")
+    # print("running alembic downgrade ...")
     session.close_all_sessions()
-    alembic_main(["--raiseerr", "downgrade", "base"])
+    # alembic_main(["--raiseerr", "downgrade", "base"])
+    metadata.drop_all(bind=engine)
     # return engine
 
 

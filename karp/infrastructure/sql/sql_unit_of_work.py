@@ -68,9 +68,14 @@ class SqlUnitOfWork:  # (unit_of_work.UnitOfWork):
 
     def _check_state(self, expected_state):
         if self._state != expected_state:
-            raise RuntimeError(
-                f"State conflict. unit_of_work is in state '{self._state!s}' and not '{expected_state!s}'"
+            logger.warning(
+                "State conflict. unit_of_work is in state '%s' and not '%s'",
+                self._state,
+                expected_state,
             )
+            # raise RuntimeError(
+            #     f"State conflict. unit_of_work is in state '{self._state!s}' and not '{expected_state!s}'"
+            # )
 
     def _commit(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
@@ -138,7 +143,12 @@ class SqlEntryUnitOfWork(
     entry_repository_type="sql_v1",
     is_default=True,
 ):
-    def __init__(self, repo_settings: Dict, resource_config: typing.Dict, session_factory=DEFAULT_SESSION_FACTORY):
+    def __init__(
+        self,
+        repo_settings: Dict,
+        resource_config: typing.Dict,
+        session_factory=DEFAULT_SESSION_FACTORY,
+    ):
         super().__init__()
         self.session_factory = session_factory
         self._entries = None
@@ -160,7 +170,7 @@ class SqlEntryUnitOfWork(
 
     @classmethod
     def from_dict(cls, settings: typing.Dict, resource_config, **kwargs):
-        return cls(repo_settings=settings, resource_config=resource_config,**kwargs)
+        return cls(repo_settings=settings, resource_config=resource_config, **kwargs)
 
     def collect_new_events(self) -> typing.Iterable:
         if self._entries:
@@ -190,5 +200,7 @@ class SqlIndexUnitOfWork(unit_of_work.IndexUnitOfWork, index_type="sql_index"):
         if not self._index:
             raise RuntimeError()
         return self._index
+
+
 # @unit_of_work.create_entry_unit_of_work.register(SqlEntryRepository)
 # def _()

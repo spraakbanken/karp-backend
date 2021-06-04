@@ -351,7 +351,7 @@ def update_entry(
         new_entry_id = id_getter(cmd.entry)
 
         current_db_entry.body = cmd.entry
-        current_db_entry.stamp(cmd.user, message=cmd.message)
+        current_db_entry.stamp(cmd.user, message=cmd.message, timestamp=cmd.timestamp)
         if new_entry_id != cmd.entry_id:
             current_db_entry.entry_id = new_entry_id
             uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
@@ -563,7 +563,7 @@ def delete_entry(cmd: commands.DeleteEntry, ctx: context.Context):
     # with ctx.resource_uow:
     #     resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
 
-    with ctx.entry_uows.get(cmd.resource_id) as uw:
+    with ctx.entry_uows.get_uow(cmd.resource_id) as uw:
         entry = uw.repo.by_entry_id(cmd.entry_id)
 
         #     resource = get_resource(resource_id)
@@ -572,7 +572,6 @@ def delete_entry(cmd: commands.DeleteEntry, ctx: context.Context):
             raise errors.EntryNotFound(
                 resource_id=cmd.resource_id,
                 entry_id=cmd.entry_id,
-                entry_version=cmd.version,
             )
 
         entry.discard(
@@ -580,7 +579,9 @@ def delete_entry(cmd: commands.DeleteEntry, ctx: context.Context):
             message=cmd.message,
             timestamp=cmd.timestamp,
         )
+        assert entry.discarded
         uw.repo.update(entry)
+        uw.commit()
 
     # ctx.search_service.delete_entry(resource, entry=entry)
 

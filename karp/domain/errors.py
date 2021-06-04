@@ -13,12 +13,12 @@ class EntryNotFound(DomainError):
         self,
         entry_id: str,
         resource_id: str,
-        entry_version: int,
         resource_version: int = None,
         **kwargs,
     ):
         super().__init__(
-            f"Entry '{entry_id}' (version={entry_version}) not found int resource '{resource_id}' (version={resource_version})",
+            f"Entry '{entry_id}' not found in resource '{resource_id}' (version={resource_version or 'latest'})",
+            code=errors.ClientErrorCodes.ENTRY_NOT_FOUND,
             **kwargs,
         )
 
@@ -118,3 +118,12 @@ class AuthError(DomainError):
         if "code" not in kwargs:
             kwargs["code"] = errors.ClientErrorCodes.AUTH_GENERAL_ERROR
         super().__init__(message, **kwargs)
+
+
+class UpdateConflict(DomainError):
+    def __init__(self, diff):
+        super().__init__(
+            "Version conflict. Please update entry.",
+            code=errors.ClientErrorCodes.VERSION_CONFLICT,
+        )
+        self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}

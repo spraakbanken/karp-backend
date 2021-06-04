@@ -236,11 +236,11 @@ class TestDeleteEntry:
             ),
         )
 
-        uow = bus.ctx.entry_uows.get(resource_id)
+        uow = bus.ctx.entry_uows.get_uow(resource_id)
+        assert uow.was_committed
         entry = uow.repo.by_id(id_)
         assert entry.version == 2
         assert entry.discarded
-        assert uow.was_committed
         assert (
             entry.entry_id not in bus.ctx.index_uow.repo.indicies[resource_id].entries
         )

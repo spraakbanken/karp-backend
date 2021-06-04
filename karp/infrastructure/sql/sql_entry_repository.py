@@ -37,7 +37,7 @@ class SqlEntryRepository(
     def __init__(
         self,
         history_model,
-        # runtime_model,
+        runtime_model,
         resource_config: Dict,
         resource_id: str,
         # mapped_class: Any
@@ -45,7 +45,7 @@ class SqlEntryRepository(
     ):
         super().__init__()
         self.history_model = history_model
-        # self.runtime_model = runtime_model
+        self.runtime_model = runtime_model
         self.resource_config = resource_config
         # self.mapped_class = mapped_class
         self._session = session
@@ -80,19 +80,25 @@ class SqlEntryRepository(
         if session:
             history_model.__table__.create(bind=session.bind, checkfirst=True)
         # runtime_table.create(bind=db.engine, checkfirst=True)
-        # runtime_model = sql_models.get_or_create_entry_runtime_model(
-        #     table_name, history_model, settings["config"]
-        # )
+        runtime_model = sql_models.get_or_create_entry_runtime_model(
+            table_name, history_model, resource_config
+        )
+        if session:
+            runtime_model.__table__.create(bind=session.bind, checkfirst=True)
+            for child_model in runtime_model.child_tables.values():
+                child_model.__table__.create(bind=session.bind, checkfirst=True)
         return cls(
             history_model=history_model,
-            # runtime_model=runtime_model,
+            runtime_model=runtime_model,
             resource_config=resource_config,
             resource_id=settings["resource_id"],
             session=session,
         )
 
     @classmethod
-    def _create_repository_settings(cls, resource_id: str, resource_config: typing.Dict) -> typing.Dict:
+    def _create_repository_settings(
+        cls, resource_id: str, resource_config: typing.Dict
+    ) -> typing.Dict:
         return {
             "table_name": resource_id,
             "resource_id": resource_id,
@@ -103,41 +109,41 @@ class SqlEntryRepository(
 
         history_id = self._insert_history(entry)
 
-        # runtime_entry = self.runtime_model(
-        #     **self._entry_to_runtime_dict(history_id, entry)
-        # )
-        # try:
-        #     return self._session.add(runtime_entry)
-        # except db.exc.IntegrityError as exc:
-        # logger.exception(exc)
+        runtime_entry = self.runtime_model(
+            **self._entry_to_runtime_dict(history_id, entry)
+        )
+        try:
+            return self._session.add(runtime_entry)
+        except db.exc.IntegrityError as exc:
+            logger.exception(exc)
 
-    #             match = DUPLICATE_PROG.search(str(exc))
-    #             if match:
-    #                 value = match.group(1)
-    #                 key = match.group(2)
-    #                 if key == "PRIMARY":
-    #                     key = "entry_id"
-    #             else:
-    #                 value = "UNKNOWN"
-    #                 key = "UNKNOWN"
-    #             raise errors.IntegrityError(key=key, value=value) from exc
+            match = DUPLICATE_PROG.search(str(exc))
+            if match:
+                value = match.group(1)
+                key = match.group(2)
+                if key == "PRIMARY":
+                    key = "entry_id"
+            else:
+                value = "UNKNOWN"
+                key = "UNKNOWN"
+            raise errors.IntegrityError(key=key, value=value) from exc
 
     def _update(self, entry: Entry):
         self._check_has_session()
         history_id = self._insert_history(entry)
 
-    #         current_db_entry = (
-    #             self._session.query(self.runtime_model)
-    #             .filter_by(entry_id=entry.entry_id)
-    #             .first()
-    #         )
-    #
-    #         if not current_db_entry:
-    #             raise errors.EntryNotFoundError("", entry.entry_id)
-    #
-    #         runtime_dict = self._entry_to_runtime_dict(history_id, entry)
-    #         for key, value in runtime_dict.items():
-    #             setattr(current_db_entry, key, value)
+        current_db_entry = (
+            self._session.query(self.runtime_model)
+            .filter_by(entry_id=entry.entry_id)
+            .first()
+        )
+
+        if not current_db_entry:
+            raise errors.EntryNotFoundError("", entry.entry_id)
+
+        runtime_dict = self._entry_to_runtime_dict(history_id, entry)
+        for key, value in runtime_dict.items():
+            setattr(current_db_entry, key, value)
 
     @classmethod
     def primary_key(cls):
@@ -175,8 +181,8 @@ class SqlEntryRepository(
         self._check_has_session()
         try:
             ins_stmt = db.insert(self.history_model)
-            history_row = self._entry_to_history_row(entry)
-            ins_stmt = ins_stmt.values(history_row)
+            history_dict = self._entry_to_history_dict(entry)
+            ins_stmt = ins_stmt.values(**history_dict)
             result = self._session.execute(ins_stmt)
             return result.lastrowid or result.returned_defaults["history_id"]
         except db.exc.IntegrityError as exc:
@@ -192,7 +198,7 @@ class SqlEntryRepository(
 
     def entry_ids(self) -> List[str]:
         self._check_has_session()
-        query = self._session.query(self.history_model).filter_by(discarded=False)
+        query = self._session.query(self.runtime_model).filter_by(discarded=False)
         return [row.entry_id for row in query.all()]
         # return [row.entry_id for row in query.filter_by(discarded=False).all()]
 
@@ -420,7 +426,7 @@ class SqlEntryRepository(
 
     def _entry_to_runtime_dict(self, history_id: int, entry: Entry) -> Dict:
         _entry = {
-            "entry_id": entry.id,
+            "entry_id": entry.entry_id,
             "history_id": history_id,
             "id": entry.id,
             "discarded": entry.discarded,

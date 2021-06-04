@@ -96,7 +96,7 @@ class Es6Index(index.Index, index_type="es6_index"):
 
     def delete_entry(
         self,
-        resource: Resource,
+        resource_id: str,
         *,
         entry_id: Optional[str] = None,
         entry: Optional[Entry] = None,
@@ -106,7 +106,7 @@ class Es6Index(index.Index, index_type="es6_index"):
         if entry:
             entry_id = entry.entry_id
         self.es.delete(
-            index=resource.resource_id,
+            index=resource_id,
             doc_type="entry",
             id=entry_id,
             refresh=True,

@@ -93,7 +93,9 @@ class ResourceDTO(db.Base):
 
 class BaseRuntimeEntry:
     entry_id = db.Column(
-        db.String(100, collation="utf8mb4_swedish_ci"), primary_key=True
+        # db.String(100, collation="utf8mb4_swedish_ci"), primary_key=True
+        db.String(100),
+        primary_key=True,
     )
     history_id = db.Column(db.Integer, nullable=False)
     id = db.Column(db.UUIDType, nullable=False)
@@ -117,6 +119,22 @@ class BaseHistoryEntry:
     @db.declared_attr
     def __table_args__(cls):
         return db.UniqueConstraint("id", "version", name="id_version_unique_constraint")
+
+    @classmethod
+    def from_entity(cls, entry: model.Entry):
+        return cls(
+            history_id=None,
+            id=entry.id,
+            entry_id=entry.entry_id,
+            version=entry.version,
+            last_modified=entry.last_modified,
+            last_modified_by=entry.last_modified_by,
+            body=entry.body,
+            status=entry.status,
+            message=entry.message,
+            op=entry.op,
+            discarded=entry.discarded,
+        )
 
 
 # Dynamic models
@@ -148,9 +166,9 @@ def get_or_create_entry_runtime_model(
 
     if table_name in class_cache:
         runtime_model = class_cache[table_name]
-        runtime_model.__table__.create(bind=db.engine, checkfirst=True)
-        for child_model in runtime_model.child_tables.values():
-            child_model.__table__.create(bind=db.engine, checkfirst=True)
+        # runtime_model.__table__.create(bind=db.engine, checkfirst=True)
+        # for child_model in runtime_model.child_tables.values():
+        #     child_model.__table__.create(bind=db.engine, checkfirst=True)
         return runtime_model
 
     foreign_key_constraint = db.ForeignKeyConstraint(
@@ -209,11 +227,11 @@ def get_or_create_entry_runtime_model(
         (db.Base, BaseRuntimeEntry),
         attributes,
     )
-    sqlalchemy_class.__table__.create(bind=db.engine, checkfirst=True)
+    # sqlalchemy_class.__table__.create(bind=db.engine, checkfirst=True)
     sqlalchemy_class.child_tables = child_tables
 
-    for child_model in sqlalchemy_class.child_tables.values():
-        child_model.__table__.create(bind=db.engine, checkfirst=True)
+    # for child_model in sqlalchemy_class.child_tables.values():
+    #     child_model.__table__.create(bind=db.engine, checkfirst=True)
     class_cache[table_name] = sqlalchemy_class
 
     return sqlalchemy_class

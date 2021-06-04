@@ -2,7 +2,7 @@ from os import stat
 from fastapi import APIRouter, Security, HTTPException, status, Response
 from starlette import responses
 
-from karp.domain import commands
+from karp.domain import commands, errors
 from karp.domain.models.user import User
 from karp.domain.auth_service import PermissionLevel
 
@@ -14,7 +14,7 @@ from karp.webapp import schemas
 
 # from karp.webapp.auth import get_current_user
 
-from karp import errors
+from karp import errors as karp_errors
 
 # from flask import Blueprint  # pyre-ignore
 # from flask import jsonify as flask_jsonify  # pyre-ignore
@@ -73,7 +73,7 @@ def update_entry(
     data: schemas.EntryUpdate,
     user: User = Security(get_current_user, scopes=["write"]),
 ):
-    if not ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not bus.ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -87,18 +87,35 @@ def update_entry(
     #     message = data.get("message")
     #     if not (version and entry and message):
     #         raise KarpError("Missing version, entry or message")
-    print(f"update: data = {data}")
     try:
-        new_id = entries.update_entry(
-            resource_id,
-            entry_id,
-            data.version,
-            data.entry,
-            user.identifier,
-            message=data.message,
-            # force=force_update,
+        entry = entry_views.get_by_entry_id(resource_id, entry_id, bus.ctx)
+        if not entry:
+            raise errors.EntryNotFound(resource_id=resource_id, entry_id=entry_id)
+        bus.handle(
+            commands.UpdateEntry(
+                resource_id=resource_id,
+                id=entry.id,
+                entry_id=entry_id,
+                version=data.version,
+                user=user.identifier,
+                message=data.message,
+                entry=data.entry,
+            )
         )
-        return {"newID": new_id}
+        # new_entry = entries.add_entry(
+        #     resource_id, data.entry, user.identifier, message=data.message
+        # )
+        # new_id = entries.update_entry(
+        #     resource_id,
+        #     entry_id,
+        #     data.version,
+        #     data.entry,
+        #     user.identifier,
+        #     message=data.message,
+        #     # force=force_update,
+        # )
+        entry = entry_views.get_by_id(resource_id, entry.id, bus.ctx)
+        return {"newID": entry.entry_id, "uuid": entry.id}
     except errors.UpdateConflict as err:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return err.error_obj
@@ -121,13 +138,22 @@ def delete_entry(
     Returns:
         [type] -- [description]
     """
-    if not ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not bus.ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
-    entries.delete_entry(resource_id, entry_id, user.identifier)
+    bus.handle(
+        commands.DeleteEntry(
+            resource_id=resource_id,
+            entry_id=entry_id,
+            user=user.identifier,
+            # message=data.message,
+            # entry=data.entry,
+        )
+    )
+    # entries.delete_entry(resource_id, entry_id, user.identifier)
     return "", 204
 
 
