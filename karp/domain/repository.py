@@ -175,12 +175,46 @@ class EntryRepository(Repository[model.Entry]):
 
     @classmethod
     @abc.abstractmethod
-    def _create_repository_settings(cls, resource_id: str, resource_config: typing.Dict):
+    def _create_repository_settings(
+        cls, resource_id: str, resource_config: typing.Dict
+    ):
         raise NotImplementedError()
 
     def __init__(self):
         super().__init__()
         self.settings = {}
+
+    def by_id(
+        self,
+        id: str,
+        *,
+        version: Optional[int] = None,
+        after_date: Optional[float] = None,
+        before_date: Optional[float] = None,
+        oldest_first: bool = False,
+    ) -> typing.Optional[model.Entry]:
+        entity = self._by_id(
+            id,
+            version=version,
+            after_date=after_date,
+            before_date=before_date,
+            oldest_first=oldest_first,
+        )
+        if entity:
+            self.seen.add(entity)
+        return entity
+
+    @abc.abstractmethod
+    def _by_id(
+        self,
+        id: str,
+        *,
+        version: Optional[int] = None,
+        after_date: Optional[float] = None,
+        before_date: Optional[float] = None,
+        oldest_first: bool = False,
+    ) -> typing.Optional[model.Entry]:
+        raise NotImplementedError()
 
     # @abc.abstractmethod
     def move(self, entry: model.Entry, *, old_entry_id: str):

@@ -6,6 +6,7 @@ import re
 
 # import karp.resourcemgr.entrywrite as entrywrite
 # from karp.application.services import entries
+from karp.utility.time import utc_now
 
 places = [
     {"code": 103, "name": "a", "municipality": [1]},
@@ -80,6 +81,19 @@ def fixture_fa_history_data_client(fa_client):
         #     message="Change it",
         # )
         time.sleep(1)
+
+    diff_entry_id = places[0]["code"]
+    for i in range(3, 10):
+        changed_entry = places[0].copy()
+        changed_entry["name"] = places[0]["name"] * i
+        response = fa_client.post(
+            f"places/{diff_entry_id}/update",
+            json={"entry": changed_entry, "message": "changes", "version": i - 1},
+            headers={"Authorization": "Bearer user4"},
+        )
+        print(f"response = {response.json()}")
+        assert response.status_code == 200
+        time.sleep(1)
     return fa_client
 
 
@@ -112,26 +126,24 @@ def test_user2_history(fa_history_data_client):
 def test_user_history_from_date(fa_history_data_client):
     response_data = get_helper(
         fa_history_data_client,
-        "places/history?user_id=user1&from_date=%s"
-        % str(datetime.now(timezone.utc).timestamp() - 5),
+        f"places/history?user_id=user1&from_date={utc_now() - 5}",
     )
-    assert 4 > len(response_data["history"])
+    assert 4 > len(response_data["history"]), len(response_data["history"])
 
 
 def test_user_history_to_date(fa_history_data_client):
     response_data = get_helper(
         fa_history_data_client,
-        "places/history?user_id=user2&to_date=%s"
-        % str(datetime.now(timezone.utc).timestamp() - 5),
+        f"/places/history?user_id=user2&to_date={utc_now() - 5}",
     )
-    assert 4 > len(response_data["history"])
+    assert len(response_data["history"]) == 4
 
 
 def test_entry_id(fa_history_data_client):
-    response_data = get_helper(fa_history_data_client, "places/history?entry_id=103")
+    response_data = get_helper(fa_history_data_client, "places/history?entry_id=104")
     assert 2 == len(response_data["history"])
     for history_entry in response_data["history"]:
-        assert "103" == history_entry["entry_id"]
+        assert "104" == history_entry["entry_id"]
 
 
 def test_entry_id_and_user_id(fa_history_data_client):
@@ -160,9 +172,140 @@ def test_diff_against_nothing(fa_history_data_client):
 def test_historical_entry(fa_history_data_client):
     response_data = get_helper(fa_history_data_client, "places/104/2/history")
     print(f"got data")
-    assert datetime.now(timezone.utc).timestamp() > response_data["last_modified"]
+    assert utc_now() > response_data["last_modified"]
     assert "user2" == response_data["last_modified_by"]
     assert "entry_id" in response_data
     assert "resource" in response_data
     assert "bb" == response_data["entry"]["name"]
     assert "version" in response_data
+
+
+def test_diff1(fa_history_data_client):
+    response = fa_history_data_client.get(
+        "places/103/diff?from_version=1&to_version=2",
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    print(f"response_data = {response_data}")
+    diff = response_data["diff"]
+    assert len(diff) == 1
+    assert "CHANGE" == diff[0]["type"]
+    assert "a" == diff[0]["before"]
+    assert "aa" == diff[0]["after"]
+    assert "name" == diff[0]["field"]
+    assert response_data["from_version"] == 1
+    assert response_data["to_version"] == 2
+
+
+def test_diff2(fa_history_data_client):
+    response = fa_history_data_client.get(
+        f"/places/103/diff?from_date=0&to_date={utc_now()}",
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    diff = response_data["diff"]
+    print(f"response = {response_data}")
+    assert "a" == diff[0]["before"]
+    assert "aaaaaaaaa" == diff[0]["after"]
+    assert response_data["from_version"] == 1
+    assert response_data["to_version"] == 9
+
+
+def test_diff_from_first_to_date(fa_history_data_client):
+    """
+    this test is a bit shaky due to assuming that we will find the correct version by subtracting three seconds
+    """
+    response = fa_history_data_client.get(
+        f"/places/103/diff?to_date={utc_now() - 3}",
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    diff = response_data["diff"]
+    assert "a" == diff[0]["before"]
+    assert "aaaaaaa" == diff[0]["after"]
+    assert response_data["from_version"] == 1
+    assert response_data["to_version"] == 7
+
+
+def test_diff_from_date_to_last(fa_history_data_client):
+    """
+    this test is a bit shaky due to assuming that we will find the correct version by subtracting three seconds
+    """
+    response = fa_history_data_client.get(
+        f"/places/103/diff?from_date={utc_now() - 3}",
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    diff = response_data["diff"]
+    assert "aaaaaaaa" == diff[0]["before"]
+    assert "aaaaaaaaa" == diff[0]["after"]
+    assert response_data["from_version"] == 8
+    assert response_data["to_version"] == 9
+
+
+def test_diff_from_first_to_version(fa_history_data_client):
+    response = fa_history_data_client.get(
+        "places/103/diff?to_version=7",
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    diff = response_data["diff"]
+    assert "a" == diff[0]["before"]
+    assert "aaaaaaa" == diff[0]["after"]
+    assert response_data["from_version"] == 1
+    assert response_data["to_version"] == 7
+
+
+def test_diff_from_version_to_last(fa_history_data_client):
+    response = fa_history_data_client.get(
+        "places/103/diff?from_version=7",
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    diff = response_data["diff"]
+    assert "aaaaaaa" == diff[0]["before"]
+    assert "aaaaaaaaa" == diff[0]["after"]
+    assert response_data["from_version"] == 7
+    assert response_data["to_version"] == 9
+
+
+def test_diff_mix_version_date(fa_history_data_client):
+    response = fa_history_data_client.get(
+        f"/places/103/diff?from_version=2&to_date={utc_now() - 3}",
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    diff = response_data["diff"]
+    assert "aa" == diff[0]["before"]
+    assert "aaaaaaa" == diff[0]["after"]
+    assert response_data["from_version"] == 2
+    assert response_data["to_version"] == 7
+
+
+def test_diff_to_entry_data(fa_history_data_client):
+    edited_entry = places[0].copy()
+    edited_entry["name"] = "testing"
+    response = fa_history_data_client.get(
+        "places/103/diff?from_version=1",
+        json=edited_entry,
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    diff = response_data["diff"]
+    assert "a" == diff[0]["before"]
+    assert "testing" == diff[0]["after"]
+    assert response_data["from_version"] == 1
+    assert response_data["to_version"] is None
+
+
+def test_diff_no_flags(fa_history_data_client):
+    response = fa_history_data_client.get(
+        "places/103/diff?from_version=1",
+        headers={"Authorization": "Bearer user4"},
+    )
+    response_data = response.json()
+    diff = response_data["diff"]
+    assert "a" == diff[0]["before"]
+    assert "aaaaaaaaa" == diff[0]["after"]
+    assert response_data["from_version"] == 1
+    assert response_data["to_version"] == 9

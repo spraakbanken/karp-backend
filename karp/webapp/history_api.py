@@ -23,18 +23,29 @@ from .app_config import bus, get_current_user
 router = APIRouter()
 
 
-@router.get("/{resource_id}/{entry_id}/diff")
-@router.post("/{resource_id}/{entry_id}/diff")
+@router.get(
+    "/{resource_id}/{entry_id}/diff", response_model=entry_views.EntryDiffResponse
+)
+# @router.post("/{resource_id}/{entry_id}/diff")
 # @auth.auth.authorization("ADMIN")
 def get_diff(
     resource_id: str,
     entry_id: str,
+    user: User = Security(get_current_user, scopes=["admin"]),
     from_version: Optional[int] = None,
     to_version: Optional[int] = None,
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
 ):
+    if not bus.ctx.auth_service.authorize(
+        auth_service.PermissionLevel.admin, user, [resource_id]
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": 'Bearer scope="admin"'},
+        )
     #     from_version = request.args.get("from_version")
     #     to_version = request.args.get("to_version")
     #     from_date_str = request.args.get("from_date")
@@ -57,20 +68,19 @@ def get_diff(
     #         "entry": request.get_json(),
     #     }
     #
-    diff, from_version, to_version = entries.diff(
-        resource_id,
-        entry_id,
+    diff_request = entry_views.EntryDiffRequest(
+        resource_id=resource_id,
+        entry_id=entry_id,
         from_version=from_version,
         to_version=to_version,
         from_date=from_date,
         to_date=to_date,
         entry=entry,
     )
-
-    result = {"diff": diff, "from_version": from_version}
-    if to_version:
-        result["to_version"] = to_version
-    return result
+    return entry_views.diff(
+        diff_request,
+        ctx=bus.ctx,
+    )
 
 
 @router.get(

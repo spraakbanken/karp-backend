@@ -6,7 +6,10 @@ from sb_json_tools import jsondiff
 
 from karp.domain import model
 from karp.utility import unique_id
+from karp import errors as karp_errors
 from . import context
+
+# pylint: disable=unsubscriptable-object
 
 
 def get_by_id(
@@ -106,3 +109,95 @@ def get_history(
         previous_body = history_entry.body
 
     return result, total
+
+
+class EntryDiffRequest(pydantic.BaseModel):
+    resource_id: str
+    entry_id: str
+    from_version: typing.Optional[int] = None
+    to_version: typing.Optional[int] = None
+    from_date: typing.Optional[float] = None
+    to_date: typing.Optional[float] = None
+    entry: typing.Optional[typing.Dict] = None
+
+
+class EntryDiffResponse(pydantic.BaseModel):
+    diff: typing.Any
+    from_version: typing.Optional[int]
+    to_version: typing.Optional[int]
+
+
+def diff(
+    diff_request: EntryDiffRequest,
+    ctx: context.Context,
+) -> EntryDiffResponse:
+    print(f"entry_vies.diff({diff_request})")
+    # with unit_of_work(using=ctx.resource_repo) as uw:
+    #     resource = uw.get_active_resource(resource_id)
+
+    with ctx.entry_uows.get_uow(diff_request.resource_id) as entries_uw:
+        db_entry = entries_uw.repo.by_entry_id(diff_request.entry_id)
+
+        #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
+        #
+        #     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
+        #     timestamp_field = resource_obj.history_model.timestamp
+        #
+        if diff_request.from_version:
+            obj1 = entries_uw.repo.by_id(db_entry.id, version=diff_request.from_version)
+        elif diff_request.from_date is not None:
+            obj1 = entries_uw.repo.by_id(db_entry.id, after_date=diff_request.from_date)
+        else:
+            obj1 = entries_uw.repo.by_id(db_entry.id, oldest_first=True)
+
+        obj1_body = obj1.body if obj1 else None
+
+        if diff_request.to_version:
+            obj2 = entries_uw.repo.by_id(db_entry.id, version=diff_request.to_version)
+            obj2_body = obj2.body
+        elif diff_request.to_date is not None:
+            obj2 = entries_uw.repo.by_id(db_entry.id, before_date=diff_request.to_date)
+            obj2_body = obj2.body
+        elif diff_request.entry is not None:
+            obj2 = None
+            obj2_body = diff_request.entry
+        else:
+            obj2 = db_entry
+            obj2_body = db_entry.body
+
+    #     elif from_date is not None:
+    #         obj1_query = query.filter(timestamp_field >= from_date).order_by(
+    #             timestamp_field
+    #         )
+    #     else:
+    #         obj1_query = query.order_by(timestamp_field)
+    #     if to_version:
+    #         obj2_query = query.filter_by(version=to_version)
+    #     elif to_date is not None:
+    #         obj2_query = query.filter(timestamp_field <= to_date).order_by(
+    #             timestamp_field.desc()
+    #         )
+    #     else:
+    #         obj2_query = None
+    #
+    #     obj1 = obj1_query.first()
+    #     obj1_body = json.loads(obj1.body) if obj1 else None
+    #
+    #     if obj2_query:
+    #         obj2 = obj2_query.first()
+    #         obj2_body = json.loads(obj2.body) if obj2 else None
+    #     elif entry is not None:
+    #         obj2 = None
+    #         obj2_body = entry
+    #     else:
+    #         obj2 = query.order_by(timestamp_field.desc()).first()
+    #         obj2_body = json.loads(obj2.body) if obj2 else None
+    #
+    if not obj1_body or not obj2_body:
+        raise karp_errors.KarpError("diff impossible!")
+    #
+    return EntryDiffResponse(
+        diff=jsondiff.compare(obj1_body, obj2_body),
+        from_version=obj1.version,
+        to_version=obj2.version if obj2 else None,
+    )
