@@ -53,17 +53,6 @@ class Entry(TimestampedVersionedEntity):
         self.resource_id = resource_id
         self._status = status
         self.resource_id = resource_id
-        self.queue_event(
-            events.EntryAdded(
-                resource_id=resource_id,
-                id=self.id,
-                entry_id=self.entry_id,
-                body=self.body,
-                message=self.message,
-                user=self.last_modified_by,
-                timestamp=self.last_modified,
-            )
-        )
 
     @property
     def entry_id(self):
@@ -185,6 +174,17 @@ def create_entry(
         last_modified_by="Unknown user" if not last_modified_by else last_modified_by,
         resource_id=resource_id,
         entity_id=entity_id,
+    )
+    entry.queue_event(
+        events.EntryAdded(
+            resource_id=resource_id,
+            id=entry.id,
+            entry_id=entry.entry_id,
+            body=entry.body,
+            message=entry.message,
+            user=entry.last_modified_by,
+            timestamp=entry.last_modified,
+        )
     )
     return entry
 
