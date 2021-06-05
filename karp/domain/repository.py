@@ -193,16 +193,16 @@ class EntryRepository(Repository[model.Entry]):
         before_date: Optional[float] = None,
         oldest_first: bool = False,
     ) -> typing.Optional[model.Entry]:
-        entity = self._by_id(
+        entry = self._by_id(
             id,
             version=version,
             after_date=after_date,
             before_date=before_date,
             oldest_first=oldest_first,
         )
-        if entity:
-            self.seen.add(entity)
-        return entity
+        if entry:
+            self.seen.add(entry)
+        return entry
 
     @abc.abstractmethod
     def _by_id(

@@ -54,6 +54,13 @@ class ResourceNotFound(DomainError):
         super().__init__(f"Resource '{resource_id}' not found.", **kwargs)
 
 
+class ResourceNotPublished(DomainError):
+    """Raised when a resource is not published."""
+
+    def __init__(self, resource_id, **kwargs):
+        super().__init__(f"Resource '{resource_id}' is not published.", **kwargs)
+
+
 class RepositoryError(DomainError):
     def __init__(self, message: str, **kwargs):
         if "code" not in kwargs:

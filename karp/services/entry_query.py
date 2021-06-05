@@ -1,8 +1,18 @@
-from karp.domain import index
+from karp.domain import errors, index
 from karp.services import context
 
 
+def check_resource_published(resource_id: str, ctx: context.Context):
+    with ctx.resource_uow:
+        resource = ctx.resource_uow.repo.by_resource_id(resource_id)
+        if not resource:
+            raise errors.ResourceNotFound(resource_id)
+        if not resource.is_published:
+            raise errors.ResourceNotPublished(resource_id)
+
+
 def search_ids(resource_id: str, entry_ids: str, ctx: context.Context):
+    check_resource_published(resource_id, ctx)
     with ctx.index_uow:
         return ctx.index_uow.repo.search_ids(resource_id, entry_ids)
 

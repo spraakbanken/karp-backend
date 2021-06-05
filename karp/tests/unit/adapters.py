@@ -54,10 +54,25 @@ class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
         self.entries.discard(r)
         self.entries.add(entry)
 
-    def _by_id(self, id, *, version=None):
+    def _by_id(
+        self,
+        id,
+        *,
+        version=None,
+        after_date=None,
+        before_date=None,
+        oldest_first=False,
+    ):
         return next((r for r in self.entries if r.id == id), None)
 
-    def _by_entry_id(self, entry_id, *, version=None):
+    def _by_entry_id(
+        self,
+        entry_id,
+        *,
+        version=None,
+        after_date=None,
+        before_date=None,
+    ):
         return next((r for r in self.entries if r.entry_id == entry_id), None)
 
     def __len__(self):
@@ -103,6 +118,9 @@ class FakeIndex(index.Index, index_type="fake"):
         # entry: typing.Optional[model.Entry]
     ):
         del self.indicies[resource_id].entries[entry_id]
+
+    def search_ids(self, resource_id: str, entry_ids: str):
+        return {}
 
 
 class FakeUnitOfWork:
