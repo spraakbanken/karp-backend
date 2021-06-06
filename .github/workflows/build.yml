@@ -99,9 +99,9 @@ jobs:
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
           cat .env
           pip install -e .[elasticsearch7]
-      - name: Setup sql index
-        if: ! ${{ matrix.es.use }}
-        run: echo "SEARCH_CONTEXT=sql_index" >> .env
+          #- name: Setup sql index
+          #if: ! ${{ matrix.es.use }}
+          #run: echo "SEARCH_CONTEXT=sql_index" >> .env
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
         env:
