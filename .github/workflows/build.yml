@@ -100,7 +100,7 @@ jobs:
           cat .env
           pip install -e .[elasticsearch7]
       - name: Setup sql index
-        if: !${{ matrix.es.use }}
+        if: ! ${{ matrix.es.use }}
         run: echo "SEARCH_CONTEXT=sql_index" >> .env
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
