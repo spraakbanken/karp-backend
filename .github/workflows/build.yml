@@ -29,15 +29,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: |
-          make install-dev
-          make install-mysql
+        run: make install-dev
 
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
 
   tests:
-    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} on ${{ matrix.os }}
+    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} es-${{ matrix.es.version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     services:
       mysql:
@@ -57,7 +55,7 @@ jobs:
         python-version: [3.8]
         es:
           - use: false
-            version: 0.0
+            version: NO
           - use: true
             version: 6.8.3
         os: [ubuntu-latest]
@@ -81,7 +79,7 @@ jobs:
           make install-mysql
 
       - name: Install Elasticsearch 6
-        if: ${{ matrix.es.use }} && startsWith( ${{ matrix.es.version }}, '6')
+        if: matrix.es.use && startsWith( matrix.es.version, '6')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
@@ -92,7 +90,7 @@ jobs:
           # pip install -e .[elasticsearch6]
 
       - name: Install Elasticsearch 7
-        if: ${{ matrix.es.use }} && startsWith( ${{ matrix.es.version }}, '7')
+        if: matrix.es.use && startsWith( matrix.es.version, '7')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
