@@ -3,9 +3,41 @@ name: Build
 on: [push]
 
 jobs:
-  test_w_es:
-    name: Test with Elasticsearch
-    runs-on: ubuntu-latest
+  checs:
+    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.8]
+        os: [ubuntu-latest]
+        task:
+          - name: Lint w pylint
+            run: make lint-no-fail
+          - name: Lint w bandit
+            run: make lint-security-issues
+          - name: Unit tests
+            run: make unit-tests
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: make install-dev
+          make install-mysql
+
+      - name: ${{ matrix.task.name }}
+        run: ${{ matrix.task.run }}
+
+  tests:
+    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     services:
       mysql:
         image: mariadb:10.3
@@ -22,12 +54,20 @@ jobs:
       max-parallel: 4
       matrix:
         python-version: [3.8]
-        # python-version: [3.6, 3.7, 3.8, 3.9]
-        es-version: [6.8.3]
-        # es-version: [6.8.3, 7.3.2]
+        es:
+          - use: false
+            version: 0.0
+          - use: true
+            version: 6.8.3
+        os: [ubuntu-latest]
+        task:
+          - name: Integration tests
+            run: make integration-tests
+          - name: End-to-end tests
+            run: make e2e-tests
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -36,40 +76,22 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          # pip install -Ur requirements-dev.txt
           make install-dev
           make install-mysql
 
-      # - name: Lint with flake8
-      #   run: |
-      #     # stop the build if there are Python syntax errors or undefined names
-      #     make lint-syntax-errors
-
-      - name: Lint with pylint
-        run: make check-pylint
-        continue-on-error: true
-
-      - name: Type check
-        run: make check-mypy
-        continue-on-error: true
-
-      - name: Lint for security issues (with bandit)
-        run: make check-security-issues
-
       - name: Install Elasticsearch 6
-        if: startsWith( matrix.es-version, '6')
+        if: matrix.es.use && startsWith( matrix.es.version, '6')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
           echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
-          echo "SEARCH_CONTEXT=es6_search_service" >> .env
+          echo "SEARCH_CONTEXT=es6_index" >> .env
           cat .env
           # pip install -e .[elasticsearch6]
 
       - name: Install Elasticsearch 7
-        if: startsWith( matrix.es-version, '7')
+        if: matrix.es.use && startsWith( matrix.es.version, '7')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
@@ -77,57 +99,11 @@ jobs:
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
           cat .env
           pip install -e .[elasticsearch7]
-
-      - name: Test with pytest
-        run: make run-all-tests-w-coverage
-        env:
-          DB_TEST_DATABASE: karp
-          DB_USER: karp
-          DB_PASSWORD: testing
-          DB_HOST: 127.0.0.1
-          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
-
-  test_w_sql:
-    name: Test with SQL
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mariadb:10.3
-        ports:
-          - 3306
-        env:
-          MYSQL_ROOT_PASSWORD: testing
-          MYSQL_DATABASE: karp
-          MYSQL_PASSWORD: testing
-          MYSQL_USER: karp
-        options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
-
-    strategy:
-      max-parallel: 4
-      matrix:
-        python-version: [3.8]
-        # python-version: [3.6, 3.7, 3.8, 3.9]
-
-    steps:
-      - uses: actions/checkout@v1
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          make install-dev
-          make install-mysql
-      # - name: Lint with flake8
-      #   run: |
-      #     # stop the build if there are Python syntax errors or undefined names
-      #     make lint-syntax-errors
-      - name: Lint with pylint
-        run: make lint-no-fail
-      - name: Test with pytest
-        run: make run-all-tests-w-coverage
+      - name: Setup sql index
+        if: !matrix.es.use
+        run: echo "SEARCH_CONTEXT=sql_index" >> .env
+      - name: ${{ matrix.task.name }}
+        run: ${{ matrix.task.run }}
         env:
           DB_TEST_DATABASE: karp
           DB_USER: karp
