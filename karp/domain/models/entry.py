@@ -1,11 +1,9 @@
 """Model for a lexical entry."""
-import abc
 import enum
-from functools import singledispatch
 import logging
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, List
+import typing
 from uuid import UUID
-from abc import abstractclassmethod
 
 from karp.domain import constraints, events
 from karp.domain.errors import ConfigurationError
@@ -160,6 +158,7 @@ def create_entry(
     resource_id: str,
     last_modified_by: str = None,
     message: Optional[str] = None,
+    last_modified: typing.Optional[float] = None,
 ) -> Entry:
     if not isinstance(entry_id, str):
         entry_id = str(entry_id)
@@ -174,6 +173,7 @@ def create_entry(
         last_modified_by="Unknown user" if not last_modified_by else last_modified_by,
         resource_id=resource_id,
         entity_id=entity_id,
+        last_modified=last_modified,
     )
     entry.queue_event(
         events.EntryAdded(

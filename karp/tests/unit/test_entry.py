@@ -8,7 +8,7 @@ from karp.utility import unique_id
 
 
 def random_entry(entry_id: str = None, body: Dict = None):
-    return model.Entry(
+    return model.create_entry(
         entity_id=unique_id.make_unique_id(),
         entry_id=entry_id or "a",
         body=body or {},
