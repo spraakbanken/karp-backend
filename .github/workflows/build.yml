@@ -9,6 +9,7 @@ jobs:
 
     strategy:
       max-parallel: 4
+      fail-fast: false
       matrix:
         python-version: [3.8]
         os: [ubuntu-latest]
@@ -57,6 +58,7 @@ jobs:
 
     strategy:
       max-parallel: 4
+      fail-fast: false
       matrix:
         python-version: [3.8]
         es:
