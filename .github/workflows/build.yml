@@ -14,11 +14,14 @@ jobs:
         os: [ubuntu-latest]
         task:
           - name: Lint w pylint
-            run: make lint-no-fail
+            run: make lint
+            allow_failure: true
           - name: Lint w bandit
             run: make lint-security-issues
+            allow_failure: false
           - name: Unit tests
             run: make unit-tests
+            allow_failure: false
 
     steps:
       - uses: actions/checkout@v2
@@ -33,6 +36,9 @@ jobs:
 
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
+        continue-on-error: ${{ matrix.task.allow_failure }}
+        env:
+          DB_DRIVER: sqlite
 
   tests:
     name: ${{ matrix.task.name }} py-${{ matrix.python-version }} es-${{ matrix.es.version }} on ${{ matrix.os }}
@@ -79,7 +85,7 @@ jobs:
           make install-mysql
 
       - name: Install Elasticsearch 6
-        if: matrix.es.use && startsWith( matrix.es.version, '6')
+        if: startsWith( matrix.es.version, '6')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
@@ -90,7 +96,7 @@ jobs:
           # pip install -e .[elasticsearch6]
 
       - name: Install Elasticsearch 7
-        if: matrix.es.use && startsWith( matrix.es.version, '7')
+        if: startsWith( matrix.es.version, '7')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
