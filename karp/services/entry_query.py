@@ -18,7 +18,7 @@ def search_ids(resource_id: str, entry_ids: str, ctx: context.Context):
 
 
 def query(req: index.QueryRequest, ctx: context.Context):
-    return {}
+    return {"hits": [], "total": 0, "distribution": {}}
     # resources_service.check_resource_published(resource_list)
 
     # args = {
@@ -33,7 +33,7 @@ def query(req: index.QueryRequest, ctx: context.Context):
 
 
 def query_split(req: index.QueryRequest, ctx: context.Context):
-    return {}
+    return {"hits": [], "total": 0, "distribution": {}}
     # resources_service.check_resource_published(resource_list)
 
     # args = {
