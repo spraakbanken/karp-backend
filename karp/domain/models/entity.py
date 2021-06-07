@@ -165,18 +165,18 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
     def __init__(
         self,
         entity_id,
-        last_modified: float = _now,
-        last_modified_by: str = _unknown_user,
+        last_modified: float = None,
+        last_modified_by: str = None,
         discarded: bool = False,
         *,
         version: int,
     ) -> None:
         super().__init__(entity_id, version=version, discarded=discarded)
         self._last_modified = (
-            monotonic_utc_now() if last_modified is _now else last_modified
+            monotonic_utc_now() if last_modified is None else last_modified
         )
         self._last_modified_by = (
-            _unknown_user if last_modified_by is _unknown_user else last_modified_by
+            _unknown_user if last_modified_by is None else last_modified_by
         )
 
     @property

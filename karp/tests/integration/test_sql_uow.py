@@ -55,7 +55,9 @@ class TestSqlResourceUnitOfWork:
 class TestSqlEntryUnitOfWork:
     def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):
         uow = sql_unit_of_work.SqlEntryUnitOfWork(
-            {"resource_id": "abc", "config": {}}, sqlite_session_factory
+            {"resource_id": "abc", "table_name": "abc"},
+            resource_config={"resource_id": "abc", "config": {}},
+            session_factory=sqlite_session_factory,
         )
         with uow:
             entry = random_entry(resource_id="abc")
@@ -70,7 +72,9 @@ class TestSqlEntryUnitOfWork:
             pass
 
         uow = sql_unit_of_work.SqlEntryUnitOfWork(
-            {"resource_id": "abc", "config": {}}, sqlite_session_factory
+            {"resource_id": "abc", "table_name": "abc"},
+            resource_config={"resource_id": "abc", "config": {}},
+            session_factory=sqlite_session_factory,
         )
         with pytest.raises(MyException):
             with uow:

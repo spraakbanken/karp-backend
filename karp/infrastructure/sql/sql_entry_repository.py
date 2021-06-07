@@ -15,13 +15,13 @@ from karp.domain.models.entry import (
     # EntryRepository,
     # create_entry_repository,
 )
-from karp.domain import repository
+from karp.domain import errors, repository
 
 from karp.infrastructure.sql import db
 from karp.infrastructure.sql import sql_models
 from karp.infrastructure.sql.sql_repository import SqlRepository
 
-from karp import errors
+from karp import errors as karp_errors
 
 
 logger = logging.getLogger("karp")
@@ -114,19 +114,8 @@ class SqlEntryRepository(
         )
         try:
             return self._session.add(runtime_entry)
-        except db.exc.IntegrityError as exc:
-            logger.exception(exc)
-
-            match = DUPLICATE_PROG.search(str(exc))
-            if match:
-                value = match.group(1)
-                key = match.group(2)
-                if key == "PRIMARY":
-                    key = "entry_id"
-            else:
-                value = "UNKNOWN"
-                key = "UNKNOWN"
-            raise errors.IntegrityError(key=key, value=value) from exc
+        except db.exc.DBAPIError as exc:
+            raise errors.RepositoryError("db failure") from exc
 
     def _update(self, entry: Entry):
         self._check_has_session()
@@ -139,7 +128,7 @@ class SqlEntryRepository(
         )
 
         if not current_db_entry:
-            raise errors.EntryNotFoundError("", entry.entry_id)
+            raise errors.RepositoryError(f"Could not find {entry.entry_id}")
 
         runtime_dict = self._entry_to_runtime_dict(history_id, entry)
         for key, value in runtime_dict.items():
@@ -158,7 +147,7 @@ class SqlEntryRepository(
             .first()
         )
         if not db_entry:
-            raise errors.EntryNotFoundError("", entry.entry_id)
+            raise errors.RepositoryError(f"Could not find {entry.entry_id}")
         db_entry.discarded = True
 
         return self.put(entry)
@@ -174,7 +163,7 @@ class SqlEntryRepository(
             .first()
         )
         if not db_entry:
-            raise errors.EntryNotFoundError("", entry.entry_id)
+            raise errors.RepositoryError(f"Could not find {entry.entry_id}")
         db_entry.discarded = True
 
     def _insert_history(self, entry: Entry):
@@ -185,16 +174,8 @@ class SqlEntryRepository(
             ins_stmt = ins_stmt.values(**history_dict)
             result = self._session.execute(ins_stmt)
             return result.lastrowid or result.returned_defaults["history_id"]
-        except db.exc.IntegrityError as exc:
-            logger.exception(exc)
-            match = DUPLICATE_PROG.search(str(exc))
-            if match:
-                value = match.group(1)
-                key = match.group(2)
-            else:
-                value = "UNKNOWN"
-                key = "UNKNOWN"
-            raise errors.IntegrityError(key, value)
+        except db.exc.DBAPIError as exc:
+            raise errors.RepositoryError("db failure") from exc
 
     def entry_ids(self) -> List[str]:
         self._check_has_session()

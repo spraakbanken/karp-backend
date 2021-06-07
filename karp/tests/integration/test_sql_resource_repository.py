@@ -60,7 +60,10 @@ def test_sql_resource_repo_put_resource(resource_repo):
     expected_version = 1
     # assert resource.config == {}
     assert resource.entry_repository_type == "sql_v1"
-    assert resource.entry_repository_settings == {"table_name": resource_id}
+    assert resource.entry_repository_settings == {
+        "table_name": resource_id,
+        "resource_id": resource_id,
+    }
 
     assert resource_repo.resource_ids() == [resource_id]
 
