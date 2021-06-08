@@ -122,6 +122,9 @@ class FakeIndex(index.Index, index_type="fake"):
     def search_ids(self, resource_id: str, entry_ids: str):
         return {}
 
+    def query(self, request: index.QueryRequest):
+        return {}
+
 
 class FakeUnitOfWork:
     def start(self):

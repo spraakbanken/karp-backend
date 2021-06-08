@@ -125,5 +125,9 @@ class Index(abc.ABC):
     def search_ids(self, resource_id: str, entry_ids: str):
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def query(self, request: QueryRequest):
+        raise NotImplementedError()
+
     def statistics(self, resource_id: str, field: str):
         raise NotImplementedError()

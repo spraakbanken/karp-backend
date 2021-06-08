@@ -39,6 +39,8 @@ def search_ids(resource_id: str, entry_ids: str, ctx: context.Context):
 def query(req: index.QueryRequest, ctx: context.Context):
     check_all_resources_published(req.resource_ids, ctx)
 
+    with ctx.index_uow:
+        return ctx.index_uow.repo.query(req)
     return {"hits": [], "total": 0, "distribution": {}}
     # resources_service.check_resource_published(resource_list)
 

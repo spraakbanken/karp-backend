@@ -1,5 +1,8 @@
 from enum import Enum
 from typing import Dict, List, Optional
+import typing
+
+import pydantic
 
 from karp import query_dsl  # , resourcemgr
 from karp.domain import errors
@@ -16,23 +19,31 @@ class Format(str, Enum):
     tsb = "tsb"
 
 
-class Query:
-    from_ = 0
-    size = 25
-    split_results = False
-    lexicon_stats = True
-    include_fields = None
-    exclude_fields = None
-    fields = []
-    format = None
-    format_query = None
-    q: Optional[str] = None
-    resources = []
-    sort: List[str] = []
+class Query(pydantic.BaseModel):
+    fields: typing.List[str]
+    resources: typing.List[str]
+    sort: typing.List[str]
+    from_: int = pydantic.Field(0, alias="from")
+    size: int = 25
+    split_results: bool = False
+    lexicon_stats_: bool = True
+    include_fields: typing.Optional[typing.List[str]] = None
+    exclude_fields: typing.Optional[typing.List[str]] = None
+    format_: typing.Optional[Format] = pydantic.Field(None, alias="format")
+    format_query: typing.Optional[Format] = None
+    q: typing.Optional[str] = None
 
-    def __init__(self):
-        # Load field_translations here?
-        pass
+    @pydantic.validator(
+        "resources", "include_fields", "exclude_fields", "sort", pre=True
+    )
+    def split_str(cls, v):
+        if isinstance(v, str):
+            return v.split(",")
+        return v
+
+    @pydantic.validator("fields", "sort", pre=True, always=True)
+    def set_ts_now(cls, v):
+        return v or []
 
     def parse_arguments(self, args, resource_str: str):
         if resource_str is None:
