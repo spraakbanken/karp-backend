@@ -33,6 +33,12 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
     to: int = 25
     lexicon_stats: bool = True
 
+    @pydantic.validator("resource_ids", pre=True)
+    def split_str(cls, v):
+        if isinstance(v, str):
+            return v.split(",")
+        return v
+
 
 class Index(abc.ABC):
     _registry = {}
