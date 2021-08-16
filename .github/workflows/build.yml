@@ -54,7 +54,11 @@ jobs:
           MYSQL_DATABASE: karp
           MYSQL_PASSWORD: testing
           MYSQL_USER: karp
-        options: --health-cmd "mysqladmin ping" --health-interval 10s --health-timeout 5s --health-retries 10
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
     strategy:
       max-parallel: 4
