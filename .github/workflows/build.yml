@@ -93,7 +93,7 @@ jobs:
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es.version, '6')
         run: |
-          wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
+          wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es.version }}.tar.gz
           tar -xzf elasticsearch-${{ matrix.es.version }}.tar.gz
           echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es.version }}`" >> .env
@@ -104,7 +104,7 @@ jobs:
       - name: Install Elasticsearch 7
         if: startsWith( matrix.es.version, '7')
         run: |
-          wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
+          wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es.version }}-linux-x86_64.tar.gz
           tar -xzf elasticsearch-${{ matrix.es.version }}-linux-x86_64.tar.gz
           echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es.version }}`" >> .env
