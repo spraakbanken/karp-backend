@@ -65,7 +65,7 @@ jobs:
           - use: false
             version: NO
           - use: true
-            version: 6.8.3
+            version: 6.8.18
         os: [ubuntu-latest]
         task:
           - name: Integration tests
@@ -90,9 +90,9 @@ jobs:
         if: startsWith( matrix.es.version, '6')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
-          tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
+          tar -xzf elasticsearch-${{ matrix.es.version }}.tar.gz
           echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
-          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
+          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es.version }}`" >> .env
           echo "SEARCH_CONTEXT=es6_index" >> .env
           cat .env
           # pip install -e .[elasticsearch6]
@@ -101,9 +101,9 @@ jobs:
         if: startsWith( matrix.es.version, '7')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
-          tar -xzf elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
+          tar -xzf elasticsearch-${{ matrix.es.version }}-linux-x86_64.tar.gz
           echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
-          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
+          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es.version }}`" >> .env
           cat .env
           pip install -e .[elasticsearch7]
           #- name: Setup sql index
