@@ -3,7 +3,7 @@ name: Build
 on: [push]
 
 jobs:
-  checs:
+  checks:
     name: ${{ matrix.task.name }} py-${{ matrix.python-version }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
