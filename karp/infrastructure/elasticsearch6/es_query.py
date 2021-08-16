@@ -1,10 +1,11 @@
 import re
 from typing import Optional, Union, List, Tuple, Dict
 
-import elasticsearch_dsl as es_dsl  # pyre-ignore
+import elasticsearch_dsl as es_dsl
+from karp import query_dsl  # pyre-ignore
 
 from karp.query_dsl import basic_ast as ast, op, is_a
-
+from karp.domain import index
 from karp.domain.models.query import Query
 from karp.domain.errors import IncompleteQuery, UnsupportedQuery
 
@@ -23,6 +24,20 @@ class EsQuery(Query):
 
     def _self_name(self) -> str:
         return "EsQuery query={} resource_str={}".format(self.query, self.resource_str)
+
+    @classmethod
+    def from_query_request(cls, request: index.QueryRequest):
+        query = cls()
+        query.resources = request.resource_ids
+        query.from_ = request.from_
+        query.size = request.to
+        query.lexicon_stats = request.lexicon_stats
+        query.q = request.q or ""
+        query.ast = query_dsl.parse(query.q)
+        query._update_ast()
+        if not query.ast.is_empty():
+            query.query = create_es_query(query.ast.root)
+        return query
 
 
 def get_value(value_node: Union[ast.Node, ast.AnyValue]) -> ast.AnyValue:
