@@ -42,7 +42,7 @@ def bootstrap(
         entry_uow_factory=entry_uow_factory,
         raise_on_all_errors=raise_on_all_errors,
     )
-    bus.handle(events.AppStarted())  # needed?
+    bus.handle(events.AppStarted())  # needed? ?
     return bus
 
 
