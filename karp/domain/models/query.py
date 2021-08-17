@@ -5,6 +5,7 @@ import typing
 import pydantic
 
 from karp import query_dsl  # , resourcemgr
+
 from karp.domain import errors
 
 from karp.util import convert as util_convert
@@ -26,12 +27,16 @@ class Query(pydantic.BaseModel):
     from_: int = pydantic.Field(0, alias="from")
     size: int = 25
     split_results: bool = False
-    lexicon_stats_: bool = True
+    lexicon_stats: bool = True
     include_fields: typing.Optional[typing.List[str]] = None
     exclude_fields: typing.Optional[typing.List[str]] = None
     format_: typing.Optional[Format] = pydantic.Field(None, alias="format")
     format_query: typing.Optional[Format] = None
     q: typing.Optional[str] = None
+    ast: typing.Optional[query_dsl.Ast] = None
+    sort_dict: typing.Optional[typing.Dict[str, typing.List[str]]] = pydantic.Field(
+        default_factory=dict
+    )
 
     @pydantic.validator(
         "resources", "include_fields", "exclude_fields", "sort", pre=True
@@ -44,6 +49,9 @@ class Query(pydantic.BaseModel):
     @pydantic.validator("fields", "sort", pre=True, always=True)
     def set_ts_now(cls, v):
         return v or []
+
+    class Config:
+        arbitrary_types_allowed = True
 
     def parse_arguments(self, args, resource_str: str):
         if resource_str is None:
@@ -63,7 +71,7 @@ class Query(pydantic.BaseModel):
         self.format_query = arg_get(args, "format_query")
         self.q = arg_get(args, "q") or ""
         self.sort: List[str] = arg_get(args, "sort", util_convert.str2list(",")) or []
-        self.sort_dict: Dict[str, List[str]] = {}
+        # self.sort_dict: Dict[str, List[str]] = {}
         #         if not self.sort:
         #             if len(self.resources) == 1:
         #                 self.sort = resourcemgr.get_resource(self.resources[0]).default_sort()
