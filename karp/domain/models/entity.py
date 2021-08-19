@@ -1,4 +1,6 @@
 """Entity"""
+from karp.foundation import events
+
 from karp.domain.common import _now, _unknown_user
 from karp.domain.errors import ConsistencyError, DiscardedEntityError
 from karp.domain.models.events import DomainEvent
@@ -6,7 +8,7 @@ from karp.domain.models.events import DomainEvent
 from karp.utility.time import monotonic_utc_now
 
 
-class Entity:
+class Entity(events.EventMixin):
     class Discarded(DomainEvent):
         def mutate(self, obj):
             obj._validate_event_applicability(self)
