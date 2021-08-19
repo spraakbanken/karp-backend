@@ -100,7 +100,7 @@ run-slow-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/quick_tests karp/tests/slow_tests
 
 run-unit-tests-w-coverage: install-dev clean-pyc
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/unit_tests
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/unit
 
 run-integration-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/integration_tests
