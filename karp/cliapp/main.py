@@ -4,10 +4,11 @@ from typing import Optional
 try:
     from importlib.metadata import entry_points
 except ImportError:
-    from importlib_metadata import entry_points
+    from importlib_metadata import entry_points  # type: ignore
 
 import typer
 
+from . import app_config
 
 logger = logging.getLogger("karp")
 
@@ -25,9 +26,9 @@ def create_app():
     ):
         pass
 
-    from karp.application.services.contexts import init_context
+    # from karp.application.services.contexts import init_context
 
-    init_context()
+    # init_context()
 
     load_commands(app)
 

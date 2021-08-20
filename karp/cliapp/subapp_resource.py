@@ -6,13 +6,19 @@ import typer
 
 from tabulate import tabulate
 
-from karp.application import ctx
-from karp.application.services import resources
+from json_streams import jsonlib
+
+from karp.domain import commands
+
+# from karp.application import ctx
+# from karp.application.services import resources
 from karp.errors import ResourceAlreadyPublished
 
-from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.infrastructure.unit_of_work import unit_of_work
 
-from ..utility import cli_error_handler, cli_timer
+from .utility import cli_error_handler, cli_timer
+
+from . import app_config
 
 logger = logging.getLogger("karp")
 
@@ -24,18 +30,19 @@ subapp = typer.Typer()
 @cli_error_handler
 @cli_timer
 def create(config: Path):
-    new_resources = []
 
     if config.is_file():
-        with open(config) as fp:
-            new_resource = resources.create_new_resource_from_file(fp)
-        new_resources.append(new_resource)
+        data = jsonlib.load_from_file(config)
+        cmd = commands.CreateResource.from_dict(data, created_by="local admin")
+        app_config.bus.handle(cmd)
+        typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.id})")
+
     elif config.is_dir():
         typer.Abort()
         new_resources = resources.create_new_resource_from_dir(config)
 
-    for resource_id in new_resources:
-        typer.echo(f"Created resource {resource_id}")
+        for resource_id in new_resources:
+            typer.echo(f"Created resource {resource_id}")
 
 
 @subapp.command()
@@ -68,6 +75,16 @@ def publish(resource_id: str):
         typer.echo("Resource already published.")
     else:
         typer.echo(f"Resource '{resource_id}' is published ")
+
+
+@subapp.command()
+@cli_error_handler
+@cli_timer
+def reindex(resource_id: str):
+    cmd = commands.ReindexResource(resource_id=resource_id)
+    app_config.bus.handle(cmd)
+
+    typer.echo(f"Successfully reindexed all data in {resource_id}")
 
 
 # @cli.command("reindex")

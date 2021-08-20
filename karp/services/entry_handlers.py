@@ -24,6 +24,8 @@ from karp.errors import (
 
 from karp.domain import commands, model, errors
 from karp.domain.models.entry import Entry
+
+from karp.utility import unique_id
 from . import context
 
 # from karp.domain.services import indexing
@@ -270,11 +272,14 @@ def add_entries(
 
     created_db_entries = []
     with ctx.entry_uows.get(cmd.resource_id) as uw:
-        for entry_raw, id in zip(cmd.entries, cmd.ids):
+        for entry_raw in cmd.entries:
             _validate_entry(validate_entry, entry_raw)
 
             entry = resource.create_entry_from_dict(
-                entry_raw, user=cmd.user, message=cmd.message, entity_id=id
+                entry_raw,
+                user=cmd.user,
+                message=cmd.message,
+                entity_id=unique_id.make_unique_id(),
             )
             uw.entries.put(entry)
             created_db_entries.append(entry)

@@ -90,6 +90,8 @@ COMMAND_HANDLERS: Dict[Type[commands.Command], Callable] = {
     commands.PublishResource: resource_handlers.publish_resource,
     commands.UpdateResource: resource_handlers.update_resource,
     commands.AddEntry: entry_handlers.add_entry,
+    commands.AddEntries: entry_handlers.add_entries,
     commands.DeleteEntry: entry_handlers.delete_entry,
+    commands.ReindexResource: index_handlers.reindex_resource,
     commands.UpdateEntry: entry_handlers.update_entry,
 }

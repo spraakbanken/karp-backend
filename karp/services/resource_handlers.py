@@ -39,7 +39,7 @@ from karp import errors as karp_errors
 # from .resource import Resource
 # from karp.resourcemgr.entrymetadata import EntryMetadata
 
-_logger = logging.getLogger("karp")
+logger = logging.getLogger("karp")
 
 resource_models = {}  # Dict
 history_models = {}  # Dict

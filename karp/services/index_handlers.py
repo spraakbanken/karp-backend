@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple, Optional
 import collections
 import logging
 
-from karp.domain import events, model, errors, index
+from karp.domain import events, model, errors, index, commands
 from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.resource import Resource
 from karp.domain.repository import ResourceRepository
@@ -96,6 +96,14 @@ def pre_process_resource(
 #     resource: Resource,
 #     search_entries: Optional[List[IndexEntry]] = None,
 # ):
+def reindex_resource(cmd: commands.ReindexResource, ctx: context.Context):
+    logger.debug("Reindexing resource '%s'", cmd.resource_id)
+    with ctx.resource_uow as resource_uw:
+        resource = resource_uw.resources.by_resource_id(cmd.resource_id)
+        if not resource:
+            raise errors.ResourceNotFound(resource_id=cmd.resource_id)
+
+
 def reindex(
     evt: events.ResourcePublished,
     ctx: context.Context,
