@@ -13,7 +13,7 @@ router = APIRouter()
 
 
 @router.get("/resources")
-def get_resources():
+def list_resources():
     result = []
     for resource in resource_views.get_published_resources(app_config.bus.ctx):
         resource_obj = {"resource_id": resource.resource_id}

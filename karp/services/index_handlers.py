@@ -223,7 +223,7 @@ def add_entries(
         ctx.index_uow.commit()
 
 
-def delete_entry(evt: events.EntryDiscarded, ctx: context.Context):
+def delete_entry(evt: events.EntryDeleted, ctx: context.Context):
     with ctx.index_uow:
         ctx.index_uow.repo.delete_entry(evt.resource_id, entry_id=evt.entry_id)
         with ctx.resource_uow:
@@ -232,6 +232,8 @@ def delete_entry(evt: events.EntryDiscarded, ctx: context.Context):
                 raise errors.ResourceNotFound(evt.resource_id)
             with ctx.entry_uows.get(evt.resource_id) as uow:
                 entry = uow.repo.by_entry_id(evt.entry_id)
+                if not entry:
+                    raise errors.EntryNotFound(evt.entry_id, evt.resource_id)
                 _update_references(resource, [entry], ctx)
                 uow.commit()
             ctx.resource_uow.commit()

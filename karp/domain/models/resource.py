@@ -12,7 +12,7 @@ from karp.domain.models import event_handler
 from karp.domain.models.entity import Entity, TimestampedVersionedEntity
 from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
-from karp.domain.auth_service import PermissionLevel
+from karp.domain.value_objects import PermissionLevel
 
 from karp.utility import unique_id, time
 from karp.utility import json_schema
@@ -67,7 +67,8 @@ class Resource(TimestampedVersionedEntity):
         if entry_repository_settings is None:
             entry_repository_settings = (
                 repository.EntryRepository.create_repository_settings(
-                    config["entry_repository_type"], resource_id,
+                    config["entry_repository_type"],
+                    resource_id,
                     config,
                 )
             )
@@ -144,19 +145,19 @@ class Resource(TimestampedVersionedEntity):
         # self.entry_repository_type = entry_repository_type
         # self.entry_repository_settings = entry_repository_settings
         self._entry_json_schema = None
-        if not self.events or not isinstance(self.events[-1], events.ResourceCreated):
-            self.queue_event(
-                events.ResourceLoaded(
-                    id=self._id,
-                    resource_id=self._resource_id,
-                    name=self._name,
-                    config=self.config,
-                    timestamp=self._last_modified,
-                    user=self._last_modified_by,
-                    message=self._message,
-                    version=self.version,
-                )
-            )
+        # if not self.events or not isinstance(self.events[-1], events.ResourceCreated):
+        #     self.queue_event(
+        #         events.ResourceLoaded(
+        #             id=self._id,
+        #             resource_id=self._resource_id,
+        #             name=self._name,
+        #             config=self.config,
+        #             timestamp=self._last_modified,
+        #             user=self._last_modified_by,
+        #             message=self._message,
+        #             version=self.version,
+        #         )
+        #     )
 
     @property
     def resource_id(self):

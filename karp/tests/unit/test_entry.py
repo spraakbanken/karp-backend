@@ -44,7 +44,7 @@ def test_discarded_entry_has_event(field, value):
     entry = random_entry()
     entry.discard(user="alice@example.org", message="bad", timestamp=123.45)
     assert entry.discarded
-    assert entry.events[-1] == events.EntryDiscarded(
+    assert entry.events[-1] == events.EntryDeleted(
         id=entry.id,
         entry_id=entry.entry_id,
         resource_id=entry.resource_id,

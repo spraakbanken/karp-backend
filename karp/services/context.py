@@ -4,7 +4,7 @@ from typing import Dict
 
 # from karp.application.config import Config
 from karp.domain import repository, index  # ResourceRepository
-from karp.domain.auth_service import AuthService
+from .auth_service import AuthService
 
 # from karp.domain.services.auth.auth import Auth
 # from karp.domain.models.search_service import SearchService

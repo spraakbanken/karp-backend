@@ -108,7 +108,7 @@ class Entry(TimestampedVersionedEntity):
         self._last_modified = timestamp
         self._version += 1
         self.queue_event(
-            events.EntryDiscarded(
+            events.EntryDeleted(
                 id=self.id,
                 entry_id=self.entry_id,
                 timestamp=self.last_modified,

@@ -1,4 +1,5 @@
 """Module for jwt-based authentication."""
+from karp.services import context
 from pathlib import Path
 import time
 from typing import List
@@ -6,10 +7,11 @@ from typing import List
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
 
-from karp.domain.auth_service import AuthService, PermissionLevel
+from karp.domain import errors, value_objects
 from karp.domain.models.user import User
 from karp.domain.errors import AuthError
 from karp.application import config
+from karp.services import auth_service, context
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 
@@ -25,7 +27,7 @@ def load_jwt_key(path: Path) -> str:
 jwt_key = load_jwt_key(config.JWT_AUTH_PUBKEY_PATH)
 
 
-class JWTAuthenticator(AuthService):
+class JWTAuthenticator(auth_service.AuthService):
     def __init__(self) -> None:
         print("JWTAuthenticator created")
 
@@ -46,12 +48,20 @@ class JWTAuthenticator(AuthService):
             lexicon_permissions = user_token["scope"]["lexica"]
         return User(user_token["sub"], lexicon_permissions, user_token["levels"])
 
-    def authorize(self, level: PermissionLevel, user: User, resource_ids: List[str]):
+    def authorize(
+        self,
+        level: value_objects.PermissionLevel,
+        user: User,
+        resource_ids: List[str],
+        ctx: context.Context,
+    ):
 
-        with unit_of_work(using=ctx.resource_repo) as resources_uw:
+        with ctx.resource_uow as resources_uw:
             for resource_id in resource_ids:
-                resource = resources_uw.by_resource_id(resource_id)
-                if resource.is_protected(resource_id, level) and (
+                resource = resources_uw.resources.by_resource_id(resource_id)
+                if not resource:
+                    raise errors.ResourceNotFound(resource_id=resource_id)
+                if resource.is_protected(level) and (
                     not user
                     or not user.permissions.get(resource_id)
                     or user.permissions[resource_id] < user.levels[level]

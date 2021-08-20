@@ -6,9 +6,8 @@ try:
 except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
-from karp.domain import commands, events, auth_service as authenticator
-from karp.domain import auth_service, events, index
-from karp.services import messagebus, unit_of_work
+from karp.domain import events
+from karp.services import messagebus, unit_of_work, auth_service
 from karp.application import config
 from karp.infrastructure.sql import sql_unit_of_work
 from karp.infrastructure.jwt import jwt_auth_service

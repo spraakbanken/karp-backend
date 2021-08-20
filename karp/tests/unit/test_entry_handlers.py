@@ -89,6 +89,7 @@ class TestAddEntry:
 
         uow = bus.ctx.entry_uows.get(resource_id)
         entry = uow.repo.by_id(id_)
+        assert entry is not None
         assert entry.id == id_
         assert entry.entry_id == entry_id
         assert entry.resource_id == "test_id"
@@ -239,6 +240,7 @@ class TestDeleteEntry:
         uow = bus.ctx.entry_uows.get_uow(resource_id)
         assert uow.was_committed
         entry = uow.repo.by_id(id_)
+        assert entry is not None
         assert entry.version == 2
         assert entry.discarded
         assert (

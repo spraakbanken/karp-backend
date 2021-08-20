@@ -1,12 +1,14 @@
 from dataclasses import dataclass
-import typing
 from typing import Dict
 import uuid
+
+from karp.foundation import events
+
 from karp.utility import time, unique_id
 
 
 @dataclass
-class Event:
+class Event(events.Event):
     timestamp: float
 
 
@@ -92,7 +94,7 @@ class EntryUpdated(Event):
 
 
 @dataclass
-class EntryDiscarded(Event):
+class EntryDeleted(Event):
     id: uuid.UUID
     resource_id: str
     entry_id: str

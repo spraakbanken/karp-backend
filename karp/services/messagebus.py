@@ -2,7 +2,7 @@ import logging
 from typing import Callable, Dict, List, Type, Union
 import typing
 
-from karp.domain import commands, events, auth_service as authenticator
+from karp.domain import commands, events
 
 from karp.services import (
     entry_handlers,
@@ -11,7 +11,7 @@ from karp.services import (
     infrastructure_handlers,
 )
 
-from . import context, unit_of_work
+from . import context, unit_of_work, auth_service as authenticator
 
 # pylint: disable=unsubscriptable-object
 Message = Union[commands.Command, events.Event]
@@ -81,7 +81,7 @@ EVENT_HANDLERS: Dict[Type[events.Event], List[Callable]] = {
     events.ResourcePublished: [index_handlers.publish_index],
     events.ResourceUpdated: [],
     events.EntryAdded: [index_handlers.add_entry],
-    events.EntryDiscarded: [index_handlers.delete_entry],
+    events.EntryDeleted: [index_handlers.delete_entry],
     events.EntryUpdated: [index_handlers.update_entry],
 }
 

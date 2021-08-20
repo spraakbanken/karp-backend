@@ -15,6 +15,7 @@ class Entity(events.EventMixin):
             obj._discarded = True
 
     def __init__(self, entity_id, discarded: bool = False, aggregate_root=None):
+        super().__init__()
         self._id = entity_id
         self._discarded = discarded
         self._root = aggregate_root
