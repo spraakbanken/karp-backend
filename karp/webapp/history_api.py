@@ -3,7 +3,7 @@ from typing import Dict, Optional
 
 from fastapi import APIRouter, Query, Security, HTTPException, status
 
-from karp.domain import auth_service, model
+from karp.domain import value_objects, model
 from karp.domain.models.user import User
 
 
@@ -31,7 +31,7 @@ router = APIRouter()
 def get_diff(
     resource_id: str,
     entry_id: str,
-    user: User = Security(get_current_user, scopes=["admin"]),
+    user: model.User = Security(get_current_user, scopes=["admin"]),
     from_version: Optional[int] = None,
     to_version: Optional[int] = None,
     from_date: Optional[float] = None,
@@ -39,7 +39,7 @@ def get_diff(
     entry: Optional[Dict] = None,
 ):
     if not bus.ctx.auth_service.authorize(
-        auth_service.PermissionLevel.admin, user, [resource_id]
+        value_objects.PermissionLevel.admin, user, [resource_id], bus.ctx
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

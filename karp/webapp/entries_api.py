@@ -4,7 +4,7 @@ from starlette import responses
 
 from karp.domain import commands, errors
 from karp.domain.models.user import User
-from karp.domain.auth_service import PermissionLevel
+from karp.domain.value_objects import PermissionLevel
 
 # from karp.application.services import entries
 
@@ -40,7 +40,9 @@ def add_entry(
     data: schemas.EntryAdd,
     user: User = Security(get_current_user, scopes=["write"]),
 ):
-    if not bus.ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not bus.ctx.auth_service.authorize(
+        PermissionLevel.write, user, [resource_id], bus.ctx
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -73,7 +75,9 @@ def update_entry(
     data: schemas.EntryUpdate,
     user: User = Security(get_current_user, scopes=["write"]),
 ):
-    if not bus.ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not bus.ctx.auth_service.authorize(
+        PermissionLevel.write, user, [resource_id], bus.ctx
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -138,7 +142,9 @@ def delete_entry(
     Returns:
         [type] -- [description]
     """
-    if not bus.ctx.auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not bus.ctx.auth_service.authorize(
+        PermissionLevel.write, user, [resource_id], bus.ctx
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",

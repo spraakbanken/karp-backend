@@ -8,7 +8,7 @@ from fastapi import APIRouter, Security, HTTPException, status, Query, Path
 
 from karp import errors as karp_errors
 
-from karp.domain import auth_service, index
+from karp.domain import value_objects, index
 
 from karp.domain.models.user import User
 
@@ -38,7 +38,7 @@ def get_entries_by_id(
 ):
     print("webapp.views.get_entries_by_id")
     if not bus.ctx.auth_service.authorize(
-        auth_service.PermissionLevel.read, user, [resource_id]
+        value_objects.PermissionLevel.read, user, [resource_id], bus.ctx
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -62,7 +62,7 @@ def query(
     print("Called 'query' called with resources={}".format(resources))
     resource_list = resources.split(",")
     if not bus.ctx.auth_service.authorize(
-        auth_service.PermissionLevel.read, user, resource_list
+        value_objects.PermissionLevel.read, user, resource_list, bus.ctx
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -103,7 +103,7 @@ def query_split(
     print("webapp.views.query.query_split: called with resources={}".format(resources))
     resource_list = resources.split(",")
     if not bus.ctx.auth_service.authorize(
-        auth_service.PermissionLevel.read, user, resource_list
+        value_objects.PermissionLevel.read, user, resource_list, bus.ctx
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
