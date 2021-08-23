@@ -96,12 +96,16 @@ def pre_process_resource(
 #     resource: Resource,
 #     search_entries: Optional[List[IndexEntry]] = None,
 # ):
+
 def reindex_resource(cmd: commands.ReindexResource, ctx: context.Context):
     logger.debug("Reindexing resource '%s'", cmd.resource_id)
     with ctx.resource_uow as resource_uw:
         resource = resource_uw.resources.by_resource_id(cmd.resource_id)
         if not resource:
             raise errors.ResourceNotFound(resource_id=cmd.resource_id)
+    with ctx.index_uow:
+        ctx.index_uow.repo.create_index(cmd.resource_id, resource.config)
+        ctx.index_uow.commit()
 
 
 def reindex(
