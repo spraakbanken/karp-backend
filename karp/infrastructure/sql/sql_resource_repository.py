@@ -19,11 +19,10 @@ _logger = logging.getLogger("karp")
 
 
 class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
-    def __init__(self, session=None):
+    def __init__(self, session: db.Session):
         repository.ResourceRepository.__init__(self)
-        SqlRepository.__init__(self)
+        SqlRepository.__init__(self, session=session)
         self.table = sql_models.ResourceDTO
-        self._session = session
 
     def check_status(self):
         self._check_has_session()
@@ -170,6 +169,7 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
             "op": resource.op,
             "discarded": resource.discarded,
         }
+
     # def _resource_to_row(
     #     self, resource: Resource
     # ) -> Tuple[

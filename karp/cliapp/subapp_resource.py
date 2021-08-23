@@ -70,7 +70,12 @@ def update(config: Path):
 @cli_timer
 def publish(resource_id: str):
     try:
-        resources.publish_resource(resource_id)
+        cmd = commands.PublishResource(
+            resource_id=resource_id,
+            message=f"Publish '{resource_id}",
+            user="local admin",
+        )
+        app_config.bus.handle(cmd)
     except ResourceAlreadyPublished:
         typer.echo("Resource already published.")
     else:

@@ -85,6 +85,9 @@ class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
     def from_dict(cls, _):
         return cls()
 
+    def all_entries(self) -> typing.Iterable[model.Entry]:
+        yield from self.entries
+
 
 class FakeIndex(index.Index, index_type="fake"):
     @dataclasses.dataclass

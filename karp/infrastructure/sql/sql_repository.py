@@ -15,8 +15,8 @@ logger = logging.getLogger("karp")
 
 
 class SqlRepository:
-    def __init__(self) -> None:
-        self._session: Optional[db.Session] = None
+    def __init__(self, session: db.Session) -> None:
+        self._session: db.Session = session
 
     def set_session(self, session):
         self._session = session

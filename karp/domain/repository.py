@@ -264,3 +264,8 @@ class EntryRepository(Repository[model.Entry]):
         limit: int = 100,
     ) -> Tuple[List[model.Entry], int]:
         return [], 0
+
+    @abc.abstractmethod
+    def all_entries(self) -> typing.Iterable[model.Entry]:
+        """Return all entries."""
+        return []

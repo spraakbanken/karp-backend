@@ -81,7 +81,7 @@ class Index(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def add_entries(self, resource_id: str, entries: List[IndexEntry]):
+    def add_entries(self, resource_id: str, entries: typing.Iterable[IndexEntry]):
         pass
 
     @abc.abstractmethod

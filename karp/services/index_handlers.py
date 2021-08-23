@@ -48,16 +48,18 @@ logger = logging.getLogger("karp")
 
 
 def pre_process_resource(
-    resource: Resource,
-    resource_repo: ResourceRepository,
-    indexer: Index,
-) -> List[IndexEntry]:
-    with unit_of_work(using=resource.entry_repository) as uw:
-        index_entries = [
-            transform_to_index_entry(resource_repo, indexer, resource, entry)
-            for entry in uw.all_entries()
-        ]
-    return index_entries
+    resource_id: str,
+    ctx: context.Context,
+) -> typing.Iterable[IndexEntry]:
+    with ctx.resource_uow as uw:
+        resource = uw.repo.by_resource_id(resource_id)
+        if not resource:
+            raise errors.ResourceNotFound(resource_id=resource_id)
+
+    with ctx.entry_uows.get(resource_id) as uw:
+        for entry in uw.repo.all_entries():
+            yield transform_to_index_entry(resource, entry, ctx)
+
     # metadata = resourcemgr.get_all_metadata(resource_obj)
     # fields = resource_obj.config["fields"].items()
     # entries = resource_obj.model.query.filter_by(deleted=False)
@@ -97,15 +99,20 @@ def pre_process_resource(
 #     search_entries: Optional[List[IndexEntry]] = None,
 # ):
 
+
 def reindex_resource(cmd: commands.ReindexResource, ctx: context.Context):
     logger.debug("Reindexing resource '%s'", cmd.resource_id)
     with ctx.resource_uow as resource_uw:
         resource = resource_uw.resources.by_resource_id(cmd.resource_id)
         if not resource:
             raise errors.ResourceNotFound(resource_id=cmd.resource_id)
-    with ctx.index_uow:
-        ctx.index_uow.repo.create_index(cmd.resource_id, resource.config)
-        ctx.index_uow.commit()
+    index_name = cmd.resource_id
+    with ctx.index_uow as index_uw:
+        index_uw.repo.create_index(cmd.resource_id, resource.config)
+        index_uw.repo.add_entries(
+            index_name, pre_process_resource(cmd.resource_id, ctx)
+        )
+        index_uw.commit()
 
 
 def reindex(

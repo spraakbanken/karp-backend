@@ -41,14 +41,17 @@ class SqlEntryRepository(
         resource_config: Dict,
         resource_id: str,
         # mapped_class: Any
-        session=None,
+        *,
+        session: db.Session,
     ):
-        super().__init__()
+        if not session:
+            raise TypeError("session can't be None")
+        repository.EntryRepository.__init__(self)
+        SqlRepository.__init__(self, session=session)
         self.history_model = history_model
         self.runtime_model = runtime_model
         self.resource_config = resource_config
         # self.mapped_class = mapped_class
-        self._session = session
         self.resource_id = resource_id
 
     @classmethod
@@ -57,8 +60,10 @@ class SqlEntryRepository(
         settings: Dict,
         resource_config: typing.Dict,
         *,
-        session=None,
+        session: db.Session,
     ):
+        if not session:
+            raise TypeError("session can't be None")
         try:
             table_name = settings.get("table_name") or settings["resource_id"]
         except KeyError:
@@ -253,15 +258,11 @@ class SqlEntryRepository(
         #     bind=db.engine, tables=[self.runtime_model, self.history_model]
         # )
 
-    def all_entries(self) -> List[Entry]:
+    def all_entries(self) -> typing.Iterable[Entry]:
         self._check_has_session()
 
-        query = (
-            self._session.query(self.runtime_model, self.history_model)
-            .filter(self.runtime_model.history_id == self.history_model.history_id)
-            .filter_by(discarded=False)
-        )
-        return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
+        query = self._session.query(self.history_model).filter_by(discarded=False)
+        return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
 
     def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
