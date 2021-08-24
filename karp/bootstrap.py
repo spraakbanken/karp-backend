@@ -24,7 +24,7 @@ def bootstrap(
     setup_logging()
     load_infrastructure()
     if authservice is None:
-        authservice = jwt_auth_service.JWTAuthenticator()
+        authservice = auth_service.AuthService.create(config.AUTH_CONTEXT)
     if resource_uow is None:
         resource_uow = sql_unit_of_work.SqlResourceUnitOfWork()
     if entry_uows is None:

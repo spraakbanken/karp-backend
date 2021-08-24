@@ -27,7 +27,9 @@ def load_jwt_key(path: Path) -> str:
 jwt_key = load_jwt_key(config.JWT_AUTH_PUBKEY_PATH)
 
 
-class JWTAuthenticator(auth_service.AuthService):
+class JWTAuthenticator(
+    auth_service.AuthService, auth_service_type="jwt_auth", is_default=True
+):
     def __init__(self) -> None:
         print("JWTAuthenticator created")
 

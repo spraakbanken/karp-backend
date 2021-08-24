@@ -77,7 +77,7 @@ class Index(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def publish_index(self, alias_name: str, index_name: str = None):
+    def publish_index(self, resource_id: str):
         pass
 
     @abc.abstractmethod

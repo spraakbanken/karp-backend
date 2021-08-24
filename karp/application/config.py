@@ -59,6 +59,7 @@ TEST_ELASTICSEARCH_ENABLED = config(
 )
 
 SEARCH_CONTEXT = config("SEARCH_CONTEXT", default=None)
+AUTH_CONTEXT = config("AUTH_CONTEXT", default=None)
 
 TEST_ES_HOME = config("TEST_ES_HOME", cast=Path, default=None)
 #     # CONSOLE_LOG_LEVEL = logging.getLevelName(

@@ -1,13 +1,12 @@
 from typing import List
 
-from karp.application import config
 
 from karp.domain import value_objects
 from karp.domain.models.user import User
 from karp.services import auth_service, context
 
 
-class DummyAuthService(auth_service.AuthService):
+class DummyAuthService(auth_service.AuthService, auth_service_type="dummy_auth"):
     def __init__(self):
         pass
         # if False or config.TESTING or config.DEBUG:

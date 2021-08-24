@@ -106,11 +106,10 @@ def reindex_resource(cmd: commands.ReindexResource, ctx: context.Context):
         resource = resource_uw.resources.by_resource_id(cmd.resource_id)
         if not resource:
             raise errors.ResourceNotFound(resource_id=cmd.resource_id)
-    index_name = cmd.resource_id
     with ctx.index_uow as index_uw:
         index_uw.repo.create_index(cmd.resource_id, resource.config)
         index_uw.repo.add_entries(
-            index_name, pre_process_resource(cmd.resource_id, ctx)
+            cmd.resource_id, pre_process_resource(cmd.resource_id, ctx)
         )
         index_uw.commit()
 

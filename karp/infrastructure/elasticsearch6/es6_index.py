@@ -24,6 +24,9 @@ from . import es_config
 
 logger = logging.getLogger("karp")
 
+KARP_CONFIGINDEX = "karp_config"
+KARP_CONFIGINDEX_TYPE = "configs"
+
 
 class Es6Index(index.Index, index_type="es6_index"):
     def __init__(self, es: Optional[elasticsearch.Elasticsearch] = None):
@@ -39,6 +42,23 @@ class Es6Index(index.Index, index_type="es6_index"):
                 sniff_timeout=10,
             )
         self.es: elasticsearch.Elasticsearch = es
+        if not self.es.indices.exists(index=KARP_CONFIGINDEX):
+            self.es.indices.create(
+                index=KARP_CONFIGINDEX,
+                body={
+                    "settings": {
+                        "number_of_shards": 1,
+                        "number_of_replicas": 1,
+                        "refresh_interval": -1,
+                    },
+                    "mappings": {
+                        KARP_CONFIGINDEX_TYPE: {
+                            "dynamic": False,
+                            "properties": {"index_name": {"type": "text"}},
+                        }
+                    },
+                },
+            )
         analyzed_fields, sortable_fields = self._init_field_mapping()
         self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
         self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
@@ -71,17 +91,34 @@ class Es6Index(index.Index, index_type="es6_index"):
             print("failed to create index")
             raise RuntimeError("failed to create index")
         print("index created")
+        self._set_index_name_for_resource(resource_id, index_name)
         return index_name
 
-    def publish_index(self, alias_name: str, index_name: str):
-        if self.es.indices.exists_alias(name=alias_name):
-            self.es.indices.delete_alias(name=alias_name, index="*")
+    def _set_index_name_for_resource(self, resource_id: str, index_name: str):
+        self.es.index(
+            index=KARP_CONFIGINDEX,
+            id=resource_id,
+            doc_type=KARP_CONFIGINDEX_TYPE,
+            body={"index_name": index_name},
+        )
 
-        self.on_publish_resource(alias_name, index_name)
-        print(f"publishing '{alias_name}' => '{index_name}'")
-        self.es.indices.put_alias(name=alias_name, index=index_name)
+    def _get_index_name_for_resource(self, resource_id: str) -> str:
+        res = self.es.get(
+            index=KARP_CONFIGINDEX, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
+        )
+        return res["_source"]["index_name"]
 
-    def add_entries(self, index_name: str, entries: List[index.IndexEntry]):
+    def publish_index(self, resource_id: str):
+        if self.es.indices.exists_alias(name=resource_id):
+            self.es.indices.delete_alias(name=resource_id, index="*")
+
+        index_name = self._get_index_name_for_resource(resource_id)
+        self.on_publish_resource(resource_id, index_name)
+        print(f"publishing '{resource_id}' => '{index_name}'")
+        self.es.indices.put_alias(name=resource_id, index=index_name)
+
+    def add_entries(self, resource_id: str, entries: List[index.IndexEntry]):
+        index_name = self._get_index_name_for_resource(resource_id)
         index_to_es = []
         for entry in entries:
             assert isinstance(entry, index.IndexEntry)
@@ -196,7 +233,12 @@ class Es6Index(index.Index, index_type="es6_index"):
         return query
 
     def _format_result(self, resource_ids, response):
+        logger.debug(
+            "es6_index._format_result called with resource_ids=%s", resource_ids
+        )
+
         def format_entry(entry):
+
             dict_entry = entry.to_dict()
             version = dict_entry.pop("_entry_version", None)
             last_modified_by = dict_entry.pop("_last_modified_by", None)
@@ -225,7 +267,7 @@ class Es6Index(index.Index, index_type="es6_index"):
         return self.search_with_query(query)
 
     def search_with_query(self, query: EsQuery):
-        logger.info("search_with_query called with query={}".format(query))
+        logger.info("search_with_query called with query=%s", query)
         print("search_with_query called with query={}".format(query))
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
@@ -259,7 +301,7 @@ class Es6Index(index.Index, index_type="es6_index"):
                     result["distribution"][query.resources[i]] = response.hits.total
             return result
         else:
-            s = es_dsl.Search(using=self.es, index=query.resource_str)
+            s = es_dsl.Search(using=self.es, index=query.resources, doc_type="entry")
             if query.query is not None:
                 s = s.query(query.query)
 
@@ -276,12 +318,13 @@ class Es6Index(index.Index, index_type="es6_index"):
                 for resource, sort in query.sort_dict.items():
                     sort_fields.extend(self.translate_sort_fields([resource], sort))
                 s = s.sort(*sort_fields)
-            logger.debug("s = {}".format(s.to_dict()))
+            logger.debug("s = %s", s.to_dict())
             response = s.execute()
 
             # TODO format response in a better way, because the whole response takes up too much space in the logs
             # logger.debug('response = {}'.format(response.to_dict()))
 
+            logger.debug("calling _format_result")
             result = self._format_result(query.resources, response)
             if query.lexicon_stats:
                 result["distribution"] = {}
@@ -290,6 +333,7 @@ class Es6Index(index.Index, index_type="es6_index"):
                     value = bucket["doc_count"]
                     result["distribution"][key.rsplit("_", 1)[0]] = value
 
+            # logger.debug("return result = %s", result)
             return result
 
     def translate_sort_fields(

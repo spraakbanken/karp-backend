@@ -24,7 +24,7 @@ logger = logging.getLogger("karp")
 def bearer_scheme(authorization=Header(None)):
     if not authorization:
         return None
-    authorization: str = authorization.get("Authorization")
+    # authorization: str = authorization.get("Authorization")
     scheme, credentials = security_utils.get_authorization_scheme_param(authorization)
     if not (scheme and credentials):
         return None
@@ -48,7 +48,10 @@ def get_current_user(
         # code=ClientErrorCodes.NOT_PERMITTED,
     )
     try:
-        logger.debug("webapp.app_config.get_current_user: Calling auth_service")
+        logger.debug(
+            "webapp.app_config.get_current_user: Calling auth_service with credentials = %s",
+            credentials,
+        )
         user = bus.ctx.auth_service.authenticate(
             credentials.scheme, credentials.credentials
         )
