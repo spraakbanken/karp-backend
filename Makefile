@@ -92,6 +92,10 @@ unit-tests: install-dev clean-pyc
 e2e-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/e2e
 
+.PHONY: run-e2e-tests-w-coverage
+run-e2e-tests-w-coverage: install-dev clean-pyc
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/e2e
+
 .PHONY: integration-tests
 integration-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/integration
@@ -103,10 +107,10 @@ run-unit-tests-w-coverage: install-dev clean-pyc
 	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/unit
 
 run-integration-tests: install-dev clean-pyc
-	${INVENV} pytest -vv karp/tests/integration_tests
+	${INVENV} pytest -vv karp/tests/integration
 
 run-integration-tests-w-coverage: install-dev clean-pyc
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/integration_tests
+	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/integration
 
 test-log: install-dev clean-pyc lint-syntax-errors
 	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests > pytest.log

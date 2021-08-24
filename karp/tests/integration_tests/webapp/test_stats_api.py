@@ -1,6 +1,6 @@
 import pytest
 
-from karp.application.services import entries, resources
+# from karp.application.services import entries, resources
 
 from karp.tests.common_data import MUNICIPALITIES, PLACES
 from karp.tests.utils import get_json, add_entries
