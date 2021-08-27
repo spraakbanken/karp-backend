@@ -32,7 +32,6 @@ class EsQuery(Query):
     @classmethod
     def from_query_request(cls, request: index.QueryRequest):
         query = cls(fields=[], resources=request.resource_ids, sort=[])
-        query.resources = request.resource_ids
         query.from_ = request.from_
         query.size = request.to
         query.lexicon_stats = request.lexicon_stats

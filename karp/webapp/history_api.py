@@ -99,7 +99,7 @@ def get_history(
     page_size: int = Query(100),
 ):
     if not bus.ctx.auth_service.authorize(
-        auth_service.PermissionLevel.admin, user, [resource_id]
+        value_objects.PermissionLevel.admin, user, [resource_id], bus.ctx
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -133,7 +133,7 @@ def get_history_for_entry(
     user: User = Security(get_current_user, scopes=["read"]),
 ):
     if not bus.ctx.auth_service.authorize(
-        auth_service.PermissionLevel.admin, user, [resource_id]
+        value_objects.PermissionLevel.admin, user, [resource_id], bus.ctx
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -235,7 +235,7 @@ def fixture_places_published(resource_places):  # , db_setup):
 
 
 @pytest.fixture(name="municipalites_published", scope="session")
-def fixture_municipalites_published(resource_municipalities):  # , db_setup):
+def fixture_municipalites_published(resource_municipalities, main_db):  # , db_setup):
     from karp.webapp import app_config, main as webapp_main
 
     try:

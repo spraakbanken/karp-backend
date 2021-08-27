@@ -19,7 +19,7 @@ def get_field_values(
     user: User = Security(app_config.get_current_user, scopes=["read"]),
 ):
     if not app_config.bus.ctx.auth_service.authorize(
-        PermissionLevel.read, user, [resource_id]
+        PermissionLevel.read, user, [resource_id], app_config.bus.ctx
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
