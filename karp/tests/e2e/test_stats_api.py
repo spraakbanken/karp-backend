@@ -6,7 +6,7 @@ from karp.tests.common_data import MUNICIPALITIES, PLACES
 from karp.tests.utils import get_json, add_entries
 
 
-@pytest.fixture(scope="module", name="fa_stats_data_client")
+@pytest.fixture(scope="session", name="fa_stats_data_client")
 def fixture_fa_stats_data_client(fa_client_w_places_w_municipalities_scope_module):
     add_entries(
         fa_client_w_places_w_municipalities_scope_module,
