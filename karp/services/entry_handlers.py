@@ -99,7 +99,12 @@ def add_entry(
     if not resource:
         raise errors.ResourceNotFound(cmd.resource_id)
 
-    entry_id = resource.id_getter()(cmd.entry)
+    try:
+        entry_id = resource.id_getter()(cmd.entry)
+    except KeyError as err:
+        raise errors.MissingIdField(
+            resource_id=cmd.resource_id, entry=cmd.entry
+        ) from err
     validate_entry = _compile_schema(resource.entry_json_schema)
 
     with ctx.entry_uows.get(cmd.resource_id) as uw:

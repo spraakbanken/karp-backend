@@ -1,3 +1,4 @@
+from typing import Dict
 from karp import errors
 
 
@@ -134,3 +135,22 @@ class UpdateConflict(DomainError):
             code=errors.ClientErrorCodes.VERSION_CONFLICT,
         )
         self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}
+
+
+class InvalidEntry(DomainError):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, code=errors.ClientErrorCodes.ENTRY_NOT_VALID)
+
+
+class MissingIdField(InvalidEntry):
+    def __init__(self, *, resource_id: str, entry: Dict, **kwargs):
+        super().__init__(
+            "missing id field",
+            **kwargs,
+        )
+        self.error_obj = {
+            "errorCode": self.code,
+            "error": self.message,
+            "obj": entry,
+            "resource_id": resource_id,
+        }

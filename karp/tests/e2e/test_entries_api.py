@@ -137,7 +137,7 @@ def test_add_fails_with_invalid_entry(fa_client):
     assert response.status_code == 400
     response_data = response.json()
 
-    assert response_data["error"] == "entry not valid"
+    assert response_data["error"] == "missing id field"
     assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
 
 
