@@ -129,6 +129,20 @@ def test_adding_existing_fails(fa_client):
 
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
+def test_add_fails_with_invalid_entry(fa_client):
+    response = fa_client.post(
+        "/places/add", json={"entry": {}}, headers={"Authorization": "Bearer 1234"}
+    )
+
+    assert response.status_code == 400
+    response_data = response.json()
+
+    assert response_data["error"] == "entry not valid"
+    assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
+
+
+@pytest.mark.usefixtures("places_published")
+@pytest.mark.usefixtures("main_db")
 def test_delete(fa_client):
     entry_id = 205
     entry_name = f"delete{entry_id}"
