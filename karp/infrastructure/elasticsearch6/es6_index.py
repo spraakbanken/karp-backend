@@ -263,6 +263,7 @@ class Es6Index(index.Index, index_type="es6_index"):
         return result
 
     def query(self, request: index.QueryRequest):
+        print(f"query called with {request}")
         query = EsQuery.from_query_request(request)
         return self.search_with_query(query)
 

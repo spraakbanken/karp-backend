@@ -59,7 +59,9 @@ def query(
     # include_fields: Optional[List[str]] = Query(None),
     user: User = Security(get_current_user, scopes=["read"]),
 ):
-    print("Called 'query' called with resources={}".format(resources))
+    print(
+        f"Called 'query' called with resources={resources}, from={from_}m size={size}"
+    )
     resource_list = resources.split(",")
     if not bus.ctx.auth_service.authorize(
         value_objects.PermissionLevel.read, user, resource_list, bus.ctx

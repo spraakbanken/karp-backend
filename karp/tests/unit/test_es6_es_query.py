@@ -35,4 +35,4 @@ def test_create_EsQuery_from_QueryRequest(query_request: QueryRequest) -> None:
     query = EsQuery.from_query_request(query_request)
 
     assert query.from_ == query_request.from_
-    assert query.size == query_request.to
+    assert query.size == query_request.size

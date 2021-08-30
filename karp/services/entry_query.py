@@ -37,6 +37,7 @@ def search_ids(resource_id: str, entry_ids: str, ctx: context.Context):
 
 
 def query(req: index.QueryRequest, ctx: context.Context):
+    print(f"entry_query.query called with req={req}")
     check_all_resources_published(req.resource_ids, ctx)
 
     with ctx.index_uow:

@@ -47,7 +47,7 @@ def test_add(fa_client):  # fa_client):
         json={
             "entry": {
                 "code": 203,
-                "name": "test203",
+                "name": "add203",
                 "population": 4,
                 "area": 50000,
                 "density": 5,
@@ -81,7 +81,7 @@ def test_add(fa_client):  # fa_client):
 def test_adding_existing_fails(fa_client):
     #     client = init(fa_client, es, [])
     entry_id = 204
-    entry_name = f"test{entry_id}"
+    entry_name = f"add{entry_id}"
     response = fa_client.post(
         "places/add",
         json={
@@ -131,7 +131,7 @@ def test_adding_existing_fails(fa_client):
 @pytest.mark.usefixtures("main_db")
 def test_delete(fa_client):
     entry_id = 205
-    entry_name = f"test{entry_id}"
+    entry_name = f"delete{entry_id}"
     response = fa_client.post(
         "places/add",
         json={
@@ -223,7 +223,7 @@ def test_update_non_existing_fails(fa_client):
 @pytest.mark.usefixtures("main_db")
 def test_update_wo_changes_fails(fa_client):
     entry_id = 206
-    entry_name = f"test{entry_id}"
+    entry_name = f"update{entry_id}"
     response = fa_client.post(
         "places/add",
         json={
@@ -274,7 +274,7 @@ def test_update_wrong_id(fa_client):
         json={
             "entry": {
                 "code": 3,
-                "name": "test3",
+                "name": "update3",
                 "population": 4,
                 "area": 50000,
                 "density": 5,
@@ -301,7 +301,7 @@ def test_update_wrong_id(fa_client):
         json={
             "entry": {
                 "code": 4,
-                "name": "test3",
+                "name": "update3",
                 "population": 4,
                 "area": 50000,
                 "density": 5,
@@ -330,7 +330,7 @@ def test_update_wrong_version_fails(fa_client):
         json={
             "entry": {
                 "code": entry_id,
-                "name": "test3",
+                "name": "update3",
                 "population": 4,
                 "area": 50000,
                 "density": 5,
@@ -348,7 +348,7 @@ def test_update_wrong_version_fails(fa_client):
         json={
             "entry": {
                 "code": entry_id,
-                "name": "test3",
+                "name": "update3",
                 "population": 5,
                 "area": 50000,
                 "density": 5,
@@ -375,7 +375,7 @@ def test_update_wrong_version_fails(fa_client):
 @pytest.mark.usefixtures("main_db")
 def test_update(fa_client):
     entry_id = 208
-    entry_name = f"test{entry_id}"
+    entry_name = f"update{entry_id}"
     response = fa_client.post(
         "places/add",
         json={
@@ -460,7 +460,7 @@ def test_update_entry_id(fa_client):
         json={
             "entry": {
                 "code": entry_id,
-                "name": "test3",
+                "name": "update3",
                 "population": 4,
                 "area": 50000,
                 "density": 5,
@@ -476,7 +476,7 @@ def test_update_entry_id(fa_client):
         json={
             "entry": {
                 "code": entry_id + 1,
-                "name": "test3",
+                "name": "update3",
                 "population": 5,
                 "area": 50000,
                 "density": 5,
@@ -511,7 +511,7 @@ def test_refs(fa_client):
         [
             {
                 "code": 1,
-                "name": "test1",
+                "name": "refs1refs",
                 "population": 10,
                 "area": 50000,
                 "density": 5,
@@ -519,7 +519,7 @@ def test_refs(fa_client):
             },
             {
                 "code": 2,
-                "name": "test2",
+                "name": "refs2refs",
                 "population": 5,
                 "larger_place": 1,
                 "area": 50000,
@@ -542,7 +542,7 @@ def test_refs(fa_client):
             assert entry["v_smaller_places"][0]["code"] == 2
         else:
             assert entry["v_larger_place"]["code"] == 1
-            assert entry["v_larger_place"]["name"] == "test1"
+            assert entry["v_larger_place"]["name"] == "refs1refs"
             assert "v_smaller_places" not in entry
 
 
@@ -727,7 +727,7 @@ def test_last_modified(fa_client):
     before_add = utc_now()
 
     # time.sleep(1)
-    init(fa_client, [{"code": entry_id, "name": "test1", "municipality": [1]}])
+    init(fa_client, [{"code": entry_id, "name": "last_modified1", "municipality": [1]}])
     # time.sleep(1)
 
     after_add = utc_now()
@@ -750,7 +750,7 @@ def test_last_modified(fa_client):
     fa_client.post(
         f"places/{entry_id}/update",
         json={
-            "entry": {"code": entry_id, "name": "test2", "municipality": [1]},
+            "entry": {"code": entry_id, "name": "last_modified2", "municipality": [1]},
             "message": "changes",
             "version": 1,
         },

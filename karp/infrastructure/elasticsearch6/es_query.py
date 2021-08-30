@@ -33,7 +33,7 @@ class EsQuery(Query):
     def from_query_request(cls, request: index.QueryRequest):
         query = cls(fields=[], resources=request.resource_ids, sort=[])
         query.from_ = request.from_
-        query.size = request.to
+        query.size = request.size
         query.lexicon_stats = request.lexicon_stats
         query.q = request.q or ""
         query.ast = query_dsl.parse(query.q)
