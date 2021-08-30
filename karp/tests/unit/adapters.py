@@ -128,6 +128,12 @@ class FakeIndex(index.Index, index_type="fake"):
     def query(self, request: index.QueryRequest):
         return {}
 
+    def query_split(self, request: index.QueryRequest):
+        return {}
+
+    def statistics(self, resource_id: str, field: str):
+        return {}
+
 
 class FakeUnitOfWork:
     def start(self):
