@@ -28,11 +28,13 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     from . import history_api
     from . import query_api
     from . import resources_api
+    from . import stats_api
 
     entries_api.init_app(app)
     history_api.init_app(app)
     query_api.init_app(app)
     resources_api.init_app(app)
+    stats_api.init_app(app)
     # load_modules(app)
     from karp.errors import KarpError
 

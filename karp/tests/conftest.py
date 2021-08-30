@@ -38,7 +38,7 @@ from karp import config
 
 from karp.utility import unique_id
 
-from karp.tests import common_data
+from karp.tests import common_data, utils
 
 
 from karp.infrastructure.sql.db import metadata
@@ -269,6 +269,20 @@ def fixture_municipalites_published(resource_municipalities, main_db):  # , db_s
     #     uow.commit()
 
     return resource_municipalities
+
+
+@pytest.fixture(scope="session", name="fa_data_client")
+# @pytest.mark.usefixtures("places_published")
+# @pytest.mark.usefixtures("main_db")
+def fixture_fa_data_client(
+    fa_client, municipalites_published, places_published, main_db
+):
+    utils.add_entries(
+        fa_client,
+        {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
+    )
+
+    return fa_client
 
 
 # @pytest.fixture(name="places_published_scope_module", scope="module")

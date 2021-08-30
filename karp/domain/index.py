@@ -129,5 +129,10 @@ class Index(abc.ABC):
     def query(self, request: QueryRequest):
         raise NotImplementedError()
 
+    @abc.abstractmethod
+    def query_split(self, request: QueryRequest):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def statistics(self, resource_id: str, field: str):
         raise NotImplementedError()

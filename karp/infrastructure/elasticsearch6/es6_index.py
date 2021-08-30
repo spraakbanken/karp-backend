@@ -267,6 +267,12 @@ class Es6Index(index.Index, index_type="es6_index"):
         query = EsQuery.from_query_request(request)
         return self.search_with_query(query)
 
+    def query_split(self, request: index.QueryRequest):
+        print(f"query called with {request}")
+        query = EsQuery.from_query_request(request)
+        query.split_results = True
+        return self.search_with_query(query)
+
     def search_with_query(self, query: EsQuery):
         logger.info("search_with_query called with query=%s", query)
         print("search_with_query called with query={}".format(query))

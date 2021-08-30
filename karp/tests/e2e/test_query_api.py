@@ -10,16 +10,16 @@ from karp.tests.common_data import MUNICIPALITIES, PLACES
 from karp.tests.utils import get_json, add_entries
 
 
-@pytest.fixture(scope="session", name="fa_query_data_client")
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def fixture_fa_query_data_client(fa_client, municipalites_published):
-    add_entries(
-        fa_client,
-        {"places": PLACES, "municipalities": MUNICIPALITIES},
-    )
+# @pytest.fixture(scope="session", name="fa_data_client")
+# @pytest.mark.usefixtures("places_published")
+# @pytest.mark.usefixtures("main_db")
+# def fixture_fa_data_client(fa_client, municipalites_published):
+#     add_entries(
+#         fa_client,
+#         {"places": PLACES, "municipalities": MUNICIPALITIES},
+#     )
 
-    return fa_client
+#     return fa_client
 
 
 def extract_names(entries):
@@ -133,9 +133,9 @@ def _test_against_entries_general(
         assert len(entries["hits"]) == expected_n_hits
 
 
-def test_query_no_q(fa_query_data_client):
+def test_query_no_q(fa_data_client):
     entries = get_json(
-        fa_query_data_client, "/query/places", headers={"Authorization": "Bearer 1234"}
+        fa_data_client, "/query/places", headers={"Authorization": "Bearer 1234"}
     )
 
     names = extract_names(entries)
@@ -169,6 +169,16 @@ def test_query_no_q(fa_query_data_client):
             assert "v_smaller_places" in entries["hits"][i]["entry"]
 
 
+def test_query_split(fa_data_client):
+    entries = get_json(
+        fa_data_client,
+        "/query_split/places,municipalities",
+        headers={"Authorization": "Bearer 1234"},
+    )
+
+    assert entries["distribution"] == {"municipalities": 3, "places": 23}
+
+
 @pytest.mark.parametrize(
     "queries,expected_result",
     [
@@ -177,9 +187,9 @@ def test_query_no_q(fa_query_data_client):
         (["regexp|name|.*bo.*", "equals|area|50000", "missing|density"], ["Hambo"]),
     ],
 )
-def test_and(fa_query_data_client, queries: List[str], expected_result: List[str]):
+def test_and(fa_data_client, queries: List[str], expected_result: List[str]):
     query = "/query/places?q=and||{queries}".format(queries="||".join(queries))
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -211,9 +221,9 @@ def test_and(fa_query_data_client, queries: List[str], expected_result: List[str
         ),
     ],
 )
-def test_contains(fa_query_data_client, field: str, value, expected_result: List[str]):
+def test_contains(fa_data_client, field: str, value, expected_result: List[str]):
     query = f"/query/places?q=contains|{field}|{value}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -221,7 +231,7 @@ def test_contains(fa_query_data_client, field: str, value, expected_result: List
     [(("name", "v_larger_place.name"), ("vi", "vi"), ["Bjurvik"])],
 )
 def test_contains_and_separate_calls(
-    fa_query_data_client,
+    fa_data_client,
     fields: Tuple,
     values: Tuple,
     expected_result: List[str],
@@ -230,7 +240,7 @@ def test_contains_and_separate_calls(
     for field, value in zip(fields, values):
         query = f"/query/places?q=contains|{field}|{value}"
         entries = get_json(
-            fa_query_data_client, query, headers={"Authorization": "Bearer 1234"}
+            fa_data_client, query, headers={"Authorization": "Bearer 1234"}
         )
         if not names:
             print("names is empty")
@@ -275,9 +285,9 @@ def test_contains_and_separate_calls(
         ("name", "|or|vik|bo", ["Alvik", "Rutvik", "Bjurvik", "Hambo"]),
     ],
 )
-def test_endswith(fa_query_data_client, field: str, value, expected_result: List[str]):
+def test_endswith(fa_data_client, field: str, value, expected_result: List[str]):
     query = f"/query/places?q=endswith|{field}|{value}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -311,9 +321,9 @@ def test_endswith(fa_query_data_client, field: str, value, expected_result: List
         ("population", "|or|6312|3122", ["Alvik", "Grund test", "Grunds"]),
     ],
 )
-def test_equals(fa_query_data_client, field: str, value, expected_result: List[str]):
+def test_equals(fa_data_client, field: str, value, expected_result: List[str]):
     query = f"/query/places?q=equals|{field}|{value}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -325,9 +335,9 @@ def test_equals(fa_query_data_client, field: str, value, expected_result: List[s
         ),
     ],
 )
-def test_exists(fa_query_data_client, field: str, expected_result: List[str]):
+def test_exists(fa_data_client, field: str, expected_result: List[str]):
     query = f"/query/places?q=exists|{field}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -357,9 +367,9 @@ def test_exists(fa_query_data_client, field: str, expected_result: List[str]):
         ("Grunds?", ["Grund test", "Grunds", "Bjurvik2", "Alhamn"]),
     ],
 )
-def test_freergxp(fa_query_data_client, field: str, expected_result: List[str]):
+def test_freergxp(fa_data_client, field: str, expected_result: List[str]):
     query = f"/query/places?q=freergxp|{field}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -397,9 +407,9 @@ def test_freergxp(fa_query_data_client, field: str, expected_result: List[str]):
         ),
     ],
 )
-def test_freetext(fa_query_data_client, field: str, expected_result: List[str]):
+def test_freetext(fa_data_client, field: str, expected_result: List[str]):
     query = f"/query/places?q=freetext|{field}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -446,10 +456,10 @@ def test_freetext(fa_query_data_client, field: str, expected_result: List[str]):
         ("name.raw", ("R",), 15),
     ],
 )
-def test_gt(fa_query_data_client, field, value, expected_n_hits):
+def test_gt(fa_data_client, field, value, expected_n_hits):
     query = f"/query/places?q=gt|{field}|{value[0]}"
-    _test_path_has_expected_length(fa_query_data_client, query, expected_n_hits)
-    # _test_against_entries(fa_query_data_client, query, field, lambda x: value[-1] < x)
+    _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
+    # _test_against_entries(fa_data_client, query, field, lambda x: value[-1] < x)
 
 
 @pytest.mark.parametrize(
@@ -478,10 +488,10 @@ def test_gt(fa_query_data_client, field, value, expected_n_hits):
         ("name.raw", ("B",), 21),
     ],
 )
-def test_gte(fa_query_data_client, field, value, expected_n_hits):
+def test_gte(fa_data_client, field, value, expected_n_hits):
     query = f"/query/places?q=gte|{field}|{value[0]}"
-    _test_path_has_expected_length(fa_query_data_client, query, expected_n_hits)
-    # _test_against_entries(fa_query_data_client, query, field, lambda x: value[-1] <= x)
+    _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
+    # _test_against_entries(fa_data_client, query, field, lambda x: value[-1] <= x)
 
 
 @pytest.mark.parametrize(
@@ -510,10 +520,10 @@ def test_gte(fa_query_data_client, field, value, expected_n_hits):
         ("name.raw", ("B",), 2),
     ],
 )
-def test_lt(fa_query_data_client, field, value, expected_n_hits: int):
+def test_lt(fa_data_client, field, value, expected_n_hits: int):
     query = f"/query/places?q=lt|{field}|{value[0]}"
-    _test_path_has_expected_length(fa_query_data_client, query, expected_n_hits)
-    # _test_against_entries(fa_query_data_client, query, field, lambda x: x < value[-1])
+    _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
+    # _test_against_entries(fa_data_client, query, field, lambda x: x < value[-1])
 
 
 @pytest.mark.parametrize(
@@ -542,10 +552,10 @@ def test_lt(fa_query_data_client, field, value, expected_n_hits: int):
         ("name.raw", ("B",), 2),
     ],
 )
-def test_lte(fa_query_data_client, field, value, expected_n_hits: int):
+def test_lte(fa_data_client, field, value, expected_n_hits: int):
     query = f"/query/places?q=lte|{field}|{value[0]}"
-    _test_path_has_expected_length(fa_query_data_client, query, expected_n_hits)
-    # _test_against_entries(fa_query_data_client, query, field, lambda x: x <= value[-1])
+    _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
+    # _test_against_entries(fa_data_client, query, field, lambda x: x <= value[-1])
 
 
 @pytest.mark.parametrize(
@@ -572,20 +582,20 @@ def test_lte(fa_query_data_client, field, value, expected_n_hits: int):
     ],
 )
 def test_binary_range_1st_arg_and(
-    fa_query_data_client,
+    fa_data_client,
     op: str,
     fields: Tuple[str, str],
     value: Tuple,
     expected_n_hits: int,
 ):
     query = f"/query/places?q={op}||and|{fields[0]}|{fields[1]}||{value[0]}"
-    _test_path_has_expected_length(fa_query_data_client, query, expected_n_hits)
+    _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
     # if expected_result:
-    #     _test_path(fa_query_data_client, query, expected_result)
+    #     _test_path(fa_data_client, query, expected_result)
 
     # elif op == "gt":
     #     _test_against_entries_general(
-    #         fa_query_data_client,
+    #         fa_data_client,
     #         query,
     #         fields,
     #         lambda entry, fields: all(
@@ -594,7 +604,7 @@ def test_binary_range_1st_arg_and(
     #     )
     # elif op == "gte":
     #     _test_against_entries_general(
-    #         fa_query_data_client,
+    #         fa_data_client,
     #         query,
     #         fields,
     #         lambda entry, fields: all(
@@ -603,7 +613,7 @@ def test_binary_range_1st_arg_and(
     #     )
     # elif op == "lt":
     #     _test_against_entries_general(
-    #         fa_query_data_client,
+    #         fa_data_client,
     #         query,
     #         fields,
     #         lambda entry, fields: all(
@@ -612,7 +622,7 @@ def test_binary_range_1st_arg_and(
     #     )
     # elif op == "lte":
     #     _test_against_entries_general(
-    #         fa_query_data_client,
+    #         fa_data_client,
     #         query,
     #         fields,
     #         lambda entry, fields: all(
@@ -657,18 +667,18 @@ def test_binary_range_1st_arg_and(
     ],
 )
 def test_binary_range_1st_arg_or(
-    fa_query_data_client,
+    fa_data_client,
     op: str,
     fields: Tuple,
     value: Tuple,
     expected_n_hits: int,
 ):
     query = f"/query/places?q={op}||or|{fields[0]}|{fields[1]}||{value[0]}"
-    _test_path_has_expected_length(fa_query_data_client, query, expected_n_hits)
+    _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
 
     # elif op == "gt":
     #     _test_against_entries_general(
-    #         fa_query_data_client,
+    #         fa_data_client,
     #         query,
     #         fields,
     #         lambda entry, fields: any(
@@ -677,7 +687,7 @@ def test_binary_range_1st_arg_or(
     #     )
     # elif op == "gte":
     #     _test_against_entries_general(
-    #         fa_query_data_client,
+    #         fa_data_client,
     #         query,
     #         fields,
     #         lambda entry, fields: any(
@@ -686,7 +696,7 @@ def test_binary_range_1st_arg_or(
     #     )
     # elif op == "lt":
     #     _test_against_entries_general(
-    #         fa_query_data_client,
+    #         fa_data_client,
     #         query,
     #         fields,
     #         lambda entry, fields: any(
@@ -695,7 +705,7 @@ def test_binary_range_1st_arg_or(
     #     )
     # elif op == "lte":
     #     _test_against_entries_general(
-    #         fa_query_data_client,
+    #         fa_data_client,
     #         query,
     #         fields,
     #         lambda entry, fields: any(
@@ -719,11 +729,11 @@ def test_binary_range_1st_arg_or(
         ("name.raw", ("B",), ("H",), 5),
     ],
 )
-def test_and_gt_lt(fa_query_data_client, field, lower, upper, expected_n_hits):
+def test_and_gt_lt(fa_data_client, field, lower, upper, expected_n_hits):
     query = f"/query/places?q=and||gt|{field}|{lower[0]}||lt|{field}|{upper[0]}"
     print(f"testing query='{query}'")
     _test_against_entries(
-        fa_query_data_client,
+        fa_data_client,
         query,
         field,
         lambda x: lower[-1] < x < upper[-1],
@@ -734,11 +744,9 @@ def test_and_gt_lt(fa_query_data_client, field, lower, upper, expected_n_hits):
 @pytest.mark.parametrize(
     "query,expected_n_hits", [("and||gt|name|alhamn||lt|name|bjurvik", 2)]
 )
-def test_and_gt_lt_expected_length(
-    fa_query_data_client, query: str, expected_n_hits: int
-):
+def test_and_gt_lt_expected_length(fa_data_client, query: str, expected_n_hits: int):
     path = f"/query/places?q={query}"
-    _test_path_has_expected_length(fa_query_data_client, path, expected_n_hits)
+    _test_path_has_expected_length(fa_data_client, path, expected_n_hits)
 
 
 @pytest.mark.parametrize(
@@ -757,9 +765,9 @@ def test_and_gt_lt_expected_length(
         ),
     ],
 )
-def test_missing(fa_query_data_client, field: str, expected_length: int):
+def test_missing(fa_data_client, field: str, expected_length: int):
     query = f"/query/places?q=missing|{field}"
-    _test_path_has_expected_length(fa_query_data_client, query, expected_length)
+    _test_path_has_expected_length(fa_data_client, query, expected_length)
 
 
 @pytest.mark.parametrize(
@@ -773,9 +781,9 @@ def test_missing(fa_query_data_client, field: str, expected_length: int):
         ("freergxp|.*test||freergxp|.*vik", 14),
     ],
 )
-def test_not(fa_query_data_client, queries: str, expected_length: int):
+def test_not(fa_data_client, queries: str, expected_length: int):
     query = f"/query/places?q=not||{queries}"
-    _test_path_has_expected_length(fa_query_data_client, query, expected_length)
+    _test_path_has_expected_length(fa_data_client, query, expected_length)
 
 
 @pytest.mark.parametrize(
@@ -788,9 +796,9 @@ def test_not(fa_query_data_client, queries: str, expected_length: int):
         ),
     ],
 )
-def test_or(fa_query_data_client, queries: List[str], expected_result: List[str]):
+def test_or(fa_data_client, queries: List[str], expected_result: List[str]):
     query = f"/query/places?q=or||{'||'.join(queries)}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -808,9 +816,9 @@ def test_or(fa_query_data_client, queries: List[str], expected_result: List[str]
         ("|not|name|", "Al.*", ["Grund test", "Hambo", "Bjurvik"]),
     ],
 )
-def test_regexp(fa_query_data_client, field: str, value, expected_result: List[str]):
+def test_regexp(fa_data_client, field: str, value, expected_result: List[str]):
     query = f"/query/places?q=regexp|{field}|{value}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -827,11 +835,9 @@ def test_regexp(fa_query_data_client, field: str, value, expected_result: List[s
         ("|not|name|", "Al", ["Grund test", "Hambo", "Bjurvik"]),
     ],
 )
-def test_startswith(
-    fa_query_data_client, field: str, value, expected_result: List[str]
-):
+def test_startswith(fa_data_client, field: str, value, expected_result: List[str]):
     query = f"/query/places?q=startswith|{field}|{value}"
-    _test_path(fa_query_data_client, query, expected_result)
+    _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
@@ -870,11 +876,11 @@ def test_startswith(
     ],
 )
 def test_response_has_correct_length(
-    fa_query_data_client, query_str: str, expected_length: int
+    fa_data_client, query_str: str, expected_length: int
 ):
     query = f"/query/places?q={query_str}"
     print(f"testing query='{query}'")
-    _test_path_has_expected_length(fa_query_data_client, query, expected_length)
+    _test_path_has_expected_length(fa_data_client, query, expected_length)
 
 
 # @pytest.mark.xfail(reason="no protected stuff")
@@ -884,11 +890,11 @@ def test_response_has_correct_length(
 #     assert "403 FORBIDDEN" in names
 
 
-def test_pagination_explicit_0_5(fa_query_data_client):
+def test_pagination_explicit_0_5(fa_data_client):
     # client = init_data(client_with_data_f, es, 30)
     resource = "places"
     json_data = get_json(
-        fa_query_data_client,
+        fa_data_client,
         f"/query/{resource}?from=0&size=5",
         headers={"Authorization": "Bearer 1234"},
     )
@@ -899,7 +905,7 @@ def test_pagination_explicit_0_5(fa_query_data_client):
 
     hit_3 = json_data["hits"][3]
 
-    response = fa_query_data_client.get(
+    response = fa_data_client.get(
         f"/query/{resource}?from=3&size=5&lexicon_stats=false",
         headers={"Authorization": "Bearer 1234"},
     )
@@ -915,7 +921,7 @@ def test_pagination_explicit_0_5(fa_query_data_client):
 
 # #
 # #
-# # def test_pagination_default_size(fa_query_data_client):
+# # def test_pagination_default_size(fa_data_client):
 # #     client = init_data(client_with_data_f, es, 30)
 # #     resource = 'places'
 # #     response = client.get('/{}/query?from=0'.format(resource))
@@ -925,7 +931,7 @@ def test_pagination_explicit_0_5(fa_query_data_client):
 # #     assert len(json_data['hits']) == 25
 # #
 # #
-# # def test_pagination_default_from(fa_query_data_client):
+# # def test_pagination_default_from(fa_data_client):
 # #     client = init_data(client_with_data_f, es, 50)
 # #     resource = 'places'
 # #     response = client.get('/{}/query?size=45'.format(resource))
@@ -935,10 +941,10 @@ def test_pagination_explicit_0_5(fa_query_data_client):
 # #     assert len(json_data['hits']) == 45
 
 
-def test_pagination_fewer(fa_query_data_client):
+def test_pagination_fewer(fa_data_client):
     # client = init_data(client_with_data_f, es, 5)
     resource = "places"
-    response = fa_query_data_client.get(
+    response = fa_data_client.get(
         f"/query/{resource}?from=10", headers={"Authorization": "Bearer 1234"}
     )
     assert response.status_code == 200
@@ -947,8 +953,8 @@ def test_pagination_fewer(fa_query_data_client):
     assert len(json_data["hits"]) == json_data["total"] - 10
 
 
-# def test_resource_not_existing(fa_query_data_client):
-#     response = fa_query_data_client.get("/asdf/query")
+# def test_resource_not_existing(fa_data_client):
+#     response = fa_data_client.get("/asdf/query")
 #     assert response.status_code == 400
 #     assert (
 #         'Resource is not searchable: "asdf"'

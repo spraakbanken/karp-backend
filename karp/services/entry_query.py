@@ -42,7 +42,6 @@ def query(req: index.QueryRequest, ctx: context.Context):
 
     with ctx.index_uow:
         return ctx.index_uow.repo.query(req)
-    return {"hits": [], "total": 0, "distribution": {}}
     # resources_service.check_resource_published(resource_list)
 
     # args = {
@@ -58,7 +57,8 @@ def query(req: index.QueryRequest, ctx: context.Context):
 
 def query_split(req: index.QueryRequest, ctx: context.Context):
     check_all_resources_published(req.resource_ids, ctx)
-    return {"hits": [], "total": 0, "distribution": {}}
+    with ctx.index_uow as uw:
+        return uw.repo.query_split(req)
     # resources_service.check_resource_published(resource_list)
 
     # args = {
@@ -71,3 +71,9 @@ def query_split(req: index.QueryRequest, ctx: context.Context):
     # query.split_results = True
     # print(f"webapp.views.query.query:search_query={search_query}")
     # response = bus.ctx.search_service.search_with_query(search_query)
+
+
+def statistics(resource_id: str, field: str, ctx: context.Context):
+    check_resource_published(resource_id, ctx)
+    with ctx.index_uow as uw:
+        return uw.repo.statistics(resource_id, field)
