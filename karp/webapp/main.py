@@ -25,12 +25,14 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
     #     init_context()
     from . import entries_api
+    from . import health_api
     from . import history_api
     from . import query_api
     from . import resources_api
     from . import stats_api
 
     entries_api.init_app(app)
+    health_api.init_app(app)
     history_api.init_app(app)
     query_api.init_app(app)
     resources_api.init_app(app)
