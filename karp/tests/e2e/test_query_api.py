@@ -975,3 +975,21 @@ def test_pagination_fewer(fa_data_client):
 #             content_type="application/json",
 #         )
 #     return client_with_data
+
+
+@pytest.mark.parametrize("endpoint", ["query", "query_split"])
+@pytest.mark.parametrize(
+    "query",
+    [
+        (""),
+        ("freetext||eat my shorts"),
+    ],
+)
+def test_distribution_in_result(fa_data_client, query: str, endpoint: str):
+    result = get_json(
+        fa_data_client,
+        f"/{endpoint}/places?{f'q={query}' if query else ''}lexicon_stats=true",
+        headers={"Authorization": "Bearer 1234"},
+    )
+
+    assert "distribution" in result
