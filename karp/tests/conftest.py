@@ -132,7 +132,7 @@ def fixture_fa_client(use_main_index):  # db_setup, es):
 
 @pytest.fixture(name="use_dummy_authenticator")
 def fixture_use_dummy_authenticator():
-    from karp.webapp import app_config, main as webapp_main
+    from karp.webapp import app_config
 
     app_config.bus.ctx.auth_service = dummy_auth_service.DummyAuthService()
 
