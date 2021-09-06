@@ -4,7 +4,8 @@ import logging
 try:
     from importlib.metadata import entry_points
 except ImportError:
-    from importlib_metadata import entry_points
+    # used if python < 3.8
+    from importlib_metadata import entry_points  # type: ignore
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
