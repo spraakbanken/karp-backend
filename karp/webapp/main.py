@@ -38,7 +38,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     query_api.init_app(app)
     resources_api.init_app(app)
     stats_api.init_app(app)
-    # load_modules(app)
+    load_modules(app)
     from karp.errors import KarpError
 
     @app.exception_handler(KarpError)
@@ -56,11 +56,12 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 def load_modules(app=None):
     logger = logging.getLogger("karp")
 
-    for ep in entry_points()["karp.modules"]:
-        logger.info("Loading module: %s", ep.name)
-        print("Loading module: %s" % ep.name)
-        mod = ep.load()
-        if app:
-            init_app = getattr(mod, "init_app", None)
-            if init_app:
-                init_app(app)
+    if "karp.modules" in entry_points():
+        for ep in entry_points()["karp.modules"]:
+            logger.info("Loading module: %s", ep.name)
+            print("Loading module: %s" % ep.name)
+            mod = ep.load()
+            if app:
+                init_app = getattr(mod, "init_app", None)
+                if init_app:
+                    init_app(app)
