@@ -10,7 +10,7 @@ certifi==2019.11.28       # via requests
 cffi==1.14.0              # via cryptography
 chardet==3.0.4            # via requests
 click==7.0                # via flask, karp-tng-backend (setup.py), sb-json-tools
-cryptography==2.8         # via karp-tng-backend (setup.py)
+cryptography==3.3.2         # via karp-tng-backend (setup.py)
 elasticsearch-dsl==6.4.0  # via karp-tng-backend (setup.py)
 elasticsearch==6.4.0      # via elasticsearch-dsl, karp-tng-backend (setup.py)
 fastjsonschema==2.14.3    # via karp-tng-backend (setup.py), sb-json-tools
