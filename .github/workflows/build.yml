@@ -17,9 +17,9 @@ jobs:
           - name: Lint w pylint
             run: make lint
             allow_failure: true
-          - name: Lint w bandit
-            run: make lint-security-issues
-            allow_failure: false
+          # - name: Lint w bandit
+          #   run: make lint-security-issues
+          #   allow_failure: false
           - name: Unit tests
             run: make unit-tests
             allow_failure: false
