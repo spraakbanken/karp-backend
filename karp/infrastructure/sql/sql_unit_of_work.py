@@ -15,6 +15,7 @@ from karp.application import config
 from karp.services import unit_of_work
 from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
 from karp.infrastructure.sql.sql_resource_repository import SqlResourceRepository
+from .sql_index import SqlSearchService
 
 DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 
@@ -188,7 +189,7 @@ class SqlIndexUnitOfWork(unit_of_work.IndexUnitOfWork, index_type="sql_index"):
 
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
         self.session_factory = session_factory
-        self._index = None
+        self._index = SqlSearchService()
 
     def _commit(self):
         pass

@@ -1,12 +1,31 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
-from karp.domain.models.search_service import SearchService, IndexEntry
+# from karp.domain.models.search_service import SearchService, IndexEntry
+from karp.domain import index
 from karp.domain.models.resource import Resource
 from karp.domain.models.entry import Entry
 
 
-class SqlSearchService(SearchService, search_service_type="sql_search_service", is_default=True):
-    def add_entries(self, resource_id, entries: List[IndexEntry]):
+class SqlSearchService(index.Index, index_type="sql_search_service", is_default=True):
+    def create_index(self, resource_id: str, resource_config: Dict):
+        pass
+
+    def publish_index(self, resource_id: str):
+        pass
+
+    def query(self):
+        pass
+
+    def query_split(self):
+        pass
+
+    def search_ids(self):
+        pass
+
+    def statistics(self):
+        pass
+
+    def add_entries(self, resource_id, entries: List[index.IndexEntry]):
         pass
 
     def delete_entry(
