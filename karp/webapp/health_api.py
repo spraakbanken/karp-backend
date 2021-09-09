@@ -15,7 +15,9 @@ router = APIRouter(tags=["Health"])
 from .app_config import bus
 
 
-@router.get("/healthz", response_model=schemas.SystemMonitorResponse)
+@router.get(
+    "/healthz", response_model=schemas.SystemMonitorResponse, include_in_schema=False
+)
 def perform_health_check(response: Response):
     db_status = system_monitor.check_database_status(bus.ctx)
     if not db_status:

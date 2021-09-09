@@ -30,33 +30,13 @@ _logger = logging.getLogger("karp")
 router = APIRouter(tags=["Querying"])
 
 
-@router.get(
-    "/entries/{resource_id}/{entry_ids}",
-    description="Returns a list of entries matching the given ids",
-)
-def get_entries_by_id(
-    resource_id: str = Path(..., description="The resource to perform operation on"),
-    entry_ids: str = Path(
-        ...,
-        description="Comma-separated. The ids to perform operation on.",
-        regex=r"^\w(,\w)*",
-    ),
-    user: User = Security(get_current_user, scopes=["read"]),
-):
-    print("webapp.views.get_entries_by_id")
-    if not bus.ctx.auth_service.authorize(
-        value_objects.PermissionLevel.read, user, [resource_id], bus.ctx
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="read"'},
-        )
-    return entry_query.search_ids(resource_id, entry_ids, ctx=bus.ctx)
-
-
 # @router.get("/{resources}/query")
-@router.get("/query/{resources}")
+@router.get(
+    "/query/{resources}",
+    description="Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.",
+    name="Query",
+    responses={200: {"content": {"application/json": {}}}},
+)
 def query(
     resources: str = Path(
         ...,
@@ -84,12 +64,59 @@ def query(
     exclude_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to remove from result"
     ),
-    format: schemas.EntryFormat = Query(
+    format_: schemas.EntryFormat = Query(
         schemas.EntryFormat.json,
+        alias="format",
         description="Will return the result in the specified format.",
     ),
     user: User = Security(get_current_user, scopes=["read"]),
 ):
+    """
+    # Query DSL
+    ## Query operators
+    - `contains|<field>|<string>` Find all entries where the field <field> contains <string>. More premissive than equals.
+
+    endswith|<field>|<string> Find all entries where the field <field> ends with <string>
+
+    equals|<field>|<string> Find all entries where <field> equals <string>. Stricter than contains
+
+    exists|<field> Find all entries that has the field <field>.
+
+    freetext|<string> Search in all fields for <string> and similar values.
+
+    freergxp|<regex.*> Search in all fields for the regex <regex.*>.
+
+    gt|<field>|<value> Find all entries where <field> is greater than <value>.
+
+    gte|<field>|<value> Find all entries where <field> is greater than or equals <value>.
+
+    lt|<field>|<value> Find all entries where <field> is less than <value>.
+
+    lte|<field>|<value> Find all entries where <field> is less than or equals <value>.
+
+    missing|<field> Search for all entries that doesn't have the field <field>.
+
+    regexp|<field>|<regex.*> Find all entries where the field <field> matches the regex <regex.*>.
+
+    startswith|<field>|<string> Find all entries where <field>starts with <string>.
+
+    Logical Operators
+    The logical operators can be used both at top-level and lower-levels.
+
+    not||<expression> Find all entries that doesn't match the expression <expression>.
+
+    and||<expression1>||<expression2> Find all entries that matches <expression1> AND <expression2>.
+
+    or||<expression1>||<expression2> Find all entries that matches <expression1> OR <expression2>.
+
+    Regular expressions
+    Always matches complete tokens.
+    Examples
+    not||missing|pos
+    and||freergxp|str.*ng||regexp|pos|str.*ng
+    and||missing|pos||equals|wf||or|blomma|äpple
+    and||equals|wf|sitta||not||equals|wf|satt
+    """
     print(
         f"Called 'query' called with resources={resources}, from={from_}m size={size}"
     )
@@ -107,6 +134,10 @@ def query(
         q=q,
         from_=from_,
         size=size,
+        sort=sort,
+        include_fields=include_fields,
+        exclude_fields=exclude_fields,
+        format_=format_,
         lexicon_stats=lexicon_stats,
     )
     try:
@@ -123,8 +154,34 @@ def query(
     return response
 
 
+@router.get(
+    "/entries/{resource_id}/{entry_ids}",
+    description="Returns a list of entries matching the given ids",
+    name="Get lexical entries by id",
+)
+def get_entries_by_id(
+    resource_id: str = Path(..., description="The resource to perform operation on"),
+    entry_ids: str = Path(
+        ...,
+        description="Comma-separated. The ids to perform operation on.",
+        regex=r"^\w(,\w)*",
+    ),
+    user: User = Security(get_current_user, scopes=["read"]),
+):
+    print("webapp.views.get_entries_by_id")
+    if not bus.ctx.auth_service.authorize(
+        value_objects.PermissionLevel.read, user, [resource_id], bus.ctx
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": 'Bearer scope="read"'},
+        )
+    return entry_query.search_ids(resource_id, entry_ids, ctx=bus.ctx)
+
+
 # @router.get("/{resources}/query_split")
-@router.get("/query_split/{resources}")
+@router.get("/query_split/{resources}", name="Query per resource")
 def query_split(
     resources: str = Path(
         ...,
