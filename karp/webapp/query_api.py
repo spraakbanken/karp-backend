@@ -168,8 +168,12 @@ def query(
 )
 @wiring.inject
 def get_entries_by_id(
-    resource_id: str,
-    entry_ids: str,
+    resource_id: str = Path(..., description="The resource to perform operation on"),
+    entry_ids: str = Path(
+        ...,
+        description="Comma-separated. The ids to perform operation on.",
+        regex=r"^\w(,\w)*",
+    ),
     user: User = Security(get_current_user, scopes=["read"]),
     auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
     bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
