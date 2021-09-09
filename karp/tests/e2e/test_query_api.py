@@ -1007,3 +1007,16 @@ def test_sorting(fa_data_client, endpoint: str):
         result["hits"][0]["entry"]["population"]
         >= result["hits"][1]["entry"]["population"]
     )
+
+
+@pytest.mark.parametrize("fields", [(["population"])])
+def test_query_include_fields(fa_data_client, fields: List[str]) -> None:
+    result = get_json(
+        fa_data_client,
+        f"/query/places?{'&'.join((f'include_field={field}' for field in fields))}",
+        headers={"Authorization": "Bearer 1234"},
+    )
+
+    for entry in (entry["entry"] for entry in result["hits"]):
+        for field in fields:
+            assert field in fields
