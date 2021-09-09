@@ -354,7 +354,7 @@ class Es6Index(index.Index, index_type="es6_index"):
         Returns:
             List[str] -- values that ES can sort by.
         """
-        translated_sort_fields: List[Union[str, Dict[str, Any]]] = []
+        translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None
             if "|" in sort_value:
@@ -370,7 +370,7 @@ class Es6Index(index.Index, index_type="es6_index"):
                         )
                     )
                 translated_sort_fields.extend(
-                    (self.translate_sort_field(resource_id, sort_value))
+                    self.translate_sort_field(resource_id, sort_value)
                 )
 
         return translated_sort_fields
@@ -406,7 +406,7 @@ class Es6Index(index.Index, index_type="es6_index"):
         s = s[0:0]
 
         if field in self.analyzed_fields[resource_id]:
-            field = field + ".raw"
+            field += ".raw"
 
         logger.debug("Statistics: analyzed fields are:")
         logger.debug(json.dumps(self.analyzed_fields, indent=4))
@@ -417,10 +417,10 @@ class Es6Index(index.Index, index_type="es6_index"):
         )
         s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
         response = s.execute()
-        result = []
-        for bucket in response.aggregations.field_values.buckets:
-            result.append({"value": bucket["key"], "count": bucket["doc_count"]})
-        return result
+        return [
+            {"value": bucket["key"], "count": bucket["doc_count"]}
+            for bucket in response.aggregations.field_values.buckets
+        ]
 
     def on_publish_resource(self, alias_name: str, index_name: str):
         mapping = self._get_index_mappings(index=index_name)
