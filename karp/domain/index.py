@@ -32,6 +32,7 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
     from_: int = 0
     size: int = 25
     lexicon_stats: bool = True
+    sort: List[str] = pydantic.Field(default_factory=list)
 
     @pydantic.validator("resource_ids", pre=True)
     def split_str(cls, v):

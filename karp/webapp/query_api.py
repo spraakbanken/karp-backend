@@ -52,8 +52,8 @@ def query(
         0, alias="from", description="Specify which entry should be the first returned."
     ),
     size: int = Query(25, description="Number of entries in page."),
-    sort: str = Query(
-        None,
+    sort: List[str] = Query(
+        [],
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^\w+\|(asc|desc)",
     ),

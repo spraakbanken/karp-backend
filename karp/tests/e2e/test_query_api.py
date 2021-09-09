@@ -988,8 +988,22 @@ def test_pagination_fewer(fa_data_client):
 def test_distribution_in_result(fa_data_client, query: str, endpoint: str):
     result = get_json(
         fa_data_client,
-        f"/{endpoint}/places?{f'q={query}' if query else ''}lexicon_stats=true",
+        f"/{endpoint}/places?{f'q={query}&' if query else ''}lexicon_stats=true",
         headers={"Authorization": "Bearer 1234"},
     )
 
     assert "distribution" in result
+
+
+@pytest.mark.parametrize("endpoint", ["query"])
+def test_sorting(fa_data_client, endpoint: str):
+    result = get_json(
+        fa_data_client,
+        f"/{endpoint}/places?sort=population|desc",
+        headers={"Authorization": "Bearer 1234"},
+    )
+
+    assert (
+        result["hits"][0]["entry"]["population"]
+        > result["hits"][1]["entry"]["population"]
+    )

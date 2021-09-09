@@ -1,7 +1,7 @@
 import logging
 import re
 import json
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from datetime import datetime
 
 import elasticsearch
@@ -345,7 +345,7 @@ class Es6Index(index.Index, index_type="es6_index"):
 
     def translate_sort_fields(
         self, resources: List[str], sort_values: List[str]
-    ) -> List[str]:
+    ) -> List[Union[str, Dict[str, Dict[str, str]]]]:
         """Translate sort field to ES sort fields.
 
         Arguments:
@@ -354,16 +354,31 @@ class Es6Index(index.Index, index_type="es6_index"):
         Returns:
             List[str] -- values that ES can sort by.
         """
-        translated_sort_fields: Set[str] = set()
+        translated_sort_fields: List[Union[str, Dict[str, Any]]] = []
         for sort_value in sort_values:
+            sort_order = None
+            if "|" in sort_value:
+                sort_value, sort_order = sort_value.split("|", 1)
             for resource_id in resources:
-                translated_sort_fields.update(
-                    self.translate_sort_field(resource_id, sort_value)
+                if sort_order:
+                    translated_sort_fields.extend(
+                        (
+                            {field: {"order": sort_order}}
+                            for field in self.translate_sort_field(
+                                resource_id, sort_value
+                            )
+                        )
+                    )
+                translated_sort_fields.extend(
+                    (self.translate_sort_field(resource_id, sort_value))
                 )
 
-        return list(translated_sort_fields)
+        return translated_sort_fields
 
     def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
+        print(
+            f"es6_index.translate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
+        )
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value]
         else:
