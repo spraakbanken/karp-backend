@@ -1005,5 +1005,5 @@ def test_sorting(fa_data_client, endpoint: str):
 
     assert (
         result["hits"][0]["entry"]["population"]
-        > result["hits"][1]["entry"]["population"]
+        >= result["hits"][1]["entry"]["population"]
     )
