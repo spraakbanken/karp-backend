@@ -11,7 +11,7 @@ from karp.webapp import schemas
 from .app_config import bus, get_current_user
 
 
-router = APIRouter()
+router = APIRouter(tags=["Statistics"])
 
 
 @router.get("/stats/{resource_id}/{field}")

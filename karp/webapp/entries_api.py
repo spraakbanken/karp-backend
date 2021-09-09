@@ -31,7 +31,7 @@ from .app_config import bus, get_current_user
 
 # edit_api = Blueprint("edit_api", __name__)
 
-router = APIRouter()
+router = APIRouter(tags=["Editing"])
 
 
 @router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED)

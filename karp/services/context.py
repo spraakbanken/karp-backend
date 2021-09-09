@@ -16,23 +16,23 @@ class Context:
     def __init__(
         self,
         resource_uow: unit_of_work.ResourceUnitOfWork,
-        entry_uows: unit_of_work.EntriesUnitOfWork = None,
-        resource_repo: repository.ResourceRepository = None,
-        search_service: index.Index = None,
-        auth_service: AuthService = None,
-        index_uow: unit_of_work.IndexUnitOfWork = None,
-        entry_uow_factory: unit_of_work.EntryUowFactory = None,
+        entry_uows: unit_of_work.EntriesUnitOfWork,
+        # resource_repo: repository.ResourceRepository,
+        # search_service: index.Index,
+        auth_service: AuthService,
+        index_uow: unit_of_work.IndexUnitOfWork,
+        entry_uow_factory: unit_of_work.EntryUowFactory,
     ):
         self.resource_uow = resource_uow
         self.entry_uows = entry_uows
-        self.resource_repo = resource_repo
-        self.search_service = search_service
+        # self.resource_repo = resource_repo
+        # self.search_service = search_service
         self.auth_service = auth_service
         self.index_uow = index_uow
         self.entry_uow_factory = entry_uow_factory
 
     def __repr__(self):
-        return f"Context(resource_repo={self.resource_repo!r})"
+        return f"Context()"
 
     def collect_new_events(self):
         yield from self.resource_uow.collect_new_events()

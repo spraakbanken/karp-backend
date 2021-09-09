@@ -30,6 +30,14 @@ class PermissionLevel(str, Enum):
     admin = "admin"
 
 
+class EntryFormat(str, Enum):
+    json = "json"
+    csv = "csv"
+    xml = "xml"
+    lmf = "lmf?"
+    tsb = "tsb"
+
+
 class Entry(BaseModel):
     entry_id: str
     resource: str

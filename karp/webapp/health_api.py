@@ -10,7 +10,7 @@ from karp.application import schemas
 from karp.services import system_monitor
 
 
-router = APIRouter()
+router = APIRouter(tags=["Health"])
 
 from .app_config import bus
 

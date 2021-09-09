@@ -9,7 +9,7 @@ from . import app_config
 # import karp.resourcemgr as resourcemgr
 
 
-router = APIRouter()
+router = APIRouter(tags=["Resources"])
 
 
 @router.get("/resources")

@@ -20,7 +20,7 @@ from .app_config import bus, get_current_user
 
 # pylint: disable=unsubscriptable-object
 
-router = APIRouter()
+router = APIRouter(tags=["History"])
 
 
 @router.get(

@@ -27,13 +27,20 @@ from .app_config import bus, get_current_user
 _logger = logging.getLogger("karp")
 
 
-router = APIRouter()
+router = APIRouter(tags=["Querying"])
 
 
-@router.get("/entries/{resource_id}/{entry_ids}")
+@router.get(
+    "/entries/{resource_id}/{entry_ids}",
+    description="Returns a list of entries matching the given ids",
+)
 def get_entries_by_id(
-    resource_id: str,
-    entry_ids: str,
+    resource_id: str = Path(..., description="The resource to perform operation on"),
+    entry_ids: str = Path(
+        ...,
+        description="Comma-separated. The ids to perform operation on.",
+        regex=r"^\w(,\w)*",
+    ),
     user: User = Security(get_current_user, scopes=["read"]),
 ):
     print("webapp.views.get_entries_by_id")
@@ -51,12 +58,36 @@ def get_entries_by_id(
 # @router.get("/{resources}/query")
 @router.get("/query/{resources}")
 def query(
-    resources: str = Path(..., regex=r"^\w+(,\w+)*$"),
-    q: Optional[str] = Query(None),
-    from_: int = Query(0, alias="from"),
-    size: int = Query(25),
-    lexicon_stats: bool = Query(True),
-    # include_fields: Optional[List[str]] = Query(None),
+    resources: str = Path(
+        ...,
+        regex=r"^\w+(,\w+)*$",
+        description="A comma-separated list of resource identifiers",
+    ),
+    q: Optional[str] = Query(
+        None,
+        title="query",
+        description="The query. If missing, all entries in chosen resource(s) will be returned.",
+    ),
+    from_: int = Query(
+        0, alias="from", description="Specify which entry should be the first returned."
+    ),
+    size: int = Query(25, description="Number of entries in page."),
+    sort: str = Query(
+        None,
+        description="The `field` to sort by. If missing, default order for each resource will be used.",
+        regex=r"^\w+\|(asc|desc)",
+    ),
+    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
+    include_fields: Optional[List[str]] = Query(
+        None, description="Comma-separated list of which fields to return"
+    ),
+    exclude_fields: Optional[List[str]] = Query(
+        None, description="Comma-separated list of which fields to remove from result"
+    ),
+    format: schemas.EntryFormat = Query(
+        schemas.EntryFormat.json,
+        description="Will return the result in the specified format.",
+    ),
     user: User = Security(get_current_user, scopes=["read"]),
 ):
     print(
@@ -95,11 +126,36 @@ def query(
 # @router.get("/{resources}/query_split")
 @router.get("/query_split/{resources}")
 def query_split(
-    resources: str = Path(...),
-    q: Optional[str] = Query(None),
-    from_: int = Query(0, alias="from"),
-    size: int = Query(25),
-    lexicon_stats: bool = Query(True),
+    resources: str = Path(
+        ...,
+        regex=r"^\w+(,\w+)*$",
+        description="A comma-separated list of resource identifiers",
+    ),
+    q: Optional[str] = Query(
+        None,
+        title="query",
+        description="The query. If missing, all entries in chosen resource(s) will be returned.",
+    ),
+    from_: int = Query(
+        0, alias="from", description="Specify which entry should be the first returned."
+    ),
+    size: int = Query(25, description="Number of entries in page."),
+    sort: str = Query(
+        None,
+        description="The `field` to sort by. If missing, default order for each resource will be used.",
+        regex=r"^\w+\|(asc|desc)",
+    ),
+    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
+    include_fields: Optional[List[str]] = Query(
+        None, description="Comma-separated list of which fields to return"
+    ),
+    exclude_fields: Optional[List[str]] = Query(
+        None, description="Comma-separated list of which fields to remove from result"
+    ),
+    format: schemas.EntryFormat = Query(
+        schemas.EntryFormat.json,
+        description="Will return the result in the specified format.",
+    ),
     user: User = Security(get_current_user, scopes=["read"]),
 ):
     print("webapp.views.query.query_split: called with resources={}".format(resources))

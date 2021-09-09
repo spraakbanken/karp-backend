@@ -14,8 +14,20 @@ from fastapi.responses import JSONResponse
 __version__ = "0.8.1"
 
 
+tags_metadata = [
+    {"name": "Querying", "description": "Query"},
+    {"name": "Editing"},
+    {"name": "Statistics"},
+    {"name": "History"},
+    {"name": "Resources"},
+    {"name": "Health"},
+]
+
+
 def create_app(*, with_context: bool = True) -> FastAPI:
-    app = FastAPI(title="Karp API", redoc_url="/", version=__version__)
+    app = FastAPI(
+        title="Karp API", redoc_url="/", version=__version__, openapi_tags=tags_metadata
+    )
 
     from karp.application.logger import setup_logging
 
