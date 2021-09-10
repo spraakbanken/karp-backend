@@ -23,4 +23,5 @@ json_streams
 importlib_metadata; python_version < "3.8"
 tenacity
 tqdm
+dependency-injector
 

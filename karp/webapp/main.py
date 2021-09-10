@@ -10,6 +10,10 @@ except ImportError:
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from karp import main
+
+from .containers import WebAppContainer
+
 
 __version__ = "0.8.1"
 
@@ -28,6 +32,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     app = FastAPI(
         title="Karp API", redoc_url="/", version=__version__, openapi_tags=tags_metadata
     )
+    app_context = main.bootstrap_app()
 
     from karp.application.logger import setup_logging
 
@@ -37,6 +42,8 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     #     from karp.application.services.contexts import init_context
 
     #     init_context()
+    container = WebAppContainer(context=app_context.container)
+
     from . import entries_api
     from . import health_api
     from . import history_api
@@ -44,13 +51,28 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     from . import resources_api
     from . import stats_api
 
+    container.wire(
+        modules=[
+            entries_api,
+            health_api,
+            history_api,
+            query_api,
+            resources_api,
+            stats_api,
+        ]
+    )
+
     entries_api.init_app(app)
     health_api.init_app(app)
     history_api.init_app(app)
     query_api.init_app(app)
     resources_api.init_app(app)
     stats_api.init_app(app)
+
+    app.container = container
+
     load_modules(app)
+
     from karp.errors import KarpError
 
     @app.exception_handler(KarpError)

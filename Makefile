@@ -75,6 +75,10 @@ run: install
 serve: install-dev
 	${INVENV} uvicorn --reload asgi:app
 
+.PHONY: serve
+serve: install-dev
+	${INVENV} uvicorn asgi:app
+
 lint-syntax-errors: install-dev
 	${INVENV} flake8 karp karp/tests setup.py run.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
 

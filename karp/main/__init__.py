@@ -7,7 +7,6 @@ try:
 except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
-from karp.main.modules import Container
 
 from karp.domain import events
 from karp.services import messagebus, unit_of_work, auth_service
@@ -15,13 +14,18 @@ from karp.application import config
 from karp.infrastructure.sql import sql_unit_of_work
 from karp.infrastructure.jwt import jwt_auth_service
 
+from .containers import AppContainer
+
 
 @dataclass
 class AppContext:
-    container: Container
+    container: AppContainer
 
 
 def bootstrap_app() -> AppContext:
+    container = AppContainer()
+    return AppContext(container)
+
 
 def bootstrap(
     resource_uow: unit_of_work.ResourceUnitOfWork = None,
