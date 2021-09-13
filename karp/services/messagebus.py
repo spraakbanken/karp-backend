@@ -25,16 +25,16 @@ class MessageBus:
         self,
         resource_uow: unit_of_work.ResourceUnitOfWork,
         entry_uows: unit_of_work.EntriesUnitOfWork,
-        auth_service: authenticator.AuthService,
-        index_uow: unit_of_work.IndexUnitOfWork,
+        # auth_service: authenticator.AuthService,
+        search_service_uow: unit_of_work.IndexUnitOfWork,
         entry_uow_factory: unit_of_work.EntryUowFactory,
         raise_on_all_errors: bool = False,
     ):
         self.ctx = context.Context(
             resource_uow=resource_uow,
             entry_uows=entry_uows,
-            auth_service=auth_service,
-            index_uow=index_uow,
+            # auth_service=auth_service,
+            index_uow=search_service_uow,
             entry_uow_factory=entry_uow_factory,
         )
         self.raise_on_all_errors = raise_on_all_errors

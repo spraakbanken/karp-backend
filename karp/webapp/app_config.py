@@ -5,15 +5,19 @@ from fastapi.param_functions import Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, SecurityScopes
 from fastapi.security import utils as security_utils
 
-from karp import bootstrap
+from dependency_injector import wiring
+
+from karp import bootstrap, services
 
 from karp.domain import model
+from karp.services.auth_service import AuthService
 
 # from karp.auth.auth import auth
 from karp.errors import ClientErrorCodes, KarpError
+from karp.main.containers import AppContainer
 
 
-bus = bootstrap.bootstrap()
+# bus = bootstrap.bootstrap()
 
 
 auth_scheme = HTTPBearer()
@@ -31,9 +35,11 @@ def bearer_scheme(authorization=Header(None)):
     return HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
 
 
+@wiring.inject
 def get_current_user(
     security_scopes: SecurityScopes,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
 ) -> Optional[model.User]:
     if not credentials:
         return None
@@ -52,11 +58,6 @@ def get_current_user(
             "webapp.app_config.get_current_user: Calling auth_service with credentials = %s",
             credentials,
         )
-        user = bus.ctx.auth_service.authenticate(
-            credentials.scheme, credentials.credentials
-        )
-        # if user is None:
-        #     raise credentials_exception
-        return user
+        return auth_service.authenticate(credentials.scheme, credentials.credentials)
     except KarpError:
         raise credentials_exception

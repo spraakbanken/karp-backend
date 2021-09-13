@@ -4,7 +4,8 @@ Query API.
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, Security, HTTPException, status, Query, Path
+from dependency_injector import wiring
+from fastapi import APIRouter, Security, HTTPException, status, Query, Path, Depends
 
 from karp import errors as karp_errors
 
@@ -21,7 +22,10 @@ from karp.webapp import schemas
 
 # from karp.webapp.auth import get_current_user
 from karp.services import entry_query
-from .app_config import bus, get_current_user
+from karp.services.auth_service import AuthService
+from karp.services.messagebus import MessageBus
+from .app_config import get_current_user
+from karp.main.containers import AppContainer
 
 
 _logger = logging.getLogger("karp")
@@ -37,6 +41,7 @@ router = APIRouter(tags=["Querying"])
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
 )
+@wiring.inject
 def query(
     resources: str = Path(
         ...,
@@ -70,6 +75,8 @@ def query(
         description="Will return the result in the specified format.",
     ),
     user: User = Security(get_current_user, scopes=["read"]),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
     """
     # Query DSL
@@ -121,8 +128,8 @@ def query(
         f"Called 'query' called with resources={resources}, from={from_}m size={size}"
     )
     resource_list = resources.split(",")
-    if not bus.ctx.auth_service.authorize(
-        value_objects.PermissionLevel.read, user, resource_list, bus.ctx
+    if not auth_service.authorize(
+        value_objects.PermissionLevel.read, user, resource_list
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -159,18 +166,17 @@ def query(
     description="Returns a list of entries matching the given ids",
     name="Get lexical entries by id",
 )
+@wiring.inject
 def get_entries_by_id(
-    resource_id: str = Path(..., description="The resource to perform operation on"),
-    entry_ids: str = Path(
-        ...,
-        description="Comma-separated. The ids to perform operation on.",
-        regex=r"^\w(,\w)*",
-    ),
+    resource_id: str,
+    entry_ids: str,
     user: User = Security(get_current_user, scopes=["read"]),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
     print("webapp.views.get_entries_by_id")
-    if not bus.ctx.auth_service.authorize(
-        value_objects.PermissionLevel.read, user, [resource_id], bus.ctx
+    if not auth_service.authorize(
+        value_objects.PermissionLevel.read, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -180,8 +186,8 @@ def get_entries_by_id(
     return entry_query.search_ids(resource_id, entry_ids, ctx=bus.ctx)
 
 
-# @router.get("/{resources}/query_split")
 @router.get("/query_split/{resources}", name="Query per resource")
+@wiring.inject
 def query_split(
     resources: str = Path(
         ...,
@@ -214,11 +220,13 @@ def query_split(
         description="Will return the result in the specified format.",
     ),
     user: User = Security(get_current_user, scopes=["read"]),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
     print("webapp.views.query.query_split: called with resources={}".format(resources))
     resource_list = resources.split(",")
-    if not bus.ctx.auth_service.authorize(
-        value_objects.PermissionLevel.read, user, resource_list, bus.ctx
+    if not auth_service.authorize(
+        value_objects.PermissionLevel.read, user, resource_list
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

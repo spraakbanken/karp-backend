@@ -1,15 +1,19 @@
 from karp.webapp import schemas
 from typing import Dict, Optional
 
-from fastapi import APIRouter, Query, Security, HTTPException, status
+from dependency_injector import wiring
+from fastapi import APIRouter, Query, Security, HTTPException, status, Depends
 
 from karp.domain import value_objects, model
 from karp.domain.models.user import User
 
 
 from karp.services import entry_views
+from karp.services.auth_service import AuthService
+from karp.services.messagebus import MessageBus
 from karp.utility import unique_id
-from .app_config import bus, get_current_user
+from .app_config import get_current_user
+from karp.main.containers import AppContainer
 
 # from flask import Blueprint, jsonify, request  # pyre-ignore
 
@@ -28,6 +32,7 @@ router = APIRouter(tags=["History"])
 )
 # @router.post("/{resource_id}/{entry_id}/diff")
 # @auth.auth.authorization("ADMIN")
+@wiring.inject
 def get_diff(
     resource_id: str,
     entry_id: str,
@@ -37,9 +42,11 @@ def get_diff(
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
-    if not bus.ctx.auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id], bus.ctx
+    if not auth_service.authorize(
+        value_objects.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -86,6 +93,7 @@ def get_diff(
 @router.get(
     "/{resource_id}/history",
 )
+@wiring.inject
 def get_history(
     resource_id: str,
     user: User = Security(get_current_user, scopes=["admin"]),
@@ -97,9 +105,11 @@ def get_history(
     from_version: Optional[int] = Query(None),
     current_page: int = Query(0),
     page_size: int = Query(100),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
-    if not bus.ctx.auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id], bus.ctx
+    if not auth_service.authorize(
+        value_objects.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -126,14 +136,17 @@ def get_history(
 
 @router.get("/{resource_id}/{entry_id}/{version}/history", response_model=schemas.Entry)
 # @auth.auth.authorization("ADMIN")
+@wiring.inject
 def get_history_for_entry(
     resource_id: str,
     entry_id: str,
     version: int,
     user: User = Security(get_current_user, scopes=["read"]),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
-    if not bus.ctx.auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id], bus.ctx
+    if not auth_service.authorize(
+        value_objects.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

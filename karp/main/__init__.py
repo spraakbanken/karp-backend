@@ -1,12 +1,15 @@
 from dataclasses import dataclass
 import logging
 import typing
+import os
 
 try:
     from importlib.metadata import entry_points
 except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
+import environs
+import dotenv
 
 from karp.domain import events
 from karp.services import messagebus, unit_of_work, auth_service
@@ -23,7 +26,41 @@ class AppContext:
 
 
 def bootstrap_app() -> AppContext:
+    config_path = os.environ.get(
+        "CONFIG_PATH",
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, ".env"),
+    )
+    dotenv.load_dotenv(config_path)
     container = AppContainer()
+    container.config.core.logging.from_value(
+        {
+            "version": 1,
+            "formatters": {
+                "formatter": {
+                    "format": "[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s",
+                }
+            },
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                    "level": config.CONSOLE_LOG_LEVEL,
+                    "formatter": "formatter",
+                    "stream": "ext://sys.stderr",
+                }
+            },
+        }
+    )
+    container.config.db.url.from_value(config.DB_URL)
+    container.config.search_service.type.from_env(
+        "SEARCH_CONTEXT", "sql_search_service"
+    )
+    container.config.search_service.elasticsearch_hosts.from_value(
+        config.ELASTICSEARCH_HOST
+    )
+    container.config.debug.from_value(config.DEBUG)
+    container.config.auth.type.from_env("AUTH_CONTEXT")
+    container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
+    container.core.init_resources()
     return AppContext(container)
 
 

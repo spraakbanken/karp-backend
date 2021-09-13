@@ -10,8 +10,7 @@ import jwt.exceptions as jwte  # pyre-ignore
 from karp.domain import errors, value_objects
 from karp.domain.models.user import User
 from karp.domain.errors import AuthError
-from karp.application import config
-from karp.services import auth_service, context
+from karp.services import auth_service, context, unit_of_work
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 
@@ -24,20 +23,26 @@ def load_jwt_key(path: Path) -> str:
         return fp.read()
 
 
-jwt_key = load_jwt_key(config.JWT_AUTH_PUBKEY_PATH)
+# jwt_key = load_jwt_key(config.JWT_AUTH_PUBKEY_PATH)
 
 
 class JWTAuthenticator(
     auth_service.AuthService, auth_service_type="jwt_auth", is_default=True
 ):
-    def __init__(self) -> None:
+    def __init__(
+        self, pubkey_path: Path, resource_uow: unit_of_work.ResourceUnitOfWork
+    ) -> None:
+        self._jwt_key = load_jwt_key(pubkey_path)
+        self._resource_uow = resource_uow
         print("JWTAuthenticator created")
 
     def authenticate(self, _scheme: str, credentials: str) -> User:
         print("JWTAuthenticator.authenticate: called")
 
         try:
-            user_token = jwt.decode(credentials, key=jwt_key, algorithms=["RS256"])
+            user_token = jwt.decode(
+                credentials, key=self._jwt_key, algorithms=["RS256"]
+            )
         except jwte.ExpiredSignatureError as exc:
             raise AuthError(
                 "The given jwt have expired", code=ClientErrorCodes.EXPIRED_JWT
@@ -55,10 +60,9 @@ class JWTAuthenticator(
         level: value_objects.PermissionLevel,
         user: User,
         resource_ids: List[str],
-        ctx: context.Context,
     ):
 
-        with ctx.resource_uow as resources_uw:
+        with self._resource_uow as resources_uw:
             for resource_id in resource_ids:
                 resource = resources_uw.resources.by_resource_id(resource_id)
                 if not resource:

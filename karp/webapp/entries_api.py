@@ -1,10 +1,11 @@
-from os import stat
-from fastapi import APIRouter, Security, HTTPException, status, Response
+from dependency_injector import wiring
+from fastapi import APIRouter, Security, HTTPException, status, Response, Depends
 from starlette import responses
 
 from karp.domain import commands, errors
 from karp.domain.models.user import User
 from karp.domain.value_objects import PermissionLevel
+from karp.services.messagebus import MessageBus
 
 # from karp.application.services import entries
 
@@ -25,9 +26,11 @@ from karp import errors as karp_errors
 # from karp.errors import KarpError
 # import karp.auth.auth as auth
 # from karp.util import convert
+from karp.services.auth_service import AuthService
 from karp.services import entry_views
 from karp.utility import unique_id
-from .app_config import bus, get_current_user
+from .app_config import get_current_user
+from karp.main.containers import AppContainer
 
 # edit_api = Blueprint("edit_api", __name__)
 
@@ -35,14 +38,15 @@ router = APIRouter(tags=["Editing"])
 
 
 @router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED)
+@wiring.inject
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Security(get_current_user, scopes=["write"]),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
-    if not bus.ctx.auth_service.authorize(
-        PermissionLevel.write, user, [resource_id], bus.ctx
-    ):
+    if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -68,16 +72,17 @@ def add_entry(
 
 @router.post("/{resource_id}/{entry_id}/update")
 # @auth.auth.authorization("WRITE", add_user=True)
+@wiring.inject
 def update_entry(
     response: Response,
     resource_id: str,
     entry_id: str,
     data: schemas.EntryUpdate,
     user: User = Security(get_current_user, scopes=["write"]),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
-    if not bus.ctx.auth_service.authorize(
-        PermissionLevel.write, user, [resource_id], bus.ctx
-    ):
+    if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -127,10 +132,13 @@ def update_entry(
 
 @router.delete("/{resource_id}/{entry_id}/delete")
 # @auth.auth.authorization("WRITE", add_user=True)
+@wiring.inject
 def delete_entry(
     resource_id: str,
     entry_id: str,
     user: User = Security(get_current_user, scopes=["write"]),
+    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
 ):
     """Delete a entry from a resource.
 
@@ -142,9 +150,7 @@ def delete_entry(
     Returns:
         [type] -- [description]
     """
-    if not bus.ctx.auth_service.authorize(
-        PermissionLevel.write, user, [resource_id], bus.ctx
-    ):
+    if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",

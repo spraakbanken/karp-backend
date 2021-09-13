@@ -12,7 +12,8 @@ from fastapi.responses import JSONResponse
 
 from karp import main
 
-from .containers import WebAppContainer
+from karp.main.containers import AppContainer
+from . import app_config
 
 
 __version__ = "0.8.1"
@@ -42,7 +43,9 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     #     from karp.application.services.contexts import init_context
 
     #     init_context()
-    container = WebAppContainer(context=app_context.container)
+    # container = AppContainer(context=app_context.container)
+
+    # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
 
     from . import entries_api
     from . import health_api
@@ -51,8 +54,9 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     from . import resources_api
     from . import stats_api
 
-    container.wire(
+    app_context.container.wire(
         modules=[
+            app_config,
             entries_api,
             health_api,
             history_api,
@@ -69,7 +73,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     resources_api.init_app(app)
     stats_api.init_app(app)
 
-    app.container = container
+    app.container = app_context.container
 
     load_modules(app)
 

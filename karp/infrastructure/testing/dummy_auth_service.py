@@ -20,6 +20,5 @@ class DummyAuthService(auth_service.AuthService, auth_service_type="dummy_auth")
         level: value_objects.PermissionLevel,
         user: User,
         resource_ids: List[str],
-        ctx: context.Context,
     ) -> bool:
         return True

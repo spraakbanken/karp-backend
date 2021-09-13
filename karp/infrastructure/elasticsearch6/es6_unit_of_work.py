@@ -3,9 +3,9 @@ from . import es6_index
 
 
 class Es6IndexUnitOfWork(unit_of_work.IndexUnitOfWork, index_type="es6_index"):
-    def __init__(self) -> None:
+    def __init__(self, es6_search_service: es6_index.Es6Index) -> None:
         super().__init__()
-        self._index = es6_index.Es6Index()
+        self._index = es6_search_service
 
     @classmethod
     def from_dict(cls, **kwargs):

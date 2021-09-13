@@ -1,4 +1,5 @@
 import abc
+from karp.utility.unique_id import UniqueId
 import logging
 import typing
 from typing import Dict, List, Optional, Union, Tuple
@@ -186,15 +187,15 @@ class EntryRepository(Repository[model.Entry]):
 
     def by_id(
         self,
-        id: str,
+        id_: UniqueId,
         *,
         version: Optional[int] = None,
         after_date: Optional[float] = None,
         before_date: Optional[float] = None,
         oldest_first: bool = False,
-    ) -> typing.Optional[model.Entry]:
+    ) -> model.Entry:
         entry = self._by_id(
-            id,
+            id_,
             version=version,
             after_date=after_date,
             before_date=before_date,
@@ -202,12 +203,13 @@ class EntryRepository(Repository[model.Entry]):
         )
         if entry:
             self.seen.add(entry)
-        return entry
+            return entry
+        raise errors.EntryNotFound(id_=id_)
 
     @abc.abstractmethod
     def _by_id(
         self,
-        id: str,
+        id: UniqueId,
         *,
         version: Optional[int] = None,
         after_date: Optional[float] = None,
@@ -230,11 +232,12 @@ class EntryRepository(Repository[model.Entry]):
 
     def by_entry_id(
         self, entry_id: str, *, version: Optional[int] = None
-    ) -> Optional[model.Entry]:
+    ) -> model.Entry:
         entry = self._by_entry_id(entry_id, version=version)
         if entry:
             self.seen.add(entry)
-        return entry
+            return entry
+        raise errors.EntryNotFound(entry_id=entry_id)
 
     @abc.abstractmethod
     def _by_entry_id(

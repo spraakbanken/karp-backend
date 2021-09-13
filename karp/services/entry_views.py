@@ -14,7 +14,10 @@ from . import context
 
 def get_by_id(
     resource_id: str, entry_uuid: unique_id.UniqueId, ctx: context.Context
-) -> typing.Optional[model.Entry]:
+) -> model.Entry:
+    print(
+        f"entry_views.get_by_id: resource_id = {resource_id}, entry_uuid = {entry_uuid}"
+    )
     with ctx.entry_uows.get_uow(resource_id) as uow:
         return uow.repo.by_id(entry_uuid)
 

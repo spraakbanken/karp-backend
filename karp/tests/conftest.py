@@ -20,6 +20,7 @@ from tenacity import retry, stop_after_delay
 
 environ["TESTING"] = "True"
 environ["ELASTICSEARCH_HOST"] = "localhost:9202"
+environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
 import elasticsearch_test  # pyre-ignore
 
@@ -103,15 +104,22 @@ def main_db():
 #     yield
 #     print("running alembic downgrade ...")
 #     alembic_main(["--raiseerr", "downgrade", "base"])
+@pytest.fixture(name="app", scope="session")
+def fixture_app():
+    from karp.webapp import main as webapp_main
+
+    app = webapp_main.create_app()
+    with app.container.auth_service.override(dummy_auth_service.DummyAuthService()):
+        yield app
+    app.container.unwire()
 
 
 @pytest.fixture(name="fa_client", scope="session")
-def fixture_fa_client(use_main_index):  # db_setup, es):
+def fixture_fa_client(use_main_index, app):  # db_setup, es):
     # ctx.auth_service = dummy_auth_service.DummyAuthService()
     print(f"use_main_index = {use_main_index}")
-    from karp.webapp import app_config, main as webapp_main
 
-    with TestClient(webapp_main.create_app()) as client:
+    with TestClient(app) as client:
         yield client
 
 
@@ -147,7 +155,6 @@ def fixture_use_dummy_authenticator():
 
 @pytest.fixture(name="resource_places", scope="session")
 def fixture_resource_places(use_main_index):
-    from karp.webapp import app_config
 
     with open("karp/tests/data/config/places.json") as fp:
         places_config = json.load(fp)
@@ -198,11 +205,13 @@ def fixture_resource_municipalities(use_main_index):
 
 
 @pytest.fixture(name="places_published", scope="session")
-def fixture_places_published(resource_places):  # , db_setup):
+def fixture_places_published(resource_places, app):  # , db_setup):
     from karp.webapp import app_config, main as webapp_main
 
+    bus = app.container.bus()
+
     try:
-        app_config.bus.handle(
+        bus.handle(
             commands.CreateResource(
                 id=resource_places.id,
                 resource_id=resource_places.resource_id,
@@ -215,7 +224,7 @@ def fixture_places_published(resource_places):  # , db_setup):
     except errors.IntegrityError:
         pass
     try:
-        app_config.bus.handle(
+        bus.handle(
             commands.PublishResource(
                 resource_id=resource_places.resource_id,
                 name=resource_places.name,
@@ -235,11 +244,15 @@ def fixture_places_published(resource_places):  # , db_setup):
 
 
 @pytest.fixture(name="municipalites_published", scope="session")
-def fixture_municipalites_published(resource_municipalities, main_db):  # , db_setup):
+def fixture_municipalites_published(
+    resource_municipalities, main_db, app
+):  # , db_setup):
     from karp.webapp import app_config, main as webapp_main
 
+    bus = app.container.bus()
+
     try:
-        app_config.bus.handle(
+        bus.handle(
             commands.CreateResource(
                 id=resource_municipalities.id,
                 resource_id=resource_municipalities.resource_id,
@@ -252,7 +265,7 @@ def fixture_municipalites_published(resource_municipalities, main_db):  # , db_s
     except errors.IntegrityError:
         pass
     try:
-        app_config.bus.handle(
+        bus.handle(
             commands.PublishResource(
                 resource_id=resource_municipalities.resource_id,
                 name=resource_municipalities.name,

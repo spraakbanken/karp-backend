@@ -1,8 +1,11 @@
-from fastapi import APIRouter
+from dependency_injector import wiring
+from fastapi import APIRouter, Depends
 
 from karp.services import resource_views
+from karp.services.messagebus import MessageBus
 
 from . import app_config
+from karp.main.containers import AppContainer
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 
@@ -13,9 +16,12 @@ router = APIRouter(tags=["Resources"])
 
 
 @router.get("/resources")
-def list_resources():
+@wiring.inject
+def list_resources(
+    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+):
     result = []
-    for resource in resource_views.get_published_resources(app_config.bus.ctx):
+    for resource in resource_views.get_published_resources(bus.ctx):
         resource_obj = {"resource_id": resource.resource_id}
 
         protected_conf = resource.config.get("protected")

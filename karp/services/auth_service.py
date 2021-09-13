@@ -52,6 +52,5 @@ class AuthService(abc.ABC):
         level: value_objects.PermissionLevel,
         user: model.User,
         resource_ids: List[str],
-        ctx: "context.Context",
     ) -> bool:
         return True

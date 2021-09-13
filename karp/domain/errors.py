@@ -9,11 +9,23 @@ class DomainError(errors.KarpError):
         super().__init__(*args, **kwargs)
 
 
+class NotFoundError(DomainError):
+    entity_name: str
+
+    def __init__(self, entity_id, *args, **kwargs):
+        super().__init__(
+            f"{self.entity_name} not found, id: {entity_id}", *args, **kwargs
+        )
+
+
 class EntryNotFound(DomainError):
+    entity_name: str = "Entry"
+
     def __init__(
         self,
-        entry_id: str,
-        resource_id: str,
+        entry_id: str = None,
+        resource_id: str = None,
+        entity_id=None,
         resource_version: int = None,
         **kwargs,
     ):
