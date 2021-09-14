@@ -19,7 +19,7 @@ class Context:
         entry_uows: unit_of_work.EntriesUnitOfWork,
         # resource_repo: repository.ResourceRepository,
         # search_service: index.Index,
-        auth_service: AuthService,
+        # auth_service: AuthService,
         index_uow: unit_of_work.IndexUnitOfWork,
         entry_uow_factory: unit_of_work.EntryUowFactory,
     ):
@@ -27,7 +27,7 @@ class Context:
         self.entry_uows = entry_uows
         # self.resource_repo = resource_repo
         # self.search_service = search_service
-        self.auth_service = auth_service
+        # self.auth_service = auth_service
         self.index_uow = index_uow
         self.entry_uow_factory = entry_uow_factory
 
