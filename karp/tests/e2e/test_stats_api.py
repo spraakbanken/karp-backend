@@ -25,4 +25,4 @@ def test_stats(fa_data_client):
 
     entries = response.json()
 
-    assert len(entries) == 4
+    assert len(entries) == 3

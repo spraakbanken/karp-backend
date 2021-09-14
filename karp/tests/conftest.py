@@ -87,7 +87,7 @@ def main_db():
     print("running alembic downgrade ...")
     session.close_all_sessions()
     alembic_main(["--raiseerr", "downgrade", "base"])
-    # metadata.drop_all(bind=engine)
+    metadata.drop_all(bind=engine)
     # return engine
 
 
