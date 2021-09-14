@@ -19,7 +19,7 @@ from karp.infrastructure.jwt import jwt_auth_service
 
 from .containers import AppContainer
 
-
+# pylint: disable=no-member
 @dataclass
 class AppContext:
     container: AppContainer
@@ -32,24 +32,7 @@ def bootstrap_app() -> AppContext:
     )
     dotenv.load_dotenv(config_path)
     container = AppContainer()
-    container.config.core.logging.from_value(
-        {
-            "version": 1,
-            "formatters": {
-                "formatter": {
-                    "format": "[%(asctime)s] [%(levelname)s] [%(name)s]: %(message)s",
-                }
-            },
-            "handlers": {
-                "console": {
-                    "class": "logging.StreamHandler",
-                    "level": config.CONSOLE_LOG_LEVEL,
-                    "formatter": "formatter",
-                    "stream": "ext://sys.stderr",
-                }
-            },
-        }
-    )
+    container.config.core.logging.from_value(_logging_config())
     container.config.db.url.from_value(config.DB_URL)
     container.config.search_service.type.from_env(
         "SEARCH_CONTEXT", "sql_search_service"
@@ -61,7 +44,43 @@ def bootstrap_app() -> AppContext:
     container.config.auth.type.from_env("AUTH_CONTEXT")
     container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
     container.core.init_resources()
+    bus = container.bus()
+    bus.handle(events.AppStarted())  # needed? ?
+
     return AppContext(container)
+
+
+def _logging_config() -> typing.Dict[str, typing.Any]:
+    return {
+        "version": 1,
+        "formatters": {
+            "standard": {
+                "format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s",
+            }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "formatter": "standard",
+                "stream": "ext://sys.stderr",
+            },
+            "email": {
+                "class": "logging.handlers.SMTPHandler",
+                "mailhost": "localhost",
+                "formatter": "standard",
+                "level": "WARNING",
+                "fromaddr": config.LOG_MAIL_FROM,
+                "toaddrs": config.LOG_MAIL_TOS,
+                "subject": "Error in Karp backend!",
+            },
+        },
+        "loggers": {
+            "karp": {
+                "handlers": ["console", "email"],
+                "level": config.CONSOLE_LOG_LEVEL,
+            }
+        },
+    }
 
 
 def bootstrap(
@@ -87,8 +106,8 @@ def bootstrap(
     bus = messagebus.MessageBus(
         resource_uow=resource_uow,
         entry_uows=entry_uows,
-        auth_service=authservice,
-        index_uow=index_uow,
+        # auth_service=authservice,
+        search_service_uow=index_uow,
         entry_uow_factory=entry_uow_factory,
         raise_on_all_errors=raise_on_all_errors,
     )

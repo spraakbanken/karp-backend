@@ -515,6 +515,8 @@ def _create_es_mapping(config):
                 mapped_type = "long"
             elif parent_field_def["type"] == "number":
                 mapped_type = "double"
+            elif parent_field_def["type"] == "boolean":
+                mapped_type = "boolean"
             elif parent_field_def["type"] == "string":
                 mapped_type = "text"
             else:

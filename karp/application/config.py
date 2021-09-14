@@ -1,4 +1,3 @@
-import os
 import logging
 from distutils.util import strtobool
 from pathlib import Path
@@ -73,6 +72,9 @@ CONSOLE_LOG_LEVEL = config("CONSOLE_LOG_LEVEL", cast=get_loglevel, default="INFO
 #     LOG_TO_SLACK = strtobool(os.environ.get("LOG_TO_SLACK", "n"))
 #     SLACK_SECRET = os.environ.get("SLACK_SECRET")
 #     JWT_AUTH = strtobool(os.environ.get("JWT_AUTH", "n"))
+
+LOG_MAIL_FROM = config("LOG_MAIL_FROM", default="sb-karp@svenska.gu.se")
+LOG_MAIL_TOS = config("LOG_MAIL_TOS", cast=CommaSeparatedStrings)
 
 if TESTING:
     print("Using testing jwt key")

@@ -6,9 +6,9 @@ fastjsonschema
 elasticsearch>=6,<7.0.0
 elasticsearch-dsl>=6,<7.0.0
 alembic
-slack-log-utils
+# slack-log-utils
 pyjwt
-cryptography
+cryptography>=3.3.2
 sb-json-tools>=0.5.2
 fastapi
 #starlette
@@ -25,4 +25,4 @@ tenacity
 tqdm
 dependency-injector
 environs
-
+urllib3>=1.26.5
