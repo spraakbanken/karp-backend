@@ -426,15 +426,16 @@ def delete_entry(cmd: commands.DeleteEntry, ctx: context.Context):
     #     resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
 
     with ctx.entry_uows.get_uow(cmd.resource_id) as uw:
-        entry = uw.repo.by_entry_id(cmd.entry_id)
+        try:
+            entry = uw.repo.by_entry_id(cmd.entry_id)
 
         #     resource = get_resource(resource_id)
         #     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
-        if not entry:
+        except errors.EntryNotFound as err:
             raise errors.EntryNotFound(
                 resource_id=cmd.resource_id,
                 entry_id=cmd.entry_id,
-            )
+            ) from err
 
         entry.discard(
             user=cmd.user,

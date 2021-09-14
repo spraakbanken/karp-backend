@@ -39,7 +39,7 @@ pytestmark = pytest.mark.usefixtures("use_dummy_authenticator")  # , "use_main_i
 
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
-def test_add(fa_client):  # fa_client):
+def test_add(fa_client, app):  # fa_client):
     # client = init(fa_client, es, [])
 
     response = fa_client.post(
@@ -62,12 +62,10 @@ def test_add(fa_client):  # fa_client):
     assert "newID" in response_data
     assert response_data["newID"] == "203"
 
-    from karp.webapp import app_config
-
     # with app_config.bus.ctx.resource_uow as uw:
     #     resource = uw.repo.get_active_resource("places")
-
-    with app_config.bus.ctx.entry_uows.get("places") as uw:
+    bus = app.container.bus()
+    with bus.ctx.entry_uows.get("places") as uw:
         entries = uw.repo.entry_ids()
         assert len(entries) == 1
         assert entries[0] == "203"
@@ -143,7 +141,7 @@ def test_add_fails_with_invalid_entry(fa_client):
 
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
-def test_delete(fa_client):
+def test_delete(fa_client, app):
     entry_id = 205
     entry_name = f"delete{entry_id}"
     response = fa_client.post(
@@ -164,9 +162,9 @@ def test_delete(fa_client):
 
     assert response.status_code == 201
 
-    from karp.webapp import app_config
+    bus = app.container.bus()
 
-    with app_config.bus.ctx.entry_uows.get("places") as uw:
+    with bus.ctx.entry_uows.get("places") as uw:
         assert f"{entry_id}" in uw.repo.entry_ids()
 
     response = fa_client.delete(
@@ -174,7 +172,7 @@ def test_delete(fa_client):
     )
 
     assert response.status_code == 200
-    with app_config.bus.ctx.entry_uows.get("places") as uw:
+    with bus.ctx.entry_uows.get("places") as uw:
         assert uw.repo.by_entry_id(str(entry_id)).discarded
         assert str(entry_id) not in uw.repo.entry_ids()
 
@@ -387,7 +385,7 @@ def test_update_wrong_version_fails(fa_client):
 
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
-def test_update(fa_client):
+def test_update(fa_client, app):
     entry_id = 208
     entry_name = f"update{entry_id}"
     response = fa_client.post(
@@ -434,9 +432,8 @@ def test_update(fa_client):
     #     assert len(entries["hits"]) == 1
     #     assert entries["hits"][0]["id"] == entry_id
     #     assert entries["hits"][0]["entry"]["population"] == 5
-    from karp.webapp import app_config
 
-    with app_config.bus.ctx.entry_uows.get("places") as uw:
+    with app.container.bus().ctx.entry_uows.get("places") as uw:
         assert uw.repo.by_entry_id(str(entry_id)).body["population"] == 5
         assert str(entry_id) in uw.repo.entry_ids()
 
@@ -467,7 +464,7 @@ def test_update_several_times(fa_client):
 
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
-def test_update_entry_id(fa_client):
+def test_update_entry_id(fa_client, app):
     entry_id = 210
     response = fa_client.post(
         "places/add",
@@ -508,9 +505,7 @@ def test_update_entry_id(fa_client):
     #     entries = get_json(client, "places/query")
     #     assert 1 == len(entries["hits"])
 
-    from karp.webapp import app_config
-
-    with app_config.bus.ctx.entry_uows.get("places") as uw:
+    with app.container.bus().ctx.entry_uows.get("places") as uw:
         entry_ids = uw.repo.entry_ids()
         assert str(entry_id) not in entry_ids
         assert str(entry_id + 1) in entry_ids
@@ -736,7 +731,7 @@ def test_update_refs2(es, fa_client):
 
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
-def test_last_modified(fa_client):
+def test_last_modified(fa_client, app):
     entry_id = 212
     before_add = utc_now()
 
@@ -746,12 +741,12 @@ def test_last_modified(fa_client):
 
     after_add = utc_now()
 
-    from karp.webapp import app_config
+    bus = app.container.bus()
 
     # with app_config.bus.ctx.resource_uow as uw:
     #     resource = uw.repo.get_active_resource("places")
 
-    with app_config.bus.ctx.entry_uows.get("places") as uw:
+    with bus.ctx.entry_uows.get("places") as uw:
         entry = uw.repo.by_entry_id(str(entry_id))
         assert entry.last_modified > before_add
         assert entry.last_modified < after_add
@@ -773,7 +768,7 @@ def test_last_modified(fa_client):
 
     after_update = utc_now()
 
-    with app_config.bus.ctx.entry_uows.get("places") as uw:
+    with bus.ctx.entry_uows.get("places") as uw:
         entry = uw.repo.by_entry_id(str(entry_id))
         assert entry.last_modified > after_add
         assert entry.last_modified < after_update

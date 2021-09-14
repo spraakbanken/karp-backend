@@ -1,9 +1,12 @@
-from sqlalchemy import create_engine, orm
+from sqlalchemy import create_engine, orm, pool
 
 
 class Database:
     def __init__(self, db_url: str) -> None:
-        self._engine = create_engine(db_url, echo=True)
+        kwargs = {}
+        if str(db_url).startswith("sqlite"):
+            kwargs["poolclass"] = pool.SingletonThreadPool
+        self._engine = create_engine(db_url, echo=True, **kwargs)
         self.session_factory = orm.sessionmaker(
             autocommit=False,
             autoflush=False,

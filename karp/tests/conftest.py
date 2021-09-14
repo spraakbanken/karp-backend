@@ -9,7 +9,7 @@ from typing import Dict
 
 import pytest  # pyre-ignore
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, pool
 from sqlalchemy.orm import sessionmaker, session
 
 from alembic.config import main as alembic_main
@@ -75,16 +75,19 @@ def wait_for_main_db_to_come_up(engine):
 @pytest.fixture(scope="session")
 def main_db():
     print(f"creating engine uri = {config.DB_URL}")
-    engine = create_engine(config.DB_URL)
+    kwargs = {}
+    if str(config.DB_URL).startswith("sqlite"):
+        kwargs["poolclass"] = pool.SingletonThreadPool
+    engine = create_engine(config.DB_URL, **kwargs)
     wait_for_main_db_to_come_up(engine)
-    metadata.create_all(bind=engine)
-    # print("running alembic upgrade ...")
-    # alembic_main(["--raiseerr", "upgrade", "head"])
+    # metadata.create_all(bind=engine)
+    print("running alembic upgrade ...")
+    alembic_main(["--raiseerr", "upgrade", "head"])
     yield engine
-    # print("running alembic downgrade ...")
+    print("running alembic downgrade ...")
     session.close_all_sessions()
-    # alembic_main(["--raiseerr", "downgrade", "base"])
-    metadata.drop_all(bind=engine)
+    alembic_main(["--raiseerr", "downgrade", "base"])
+    # metadata.drop_all(bind=engine)
     # return engine
 
 
@@ -139,10 +142,9 @@ def fixture_fa_client(use_main_index, app):  # db_setup, es):
 
 
 @pytest.fixture(name="use_dummy_authenticator")
-def fixture_use_dummy_authenticator():
-    from karp.webapp import app_config
-
-    app_config.bus.ctx.auth_service = dummy_auth_service.DummyAuthService()
+def fixture_use_dummy_authenticator(app):
+    with app.container.auth_service.override(dummy_auth_service.DummyAuthService()):
+        yield app
 
 
 # @pytest.fixture(name="fa_client_scope_session", scope="session")

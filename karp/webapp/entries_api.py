@@ -98,8 +98,6 @@ def update_entry(
     #         raise KarpError("Missing version, entry or message")
     try:
         entry = entry_views.get_by_entry_id(resource_id, entry_id, bus.ctx)
-        if not entry:
-            raise errors.EntryNotFound(resource_id=resource_id, entry_id=entry_id)
         bus.handle(
             commands.UpdateEntry(
                 resource_id=resource_id,
@@ -125,6 +123,9 @@ def update_entry(
         # )
         entry = entry_views.get_by_id(resource_id, entry.id, bus.ctx)
         return {"newID": entry.entry_id, "uuid": entry.id}
+    except errors.EntryNotFound as err:
+        raise errors.EntryNotFound(resource_id=resource_id, entry_id=entry_id) from err
+
     except errors.UpdateConflict as err:
         response.status_code = status.HTTP_400_BAD_REQUEST
         return err.error_obj
