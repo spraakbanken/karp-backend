@@ -3,7 +3,7 @@ import typing
 from typing import List
 from karp import bootstrap
 from karp.domain import index, repository, model
-from karp.services import unit_of_work
+from karp.services import messagebus, unit_of_work
 
 
 class FakeResourceRepository(repository.ResourceRepository):
@@ -206,12 +206,12 @@ class FakeEntryUowFactory(unit_of_work.EntryUowFactory):
 
 
 def bootstrap_test_app(entry_uow_keys: List[str] = None):
-    return bootstrap.bootstrap(
+    return messagebus.MessageBus(
         resource_uow=FakeResourceUnitOfWork(),
         entry_uows=unit_of_work.EntriesUnitOfWork(
             # ((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])
         ),
-        index_uow=FakeIndexUnitOfWork(),
+        search_service_uow=FakeIndexUnitOfWork(),
         entry_uow_factory=FakeEntryUowFactory(),
         raise_on_all_errors=True,
     )

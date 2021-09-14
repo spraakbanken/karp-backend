@@ -10,7 +10,7 @@ from karp.errors import ClientErrorCodes
 from karp.domain.errors import AuthError
 
 from karp.infrastructure.jwt.jwt_auth_service import JWTAuthenticator
-
+from . import adapters
 
 with open(Path(__file__).parent / ".." / "data/private_key.pem") as fp:
     jwt_private_key = fp.read()
@@ -18,7 +18,10 @@ with open(Path(__file__).parent / ".." / "data/private_key.pem") as fp:
 
 @pytest.fixture
 def jwt_authenticator():
-    return JWTAuthenticator()
+    return JWTAuthenticator(
+        pubkey_path=Path("karp/tests/data/pubkey.pem"),
+        resource_uow=adapters.FakeResourceUnitOfWork(),
+    )
 
 
 def test_authenticate_invalid_token(jwt_authenticator):
