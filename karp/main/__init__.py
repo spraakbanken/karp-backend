@@ -30,6 +30,7 @@ def bootstrap_app() -> AppContext:
         "CONFIG_PATH",
         os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, ".env"),
     )
+    print(f"loading config from '{config_path}'")
     dotenv.load_dotenv(config_path)
     container = AppContainer()
     container.config.core.logging.from_value(_logging_config())
