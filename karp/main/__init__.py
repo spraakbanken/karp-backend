@@ -26,10 +26,7 @@ class AppContext:
 
 
 def bootstrap_app() -> AppContext:
-    config_path = os.environ.get(
-        "CONFIG_PATH",
-        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, ".env"),
-    )
+    config_path = os.environ.get("CONFIG_PATH", ".env")
     print(f"loading config from '{config_path}'")
     dotenv.load_dotenv(config_path)
     container = AppContainer()
