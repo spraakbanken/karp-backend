@@ -79,7 +79,8 @@ jobs:
             run: make e2e-tests
             allow_failure: false
         include:
-          - es:
+          - os: ubuntu-latest
+            es:
               use: false
             task:
               name: End-to-end tests
