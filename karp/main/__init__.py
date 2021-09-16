@@ -19,17 +19,19 @@ from karp.infrastructure.jwt import jwt_auth_service
 
 from .containers import AppContainer
 
+
 # pylint: disable=no-member
 @dataclass
 class AppContext:
     container: AppContainer
 
 
-def bootstrap_app() -> AppContext:
+def bootstrap_app(container: typing.Optional[AppContainer] = None) -> AppContext:
     config_path = os.environ.get("CONFIG_PATH", ".env")
     print(f"loading config from '{config_path}'")
     dotenv.load_dotenv(config_path)
-    container = AppContainer()
+    if not container:
+        container = AppContainer()
     container.config.core.logging.from_value(_logging_config())
     container.config.db.url.from_value(config.DB_URL)
     container.config.search_service.type.from_env(
@@ -39,8 +41,6 @@ def bootstrap_app() -> AppContext:
         config.ELASTICSEARCH_HOST
     )
     container.config.debug.from_value(config.DEBUG)
-    container.config.auth.type.from_env("AUTH_CONTEXT")
-    container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
     container.core.init_resources()
     bus = container.bus()
     bus.handle(events.AppStarted())  # needed? ?
