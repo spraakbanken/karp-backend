@@ -5,7 +5,7 @@ from karp.services import resource_views
 from karp.services.messagebus import MessageBus
 
 from . import app_config
-from karp.main.containers import AppContainer
+from .containers import WebAppContainer
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 
@@ -18,7 +18,7 @@ router = APIRouter(tags=["Resources"])
 @router.get("/resources")
 @wiring.inject
 def list_resources(
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     result = []
     for resource in resource_views.get_published_resources(bus.ctx):

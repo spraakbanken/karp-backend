@@ -8,7 +8,7 @@ from dependency_injector import wiring
 from fastapi import APIRouter, Response, status, Depends
 
 from karp.application import schemas
-from karp.main import AppContainer
+from .containers import WebAppContainer
 from karp.services import system_monitor
 from karp.services.auth_service import AuthService
 from karp.services.messagebus import MessageBus
@@ -25,7 +25,7 @@ router = APIRouter(tags=["Health"])
 @wiring.inject
 def perform_health_check(
     response: Response,
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     db_status = system_monitor.check_database_status(bus.ctx)
     if not db_status:

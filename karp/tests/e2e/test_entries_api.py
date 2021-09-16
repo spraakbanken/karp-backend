@@ -64,7 +64,7 @@ def test_add(fa_client, app):  # fa_client):
 
     # with app_config.bus.ctx.resource_uow as uw:
     #     resource = uw.repo.get_active_resource("places")
-    bus = app.container.bus()
+    bus = app.container.context.bus()
     with bus.ctx.entry_uows.get("places") as uw:
         entries = uw.repo.entry_ids()
         assert len(entries) == 1
@@ -162,7 +162,7 @@ def test_delete(fa_client, app):
 
     assert response.status_code == 201
 
-    bus = app.container.bus()
+    bus = app.container.context.bus()
 
     with bus.ctx.entry_uows.get("places") as uw:
         assert f"{entry_id}" in uw.repo.entry_ids()
@@ -433,7 +433,7 @@ def test_update(fa_client, app):
     #     assert entries["hits"][0]["id"] == entry_id
     #     assert entries["hits"][0]["entry"]["population"] == 5
 
-    with app.container.bus().ctx.entry_uows.get("places") as uw:
+    with app.container.context.bus().ctx.entry_uows.get("places") as uw:
         assert uw.repo.by_entry_id(str(entry_id)).body["population"] == 5
         assert str(entry_id) in uw.repo.entry_ids()
 
@@ -505,7 +505,7 @@ def test_update_entry_id(fa_client, app):
     #     entries = get_json(client, "places/query")
     #     assert 1 == len(entries["hits"])
 
-    with app.container.bus().ctx.entry_uows.get("places") as uw:
+    with app.container.context.bus().ctx.entry_uows.get("places") as uw:
         entry_ids = uw.repo.entry_ids()
         assert str(entry_id) not in entry_ids
         assert str(entry_id + 1) in entry_ids
@@ -741,7 +741,7 @@ def test_last_modified(fa_client, app):
 
     after_add = utc_now()
 
-    bus = app.container.bus()
+    bus = app.container.context.bus()
 
     # with app_config.bus.ctx.resource_uow as uw:
     #     resource = uw.repo.get_active_resource("places")

@@ -12,7 +12,7 @@ from fastapi.responses import JSONResponse
 
 from karp import main
 
-from karp.main.containers import AppContainer
+from .containers import WebAppContainer
 from . import app_config
 
 
@@ -33,17 +33,20 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     app = FastAPI(
         title="Karp API", redoc_url="/", version=__version__, openapi_tags=tags_metadata
     )
-    app_context = main.bootstrap_app()
+    container = WebAppContainer()
+    container.config.auth.type.from_env("AUTH_CONTEXT")
+    container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
+    main.bootstrap_app(container.context)
 
-    from karp.application.logger import setup_logging
+    # from karp.application.logger import setup_logging
 
-    logger = setup_logging()
+    # logger = setup_logging()
 
     # if with_context:
     #     from karp.application.services.contexts import init_context
 
     #     init_context()
-    # container = AppContainer(context=app_context.container)
+    # container = WebAppContainer(context=app_context.container)
 
     # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
 
@@ -54,7 +57,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     from . import resources_api
     from . import stats_api
 
-    app_context.container.wire(
+    container.wire(
         modules=[
             app_config,
             entries_api,
@@ -73,7 +76,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     resources_api.init_app(app)
     stats_api.init_app(app)
 
-    app.container = app_context.container
+    app.container = container
 
     load_modules(app)
 
@@ -81,8 +84,9 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
     @app.exception_handler(KarpError)
     async def _karp_error_handler(request: Request, exc: KarpError):
+        logger = logging.getLogger("karp")
         logger.exception(exc)
-        traceback.print_exception(KarpError, exc, None)
+        # traceback.print_exception(KarpError, exc, None)
         return JSONResponse(
             status_code=exc.http_return_code,
             content={"error": exc.message, "errorCode": exc.code},

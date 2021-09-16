@@ -208,9 +208,8 @@ def fixture_resource_municipalities(use_main_index):
 
 @pytest.fixture(name="places_published", scope="session")
 def fixture_places_published(resource_places, app):  # , db_setup):
-    from karp.webapp import app_config, main as webapp_main
 
-    bus = app.container.bus()
+    bus = app.container.context.bus()
 
     try:
         bus.handle(
@@ -249,9 +248,8 @@ def fixture_places_published(resource_places, app):  # , db_setup):
 def fixture_municipalites_published(
     resource_municipalities, main_db, app
 ):  # , db_setup):
-    from karp.webapp import app_config, main as webapp_main
 
-    bus = app.container.bus()
+    bus = app.container.context.bus()
 
     try:
         bus.handle(

@@ -13,7 +13,7 @@ from karp.services.auth_service import AuthService
 from karp.services.messagebus import MessageBus
 from karp.utility import unique_id
 from .app_config import get_current_user
-from karp.main.containers import AppContainer
+from .containers import WebAppContainer
 
 # from flask import Blueprint, jsonify, request  # pyre-ignore
 
@@ -42,8 +42,8 @@ def get_diff(
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     if not auth_service.authorize(
         value_objects.PermissionLevel.admin, user, [resource_id]
@@ -105,8 +105,8 @@ def get_history(
     from_version: Optional[int] = Query(None),
     current_page: int = Query(0),
     page_size: int = Query(100),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     if not auth_service.authorize(
         value_objects.PermissionLevel.admin, user, [resource_id]
@@ -142,8 +142,8 @@ def get_history_for_entry(
     entry_id: str,
     version: int,
     user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     if not auth_service.authorize(
         value_objects.PermissionLevel.admin, user, [resource_id]

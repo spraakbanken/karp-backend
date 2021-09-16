@@ -74,10 +74,10 @@ class AppContainer(containers.DeclarativeContainer):
         raise_on_all_errors=config.debug,
     )
 
-    jwt_authenticator = providers.Singleton(
-        jwt_auth_service.JWTAuthenticator,
-        pubkey_path=config.auth.jwt.pubkey_path,
-        resource_uow=resource_uow,
-    )
-
-    auth_service = providers.Selector(config.auth.type, jwt_auth=jwt_authenticator)
+#    jwt_authenticator = providers.Singleton(
+#        jwt_auth_service.JWTAuthenticator,
+#        pubkey_path=config.auth.jwt.pubkey_path,
+#        resource_uow=resource_uow,
+#    )
+#
+#    auth_service = providers.Selector(config.auth.type, jwt_auth=jwt_authenticator)

@@ -30,7 +30,7 @@ from karp.services.auth_service import AuthService
 from karp.services import entry_views
 from karp.utility import unique_id
 from .app_config import get_current_user
-from karp.main.containers import AppContainer
+from .containers import WebAppContainer
 
 # edit_api = Blueprint("edit_api", __name__)
 
@@ -43,8 +43,8 @@ def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Security(get_current_user, scopes=["write"]),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -79,8 +79,8 @@ def update_entry(
     entry_id: str,
     data: schemas.EntryUpdate,
     user: User = Security(get_current_user, scopes=["write"]),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -138,8 +138,8 @@ def delete_entry(
     resource_id: str,
     entry_id: str,
     user: User = Security(get_current_user, scopes=["write"]),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     """Delete a entry from a resource.
 
