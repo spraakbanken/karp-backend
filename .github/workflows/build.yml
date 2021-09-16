@@ -74,17 +74,13 @@ jobs:
         task:
           - name: Integration tests
             run: make integration-tests
-            allow_failure: false
           - name: End-to-end tests
             run: make e2e-tests
-            allow_failure: false
-        include:
-          - os: ubuntu-latest
-            es:
+        exclude:
+          - es:
               use: false
             task:
               name: End-to-end tests
-              allow_failure: true
 
     steps:
       - uses: actions/checkout@v2
@@ -124,7 +120,6 @@ jobs:
           #run: echo "SEARCH_CONTEXT=sql_index" >> .env
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
-        continue-on-error: ${{ matrix.task.allow_failure }}
         env:
           DB_TEST_DATABASE: karp
           DB_USER: karp
