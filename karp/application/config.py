@@ -74,7 +74,7 @@ CONSOLE_LOG_LEVEL = config("CONSOLE_LOG_LEVEL", cast=get_loglevel, default="INFO
 #     JWT_AUTH = strtobool(os.environ.get("JWT_AUTH", "n"))
 
 LOG_MAIL_FROM = config("LOG_MAIL_FROM", default="sb-karp@svenska.gu.se")
-LOG_MAIL_TOS = config("LOG_MAIL_TOS", cast=CommaSeparatedStrings)
+LOG_MAIL_TOS = config("LOG_MAIL_TOS", cast=CommaSeparatedStrings, default=None)
 
 if TESTING:
     print("Using testing jwt key")
