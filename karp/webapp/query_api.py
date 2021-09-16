@@ -25,7 +25,7 @@ from karp.services import entry_query
 from karp.services.auth_service import AuthService
 from karp.services.messagebus import MessageBus
 from .app_config import get_current_user
-from karp.main.containers import AppContainer
+from .containers import WebAppContainer
 
 
 _logger = logging.getLogger("karp")
@@ -75,8 +75,8 @@ def query(
         description="Will return the result in the specified format.",
     ),
     user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     """
     # Query DSL
@@ -175,8 +175,8 @@ def get_entries_by_id(
         regex=r"^\w(,\w)*",
     ),
     user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     print("webapp.views.get_entries_by_id")
     if not auth_service.authorize(
@@ -224,8 +224,8 @@ def query_split(
         description="Will return the result in the specified format.",
     ),
     user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     print("webapp.views.query.query_split: called with resources={}".format(resources))
     resource_list = resources.split(",")

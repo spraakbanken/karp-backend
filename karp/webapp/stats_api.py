@@ -12,7 +12,7 @@ from karp.services.messagebus import MessageBus
 
 from karp.webapp import schemas
 from .app_config import get_current_user
-from karp.main.containers import AppContainer
+from .containers import WebAppContainer
 
 
 router = APIRouter(tags=["Statistics"])
@@ -24,8 +24,8 @@ def get_field_values(
     resource_id: str,
     field: str,
     user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[AppContainer.bus]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
+    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(

@@ -14,7 +14,7 @@ from karp.services.auth_service import AuthService
 
 # from karp.auth.auth import auth
 from karp.errors import ClientErrorCodes, KarpError
-from karp.main.containers import AppContainer
+from .containers import WebAppContainer
 
 
 # bus = bootstrap.bootstrap()
@@ -39,7 +39,7 @@ def bearer_scheme(authorization=Header(None)):
 def get_current_user(
     security_scopes: SecurityScopes,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
-    auth_service: AuthService = Depends(wiring.Provide[AppContainer.auth_service]),
+    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
 ) -> Optional[model.User]:
     if not credentials:
         return None

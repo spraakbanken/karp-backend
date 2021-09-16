@@ -46,7 +46,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     #     from karp.application.services.contexts import init_context
 
     #     init_context()
-    # container = AppContainer(context=app_context.container)
+    # container = WebAppContainer(context=app_context.container)
 
     # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
 
