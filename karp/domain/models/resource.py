@@ -4,7 +4,7 @@ import enum
 import typing
 from karp.utility.time import utc_now
 from uuid import UUID
-from typing import Callable, Dict, Any, Optional, List, Union
+from typing import Callable, Dict, Any, Optional, List, Type, Union
 
 from karp.domain import constraints, events
 from karp.domain.errors import ConfigurationError, RepositoryStatusError
@@ -29,7 +29,8 @@ class ResourceOp(enum.Enum):
 
 
 class Resource(TimestampedVersionedEntity):
-    _registry = {}
+    _registry: Dict[str, Type] = {}
+    _type: str = "Resource"
 
     def __init_subclass__(cls, resource_type: str, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -40,11 +41,13 @@ class Resource(TimestampedVersionedEntity):
                 f"A Resource with type '{resource_type}' already exists: {cls._registry[resource_type]!r}"
             )
 
-        cls.type = resource_type
+        cls._type = resource_type
         cls._registry[resource_type] = cls
 
     @classmethod
     def create_resource(cls, resource_type: str, resource_config: Dict):
+        if resource_type == cls._type:
+            return cls.from_dict(resource_config)
         try:
             resource_cls = cls._registry[resource_type]
         except KeyError:
@@ -220,12 +223,7 @@ class Resource(TimestampedVersionedEntity):
         message: str = None,
         increment_version: bool = True,
     ):
-        self._check_not_discarded()
-
-        self._last_modified = timestamp or utc_now()
-        self._last_modified_by = user
-        self._message = message or "Updated"
-        self._op = ResourceOp.UPDATED
+        self._extracted_from_publish_9(timestamp, user, message, "Updated")
         if increment_version:
             self._version += 1
         self.queue_event(
@@ -248,11 +246,7 @@ class Resource(TimestampedVersionedEntity):
         message: str,
         timestamp: float = None,
     ):
-        self._check_not_discarded()
-        self._last_modified = timestamp or utc_now()
-        self._last_modified_by = user
-        self._message = message or "Published"
-        self._op = ResourceOp.UPDATED
+        self._extracted_from_publish_9(timestamp, user, message, "Published")
         self._version += 1
         self.is_published = True
         self.queue_event(
@@ -267,6 +261,13 @@ class Resource(TimestampedVersionedEntity):
                 message=self.message,
             )
         )
+
+    def _extracted_from_publish_9(self, timestamp, user, message, arg3):
+        self._check_not_discarded()
+        self._last_modified = timestamp or utc_now()
+        self._last_modified_by = user
+        self._message = message or arg3
+        self._op = ResourceOp.UPDATED
 
     def add_new_release(self, *, name: str, user: str, description: str):
         self._check_not_discarded()
