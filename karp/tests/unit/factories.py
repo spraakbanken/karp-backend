@@ -12,7 +12,8 @@ class ResourceFactory(factory.Factory):
 
     entity_id = factory.LazyFunction(value_objects.make_unique_id)
     resource_id = factory.Faker("word")
-    created_by
+    last_modified_by = factory.Faker("email")
+    last_modified = factory.LazyFunction()
 
 
 def random_resource(config: typing.Optional[typing.Dict] = None):
