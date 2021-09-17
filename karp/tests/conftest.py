@@ -112,9 +112,11 @@ def fixture_app():
     from karp.webapp import main as webapp_main
 
     app = webapp_main.create_app()
-    with app.container.auth_service.override(dummy_auth_service.DummyAuthService()):
+    with app.state.container.auth_service.override(
+        dummy_auth_service.DummyAuthService()
+    ):
         yield app
-    app.container.unwire()
+    app.state.container.unwire()
 
 
 @pytest.fixture(name="fa_client", scope="session")
@@ -143,7 +145,9 @@ def fixture_fa_client(use_main_index, app):  # db_setup, es):
 
 @pytest.fixture(name="use_dummy_authenticator")
 def fixture_use_dummy_authenticator(app):
-    with app.container.auth_service.override(dummy_auth_service.DummyAuthService()):
+    with app.state.container.auth_service.override(
+        dummy_auth_service.DummyAuthService()
+    ):
         yield app
 
 
@@ -209,7 +213,7 @@ def fixture_resource_municipalities(use_main_index):
 @pytest.fixture(name="places_published", scope="session")
 def fixture_places_published(resource_places, app):  # , db_setup):
 
-    bus = app.container.context.bus()
+    bus = app.state.container.context.bus()
 
     try:
         bus.handle(
@@ -249,7 +253,7 @@ def fixture_municipalites_published(
     resource_municipalities, main_db, app
 ):  # , db_setup):
 
-    bus = app.container.context.bus()
+    bus = app.state.container.context.bus()
 
     try:
         bus.handle(

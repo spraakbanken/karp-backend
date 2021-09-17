@@ -76,7 +76,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     resources_api.init_app(app)
     stats_api.init_app(app)
 
-    app.container = container
+    app.state.container = container
 
     load_modules(app)
 
