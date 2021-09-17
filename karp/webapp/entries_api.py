@@ -28,7 +28,7 @@ from karp import errors as karp_errors
 # from karp.util import convert
 from karp.services.auth_service import AuthService
 from karp.services import entry_views
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 from .app_config import get_current_user
 from .containers import WebAppContainer
 

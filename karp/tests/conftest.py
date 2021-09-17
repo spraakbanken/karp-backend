@@ -3,8 +3,6 @@
 # pylint: disable=wrong-import-position,missing-function-docstring
 
 import json
-import os
-import time
 from typing import Dict
 
 import pytest  # pyre-ignore
@@ -37,7 +35,7 @@ from karp import config
 # # from karp.application.services import contexts, entries, resources
 
 
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 
 from karp.tests import common_data, utils
 

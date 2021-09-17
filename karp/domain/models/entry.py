@@ -11,7 +11,7 @@ from karp.domain.common import _now, _unknown_user
 from karp.domain.models import event_handler
 from karp.domain.models.entity import TimestampedVersionedEntity
 
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 
 
 logger = logging.getLogger("karp")

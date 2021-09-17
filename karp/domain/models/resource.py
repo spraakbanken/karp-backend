@@ -12,9 +12,9 @@ from karp.domain.models import event_handler
 from karp.domain.models.entity import Entity, TimestampedVersionedEntity
 from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
-from karp.domain.value_objects import PermissionLevel
+from karp.domain.value_objects import PermissionLevel, unique_id
 
-from karp.utility import unique_id, time
+from karp.utility import time
 from karp.utility import json_schema
 from karp.utility.container import create_field_getter
 

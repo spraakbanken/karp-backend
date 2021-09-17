@@ -7,17 +7,9 @@ from karp.domain import events, model, errors
 
 from karp.domain.errors import ConsistencyError, DiscardedEntityError, ConstraintsError
 from karp.domain.models.resource import Resource, ResourceOp, Release, create_resource
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 
-
-def random_resource():
-    return model.create_resource(
-        entity_id=unique_id.make_unique_id(),
-        resource_id="resource",
-        config={"fields": {"wf": {"type" "string"}, "id": "wf"}},
-        message="Resource add",
-        created_by="kristoff@example.com",
-    )
+from .factories import random_resource
 
 
 def test_create_resource_creates_resource():

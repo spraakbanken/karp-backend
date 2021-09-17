@@ -4,7 +4,7 @@ import pytest
 from .adapters import bootstrap_test_app
 from karp.services import messagebus
 from karp.domain import events, errors, commands
-from karp.utility.unique_id import make_unique_id
+from karp.domain.value_objects.unique_id import make_unique_id
 
 
 def make_create_resource_command(

@@ -25,7 +25,7 @@ from karp.errors import (
 from karp.domain import commands, model, errors
 from karp.domain.models.entry import Entry
 
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 from . import context
 
 # from karp.domain.services import indexing

@@ -11,7 +11,7 @@ from karp.domain.models.user import User
 from karp.services import entry_views
 from karp.services.auth_service import AuthService
 from karp.services.messagebus import MessageBus
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 from .app_config import get_current_user
 from .containers import WebAppContainer
 

@@ -4,7 +4,7 @@ import pytest
 from karp.domain import model, events, errors
 
 from karp.tests import common_data
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 
 
 def random_entry(entry_id: str = None, body: Dict = None):

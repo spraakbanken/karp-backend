@@ -4,7 +4,7 @@ import uuid
 
 from karp.foundation import events
 
-from karp.utility import time, unique_id
+from karp.utility import time
 
 
 @dataclass

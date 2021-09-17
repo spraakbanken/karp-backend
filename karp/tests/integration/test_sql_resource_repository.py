@@ -14,7 +14,7 @@ from karp.domain.errors import IntegrityError
 from karp.services import handlers
 from karp.infrastructure.sql import db
 from karp.infrastructure.sql.sql_resource_repository import SqlResourceRepository
-from karp.utility import unique_id, time
+from karp.domain.value_objects import unique_id, time
 
 # pytestmark = pytest.mark.usefixtures("db_setup")
 

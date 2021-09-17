@@ -9,7 +9,7 @@ from karp.domain import repository
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 
 
 @pytest.fixture(name="entry_repo")
