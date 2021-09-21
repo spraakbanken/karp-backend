@@ -1,9 +1,11 @@
-from karp.domain.value_objects.unique_id import make_unique_id
+"""Factories used in tests."""
 import typing
+
 import factory
 
+from karp.domain import model, value_objects
 from karp.domain.models import resource
-from karp.domain import value_objects
+from karp.utility.time import utc_now
 
 
 class ResourceFactory(factory.Factory):
@@ -13,7 +15,7 @@ class ResourceFactory(factory.Factory):
     entity_id = factory.LazyFunction(value_objects.make_unique_id)
     resource_id = factory.Faker("word")
     last_modified_by = factory.Faker("email")
-    last_modified = factory.LazyFunction()
+    last_modified = factory.LazyFunction(utc_now)
 
 
 def random_resource(config: typing.Optional[typing.Dict] = None):

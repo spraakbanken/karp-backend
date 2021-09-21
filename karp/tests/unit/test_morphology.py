@@ -1,5 +1,6 @@
 from karp.domain.models.resource import Resource
 from karp.domain.models.morphology import Morphology
+from karp.domain import value_objects
 from .factories import random_resource
 
 
@@ -7,7 +8,11 @@ def test_morphology():
     resource = random_resource()
     entry = {"baseform": "Appalacherna", "paradigm": "pm_plg_alperna", "pos": "pm"}
 
-    morphology = Morphology()
+    morphology = Morphology.create_resource(
+        resource_type='SaldoMorphology',
+        resource_config={},
+        # entity_id=value_objects.make_unique_id(),
+    )
     # morphological_entry = {"entry_id": "pm_plg_alperna"}
 
     needed_field_names = morphology.inflection_fields()
