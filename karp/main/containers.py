@@ -4,12 +4,13 @@ from dependency_injector import containers, providers
 
 import elasticsearch
 
-
 from karp import db_infrastructure
-from karp.services import messagebus, unit_of_work
+from karp.services import unit_of_work
 from karp.infrastructure.sql import sql_unit_of_work
 from karp.infrastructure import elasticsearch6
 from karp.infrastructure.jwt import jwt_auth_service
+
+from .bootstrap import bootstrap_message_bus
 
 
 class Core(containers.DeclarativeContainer):
@@ -66,7 +67,7 @@ class AppContainer(containers.DeclarativeContainer):
     )
 
     bus = providers.Singleton(
-        messagebus.MessageBus,
+        bootstrap_message_bus,
         resource_uow=resource_uow.provided,
         entry_uows=entry_uows.provided,
         search_service_uow=search_service_uow.provided,

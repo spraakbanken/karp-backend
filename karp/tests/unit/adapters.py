@@ -4,7 +4,7 @@ from typing import List
 
 from karp.main.bootstrap import bootstrap_message_bus
 from karp.domain import index, repository, model
-from karp.services import messagebus, unit_of_work
+from karp.services import unit_of_work
 
 
 class FakeResourceRepository(repository.ResourceRepository):
