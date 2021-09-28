@@ -1,58 +1,46 @@
-[metadata]
-name = karp-tng-backend
-license = MIT
-description-file = README.md
-description-content-type = text/markdown
-author = Språkbanken at the University of Gothenburg
-author_email = sb-info@svenska.gu.se
-home-page = https://spraakbanken.gu.se
-project_urls =
-	Bug Tracker = https://github.com/spraakbanken/karp-tng-backend/issues
-	Documentation = https://github.com/spraakbanken/karp-tng-backend
-	Source Code = https://github.com/spraakbanken/karp-tng-backend
-classifier =
-	Development Status :: 2 - Pre-Alpha
-	Intended Audience :: Developers
-	License :: OSI Approved :: MIT License
-	Operating System :: Unix
-	Operating System :: POSIX
-	Operating System :: Microsoft :: Windows
-	Programming Language :: Python
-	Programming Language :: Python :: 3
-	Programming Language :: Python :: 3.6
-	Programming Language :: Python :: 3.7
-	Programming Language :: Python :: 3.8
-	Programming Language :: Python :: 3.9
-	Programming Language :: Python :: Implementation :: CPython
-	Topic :: Utilities
+[tool.poetry]
+name = "karp-tng-backend"
+license = "MIT"
+description = "Karp backend"
+readme = "README.md"
+authors = ["Språkbanken at the University of Gothenburg<sb-info@svenska.gu.se>"]
+homepage = "https://spraakbanken.gu.se"
 
-[files]
-packages =
-	karp
-# data_files =
-# 	etc/karp = doc/karp_api_spec.yaml
-# data_files =
-# 	karp = schema/resourceconf.schema.json
-# 	karp = auth/pubkey.pem
+documentation = "https://github.com/spraakbanken/karp-tng-backend"
+repository = "https://github.com/spraakbanken/karp-tng-backend"
+classifiers = [
+	"Development Status :: 2 - Pre-Alpha",
+	"Intended Audience :: Developers",
+	"License :: OSI Approved :: MIT License",
+	"Operating System :: Unix",
+	"Operating System :: POSIX",
+	"Operating System :: Microsoft :: Windows",
+	"Topic :: Utilities",
+]
+packages = [
+	{ include = "karp" },
+]
 
-[entry_points]
-console_scripts =
-	karp-cli = karp.cliapp.main:cliapp
+[tool.poetry.scripts]
+karp-cli = "karp.cliapp.main:cliapp"
 ; karp.modules =
-;     health = karp.webapp.health_api
-;     entries = karp.webapp.views.entries
-;     resources = karp.webapp.resources_api
-; 	history = karp.webapp.views.history
-; 	stats = karp.webapp.stats_api
-; 	query = karp.webapp.query_api
+;     health = "karp.webapp.health"_api
+;     entries = "karp.webapp.views.entries"
+;     resources = "karp.webapp.resources"_api
+; 	history = "karp.webapp.views.history"
+; 	stats = "karp.webapp.stats"_api
+; 	query = "karp.webapp.query"_api
 karp.infrastructure =
-	es6 = karp.infrastructure.elasticsearch6
-    sql = karp.infrastructure.sql
-	testing = karp.infrastructure.testing
-	jwt = karp.infrastructure.jwt
+	es6 = "karp.infrastructure.elasticsearch6"
+    sql = "karp.infrastructure.sql"
+	testing = "karp.infrastructure.testing"
+	jwt = "karp.infrastructure.jwt"
 karp.clicommands =
-    entries = karp.cliapp.subapp_entries
-	resource = karp.cliapp.subapp_resource
+    entries = "karp.cliapp.subapp"_entries
+	resource = "karp.cliapp.subapp"_resource
+
+[tool.poetry.urls]
+"Bug Tracker"" = "https://github.com/spraakbanken/karp-tng-backend/issues"
 
 [extras]
 elasticsearch6 =
@@ -81,11 +69,11 @@ mysql =
 	pymysql
 	mysqlclient
 
-[tool:pytest]
-testpaths = karp/tests
-junit_family = xunit1
+[tool.pytest]
+testpaths = "karp/tests"
+junit_family = "xunit1"
 
-[coverage:run]
+[tool.coverage.run]
 branch = true
 source =
 	karp
@@ -93,10 +81,10 @@ omit =
 	karp/tests/*
 
 [pycodestyle]
-max-line-length = 120
+max-line-length = "120"
 
 [flake8]
-max-line-length = 120
+max-line-length = "120"
 
 # slack-log-utils
 #mysqlclient
