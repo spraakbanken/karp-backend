@@ -1,9 +1,12 @@
 [tool.poetry]
 name = "karp-tng-backend"
+version = "0.8.1"
 license = "MIT"
 description = "Karp backend"
 readme = "README.md"
-authors = ["Språkbanken at the University of Gothenburg<sb-info@svenska.gu.se>"]
+authors = [
+	"Språkbanken at the University of Gothenburg <sb-info@svenska.gu.se>",
+]
 homepage = "https://spraakbanken.gu.se"
 
 documentation = "https://github.com/spraakbanken/karp-tng-backend"
@@ -17,100 +20,56 @@ classifiers = [
 	"Operating System :: Microsoft :: Windows",
 	"Topic :: Utilities",
 ]
-packages = [
-	{ include = "karp" },
-]
+packages = [{ include = "karp" }]
 
 [tool.poetry.scripts]
 karp-cli = "karp.cliapp.main:cliapp"
-; karp.modules =
-;     health = "karp.webapp.health"_api
-;     entries = "karp.webapp.views.entries"
-;     resources = "karp.webapp.resources"_api
-; 	history = "karp.webapp.views.history"
-; 	stats = "karp.webapp.stats"_api
-; 	query = "karp.webapp.query"_api
-karp.infrastructure =
-	es6 = "karp.infrastructure.elasticsearch6"
-    sql = "karp.infrastructure.sql"
-	testing = "karp.infrastructure.testing"
-	jwt = "karp.infrastructure.jwt"
-karp.clicommands =
-    entries = "karp.cliapp.subapp"_entries
-	resource = "karp.cliapp.subapp"_resource
+# ; karp.modules =
+# ;     health = "karp.webapp.health"_api
+# ;     entries = "karp.webapp.views.entries"
+# ;     resources = "karp.webapp.resources"_api
+# ; 	history = "karp.webapp.views.history"
+# ; 	stats = "karp.webapp.stats"_api
+# ; 	query = "karp.webapp.query"_api
+[tool.poetry.plugins."karp.infrastructure"]
+"es6" = "karp.infrastructure.elasticsearch6"
+"sql" = "karp.infrastructure.sql"
+"testing" = "karp.infrastructure.testing"
+"jwt" = "karp.infrastructure.jwt"
+[tool.poetry.plugins."karp.clicommands"]
+"entries" = "karp.cliapp.subapp"
+"resource" = "karp.cliapp.subapp"
 
 [tool.poetry.urls]
-"Bug Tracker"" = "https://github.com/spraakbanken/karp-tng-backend/issues"
+"Bug Tracker" = "https://github.com/spraakbanken/karp-tng-backend/issues"
 
-[extras]
-elasticsearch6 =
-	elasticsearch>=6,<7.0.0
-	elasticsearch-dsl>=6,<7.0.0
-elasticsearch7 =
-	elasticsearch>=7,<8.0.0
-	elasticsearch-dsl>=7,<8.0.0
-dev =
-	pysqlcipher3
-	flake8
-	elasticsearch-test-py
-	pylint
-	pytest
-	pytest-cov
-	pyre-check
-	python-dotenv
-	bump2version
-	black
-	mypy
-	bandit
-    factory-boy
-	requests
-	isort
-mysql =
-	pymysql
-	mysqlclient
+[tool.poetry.dependencies]
+python = "^3.8"
+json-streams = "^0.10.1"
+paradigmextract = "^0.1.1"
+pydantic = "^1.8.2"
+PyJWT = "^2.1.0"
+sb-json-tools = "^0.9.1"
+SQLAlchemy = "^1.4.25"
+sqlalchemy-json = "^0.4.0"
+SQLAlchemy-Utils = "^0.37.8"
+tabulate = "^0.8.9"
+tenacity = "^8.0.1"
+tqdm = "^4.62.3"
+typer = "^0.4.0"
+urllib3 = "^1.26.7"
+uvicorn = "^0.15.0"
+fastapi = "^0.68.1"
 
-[tool.pytest]
-testpaths = "karp/tests"
-junit_family = "xunit1"
-
-[tool.coverage.run]
-branch = true
-source =
-	karp
-omit =
-	karp/tests/*
-
-[pycodestyle]
-max-line-length = "120"
-
-[flake8]
-max-line-length = "120"
-
-# slack-log-utils
-#mysqlclient
-#starlette
-alembic
-click
-cryptography>=3.3.2
-dependency-injector
-elasticsearch-dsl>=6,<7.0.0
-elasticsearch>=6,<7.0.0
-environs
-fastapi
-fastjsonschema
-gunicorn
-importlib_metadata; python_version < "3.8"
-json_streams
-paradigmextract>=0.1.0
-pydantic
-pyjwt
-sb-json-tools>=0.5.2
-sqlalchemy
-sqlalchemy-json
-sqlalchemy-utils
-tabulate
-tenacity
-tqdm
-typer
-urllib3>=1.26.5
-uvicorn
+[tool.poetry.dev-dependencies]
+flake8 = "^3.9.2"
+autopep8 = "^1.5.7"
+pytest = "^6.2.5"
+pytest-cov = "^2.12.1"
+mypy = "^0.910"
+bump2version = "^1.0.1"
+factory-boy = "^3.2.0"
+requests = "^2.26.0"
+isort = "^5.9.3"
+flakehell = "^0.9.0"
+wemake-python-styleguide = "^0.15.3"
