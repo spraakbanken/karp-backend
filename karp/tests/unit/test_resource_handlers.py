@@ -1,14 +1,27 @@
+from karp.services import unit_of_work
 import pytest
 
-from .adapters import bootstrap_test_app
-from karp.services import messagebus
-from karp.domain import events, errors, commands
+from karp.lex.domain import commands
+
+from .adapters import FakeEntryUowFactory, FakeResourceUnitOfWork, bootstrap_test_app
+# from karp.services import messagebus
+from karp.domain import events, errors
 from karp.domain.value_objects.unique_id import make_unique_id
 
 
 class TestCreateResource:
-    def test_create_resource(self):
-        bus = bootstrap_test_app()
+    def test_create_resource(
+        self,
+        entry_uow_factory: FakeEntryUowFactory,
+        entry_uows: unit_of_work.EntriesUnitOfWork,
+        resource_uow: FakeResourceUnitOfWork,
+    ):
+        # uow = FakeUnitOfWork(FakeResourceRepository())
+        bus = bootstrap_test_app(
+            entry_uow_factory=entry_uow_factory,
+            entry_uows=entry_uows,
+            resource_uow=resource_uow
+        )
         id_ = make_unique_id()
         resource_id = "test_resource"
         resource_name = "Test resource"
@@ -33,9 +46,9 @@ class TestCreateResource:
 
         bus.handle(cmd)
 
-        assert len(bus.ctx.resource_uow.resources) == 1
+        assert len(resource_uow.resources) == 1
 
-        resource = bus.ctx.resource_uow.resources.by_id(id_)
+        resource = resource_uow.resources.by_id(id_)
         assert resource.id == id_
         assert resource.resource_id == resource_id
 
@@ -49,14 +62,23 @@ class TestCreateResource:
         assert resource.config == expected_config
         assert resource.last_modified_by == "kristoff@example.com"
 
-        assert bus.ctx.resource_uow.was_committed
+        assert resource_uow.was_committed
 
-        assert bus.ctx.index_uow.repo.indicies[resource_id].created
-        assert bus.ctx.index_uow.was_committed
+        # assert bus.ctx.index_uow.repo.indicies[resource_id].created
+        # assert bus.ctx.index_uow.was_committed
 
-    def test_create_resource_with_same_resource_id_raises(self):
+    def test_create_resource_with_same_resource_id_raises(
+        self,
+        entry_uow_factory: FakeEntryUowFactory,
+        entry_uows: unit_of_work.EntriesUnitOfWork,
+        resource_uow: FakeResourceUnitOfWork,
+    ):
         # uow = FakeUnitOfWork(FakeResourceRepository())
-        bus = bootstrap_test_app()
+        bus = bootstrap_test_app(
+            entry_uow_factory=entry_uow_factory,
+            entry_uows=entry_uows,
+            resource_uow=resource_uow
+        )
         bus.handle(
             commands.CreateResource(
                 id=make_unique_id(),
@@ -78,7 +100,7 @@ class TestCreateResource:
                     created_by="user",
                 ),
             )
-        assert bus.ctx.resource_uow.was_rolled_back
+        assert resource_uow.was_rolled_back
         # assert uow.repo[0].events[-1] == events.ResourceCreated(
         #     id=id_, resource_id=resource_id, name=resource_name, config=conf
         # )
@@ -102,8 +124,18 @@ class TestCreateResource:
 
 
 class TestUpdateResource:
-    def test_update_resource(self):
-        bus = bootstrap_test_app()
+    def test_update_resource(
+        self,
+        entry_uow_factory: FakeEntryUowFactory,
+        entry_uows: unit_of_work.EntriesUnitOfWork,
+        resource_uow: FakeResourceUnitOfWork,
+    ):
+        # uow = FakeUnitOfWork(FakeResourceRepository())
+        bus = bootstrap_test_app(
+            entry_uow_factory=entry_uow_factory,
+            entry_uows=entry_uows,
+            resource_uow=resource_uow
+        )
         # uow = FakeUnitOfWork(FakeResourceRepository())
         id_ = make_unique_id()
         bus.handle(
@@ -127,17 +159,27 @@ class TestUpdateResource:
             ),
         )
 
-        resource = bus.ctx.resource_uow.resources.by_id(id_)
+        resource = resource_uow.resources.by_id(id_)
         assert resource is not None
         assert resource.config["a"] == "changed"
         assert resource.config["b"] == "added"
         assert resource.version == 2
-        assert bus.ctx.resource_uow.was_committed
+        assert resource_uow.was_committed
 
 
 class TestPublishResource:
-    def test_publish_resource(self):
-        bus = bootstrap_test_app()
+    def test_publish_resource(
+        self,
+        entry_uow_factory: FakeEntryUowFactory,
+        entry_uows: unit_of_work.EntriesUnitOfWork,
+        resource_uow: FakeResourceUnitOfWork,
+    ):
+        # uow = FakeUnitOfWork(FakeResourceRepository())
+        bus = bootstrap_test_app(
+            entry_uow_factory=entry_uow_factory,
+            entry_uows=entry_uows,
+            resource_uow=resource_uow
+        )
         id_ = make_unique_id()
         resource_id = "test_resource"
         resource_name = "Test resource"
@@ -170,9 +212,9 @@ class TestPublishResource:
             )
         )
 
-        resource = bus.ctx.resource_uow.resources.by_id(id_)
+        resource = resource_uow.resources.by_id(id_)
         assert resource.is_published
         assert resource.version == 2
-        assert bus.ctx.resource_uow.was_committed
-        assert bus.ctx.index_uow.repo.indicies[resource_id].published
-        assert bus.ctx.index_uow.was_committed
+        assert resource_uow.was_committed
+        # assert index_uow.repo.indicies[resource_id].published
+        # assert index_uow.was_committed

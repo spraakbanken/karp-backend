@@ -1,7 +1,8 @@
 import dataclasses
 import typing
 from typing import List
-from karp import bootstrap
+
+from karp.main.bootstrap import bootstrap_message_bus
 from karp.domain import index, repository, model
 from karp.services import messagebus, unit_of_work
 
@@ -205,7 +206,12 @@ class FakeEntryUowFactory(unit_of_work.EntryUowFactory):
         return entry_uow
 
 
-def bootstrap_test_app(entry_uow_keys: List[str] = None):
+def bootstrap_test_app(
+    resource_uow: unit_of_work.ResourceUnitOfWork,
+    entry_uows: unit_of_work.EntriesUnitOfWork,
+    entry_uow_factory: unit_of_work.EntryUowFactory
+):
+    return bootstrap_message_bus(resource_uow=resource_uow, entry_uows=entry_uows, entry_uow_factory=entry_uow_factory, raise_on_all_errors=True)
     return messagebus.MessageBus(
         resource_uow=FakeResourceUnitOfWork(),
         entry_uows=unit_of_work.EntriesUnitOfWork(

@@ -40,10 +40,12 @@ class Repository(typing.Generic[EntityType], abc.ABC):
 
     def by_id(
         self, id: Union[uuid.UUID, str], *, version: Optional[int] = None
-    ) -> Optional[EntityType]:
+    ) -> EntityType:
         entity = self._by_id(id, version=version)
         if entity:
             self.seen.add(entity)
+        else:
+            raise self.EntityNotFound(f"Entity with id={id} is not found")
         return entity
 
     @abc.abstractmethod
@@ -66,10 +68,12 @@ class ResourceRepository(Repository[model.Resource]):
 
     def by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
-    ) -> Optional[model.Resource]:
+    ) -> model.Resource:
         resource = self._by_resource_id(resource_id, version=version)
         if resource:
             self.seen.add(resource)
+        else:
+            raise self.EntityNotFound(f"Entity with resource_id='{resource_id}' can't be found.")
         return resource
 
     @abc.abstractmethod

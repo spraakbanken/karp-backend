@@ -1,3 +1,6 @@
+import typing
+
+from karp.services import unit_of_work
 from pathlib import Path
 from karp.domain.models.resource import Resource
 from typing import Optional, Dict, List, Tuple, Any
@@ -10,6 +13,8 @@ import fastjsonschema  # pyre-ignore
 from sb_json_tools import jsondiff
 import json_streams
 
+from karp.foundation import messagebus, events as foundation_events
+from karp.lex.domain import commands
 # from karp.resourcemgr import get_resource
 # from .resource import Resource
 
@@ -22,7 +27,7 @@ from karp.errors import (
     EntryIdMismatch,
 )
 
-from karp.domain import commands, model, errors
+from karp.domain import model, errors
 from karp.domain.models.entry import Entry
 
 from karp.domain.value_objects import unique_id
@@ -87,48 +92,54 @@ _logger = logging.getLogger("karp")
 #
 #
 
+class AddEntryHandler(messagebus.Handler[commands.AddEntry]):
+    def __init__(self, entry_uows: unit_of_work.EntriesUnitOfWork, resource_uow: unit_of_work.ResourceUnitOfWork) -> None:
+        super().__init__()
+        self.entry_uows = entry_uows
+        self.resource_uow = resource_uow
 
-def add_entry(
-    cmd: commands.AddEntry,
-    ctx: context.Context,
-) -> Entry:
-    print(f"event_handlers.add_entry: cmd = {cmd}")
-    with ctx.resource_uow:
-        resource = ctx.resource_uow.resources.by_resource_id(cmd.resource_id)
+    def execute(self, cmd: commands.AddEntry):
+        print(f"event_handlers.add_entry: cmd = {cmd}")
+        with self.resource_uow:
+            resource = self.resource_uow.resources.by_resource_id(cmd.resource_id)
 
-    if not resource:
-        raise errors.ResourceNotFound(cmd.resource_id)
+        if not resource:
+            raise errors.ResourceNotFound(cmd.resource_id)
 
-    try:
-        entry_id = resource.id_getter()(cmd.entry)
-    except KeyError as err:
-        raise errors.MissingIdField(
-            resource_id=cmd.resource_id, entry=cmd.entry
-        ) from err
-    validate_entry = _compile_schema(resource.entry_json_schema)
-
-    with ctx.entry_uows.get(cmd.resource_id) as uw:
         try:
-            existing_entry = uw.repo.by_entry_id(entry_id)
-            if (
-                existing_entry
-                and not existing_entry.discarded
-                and existing_entry.id != cmd.id
-            ):
-                raise errors.IntegrityError(
-                    f"An entry with entry_id '{entry_id}' already exists."
-                )
-        except errors.EntryNotFound:
-            pass
+            entry_id = resource.id_getter()(cmd.entry)
+        except KeyError as err:
+            raise errors.MissingIdField(
+                resource_id=cmd.resource_id, entry=cmd.entry
+            ) from err
+        validate_entry = _compile_schema(resource.entry_json_schema)
 
-        _validate_entry(validate_entry, cmd.entry)
+        with self.entry_uows.get(cmd.resource_id) as uw:
+            try:
+                existing_entry = uw.repo.by_entry_id(entry_id)
+                if (
+                    existing_entry
+                    and not existing_entry.discarded
+                    and existing_entry.id != cmd.id
+                ):
+                    raise errors.IntegrityError(
+                        f"An entry with entry_id '{entry_id}' already exists."
+                    )
+            except errors.EntryNotFound:
+                pass
 
-        entry = resource.create_entry_from_dict(
-            cmd.entry, user=cmd.user, message=cmd.message, entity_id=cmd.id
-        )
-        uw.entries.put(entry)
-        uw.commit()
-    return entry
+            _validate_entry(validate_entry, cmd.entry)
+
+            entry = resource.create_entry_from_dict(
+                cmd.entry, user=cmd.user, message=cmd.message, entity_id=cmd.id
+            )
+            uw.entries.put(entry)
+            uw.commit()
+        return entry
+
+    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
+        yield from self.resource_uow.collect_new_events()
+        yield from self.entry_uows.collect_new_events()
 
 
 def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):

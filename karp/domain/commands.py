@@ -2,6 +2,7 @@ import typing
 
 import pydantic
 
+from karp.foundation import commands
 from . import errors
 from karp.domain.value_objects import unique_id
 from karp.utility import time
@@ -9,7 +10,7 @@ from karp.utility import time
 # pylint: disable=unsubscriptable-object
 
 
-class Command(pydantic.BaseModel):  # pylint: disable=no-member
+class Command(pydantic.BaseModel, commands.Command):  # pylint: disable=no-member
     timestamp: float = pydantic.Field(default_factory=time.utc_now)
 
 

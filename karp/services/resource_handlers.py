@@ -1,18 +1,14 @@
+from karp.services import unit_of_work
 from typing import IO, Tuple, Dict, List, Optional
 import json
 import logging
 from pathlib import Path
-import collections
-import os
-import re
+import typing
 
-from sqlalchemy.sql import func
 
-import fastjsonschema  # pyre-ignore
-
-from sb_json_tools import jsondiff
-
-from karp.domain import commands, model, errors, events
+from karp.foundation import messagebus, events as foundation_events
+from karp.lex.domain import commands
+from karp.domain import model, errors, events
 from . import context
 from karp.domain.models.resource import Resource
 
@@ -168,36 +164,48 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 # def update_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
 #     return update_resource(config_file)
 
+class CreateResourceHandler(messagebus.Handler[commands.CreateResource]):
+    def __init__(self, resource_uow: unit_of_work.ResourceUnitOfWork, entry_uow_factory: unit_of_work.EntryUowFactory, entry_uows: unit_of_work.EntriesUnitOfWork) -> None:
+        super().__init__()
+        self.resource_uow = resource_uow
+        self.entry_uow_factory = entry_uow_factory
+        self.entry_uows = entry_uows
 
-def create_resource(cmd: commands.CreateResource, ctx: context.Context):
-    with ctx.resource_uow as uow:
-        existing_resource = uow.resources.by_resource_id(cmd.resource_id)
-        if existing_resource and existing_resource.id != cmd.id:
-            raise errors.IntegrityError(
-                f"Resource with '{cmd.resource_id}' already exists."
+    def execute(self, cmd: commands.CreateResource):
+        with self.resource_uow as uow:
+            try:
+                existing_resource = uow.resources.by_resource_id(cmd.resource_id)
+                if existing_resource and existing_resource.id != cmd.id:
+                    raise errors.IntegrityError(
+                        f"Resource with resource_id='{cmd.resource_id}' already exists."
+                    )
+            except errors.ResourceNotFound:
+                pass
+            resource = model.create_resource(
+                entity_id=cmd.id,
+                resource_id=cmd.resource_id,
+                config=cmd.config,
+                message=cmd.message,
+                created_at=cmd.timestamp,
+                created_by=cmd.created_by,
+                name=cmd.name,
             )
-        resource = model.create_resource(
-            entity_id=cmd.id,
-            resource_id=cmd.resource_id,
-            config=cmd.config,
-            message=cmd.message,
-            created_at=cmd.timestamp,
-            created_by=cmd.created_by,
-            name=cmd.name,
-        )
 
-        entry_repo_uow = ctx.entry_uow_factory.create(
-            resource_id=cmd.resource_id,
-            resource_config=resource.config,
-            entry_repository_settings=cmd.entry_repository_settings,
-        )
-        resource.entry_repository_type = entry_repo_uow.type
-        resource.entry_repository_settings = entry_repo_uow.repo_settings
+            entry_repo_uow = self.entry_uow_factory.create(
+                resource_id=cmd.resource_id,
+                resource_config=resource.config,
+                entry_repository_settings=cmd.entry_repository_settings,
+            )
+            resource.entry_repository_type = entry_repo_uow.type
+            resource.entry_repository_settings = entry_repo_uow.repo_settings
 
-        ctx.entry_uows.set_uow(cmd.resource_id, entry_repo_uow)
+            self.entry_uows.set_uow(cmd.resource_id, entry_repo_uow)
 
-        uow.repo.put(resource)
-        uow.commit()
+            uow.repo.put(resource)
+            uow.commit()
+
+    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
+        yield from self.resource_uow.collect_new_events()
 
 
 def setup_existing_resources(evt: events.AppStarted, ctx: context.Context):
@@ -285,25 +293,32 @@ def create_new_resource(config_file: IO, config_dir=None) -> Resource:
 
 #     return config
 
+class UpdateResourceHandler(messagebus.Handler[commands.UpdateResource]):
+    def __init__(self, resource_uow: unit_of_work.ResourceUnitOfWork) -> None:
+        super().__init__()
+        self.resource_uow = resource_uow
 
-def update_resource(cmd: commands.UpdateResource, ctx: context.Context):
-    with ctx.resource_uow as uow:
-        resource = uow.repo.by_resource_id(cmd.resource_id)
-        found_changes = False
-        if resource.name != cmd.name:
-            resource.name = cmd.name
-            found_changes = True
-        if resource.config != cmd.config:
-            resource.config = cmd.config
-            found_changes = True
-        if found_changes:
-            resource.stamp(
-                user=cmd.user,
-                message=cmd.message,
-                timestamp=cmd.timestamp,
-            )
-            uow.repo.update(resource)
-        uow.commit()
+    def execute(self, cmd: commands.UpdateResource):
+        with self.resource_uow as uow:
+            resource = uow.repo.by_resource_id(cmd.resource_id)
+            found_changes = False
+            if resource.name != cmd.name:
+                resource.name = cmd.name
+                found_changes = True
+            if resource.config != cmd.config:
+                resource.config = cmd.config
+                found_changes = True
+            if found_changes:
+                resource.stamp(
+                    user=cmd.user,
+                    message=cmd.message,
+                    timestamp=cmd.timestamp,
+                )
+                uow.repo.update(resource)
+            uow.commit()
+
+    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
+        yield from self.resource_uow.collect_new_events()
 
 
 # def update_resource(config_file: BinaryIO, config_dir=None) -> Tuple[str, int]:
@@ -391,23 +406,30 @@ def update_resource(cmd: commands.UpdateResource, ctx: context.Context):
 
 #     return resource_id, resource_def.version
 
+class PublishResourceHandler(messagebus.Handler[commands.PublishResource]):
+    def __init__(self, resource_uow: unit_of_work.ResourceUnitOfWork) -> None:
+        super().__init__()
+        self.resource_uow = resource_uow
 
-def publish_resource(cmd: commands.PublishResource, ctx: context.Context):
-    print(f"publish_resource resource_id='{cmd.resource_id}' ...")
-    with ctx.resource_uow:
-        resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
-        if not resource:
-            raise errors.ResourceNotFound(cmd.resource_id)
-        # if resource.is_published:
-        #     print(f"'{cmd.resource_id}' already published!")
-        #     raise karp_errors.ResourceAlreadyPublished(cmd.resource_id)
-        # resource.is_published = True
-        resource.publish(user=cmd.user, message=cmd.message, timestamp=cmd.timestamp)
-        ctx.resource_uow.repo.update(resource)
-        ctx.resource_uow.commit()
+    def execute(self, cmd: commands.PublishResource):
+        print(f"publish_resource resource_id='{cmd.resource_id}' ...")
+        with self.resource_uow as uow:
+            resource = uow.repo.by_resource_id(cmd.resource_id)
+            if not resource:
+                raise errors.ResourceNotFound(cmd.resource_id)
+            # if resource.is_published:
+            #     print(f"'{cmd.resource_id}' already published!")
+            #     raise karp_errors.ResourceAlreadyPublished(cmd.resource_id)
+            # resource.is_published = True
+            resource.publish(user=cmd.user, message=cmd.message, timestamp=cmd.timestamp)
+            uow.repo.update(resource)
+            uow.commit()
     # print("calling indexing.publish_index ...")
     # indexing.publish_index(ctx.search_service, ctx.resource_repo, resource)
     # print("index published")
+
+    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
+        yield from self.resource_uow.collect_new_events()
 
 
 #     resource = database.get_resource_definition(resource_id, version)
