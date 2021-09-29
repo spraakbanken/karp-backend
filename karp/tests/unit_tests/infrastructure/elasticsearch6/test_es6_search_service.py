@@ -1,13 +1,10 @@
-from unittest import mock
 from typing import List, Tuple
+from unittest import mock
 
 import pytest
 
 from karp.infrastructure.elasticsearch6.es6_search_service import (
-    Es6SearchService,
-    UnsupportedField,
-    _create_es_mapping,
-)
+    Es6SearchService, UnsupportedField, _create_es_mapping)
 
 
 @pytest.fixture

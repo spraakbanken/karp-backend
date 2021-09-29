@@ -1,18 +1,16 @@
 import collections
-import typing
-from karp.domain.models.entry import Entry
-
-# from karp.infrastructure.unit_of_work import unit_of_work
-from typing import Dict, Any, Iterator, Optional, Tuple, List
 import json
+import typing
+# from karp.infrastructure.unit_of_work import unit_of_work
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 from karp.domain import model
+from karp.domain.models.entry import Entry
 from karp.domain.repository import ResourceRepository
-from karp.services import context
-
 # from karp.resourcemgr import get_resource
 # import karp.resourcemgr.entryread as entryread
 from karp.errors import EntryNotFoundError
+from karp.services import context
 
 
 def get_referenced_entries(

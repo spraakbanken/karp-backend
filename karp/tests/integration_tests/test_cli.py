@@ -1,12 +1,10 @@
 from pathlib import Path
-from typer.testing import CliRunner
 
 import pytest
-
-
-from karp.infrastructure.unit_of_work import unit_of_work
+from typer.testing import CliRunner
 
 from karp.application import ctx
+from karp.infrastructure.unit_of_work import unit_of_work
 
 runner = CliRunner()
 

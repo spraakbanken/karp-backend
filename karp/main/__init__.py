@@ -1,21 +1,21 @@
-from dataclasses import dataclass
 import logging
-import typing
 import os
+import typing
+from dataclasses import dataclass
 
 try:
     from importlib.metadata import entry_points
 except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
-import environs
 import dotenv
+import environs
 
-from karp.domain import events
-from karp.services import unit_of_work, auth_service
 from karp.application import config
-from karp.infrastructure.sql import sql_unit_of_work
+from karp.domain import events
 from karp.infrastructure.jwt import jwt_auth_service
+from karp.infrastructure.sql import sql_unit_of_work
+from karp.services import auth_service, unit_of_work
 
 from .containers import AppContainer
 

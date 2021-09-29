@@ -1,10 +1,9 @@
 # import pytest  # pyre-ignore
 # import json
 import time
-from karp.utility.time import utc_now
 
 from karp.tests.utils import get_json
-
+from karp.utility.time import utc_now
 
 # def init(fa_client_w_places_w_municipalities_scope_module, es_status_code):
 #     if es_status_code == "skip":

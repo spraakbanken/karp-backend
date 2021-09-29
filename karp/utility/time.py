@@ -1,7 +1,7 @@
 """Time utilities."""
-from datetime import datetime, timezone
 import math
 import struct
+from datetime import datetime, timezone
 
 
 def utc_now() -> float:

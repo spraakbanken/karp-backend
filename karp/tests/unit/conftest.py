@@ -1,6 +1,7 @@
 import pytest
 
 from karp.services import unit_of_work
+
 from .adapters import FakeEntryUowFactory, FakeResourceUnitOfWork
 
 

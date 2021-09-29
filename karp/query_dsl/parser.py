@@ -2,9 +2,7 @@ from typing import Optional, Union
 
 from .basic_ast import Ast
 from .errors import ParseError, SyntaxError
-from .node import create_binary_node
-from .node import create_unary_node
-from .node import Node
+from .node import Node, create_binary_node, create_unary_node
 from .token import Token
 
 

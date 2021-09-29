@@ -1,10 +1,11 @@
 import abc
 import logging
 import typing
-from typing import Dict, List, Optional, Union, Tuple
 import uuid
+from typing import Dict, List, Optional, Tuple, Union
 
 from karp.domain.value_objects import UniqueId
+
 from . import errors, model
 
 logger = logging.getLogger("karp")

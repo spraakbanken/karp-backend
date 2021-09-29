@@ -1,8 +1,7 @@
 import pytest
 
-from karp.domain.models.resource import create_resource
 from karp.domain.models.entry import EntryRepository, create_entry
-
+from karp.domain.models.resource import create_resource
 from karp.infrastructure.sql import sql_entry_repository
 from karp.infrastructure.unit_of_work import unit_of_work
 

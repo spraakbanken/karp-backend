@@ -1,6 +1,6 @@
 """Helpers for converting.
 """
-from typing import List, Callable
+from typing import Callable, List
 
 
 def str2list(delimiter: str = None) -> Callable[[str], List[str]]:

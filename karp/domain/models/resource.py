@@ -2,9 +2,8 @@
 import abc
 import enum
 import typing
-from karp.utility.time import utc_now
+from typing import Any, Callable, Dict, List, Optional, Type, Union
 from uuid import UUID
-from typing import Callable, Dict, Any, Optional, List, Type, Union
 
 from karp.domain import constraints, events
 from karp.domain.errors import ConfigurationError, RepositoryStatusError
@@ -13,11 +12,9 @@ from karp.domain.models.entity import Entity, TimestampedVersionedEntity
 from karp.domain.models.entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
 from karp.domain.value_objects import PermissionLevel, unique_id
-
-from karp.utility import time
-from karp.utility import json_schema
+from karp.utility import json_schema, time
 from karp.utility.container import create_field_getter
-
+from karp.utility.time import utc_now
 
 # pylint: disable=unsubscriptable-object
 

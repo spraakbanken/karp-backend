@@ -1,9 +1,8 @@
+import uuid
 from dataclasses import dataclass
 from typing import Dict
-import uuid
 
 from karp.foundation import events
-
 from karp.utility import time
 
 

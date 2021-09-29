@@ -1,4 +1,5 @@
 import typing
+
 from karp.domain import errors, index, repository
 from karp.services import context
 

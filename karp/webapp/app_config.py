@@ -1,21 +1,20 @@
 import logging
 from typing import Optional
-from fastapi import Depends, HTTPException, status
-from fastapi.param_functions import Header
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, SecurityScopes
-from fastapi.security import utils as security_utils
 
 from dependency_injector import wiring
+from fastapi import Depends, HTTPException, status
+from fastapi.param_functions import Header
+from fastapi.security import (HTTPAuthorizationCredentials, HTTPBearer,
+                              SecurityScopes)
+from fastapi.security import utils as security_utils
 
 from karp import bootstrap, services
-
 from karp.domain import model
-from karp.services.auth_service import AuthService
-
 # from karp.auth.auth import auth
 from karp.errors import ClientErrorCodes, KarpError
-from .containers import WebAppContainer
+from karp.services.auth_service import AuthService
 
+from .containers import WebAppContainer
 
 # bus = bootstrap.bootstrap()
 

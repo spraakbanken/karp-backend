@@ -1,10 +1,8 @@
 """Entity"""
-from karp.foundation import events
-
 from karp.domain.common import _now, _unknown_user
 from karp.domain.errors import ConsistencyError, DiscardedEntityError
 from karp.domain.models.events import DomainEvent
-
+from karp.foundation import events
 from karp.utility.time import monotonic_utc_now
 
 

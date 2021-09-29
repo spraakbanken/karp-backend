@@ -1,10 +1,9 @@
 import pytest
-from karp.domain.models.entity import (
-    TimestampedEntity,
-    TimestampedVersionedEntity,
-    VersionedEntity,
-)
+
 from karp.domain.errors import ConsistencyError
+from karp.domain.models.entity import (TimestampedEntity,
+                                       TimestampedVersionedEntity,
+                                       VersionedEntity)
 
 
 def test_versioned_entity_discard_w_wrong_version_raises_consistency_error():

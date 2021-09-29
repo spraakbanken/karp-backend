@@ -1,12 +1,13 @@
-from unittest import mock
 import uuid
+from unittest import mock
 
 import pytest
 
-from karp.domain import events, model, errors
-
-from karp.domain.errors import ConsistencyError, DiscardedEntityError, ConstraintsError
-from karp.domain.models.resource import Resource, ResourceOp, Release, create_resource
+from karp.domain import errors, events, model
+from karp.domain.errors import (ConsistencyError, ConstraintsError,
+                                DiscardedEntityError)
+from karp.domain.models.resource import (Release, Resource, ResourceOp,
+                                         create_resource)
 from karp.domain.value_objects import unique_id
 
 from .factories import random_resource

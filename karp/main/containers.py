@@ -1,14 +1,13 @@
 import logging.config
 
+import elasticsearch
 from dependency_injector import containers, providers
 
-import elasticsearch
-
 from karp import db_infrastructure
-from karp.services import unit_of_work
-from karp.infrastructure.sql import sql_unit_of_work
 from karp.infrastructure import elasticsearch6
 from karp.infrastructure.jwt import jwt_auth_service
+from karp.infrastructure.sql import sql_unit_of_work
+from karp.services import unit_of_work
 
 from .bootstrap import bootstrap_message_bus
 

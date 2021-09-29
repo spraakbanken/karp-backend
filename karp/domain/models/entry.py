@@ -1,18 +1,16 @@
 """Model for a lexical entry."""
 import enum
 import logging
-from typing import Dict, Optional, List
 import typing
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from karp.domain import constraints, events
-from karp.domain.errors import ConfigurationError
 from karp.domain.common import _now, _unknown_user
+from karp.domain.errors import ConfigurationError
 from karp.domain.models import event_handler
 from karp.domain.models.entity import TimestampedVersionedEntity
-
 from karp.domain.value_objects import unique_id
-
 
 logger = logging.getLogger("karp")
 

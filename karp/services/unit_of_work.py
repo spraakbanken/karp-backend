@@ -1,8 +1,8 @@
 """Unit of Work"""
 import abc
-from functools import singledispatch
 import logging
 import typing
+from functools import singledispatch
 
 from karp.domain import errors, index, network, repository
 

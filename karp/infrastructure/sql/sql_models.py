@@ -3,7 +3,6 @@ from typing import Dict
 from karp.domain import model
 from karp.domain.models.entry import EntryOp, EntryStatus
 from karp.domain.models.resource import ResourceOp
-
 from karp.infrastructure.sql import db
 
 

@@ -1,17 +1,16 @@
-from karp.webapp import schemas
 from typing import Dict, Optional
 
 from dependency_injector import wiring
-from fastapi import APIRouter, Query, Security, HTTPException, status, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 
-from karp.domain import value_objects, model
+from karp.domain import model, value_objects
 from karp.domain.models.user import User
-
-
+from karp.domain.value_objects import unique_id
 from karp.services import entry_views
 from karp.services.auth_service import AuthService
 from karp.services.messagebus import MessageBus
-from karp.domain.value_objects import unique_id
+from karp.webapp import schemas
+
 from .app_config import get_current_user
 from .containers import WebAppContainer
 

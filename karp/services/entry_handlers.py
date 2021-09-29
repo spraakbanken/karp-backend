@@ -1,36 +1,26 @@
-import typing
-
-from karp.services import unit_of_work
-from pathlib import Path
-from karp.domain.models.resource import Resource
-from typing import Optional, Dict, List, Tuple, Any
-import json
 import collections
+import json
 import logging
+import typing
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, Generic, List, Optional, Tuple
 
 import fastjsonschema  # pyre-ignore
-from sb_json_tools import jsondiff
 import json_streams
+from sb_json_tools import jsondiff
 
-from karp.foundation import messagebus, events as foundation_events
-from karp.lex.domain import commands
-# from karp.resourcemgr import get_resource
-# from .resource import Resource
-
-
-from karp.errors import (
-    KarpError,
-    ClientErrorCodes,
-    EntryNotFoundError,
-    UpdateConflict,
-    EntryIdMismatch,
-)
-
-from karp.domain import model, errors
+from karp.domain import errors, model
 from karp.domain.models.entry import Entry
-
+from karp.domain.models.resource import Resource
 from karp.domain.value_objects import unique_id
+from karp.errors import (ClientErrorCodes, EntryIdMismatch, EntryNotFoundError,
+                         KarpError, UpdateConflict)
+from karp.foundation import events as foundation_events
+from karp.foundation import messagebus
+from karp.lex.domain import commands
+from karp.services import unit_of_work
+
 from . import context
 
 # from karp.domain.services import indexing
@@ -91,17 +81,31 @@ _logger = logging.getLogger("karp")
 #     return cls.query.filter_by(entry_id=entry_id).first()
 #
 #
-
-class AddEntryHandler(messagebus.Handler[commands.AddEntry]):
-    def __init__(self, entry_uows: unit_of_work.EntriesUnitOfWork, resource_uow: unit_of_work.ResourceUnitOfWork) -> None:
+class BaseEntryHandler(
+    Generic[messagebus.CommandType],
+    messagebus.CommandHandler[messagebus.CommandType]
+):
+    def __init__(
+        self,
+        entry_uows: unit_of_work.EntriesUnitOfWork,
+        resource_uow: unit_of_work.ResourceUnitOfWork
+    ) -> None:
         super().__init__()
         self.entry_uows = entry_uows
         self.resource_uow = resource_uow
 
+    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
+        yield from self.resource_uow.collect_new_events()
+        yield from self.entry_uows.collect_new_events()
+
+
+class AddEntryHandler(BaseEntryHandler[commands.AddEntry]):
+
     def execute(self, cmd: commands.AddEntry):
         print(f"event_handlers.add_entry: cmd = {cmd}")
         with self.resource_uow:
-            resource = self.resource_uow.resources.by_resource_id(cmd.resource_id)
+            resource = self.resource_uow.resources.by_resource_id(
+                cmd.resource_id)
 
         if not resource:
             raise errors.ResourceNotFound(cmd.resource_id)
@@ -136,10 +140,6 @@ class AddEntryHandler(messagebus.Handler[commands.AddEntry]):
             uw.entries.put(entry)
             uw.commit()
         return entry
-
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
-        yield from self.entry_uows.collect_new_events()
 
 
 def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):
@@ -177,63 +177,62 @@ def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):
 #     return entry_json
 
 
-def update_entry(
-    cmd: commands.UpdateEntry,
-    ctx: context.Context,
-):
-    with ctx.resource_uow:
-        resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
-    #     resource = get_resource(resource_id, version=resource_version)
+class UpdateEntryHandler(BaseEntryHandler[commands.UpdateEntry]):
+    def execute(self, cmd: commands.UpdateEntry):
+        with self.resource_uow:
+            resource = self.resource_uow.repo.by_resource_id(cmd.resource_id)
 
-    if not resource:
-        raise errors.ResourceNotFound(cmd.resource_id)
-    schema = _compile_schema(resource.entry_json_schema)
-    _validate_entry(schema, cmd.entry)
+        if not resource:
+            raise errors.ResourceNotFound(cmd.resource_id)
+        schema = _compile_schema(resource.entry_json_schema)
+        _validate_entry(schema, cmd.entry)
 
-    with ctx.entry_uows.get(cmd.resource_id) as uw:
-        current_db_entry = uw.repo.by_entry_id(cmd.entry_id)
+        with self.entry_uows.get(cmd.resource_id) as uw:
+            current_db_entry = uw.repo.by_entry_id(cmd.entry_id)
 
-        if not current_db_entry:
-            raise errors.EntryNotFound(
-                cmd.resource_id,
-                cmd.entry_id,
-                entry_version=cmd.version,
-                resource_version=resource.version,
-            )
+            if not current_db_entry:
+                raise errors.EntryNotFound(
+                    cmd.resource_id,
+                    cmd.entry_id,
+                    entry_version=cmd.version,
+                    resource_version=resource.version,
+                )
 
-        diff = jsondiff.compare(current_db_entry.body, cmd.entry)
-        if not diff:
-            raise KarpError("No changes made", ClientErrorCodes.ENTRY_NOT_CHANGED)
+            diff = jsondiff.compare(current_db_entry.body, cmd.entry)
+            if not diff:
+                raise KarpError("No changes made",
+                                ClientErrorCodes.ENTRY_NOT_CHANGED)
 
-        #     db_entry_json = json.dumps(entry)
-        #     db_id = current_db_entry.id
-        #     latest_history_entry = (
-        #         resource.history_model.query.filter_by(entry_id=db_id)
-        #         .order_by(resource.history_model.version.desc())
-        #         .first()
+            #     db_entry_json = json.dumps(entry)
+            #     db_id = current_db_entry.id
+            #     latest_history_entry = (
+            #         resource.history_model.query.filter_by(entry_id=db_id)
+            #         .order_by(resource.history_model.version.desc())
+            #         .first()
+            #     )
+            print(f"({current_db_entry.version}, {cmd.version})")
+            if not cmd.force and current_db_entry.version != cmd.version:
+                print("version conflict")
+                raise errors.UpdateConflict(diff)
+
+            id_getter = resource.id_getter()
+            new_entry_id = id_getter(cmd.entry)
+
+            current_db_entry.body = cmd.entry
+            current_db_entry.stamp(
+                cmd.user, message=cmd.message, timestamp=cmd.timestamp)
+            if new_entry_id != cmd.entry_id:
+                current_db_entry.entry_id = new_entry_id
+                uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
+            else:
+                uw.repo.update(current_db_entry)
+            uw.commit()
+        # if resource.is_published:
+        #     if new_entry_id != entry_id:
+        #         ctx.search_service.delete_entry(resource, entry_id=entry_id)
+        #     indexing.add_entries(
+        #         ctx.resource_repo, ctx.search_service, resource, [current_db_entry]
         #     )
-        print(f"({current_db_entry.version}, {cmd.version})")
-        if not cmd.force and current_db_entry.version != cmd.version:
-            print("version conflict")
-            raise errors.UpdateConflict(diff)
-
-        id_getter = resource.id_getter()
-        new_entry_id = id_getter(cmd.entry)
-
-        current_db_entry.body = cmd.entry
-        current_db_entry.stamp(cmd.user, message=cmd.message, timestamp=cmd.timestamp)
-        if new_entry_id != cmd.entry_id:
-            current_db_entry.entry_id = new_entry_id
-            uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
-        else:
-            uw.repo.update(current_db_entry)
-        uw.commit()
-    # if resource.is_published:
-    #     if new_entry_id != entry_id:
-    #         ctx.search_service.delete_entry(resource, entry_id=entry_id)
-    #     indexing.add_entries(
-    #         ctx.resource_repo, ctx.search_service, resource, [current_db_entry]
-    #     )
 
     # return current_db_entry.entry_id
 
@@ -431,31 +430,32 @@ def add_entries(
 #     return kwargs
 
 
-# def delete_entry(resource_id: str, entry_id: str, user_id: str):
-def delete_entry(cmd: commands.DeleteEntry, ctx: context.Context):
-    # with ctx.resource_uow:
-    #     resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
+class DeleteEntryHandler(BaseEntryHandler[commands.DeleteEntry]):
 
-    with ctx.entry_uows.get_uow(cmd.resource_id) as uw:
-        try:
-            entry = uw.repo.by_entry_id(cmd.entry_id)
+    def execute(self, cmd: commands.DeleteEntry):
+        # with ctx.resource_uow:
+        #     resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
 
-        #     resource = get_resource(resource_id)
-        #     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
-        except errors.EntryNotFound as err:
-            raise errors.EntryNotFound(
-                resource_id=cmd.resource_id,
-                entry_id=cmd.entry_id,
-            ) from err
+        with self.entry_uows.get_uow(cmd.resource_id) as uw:
+            try:
+                entry = uw.repo.by_entry_id(cmd.entry_id)
 
-        entry.discard(
-            user=cmd.user,
-            message=cmd.message,
-            timestamp=cmd.timestamp,
-        )
-        assert entry.discarded
-        uw.repo.update(entry)
-        uw.commit()
+            #     resource = get_resource(resource_id)
+            #     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
+            except errors.EntryNotFound as err:
+                raise errors.EntryNotFound(
+                    resource_id=cmd.resource_id,
+                    entry_id=cmd.entry_id,
+                ) from err
+
+            entry.discard(
+                user=cmd.user,
+                message=cmd.message,
+                timestamp=cmd.timestamp,
+            )
+            assert entry.discarded
+            uw.repo.update(entry)
+            uw.commit()
 
     # ctx.search_service.delete_entry(resource, entry=entry)
 

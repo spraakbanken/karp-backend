@@ -2,14 +2,13 @@
 import datetime
 from pathlib import Path
 
+import jwt
 import pytest
 
-import jwt
-
-from karp.errors import ClientErrorCodes
 from karp.domain.errors import AuthError
-
+from karp.errors import ClientErrorCodes
 from karp.infrastructure.jwt.jwt_auth_service import JWTAuthenticator
+
 from . import adapters
 
 with open(Path(__file__).parent / ".." / "data/private_key.pem") as fp:

@@ -1,6 +1,6 @@
-from karp.services import network_handlers
 from karp.domain.models.entry import create_entry
 from karp.domain.value_objects import unique_id
+from karp.services import network_handlers
 
 
 def test__create_ref():

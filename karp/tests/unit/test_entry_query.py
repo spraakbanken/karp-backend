@@ -1,9 +1,9 @@
 import pytest
 
-from karp.domain import index, errors
+from karp.domain import errors, index
 from karp.services import entry_query
-
 from karp.tests import random_refs
+
 from .adapters import bootstrap_test_app
 
 

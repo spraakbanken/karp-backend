@@ -1,10 +1,7 @@
-from karp.domain.models.search_service import IndexEntry
-from karp.domain.services.indexing import (
-    transform_to_index_entry,
-    _transform_to_index_entry,
-)
-
 from karp.application import ctx
+from karp.domain.models.search_service import IndexEntry
+from karp.domain.services.indexing import (_transform_to_index_entry,
+                                           transform_to_index_entry)
 
 
 def test_transform_to_index_entry(

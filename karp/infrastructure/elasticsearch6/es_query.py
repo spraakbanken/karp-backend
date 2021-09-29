@@ -1,14 +1,15 @@
 import re
-from typing import Optional, Union, List, Tuple, Dict
 import typing
+from typing import Dict, List, Optional, Tuple, Union
 
 import elasticsearch_dsl as es_dsl
-from karp import query_dsl  # pyre-ignore
 
-from karp.query_dsl import basic_ast as ast, op, is_a
+from karp import query_dsl  # pyre-ignore
 from karp.domain import index
-from karp.domain.models.query import Query
 from karp.domain.errors import IncompleteQuery, UnsupportedQuery
+from karp.domain.models.query import Query
+from karp.query_dsl import basic_ast as ast
+from karp.query_dsl import is_a, op
 
 
 class EsQuery(Query):

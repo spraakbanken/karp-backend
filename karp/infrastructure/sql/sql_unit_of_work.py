@@ -1,20 +1,19 @@
 import enum
 import logging
-from typing import Dict
 import typing
+from typing import Dict
 
 import regex
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from karp.domain import errors, repository
-
 from karp.application import config
-
-from karp.services import unit_of_work
+from karp.domain import errors, repository
 from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
-from karp.infrastructure.sql.sql_resource_repository import SqlResourceRepository
+from karp.infrastructure.sql.sql_resource_repository import \
+    SqlResourceRepository
+from karp.services import unit_of_work
+
 from .sql_index import SqlSearchService
 
 DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")

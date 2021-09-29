@@ -1,7 +1,6 @@
-from karp.domain.services.network import get_refs, get_referenced_entries
-
 from karp.application import ctx
 from karp.application.services import entries
+from karp.domain.services.network import get_referenced_entries, get_refs
 
 
 def test_get_refs_for_places(

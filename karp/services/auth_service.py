@@ -2,7 +2,7 @@ import abc
 import logging
 from typing import List, Optional
 
-from karp.domain import model, value_objects, errors
+from karp.domain import errors, model, value_objects
 from karp.domain.models.user import User
 
 # from karp.services import context

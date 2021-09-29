@@ -1,8 +1,7 @@
-from unittest import mock
 import uuid
+from unittest import mock
 
 import pytest
-
 
 from karp.domain import errors, repository
 

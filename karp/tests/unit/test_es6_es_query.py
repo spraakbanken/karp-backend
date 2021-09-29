@@ -1,9 +1,9 @@
-from karp.domain.models.query import Query
 from typing import List
 
 import pytest
 
 from karp.domain.index import QueryRequest
+from karp.domain.models.query import Query
 from karp.infrastructure.elasticsearch6 import EsQuery
 
 

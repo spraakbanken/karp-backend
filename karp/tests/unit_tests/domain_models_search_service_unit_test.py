@@ -1,4 +1,5 @@
 from re import search
+
 from karp.domain.models.search_service import IndexEntry, SearchService
 
 

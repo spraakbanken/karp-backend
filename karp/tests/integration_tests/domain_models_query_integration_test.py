@@ -2,8 +2,8 @@ from itertools import zip_longest
 
 import pytest  # pyre-ignore
 
-from karp.domain.models.query import Query
 from karp.domain import errors
+from karp.domain.models.query import Query
 from karp.query_dsl import op
 
 

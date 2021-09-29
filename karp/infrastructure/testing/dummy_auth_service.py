@@ -1,6 +1,5 @@
 from typing import List
 
-
 from karp.domain import value_objects
 from karp.domain.models.user import User
 from karp.services import auth_service, context

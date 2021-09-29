@@ -1,20 +1,21 @@
-from karp.services import unit_of_work
-from typing import IO, Tuple, Dict, List, Optional
 import json
 import logging
-from pathlib import Path
 import typing
+from pathlib import Path
+from typing import IO, Dict, Generic, List, Optional, Tuple
 
-
-from karp.foundation import messagebus, events as foundation_events
-from karp.lex.domain import commands
-from karp.domain import model, errors, events
-from . import context
+from karp import errors as karp_errors
+from karp.domain import errors, events, model
 from karp.domain.models.resource import Resource
+from karp.foundation import events as foundation_events
+from karp.foundation import messagebus
+from karp.lex.domain import commands
+from karp.services import unit_of_work
+
+from . import context
 
 # from karp.domain.services import indexing
 
-from karp import errors as karp_errors
 
 # from karp.application import ctx
 
@@ -49,6 +50,20 @@ def get_field_translations(resource_id: str) -> Optional[Dict]:
         resource = uw.by_resource_id(resource_id)
         return resource.config.get("field_mapping") if resource else None
 
+
+class BaseResourceHandler(
+    Generic[messagebus.CommandType],
+    messagebus.CommandHandler[messagebus.CommandType]
+):
+    def __init__(
+        self,
+        resource_uow: unit_of_work.ResourceUnitOfWork
+    ) -> None:
+        super().__init__()
+        self.resource_uow = resource_uow
+
+    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
+        yield from self.resource_uow.collect_new_events()
 
 # def get_resource(resource_id: str, version: Optional[int] = None) -> Resource:
 #     if not version:
@@ -164,17 +179,17 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 # def update_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
 #     return update_resource(config_file)
 
-class CreateResourceHandler(messagebus.Handler[commands.CreateResource]):
+class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
     def __init__(self, resource_uow: unit_of_work.ResourceUnitOfWork, entry_uow_factory: unit_of_work.EntryUowFactory, entry_uows: unit_of_work.EntriesUnitOfWork) -> None:
-        super().__init__()
-        self.resource_uow = resource_uow
+        super().__init__(resource_uow=resource_uow)
         self.entry_uow_factory = entry_uow_factory
         self.entry_uows = entry_uows
 
     def execute(self, cmd: commands.CreateResource):
         with self.resource_uow as uow:
             try:
-                existing_resource = uow.resources.by_resource_id(cmd.resource_id)
+                existing_resource = uow.resources.by_resource_id(
+                    cmd.resource_id)
                 if existing_resource and existing_resource.id != cmd.id:
                     raise errors.IntegrityError(
                         f"Resource with resource_id='{cmd.resource_id}' already exists."
@@ -421,7 +436,8 @@ class PublishResourceHandler(messagebus.Handler[commands.PublishResource]):
             #     print(f"'{cmd.resource_id}' already published!")
             #     raise karp_errors.ResourceAlreadyPublished(cmd.resource_id)
             # resource.is_published = True
-            resource.publish(user=cmd.user, message=cmd.message, timestamp=cmd.timestamp)
+            resource.publish(user=cmd.user, message=cmd.message,
+                             timestamp=cmd.timestamp)
             uow.repo.update(resource)
             uow.commit()
     # print("calling indexing.publish_index ...")

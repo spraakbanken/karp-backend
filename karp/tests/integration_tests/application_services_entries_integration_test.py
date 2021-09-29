@@ -1,5 +1,4 @@
 from karp.application.services.entries import add_entries
-
 from karp.tests import common_data
 
 

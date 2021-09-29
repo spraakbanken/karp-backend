@@ -1,4 +1,5 @@
 import abc
+
 from .model import Resource
 
 

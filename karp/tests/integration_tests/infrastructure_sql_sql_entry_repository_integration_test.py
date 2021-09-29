@@ -1,9 +1,8 @@
-from karp.infrastructure.unit_of_work import unit_of_work
 import pytest
 
-from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
 from karp.domain.errors import NonExistingField
-
+from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
+from karp.infrastructure.unit_of_work import unit_of_work
 from karp.tests import common_data
 
 

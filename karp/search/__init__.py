@@ -1,5 +1,5 @@
-from .search import SearchInterface, Query  # noqa: F401
 from . import errors  # noqa: F401
+from .search import Query, SearchInterface  # noqa: F401
 
 _search = None
 

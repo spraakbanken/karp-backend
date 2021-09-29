@@ -1,12 +1,12 @@
 import typing
 
 import pydantic
-
 from sb_json_tools import jsondiff
 
+from karp import errors as karp_errors
 from karp.domain import model
 from karp.domain.value_objects import unique_id
-from karp import errors as karp_errors
+
 from . import context
 
 # pylint: disable=unsubscriptable-object

@@ -1,21 +1,20 @@
 """Module for jwt-based authentication."""
-from karp.services import context
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import List
 
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
 
 from karp.domain import errors, value_objects
-from karp.domain.models.user import User
 from karp.domain.errors import AuthError
+from karp.domain.models.user import User
+# import karp.resourcemgr as resourcemgr
+from karp.errors import ClientErrorCodes, KarpError
 from karp.services import auth_service, context, unit_of_work
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 
-# import karp.resourcemgr as resourcemgr
-from karp.errors import KarpError, ClientErrorCodes
 
 
 def load_jwt_key(path: Path) -> str:

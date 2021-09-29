@@ -1,18 +1,19 @@
 from dependency_injector import wiring
-from fastapi import APIRouter, Security, HTTPException, status, Response, Depends
+from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
+                     status)
 
 from karp.domain.models.user import User
 from karp.domain.value_objects import PermissionLevel
-
 from karp.services import entry_query
 from karp.services.auth_service import AuthService
 from karp.services.messagebus import MessageBus
+from karp.webapp import schemas
+
+from .app_config import get_current_user
+from .containers import WebAppContainer
 
 # from karp.application import ctx
 
-from karp.webapp import schemas
-from .app_config import get_current_user
-from .containers import WebAppContainer
 
 
 router = APIRouter(tags=["Statistics"])

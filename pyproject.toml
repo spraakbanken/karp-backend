@@ -62,7 +62,7 @@ uvicorn = "^0.15.0"
 fastapi = "^0.68.1"
 
 [tool.poetry.dev-dependencies]
-flake8 = "^3.9.2"
+flake8 = "<3.9.1"
 autopep8 = "^1.5.7"
 pytest = "^6.2.5"
 pytest-cov = "^2.12.1"
@@ -72,4 +72,46 @@ factory-boy = "^3.2.0"
 requests = "^2.26.0"
 isort = "^5.9.3"
 flakehell = "^0.9.0"
-wemake-python-styleguide = "^0.15.3"
+wemake-python-styleguide = { git = "https://github.com/wemake-services/wemake-python-styleguide.git" }
+
+[tool.flakehell]
+exclude = ["README.rst", "README.md"]
+# format = "colored"
+show_source = true
+# whitelist = "../../allowlist.txt"
+format = "grouped"
+statistics = false
+doctests = true
+enable_extensions = "G"
+
+
+accept_encodings = "utf-8"
+max_complexity = 6
+max_line_length = 88
+
+ignore = "D100, D104, D401, W504, RST303, RST304, DAR103, DAR203"
+
+extended_default_ignore = []
+
+[tool.flakehell.exceptions."*/__init__.py"]
+pycodestyle = ["-F401"]
+pyflakes = ["-F401"]
+
+[tool.flakehell.plugins]
+flake8-bandit = ["+*", "-S322"]
+flake8-bugbear = ["+*"]
+flake8-builtins = ["+*"]
+flake8-comprehensions = ["+*"]
+flake8-darglint = ["+*"]
+flake8-docstrings = ["+*"]
+flake8-eradicate = ["+*"]
+flake8-isort = ["+*"]
+flake8-mutable = ["+*"]
+flake8-pytest-style = ["+*"]
+flake8-spellcheck = ["+*"]
+mccabe = ["+*"]
+pep8-naming = ["+*"]
+pycodestyle = ["+*"]
+pyflakes = ["+*"]
+pylint = ["+*"]
+"wemake-python-styleguide" = ["+*"]

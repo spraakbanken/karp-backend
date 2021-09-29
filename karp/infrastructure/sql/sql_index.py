@@ -2,8 +2,8 @@ from typing import Dict, List, Optional
 
 # from karp.domain.models.search_service import SearchService, IndexEntry
 from karp.domain import index
-from karp.domain.models.resource import Resource
 from karp.domain.models.entry import Entry
+from karp.domain.models.resource import Resource
 
 
 class SqlSearchService(index.Index, index_type="sql_search_service", is_default=True):

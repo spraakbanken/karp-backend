@@ -3,7 +3,8 @@ from unittest import mock
 import pytest
 
 from karp.domain.models.search_service import IndexEntry
-from karp.infrastructure.elasticsearch6.es6_search_service import Es6SearchService
+from karp.infrastructure.elasticsearch6.es6_search_service import \
+    Es6SearchService
 
 
 @pytest.fixture(name="es6_search")

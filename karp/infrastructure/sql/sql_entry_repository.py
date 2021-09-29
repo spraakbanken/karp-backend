@@ -1,28 +1,18 @@
 """SQL repository for entries."""
-from karp.domain.errors import NonExistingField, RepositoryError
 import logging
-from typing import Dict, List, Optional, Tuple
 import typing
+from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
 import regex
 
-from karp.domain.models.entry import (
-    Entry,
-    EntryOp,
-    # EntryRepositorySettings,
-    EntryStatus,
-    # EntryRepository,
-    # create_entry_repository,
-)
-from karp.domain import errors, repository
-
-from karp.infrastructure.sql import db
-from karp.infrastructure.sql import sql_models
-from karp.infrastructure.sql.sql_repository import SqlRepository
-
 from karp import errors as karp_errors
-
+from karp.domain import errors, repository
+from karp.domain.errors import NonExistingField, RepositoryError
+from karp.domain.models.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
+    Entry, EntryOp, EntryStatus)
+from karp.infrastructure.sql import db, sql_models
+from karp.infrastructure.sql.sql_repository import SqlRepository
 
 logger = logging.getLogger("karp")
 

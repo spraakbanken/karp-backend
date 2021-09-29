@@ -6,7 +6,6 @@ import typer
 
 from karp.errors import KarpError, ResourceNotFoundError
 
-
 logger = logging.getLogger("karp")
 
 

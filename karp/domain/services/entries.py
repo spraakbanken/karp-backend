@@ -2,7 +2,6 @@ from typing import List
 
 from karp.domain.models.entry import Entry
 from karp.domain.models.resource import Resource
-
 from karp.infrastructure.unit_of_work import unit_of_work
 
 

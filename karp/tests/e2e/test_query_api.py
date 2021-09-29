@@ -1,13 +1,14 @@
-from typing import Callable, List, Optional, Tuple, Dict
 import json
+from typing import Callable, Dict, List, Optional, Tuple
 
 import pytest  # pyre-ignore
+
+from karp.tests.common_data import MUNICIPALITIES, PLACES
+from karp.tests.utils import add_entries, get_json
 
 # import time
 
 
-from karp.tests.common_data import MUNICIPALITIES, PLACES
-from karp.tests.utils import get_json, add_entries
 
 
 # @pytest.fixture(scope="session", name="fa_data_client")

@@ -1,10 +1,10 @@
 from typing import Dict
+
 import pytest
 
-from karp.domain import model, events, errors
-
-from karp.tests import common_data
+from karp.domain import errors, events, model
 from karp.domain.value_objects import unique_id
+from karp.tests import common_data
 
 
 def random_entry(entry_id: str = None, body: Dict = None):

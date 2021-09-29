@@ -1,2 +1,2 @@
-from .parser import parse, op, Node, is_a  # noqa: F401
 from .basic_ast import Ast
+from .parser import Node, is_a, op, parse  # noqa: F401

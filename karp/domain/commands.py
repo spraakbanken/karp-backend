@@ -2,10 +2,11 @@ import typing
 
 import pydantic
 
-from karp.foundation import commands
-from . import errors
 from karp.domain.value_objects import unique_id
+from karp.foundation import commands
 from karp.utility import time
+
+from . import errors
 
 # pylint: disable=unsubscriptable-object
 
@@ -18,7 +19,8 @@ class Command(pydantic.BaseModel, commands.Command):  # pylint: disable=no-membe
 
 
 class CreateResource(Command):
-    id: unique_id.UniqueId = pydantic.Field(default_factory=unique_id.make_unique_id)
+    id: unique_id.UniqueId = pydantic.Field(
+        default_factory=unique_id.make_unique_id)
     resource_id: str
     name: str
     config: typing.Dict
@@ -75,7 +77,6 @@ class ReindexResource(Command):
 class AddEntry(Command):
     resource_id: str
     id: unique_id.UniqueId
-    # entry_id: str
     entry: typing.Dict
     user: str
     message: str
@@ -83,7 +84,6 @@ class AddEntry(Command):
 
 class AddEntries(Command):
     resource_id: str
-    # ids: typing.Iterable[unique_id.UniqueId]
     entries: typing.Iterable[typing.Dict]
     user: str
     message: str

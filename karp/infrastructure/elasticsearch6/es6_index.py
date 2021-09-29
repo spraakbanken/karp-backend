@@ -1,26 +1,25 @@
+import json
 import logging
 import re
-import json
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import elasticsearch
-import elasticsearch_dsl as es_dsl  # pyre-ignore
 import elasticsearch.helpers  # pyre-ignore
-
-# from karp.query_dsl import basic_ast as ast, op, is_a
+import elasticsearch_dsl as es_dsl  # pyre-ignore
 
 # from karp import query_dsl
 from karp.domain import index
+from karp.domain.errors import \
+    UnsupportedField  # IncompleteQuery,; UnsupportedQuery,
 from karp.domain.models.entry import Entry
 from karp.domain.models.resource import Resource
-from karp.domain.errors import (
-    UnsupportedField,
-    # IncompleteQuery,
-    # UnsupportedQuery,
-)
-from .es_query import EsQuery
+
 from . import es_config
+from .es_query import EsQuery
+
+# from karp.query_dsl import basic_ast as ast, op, is_a
+
 
 logger = logging.getLogger("karp")
 

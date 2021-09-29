@@ -1,10 +1,9 @@
-import os
 import logging
+import os
 from distutils.util import strtobool
 from pathlib import Path
 
 from sqlalchemy.engine.url import URL, make_url
-
 from starlette.config import Config as StarletteConfig
 from starlette.datastructures import CommaSeparatedStrings, Secret
 

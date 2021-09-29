@@ -3,22 +3,20 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-
+from json_streams import jsonlib
 from tabulate import tabulate
 
-from json_streams import jsonlib
-
 from karp.domain import commands
-
 # from karp.application import ctx
 # from karp.application.services import resources
 from karp.errors import ResourceAlreadyPublished
 
-# from karp.infrastructure.unit_of_work import unit_of_work
-
+from . import app_config
 from .utility import cli_error_handler, cli_timer
 
-from . import app_config
+# from karp.infrastructure.unit_of_work import unit_of_work
+
+
 
 logger = logging.getLogger("karp")
 

@@ -1,43 +1,25 @@
 """Handles all sql db connections."""
 import collections
 import json
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 import attr
 import sqlalchemy
-from sqlalchemy import (
-    Table,
-    Column,
-    Integer,
-    String,
-    MetaData,
-    Text,
-    ForeignKey,
-    event,
-    Unicode,
-    Enum,
-    func,
-    and_,
-    or_,
-    JSON,
-)
-from sqlalchemy import exc
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.sql import insert, delete, update
+from sqlalchemy import (JSON, Column, Enum, ForeignKey, Integer, MetaData,
+                        String, Table, Text, Unicode, and_, event, exc, func,
+                        or_)
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import mapper, aliased, relationship
-from sqlalchemy.orm.session import Session, sessionmaker
-from sqlalchemy.schema import (
-    UniqueConstraint,
-    ForeignKeyConstraint,
-    PrimaryKeyConstraint,
-)
-from sqlalchemy.types import TypeDecorator, VARCHAR, Boolean, Time, Float
-from sqlalchemy.ext.mutable import Mutable
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
-
-from sqlalchemy_utils import UUIDType
+from sqlalchemy.ext.mutable import Mutable
+from sqlalchemy.orm import aliased, mapper, relationship
+from sqlalchemy.orm.session import Session, sessionmaker
+from sqlalchemy.schema import (ForeignKeyConstraint, PrimaryKeyConstraint,
+                               UniqueConstraint)
+from sqlalchemy.sql import delete, insert, update
+from sqlalchemy.types import VARCHAR, Boolean, Float, Time, TypeDecorator
 from sqlalchemy_json import NestedMutableJson
+from sqlalchemy_utils import UUIDType
 
 from karp.application import config
 

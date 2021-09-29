@@ -1,15 +1,12 @@
 """SQL Resource Repository"""
 import logging
-from typing import Optional, List, Tuple, Dict, Union
-from uuid import UUID
 import typing
+from typing import Dict, List, Optional, Tuple, Union
+from uuid import UUID
 
-from karp.domain.errors import RepositoryStatusError, IntegrityError
-from karp.domain.models.resource import (
-    Resource,
-    ResourceOp,
-)
-from karp.domain import model, repository, errors
+from karp.domain import errors, model, repository
+from karp.domain.errors import IntegrityError, RepositoryStatusError
+from karp.domain.models.resource import Resource, ResourceOp
 
 from . import db, sql_models
 from .sql_models import ResourceDTO

@@ -1,13 +1,9 @@
 import pytest
-
 from paradigmextract import morphparser
 
-from karp.domain.models.morphological_entry import (
-    MorphologicalEntry,
-    create_morphological_entry,
-)
-
 from karp.domain.models.entry import Entry
+from karp.domain.models.morphological_entry import (MorphologicalEntry,
+                                                    create_morphological_entry)
 
 
 def test_morph_entry_has_entry_id():

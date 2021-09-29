@@ -5,27 +5,27 @@ import logging
 from typing import List, Optional
 
 from dependency_injector import wiring
-from fastapi import APIRouter, Security, HTTPException, status, Query, Path, Depends
+from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
+                     status)
 
 from karp import errors as karp_errors
-
-from karp.domain import value_objects, index
-
+from karp.domain import index, value_objects
 from karp.domain.models.user import User
+# from karp.webapp.auth import get_current_user
+from karp.services import entry_query
+from karp.services.auth_service import AuthService
+from karp.services.messagebus import MessageBus
+from karp.webapp import schemas
+
+from .app_config import get_current_user
+from .containers import WebAppContainer
 
 # from karp.domain.models.auth_service import PermissionLevel
 
 # from karp.application import ctx
 # from karp.application.services import resources as resources_service
 
-from karp.webapp import schemas
 
-# from karp.webapp.auth import get_current_user
-from karp.services import entry_query
-from karp.services.auth_service import AuthService
-from karp.services.messagebus import MessageBus
-from .app_config import get_current_user
-from .containers import WebAppContainer
 
 
 _logger = logging.getLogger("karp")

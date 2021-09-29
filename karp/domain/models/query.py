@@ -1,13 +1,11 @@
+import typing
 from enum import Enum
 from typing import Dict, List, Optional
-import typing
 
 import pydantic
 
 from karp import query_dsl  # , resourcemgr
-
 from karp.domain import errors
-
 from karp.util import convert as util_convert
 from karp.utility.container import arg_get
 

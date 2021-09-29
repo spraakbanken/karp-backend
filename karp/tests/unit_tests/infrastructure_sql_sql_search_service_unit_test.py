@@ -1,6 +1,5 @@
 from unittest import mock
 
-
 from karp.domain.models.search_service import IndexEntry
 from karp.infrastructure.sql.sql_search_service import SqlSearchService
 

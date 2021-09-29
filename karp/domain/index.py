@@ -1,18 +1,16 @@
 import abc
-import typing
-from karp.domain.models.resource import Resource
-from typing import Optional, Callable, TypeVar, List, Dict, Tuple
 import logging
+import typing
+from typing import Callable, Dict, List, Optional, Tuple, TypeVar
 
 import attr
 import pydantic
 
 from karp.domain import errors, model
 from karp.domain.errors import ConfigurationError
-
-from karp.domain.models.query import Query
 from karp.domain.models.entry import Entry
-
+from karp.domain.models.query import Query
+from karp.domain.models.resource import Resource
 
 logger = logging.getLogger("karp")
 

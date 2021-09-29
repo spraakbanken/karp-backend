@@ -2,8 +2,8 @@ import dataclasses
 import typing
 from typing import List
 
+from karp.domain import index, model, repository
 from karp.main.bootstrap import bootstrap_message_bus
-from karp.domain import index, repository, model
 from karp.services import unit_of_work
 
 

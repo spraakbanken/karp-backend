@@ -1,10 +1,10 @@
 import abc
 import logging
 import typing
+from typing import Dict, List, Type, Union
 
-from .events import Event
 from .commands import Command
-
+from .events import Event
 
 T = typing.TypeVar("T")
 
@@ -23,11 +23,15 @@ CommandType = typing.TypeVar('CommandType', bound=Command)
 EventType = typing.TypeVar('EventType', bound=Event)
 
 
+class CommandHandler(typing.Generic[CommandType], Handler[CommandType]):
+    pass
+
+
 class MessageBus:
     def __init__(
         self,
-        command_handlers: typing.Dict[typing.Type[Command], Handler[CommandType]],
-        event_handlers: typing.Dict[typing.Type[Event], typing.List[Handler[EventType]]],
+        command_handlers: Dict[Type[Command], CommandHandler[Command]],
+        event_handlers: Dict[Type[Event], List[Handler[Event]]],
         logger: logging.Logger = None,
         raise_on_all_errors: bool = False,
     ) -> None:
@@ -35,7 +39,7 @@ class MessageBus:
         self._event_handlers = event_handlers
         self._logger = logger or logging.getLogger(__name__)
         self.raise_on_all_errors = raise_on_all_errors
-        self.queue = []
+        self.queue: List[Union[Command, Event]] = []
 
     def handle(self, msg: typing.Union[Command, Event]):
         self.queue = [msg]
@@ -49,7 +53,8 @@ class MessageBus:
     def _handle_event(self, event: Event):
         for handler in self._event_handlers[type(event)]:
             try:
-                self._logger.debug("handling event %s with handler %s", event, handler)
+                self._logger.debug(
+                    "handling event %s with handler %s", event, handler)
                 handler.execute(event)
                 self.queue.extend(handler.collect_new_events())
             except Exception:

@@ -5,14 +5,14 @@ Used to perform readiness and liveness probes on the server.
 """
 
 from dependency_injector import wiring
-from fastapi import APIRouter, Response, status, Depends
+from fastapi import APIRouter, Depends, Response, status
 
 from karp.application import schemas
-from .containers import WebAppContainer
 from karp.services import system_monitor
 from karp.services.auth_service import AuthService
 from karp.services.messagebus import MessageBus
 
+from .containers import WebAppContainer
 
 router = APIRouter(tags=["Health"])
 

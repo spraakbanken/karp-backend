@@ -1,6 +1,6 @@
-from karp.database import ResourceDefinition
 from karp import create_app
 from karp.config import MariaDBConfig
+from karp.database import ResourceDefinition
 
 app = create_app(MariaDBConfig(setup_database=False))
 

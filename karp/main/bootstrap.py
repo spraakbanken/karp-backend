@@ -1,13 +1,12 @@
-from karp.services import unit_of_work
 from karp.foundation import messagebus
-
-from karp.lex.application.handlers import (
-    CreateResourceHandler,
-    PublishResourceHandler,
-    UpdateResourceHandler,
-    AddEntryHandler,
-)
+from karp.lex.application.handlers import (AddEntryHandler,
+                                           CreateResourceHandler,
+                                           DeleteEntryHandler,
+                                           PublishResourceHandler,
+                                           UpdateEntryHandler,
+                                           UpdateResourceHandler)
 from karp.lex.domain import commands
+from karp.services import unit_of_work
 
 
 def bootstrap_message_bus(
@@ -34,6 +33,15 @@ def bootstrap_message_bus(
             commands.AddEntry: AddEntryHandler(
                 resource_uow=resource_uow,
                 entry_uows=entry_uows,
-            )},
+            ),
+            commands.DeleteEntry: DeleteEntryHandler(
+                resource_uow=resource_uow,
+                entry_uows=entry_uows,
+            ),
+            commands.UpdateEntry: UpdateEntryHandler(
+                resource_uow=resource_uow,
+                entry_uows=entry_uows,
+            )
+        },
         event_handlers={},
         raise_on_all_errors=raise_on_all_errors)

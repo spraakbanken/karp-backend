@@ -1,8 +1,8 @@
 import pytest
 
 from karp.domain import model
-from karp.infrastructure.sql import sql_unit_of_work
 from karp.domain.value_objects import unique_id
+from karp.infrastructure.sql import sql_unit_of_work
 
 
 def random_resource() -> model.Resource:

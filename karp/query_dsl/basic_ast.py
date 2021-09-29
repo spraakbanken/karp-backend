@@ -2,7 +2,6 @@ from typing import Iterable, TypeVar
 
 from .node import Node
 
-
 AnyValue = TypeVar("AnyValue", str, int, float)
 
 

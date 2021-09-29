@@ -1,11 +1,9 @@
 import pytest  # pyre-ignore
-
-from elasticsearch_dsl.query import Bool, Exists, Match, Range, Regexp  # pyre-ignore
-
-from karp.infrastructure.elasticsearch6.es_query import EsQuery
+from elasticsearch_dsl.query import (Bool, Exists, Match, Range,  # pyre-ignore
+                                     Regexp)
 
 from karp.application import ctx
-
+from karp.infrastructure.elasticsearch6.es_query import EsQuery
 
 # @pytest.mark.parametrize(
 #     "resource,query,expected_hits",

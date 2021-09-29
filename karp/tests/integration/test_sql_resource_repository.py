@@ -5,16 +5,15 @@ import uuid
 import pytest
 
 from karp.domain import model
-from karp.domain.models.resource import ResourceOp, create_resource, Resource
-
 from karp.domain.errors import IntegrityError
-
+from karp.domain.models.resource import Resource, ResourceOp, create_resource
+from karp.domain.value_objects import time, unique_id
+from karp.infrastructure.sql import db
+from karp.infrastructure.sql.sql_resource_repository import \
+    SqlResourceRepository
 # from karp.domain.models.lexical_resource import LexicalResource
 # from karp.infrastructure.unit_of_work import unit_of_work
 from karp.services import handlers
-from karp.infrastructure.sql import db
-from karp.infrastructure.sql.sql_resource_repository import SqlResourceRepository
-from karp.domain.value_objects import unique_id, time
 
 # pytestmark = pytest.mark.usefixtures("db_setup")
 

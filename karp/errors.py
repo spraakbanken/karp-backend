@@ -1,6 +1,5 @@
 from typing import IO, Optional
 
-
 NoIndexModuleConfigured = 10
 
 

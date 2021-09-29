@@ -1,5 +1,5 @@
-import traceback
 import logging
+import traceback
 
 try:
     from importlib.metadata import entry_points
@@ -12,9 +12,8 @@ from fastapi.responses import JSONResponse
 
 from karp import main
 
-from .containers import WebAppContainer
 from . import app_config
-
+from .containers import WebAppContainer
 
 __version__ = "0.8.1"
 
@@ -50,12 +49,8 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
     # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
 
-    from . import entries_api
-    from . import health_api
-    from . import history_api
-    from . import query_api
-    from . import resources_api
-    from . import stats_api
+    from . import (entries_api, health_api, history_api, query_api,
+                   resources_api, stats_api)
 
     container.wire(
         modules=[
