@@ -12,8 +12,6 @@ from karp.foundation import messagebus
 from karp.lex.domain import commands
 from karp.services import unit_of_work
 
-from . import context
-
 
 # from karp.application import ctx
 
@@ -221,7 +219,7 @@ class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
         yield from self.resource_uow.collect_new_events()
 
 
-def setup_existing_resources(evt: events.AppStarted, ctx: context.Context):
+def setup_existing_resources(evt: events.AppStarted):
     with ctx.resource_uow:
         for resource_id in ctx.resource_uow.repo.resource_ids():
             resource = ctx.resource_uow.repo.by_resource_id(resource_id)

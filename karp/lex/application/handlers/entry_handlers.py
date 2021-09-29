@@ -21,7 +21,7 @@ from karp.foundation import messagebus
 from karp.lex.domain import commands
 from karp.services import unit_of_work
 
-from . import context
+# from . import context
 
 # from karp.domain.services import indexing
 
@@ -142,34 +142,6 @@ class AddEntryHandler(BaseEntryHandler[commands.AddEntry]):
         return entry
 
 
-def add_entry_tmp(cmd: commands.AddEntry, ctx: context.Context):
-    with ctx.entry_uows.get(cmd.resource_id) as uow:
-        # resource = uow.repo.by_resource_id(cmd.resource_id)
-        # with unit_of_work(using=resource.entry_repository) as uow2:
-        existing_entry = uow.repo.by_entry_id(cmd.entry_id)
-        if (
-            existing_entry
-            and not existing_entry.discarded
-            and existing_entry.id != cmd.id
-        ):
-            raise errors.IntegrityError(
-                f"An entry with entry_id '{cmd.entry_id}' already exists."
-            )
-        entry = model.Entry(
-            entity_id=cmd.id,
-            entry_id=cmd.entry_id,
-            resource_id=cmd.resource_id,
-            body=cmd.body,
-            message=cmd.message,
-            last_modified=cmd.timestamp,
-            last_modified_by=cmd.user,
-        )
-        # uow2.repo.put(entry)
-        # uow2.commit()
-        uow.repo.put(entry)
-        uow.commit()
-
-
 #
 # def preview_entry(resource_id, entry, resource_version=None):
 #     resource = get_resource(resource_id, version=resource_version)
@@ -254,7 +226,6 @@ def add_entries_from_file(
 
 def add_entries(
     cmd: commands.AddEntries,
-    ctx: context.Context,
 ) -> List[Entry]:
     """
     Add entries to DB and INDEX (if present and resource is active).
