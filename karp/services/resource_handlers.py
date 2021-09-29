@@ -14,8 +14,6 @@ from karp.services import unit_of_work
 
 from . import context
 
-# from karp.domain.services import indexing
-
 
 # from karp.application import ctx
 
