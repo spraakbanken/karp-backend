@@ -22,7 +22,7 @@ NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 
 
 class SqlEntryRepository(
-    repository.EntryRepository, SqlRepository, repository_type="sql_v1", is_default=True
+    repository.EntryRepository, SqlRepository
 ):
     def __init__(
         self,
@@ -64,7 +64,8 @@ class SqlEntryRepository(
         #     history_model = create_history_entry_table(table_name)
         # history_model.create(bind=db.engine, checkfirst=True)
 
-        history_model = sql_models.get_or_create_entry_history_model(table_name)
+        history_model = sql_models.get_or_create_entry_history_model(
+            table_name)
 
         # runtime_table = db.get_table(runtime_table_name)
         # if runtime_table is None:
@@ -81,7 +82,8 @@ class SqlEntryRepository(
         if session:
             runtime_model.__table__.create(bind=session.bind, checkfirst=True)
             for child_model in runtime_model.child_tables.values():
-                child_model.__table__.create(bind=session.bind, checkfirst=True)
+                child_model.__table__.create(
+                    bind=session.bind, checkfirst=True)
         return cls(
             history_model=history_model,
             runtime_model=runtime_model,
@@ -174,7 +176,8 @@ class SqlEntryRepository(
 
     def entry_ids(self) -> List[str]:
         self._check_has_session()
-        query = self._session.query(self.runtime_model).filter_by(discarded=False)
+        query = self._session.query(
+            self.runtime_model).filter_by(discarded=False)
         return [row.entry_id for row in query.all()]
         # return [row.entry_id for row in query.filter_by(discarded=False).all()]
 
@@ -251,7 +254,8 @@ class SqlEntryRepository(
     def all_entries(self) -> typing.Iterable[Entry]:
         self._check_has_session()
 
-        query = self._session.query(self.history_model).filter_by(discarded=False)
+        query = self._session.query(
+            self.history_model).filter_by(discarded=False)
         return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
 
     def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
@@ -298,9 +302,12 @@ class SqlEntryRepository(
                 raise RepositoryError("Unknown invalid request") from exc
 
         for child_filters in joined_filters:
-            print(f"list(child_filters.keys())[0] = {list(child_filters.keys())[0]}")
-            child_cls = self.runtime_model.child_tables[list(child_filters.keys())[0]]
-            child_query = self._session.query(child_cls).filter_by(**child_filters)
+            print(
+                f"list(child_filters.keys())[0] = {list(child_filters.keys())[0]}")
+            child_cls = self.runtime_model.child_tables[list(child_filters.keys())[
+                0]]
+            child_query = self._session.query(
+                child_cls).filter_by(**child_filters)
             for child_e in child_query:
                 print(f"child hit = {child_e}")
             query = query.join(child_cls).filter_by(**child_filters)
@@ -412,7 +419,8 @@ class SqlEntryRepository(
                 for elem in field_val:
                     if field_name not in _entry:
                         _entry[field_name] = []
-                    _entry[field_name].append(child_table(**{field_name: elem}))
+                    _entry[field_name].append(
+                        child_table(**{field_name: elem}))
             else:
                 _entry[field_name] = field_val
         return _entry

@@ -4,8 +4,11 @@ import logging
 # from karp.infrastructure.unit_of_work import unit_of_work
 import sys
 import typing
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Iterable
 
+from karp.foundation import messagebus, events as foundation_events
+from karp.lex.domain import events as lex_events
+from karp.search.application.unit_of_work import SearchServiceUnitOfWork
 # from .index import IndexModule
 # import karp.resourcemgr as resourcemgr
 # import karp.resourcemgr.entryread as entryread
@@ -149,11 +152,19 @@ def publish_index(
     #     resourcemgr.publish_resource(resource_id, version)
 
 
-def create_index(evt: events.ResourceCreated, ctx: context.Context):
-    print(f"index_handlers.create_index: evt = {evt}")
-    with ctx.index_uow:
-        ctx.index_uow.repo.create_index(evt.resource_id, evt.config)
-        ctx.index_uow.commit()
+class CreateIndexHandler(messagebus.Handler[lex_events.ResourceCreated]):
+    def __init__(self, search_service_uow: SearchServiceUnitOfWork):
+        self.search_service_uow = search_service_uow
+
+    def collect_new_events(self) -> Iterable[foundation_events.Event]:
+        yield from self.search_service_uow.collect_new_events()
+
+    def execute(self, evt: events.ResourceCreated):
+        print(f"index_handlers.create_index: evt = {evt}")
+        with self.search_service_uow:
+            self.search_service_uow.repo.create_index(
+                evt.resource_id, evt.config)
+            self.search_service_uow.commit()
 
 
 # def add_entries(
@@ -230,7 +241,8 @@ def add_entries(
                 raise errors.ResourceNotFound(resource_id)
             ctx.index_uow.repo.add_entries(
                 index_name,
-                [transform_to_index_entry(resource, entry, ctx) for entry in entries],
+                [transform_to_index_entry(resource, entry, ctx)
+                 for entry in entries],
             )
             if update_refs:
                 _update_references(resource, entries, ctx)
@@ -307,7 +319,8 @@ def transform_to_index_entry(
     print(f"transforming entry_id={src_entry.entry_id}")
     index_entry = ctx.index_uow.repo.create_empty_object()
     index_entry.id = src_entry.entry_id
-    ctx.index_uow.repo.assign_field(index_entry, "_entry_version", src_entry.version)
+    ctx.index_uow.repo.assign_field(
+        index_entry, "_entry_version", src_entry.version)
     ctx.index_uow.repo.assign_field(
         index_entry, "_last_modified", src_entry.last_modified
     )
@@ -334,7 +347,8 @@ def _evaluate_function(
     src_resource: model.Resource,
     ctx: context.Context,
 ):
-    print(f"indexing._evaluate_function src_resource={src_resource.resource_id}")
+    print(
+        f"indexing._evaluate_function src_resource={src_resource.resource_id}")
     print(f"indexing._evaluate_function src_entry={src_entry}")
     if "multi_ref" in function_conf:
         function_conf = function_conf["multi_ref"]
@@ -372,7 +386,8 @@ def _evaluate_function(
                 with ctx.entry_uows.get(
                     target_resource.resource_id
                 ) as target_entries_uw:
-                    target_entries = target_entries_uw.repo.by_referenceable(filters)
+                    target_entries = target_entries_uw.repo.by_referenceable(
+                        filters)
             else:
                 raise NotImplementedError()
         else:
@@ -416,10 +431,12 @@ def _transform_to_index_entry(
     for field_name, field_conf in fields:
         if field_conf.get("virtual"):
             print("found virtual field")
-            res = _evaluate_function(field_conf["function"], _src_entry, resource, ctx)
+            res = _evaluate_function(
+                field_conf["function"], _src_entry, resource, ctx)
             print(f"res = {res}")
             if res:
-                ctx.index_uow.repo.assign_field(_index_entry, "v_" + field_name, res)
+                ctx.index_uow.repo.assign_field(
+                    _index_entry, "v_" + field_name, res)
         elif field_conf.get("ref"):
             ref_field = field_conf["ref"]
             if ref_field.get("resource_id"):
@@ -448,7 +465,8 @@ def _transform_to_index_entry(
                                 ref_index_entry = (
                                     ctx.index_uow.repo.create_empty_object()
                                 )
-                                list_of_sub_fields = ((field_name, ref_field["field"]),)
+                                list_of_sub_fields = (
+                                    (field_name, ref_field["field"]),)
                                 _transform_to_index_entry(
                                     resource,
                                     # resource_repo,
@@ -458,7 +476,8 @@ def _transform_to_index_entry(
                                     list_of_sub_fields,
                                     ctx,
                                 )
-                                ref_objs.append(ref_index_entry.entry[field_name])
+                                ref_objs.append(
+                                    ref_index_entry.entry[field_name])
                     ctx.index_uow.repo.assign_field(
                         _index_entry, "v_" + field_name, ref_objs
                     )
@@ -480,7 +499,8 @@ def _transform_to_index_entry(
                     if ref:
                         ref_entry = {field_name: ref.body}
                         ref_index_entry = ctx.index_uow.repo.create_empty_object()
-                        list_of_sub_fields = ((field_name, ref_field["field"]),)
+                        list_of_sub_fields = (
+                            (field_name, ref_field["field"]),)
                         _transform_to_index_entry(
                             resource,
                             # resource_repo,
@@ -513,4 +533,5 @@ def _transform_to_index_entry(
             field_content = _src_entry.get(field_name)
 
         if field_content:
-            ctx.index_uow.repo.assign_field(_index_entry, field_name, field_content)
+            ctx.index_uow.repo.assign_field(
+                _index_entry, field_name, field_content)

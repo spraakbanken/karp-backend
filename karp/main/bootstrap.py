@@ -1,6 +1,8 @@
 from karp.foundation import messagebus
-from karp.lex.application import command_handlers as lex_cmd_handlers
+from karp.lex.application import handlers as lex_handlers
 from karp.lex.domain import commands as lex_commands, events as lex_events
+from karp.search.application import handlers as search_handlers
+from karp.search.application.unit_of_work import SearchServiceUnitOfWork
 from karp.services import unit_of_work
 
 
@@ -9,37 +11,42 @@ def bootstrap_message_bus(
     resource_uow: unit_of_work.ResourceUnitOfWork,
     entry_uows: unit_of_work.EntriesUnitOfWork,
     entry_uow_factory: unit_of_work.EntryUowFactory,
+    search_service_uow: SearchServiceUnitOfWork,
     raise_on_all_errors: bool = False
 ) -> messagebus.MessageBus:
     return messagebus.MessageBus(
         command_handlers={
-            lex_commands.CreateResource: lex_cmd_handlers.CreateResourceHandler(
+            lex_commands.CreateResource: lex_handlers.CreateResourceHandler(
                 resource_uow=resource_uow,
                 entry_uow_factory=entry_uow_factory,
                 entry_uows=entry_uows
             ),
-            lex_commands.PublishResource: lex_cmd_handlers.PublishResourceHandler(
+            lex_commands.PublishResource: lex_handlers.PublishResourceHandler(
                 resource_uow=resource_uow,
             ),
-            lex_commands.UpdateResource: lex_cmd_handlers.UpdateResourceHandler(
+            lex_commands.UpdateResource: lex_handlers.UpdateResourceHandler(
                 resource_uow=resource_uow,
             ),
             # Entry command handlers
-            lex_commands.AddEntry: lex_cmd_handlers.AddEntryHandler(
+            lex_commands.AddEntry: lex_handlers.AddEntryHandler(
                 resource_uow=resource_uow,
                 entry_uows=entry_uows,
             ),
-            lex_commands.DeleteEntry: lex_cmd_handlers.DeleteEntryHandler(
+            lex_commands.DeleteEntry: lex_handlers.DeleteEntryHandler(
                 resource_uow=resource_uow,
                 entry_uows=entry_uows,
             ),
-            lex_commands.UpdateEntry: lex_cmd_handlers.UpdateEntryHandler(
+            lex_commands.UpdateEntry: lex_handlers.UpdateEntryHandler(
                 resource_uow=resource_uow,
                 entry_uows=entry_uows,
             )
         },
         event_handlers={
-            lex_events.ResourceCreated: [],
+            lex_events.ResourceCreated: [
+                search_handlers.CreateIndexHandler(
+                    search_service_uow=search_service_uow
+                ),
+            ],
             lex_events.ResourcePublished: [],
             lex_events.ResourceUpdated: [],
             lex_events.EntryAdded: [],

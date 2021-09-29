@@ -140,9 +140,7 @@ class SqlResourceUnitOfWork(SqlUnitOfWork, unit_of_work.ResourceUnitOfWork):
 
 class SqlEntryUnitOfWork(
     SqlUnitOfWork,
-    unit_of_work.EntryUnitOfWork,
-    entry_repository_type="sql_v1",
-    is_default=True,
+    unit_of_work.EntryUnitOfWork
 ):
     def __init__(
         self,
@@ -180,7 +178,7 @@ class SqlEntryUnitOfWork(
             return []
 
 
-class SqlIndexUnitOfWork(unit_of_work.IndexUnitOfWork, index_type="sql_index"):
+class SqlIndexUnitOfWork(unit_of_work.IndexUnitOfWork):
     @classmethod
     def from_dict(cls, **kwargs):
         print(f"SqlIndexUnitOfWork.from_dict: kwargs = {kwargs}")

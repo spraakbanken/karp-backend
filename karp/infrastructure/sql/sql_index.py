@@ -6,7 +6,7 @@ from karp.domain.models.entry import Entry
 from karp.domain.models.resource import Resource
 
 
-class SqlSearchService(index.Index, index_type="sql_search_service", is_default=True):
+class SqlSearchService(index.Index):
     def create_index(self, resource_id: str, resource_config: Dict):
         pass
 

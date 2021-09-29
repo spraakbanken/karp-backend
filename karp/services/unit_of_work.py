@@ -50,60 +50,6 @@ class ResourceUnitOfWork(UnitOfWork[repository.ResourceRepository]):
 
 
 class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
-    _registry = {}
-    type = None
-
-    def __init_subclass__(
-        cls, entry_repository_type: str, is_default: bool = False, **kwargs
-    ) -> None:
-        super().__init_subclass__(**kwargs)
-        print(
-            f"""EntryUnitOfWork.__init_subclass__ called with:
-            entry_repository_type={entry_repository_type} and
-            is_default={is_default}"""
-        )
-        if entry_repository_type is None:
-            raise RuntimeError(
-                "Unallowed entry_repository_type: entry_repository_type = None"
-            )
-        if entry_repository_type in cls._registry:
-            raise RuntimeError(
-                f"An EntryUnitOfWork with type '{entry_repository_type}' already exists: {cls._registry[entry_repository_type]!r}"
-            )
-
-        # if is_default and None in cls._registry:
-        #     raise RuntimeError(f"A default EntryRepository is already set. Default type is {cls._registry[None]!r}")
-        cls.type = entry_repository_type
-        cls._registry[entry_repository_type] = cls
-        if is_default or None not in cls._registry:
-            logger.info(
-                "Setting default EntryUnitOfWork type to '%s'", entry_repository_type
-            )
-            cls._registry[None] = entry_repository_type
-
-    @classmethod
-    def get_default_entry_repository_type(cls) -> typing.Optional[str]:
-        return cls._registry[None]
-
-    @classmethod
-    def create(
-        cls,
-        entry_repository_type: typing.Optional[str],
-        settings: typing.Dict,
-        resource_config: typing.Dict,
-        **kwargs,
-    ):
-        print(f"_registry={cls._registry}")
-        if entry_repository_type is None:
-            entry_repository_type = cls._registry[None]
-        try:
-            uow_cls = cls._registry[entry_repository_type]
-        except KeyError as err:
-            raise errors.ConfigurationError(
-                f"Can't create an EntryUnitOfWork with type '{entry_repository_type}'"
-            ) from err
-        print(f"kwargs = {kwargs}")
-        return uow_cls.from_dict(settings, resource_config, **kwargs)
 
     @property
     def entries(self) -> repository.EntryRepository:
@@ -111,52 +57,7 @@ class EntryUnitOfWork(UnitOfWork[repository.EntryRepository]):
 
 
 class IndexUnitOfWork(UnitOfWork[index.Index]):
-    _registry = {}
-    type = None
-
-    def __init_subclass__(
-        cls, index_type: str, is_default: bool = False, **kwargs
-    ) -> None:
-        super().__init_subclass__(**kwargs)
-        print(
-            f"""IndexUnitOfWork.__init_subclass__ called with:
-            index_type={index_type} and
-            is_default={is_default}"""
-        )
-        if index_type is None:
-            raise RuntimeError("Unallowed index_type: index_type = None")
-        if index_type in cls._registry:
-            raise RuntimeError(
-                f"An IndexUnitOfWork with type '{index_type}' already exists: {cls._registry[index_type]!r}"
-            )
-
-        # if is_default and None in cls._registry:
-        #     raise RuntimeError(f"A default EntryRepository is already set. Default type is {cls._registry[None]!r}")
-        cls.type = index_type
-        cls._registry[index_type] = cls
-        if is_default or None not in cls._registry:
-            logger.info("Setting default IndexUnitOfWork type to '%s'", index_type)
-            cls._registry[None] = index_type
-
-    @classmethod
-    def get_default_index_type(cls) -> typing.Optional[str]:
-        return cls._registry[None]
-
-    @classmethod
-    def create(
-        cls, index_type: typing.Optional[str], **kwargs
-    ):  # , settings: typing.Dict, **kwargs):
-        print(f"_registry={cls._registry}")
-        if index_type is None:
-            index_type = cls._registry[None]
-        try:
-            uow_cls = cls._registry[index_type]
-        except KeyError as err:
-            raise errors.ConfigurationError(
-                f"Can't create an IndexUnitOfWork with type '{index_type}'"
-            ) from err
-        print(f"kwargs = {kwargs}")
-        return uow_cls.from_dict(**kwargs)
+    pass
 
 
 class EntriesUnitOfWork:

@@ -3,7 +3,7 @@ from karp.services import unit_of_work
 from . import es6_index
 
 
-class Es6IndexUnitOfWork(unit_of_work.IndexUnitOfWork, index_type="es6_index"):
+class Es6IndexUnitOfWork(unit_of_work.IndexUnitOfWork):
     def __init__(self, es6_search_service: es6_index.Es6Index) -> None:
         super().__init__()
         self._index = es6_search_service

@@ -27,7 +27,7 @@ KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
 
-class Es6Index(index.Index, index_type="es6_index"):
+class Es6Index(index.Index):
     def __init__(self, es: Optional[elasticsearch.Elasticsearch] = None):
         if es is None:
             logger.info(
@@ -162,7 +162,8 @@ class Es6Index(index.Index, index_type="es6_index"):
                 res = Es6Index.get_analyzed_fields_from_mapping(
                     prop_values["properties"]
                 )
-                analyzed_fields.extend([prop_name + "." + prop for prop in res])
+                analyzed_fields.extend(
+                    [prop_name + "." + prop for prop in res])
             else:
                 if prop_values["type"] == "text":
                     analyzed_fields.append(prop_name)
@@ -283,9 +284,10 @@ class Es6Index(index.Index, index_type="es6_index"):
 
                 if query.query is not None:
                     s = s.query(query.query)
-                s = s[query.from_ : query.from_ + query.size]
+                s = s[query.from_: query.from_ + query.size]
                 if query.sort:
-                    s = s.sort(*self.translate_sort_fields([resource], query.sort))
+                    s = s.sort(
+                        *self.translate_sort_fields([resource], query.sort))
                 elif resource in query.sort_dict:
                     s = s.sort(
                         *self.translate_sort_fields(
@@ -304,25 +306,29 @@ class Es6Index(index.Index, index_type="es6_index"):
                 if query.lexicon_stats:
                     if "distribution" not in result:
                         result["distribution"] = {}
-                    result["distribution"][query.resources[i]] = response.hits.total
+                    result["distribution"][query.resources[i]
+                                           ] = response.hits.total
             return result
         else:
-            s = es_dsl.Search(using=self.es, index=query.resources, doc_type="entry")
+            s = es_dsl.Search(
+                using=self.es, index=query.resources, doc_type="entry")
             if query.query is not None:
                 s = s.query(query.query)
 
-            s = s[query.from_ : query.from_ + query.size]
+            s = s[query.from_: query.from_ + query.size]
 
             if query.lexicon_stats:
                 s.aggs.bucket(
                     "distribution", "terms", field="_index", size=len(query.resources)
                 )
             if query.sort:
-                s = s.sort(*self.translate_sort_fields(query.resources, query.sort))
+                s = s.sort(
+                    *self.translate_sort_fields(query.resources, query.sort))
             elif query.sort_dict:
                 sort_fields = []
                 for resource, sort in query.sort_dict.items():
-                    sort_fields.extend(self.translate_sort_fields([resource], sort))
+                    sort_fields.extend(
+                        self.translate_sort_fields([resource], sort))
                 s = s.sort(*sort_fields)
             logger.debug("s = %s", s.to_dict())
             response = s.execute()
@@ -353,7 +359,8 @@ class Es6Index(index.Index, index_type="es6_index"):
         Returns:
             List[str] -- values that ES can sort by.
         """
-        translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
+        translated_sort_fields: List[Union[str,
+                                           Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None
             if "|" in sort_value:
@@ -447,7 +454,8 @@ class Es6Index(index.Index, index_type="es6_index"):
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():
                     ext_base_name = f"{base_name}.{ext_name}"
-                    parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
+                    parse_prop_value(sort_map, ext_base_name,
+                                     ext_base_name, ext_value)
                 return
             if prop_value["type"] in [
                 "boolean",
@@ -494,10 +502,12 @@ def _create_es_mapping(config):
             fun = parent_field_def["function"]
             if list(fun.keys())[0] == "multi_ref":
                 res_object = fun["multi_ref"]["result"]
-                recursive_field(parent_schema, "v_" + parent_field_name, res_object)
+                recursive_field(parent_schema, "v_" +
+                                parent_field_name, res_object)
             if "result" in fun:
                 res_object = fun["result"]
-                recursive_field(parent_schema, "v_" + parent_field_name, res_object)
+                recursive_field(parent_schema, "v_" +
+                                parent_field_name, res_object)
             return
         if parent_field_def.get("ref"):
             if "field" in parent_field_def["ref"]:
@@ -506,7 +516,8 @@ def _create_es_mapping(config):
                 res_object = {}
                 res_object.update(parent_field_def)
                 del res_object["ref"]
-            recursive_field(parent_schema, "v_" + parent_field_name, res_object)
+            recursive_field(parent_schema, "v_" +
+                            parent_field_name, res_object)
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.

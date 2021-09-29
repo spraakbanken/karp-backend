@@ -40,36 +40,6 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
 
 
 class Index(abc.ABC):
-    _registry = {}
-
-    def __init_subclass__(
-        cls, index_type: str, is_default: bool = False, **kwargs
-    ) -> None:
-        super().__init_subclass__(**kwargs)
-        if index_type is None:
-            raise RuntimeError("Unallowed index_type: index_type = None")
-        if index_type in cls._registry:
-            raise RuntimeError(
-                f"An Index with type '{index_type}' already exists: {cls._registry[index_type]!r}"
-            )
-        index_type = index_type.lower()
-        cls._registry[index_type] = cls
-        if is_default or None not in cls._registry:
-            logger.info("Setting default Index type to '%s'", index_type)
-            cls._registry[None] = index_type
-
-    @classmethod
-    def create(cls, index_type: Optional[str]):
-        if index_type is None:
-            index_type = cls._registry[None]
-        else:
-            index_type = index_type.lower()
-
-        try:
-            index_cls = cls._registry[index_type]
-        except KeyError:
-            raise ConfigurationError(f"Can't create a Index of type '{index_type}'")
-        return index_cls()
 
     @abc.abstractmethod
     def create_index(self, resource_id: str, config: Dict):

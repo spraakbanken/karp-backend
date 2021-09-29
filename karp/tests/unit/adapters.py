@@ -5,6 +5,7 @@ from typing import List
 from karp.domain import index, model, repository
 from karp.main.bootstrap import bootstrap_message_bus
 from karp.services import unit_of_work
+from karp.search.application.unit_of_work import SearchServiceUnitOfWork
 
 
 class FakeResourceRepository(repository.ResourceRepository):
@@ -39,7 +40,7 @@ class FakeResourceRepository(repository.ResourceRepository):
         return (res.resource_id for res in self.resources)
 
 
-class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
+class FakeEntryRepository(repository.EntryRepository):
     def __init__(self):
         super().__init__()
         self.entries = set()
@@ -90,7 +91,7 @@ class FakeEntryRepository(repository.EntryRepository, repository_type="fake"):
         yield from self.entries
 
 
-class FakeIndex(index.Index, index_type="fake"):
+class FakeIndex(index.Index):
     @dataclasses.dataclass
     class Index:
         config: typing.Dict
@@ -103,6 +104,7 @@ class FakeIndex(index.Index, index_type="fake"):
     def __init__(self) -> None:
         super().__init__()
         self.indicies = {}
+        self.seen = []
 
     def create_index(self, resource_id: str, config: typing.Dict):
         self.indicies[resource_id] = FakeIndex.Index(config=config)
@@ -160,7 +162,7 @@ class FakeUnitOfWork:
 
 
 class FakeEntryUnitOfWork(
-    FakeUnitOfWork, unit_of_work.EntryUnitOfWork, entry_repository_type="fake_entries"
+    FakeUnitOfWork, unit_of_work.EntryUnitOfWork
 ):
     def __init__(self, settings: typing.Dict):
         self._entries = FakeEntryRepository()
@@ -181,7 +183,18 @@ class FakeResourceUnitOfWork(FakeUnitOfWork, unit_of_work.ResourceUnitOfWork):
 
 
 class FakeIndexUnitOfWork(
-    FakeUnitOfWork, unit_of_work.IndexUnitOfWork, index_type="fake_index"
+    FakeUnitOfWork, unit_of_work.IndexUnitOfWork
+):
+    def __init__(self):
+        self._index = FakeIndex()
+
+    @property
+    def repo(self) -> index.Index:
+        return self._index
+
+
+class FakeSearchServiceUnitOfWork(
+    FakeUnitOfWork, unit_of_work.IndexUnitOfWork
 ):
     def __init__(self):
         self._index = FakeIndex()
@@ -207,17 +220,15 @@ class FakeEntryUowFactory(unit_of_work.EntryUowFactory):
 
 
 def bootstrap_test_app(
-    resource_uow: unit_of_work.ResourceUnitOfWork,
-    entry_uows: unit_of_work.EntriesUnitOfWork,
-    entry_uow_factory: unit_of_work.EntryUowFactory
+    resource_uow: unit_of_work.ResourceUnitOfWork = None,
+    entry_uows: unit_of_work.EntriesUnitOfWork = None,
+    entry_uow_factory: unit_of_work.EntryUowFactory = None,
+    search_service_uow: SearchServiceUnitOfWork = None,
 ):
-    return bootstrap_message_bus(resource_uow=resource_uow, entry_uows=entry_uows, entry_uow_factory=entry_uow_factory, raise_on_all_errors=True)
-    return messagebus.MessageBus(
-        resource_uow=FakeResourceUnitOfWork(),
-        entry_uows=unit_of_work.EntriesUnitOfWork(
-            # ((key, FakeEntryUnitOfWork()) for key in entry_uow_keys or [])
-        ),
-        search_service_uow=FakeIndexUnitOfWork(),
-        entry_uow_factory=FakeEntryUowFactory(),
-        raise_on_all_errors=True,
+    return bootstrap_message_bus(
+        resource_uow=resource_uow or FakeResourceUnitOfWork(),
+        entry_uows=entry_uows or unit_of_work.EntriesUnitOfWork(),
+        entry_uow_factory=entry_uow_factory or FakeEntryUowFactory(),
+        search_service_uow=search_service_uow or FakeSearchServiceUnitOfWork(),
+        raise_on_all_errors=True
     )

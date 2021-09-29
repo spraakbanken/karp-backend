@@ -6,8 +6,8 @@ from karp.domain.value_objects.unique_id import make_unique_id
 from karp.lex.domain import commands
 from karp.services import unit_of_work
 
-from .adapters import (FakeEntryUowFactory, FakeResourceUnitOfWork,
-                       bootstrap_test_app)
+from karp.tests.unit.adapters import (FakeEntryUowFactory, FakeResourceUnitOfWork,
+                                      bootstrap_test_app)
 
 
 class TestCreateResource:
