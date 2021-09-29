@@ -46,4 +46,5 @@ def bootstrap_message_bus(
             lex_events.EntryDeleted: [],
             lex_events.EntryUpdated: [],
         },
-        raise_on_all_errors=raise_on_all_errors)
+        raise_on_all_errors=raise_on_all_errors
+    )
