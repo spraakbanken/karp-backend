@@ -3,6 +3,7 @@ import typing
 from typing import List
 
 from karp.domain import index, model, repository
+from karp.lex.application import unit_of_work as lex_unit_of_work, repositories as lex_repositories
 from karp.main.bootstrap import bootstrap_message_bus
 from karp.services import unit_of_work
 from karp.search.application.unit_of_work import SearchServiceUnitOfWork
@@ -182,10 +183,6 @@ class FakeResourceUnitOfWork(FakeUnitOfWork, unit_of_work.ResourceUnitOfWork):
         return self._resources
 
 
-class FakeEntriesUnitOfWork(FakeUnitOfWork, unit_of_work.EntriesUnitOfWork):
-    def __init__(self):
-        self._repo = FakeEnUnitOfWork()
-
 class FakeIndexUnitOfWork(
     FakeUnitOfWork, unit_of_work.IndexUnitOfWork
 ):
@@ -223,14 +220,31 @@ class FakeEntryUowFactory(unit_of_work.EntryUowFactory):
         return entry_uow
 
 
+class FakeEntryRepositoryRepository(lex_repositories.EntryRepositoryRepository):
+    def __init__(self) -> None:
+        super().__init__()
+
+
+class FakeEntryRepositoryRepositoryUnitOfWork(FakeUnitOfWork, lex_unit_of_work.EntryRepositoryRepositoryUnitOfWork):
+    def __init__(self) -> None:
+        super().__init__()
+        self._repo = FakeEntryRepositoryRepository()
+
+    @property
+    def repo(self) -> lex_repositories.EntryRepositoryRepository:
+        return self._repo
+
+
 def bootstrap_test_app(
     resource_uow: unit_of_work.ResourceUnitOfWork = None,
     entry_uows: unit_of_work.EntriesUnitOfWork = None,
     entry_uow_factory: unit_of_work.EntryUowFactory = None,
     search_service_uow: SearchServiceUnitOfWork = None,
+    entry_repo_repo_uow: lex_unit_of_work.EntryRepositoryRepositoryUnitOfWork = None,
 ):
     return bootstrap_message_bus(
         resource_uow=resource_uow or FakeResourceUnitOfWork(),
+        entry_repo_repo_uow=entry_repo_repo_uow or FakeEntryRepositoryRepositoryUnitOfWork(),
         entry_uows=entry_uows or unit_of_work.EntriesUnitOfWork(),
         entry_uow_factory=entry_uow_factory or FakeEntryUowFactory(),
         search_service_uow=search_service_uow or FakeSearchServiceUnitOfWork(),

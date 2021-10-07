@@ -10,15 +10,6 @@ class DomainError(errors.KarpError):
         super().__init__(*args, **kwargs)
 
 
-class NotFoundError(DomainError):
-    entity_name: str
-
-    def __init__(self, entity_id, *args, **kwargs):
-        super().__init__(
-            f"{self.entity_name} not found, id: {entity_id}", *args, **kwargs
-        )
-
-
 class EntryNotFound(DomainError):
     entity_name: str = "Entry"
 
@@ -72,7 +63,8 @@ class ResourceNotPublished(DomainError):
     """Raised when a resource is not published."""
 
     def __init__(self, resource_id, **kwargs):
-        super().__init__(f"Resource '{resource_id}' is not published.", **kwargs)
+        super().__init__(
+            f"Resource '{resource_id}' is not published.", **kwargs)
 
 
 class RepositoryError(DomainError):
@@ -147,7 +139,8 @@ class UpdateConflict(DomainError):
             "Version conflict. Please update entry.",
             code=errors.ClientErrorCodes.VERSION_CONFLICT,
         )
-        self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}
+        self.error_obj = {"diff": diff,
+                          "errorCode": self.code, "error": self.message}
 
 
 class InvalidEntry(DomainError):

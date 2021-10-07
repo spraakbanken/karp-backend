@@ -6,6 +6,8 @@ from karp.tests import random_refs
 
 from .adapters import bootstrap_test_app
 
+pytestmark = pytest.mark.skip()
+
 
 class TestSearchIds:
     def test_cannot_search_non_existent_resource(self):
