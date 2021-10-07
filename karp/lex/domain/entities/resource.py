@@ -6,10 +6,10 @@ from typing import Any, Callable, Dict, List, Optional, Type, Union
 from uuid import UUID
 
 from karp.domain import constraints, events
-from karp.domain.errors import ConfigurationError, RepositoryStatusError
+from karp.domain.errors import ConfigurationError
 from karp.domain.models import event_handler
 from karp.domain.models.entity import Entity, TimestampedVersionedEntity
-from karp.domain.models.entry import Entry, create_entry
+from .entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
 from karp.domain.value_objects import PermissionLevel, unique_id
 from karp.utility import json_schema, time
@@ -55,7 +55,6 @@ class Resource(TimestampedVersionedEntity):
 
     @classmethod
     def from_dict(cls, config: Dict, **kwargs):
-        from karp.domain import repository
 
         resource_id = config.pop("resource_id")
         resource_name = config.pop("resource_name")
@@ -369,7 +368,6 @@ def create_resource(
     message: typing.Optional[str] = None,
     name: typing.Optional[str] = None,
 ) -> Resource:
-    from karp.domain import repository
 
     resource_id_in_config = config.pop("resource_id", None)
     resource_id = resource_id or resource_id_in_config

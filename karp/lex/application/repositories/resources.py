@@ -4,6 +4,7 @@ import typing
 import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
+from karp.foundation import repository
 from karp.domain.value_objects import UniqueId
 
 from . import errors, model
@@ -11,7 +12,7 @@ from . import errors, model
 logger = logging.getLogger("karp")
 
 
-class ResourceRepository(Repository[model.Resource]):
+class ResourceRepository(repository.Repository[model.Resource]):
     EntityNotFound = errors.ResourceNotFound
 
     @abc.abstractmethod
