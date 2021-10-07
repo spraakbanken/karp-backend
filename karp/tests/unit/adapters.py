@@ -182,6 +182,10 @@ class FakeResourceUnitOfWork(FakeUnitOfWork, unit_of_work.ResourceUnitOfWork):
         return self._resources
 
 
+class FakeEntriesUnitOfWork(FakeUnitOfWork, unit_of_work.EntriesUnitOfWork):
+    def __init__(self):
+        self._repo = FakeEnUnitOfWork()
+
 class FakeIndexUnitOfWork(
     FakeUnitOfWork, unit_of_work.IndexUnitOfWork
 ):

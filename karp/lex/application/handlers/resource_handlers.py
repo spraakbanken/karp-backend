@@ -176,13 +176,18 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 #     return update_resource(config_file)
 
 class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
-    def __init__(self, resource_uow: unit_of_work.ResourceUnitOfWork, entry_uow_factory: unit_of_work.EntryUowFactory, entry_uows: unit_of_work.EntriesUnitOfWork) -> None:
+    def __init__(
+        self,
+        resource_uow: unit_of_work.ResourceUnitOfWork,
+        entry_uow_factory: unit_of_work.EntryUowFactory,
+        entry_uows: unit_of_work.EntriesUnitOfWork
+    ) -> None:
         super().__init__(resource_uow=resource_uow)
         self.entry_uow_factory = entry_uow_factory
         self.entry_uows = entry_uows
 
     def execute(self, cmd: commands.CreateResource):
-        with self.resource_uow as uow:
+        with self.resource_uow as uow, self.entry_uows as entry_uows:
             try:
                 existing_resource = uow.resources.by_resource_id(
                     cmd.resource_id)
@@ -202,18 +207,23 @@ class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
                 name=cmd.name,
             )
 
-            entry_repo_uow = self.entry_uow_factory.create(
-                resource_id=cmd.resource_id,
-                resource_config=resource.config,
-                entry_repository_settings=cmd.entry_repository_settings,
-            )
-            resource.entry_repository_type = entry_repo_uow.type
+            if resource.entry_repo_id:
+                entry_repo_uow = entry_uows.get_by_id(
+                    resource.entry_repo_id
+                )
+            else:
+                entry_repo_uow = self.entry_uow_factory.create(
+                    resource_id=cmd.resource_id,
+                    resource_config=resource.config,
+                    entry_repository_settings=cmd.entry_repository_settings,
+                )
+            resource.entry_repo_id = entry_repo_uow.id
             resource.entry_repository_settings = entry_repo_uow.repo_settings
-
-            self.entry_uows.set_uow(cmd.resource_id, entry_repo_uow)
 
             uow.repo.put(resource)
             uow.commit()
+            entry_uows.put(entry_repo_uow)
+            entry_uows.commit()
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()

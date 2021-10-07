@@ -59,19 +59,6 @@ class Resource(TimestampedVersionedEntity):
 
         resource_id = config.pop("resource_id")
         resource_name = config.pop("resource_name")
-        if "entry_repository_type" not in config:
-            config[
-                "entry_repository_type"
-            ] = repository.EntryRepository.get_default_repository_type()
-        entry_repository_settings = config.get("entry_repository_settings")
-        if entry_repository_settings is None:
-            entry_repository_settings = (
-                repository.EntryRepository.create_repository_settings(
-                    config["entry_repository_type"],
-                    resource_id,
-                    config,
-                )
-            )
 
         #     entry_repository = EntryRepository.create(
         #         config["entry_repository_type"],
@@ -393,18 +380,6 @@ def create_resource(
     name_in_config = config.pop("resource_name", None)
     resource_name = name or name_in_config or resource_id
     entity_id = entity_id or unique_id.make_unique_id()
-    if "entry_repository_type" not in config:
-        config[
-            "entry_repository_type"
-        ] = repository.EntryRepository.get_default_repository_type()
-    entry_repository_settings = config.get("entry_repository_settings")
-    if entry_repository_settings is None:
-        entry_repository_settings = (
-            repository.EntryRepository.create_repository_settings(
-                config["entry_repository_type"], resource_id, config
-            )
-        )
-        config["entry_repository_settings"] = entry_repository_settings
     #
     #     entry_repository = EntryRepository.create(
     #         config["entry_repository_type"],

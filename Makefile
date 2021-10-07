@@ -91,7 +91,7 @@ run-all-tests: unit-tests run-integration-tests
 run-all-tests-w-coverage: run-unit-tests-w-coverage run-integration-tests-w-coverage
 
 .PHONY: unit-tests
-unit-tests: install-dev clean-pyc
+unit-tests: clean-pyc
 	poetry run pytest -vv karp/tests/unit
 
 .PHONY: e2e-tests
