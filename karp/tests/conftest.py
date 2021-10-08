@@ -22,10 +22,10 @@ import elasticsearch_test  # pyre-ignore
 
 from karp import config
 from karp import errors as karp_errors
-from karp.domain import commands, errors, model
-from karp.domain.value_objects import unique_id
-from karp.infrastructure.sql import sql_models
-from karp.infrastructure.sql.db import metadata
+from karp.lex.domain import commands, errors
+from karp.lex.domain.value_objects import unique_id
+from karp.lex_infrastructure.sql.db import metadata
+import karp.lex_infrastructure.sql.sql_models
 # # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
 from karp.infrastructure.testing import dummy_auth_service

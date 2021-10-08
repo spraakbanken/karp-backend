@@ -1,4 +1,3 @@
-from karp.domain.commands import Command
 import pydantic
 
 from karp.lex.domain.value_objects import UniqueId

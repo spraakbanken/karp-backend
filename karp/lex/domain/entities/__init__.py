@@ -1,1 +1,2 @@
-from karp.domain.models.entry import Entry
+from .entry import Entry
+from .resource import Resource

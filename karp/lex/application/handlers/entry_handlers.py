@@ -10,10 +10,10 @@ import fastjsonschema  # pyre-ignore
 import json_streams
 from sb_json_tools import jsondiff
 
-from karp.domain import errors, model
-from karp.domain.models.entry import Entry
-from karp.domain.models.resource import Resource
-from karp.domain.value_objects import unique_id
+from karp.lex.domain import errors, entities
+from karp.lex.domain.entities.entry import Entry
+from karp.lex.domain.entities.resource import Resource
+from karp.lex.domain.value_objects import unique_id
 from karp.errors import (ClientErrorCodes, EntryIdMismatch, EntryNotFoundError,
                          KarpError, UpdateConflict)
 from karp.foundation import events as foundation_events

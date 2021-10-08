@@ -1,9 +1,8 @@
 """Lex domain errors."""
 
 
-from karp.domain.errors import NonExistingField
 from typing import Dict
-
+from karp.foundation.errors import NotFoundError
 
 class LexDomainError(Exception):
 
@@ -14,7 +13,7 @@ class LexDomainError(Exception):
         self.extras = extras or {}
 
 
-class EntryNotFound(NotFoundError):
+class EntryNotFound(NotFoundError, LexDomainError):
     entity_name = "Entry"
 
     def __init__(self, entity_id, *args, **kwargs):

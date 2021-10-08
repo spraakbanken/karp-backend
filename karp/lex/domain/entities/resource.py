@@ -8,10 +8,11 @@ from uuid import UUID
 from karp.domain import constraints, events
 from karp.domain.errors import ConfigurationError
 from karp.domain.models import event_handler
-from karp.domain.models.entity import Entity, TimestampedVersionedEntity
+from karp.foundation.entity import Entity, TimestampedVersionedEntity
+from karp.foundation.value_objects import PermissionLevel
 from .entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
-from karp.domain.value_objects import PermissionLevel, unique_id
+from karp.lex.domain.value_objects import unique_id
 from karp.utility import json_schema, time
 from karp.utility.container import create_field_getter
 from karp.utility.time import utc_now
