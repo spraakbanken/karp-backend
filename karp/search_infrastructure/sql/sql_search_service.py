@@ -1,12 +1,12 @@
 from typing import Dict, List, Optional
 
 # from karp.domain.models.search_service import SearchService, IndexEntry
-from karp.domain import index
+from karp.search.domain import search_service
 from karp.domain.models.entry import Entry
 from karp.domain.models.resource import Resource
 
 
-class SqlSearchService(index.Index):
+class SqlSearchService(search_service.SearchService):
     def create_index(self, resource_id: str, resource_config: Dict):
         pass
 
@@ -25,7 +25,7 @@ class SqlSearchService(index.Index):
     def statistics(self):
         pass
 
-    def add_entries(self, resource_id, entries: List[index.IndexEntry]):
+    def add_entries(self, resource_id, entries: List[search_service.IndexEntry]):
         pass
 
     def delete_entry(
