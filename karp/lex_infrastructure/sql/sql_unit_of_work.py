@@ -8,13 +8,12 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from karp.application import config
-from karp.domain import errors, repository
-from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
-from karp.infrastructure.sql.sql_resource_repository import \
+from karp.lex_infrastructure.sql.sql_entry_repository import SqlEntryRepository
+from karp.lex_infrastructure.sql.sql_resource_repository import \
     SqlResourceRepository
-from karp.services import unit_of_work
+from karp.lex.application import unit_of_work
 
-from .sql_index import SqlSearchService
+# from .sql_index import SqlSearchService
 
 DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 
@@ -176,29 +175,6 @@ class SqlEntryUnitOfWork(
             return super().collect_new_events()
         else:
             return []
-
-
-class SqlIndexUnitOfWork(unit_of_work.IndexUnitOfWork):
-    @classmethod
-    def from_dict(cls, **kwargs):
-        print(f"SqlIndexUnitOfWork.from_dict: kwargs = {kwargs}")
-        return cls()
-
-    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
-        self.session_factory = session_factory
-        self._index = SqlSearchService()
-
-    def _commit(self):
-        pass
-
-    def rollback(self):
-        pass
-
-    @property
-    def repo(self):
-        if not self._index:
-            raise RuntimeError()
-        return self._index
 
 
 # @unit_of_work.create_entry_unit_of_work.register(SqlEntryRepository)

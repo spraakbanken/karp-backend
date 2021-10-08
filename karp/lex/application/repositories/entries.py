@@ -1,6 +1,6 @@
 import abc
 import typing
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from karp.foundation import repository
 from karp.lex.domain import entities, errors

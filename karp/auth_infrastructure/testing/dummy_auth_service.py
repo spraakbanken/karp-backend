@@ -1,8 +1,8 @@
 from typing import List
 
-from karp.domain import value_objects
-from karp.domain.models.user import User
-from karp.services import auth_service, context
+from karp.foundation import value_objects
+from karp.auth.domain.entities.user import User
+from karp.services import auth_service
 
 
 class DummyAuthService(auth_service.AuthService, auth_service_type="dummy_auth"):

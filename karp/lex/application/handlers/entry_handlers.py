@@ -19,7 +19,7 @@ from karp.errors import (ClientErrorCodes, EntryIdMismatch, EntryNotFoundError,
 from karp.foundation import events as foundation_events
 from karp.foundation import messagebus
 from karp.lex.domain import commands
-from karp.services import unit_of_work
+from karp.lex.application import unit_of_work
 
 # from . import context
 

@@ -35,7 +35,7 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
         return v
 
 
-class Index(abc.ABC):
+class SearchService(abc.ABC):
 
     @abc.abstractmethod
     def create_index(self, resource_id: str, config: Dict):

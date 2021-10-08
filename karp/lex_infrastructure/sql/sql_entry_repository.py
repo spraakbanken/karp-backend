@@ -1,4 +1,4 @@
-"""SQL repository for entries."""
+"""SQL repositories for entries."""
 import logging
 import typing
 from typing import Dict, List, Optional, Tuple
@@ -6,13 +6,13 @@ from uuid import UUID
 
 import regex
 
-from karp import errors as karp_errors
-from karp.domain import errors, repository
+from karp.lex.domain import errors
+from karp.lex.application import repositories
 from karp.domain.errors import NonExistingField, RepositoryError
-from karp.domain.models.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
+from karp.lex.domain.entities.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
     Entry, EntryOp, EntryStatus)
-from karp.infrastructure.sql import db, sql_models
-from karp.infrastructure.sql.sql_repository import SqlRepository
+from karp.lex_infrastructure.sql import db, sql_models
+from karp.lex_infrastructure.sql.sql_repository import SqlRepository
 
 logger = logging.getLogger("karp")
 
@@ -22,7 +22,7 @@ NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 
 
 class SqlEntryRepository(
-    repository.EntryRepository, SqlRepository
+    repositories.EntryRepository, SqlRepository
 ):
     def __init__(
         self,
@@ -36,7 +36,7 @@ class SqlEntryRepository(
     ):
         if not session:
             raise TypeError("session can't be None")
-        repository.EntryRepository.__init__(self)
+        repositories.EntryRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
         self.history_model = history_model
         self.runtime_model = runtime_model

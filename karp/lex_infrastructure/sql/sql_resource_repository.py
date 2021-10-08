@@ -4,9 +4,10 @@ import typing
 from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
-from karp.domain import errors, model, repository
-from karp.domain.errors import IntegrityError, RepositoryStatusError
-from karp.domain.models.resource import Resource, ResourceOp
+from karp.lex.domain import errors, entities
+from karp.lex.application import repositories
+from karp.lex.domain.errors import IntegrityError, RepositoryStatusError
+from karp.lex.domain.entities.resource import Resource, ResourceOp
 
 from . import db, sql_models
 from .sql_models import ResourceDTO
@@ -15,9 +16,9 @@ from .sql_repository import SqlRepository
 _logger = logging.getLogger("karp")
 
 
-class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
+class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
     def __init__(self, session: db.Session):
-        repository.ResourceRepository.__init__(self)
+        repositories.ResourceRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
         self.table = sql_models.ResourceDTO
 
@@ -46,7 +47,8 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
                 f"Resource with resource_id '{resource.resource_id}' already exists."
             )
         if resource.version is None:
-            resource._version = self.get_latest_version(resource.resource_id) + 1
+            resource._version = self.get_latest_version(
+                resource.resource_id) + 1
 
         # self._session.execute(
         #     db.insert(self.table).values(**self._resource_to_dict(resource))
@@ -63,7 +65,7 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
 
     def _by_id(
         self, id: Union[UUID, str], *, version: Optional[int] = None
-    ) -> typing.Optional[model.Resource]:
+    ) -> typing.Optional[entities.Resource]:
         self._check_has_session()
         query = self._session.query(ResourceDTO).filter_by(id=id)
         if version:
@@ -77,7 +79,8 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
         self, resource_id: str, *, version: Optional[int] = None
     ) -> Optional[Resource]:
         self._check_has_session()
-        query = self._session.query(ResourceDTO).filter_by(resource_id=resource_id)
+        query = self._session.query(
+            ResourceDTO).filter_by(resource_id=resource_id)
         if version:
             query = query.filter_by(version=version)
         else:
@@ -93,7 +96,8 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
     ) -> Optional[Resource]:
         self._check_has_session()
         query = self._session.query(ResourceDTO)
-        resource_dto = query.filter_by(resource_id=resource_id, version=version).first()
+        resource_dto = query.filter_by(
+            resource_id=resource_id, version=version).first()
         return resource_dto.to_entity() if resource_dto else None
 
     def get_active_resource(self, resource_id: str) -> Optional[Resource]:
@@ -116,7 +120,7 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
             return 0
         return row.version
 
-    def history_by_resource_id(self, resource_id: str) -> typing.List[model.Resource]:
+    def history_by_resource_id(self, resource_id: str) -> typing.List[entities.Resource]:
         self._check_has_session()
         query = self._session.query(ResourceDTO)
         return [
@@ -126,7 +130,7 @@ class SqlResourceRepository(SqlRepository, repository.ResourceRepository):
             .all()
         ]
 
-    def _get_published_resources(self) -> typing.List[model.Resource]:
+    def _get_published_resources(self) -> typing.List[entities.Resource]:
         self._check_has_session()
         subq = (
             self._session.query(

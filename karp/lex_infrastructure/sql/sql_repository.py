@@ -1,13 +1,8 @@
 """Base class for SQL repositories."""
 import logging
-from enum import Enum
-from typing import Optional
 
-import regex
 
-from karp import errors
-from karp.infrastructure.sql import db
-from karp.services import unit_of_work
+from karp.lex_infrastructure.sql import db
 
 logger = logging.getLogger("karp")
 

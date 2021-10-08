@@ -5,13 +5,13 @@ from pathlib import Path
 from typing import IO, Dict, Generic, List, Optional, Tuple
 
 from karp import errors as karp_errors
-from karp.domain import errors, events, model
-from karp.domain.models.resource import Resource
+from karp.domain import errors, events
+from karp.lex.domain.entities import Resource
 from karp.foundation import events as foundation_events
 from karp.foundation import messagebus
 from karp.lex.application import unit_of_work as lex_unit_of_work
 from karp.lex.domain import commands
-from karp.services import unit_of_work
+from karp.lex.application import unit_of_work
 
 
 # from karp.application import ctx

@@ -5,14 +5,14 @@ import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
 from karp.foundation import repository
-from karp.domain.value_objects import UniqueId
+from karp.lex.domain import entities
 
-from . import errors, model
+from karp.lex.domain import errors
 
 logger = logging.getLogger("karp")
 
 
-class ResourceRepository(repository.Repository[model.Resource]):
+class ResourceRepository(repository.Repository[entities.Resource]):
     EntityNotFound = errors.ResourceNotFound
 
     @abc.abstractmethod
@@ -25,7 +25,7 @@ class ResourceRepository(repository.Repository[model.Resource]):
 
     def by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
-    ) -> model.Resource:
+    ) -> entities.Resource:
         resource = self._by_resource_id(resource_id, version=version)
         if resource:
             self.seen.add(resource)
@@ -37,7 +37,7 @@ class ResourceRepository(repository.Repository[model.Resource]):
     @abc.abstractmethod
     def _by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
-    ) -> Optional[model.Resource]:
+    ) -> Optional[entities.Resource]:
         raise NotImplementedError()
 
     # @abc.abstractmethod
@@ -52,7 +52,7 @@ class ResourceRepository(repository.Repository[model.Resource]):
     # def get_active_resource(self, resource_id: str) -> Optional[Resource]:
     #     raise NotImplementedError()
 
-    def get_published_resources(self) -> typing.List[model.Resource]:
+    def get_published_resources(self) -> typing.List[entities.Resource]:
         published_resources = []
         for resource in self._get_published_resources():
             self.seen.add(resource)
@@ -60,5 +60,5 @@ class ResourceRepository(repository.Repository[model.Resource]):
         return published_resources
 
     @abc.abstractmethod
-    def _get_published_resources(self) -> typing.Iterable[model.Resource]:
+    def _get_published_resources(self) -> typing.Iterable[entities.Resource]:
         raise NotImplementedError()
