@@ -6,41 +6,8 @@ from functools import singledispatch
 
 from karp.domain import errors, index, network, repository
 
-RepositoryType = typing.TypeVar(
-    "RepositoryType", repository.Repository, index.Index, network.Network
-)
-
 
 logger = logging.getLogger("karp")
-
-
-class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.rollback()
-
-    def commit(self):
-        self._commit()
-
-    def collect_new_events(self) -> typing.Iterable:
-        for entity in self.repo.seen:
-            while entity.events:
-                yield entity.events.pop(0)
-
-    @abc.abstractmethod
-    def _commit(self):
-        pass
-
-    @abc.abstractmethod
-    def rollback(self):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def repo(self) -> RepositoryType:
-        pass
 
 
 class ResourceUnitOfWork(UnitOfWork[repository.ResourceRepository]):
