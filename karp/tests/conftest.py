@@ -28,7 +28,7 @@ from karp.lex_infrastructure.sql.db import metadata
 import karp.lex_infrastructure.sql.sql_models
 # # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
-from karp.infrastructure.testing import dummy_auth_service
+from karp.auth_infrastructure.testing import dummy_auth_service
 from karp.tests import common_data, utils
 
 # from karp.domain.models.resource import create_resource

@@ -5,21 +5,28 @@ from karp.foundation.commands import CommandBus
 from karp.lex import Lex
 from karp.lex.application.unit_of_work import (
     EntryRepositoryRepositoryUnitOfWork,
+    EntryRepositoryUnitOfWorkFactory,
 )
 from karp.main.modules import CommandBusMod
-from karp.services import unit_of_work
+from karp.lex.application import unit_of_work
 
 from .adapters import (
     FakeEntryRepositoryRepositoryUnitOfWork,
     FakeEntryUowFactory,
     FakeResourceUnitOfWork,
     FakeSearchServiceUnitOfWork,
+    FakeEntryRepositoryUnitOfWorkFactory,
 )
 
 
 @pytest.fixture(name="entry_repo_repo_uow")
 def fixture_entry_repo_repo_uow() -> EntryRepositoryRepositoryUnitOfWork:
     return FakeEntryRepositoryRepositoryUnitOfWork()
+
+
+@pytest.fixture(name="entry_repo_uow_factory")
+def fixture_entry_repo_uow_factory() -> EntryRepositoryUnitOfWorkFactory:
+    return FakeEntryRepositoryUnitOfWorkFactory()
 
 
 def configure_for_testing(binder: injector.Binder) -> None:

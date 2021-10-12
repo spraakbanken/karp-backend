@@ -9,24 +9,25 @@ from typing import Dict, List, Optional, Tuple, Iterable
 from karp.foundation import messagebus, events as foundation_events
 from karp.lex.domain import events as lex_events
 from karp.search.application.unit_of_work import SearchServiceUnitOfWork
-# from .index import IndexModule
+# from .search_service import SearchServiceModule
 # import karp.resourcemgr as resourcemgr
 # import karp.resourcemgr.entryread as entryread
 # from karp.resourcemgr.resource import Resource
 from karp import errors as karp_errors
-from karp.domain import commands, errors, events, index, model
-from karp.domain.index import Index, IndexEntry
-from karp.domain.models.entry import Entry, create_entry
-from karp.domain.models.resource import Resource
-from karp.domain.repository import ResourceRepository
-from karp.services import context, network_handlers
+from karp.lex.domain import events, entities
+from karp.search.domain import commands, search_service  #, errors, events, search_service, model
+from karp.search.domain.search_service import SearchService, IndexEntry
+from karp.lex.domain.entities.entry import Entry, create_entry
+# from karp.domain.models.resource import Resource
+# from karp.domain.repository import ResourceRepository
+# from karp.services import context, network_handlers
 
 # from karp.domain.services import network
 
 
 # from karp.resourcemgr.entrymetadata import EntryMetadata
 
-# indexer = IndexModule()
+# search_serviceer = SearchServiceModule()
 
 logger = logging.getLogger("karp")
 
@@ -36,12 +37,12 @@ logger = logging.getLogger("karp")
 # ) -> List[Tuple[str, EntryMetadata, Dict]]:
 #     metadata = resourcemgr.get_all_metadata(resource_obj)
 #     fields = resource_obj.config["fields"].items()
-#     entries = resource_obj.model.query.filter_by(deleted=False)
+#     entries = resource_obj.entities.query.filter_by(deleted=False)
 #     return [
 #         (
 #             entry.entry_id,
 #             metadata[entry.id],
-#             transform_to_index_entry(resource_obj, json.loads(entry.body), fields),
+#             transform_to_search_service_entry(resource_obj, json.loads(entry.body), fields),
 #         )
 #         for entry in entries
 #     ]
@@ -49,7 +50,6 @@ logger = logging.getLogger("karp")
 
 def pre_process_resource(
     resource_id: str,
-    ctx: context.Context,
 ) -> typing.Iterable[IndexEntry]:
     with ctx.resource_uow as uw:
         resource = uw.repo.by_resource_id(resource_id)
@@ -58,101 +58,99 @@ def pre_process_resource(
 
     with ctx.entry_uows.get(resource_id) as uw:
         for entry in uw.repo.all_entries():
-            yield transform_to_index_entry(resource, entry, ctx)
+            yield transform_to_search_service_entry(resource, entry, ctx)
 
     # metadata = resourcemgr.get_all_metadata(resource_obj)
     # fields = resource_obj.config["fields"].items()
-    # entries = resource_obj.model.query.filter_by(deleted=False)
+    # entries = resource_obj.entities.query.filter_by(deleted=False)
     # return [
     #     (
     #         entry.entry_id,
     #         metadata[entry.id],
-    #         transform_to_index_entry(resource_obj, json.loads(entry.body), fields),
+    #         transform_to_search_service_entry(resource_obj, json.loads(entry.body), fields),
     #     )
     #     for entry in entries
     # ]
 
 
-# def reindex(
+# def research_service(
 #     resource_id: str,
 #     version: Optional[int] = None,
 #     search_entries: Optional[List[Tuple[str, EntryMetadata, Dict]]] = None,
 # ) -> None:
 #     """
-#     If `search_entries` is not given, they will be fetched from DB and processed using `transform_to_index_entry`
+#     If `search_entries` is not given, they will be fetched from DB and processed using `transform_to_search_service_entry`
 #     If `search_entries` is given, they most have the same format as the output from `pre_process_resource`
 #     """
 #     resource_obj = resourcemgr.get_resource(resource_id, version=version)
 #     try:
-#         index_name = indexer.impl.create_index(resource_id, resource_obj.config)
+#         search_service_name = search_serviceer.impl.create_search_service(resource_id, resource_obj.config)
 #     except NotImplementedError:
-#         _logger.error("No Index module is loaded. Check your configurations...")
-#         sys.exit(errors.NoIndexModuleConfigured)
+#         _logger.error("No SearchService module is loaded. Check your configurations...")
+#         sys.exit(errors.NoSearchServiceModuleConfigured)
 #     if not search_entries:
 #         search_entries = pre_process_resource(resource_obj)
-#     add_entries(index_name, search_entries, update_refs=False)
-#     indexer.impl.publish_index(resource_id, index_name)
-# def reindex(
-#     indexer: Index,
+#     add_entries(search_service_name, search_entries, update_refs=False)
+#     search_serviceer.impl.publish_search_service(resource_id, search_service_name)
+# def research_service(
+#     search_serviceer: SearchService,
 #     resource_repo: ResourceRepository,
 #     resource: Resource,
 #     search_entries: Optional[List[IndexEntry]] = None,
 # ):
 
 
-def reindex_resource(cmd: commands.ReindexResource, ctx: context.Context):
+def research_service_resource(cmd: commands.ReindexResource):
     logger.debug("Reindexing resource '%s'", cmd.resource_id)
     with ctx.resource_uow as resource_uw:
         resource = resource_uw.resources.by_resource_id(cmd.resource_id)
         if not resource:
             raise errors.ResourceNotFound(resource_id=cmd.resource_id)
-    with ctx.index_uow as index_uw:
-        index_uw.repo.create_index(cmd.resource_id, resource.config)
-        index_uw.repo.add_entries(
+    with ctx.search_service_uow as search_service_uw:
+        search_service_uw.repo.create_search_service(cmd.resource_id, resource.config)
+        search_service_uw.repo.add_entries(
             cmd.resource_id, pre_process_resource(cmd.resource_id, ctx)
         )
-        index_uw.commit()
+        search_service_uw.commit()
 
 
-def reindex(
+def research_service(
     evt: events.ResourcePublished,
-    ctx: context.Context,
 ):
-    print("creating index ...")
-    index_name = indexer.create_index(resource.resource_id, resource.config)
+    print("creating search_service ...")
+    search_service_name = search_serviceer.create_search_service(resource.resource_id, resource.config)
 
     if not search_entries:
         print("preprocessing entries ...")
-        search_entries = pre_process_resource(resource, resource_repo, indexer)
-    print(f"adding entries to '{index_name}' ...")
+        search_entries = pre_process_resource(resource, resource_repo, search_serviceer)
+    print(f"adding entries to '{search_service_name}' ...")
     # add_entries(
     #     resource_repo,
-    #     indexer,
+    #     search_serviceer,
     #     resource,
     #     search_entries,
-    #     index_name=index_name,
+    #     search_service_name=search_service_name,
     #     update_refs=False,
     # )
-    indexer.add_entries(index_name, search_entries)
+    search_serviceer.add_entries(search_service_name, search_entries)
     print("publishing ...")
-    indexer.publish_index(resource.resource_id, index_name)
+    search_serviceer.publish_search_service(resource.resource_id, search_service_name)
 
 
-# def publish_index(resource_id: str, version: Optional[int] = None) -> None:
-def publish_index(
+# def publish_search_service(resource_id: str, version: Optional[int] = None) -> None:
+def publish_search_service(
     evt: events.ResourcePublished,
-    ctx: context.Context,
 ) -> None:
-    print("calling reindex ...")
-    # reindex(evt, ctx)
-    with ctx.index_uow:
-        ctx.index_uow.repo.publish_index(evt.resource_id)
-        ctx.index_uow.commit()
+    print("calling research_service ...")
+    # research_service(evt, ctx)
+    with ctx.search_service_uow:
+        ctx.search_service_uow.repo.publish_search_service(evt.resource_id)
+        ctx.search_service_uow.commit()
     # if version:
     #     resourcemgr.publish_resource(resource_id, version)
 
 
-class CreateIndexHandler(messagebus.Handler[lex_events.ResourceCreated]):
+class CreateSearchServiceHandler(messagebus.Handler[lex_events.ResourceCreated]):
     def __init__(self, search_service_uow: SearchServiceUnitOfWork):
         self.search_service_uow = search_service_uow
 
@@ -160,9 +158,9 @@ class CreateIndexHandler(messagebus.Handler[lex_events.ResourceCreated]):
         yield from self.search_service_uow.collect_new_events()
 
     def execute(self, evt: events.ResourceCreated):
-        print(f"index_handlers.create_index: evt = {evt}")
+        print(f"search_service_handlers.create_search_service: evt = {evt}")
         with self.search_service_uow:
-            self.search_service_uow.repo.create_index(
+            self.search_service_uow.repo.create_search_service(
                 evt.resource_id, evt.config)
             self.search_service_uow.commit()
 
@@ -172,17 +170,16 @@ class CreateIndexHandler(messagebus.Handler[lex_events.ResourceCreated]):
 #     entries: List[Tuple[str, EntryMetadata, Dict]],
 #     update_refs: bool = True,
 # ) -> None:
-#     indexer.impl.add_entries(resource_id, entries)
+#     search_serviceer.impl.add_entries(resource_id, entries)
 #     if update_refs:
 #         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
 def add_entry(
     evt: events.EntryAdded,
-    ctx: context.Context,
 ):
-    with ctx.index_uow:
-        entry = model.Entry(
+    with ctx.search_service_uow:
+        entry = entities.Entry(
             entity_id=evt.id,
             entry_id=evt.entry_id,
             resource_id=evt.resource_id,
@@ -192,15 +189,14 @@ def add_entry(
             last_modified_by=evt.user,
         )
         add_entries(evt.resource_id, [entry], ctx)
-        ctx.index_uow.commit()
+        ctx.search_service_uow.commit()
 
 
 def update_entry(
     evt: events.EntryUpdated,
-    ctx: context.Context,
 ):
-    with ctx.index_uow:
-        entry = model.Entry(
+    with ctx.search_service_uow:
+        entry = entities.Entry(
             entity_id=evt.id,
             entry_id=evt.entry_id,
             resource_id=evt.resource_id,
@@ -211,48 +207,47 @@ def update_entry(
             version=evt.version,
         )
         add_entries(evt.resource_id, [entry], ctx)
-        ctx.index_uow.commit()
+        ctx.search_service_uow.commit()
 
     # def add_entries(
     #     resource_repo: ResourceRepository,
-    #     indexer: Index,
+    #     search_serviceer: SearchService,
     #     resource: Resource,
     #     entries: List[Entry],
     #     *,
     #     update_refs: bool = True,
-    #     index_name: Optional[str] = None,
+    #     search_service_name: Optional[str] = None,
     # ) -> None:
 
 
 def add_entries(
     resource_id: str,
-    entries: typing.List[model.Entry],
-    ctx: context.Context,
+    entries: typing.List[entities.Entry],
     *,
     update_refs: bool = True,
-    index_name: typing.Optional[str] = None,
+    search_service_name: typing.Optional[str] = None,
 ):
-    if not index_name:
-        index_name = resource_id
-    with ctx.index_uow:
+    if not search_service_name:
+        search_service_name = resource_id
+    with ctx.search_service_uow:
         with ctx.resource_uow:
             resource = ctx.resource_uow.repo.by_resource_id(resource_id)
             if not resource:
                 raise errors.ResourceNotFound(resource_id)
-            ctx.index_uow.repo.add_entries(
-                index_name,
-                [transform_to_index_entry(resource, entry, ctx)
+            ctx.search_service_uow.repo.add_entries(
+                search_service_name,
+                [transform_to_search_service_entry(resource, entry, ctx)
                  for entry in entries],
             )
             if update_refs:
                 _update_references(resource, entries, ctx)
             ctx.resource_uow.commit()
-        ctx.index_uow.commit()
+        ctx.search_service_uow.commit()
 
 
-def delete_entry(evt: events.EntryDeleted, ctx: context.Context):
-    with ctx.index_uow:
-        ctx.index_uow.repo.delete_entry(evt.resource_id, entry_id=evt.entry_id)
+def delete_entry(evt: events.EntryDeleted):
+    with ctx.search_service_uow:
+        ctx.search_service_uow.repo.delete_entry(evt.resource_id, entry_id=evt.entry_id)
         with ctx.resource_uow:
             resource = ctx.resource_uow.repo.by_resource_id(evt.resource_id)
             if not resource:
@@ -264,16 +259,15 @@ def delete_entry(evt: events.EntryDeleted, ctx: context.Context):
                 _update_references(resource, [entry], ctx)
                 uow.commit()
             ctx.resource_uow.commit()
-        ctx.index_uow.commit()
+        ctx.search_service_uow.commit()
 
 
 def _update_references(
     # resource_id: str,
     # resource_repo: ResourceRepository,
-    # indexer: Index,
-    resource: model.Resource,
+    # search_serviceer: SearchService,
+    resource: entities.Resource,
     entries: List[Entry],
-    ctx: context.Context,
 ) -> None:
     add = collections.defaultdict(list)
     with ctx.resource_uow:
@@ -287,29 +281,28 @@ def _update_references(
                     ref_resource_id, version=(field_ref["resource_version"])
                 )
                 if ref_resource:
-                    ref_index_entry = transform_to_index_entry(
+                    ref_search_service_entry = transform_to_search_service_entry(
                         # resource_repo,
-                        # indexer,
+                        # search_serviceer,
                         ref_resource,
                         field_ref["entry"],
                         # ref_resource.config["fields"].items(),
                         ctx,
                     )
                     # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
-                    add[ref_resource_id].append(ref_index_entry)
+                    add[ref_resource_id].append(ref_search_service_entry)
 
     for ref_resource_id, ref_entries in add.items():
-        ctx.index_uow.repo.add_entries(ref_resource_id, ref_entries)
+        ctx.search_service_uow.repo.add_entries(ref_resource_id, ref_entries)
 
 
-def transform_to_index_entry(
+def transform_to_search_service_entry(
     # resource_id: str,
     # resource_repo: ResourceRepository,
-    # indexer: Index,
-    resource: model.Resource,
-    src_entry: model.Entry,
-    ctx: context.Context,
-) -> index.IndexEntry:
+    # search_serviceer: SearchService,
+    resource: entities.Resource,
+    src_entry: entities.Entry,
+) -> search_service.IndexEntry:
     """
     TODO This is very slow (for resources with references) because of db-lookups everywhere in the code
     TODO We can pre-fetch the needed entries (same code that only looks for refs?) or
@@ -317,45 +310,44 @@ def transform_to_index_entry(
     TODO the transformed entries afterward. Very tricky.
     """
     print(f"transforming entry_id={src_entry.entry_id}")
-    index_entry = ctx.index_uow.repo.create_empty_object()
-    index_entry.id = src_entry.entry_id
-    ctx.index_uow.repo.assign_field(
-        index_entry, "_entry_version", src_entry.version)
-    ctx.index_uow.repo.assign_field(
-        index_entry, "_last_modified", src_entry.last_modified
+    search_service_entry = ctx.search_service_uow.repo.create_empty_object()
+    search_service_entry.id = src_entry.entry_id
+    ctx.search_service_uow.repo.assign_field(
+        search_service_entry, "_entry_version", src_entry.version)
+    ctx.search_service_uow.repo.assign_field(
+        search_service_entry, "_last_modified", src_entry.last_modified
     )
-    ctx.index_uow.repo.assign_field(
-        index_entry, "_last_modified_by", src_entry.last_modified_by
+    ctx.search_service_uow.repo.assign_field(
+        search_service_entry, "_last_modified_by", src_entry.last_modified_by
     )
-    _transform_to_index_entry(
+    _transform_to_search_service_entry(
         resource,
         # resource_repo,
-        # indexer,
+        # search_serviceer,
         src_entry.body,
-        index_entry,
+        search_service_entry,
         resource.config["fields"].items(),
         ctx,
     )
-    return index_entry
+    return search_service_entry
 
 
 def _evaluate_function(
     # resource_repo: ResourceRepository,
-    # indexer: Index,
+    # search_serviceer: SearchService,
     function_conf: typing.Dict,
     src_entry: typing.Dict,
-    src_resource: model.Resource,
-    ctx: context.Context,
+    src_resource: entities.Resource,
 ):
     print(
-        f"indexing._evaluate_function src_resource={src_resource.resource_id}")
-    print(f"indexing._evaluate_function src_entry={src_entry}")
+        f"search_serviceing._evaluate_function src_resource={src_resource.resource_id}")
+    print(f"search_serviceing._evaluate_function src_entry={src_entry}")
     if "multi_ref" in function_conf:
         function_conf = function_conf["multi_ref"]
         target_field = function_conf["field"]
         if "resource_id" in function_conf:
             print(
-                f"indexing._evaluate_function: trying to find '{function_conf['resource_id']}'"
+                f"search_serviceing._evaluate_function: trying to find '{function_conf['resource_id']}'"
             )
             target_resource = ctx.resource_uow.repo.by_resource_id(
                 function_conf["resource_id"], version=function_conf["resource_version"]
@@ -365,11 +357,11 @@ def _evaluate_function(
                     "Didn't find the resource with resource_id='%s'",
                     function_conf["resource_id"],
                 )
-                return ctx.index_uow.repo.create_empty_list()
+                return ctx.search_service_uow.repo.create_empty_list()
         else:
             target_resource = src_resource
         print(
-            f"indexing._evaluate_function target_resource={target_resource.resource_id}"
+            f"search_serviceing._evaluate_function target_resource={target_resource.resource_id}"
         )
         if "test" in function_conf:
             operator, args = list(function_conf["test"].items())[0]
@@ -393,20 +385,20 @@ def _evaluate_function(
         else:
             raise NotImplementedError()
 
-        res = ctx.index_uow.repo.create_empty_list()
+        res = ctx.search_service_uow.repo.create_empty_list()
         for entry in target_entries:
-            index_entry = ctx.index_uow.repo.create_empty_object()
+            search_service_entry = ctx.search_service_uow.repo.create_empty_object()
             list_of_sub_fields = (("tmp", function_conf["result"]),)
-            _transform_to_index_entry(
+            _transform_to_search_service_entry(
                 target_resource,
                 # resource_repo,
-                # indexer,
+                # search_serviceer,
                 {"tmp": entry.body},
-                index_entry,
+                search_service_entry,
                 list_of_sub_fields,
                 ctx,
             )
-            ctx.index_uow.repo.add_to_list_field(res, index_entry.entry["tmp"])
+            ctx.search_service_uow.repo.add_to_list_field(res, search_service_entry.entry["tmp"])
     elif "plugin" in function_conf:
         plugin_id = function_conf["plugin"]
         import karp.pluginmanager as plugins
@@ -419,14 +411,13 @@ def _evaluate_function(
     return res
 
 
-def _transform_to_index_entry(
-    resource: model.Resource,
+def _transform_to_search_service_entry(
+    resource: entities.Resource,
     # resource_repo: ResourceRepository,
-    # indexer: Index,
+    # search_serviceer: SearchService,
     _src_entry: typing.Dict,
-    _index_entry: index.IndexEntry,
+    _search_service_entry: search_service.IndexEntry,
     fields,
-    ctx: context.Context,
 ):
     for field_name, field_conf in fields:
         if field_conf.get("virtual"):
@@ -435,8 +426,8 @@ def _transform_to_index_entry(
                 field_conf["function"], _src_entry, resource, ctx)
             print(f"res = {res}")
             if res:
-                ctx.index_uow.repo.assign_field(
-                    _index_entry, "v_" + field_name, res)
+                ctx.search_service_uow.repo.assign_field(
+                    _search_service_entry, "v_" + field_name, res)
         elif field_conf.get("ref"):
             ref_field = field_conf["ref"]
             if ref_field.get("resource_id"):
@@ -462,24 +453,24 @@ def _transform_to_index_entry(
                                 ref_resource_entries_uw.commit()
                             if ref_entry_body:
                                 ref_entry = {field_name: ref_entry_body.body}
-                                ref_index_entry = (
-                                    ctx.index_uow.repo.create_empty_object()
+                                ref_search_service_entry = (
+                                    ctx.search_service_uow.repo.create_empty_object()
                                 )
                                 list_of_sub_fields = (
                                     (field_name, ref_field["field"]),)
-                                _transform_to_index_entry(
+                                _transform_to_search_service_entry(
                                     resource,
                                     # resource_repo,
-                                    # indexer,
+                                    # search_serviceer,
                                     ref_entry,
-                                    ref_index_entry,
+                                    ref_search_service_entry,
                                     list_of_sub_fields,
                                     ctx,
                                 )
                                 ref_objs.append(
-                                    ref_index_entry.entry[field_name])
-                    ctx.index_uow.repo.assign_field(
-                        _index_entry, "v_" + field_name, ref_objs
+                                    ref_search_service_entry.entry[field_name])
+                    ctx.search_service_uow.repo.assign_field(
+                        _search_service_entry, "v_" + field_name, ref_objs
                     )
                 else:
                     raise NotImplementedError()
@@ -498,32 +489,32 @@ def _transform_to_index_entry(
                         resource_entries_uw.commit()
                     if ref:
                         ref_entry = {field_name: ref.body}
-                        ref_index_entry = ctx.index_uow.repo.create_empty_object()
+                        ref_search_service_entry = ctx.search_service_uow.repo.create_empty_object()
                         list_of_sub_fields = (
                             (field_name, ref_field["field"]),)
-                        _transform_to_index_entry(
+                        _transform_to_search_service_entry(
                             resource,
                             # resource_repo,
-                            # indexer,
+                            # search_serviceer,
                             ref_entry,
-                            ref_index_entry,
+                            ref_search_service_entry,
                             list_of_sub_fields,
                             ctx,
                         )
-                        ctx.index_uow.repo.assign_field(
-                            _index_entry,
+                        ctx.search_service_uow.repo.assign_field(
+                            _search_service_entry,
                             "v_" + field_name,
-                            ref_index_entry.entry[field_name],
+                            ref_search_service_entry.entry[field_name],
                         )
 
         if field_conf["type"] == "object":
             print("found field with type 'object'")
-            field_content = ctx.index_uow.repo.create_empty_object()
+            field_content = ctx.search_service_uow.repo.create_empty_object()
             if field_name in _src_entry:
-                _transform_to_index_entry(
+                _transform_to_search_service_entry(
                     resource,
                     # resource_repo,
-                    # indexer,
+                    # search_serviceer,
                     _src_entry[field_name],
                     field_content,
                     field_conf["fields"].items(),
@@ -533,5 +524,5 @@ def _transform_to_index_entry(
             field_content = _src_entry.get(field_name)
 
         if field_content:
-            ctx.index_uow.repo.assign_field(
-                _index_entry, field_name, field_content)
+            ctx.search_service_uow.repo.assign_field(
+                _search_service_entry, field_name, field_content)

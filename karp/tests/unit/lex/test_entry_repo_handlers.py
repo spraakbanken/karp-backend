@@ -8,7 +8,10 @@ from karp.lex.application.handlers import (
 from karp.lex.domain.commands import CreateEntryRepository
 from karp.lex.domain.value_objects.factories import make_unique_id
 
-from karp.tests.unit.adapters import bootstrap_test_app, FakeEntryRepositoryRepositoryUnitOfWork
+from karp.tests.unit.adapters import (
+    FakeEntryRepositoryRepositoryUnitOfWork,
+    FakeEntryRepositoryUnitOfWorkFactory,
+)
 
 
 class CreateEntryRepositoryFactory(factory.Factory):
@@ -16,6 +19,9 @@ class CreateEntryRepositoryFactory(factory.Factory):
         model = CreateEntryRepository
 
     entity_id = factory.LazyFunction(make_unique_id)
+    name = factory.Faker('word')
+    repository_type = 'fake'
+    config = {}
 
 
 @pytest.fixture(name='create_entry_repository')
@@ -28,8 +34,13 @@ class TestCreateEntryRepository:
         self,
         create_entry_repository: CreateEntryRepository,
         entry_repo_repo_uow: FakeEntryRepositoryRepositoryUnitOfWork,
+        entry_repo_uow_factory: FakeEntryRepositoryUnitOfWorkFactory,
     ):
-        cmd_handler = CreateEntryRepositoryHandler(entry_repo_repo_uow)
+        cmd_handler = CreateEntryRepositoryHandler(
+            entry_repo_repo_uow,
+            entry_repo_uow_factory,
+        )
         cmd_handler(create_entry_repository)
 
+        assert entry_repo_repo_uow.was_committed
         assert len(entry_repo_repo_uow.repo) == 1

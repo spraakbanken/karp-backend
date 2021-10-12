@@ -2,8 +2,9 @@ import abc
 import logging
 from typing import List, Optional
 
-from karp.domain import errors, model, value_objects
-from karp.domain.models.user import User
+from karp.foundation import value_objects
+from karp.domain import errors
+from karp.auth.domain.entities.user import User
 
 # from karp.services import context
 
@@ -50,7 +51,7 @@ class AuthService(abc.ABC):
     def authorize(
         self,
         level: value_objects.PermissionLevel,
-        user: model.User,
+        user: User,
         resource_ids: List[str],
     ) -> bool:
         return True

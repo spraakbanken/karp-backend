@@ -1,4 +1,5 @@
 from karp.search.application import unit_of_work
+from .sql_search_service import SqlSearchService
 
 
 class SqlSearchServiceUnitOfWork(unit_of_work.SearchServiceUnitOfWork):
@@ -7,7 +8,8 @@ class SqlSearchServiceUnitOfWork(unit_of_work.SearchServiceUnitOfWork):
         print(f"SqlIndexUnitOfWork.from_dict: kwargs = {kwargs}")
         return cls()
 
-    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+    def __init__(self, session_factory):
+        # session_factory=DEFAULT_SESSION_FACTORY):
         self.session_factory = session_factory
         self._index = SqlSearchService()
 

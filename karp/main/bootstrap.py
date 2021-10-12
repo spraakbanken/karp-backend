@@ -3,14 +3,14 @@ from karp.lex.application import handlers as lex_handlers, unit_of_work as lex_u
 from karp.lex.domain import commands as lex_commands, events as lex_events
 from karp.search.application import handlers as search_handlers
 from karp.search.application.unit_of_work import SearchServiceUnitOfWork
-from karp.services import unit_of_work
+from karp.lex.application import unit_of_work
 
 
 def bootstrap_message_bus(
     *,
     resource_uow: unit_of_work.ResourceUnitOfWork,
     entry_uows: unit_of_work.EntriesUnitOfWork,
-    entry_uow_factory: unit_of_work.EntryUowFactory,
+    entry_uow_factory,  #: unit_of_work.EntryUowFactory,
     search_service_uow: SearchServiceUnitOfWork,
     entry_repo_repo_uow: lex_unit_of_work.EntryRepositoryRepositoryUnitOfWork,
     raise_on_all_errors: bool = False

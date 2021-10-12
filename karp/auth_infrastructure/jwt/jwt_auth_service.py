@@ -5,14 +5,13 @@ from typing import List
 
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
-
-from karp.domain import errors, value_objects
+from karp.foundation import value_objects
+from karp.domain import errors
 from karp.domain.errors import AuthError
-from karp.domain.models.user import User
-# import karp.resourcemgr as resourcemgr
+from karp.auth.domain.entities.user import User
 from karp.errors import ClientErrorCodes, KarpError
-from karp.services import auth_service, context, unit_of_work
-
+from karp.auth.domain import auth_service
+from karp.lex.application import unit_of_work
 # from karp.infrastructure.unit_of_work import unit_of_work
 
 

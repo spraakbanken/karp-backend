@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Optional, Tuple, TypeVar
 import attr
 import pydantic
 
-from karp.domain.models.query import Query
+from karp.search.domain.query import Query
 
 logger = logging.getLogger("karp")
 

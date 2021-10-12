@@ -17,5 +17,5 @@
 #     ctx.search_service = search_service
 __all__ = ["EsQuery"]
 
-from . import es6_index, es6_unit_of_work
+from . import es6_search_service, es6_unit_of_work
 from .es_query import EsQuery

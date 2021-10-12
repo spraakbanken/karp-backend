@@ -9,11 +9,11 @@ import elasticsearch.helpers  # pyre-ignore
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
 # from karp import query_dsl
-from karp.domain import index
-from karp.domain.errors import \
+from karp.search.domain import search_service
+from karp.search.domain.errors import \
     UnsupportedField  # IncompleteQuery,; UnsupportedQuery,
-from karp.domain.models.entry import Entry
-from karp.domain.models.resource import Resource
+from karp.lex.domain.entities.entry import Entry
+from karp.lex.domain.entities.resource import Resource
 
 from . import es_config
 from .es_query import EsQuery
@@ -27,19 +27,8 @@ KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
 
-class Es6Index(index.Index):
-    def __init__(self, es: Optional[elasticsearch.Elasticsearch] = None):
-        if es is None:
-            logger.info(
-                "Connecting to Elasticsearch with url=%s", es_config.ELASTICSEARCH_HOST
-            )
-            es = elasticsearch.Elasticsearch(
-                hosts=es_config.ELASTICSEARCH_HOST,
-                sniff_on_start=True,
-                sniff_on_connection_fail=True,
-                sniffer_timeout=60,
-                sniff_timeout=10,
-            )
+class Es6SearchService(search_service.SearchService):
+    def __init__(self, es: elasticsearch.Elasticsearch):
         self.es: elasticsearch.Elasticsearch = es
         if not self.es.indices.exists(index=KARP_CONFIGINDEX):
             self.es.indices.create(
@@ -116,11 +105,11 @@ class Es6Index(index.Index):
         print(f"publishing '{resource_id}' => '{index_name}'")
         self.es.indices.put_alias(name=resource_id, index=index_name)
 
-    def add_entries(self, resource_id: str, entries: List[index.IndexEntry]):
+    def add_entries(self, resource_id: str, entries: List[search_service.IndexEntry]):
         index_name = self._get_index_name_for_resource(resource_id)
         index_to_es = []
         for entry in entries:
-            assert isinstance(entry, index.IndexEntry)
+            assert isinstance(entry, search_service.IndexEntry)
             # entry.update(metadata.to_dict())
             index_to_es.append(
                 {
@@ -159,7 +148,7 @@ class Es6Index(index.Index):
 
         for prop_name, prop_values in properties.items():
             if "properties" in prop_values:
-                res = Es6Index.get_analyzed_fields_from_mapping(
+                res = Es6SearchService.get_analyzed_fields_from_mapping(
                     prop_values["properties"]
                 )
                 analyzed_fields.extend(
@@ -197,10 +186,10 @@ class Es6Index(index.Index):
                 and "entry" in mapping[index]["mappings"]
                 and "properties" in mapping[index]["mappings"]["entry"]
             ):
-                field_mapping[alias] = Es6Index.get_analyzed_fields_from_mapping(
+                field_mapping[alias] = Es6SearchService.get_analyzed_fields_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
-                sortable_fields[alias] = Es6Index.create_sortable_map_from_mapping(
+                sortable_fields[alias] = Es6SearchService.create_sortable_map_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
         return field_mapping, sortable_fields
@@ -234,7 +223,7 @@ class Es6Index(index.Index):
 
     def _format_result(self, resource_ids, response):
         logger.debug(
-            "es6_index._format_result called with resource_ids=%s", resource_ids
+            "es6_search_service_format_result called with resource_ids=%s", resource_ids
         )
 
         def format_entry(entry):
@@ -251,7 +240,7 @@ class Es6Index(index.Index):
                 "resource": next(
                     resource
                     for resource in resource_ids
-                    if entry.meta.index.startswith(resource)
+                    if entry.meta.search_servicestartswith(resource)
                 ),
                 "entry": dict_entry,
             }
@@ -262,12 +251,12 @@ class Es6Index(index.Index):
         }
         return result
 
-    def query(self, request: index.QueryRequest):
+    def query(self, request: search_service.QueryRequest):
         print(f"query called with {request}")
         query = EsQuery.from_query_request(request)
         return self.search_with_query(query)
 
-    def query_split(self, request: index.QueryRequest):
+    def query_split(self, request: search_service.QueryRequest):
         print(f"query called with {request}")
         query = EsQuery.from_query_request(request)
         query.split_results = True
@@ -383,7 +372,7 @@ class Es6Index(index.Index):
 
     def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
         print(
-            f"es6_index.translate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
+            f"es6_search_servicetranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
         )
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value]
@@ -437,12 +426,12 @@ class Es6Index(index.Index):
         ):
             self.analyzed_fields[
                 alias_name
-            ] = Es6Index.get_analyzed_fields_from_mapping(
+            ] = Es6SearchService.get_analyzed_fields_from_mapping(
                 mapping[index_name]["mappings"]["entry"]["properties"]
             )
             self.sortable_fields[
                 alias_name
-            ] = Es6Index.create_sortable_map_from_mapping(
+            ] = Es6SearchService.create_sortable_map_from_mapping(
                 mapping[index_name]["mappings"]["entry"]["properties"]
             )
 

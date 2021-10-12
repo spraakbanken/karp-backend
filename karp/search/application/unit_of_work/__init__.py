@@ -1,1 +1,1 @@
-from karp.services.unit_of_work import IndexUnitOfWork as SearchServiceUnitOfWork
+from .search_service_unit_of_work import SearchServiceUnitOfWork

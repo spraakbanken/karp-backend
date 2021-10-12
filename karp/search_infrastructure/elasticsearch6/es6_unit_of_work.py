@@ -1,12 +1,12 @@
-from karp.services import unit_of_work
+from karp.search.application import unit_of_work
 
-from . import es6_index
+from . import es6_search_service
 
 
-class Es6IndexUnitOfWork(unit_of_work.IndexUnitOfWork):
-    def __init__(self, es6_search_service: es6_index.Es6Index) -> None:
+class Es6SearchServiceUnitOfWork(unit_of_work.SearchServiceUnitOfWork):
+    def __init__(self, es6_search_service: es6_search_service.Es6SearchService) -> None:
         super().__init__()
-        self._index = es6_search_service
+        self._search_service = es6_search_service
 
     @classmethod
     def from_dict(cls, **kwargs):
@@ -19,5 +19,5 @@ class Es6IndexUnitOfWork(unit_of_work.IndexUnitOfWork):
         return super().rollback()
 
     @property
-    def repo(self) -> es6_index.Es6Index:
-        return self._index
+    def repo(self) -> es6_search_service.Es6SearchService:
+        return self._search_service

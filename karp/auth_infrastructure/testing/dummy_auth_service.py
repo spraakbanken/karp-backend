@@ -2,7 +2,7 @@ from typing import List
 
 from karp.foundation import value_objects
 from karp.auth.domain.entities.user import User
-from karp.services import auth_service
+from karp.auth.domain import auth_service
 
 
 class DummyAuthService(auth_service.AuthService, auth_service_type="dummy_auth"):
