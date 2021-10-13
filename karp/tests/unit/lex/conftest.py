@@ -18,7 +18,7 @@ from .adapters import (
     FakeSearchServiceUnitOfWork,
     FakeEntryRepositoryUnitOfWorkFactory,
 )
-from . import factories
+from . import adapters, factories
 
 
 @pytest.fixture(name="entry_repo_repo_uow")
@@ -73,6 +73,17 @@ def unit_test_injector() -> injector.Injector:
         ]
     )
 
+@pytest.fixture()
+def lex_test_context() -> adapters.UnitTestContext:
+    container = injector.Injector([
+        CommandBusMod(),
+        Lex(),
+        adapters.FakeLexInfrastructure()
+    ])
+    return adapters.UnitTestContext(
+        container=container,
+        command_bus=container.get(CommandBus)
+    )
 
 @pytest.fixture()
 def command_bus(unit_test_injector: injector.Injector) -> CommandBus:

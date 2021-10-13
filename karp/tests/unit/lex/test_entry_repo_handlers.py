@@ -2,26 +2,23 @@
 from karp.lex.application.handlers import (
     CreateEntryRepositoryHandler,
 )
+from karp.lex.application.repositories import (
+    EntryUowRepositoryUnitOfWork,
+)
 from karp.lex.domain.commands import CreateEntryRepository
 
-from karp.tests.unit.adapters import (
-    FakeEntryUowRepositoryUnitOfWork,
-    FakeEntryRepositoryUnitOfWorkFactory,
-)
+from . import adapters, factories
 
 
 class TestCreateEntryRepository:
     def test_create_entry_repository(
         self,
-        create_entry_repository: CreateEntryRepository,
-        entry_repo_repo_uow: FakeEntryUowRepositoryUnitOfWork,
-        entry_repo_uow_factory: FakeEntryRepositoryUnitOfWorkFactory,
+        lex_test_context: adapters.UnitTestContext,
     ):
-        cmd_handler = CreateEntryRepositoryHandler(
-            entry_repo_repo_uow,
-            entry_repo_uow_factory,
-        )
-        cmd_handler(create_entry_repository)
+        cmd = factories.CreateEntryRepositoryFactory()
+        lex_test_context.command_bus.dispatch(cmd)
 
-        assert entry_repo_repo_uow.was_committed
-        assert len(entry_repo_repo_uow.repo) == 1
+        entry_uow_repo_uow = lex_test_context.container.get(EntryUowRepositoryUnitOfWork)
+        assert entry_uow_repo_uow.was_committed
+        assert len(entry_uow_repo_uow.repo) == 1
+

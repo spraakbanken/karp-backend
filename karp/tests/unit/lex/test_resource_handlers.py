@@ -30,24 +30,6 @@ class TestCreateResource:
         entry_repo_repo_uow: FakeEntryUowRepositoryUnitOfWork,
         resource_uow: FakeResourceUnitOfWork,
     ):
-        # uow = FakeUnitOfWork(FakeResourceRepository())
-        # bus = bootstrap_test_app(
-        #     entry_uow_factory=entry_uow_factory,
-        #     entry_uows=entry_uows,
-        #     resource_uow=resource_uow
-        # )
-        # id_ = make_unique_id()
-        # resource_id = "test_resource"
-        # resource_name = "Test resource"
-        # conf = {
-        #     "sort": ["baseform"],
-        #     "fields": {"baseform": {"type": "string", "required": True}},
-        # }
-        # message = "test_resource added"
-        #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
-        #         resource = create_resource(conf)
-
-        # uow = FakeUnitOfWork(FakeResourceRepository())
         cmd_handler = CreateResourceHandler(resource_uow, entry_repo_repo_uow)
         cmd = factories.CreateResourceFactory()
 

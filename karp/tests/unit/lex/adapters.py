@@ -2,12 +2,21 @@ import dataclasses
 import typing
 from typing import Dict, List, Optional
 
+import injector
+
 from karp.foundation.value_objects import UniqueId
+from karp.foundation.commands import CommandBus
 from karp.lex.domain import entities as lex_entities
 from karp.lex.application import repositories as lex_repositories
 from karp.main.bootstrap import bootstrap_message_bus
 from karp.search.application.unit_of_work import SearchServiceUnitOfWork
 from karp.search.domain import search_service
+
+
+@dataclasses.dataclass
+class UnitTestContext:
+    container: injector.Injector
+    command_bus: CommandBus
 
 
 class FakeResourceRepository(lex_repositories.ResourceRepository):
@@ -252,6 +261,22 @@ class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUow
     @property
     def repo(self) -> lex_repositories.EntryRepositoryRepository:
         return self._repo
+
+
+class FakeLexInfrastructure(injector.Module):
+    @injector.provider
+    @injector.singleton
+    def entry_uow_repo_uow(self) -> lex_repositories.EntryUowRepositoryUnitOfWork:
+        return FakeEntryUowRepositoryUnitOfWork()
+
+    @injector.provider
+    def entry_uow_factory(self) -> lex_repositories.EntryRepositoryUnitOfWorkFactory:
+        return FakeEntryRepositoryUnitOfWorkFactory()
+
+    @injector.provider
+    @injector.singleton
+    def resource_uow(self) -> lex_repositories.ResourceUnitOfWork:
+        return FakeResourceUnitOfWork()
 
 
 def bootstrap_test_app(
