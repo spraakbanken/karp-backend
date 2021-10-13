@@ -11,8 +11,8 @@ from karp.domain.errors import AuthError
 from karp.auth.domain.entities.user import User
 from karp.errors import ClientErrorCodes, KarpError
 from karp.auth.domain import auth_service
-from karp.lex.application import unit_of_work
-# from karp.infrastructure.unit_of_work import unit_of_work
+from karp.lex.application import repositories
+# from karp.infrastructure.repositories import repositories
 
 
 
@@ -28,7 +28,7 @@ class JWTAuthenticator(
     auth_service.AuthService, auth_service_type="jwt_auth", is_default=True
 ):
     def __init__(
-        self, pubkey_path: Path, resource_uow: unit_of_work.ResourceUnitOfWork
+        self, pubkey_path: Path, resource_uow: repositories.ResourceUnitOfWork
     ) -> None:
         self._jwt_key = load_jwt_key(pubkey_path)
         self._resource_uow = resource_uow

@@ -1,12 +1,12 @@
 from karp.lex.domain import commands
-from karp.lex.application import unit_of_work
+from karp.lex.application import repositories
 
 
 class CreateEntryRepositoryHandler:
     def __init__(
         self,
-        entry_repo_repo_uow: unit_of_work.EntryRepositoryRepositoryUnitOfWork,
-        entry_repo_uow_factory: unit_of_work.EntryRepositoryUnitOfWorkFactory
+        entry_repo_repo_uow: repositories.EntryRepositoryRepositoryUnitOfWork,
+        entry_repo_uow_factory: repositories.EntryRepositoryUnitOfWorkFactory
     ):
         self._entry_repo_repo_uow = entry_repo_repo_uow
         self._entry_repo_uow_factory = entry_repo_uow_factory
@@ -22,6 +22,7 @@ class CreateEntryRepositoryHandler:
             config=command.config,
         )
         with self._entry_repo_repo_uow as uow:
+            uow.repo.save(entry_repo)
             uow.commit()
 
 

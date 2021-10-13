@@ -19,7 +19,7 @@ from karp.errors import (ClientErrorCodes, EntryIdMismatch, EntryNotFoundError,
 from karp.foundation import events as foundation_events
 from karp.foundation import messagebus
 from karp.lex.domain import commands
-from karp.lex.application import unit_of_work
+from karp.lex.application import repositories
 
 # from . import context
 
@@ -30,7 +30,7 @@ from karp.lex.application import unit_of_work
 # import karp.resourcemgr.entrymetadata as entrymetadata
 # from karp.application import ctx
 
-# from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.infrastructure.repositories import repositories
 
 
 _logger = logging.getLogger("karp")
@@ -87,8 +87,8 @@ class BaseEntryHandler(
 ):
     def __init__(
         self,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
-        resource_uow: unit_of_work.ResourceUnitOfWork
+        entry_uows: repositories.EntriesUnitOfWork,
+        resource_uow: repositories.ResourceUnitOfWork
     ) -> None:
         super().__init__()
         self.entry_uows = entry_uows

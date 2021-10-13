@@ -9,14 +9,14 @@ from karp.domain import errors, events
 from karp.lex.domain.entities import Resource
 from karp.foundation import events as foundation_events
 from karp.foundation import messagebus
-from karp.lex.application import unit_of_work as lex_unit_of_work
+from karp.lex.application import repositories as lex_repositories
 from karp.lex.domain import commands
-from karp.lex.application import unit_of_work
+from karp.lex.application import repositories
 
 
 # from karp.application import ctx
 
-# from karp.infrastructure.unit_of_work import unit_of_work
+# from karp.infrastructure.repositories import repositories
 
 # from karp import get_resource_string
 # from karp.database import db
@@ -43,7 +43,7 @@ field_translations = {}  # Dict[str, Dict[str, List[str]]]
 
 
 def get_field_translations(resource_id: str) -> Optional[Dict]:
-    with unit_of_work(using=ctx.resource_repo) as uw:
+    with repositories(using=ctx.resource_repo) as uw:
         resource = uw.by_resource_id(resource_id)
         return resource.config.get("field_mapping") if resource else None
 
@@ -54,7 +54,7 @@ class BaseResourceHandler(
 ):
     def __init__(
         self,
-        resource_uow: unit_of_work.ResourceUnitOfWork
+        resource_uow: repositories.ResourceUnitOfWork
     ) -> None:
         super().__init__()
         self.resource_uow = resource_uow
@@ -179,9 +179,9 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
     def __init__(
         self,
-        resource_uow: unit_of_work.ResourceUnitOfWork,
-        # entry_uow_factory: unit_of_work.EntryUowFactory,
-        entry_repo_repo_uow: lex_unit_of_work.EntryRepositoryRepositoryUnitOfWork
+        resource_uow: repositories.ResourceUnitOfWork,
+        # entry_uow_factory: repositories.EntryUowFactory,
+        entry_repo_repo_uow: lex_repositories.EntryRepositoryRepositoryUnitOfWork
     ) -> None:
         super().__init__(resource_uow=resource_uow)
         # self.entry_uow_factory = entry_uow_factory
@@ -250,8 +250,8 @@ def create_new_resource(config_file: IO, config_dir=None) -> Resource:
     print("creating resource ...")
     resource = Resource.from_dict(config)
 
-    print("resource created. setting up unit_of_work")
-    with unit_of_work(using=ctx.resource_repo) as uw:
+    print("resource created. setting up repositories")
+    with repositories(using=ctx.resource_repo) as uw:
         print("adding resource to ctx.resource_repo ...")
         uw.put(resource)
 
@@ -318,7 +318,7 @@ def create_new_resource(config_file: IO, config_dir=None) -> Resource:
 #     return config
 
 class UpdateResourceHandler(messagebus.Handler[commands.UpdateResource]):
-    def __init__(self, resource_uow: unit_of_work.ResourceUnitOfWork) -> None:
+    def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
         super().__init__()
         self.resource_uow = resource_uow
 
@@ -431,7 +431,7 @@ class UpdateResourceHandler(messagebus.Handler[commands.UpdateResource]):
 #     return resource_id, resource_def.version
 
 class PublishResourceHandler(messagebus.Handler[commands.PublishResource]):
-    def __init__(self, resource_uow: unit_of_work.ResourceUnitOfWork) -> None:
+    def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
         super().__init__()
         self.resource_uow = resource_uow
 

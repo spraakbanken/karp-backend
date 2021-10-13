@@ -2,7 +2,7 @@ import injector
 
 from karp.foundation.commands import CommandHandler
 from karp.lex.application import handlers
-from karp.lex.application.unit_of_work import (
+from karp.lex.application.repositories import (
     EntryRepositoryRepositoryUnitOfWork,
 )
 from karp.lex.domain.commands import (

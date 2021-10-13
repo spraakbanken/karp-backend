@@ -11,7 +11,7 @@ from karp.application import config
 from karp.lex_infrastructure.sql.sql_entry_repository import SqlEntryRepository
 from karp.lex_infrastructure.sql.sql_resource_repository import \
     SqlResourceRepository
-from karp.lex.application import unit_of_work
+from karp.lex.application import repositories
 
 # from .sql_index import SqlSearchService
 
@@ -22,7 +22,7 @@ _create_new = object()
 logger = logging.getLogger("karp")
 
 
-class SqlUnitOfWork:  # (unit_of_work.UnitOfWork):
+class SqlUnitOfWork:  # (repositories.UnitOfWork):
     class State(enum.Enum):
         initialized = 0
         begun = 1
@@ -69,12 +69,12 @@ class SqlUnitOfWork:  # (unit_of_work.UnitOfWork):
         if self._state != expected_state:
             pass
             # logger.warning(
-            #     "State conflict. unit_of_work is in state '%s' and not '%s'",
+            #     "State conflict. repositories is in state '%s' and not '%s'",
             #     self._state,
             #     expected_state,
             # )
             # raise RuntimeError(
-            #     f"State conflict. unit_of_work is in state '{self._state!s}' and not '{expected_state!s}'"
+            #     f"State conflict. repositories is in state '{self._state!s}' and not '{expected_state!s}'"
             # )
 
     def _commit(self):
@@ -119,7 +119,7 @@ class SqlUnitOfWork:  # (unit_of_work.UnitOfWork):
 DEFAULT_SESSION_FACTORY = sessionmaker(bind=create_engine(config.DB_URL))
 
 
-class SqlResourceUnitOfWork(SqlUnitOfWork, unit_of_work.ResourceUnitOfWork):
+class SqlResourceUnitOfWork(SqlUnitOfWork, repositories.ResourceUnitOfWork):
     def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
         super().__init__()
         self.session_factory = session_factory
@@ -139,7 +139,7 @@ class SqlResourceUnitOfWork(SqlUnitOfWork, unit_of_work.ResourceUnitOfWork):
 
 class SqlEntryUnitOfWork(
     SqlUnitOfWork,
-    unit_of_work.EntryUnitOfWork
+    repositories.EntryUnitOfWork
 ):
     def __init__(
         self,
@@ -177,5 +177,5 @@ class SqlEntryUnitOfWork(
             return []
 
 
-# @unit_of_work.create_entry_unit_of_work.register(SqlEntryRepository)
+# @repositories.create_entry_repositories.register(SqlEntryRepository)
 # def _()

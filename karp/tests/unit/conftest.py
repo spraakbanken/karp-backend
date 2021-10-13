@@ -3,15 +3,15 @@ import pytest
 
 from karp.foundation.commands import CommandBus
 from karp.lex import Lex
-from karp.lex.application.unit_of_work import (
-    EntryRepositoryRepositoryUnitOfWork,
+from karp.lex.application.repositories import (
+    EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
 )
 from karp.main.modules import CommandBusMod
-from karp.lex.application import unit_of_work
+from karp.lex.application import repositories
 
 from .adapters import (
-    FakeEntryRepositoryRepositoryUnitOfWork,
+    FakeEntryUowRepositoryUnitOfWork,
     FakeEntryUowFactory,
     FakeResourceUnitOfWork,
     FakeSearchServiceUnitOfWork,
@@ -20,8 +20,8 @@ from .adapters import (
 
 
 @pytest.fixture(name="entry_repo_repo_uow")
-def fixture_entry_repo_repo_uow() -> EntryRepositoryRepositoryUnitOfWork:
-    return FakeEntryRepositoryRepositoryUnitOfWork()
+def fixture_entry_repo_repo_uow() -> EntryUowRepositoryUnitOfWork:
+    return FakeEntryUowRepositoryUnitOfWork()
 
 
 @pytest.fixture(name="entry_repo_uow_factory")
@@ -42,8 +42,8 @@ def fixture_resource_uow() -> FakeResourceUnitOfWork:
 
 
 @pytest.fixture(name="entry_uows")
-def fixture_entry_uows() -> unit_of_work.EntriesUnitOfWork:
-    return unit_of_work.EntriesUnitOfWork()
+def fixture_entry_uows() -> repositories.EntriesUnitOfWork:
+    return repositories.EntriesUnitOfWork()
 
 
 @pytest.fixture(name="entry_uow_factory")

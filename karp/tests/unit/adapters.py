@@ -4,7 +4,7 @@ from typing import Dict, List
 
 from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import entities as lex_entities
-from karp.lex.application import unit_of_work as lex_unit_of_work, repositories as lex_repositories
+from karp.lex.application import repositories as lex_repositories
 from karp.main.bootstrap import bootstrap_message_bus
 from karp.search.application.unit_of_work import SearchServiceUnitOfWork
 from karp.search.domain import search_service
@@ -18,7 +18,7 @@ class FakeResourceRepository(lex_repositories.ResourceRepository):
     def check_status(self):
         pass
 
-    def _put(self, resource):
+    def _save(self, resource):
         self.resources.add(resource)
 
     def _update(self, resource):
@@ -50,7 +50,7 @@ class FakeEntryRepository(lex_repositories.EntryRepository):
     def check_status(self):
         pass
 
-    def _put(self, entry):
+    def _save(self, entry):
         self.entries.add(entry)
 
     def _update(self, entry):
@@ -164,18 +164,20 @@ class FakeUnitOfWork:
 
 
 class FakeEntryUnitOfWork(
-    FakeUnitOfWork, lex_unit_of_work.EntryUnitOfWork
+    FakeUnitOfWork, lex_repositories.EntryUnitOfWork
 ):
     def __init__(self, entity_id, name: str, config: typing.Dict):
         self._entries = FakeEntryRepository()
-        self.repo_settings = settings
+        self.id = entity_id
+        self.name = name
+        self.config = config
 
     @property
     def repo(self) -> lex_repositories.EntryRepository:
         return self._entries
 
 
-class FakeResourceUnitOfWork(FakeUnitOfWork, lex_unit_of_work.ResourceUnitOfWork):
+class FakeResourceUnitOfWork(FakeUnitOfWork, lex_repositories.ResourceUnitOfWork):
     def __init__(self):
         self._resources = FakeResourceRepository()
 
@@ -195,13 +197,13 @@ class FakeSearchServiceUnitOfWork(
         return self._index
 
 
-class FakeEntryUowFactory(lex_unit_of_work.EntryUowFactory):
+class FakeEntryUowFactory(lex_repositories.EntryUowFactory):
     def create(
         self,
         resource_id: str,
         resource_config: typing.Dict,
         entry_repository_settings,
-    ) -> lex_unit_of_work.EntryUnitOfWork:
+    ) -> lex_repositories.EntryUnitOfWork:
         entry_uow = FakeEntryUnitOfWork(entry_repository_settings)
         if "entry_repository_type" in resource_config:
             entry_uow.repo.type = resource_config["entry_repository_type"]
@@ -211,7 +213,7 @@ class FakeEntryUowFactory(lex_unit_of_work.EntryUowFactory):
 
 
 class FakeEntryRepositoryUnitOfWorkFactory(
-    lex_unit_of_work.EntryRepositoryUnitOfWorkFactory
+    lex_repositories.EntryRepositoryUnitOfWorkFactory
 ):
     def create(
         self,
@@ -219,7 +221,7 @@ class FakeEntryRepositoryUnitOfWorkFactory(
         entity_id: UniqueId,
         name: str,
         config: Dict,
-    ) -> lex_unit_of_work.EntryUnitOfWork:
+    ) -> lex_repositories.EntryUnitOfWork:
         return FakeEntryUnitOfWork(
             entity_id=entity_id,
             name=name,
@@ -227,12 +229,13 @@ class FakeEntryRepositoryUnitOfWorkFactory(
         )
 
 
-class FakeEntryUoWRepository(lex_repositories.EntryUoWRepository):
+class FakeEntryUowRepository(lex_repositories.EntryUowRepository):
     def __init__(self) -> None:
         super().__init__()
         self._storage = []
 
     def _save(self, entry_repo):
+        print(f'saving {entry_repo}')
         self._storage.append(entry_repo)
 
     def _by_id(self, id_):
@@ -242,10 +245,10 @@ class FakeEntryUoWRepository(lex_repositories.EntryUoWRepository):
         return len(self._storage)
 
 
-class FakeEntryUoWRepositoryUnitOfWork(FakeUnitOfWork, lex_unit_of_work.EntryUowRepositoryUnitOfWork):
+class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):
     def __init__(self) -> None:
         super().__init__()
-        self._repo = FakeEntryUoWRepository()
+        self._repo = FakeEntryUowRepository()
 
     @property
     def repo(self) -> lex_repositories.EntryRepositoryRepository:
@@ -253,16 +256,16 @@ class FakeEntryUoWRepositoryUnitOfWork(FakeUnitOfWork, lex_unit_of_work.EntryUow
 
 
 def bootstrap_test_app(
-    resource_uow: lex_unit_of_work.ResourceUnitOfWork = None,
-    entry_uows: lex_unit_of_work.EntriesUnitOfWork = None,
-    entry_uow_factory: lex_unit_of_work.EntryUowFactory = None,
+    resource_uow: lex_repositories.ResourceUnitOfWork = None,
+    entry_uows: lex_repositories.EntriesUnitOfWork = None,
+    entry_uow_factory: lex_repositories.EntryUowFactory = None,
     search_service_uow: SearchServiceUnitOfWork = None,
-    entry_repo_repo_uow: lex_unit_of_work.EntryRepositoryRepositoryUnitOfWork = None,
+    entry_repo_repo_uow: lex_repositories.EntryRepositoryRepositoryUnitOfWork = None,
 ):
     return bootstrap_message_bus(
         resource_uow=resource_uow or FakeResourceUnitOfWork(),
         entry_repo_repo_uow=entry_repo_repo_uow or FakeEntryRepositoryRepositoryUnitOfWork(),
-        entry_uows=entry_uows or lex_unit_of_work.EntriesUnitOfWork(),
+        entry_uows=entry_uows or lex_repositories.EntriesUnitOfWork(),
         entry_uow_factory=entry_uow_factory or FakeEntryUowFactory(),
         search_service_uow=search_service_uow or FakeSearchServiceUnitOfWork(),
         raise_on_all_errors=True
