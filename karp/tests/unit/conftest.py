@@ -3,6 +3,7 @@ import pytest
 
 from karp.foundation.commands import CommandBus
 from karp.lex import Lex
+from karp.lex.domain import commands as lex_commands
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
@@ -17,6 +18,7 @@ from .adapters import (
     FakeSearchServiceUnitOfWork,
     FakeEntryRepositoryUnitOfWorkFactory,
 )
+from . import factories
 
 
 @pytest.fixture(name="entry_repo_repo_uow")
@@ -27,6 +29,11 @@ def fixture_entry_repo_repo_uow() -> EntryUowRepositoryUnitOfWork:
 @pytest.fixture(name="entry_repo_uow_factory")
 def fixture_entry_repo_uow_factory() -> EntryRepositoryUnitOfWorkFactory:
     return FakeEntryRepositoryUnitOfWorkFactory()
+
+
+@pytest.fixture(name='create_entry_repository')
+def fixture_create_entry_repository() -> lex_commands.CreateEntryRepository:
+    return factories.CreateEntryRepositoryFactory()
 
 
 def configure_for_testing(binder: injector.Binder) -> None:

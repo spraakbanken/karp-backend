@@ -1,51 +1,47 @@
 import pytest
 
 # from karp.services import messagebus
-from karp.domain import errors, events
-from karp.domain.value_objects.unique_id import make_unique_id
-from karp.lex.domain import commands
-from karp.services import unit_of_work
+from karp.domain import errors
 
-from karp.tests.unit.adapters import (FakeEntryUowFactory, FakeResourceUnitOfWork,
-                                      bootstrap_test_app)
+from karp.lex.application import repositories
+from karp.lex.application.handlers import CreateResourceHandler
+from karp.lex.domain import commands
+from karp.lex.domain.commands.resource_commands import CreateResource
+# from karp.services impor: repositories
+
+from karp.tests.unit.adapters import (FakeEntryUowFactory, FakeEntryUowRepositoryUnitOfWork, FakeResourceUnitOfWork,
+                                      )
+from karp.tests.unit import factories
 
 
 class TestCreateResource:
     def test_create_resource(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
+        entry_repo_repo_uow: FakeEntryUowRepositoryUnitOfWork,
         resource_uow: FakeResourceUnitOfWork,
     ):
         # uow = FakeUnitOfWork(FakeResourceRepository())
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
-        )
-        id_ = make_unique_id()
-        resource_id = "test_resource"
-        resource_name = "Test resource"
-        conf = {
-            "sort": ["baseform"],
-            "fields": {"baseform": {"type": "string", "required": True}},
-        }
-        message = "test_resource added"
+        # bus = bootstrap_test_app(
+        #     entry_uow_factory=entry_uow_factory,
+        #     entry_uows=entry_uows,
+        #     resource_uow=resource_uow
+        # )
+        # id_ = make_unique_id()
+        # resource_id = "test_resource"
+        # resource_name = "Test resource"
+        # conf = {
+        #     "sort": ["baseform"],
+        #     "fields": {"baseform": {"type": "string", "required": True}},
+        # }
+        # message = "test_resource added"
         #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
         #         resource = create_resource(conf)
 
         # uow = FakeUnitOfWork(FakeResourceRepository())
+        cmd_handler = CreateResourceHandler(resource_uow, entry_repo_repo_uow)
+        cmd = factories.CreateResourceFactory()
 
-        cmd = commands.CreateResource(
-            id=id_,
-            resource_id=resource_id,
-            name=resource_name,
-            config=conf,
-            message=message,
-            created_by="kristoff@example.com",
-        )
-
-        bus.handle(cmd)
+        cmd_handler(cmd)
 
         assert len(resource_uow.resources) == 1
 
@@ -71,7 +67,7 @@ class TestCreateResource:
     def test_create_resource_with_same_resource_id_raises(
         self,
         entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
+        entry_uows: repositories.EntriesUnitOfWork,
         resource_uow: FakeResourceUnitOfWork,
     ):
         # uow = FakeUnitOfWork(FakeResourceRepository())
@@ -128,7 +124,7 @@ class TestUpdateResource:
     def test_update_resource(
         self,
         entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
+        entry_uows: repositories.EntriesUnitOfWork,
         resource_uow: FakeResourceUnitOfWork,
     ):
         # uow = FakeUnitOfWork(FakeResourceRepository())
@@ -172,7 +168,7 @@ class TestPublishResource:
     def test_publish_resource(
         self,
         entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
+        entry_uows: repositories.EntriesUnitOfWork,
         resource_uow: FakeResourceUnitOfWork,
     ):
         # uow = FakeUnitOfWork(FakeResourceRepository())

@@ -1,32 +1,13 @@
-import factory
-import pytest
 
-from karp.foundation.commands import CommandBus
 from karp.lex.application.handlers import (
     CreateEntryRepositoryHandler,
 )
 from karp.lex.domain.commands import CreateEntryRepository
-from karp.lex.domain.value_objects.factories import make_unique_id
 
 from karp.tests.unit.adapters import (
     FakeEntryUowRepositoryUnitOfWork,
     FakeEntryRepositoryUnitOfWorkFactory,
 )
-
-
-class CreateEntryRepositoryFactory(factory.Factory):
-    class Meta:
-        model = CreateEntryRepository
-
-    entity_id = factory.LazyFunction(make_unique_id)
-    name = factory.Faker('word')
-    repository_type = 'fake'
-    config = {}
-
-
-@pytest.fixture(name='create_entry_repository')
-def fixture_create_entry_repository() -> CreateEntryRepository:
-    return CreateEntryRepositoryFactory()
 
 
 class TestCreateEntryRepository:
