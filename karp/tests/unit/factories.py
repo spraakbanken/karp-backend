@@ -39,6 +39,19 @@ def random_resource(config: typing.Optional[typing.Dict] = None):
     )
 
 
+class CreateResourceFactory(factory.Factory):
+    class Meta:
+        model = lex_commands.CreateResource
+
+    timestamp = factory.LazyFunction(utc_now)
+    id = factory.LazyFunction(lex_factories.make_unique_id)
+    resource_id = factory.Faker('word')
+    name = factory.Faker('word')
+    config = factory.Faker('resource_config')
+    user = factory.Faker('email')
+    message = 'resource created'
+
+
 class ResourceCreatedFactory(factory.Factory):
     class Meta:
         model = lex_events.ResourceCreated
