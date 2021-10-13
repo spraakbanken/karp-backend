@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import IO, Dict, Generic, List, Optional, Tuple
 
 from karp import errors as karp_errors
-from karp.domain import errors, events
+from karp.lex.domain import errors, events, entities
 from karp.lex.domain.entities import Resource
 from karp.foundation import events as foundation_events
 from karp.foundation import messagebus
@@ -48,15 +48,11 @@ def get_field_translations(resource_id: str) -> Optional[Dict]:
         return resource.config.get("field_mapping") if resource else None
 
 
-class BaseResourceHandler(
-    Generic[messagebus.CommandType],
-    messagebus.CommandHandler[messagebus.CommandType]
-):
+class BaseResourceHandler:
     def __init__(
         self,
         resource_uow: repositories.ResourceUnitOfWork
     ) -> None:
-        super().__init__()
         self.resource_uow = resource_uow
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
@@ -176,7 +172,7 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 # def update_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
 #     return update_resource(config_file)
 
-class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
+class CreateResourceHandler(BaseResourceHandler):
     def __init__(
         self,
         resource_uow: repositories.ResourceUnitOfWork,
@@ -187,7 +183,7 @@ class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
         # self.entry_uow_factory = entry_uow_factory
         self.entry_repo_repo_uow = entry_repo_repo_uow
 
-    def execute(self, cmd: commands.CreateResource):
+    def __call__(self, cmd: commands.CreateResource):
         with self.resource_uow as uow, self.entry_repo_repo_uow as entry_repo_repo_uow:
             try:
                 existing_resource = uow.resources.by_resource_id(
@@ -198,18 +194,19 @@ class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
                     )
             except errors.ResourceNotFound:
                 pass
-            resource = model.create_resource(
+            _entry_repo_exists = entry_repo_repo_uow.repo.get_by_id(
+                cmd.entry_repo_id)
+            resource = entities.create_resource(
                 entity_id=cmd.id,
                 resource_id=cmd.resource_id,
                 config=cmd.config,
                 message=cmd.message,
+                entry_repo_id=cmd.entry_repo_id,
                 created_at=cmd.timestamp,
                 created_by=cmd.created_by,
                 name=cmd.name,
             )
 
-            _entry_repo_exists = entry_repo_repo_uow.repo.get_by_id(
-                resource.entry_repo_id)
             # if resource.entry_repo_id:
             #     entry_repo_uow = entry_uows.get_by_id(
             #         resource.entry_repo_id
@@ -232,7 +229,7 @@ class CreateResourceHandler(BaseResourceHandler[commands.CreateResource]):
         yield from self.resource_uow.collect_new_events()
 
 
-def setup_existing_resources(evt: events.AppStarted):
+def setup_existing_resources(evt):
     with ctx.resource_uow:
         for resource_id in ctx.resource_uow.repo.resource_ids():
             resource = ctx.resource_uow.repo.by_resource_id(resource_id)

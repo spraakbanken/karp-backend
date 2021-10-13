@@ -17,8 +17,7 @@ class CreateResource(Command):
     config: typing.Dict
     message: str
     created_by: str
-    entry_repository_type: typing.Optional[str] = None
-    entry_repository_settings: typing.Optional[typing.Dict] = None
+    entry_repo_id: unique_id.UniqueId
 
     @classmethod
     def from_dict(

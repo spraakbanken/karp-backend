@@ -84,5 +84,6 @@ class CreateResourceFactory(factory.Factory):
     name = factory.Faker('word')
     repository_type = 'fake'
     config = factory.Faker('resource_config')
+    entry_repo_id = factory.LazyFunction(lex_factories.make_unique_id)
     message = 'created'
     created_by = 'kristoff@example.com'

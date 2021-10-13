@@ -1,7 +1,7 @@
 import pytest
 
 # from karp.services import messagebus
-from karp.domain import errors
+from karp.lex.domain import errors
 
 from karp.lex.application import repositories
 from karp.lex.application.handlers import CreateResourceHandler
@@ -15,6 +15,16 @@ from karp.tests.unit import factories
 
 
 class TestCreateResource:
+    def test_create_resource_w_no_entry_repo_raises(
+        self,
+        entry_repo_repo_uow: FakeEntryUowRepositoryUnitOfWork,
+        resource_uow: FakeResourceUnitOfWork,
+    ):
+        cmd_handler = CreateResourceHandler(resource_uow, entry_repo_repo_uow)
+        cmd = factories.CreateResourceFactory()
+        with pytest.raises(errors.EntryRepoNotFound):
+            cmd_handler(cmd)
+
     def test_create_resource(
         self,
         entry_repo_repo_uow: FakeEntryUowRepositoryUnitOfWork,

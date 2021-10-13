@@ -1,6 +1,6 @@
 import dataclasses
 import typing
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import entities as lex_entities
@@ -232,14 +232,13 @@ class FakeEntryRepositoryUnitOfWorkFactory(
 class FakeEntryUowRepository(lex_repositories.EntryUowRepository):
     def __init__(self) -> None:
         super().__init__()
-        self._storage = []
+        self._storage = {}
 
     def _save(self, entry_repo):
-        print(f'saving {entry_repo}')
-        self._storage.append(entry_repo)
+        self._storage[entry_repo.id] = entry_repo
 
-    def _by_id(self, id_):
-        return next((e for e in self._storage if e.id == id_))
+    def _by_id(self, id_, *, version: Optional[int] = None):
+        return self._storage.get(id_)
 
     def __len__(self):
         return len(self._storage)

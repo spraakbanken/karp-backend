@@ -9,9 +9,9 @@ class LexDomainError(Exception):
 
     """Base exception for domain errors."""
 
-    def __init__(self, *args: object, extras: Dict = None) -> None:
+    def __init__(self, *args: object, **kwargs) -> None:
         super().__init__(*args)
-        self.extras = extras or {}
+        self.extras = kwargs or {}
 
 
 class EntryNotFound(NotFoundError, LexDomainError):
@@ -21,11 +21,18 @@ class EntryNotFound(NotFoundError, LexDomainError):
         super().__init__(entity_id, *args, **kwargs)
 
 
+class EntryRepoNotFound(NotFoundError, LexDomainError):
+    entity_name = "EntryRepository"
+
+    def __init__(self, entity_id, *args, **kwargs):
+        super().__init__(entity_id, *args, **kwargs)
+
+
 class ResourceNotFound(NotFoundError, LexDomainError):
     entity_name = "Resource"
 
-    def __init__(self, entity_id, *args, msg: str):
-        super().__init__(entity_id, *args, msg=msg)
+    def __init__(self, entity_id, *args, **kwargs):
+        super().__init__(entity_id, *args, **kwargs)
 
 
 class IntegrityError(LexDomainError):

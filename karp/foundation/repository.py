@@ -31,6 +31,8 @@ class Repository(Generic[EntityType], abc.ABC):
             raise self.EntityNotFound(f"Entity with id={id_} is not found")
         return entity
 
+    get_by_id = by_id
+
     @abc.abstractmethod
     def _by_id(
         self, id_: Union[uuid.UUID, str], *, version: Optional[int] = None
