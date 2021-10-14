@@ -47,3 +47,14 @@ class Lex(injector.Module):
         resource_uow: ResourceUnitOfWork,
     ) -> CommandHandler[commands.PublishResource]:
         return handlers.PublishResourceHandler(resource_uow)
+
+    @injector.provider
+    def add_entry(
+        self,
+        resource_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork
+    ) -> CommandHandler[commands.AddEntry]:
+        return handlers.AddEntryHandler(
+            resource_uow=resource_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow
+        )

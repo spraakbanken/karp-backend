@@ -10,6 +10,7 @@ import fastjsonschema  # pyre-ignore
 import json_streams
 from sb_json_tools import jsondiff
 
+from karp.foundation.commands import CommandHandler
 from karp.lex.domain import errors, entities
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
@@ -81,27 +82,24 @@ _logger = logging.getLogger("karp")
 #     return cls.query.filter_by(entry_id=entry_id).first()
 #
 #
-class BaseEntryHandler(
-    Generic[messagebus.CommandType],
-    messagebus.CommandHandler[messagebus.CommandType]
-):
+class BaseEntryHandler:
     def __init__(
         self,
-        entry_uows: repositories.EntriesUnitOfWork,
+        entry_uow_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
         resource_uow: repositories.ResourceUnitOfWork
     ) -> None:
         super().__init__()
-        self.entry_uows = entry_uows
+        self.entry_uow_repo_uow = entry_uow_repo_uow
         self.resource_uow = resource_uow
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
-        yield from self.entry_uows.collect_new_events()
+        yield from self.entry_uow_repo_uow.collect_new_events()
 
 
-class AddEntryHandler(BaseEntryHandler[commands.AddEntry]):
+class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
 
-    def execute(self, cmd: commands.AddEntry):
+    def __call__(self, cmd: commands.AddEntry):
         print(f"event_handlers.add_entry: cmd = {cmd}")
         with self.resource_uow:
             resource = self.resource_uow.resources.by_resource_id(
@@ -118,13 +116,13 @@ class AddEntryHandler(BaseEntryHandler[commands.AddEntry]):
             ) from err
         validate_entry = _compile_schema(resource.entry_json_schema)
 
-        with self.entry_uows.get(cmd.resource_id) as uw:
+        with self.entry_uow_repo_uow.repo.get_by_id(resource.entry_repository_id) as uw:
             try:
                 existing_entry = uw.repo.by_entry_id(entry_id)
                 if (
                     existing_entry
                     and not existing_entry.discarded
-                    and existing_entry.id != cmd.id
+                    and existing_entry.id != cmd.entity_id
                 ):
                     raise errors.IntegrityError(
                         f"An entry with entry_id '{entry_id}' already exists."

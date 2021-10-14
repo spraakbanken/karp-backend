@@ -178,7 +178,7 @@ class CreateResourceHandler(CommandHandler[commands.CreateResource], BaseResourc
         self,
         resource_uow: repositories.ResourceUnitOfWork,
         # entry_uow_factory: repositories.EntryUowFactory,
-        entry_uow_repo_uow: lex_repositories.EntryRepositoryRepositoryUnitOfWork
+        entry_uow_repo_uow: lex_repositories.EntryUowRepositoryUnitOfWork
     ) -> None:
         super().__init__(resource_uow=resource_uow)
         # self.entry_uow_factory = entry_uow_factory

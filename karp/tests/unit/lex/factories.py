@@ -101,3 +101,14 @@ class UpdateResourceFactory(factory.Factory):
     entry_repo_id = factory.LazyFunction(lex_factories.make_unique_id)
     message = 'created'
     created_by = 'kristoff@example.com'
+
+
+class AddEntryFactory(factory.Factory):
+    class Meta:
+        model = lex_commands.AddEntry
+
+    entity_id = factory.LazyFunction(lex_factories.make_unique_id)
+    resource_id = factory.Faker('word')
+    entry = {}
+    user = factory.Faker('email')
+    message = 'added'

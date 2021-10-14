@@ -2,63 +2,39 @@ from typing import Dict, Optional
 
 import pytest
 
-from karp.domain import errors, events
-from karp.domain.value_objects.unique_id import make_unique_id
+from karp.lex.domain import errors
+
+from karp.lex.application import repositories
+from karp.lex.application.repositories import ResourceUnitOfWork
 from karp.lex.domain import commands
-from karp.services import unit_of_work
 
-from karp.tests.unit.adapters import (FakeEntryUowFactory, FakeResourceUnitOfWork,
-                                      bootstrap_test_app)
+from . import adapters, factories
 
+# from karp.domain import errors, events
+# from karp.domain.value_objects.unique_id import make_unique_id
+# from karp.lex.domain import commands
+# from karp.services import unit_of_work
 
-def make_create_resource_command(
-    resource_id: str, config: Optional[Dict] = None
-) -> commands.CreateResource:
-    config = config or {
-        "fields": {},
-        "id": "id",
-    }
-    return commands.CreateResource(
-        id=make_unique_id(),
-        resource_id=resource_id,
-        name=resource_id.upper(),
-        config=config,
-        message="create resource",
-        created_by="kristoff@example.com",
-    )
+# from karp.tests.unit.adapters import (FakeEntryUowFactory, FakeResourceUnitOfWork,
+#                                       bootstrap_test_app)
 
 
 class TestAddEntry:
     def test_cannot_add_entry_to_nonexistent_resource(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
         # uow = FakeUnitOfWork(FakeResourceRepository())
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
-        )
         with pytest.raises(errors.ResourceNotFound):
-            bus.handle(
-                commands.AddEntry(
-                    id=make_unique_id(),
+            lex_ctx.command_bus.dispatch(
+                factories.AddEntryFactory(
                     resource_id="non_existent",
-                    entry_id="a",
-                    version=3,
-                    entry={},
-                    user="kristoff@example.com",
-                    message="update",
                 )
             )
 
     def test_add_entry(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
         # uow = FakeUnitOfWork(FakeResourceRepository())
         bus = bootstrap_test_app(
@@ -131,9 +107,7 @@ class TestAddEntry:
 
     def test_create_entry_with_same_entry_id_raises(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
         bus = bootstrap_test_app(
             entry_uow_factory=entry_uow_factory,
@@ -190,9 +164,7 @@ class TestAddEntry:
 class TestUpdateEntry:
     def test_update_entry(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
         bus = bootstrap_test_app(
             entry_uow_factory=entry_uow_factory,
@@ -240,9 +212,7 @@ class TestUpdateEntry:
 
     def test_cannot_update_entry_in_nonexistent_resource(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
         bus = bootstrap_test_app(
             entry_uow_factory=entry_uow_factory,
@@ -265,9 +235,7 @@ class TestUpdateEntry:
 class TestDeleteEntry:
     def test_can_delete_entry(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: unit_of_work.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
         bus = bootstrap_test_app(
             entry_uow_factory=entry_uow_factory,

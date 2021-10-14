@@ -11,7 +11,7 @@ from karp.lex.domain import errors
 
 class AddEntry(Command):
     resource_id: str
-    id: unique_id.UniqueId
+    entity_id: unique_id.UniqueId
     entry: typing.Dict
     user: str
     message: str
