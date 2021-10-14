@@ -8,6 +8,7 @@ from karp import errors as karp_errors
 from karp.lex.domain import errors, events, entities
 from karp.lex.domain.entities import Resource
 from karp.foundation import events as foundation_events
+from karp.foundation.commands import CommandHandler
 from karp.foundation import messagebus
 from karp.lex.application import repositories as lex_repositories
 from karp.lex.domain import commands
@@ -172,7 +173,7 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 # def update_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
 #     return update_resource(config_file)
 
-class CreateResourceHandler(BaseResourceHandler):
+class CreateResourceHandler(CommandHandler[commands.CreateResource], BaseResourceHandler):
     def __init__(
         self,
         resource_uow: repositories.ResourceUnitOfWork,
@@ -207,23 +208,8 @@ class CreateResourceHandler(BaseResourceHandler):
                 name=cmd.name,
             )
 
-            # if resource.entry_repo_id:
-            #     entry_repo_uow = entry_uows.get_by_id(
-            #         resource.entry_repo_id
-            #     )
-            # else:
-            #     entry_repo_uow = self.entry_uow_factory.create(
-            #         resource_id=cmd.resource_id,
-            #         resource_config=resource.config,
-            #         entry_repository_settings=cmd.entry_repository_settings,
-            #     )
-            # resource.entry_repo_id = entry_repo_uow.id
-            # resource.entry_repository_settings = entry_repo_uow.repo_settings
-
-            uow.repo.put(resource)
+            uow.repo.save(resource)
             uow.commit()
-            # entry_uows.put(entry_repo_uow)
-            # entry_uows.commit()
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
@@ -314,12 +300,11 @@ def create_new_resource(config_file: IO, config_dir=None) -> Resource:
 
 #     return config
 
-class UpdateResourceHandler(messagebus.Handler[commands.UpdateResource]):
+class UpdateResourceHandler(CommandHandler[commands.UpdateResource], BaseResourceHandler):
     def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
-        super().__init__()
-        self.resource_uow = resource_uow
+        super().__init__(resource_uow=resource_uow)
 
-    def execute(self, cmd: commands.UpdateResource):
+    def __call__(self, cmd: commands.UpdateResource):
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(cmd.resource_id)
             found_changes = False
@@ -335,7 +320,7 @@ class UpdateResourceHandler(messagebus.Handler[commands.UpdateResource]):
                     message=cmd.message,
                     timestamp=cmd.timestamp,
                 )
-                uow.repo.update(resource)
+                uow.repo.save(resource)
             uow.commit()
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
@@ -427,12 +412,11 @@ class UpdateResourceHandler(messagebus.Handler[commands.UpdateResource]):
 
 #     return resource_id, resource_def.version
 
-class PublishResourceHandler(messagebus.Handler[commands.PublishResource]):
+class PublishResourceHandler(CommandHandler[commands.PublishResource], BaseResourceHandler):
     def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
-        super().__init__()
-        self.resource_uow = resource_uow
+        super().__init__(resource_uow=resource_uow)
 
-    def execute(self, cmd: commands.PublishResource):
+    def __call__(self, cmd: commands.PublishResource):
         print(f"publish_resource resource_id='{cmd.resource_id}' ...")
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(cmd.resource_id)
@@ -444,7 +428,7 @@ class PublishResourceHandler(messagebus.Handler[commands.PublishResource]):
             # resource.is_published = True
             resource.publish(user=cmd.user, message=cmd.message,
                              timestamp=cmd.timestamp)
-            uow.repo.update(resource)
+            uow.repo.save(resource)
             uow.commit()
     # print("calling indexing.publish_index ...")
     # indexing.publish_index(ctx.search_service, ctx.resource_repo, resource)

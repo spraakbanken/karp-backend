@@ -22,24 +22,23 @@ class UnitTestContext:
 class FakeResourceRepository(lex_repositories.ResourceRepository):
     def __init__(self):
         super().__init__()
-        self.resources = set()
+        self.resources = {}
 
     def check_status(self):
         pass
 
     def _save(self, resource):
-        self.resources.add(resource)
+        self.resources[resource.id] = resource
+    # def _update(self, resource):
+    #     r = self._by_id(resource.id)
+    #     self.resources.discard(r)
+    #     self.resources.add(resource)
 
-    def _update(self, resource):
-        r = self._by_id(resource.id)
-        self.resources.discard(r)
-        self.resources.add(resource)
-
-    def _by_id(self, id, *, version=None):
-        return next((r for r in self.resources if r.id == id), None)
+    def _by_id(self, id_, *, version=None):
+        return self.resources.get(id_)
 
     def _by_resource_id(self, resource_id, *, version=None):
-        return next((r for r in self.resources if r.resource_id == resource_id), None)
+        return next((res for res in self.resources.values() if res.resource_id == resource_id), None)
 
     def __len__(self):
         return len(self.resources)

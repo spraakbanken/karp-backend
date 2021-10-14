@@ -73,8 +73,9 @@ def unit_test_injector() -> injector.Injector:
         ]
     )
 
+
 @pytest.fixture()
-def lex_test_context() -> adapters.UnitTestContext:
+def lex_ctx() -> adapters.UnitTestContext:
     container = injector.Injector([
         CommandBusMod(),
         Lex(),
@@ -84,6 +85,7 @@ def lex_test_context() -> adapters.UnitTestContext:
         container=container,
         command_bus=container.get(CommandBus)
     )
+
 
 @pytest.fixture()
 def command_bus(unit_test_injector: injector.Injector) -> CommandBus:

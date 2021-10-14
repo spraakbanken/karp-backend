@@ -87,3 +87,17 @@ class CreateResourceFactory(factory.Factory):
     entry_repo_id = factory.LazyFunction(lex_factories.make_unique_id)
     message = 'created'
     created_by = 'kristoff@example.com'
+
+
+class UpdateResourceFactory(factory.Factory):
+    class Meta:
+        model = lex_commands.UpdateResource
+
+    # entity_id = factory.LazyFunction(lex_factories.make_unique_id)
+    resource_id = factory.Faker('word')
+    name = factory.Faker('word')
+    repository_type = 'fake'
+    config = factory.Faker('resource_config')
+    entry_repo_id = factory.LazyFunction(lex_factories.make_unique_id)
+    message = 'created'
+    created_by = 'kristoff@example.com'

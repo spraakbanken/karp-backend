@@ -112,6 +112,7 @@ class Resource(TimestampedVersionedEntity):
         name: str,
         config: Dict[str, Any],
         message: str,
+        entry_repo_id: unique_id.UniqueId,
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
@@ -132,6 +133,7 @@ class Resource(TimestampedVersionedEntity):
         # self.entry_repository_type = entry_repository_type
         # self.entry_repository_settings = entry_repository_settings
         self._entry_json_schema = None
+        self._entry_repo_id = entry_repo_id
         # if not self.events or not isinstance(self.events[-1], events.ResourceCreated):
         #     self.queue_event(
         #         events.ResourceLoaded(
@@ -147,16 +149,12 @@ class Resource(TimestampedVersionedEntity):
         #     )
 
     @property
-    def resource_id(self):
+    def resource_id(self) -> str:
         return self._resource_id
 
     @property
-    def entry_repository_type(self) -> str:
-        return self.config["entry_repository_type"]
-
-    @entry_repository_type.setter
-    def entry_repository_type(self, entry_repository_type: str):
-        self.config["entry_repository_type"] = entry_repository_type
+    def entry_repository_id(self) -> unique_id.UniqueId:
+        return self._entry_repo_id
 
     @property
     def entry_repository_settings(self) -> typing.Dict:

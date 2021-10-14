@@ -1,197 +1,131 @@
+import copy
+
 import pytest
 
 # from karp.services import messagebus
 from karp.lex.domain import errors
 
 from karp.lex.application import repositories
+from karp.lex.application.repositories import ResourceUnitOfWork
 from karp.lex.application.handlers import CreateResourceHandler
 from karp.lex.domain import commands
 from karp.lex.domain.commands.resource_commands import CreateResource
 # from karp.services impor: repositories
 
 from .adapters import (FakeEntryUowFactory, FakeEntryUowRepositoryUnitOfWork, FakeResourceUnitOfWork,
-                                      )
+                       )
 from . import adapters, factories
 
 
 class TestCreateResource:
     def test_create_resource_w_no_entry_repo_raises(
         self,
-        lex_test_context: adapters.UnitTestContext,
+        lex_ctx: adapters.UnitTestContext,
     ):
         cmd = factories.CreateResourceFactory()
         with pytest.raises(errors.EntryRepoNotFound):
-            lex_test_context.command_bus.dispatch(cmd)
+            lex_ctx.command_bus.dispatch(cmd)
 
     def test_create_resource(
         self,
-        lex_test_context: adapters.UnitTestContext,
+        lex_ctx: adapters.UnitTestContext,
     ):
         cmd = factories.CreateEntryRepositoryFactory()
-        lex_test_context.command_bus.dispatch(cmd)
+        lex_ctx.command_bus.dispatch(cmd)
 
         cmd = factories.CreateResourceFactory(
             entry_repo_id=cmd.entity_id)
-        lex_test_context.command_bus.dispatch(cmd)
+        lex_ctx.command_bus.dispatch(cmd)
 
-        resource_uow = lex_test_context.container.get(
+        resource_uow = lex_ctx.container.get(
             repositories.ResourceUnitOfWork)
         assert resource_uow.was_committed
         assert len(resource_uow.resources) == 1
 
-        resource = resource_uow.resources.by_id(cmd.entity_id)
-        assert resource.id == cmd.entity_id
+        resource = resource_uow.resources.by_id(cmd.id)
+        assert resource.id == cmd.id
         assert resource.resource_id == cmd.resource_id
-        assert len(resource.domain_events) == 1
+        # assert len(resource.domain_events) == 1
 
     def test_create_resource_with_same_resource_id_raises(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: repositories.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
-        # uow = FakeUnitOfWork(FakeResourceRepository())
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
-        )
-        bus.handle(
-            commands.CreateResource(
-                id=make_unique_id(),
-                resource_id="r1",
-                name="R1",
-                config={"fields": {}},
-                message="added",
-                created_by="user",
-            ),
-        )
-        with pytest.raises(errors.IntegrityError):
-            bus.handle(
-                commands.CreateResource(
-                    id=make_unique_id(),
-                    resource_id="r1",
-                    name="R1",
-                    config={"fields": {}},
-                    message="added",
-                    created_by="user",
-                ),
-            )
-        assert resource_uow.was_rolled_back
-        # assert uow.repo[0].events[-1] == events.ResourceCreated(
-        #     id=id_, resource_id=resource_id, name=resource_name, config=conf
-        # )
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+        cmd2 = factories.CreateResourceFactory(entry_repo_id=cmd1.entity_id)
+        lex_ctx.command_bus.dispatch(cmd2)
 
-    # assert isinstance(resource, Resource)
-    # assert resource.id == uuid.UUID(str(resource.id), version=4)
-    # assert resource.version == 1
-    # assert resource.resource_id == resource_id
-    # assert resource.name == name
-    # assert not resource.discarded
-    # assert not resource.is_published
-    # assert "resource_id" not in resource.config
-    # assert "resource_name" not in resource.config
-    # assert "sort" in resource.config
-    # assert resource.config["sort"] == conf["sort"]
-    # assert "fields" in resource.config
-    # assert resource.config["fields"] == conf["fields"]
-    # assert int(resource.last_modified) == 12345
-    # assert resource.message == "Resource added."
-    # assert resource.op == ResourceOp.ADDED
+        with pytest.raises(errors.IntegrityError):
+            lex_ctx.command_bus.dispatch(
+                factories.CreateResourceFactory(resource_id=cmd2.resource_id, entry_repo_id=cmd1.entity_id))
+
+        resource_uow = lex_ctx.container.get(repositories.ResourceUnitOfWork)
+        assert resource_uow.was_rolled_back
 
 
 class TestUpdateResource:
     def test_update_resource(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: repositories.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
-        # uow = FakeUnitOfWork(FakeResourceRepository())
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
-        )
-        # uow = FakeUnitOfWork(FakeResourceRepository())
-        id_ = make_unique_id()
-        bus.handle(
-            commands.CreateResource(
-                id=id_,
-                resource_id="r1",
-                name="R1",
-                config={"a": "b"},
-                message="added",
-                created_by="user",
-            )
-        )
-        bus.handle(
-            commands.UpdateResource(
-                resource_id="r1",
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+        cmd2 = factories.CreateResourceFactory(entry_repo_id=cmd1.entity_id)
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        changed_config = copy.deepcopy(cmd2.config)
+        changed_config['fields']['b'] = {'type': 'integer'}
+        lex_ctx.command_bus.dispatch(
+            factories.UpdateResourceFactory(
+                resource_id=cmd2.resource_id,
                 version=1,
                 name="R1",
-                config={"a": "changed", "b": "added"},
+                config=changed_config,
                 message="changed",
                 user="bob",
             ),
         )
 
-        resource = resource_uow.resources.by_id(id_)
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)
+
+        assert resource_uow.was_committed  # type: ignore
+
+        resource = resource_uow.resources.by_resource_id(cmd2.resource_id)
         assert resource is not None
-        assert resource.config["a"] == "changed"
-        assert resource.config["b"] == "added"
+        assert resource.config == changed_config
         assert resource.version == 2
-        assert resource_uow.was_committed
+
+        resource = resource_uow.resources.get_by_id(cmd2.id)
+        assert resource is not None
+        assert resource.config == changed_config
+        assert resource.version == 2
 
 
 class TestPublishResource:
     def test_publish_resource(
         self,
-        entry_uow_factory: FakeEntryUowFactory,
-        entry_uows: repositories.EntriesUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_ctx: adapters.UnitTestContext,
     ):
-        # uow = FakeUnitOfWork(FakeResourceRepository())
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
-        )
-        id_ = make_unique_id()
-        resource_id = "test_resource"
-        resource_name = "Test resource"
-        conf = {
-            "sort": ["baseform"],
-            "fields": {"baseform": {"type": "string", "required": True}},
-        }
-        message = "test_resource added"
-        #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
-        #         resource = create_resource(conf)
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+        cmd2 = factories.CreateResourceFactory(entry_repo_id=cmd1.entity_id)
+        lex_ctx.command_bus.dispatch(cmd2)
 
-        # uow = FakeUnitOfWork(FakeResourceRepository())
-
-        bus.handle(
-            commands.CreateResource(
-                id=id_,
-                resource_id=resource_id,
-                name=resource_name,
-                config=conf,
-                message=message,
-                created_by="kristoff@example.com",
-            )
-        )
-
-        bus.handle(
+        lex_ctx.command_bus.dispatch(
             commands.PublishResource(
-                resource_id=resource_id,
-                message=message,
+                resource_id=cmd2.resource_id,
+                message='publish',
                 user="kristoff@example.com",
             )
         )
 
-        resource = resource_uow.resources.by_id(id_)
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)
+
+        assert resource_uow.was_committed  # type: ignore
+
+        resource = resource_uow.resources.by_id(cmd2.id)
         assert resource.is_published
         assert resource.version == 2
-        assert resource_uow.was_committed
         # assert index_uow.repo.indicies[resource_id].published
         # assert index_uow.was_committed

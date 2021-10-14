@@ -11,6 +11,7 @@ from karp.lex.domain.commands import (
     CreateEntryRepository,
     CreateResource,
 )
+from karp.lex.domain import commands
 
 
 class Lex(injector.Module):
@@ -32,3 +33,17 @@ class Lex(injector.Module):
             entry_uow_repo_uow=entry_uow_repo_uow,
             resource_uow=resource_uow,
         )
+
+    @injector.provider
+    def update_resource(
+        self,
+        resource_uow: ResourceUnitOfWork,
+    ) -> CommandHandler[commands.UpdateResource]:
+        return handlers.UpdateResourceHandler(resource_uow)
+
+    @injector.provider
+    def publish_resource(
+        self,
+        resource_uow: ResourceUnitOfWork,
+    ) -> CommandHandler[commands.PublishResource]:
+        return handlers.PublishResourceHandler(resource_uow)
