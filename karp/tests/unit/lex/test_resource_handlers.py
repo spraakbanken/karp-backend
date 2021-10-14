@@ -2,18 +2,12 @@ import copy
 
 import pytest
 
-# from karp.services import messagebus
 from karp.lex.domain import errors
 
 from karp.lex.application import repositories
 from karp.lex.application.repositories import ResourceUnitOfWork
-from karp.lex.application.handlers import CreateResourceHandler
 from karp.lex.domain import commands
-from karp.lex.domain.commands.resource_commands import CreateResource
-# from karp.services impor: repositories
 
-from .adapters import (FakeEntryUowFactory, FakeEntryUowRepositoryUnitOfWork, FakeResourceUnitOfWork,
-                       )
 from . import adapters, factories
 
 
@@ -37,8 +31,7 @@ class TestCreateResource:
             entry_repo_id=cmd.entity_id)
         lex_ctx.command_bus.dispatch(cmd)
 
-        resource_uow = lex_ctx.container.get(
-            repositories.ResourceUnitOfWork)
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)
         assert resource_uow.was_committed
         assert len(resource_uow.resources) == 1
 
