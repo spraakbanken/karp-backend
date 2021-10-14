@@ -177,14 +177,14 @@ class CreateResourceHandler(BaseResourceHandler):
         self,
         resource_uow: repositories.ResourceUnitOfWork,
         # entry_uow_factory: repositories.EntryUowFactory,
-        entry_repo_repo_uow: lex_repositories.EntryRepositoryRepositoryUnitOfWork
+        entry_uow_repo_uow: lex_repositories.EntryRepositoryRepositoryUnitOfWork
     ) -> None:
         super().__init__(resource_uow=resource_uow)
         # self.entry_uow_factory = entry_uow_factory
-        self.entry_repo_repo_uow = entry_repo_repo_uow
+        self.entry_uow_repo_uow = entry_uow_repo_uow
 
     def __call__(self, cmd: commands.CreateResource):
-        with self.resource_uow as uow, self.entry_repo_repo_uow as entry_repo_repo_uow:
+        with self.resource_uow as uow, self.entry_uow_repo_uow as entry_uow_repo_uow:
             try:
                 existing_resource = uow.resources.by_resource_id(
                     cmd.resource_id)
@@ -194,7 +194,7 @@ class CreateResourceHandler(BaseResourceHandler):
                     )
             except errors.ResourceNotFound:
                 pass
-            _entry_repo_exists = entry_repo_repo_uow.repo.get_by_id(
+            _entry_repo_exists = entry_uow_repo_uow.repo.get_by_id(
                 cmd.entry_repo_id)
             resource = entities.create_resource(
                 entity_id=cmd.id,

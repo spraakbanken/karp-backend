@@ -363,6 +363,7 @@ class Release(Entity):
 def create_resource(
     config: Dict,
     created_by: str,
+    entry_repo_id: unique_id.UniqueId,
     created_at: float = None,
     entity_id: unique_id.UniqueId = None,
     resource_id: typing.Optional[str] = None,
@@ -390,6 +391,7 @@ def create_resource(
         resource_id=resource_id,
         name=resource_name,
         config=config,
+        entry_repo_id=entry_repo_id,
         message=message or "Resource added.",
         op=ResourceOp.ADDED,
         version=1,

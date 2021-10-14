@@ -9,52 +9,40 @@ from karp.lex.domain import commands
 from karp.lex.domain.commands.resource_commands import CreateResource
 # from karp.services impor: repositories
 
-from karp.tests.unit.adapters import (FakeEntryUowFactory, FakeEntryUowRepositoryUnitOfWork, FakeResourceUnitOfWork,
+from .adapters import (FakeEntryUowFactory, FakeEntryUowRepositoryUnitOfWork, FakeResourceUnitOfWork,
                                       )
-from karp.tests.unit import factories
+from . import adapters, factories
 
 
 class TestCreateResource:
     def test_create_resource_w_no_entry_repo_raises(
         self,
-        entry_repo_repo_uow: FakeEntryUowRepositoryUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_test_context: adapters.UnitTestContext,
     ):
-        cmd_handler = CreateResourceHandler(resource_uow, entry_repo_repo_uow)
         cmd = factories.CreateResourceFactory()
         with pytest.raises(errors.EntryRepoNotFound):
-            cmd_handler(cmd)
+            lex_test_context.command_bus.dispatch(cmd)
 
     def test_create_resource(
         self,
-        entry_repo_repo_uow: FakeEntryUowRepositoryUnitOfWork,
-        resource_uow: FakeResourceUnitOfWork,
+        lex_test_context: adapters.UnitTestContext,
     ):
-        cmd_handler = CreateResourceHandler(resource_uow, entry_repo_repo_uow)
-        cmd = factories.CreateResourceFactory()
+        cmd = factories.CreateEntryRepositoryFactory()
+        lex_test_context.command_bus.dispatch(cmd)
 
-        cmd_handler(cmd)
+        cmd = factories.CreateResourceFactory(
+            entry_repo_id=cmd.entity_id)
+        lex_test_context.command_bus.dispatch(cmd)
 
+        resource_uow = lex_test_context.container.get(
+            repositories.ResourceUnitOfWork)
+        assert resource_uow.was_committed
         assert len(resource_uow.resources) == 1
 
-        resource = resource_uow.resources.by_id(id_)
-        assert resource.id == id_
-        assert resource.resource_id == resource_id
-
-        assert resource.name == resource_name
-
-        expected_config = {
-            "entry_repository_type": "fake_entries",
-            "entry_repository_settings": None,
-        }
-        expected_config.update(conf)
-        assert resource.config == expected_config
-        assert resource.last_modified_by == "kristoff@example.com"
-
-        assert resource_uow.was_committed
-
-        # assert bus.ctx.index_uow.repo.indicies[resource_id].created
-        # assert bus.ctx.index_uow.was_committed
+        resource = resource_uow.resources.by_id(cmd.entity_id)
+        assert resource.id == cmd.entity_id
+        assert resource.resource_id == cmd.resource_id
+        assert len(resource.domain_events) == 1
 
     def test_create_resource_with_same_resource_id_raises(
         self,
