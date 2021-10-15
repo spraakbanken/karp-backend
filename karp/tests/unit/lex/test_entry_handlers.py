@@ -5,7 +5,7 @@ import pytest
 from karp.lex.domain import errors
 
 from karp.lex.application import repositories
-from karp.lex.application.repositories import ResourceUnitOfWork
+from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
 from karp.lex.domain import commands
 
 from . import adapters, factories
@@ -24,7 +24,6 @@ class TestAddEntry:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        # uow = FakeUnitOfWork(FakeResourceRepository())
         with pytest.raises(errors.ResourceNotFound):
             lex_ctx.command_bus.dispatch(
                 factories.AddEntryFactory(
@@ -36,66 +35,44 @@ class TestAddEntry:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        # uow = FakeUnitOfWork(FakeResourceRepository())
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    }
+                },
+                "id": "baseform",
+            },
         )
-        resource_id = "test_id"
-        id_ = make_unique_id()
-        entry_id = "test_entry"
-        entry_name = "Test entry"
-        conf = {
-            "sort": ["baseform"],
-            "fields": {"baseform": {"type": "string", "required": True}},
-            "id": "baseform",
-        }
-        message = "test_entry added"
-        #     with mock.patch("karp.utility.time.utc_now", return_value=12345):
-        #         entry = create_entry(conf)
+        lex_ctx.command_bus.dispatch(cmd2)
 
-        # uow = FakeUnitOfWork(FakeEntryRepository())
-
-        # cmd = commands.CreateResource(
-        #     id=make_unique_id(),
-        #     resource_id=resource_id,
-        #     name="Test",
-        #     config=conf,
-        #     message=message,
-        #     created_by="kristoff@example.com",
-        #     entry_repository_type="fake",
-        # )
-        # bus.handle(cmd)
-        bus.handle(make_create_resource_command(resource_id, config=conf))
-
-        cmd = commands.AddEntry(
-            resource_id=resource_id,
-            id=id_,
-            entry_id=entry_id,
-            name=entry_name,
+        entry_id = "beta"
+        cmd3 = factories.AddEntryFactory(
+            resource_id=cmd2.resource_id,
             entry={"baseform": entry_id},
-            message=message,
-            user="kristoff@example.com",
         )
 
-        bus.handle(cmd)
+        lex_ctx.command_bus.dispatch(cmd3)
 
-        assert len(resource_uow.resources) == 1
-
-        # resource = uow.repo.by_resource_id("test_id")
-
-        # assert len(resource.entry_repository) == 1
-
-        uow = entry_uows.get(resource_id)
-        entry = uow.repo.by_id(id_)
+        entry_uow_repo_uow = lex_ctx.container.get(
+            EntryUowRepositoryUnitOfWork
+        )
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
+        entry = uow.repo.by_id(cmd3.entity_id)
         assert entry is not None
-        assert entry.id == id_
+        assert entry.id == cmd3.entity_id
         assert entry.entry_id == entry_id
-        assert entry.resource_id == "test_id"
+        assert entry.resource_id == cmd3.resource_id
 
         assert entry.body == {"baseform": entry_id}
-        assert entry.last_modified_by == "kristoff@example.com"
+        assert entry.last_modified_by == cmd3.user
 
         assert uow.was_committed
 
@@ -109,56 +86,39 @@ class TestAddEntry:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    }
+                },
+                "id": "baseform",
+            },
         )
-        resource_id = "abc"
-        bus.handle(make_create_resource_command(resource_id))
-        bus.handle(
-            commands.AddEntry(
-                id=make_unique_id(),
-                entry_id="r1",
-                resource_id=resource_id,
-                name="R1",
-                entry={"id": "r1"},
-                message="added",
-                user="user",
-            ),
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        entry_id = "beta"
+        cmd3 = factories.AddEntryFactory(
+            resource_id=cmd2.resource_id,
+            entry={"baseform": entry_id},
         )
+
+        lex_ctx.command_bus.dispatch(cmd3)
+
         with pytest.raises(errors.IntegrityError):
-            bus.handle(
-                commands.AddEntry(
-                    id=make_unique_id(),
-                    entry_id="r1",
-                    resource_id=resource_id,
-                    name="R1",
-                    entry={"id": "r1"},
-                    message="added",
-                    user="user",
+            lex_ctx.command_bus.dispatch(
+                factories.AddEntryFactory(
+                    resource_id=cmd3.resource_id,
+                    entry={"baseform": entry_id},
                 ),
             )
-        # assert uow.repo[0].events[-1] == events.EntryCreated(
-        #     id=id_, entry_id=entry_id, name=entry_name, config=conf
-        # )
-
-    # assert isinstance(entry, Entry)
-    # assert entry.id == uuid.UUID(str(entry.id), version=4)
-    # assert entry.version == 1
-    # assert entry.entry_id == entry_id
-    # assert entry.name == name
-    # assert not entry.discarded
-    # assert not entry.is_published
-    # assert "entry_id" not in entry.config
-    # assert "entry_name" not in entry.config
-    # assert "sort" in entry.config
-    # assert entry.config["sort"] == conf["sort"]
-    # assert "fields" in entry.config
-    # assert entry.config["fields"] == conf["fields"]
-    # assert int(entry.last_modified) == 12345
-    # assert entry.message == "Entry added."
-    # assert entry.op == EntryOp.ADDED
 
 
 class TestUpdateEntry:
@@ -166,42 +126,55 @@ class TestUpdateEntry:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    },
+                    "a": {
+                        "type": "string",
+                    }
+                },
+                "id": "baseform",
+            },
         )
-        resource_id = "abc"
-        id_ = make_unique_id()
-        bus.handle(make_create_resource_command(resource_id))
-        bus.handle(
-            commands.AddEntry(
-                id=id_,
-                entry_id="r1",
-                resource_id=resource_id,
-                entry={"id": "r1", "a": "b"},
-                message="added",
-                user="user",
-            ),
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        entry_id = "beta"
+        cmd3 = factories.AddEntryFactory(
+            resource_id=cmd2.resource_id,
+            entry={"baseform": entry_id, 'a': 'orig'},
         )
-        bus.handle(
-            commands.UpdateEntry(
-                entry_id="r1",
+
+        lex_ctx.command_bus.dispatch(cmd3)
+
+        lex_ctx.command_bus.dispatch(
+            factories.UpdateEntryFactory(
+                entry_id=entry_id,
                 version=1,
-                resource_id=resource_id,
-                entry={"id": "r1", "a": "changed", "b": "added"},
-                message="changed",
-                user="bob",
+                resource_id=cmd3.resource_id,
+                entry={"baseform": entry_id, "a": "changed", "b": "added"},
             ),
         )
 
-        uow = entry_uows.get(resource_id)
-        entry = uow.repo.by_id(id_)
+        entry_uow_repo_uow = lex_ctx.container.get(
+            EntryUowRepositoryUnitOfWork
+        )
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
+        assert uow.was_committed
+
+        entry = uow.repo.by_id(cmd3.entity_id)
         assert entry is not None
         assert entry.body["a"] == "changed"
         assert entry.body["b"] == "added"
         assert entry.version == 2
-        assert uow.was_committed
         # assert (
         #     bus.ctx.index_uow.repo.indicies[resource_id]
         #     .entries[entry.entry_id]
@@ -214,13 +187,8 @@ class TestUpdateEntry:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
-        )
         with pytest.raises(errors.ResourceNotFound):
-            bus.handle(
+            lex_ctx.command_bus.dispatch(
                 commands.UpdateEntry(
                     resource_id="non_existent",
                     entry_id="a",
@@ -231,44 +199,118 @@ class TestUpdateEntry:
                 )
             )
 
+    def test_update_of_entry_id_changes_entry_id(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    },
+                },
+                "id": "baseform",
+            },
+        )
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        entry_id = "beta"
+        cmd3 = factories.AddEntryFactory(
+            resource_id=cmd2.resource_id,
+            entry={"baseform": entry_id},
+        )
+
+        lex_ctx.command_bus.dispatch(cmd3)
+
+        new_entry_id = 'gamma'
+        lex_ctx.command_bus.dispatch(
+            factories.UpdateEntryFactory(
+                entry_id=entry_id,
+                version=1,
+                resource_id=cmd3.resource_id,
+                entry={'baseform': new_entry_id},
+            ),
+        )
+
+        entry_uow_repo_uow = lex_ctx.container.get(
+            EntryUowRepositoryUnitOfWork
+        )
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
+        assert uow.was_committed
+
+        entry = uow.repo.by_id(cmd3.entity_id)
+        assert entry.entry_id == new_entry_id
+        assert entry.version == 2
+
+        entry = uow.repo.by_entry_id(new_entry_id)
+        assert entry.id == cmd3.entity_id
+
+        with pytest.raises(errors.EntryNotFound):
+            uow.repo.by_entry_id(entry_id)
+
 
 class TestDeleteEntry:
     def test_can_delete_entry(
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        bus = bootstrap_test_app(
-            entry_uow_factory=entry_uow_factory,
-            entry_uows=entry_uows,
-            resource_uow=resource_uow
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    },
+                    "a": {
+                        "type": "string",
+                    }
+                },
+                "id": "baseform",
+            },
         )
-        resource_id = "abc"
-        id_ = make_unique_id()
-        bus.handle(make_create_resource_command(resource_id))
-        bus.handle(
-            commands.AddEntry(
-                id=id_,
-                entry_id="r1",
-                resource_id=resource_id,
-                entry={"id": "r1", "a": "b"},
-                message="added",
-                user="user",
-            ),
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        entry_id = "beta"
+        cmd3 = factories.AddEntryFactory(
+            resource_id=cmd2.resource_id,
+            entry={"baseform": entry_id, 'a': 'orig'},
         )
-        bus.handle(
+
+        lex_ctx.command_bus.dispatch(cmd3)
+
+        lex_ctx.command_bus.dispatch(
             commands.DeleteEntry(
-                entry_id="r1",
+                entry_id=entry_id,
                 version=1,
-                resource_id=resource_id,
+                resource_id=cmd3.resource_id,
                 message="deleted",
                 user="bob",
             ),
         )
 
-        uow = entry_uows.get_uow(resource_id)
+        entry_uow_repo_uow = lex_ctx.container.get(
+            EntryUowRepositoryUnitOfWork
+        )
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
         assert uow.was_committed
-        entry = uow.repo.by_id(id_)
-        assert entry is not None
+
+        entry = uow.repo.by_id(cmd3.entity_id)
+        assert entry.version == 2
+        assert entry.discarded
+
+        entry = uow.repo.by_entry_id(entry_id)
         assert entry.version == 2
         assert entry.discarded
         # assert (

@@ -17,7 +17,7 @@ class LexDomainError(Exception):
 class EntryNotFound(NotFoundError, LexDomainError):
     entity_name = "Entry"
 
-    def __init__(self, entity_id, *args, **kwargs):
+    def __init__(self, *args, entity_id, **kwargs):
         super().__init__(entity_id, *args, **kwargs)
 
 

@@ -9,7 +9,7 @@ CommandType = TypeVar('CommandType')
 
 class CommandHandler(Generic[CommandType]):
     def __call__(self, command: CommandType) -> None:
-        pass
+        raise NotImplementedError()
 
 
 class Command:

@@ -58,3 +58,25 @@ class Lex(injector.Module):
             resource_uow=resource_uow,
             entry_uow_repo_uow=entry_uow_repo_uow
         )
+
+    @injector.provider
+    def update_entry(
+        self,
+        resource_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork
+    ) -> CommandHandler[commands.UpdateEntry]:
+        return handlers.UpdateEntryHandler(
+            resource_uow=resource_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow
+        )
+
+    @injector.provider
+    def delete_entry(
+        self,
+        resource_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork
+    ) -> CommandHandler[commands.DeleteEntry]:
+        return handlers.DeleteEntryHandler(
+            resource_uow=resource_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow
+        )

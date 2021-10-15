@@ -105,14 +105,12 @@ class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
             resource = self.resource_uow.resources.by_resource_id(
                 cmd.resource_id)
 
-        if not resource:
-            raise errors.ResourceNotFound(cmd.resource_id)
-
         try:
             entry_id = resource.id_getter()(cmd.entry)
         except KeyError as err:
             raise errors.MissingIdField(
-                resource_id=cmd.resource_id, entry=cmd.entry
+                resource_id=cmd.resource_id,
+                entry=cmd.entry
             ) from err
         validate_entry = _compile_schema(resource.entry_json_schema)
 
@@ -133,9 +131,12 @@ class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
             _validate_entry(validate_entry, cmd.entry)
 
             entry = resource.create_entry_from_dict(
-                cmd.entry, user=cmd.user, message=cmd.message, entity_id=cmd.id
+                cmd.entry,
+                user=cmd.user,
+                message=cmd.message,
+                entity_id=cmd.entity_id
             )
-            uw.entries.put(entry)
+            uw.entries.save(entry)
             uw.commit()
         return entry
 
@@ -147,31 +148,33 @@ class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
 #     return entry_json
 
 
-class UpdateEntryHandler(BaseEntryHandler[commands.UpdateEntry]):
-    def execute(self, cmd: commands.UpdateEntry):
+class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry]):
+    def __call__(self, cmd: commands.UpdateEntry):
         with self.resource_uow:
-            resource = self.resource_uow.repo.by_resource_id(cmd.resource_id)
+            resource = self.resource_uow.repo.by_resource_id(
+                cmd.resource_id
+            )
 
-        if not resource:
-            raise errors.ResourceNotFound(cmd.resource_id)
         schema = _compile_schema(resource.entry_json_schema)
         _validate_entry(schema, cmd.entry)
 
-        with self.entry_uows.get(cmd.resource_id) as uw:
-            current_db_entry = uw.repo.by_entry_id(cmd.entry_id)
-
-            if not current_db_entry:
+        with self.entry_uow_repo_uow.repo.get_by_id(
+            resource.entry_repository_id) as uw:
+            try:
+                current_db_entry = uw.repo.by_entry_id(
+                    cmd.entry_id
+                )
+            except errors.EntryNotFound as err:
                 raise errors.EntryNotFound(
                     cmd.resource_id,
                     cmd.entry_id,
                     entry_version=cmd.version,
                     resource_version=resource.version,
-                )
+                ) from err
 
             diff = jsondiff.compare(current_db_entry.body, cmd.entry)
             if not diff:
-                raise KarpError("No changes made",
-                                ClientErrorCodes.ENTRY_NOT_CHANGED)
+                return
 
             #     db_entry_json = json.dumps(entry)
             #     db_id = current_db_entry.id
@@ -193,9 +196,10 @@ class UpdateEntryHandler(BaseEntryHandler[commands.UpdateEntry]):
                 cmd.user, message=cmd.message, timestamp=cmd.timestamp)
             if new_entry_id != cmd.entry_id:
                 current_db_entry.entry_id = new_entry_id
-                uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
+                # uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
+                uw.repo.save(current_db_entry)
             else:
-                uw.repo.update(current_db_entry)
+                uw.repo.save(current_db_entry)
             uw.commit()
         # if resource.is_published:
         #     if new_entry_id != entry_id:
@@ -399,13 +403,15 @@ def add_entries(
 #     return kwargs
 
 
-class DeleteEntryHandler(BaseEntryHandler[commands.DeleteEntry]):
+class DeleteEntryHandler(BaseEntryHandler, CommandHandler[commands.DeleteEntry]):
 
-    def execute(self, cmd: commands.DeleteEntry):
-        # with ctx.resource_uow:
-        #     resource = ctx.resource_uow.repo.by_resource_id(cmd.resource_id)
+    def __call__(self, cmd: commands.DeleteEntry):
+        with self.resource_uow:
+            resource = self.resource_uow.repo.by_resource_id(cmd.resource_id)
 
-        with self.entry_uows.get_uow(cmd.resource_id) as uw:
+        with self.entry_uow_repo_uow.repo.get_by_id(
+            resource.entry_repository_id
+        ) as uw:
             try:
                 entry = uw.repo.by_entry_id(cmd.entry_id)
 
@@ -423,7 +429,7 @@ class DeleteEntryHandler(BaseEntryHandler[commands.DeleteEntry]):
                 timestamp=cmd.timestamp,
             )
             assert entry.discarded
-            uw.repo.update(entry)
+            uw.repo.save(entry)
             uw.commit()
 
     # ctx.search_service.delete_entry(resource, entry=entry)

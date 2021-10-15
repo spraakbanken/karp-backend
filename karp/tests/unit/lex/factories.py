@@ -12,7 +12,11 @@ from karp.utility.time import utc_now
 
 class ResourceConfigProvider(BaseProvider):
     def resource_config(self) -> typing.Dict:
-        return {'fields': {}, 'id': 'id'}
+        return {
+            "sort": ["baseform"],
+            "fields": {"baseform": {"type": "string", "required": True}},
+            "id": "baseform",
+        }
 
 
 factory.Faker.add_provider(ResourceConfigProvider)
@@ -37,19 +41,6 @@ def random_resource(config: typing.Optional[typing.Dict] = None):
         message="Resource add",
         created_by="kristoff@example.com",
     )
-
-
-class CreateResourceFactory(factory.Factory):
-    class Meta:
-        model = lex_commands.CreateResource
-
-    timestamp = factory.LazyFunction(utc_now)
-    id = factory.LazyFunction(lex_factories.make_unique_id)
-    resource_id = factory.Faker('word')
-    name = factory.Faker('word')
-    config = factory.Faker('resource_config')
-    user = factory.Faker('email')
-    message = 'resource created'
 
 
 class ResourceCreatedFactory(factory.Factory):
@@ -109,6 +100,17 @@ class AddEntryFactory(factory.Factory):
 
     entity_id = factory.LazyFunction(lex_factories.make_unique_id)
     resource_id = factory.Faker('word')
+    entry = {}
+    user = factory.Faker('email')
+    message = 'added'
+
+
+class UpdateEntryFactory(factory.Factory):
+    class Meta:
+        model = lex_commands.UpdateEntry
+
+    resource_id = factory.Faker('word')
+    entry_id = factory.Faker('word')
     entry = {}
     user = factory.Faker('email')
     message = 'added'

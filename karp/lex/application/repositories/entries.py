@@ -78,7 +78,10 @@ class EntryRepository(repository.Repository[entities.Entry]):
         if entry:
             self.seen.add(entry)
             return entry
-        raise errors.EntryNotFound(entry_id=entry_id)
+        raise errors.EntryNotFound(
+            f'Entry with entry_id="{entry_id}"',
+            entity_id=None,
+        )
 
     @abc.abstractmethod
     def _by_entry_id(
