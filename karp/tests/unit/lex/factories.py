@@ -27,9 +27,13 @@ class ResourceFactory(factory.Factory):
         model = lex_entities.Resource
 
     entity_id = factory.LazyFunction(lex_factories.make_unique_id)
+    entry_repo_id = factory.LazyFunction(lex_factories.make_unique_id)
     resource_id = factory.Faker("word")
+    name = factory.Faker('word')
+    config = factory.Faker('resource_config')
     last_modified_by = factory.Faker("email")
     last_modified = factory.LazyFunction(utc_now)
+    message = 'resource created'
 
 
 def random_resource(config: typing.Optional[typing.Dict] = None):

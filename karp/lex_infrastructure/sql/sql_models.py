@@ -13,6 +13,7 @@ class ResourceDTO(db.Base):
     resource_id = db.Column(db.String(32), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(64), nullable=False)
+    entry_repo_id = db.Column(db.UUIDType, nullable=False)
     config = db.Column(db.NestedMutableJson, nullable=False)
     is_published = db.Column(db.Boolean, index=True,
                              nullable=True, default=None)
@@ -43,9 +44,11 @@ class ResourceDTO(db.Base):
                     version={},
                     name={},
                     config={},
+                    entry_repo_id={},
                     is_published={},
                     last_modified={},
                     last_modified_by={},
+                    discarded={},
                 ) > """.format(
             self.history_id,
             self.id,
@@ -53,6 +56,7 @@ class ResourceDTO(db.Base):
             self.version,
             self.name,
             self.config,
+            self.entry_repo_id,
             self.is_published,
             self.last_modified,
             self.last_modified_by,
@@ -66,6 +70,7 @@ class ResourceDTO(db.Base):
             version=self.version,
             name=self.name,
             config=self.config,
+            entry_repo_id=self.entry_repo_id,
             is_published=self.is_published,
             last_modified=self.last_modified,
             last_modified_by=self.last_modified_by,
@@ -82,6 +87,7 @@ class ResourceDTO(db.Base):
             version=resource.version,
             name=resource.name,
             config=resource.config,
+            entry_repo_id=resource.entry_repository_id,
             is_published=resource.is_published,
             last_modified=resource.last_modified,
             last_modified_by=resource.last_modified_by,

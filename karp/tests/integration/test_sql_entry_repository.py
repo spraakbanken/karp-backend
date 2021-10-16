@@ -1,10 +1,10 @@
 import pytest
 
-from karp.domain import repository
-from karp.domain.models.entry import Entry, create_entry  # EntryRepository,
-from karp.domain.value_objects import unique_id
+# from karp.domain import repository
+# from karp.domain.models.entry import Entry, create_entry  # EntryRepository,
+# from karp.domain.value_objects import unique_id
 # from karp.infrastructure.unit_of_work import unit_of_work
-from karp.infrastructure.sql.sql_entry_repository import SqlEntryRepository
+from karp.lex_infrastructure.sql.sql_entry_repository import SqlEntryRepository
 
 
 @pytest.fixture(name="entry_repo")

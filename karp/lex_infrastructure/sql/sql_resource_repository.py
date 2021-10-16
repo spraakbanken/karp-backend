@@ -34,18 +34,18 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
     def primary_key(cls):
         return "resource_id"
 
-    def _put(self, resource: Resource):
+    def _save(self, resource: Resource):
         self._check_has_session()
         # Check if resource exists
-        existing_resource = self.by_resource_id(resource.resource_id)
-        if (
-            existing_resource
-            and not existing_resource.discarded
-            and existing_resource.id != resource.id
-        ):
-            raise errors.IntegrityError(
-                f"Resource with resource_id '{resource.resource_id}' already exists."
-            )
+#        existing_resource = self.by_resource_id(resource.resource_id)
+#        if (
+#            existing_resource
+#            and not existing_resource.discarded
+#            and existing_resource.id != resource.id
+#        ):
+#            raise errors.IntegrityError(
+#                f"Resource with resource_id '{resource.resource_id}' already exists."
+#            )
         if resource.version is None:
             resource._version = self.get_latest_version(
                 resource.resource_id) + 1
@@ -55,8 +55,6 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         # )
         resource_dto = ResourceDTO.from_entity(resource)
         self._session.add(resource_dto)
-
-    _update = _put
 
     def resource_ids(self) -> List[str]:
         self._check_has_session()
