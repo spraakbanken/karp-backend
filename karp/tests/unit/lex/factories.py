@@ -36,6 +36,19 @@ class ResourceFactory(factory.Factory):
     message = 'resource created'
 
 
+class EntryFactory(factory.Factory):
+    class Meta:
+        model = lex_entities.Entry
+
+    entity_id = factory.LazyFunction(lex_factories.make_unique_id)
+    entry_id = factory.Faker("word")
+    resource_id = factory.Faker("word")
+    last_modified_by = factory.Faker("email")
+    last_modified = factory.LazyFunction(utc_now)
+    message = 'entry created'
+    body={}
+
+
 def random_resource(config: typing.Optional[typing.Dict] = None):
     config = config or {"fields": {"wf": {"type" "string"}, "id": "wf"}}
     return lex_entities.create_resource(

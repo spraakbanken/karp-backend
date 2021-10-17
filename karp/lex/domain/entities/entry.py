@@ -48,7 +48,6 @@ class Entry(TimestampedVersionedEntity):
         self._message = "Entry added." if message is None else message
         self.resource_id = resource_id
         self._status = status
-        self.resource_id = resource_id
 
     @property
     def entry_id(self):

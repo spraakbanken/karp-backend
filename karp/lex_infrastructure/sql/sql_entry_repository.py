@@ -101,16 +101,29 @@ class SqlEntryRepository(
             "resource_id": resource_id,
         }
 
-    def _put(self, entry: Entry):
+    def _save(self, entry: Entry):
         self._check_has_session()
 
         history_id = self._insert_history(entry)
 
-        runtime_entry = self.runtime_model(
-            **self._entry_to_runtime_dict(history_id, entry)
-        )
+        runtime_entry_raw = self._entry_to_runtime_dict(history_id, entry)
+
         try:
-            return self._session.add(runtime_entry)
+            update_result = self._session.query(
+                self.runtime_model
+            ).filter_by(
+                id=entry.id
+            ).update(
+                runtime_entry_raw,
+            )
+
+            if update_result != 1:
+                self._session.add(
+                    self.runtime_model(
+                        **runtime_entry_raw
+                    )
+                )
+            # return self._session.add(runtime_entry)
         except db.exc.DBAPIError as exc:
             raise errors.RepositoryError("db failure") from exc
 
