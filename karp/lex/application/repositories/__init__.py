@@ -3,4 +3,4 @@ from .entry_repositories import EntryRepositoryRepository, EntryUowRepository, E
 from .resources import ResourceRepository
 from .unit_of_work import EntriesUnitOfWork, ResourceUnitOfWork, EntryUnitOfWork, EntryUowFactory
 from .entry_repository_repository import EntryRepositoryRepositoryUnitOfWork
-from .entry_repository_uow import EntryRepositoryUnitOfWorkFactory
+from .entry_repository_uow import EntryRepositoryUnitOfWorkFactory, InjectorEntryUnitOfWorkRepoFactory, EntryUnitOfWorkCreator

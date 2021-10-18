@@ -16,7 +16,6 @@ from .adapters import (
     FakeEntryUowFactory,
     FakeResourceUnitOfWork,
     FakeSearchServiceUnitOfWork,
-    FakeEntryRepositoryUnitOfWorkFactory,
 )
 from . import adapters, factories
 
@@ -26,21 +25,9 @@ def fixture_entry_repo_repo_uow() -> EntryUowRepositoryUnitOfWork:
     return FakeEntryUowRepositoryUnitOfWork()
 
 
-@pytest.fixture(name="entry_repo_uow_factory")
-def fixture_entry_repo_uow_factory() -> EntryRepositoryUnitOfWorkFactory:
-    return FakeEntryRepositoryUnitOfWorkFactory()
-
-
 @pytest.fixture(name='create_entry_repository')
 def fixture_create_entry_repository() -> lex_commands.CreateEntryRepository:
     return factories.CreateEntryRepositoryFactory()
-
-
-def configure_for_testing(binder: injector.Binder) -> None:
-    binder.bind(
-        EntryRepositoryRepositoryUnitOfWork,
-        to=FakeEntryRepositoryRepositoryUnitOfWork
-    )
 
 
 @pytest.fixture(name="resource_uow")
@@ -61,17 +48,6 @@ def fixture_entry_uow_factory() -> FakeEntryUowFactory:
 @pytest.fixture()
 def search_service_uow() -> FakeSearchServiceUnitOfWork:
     return FakeSearchServiceUnitOfWork()
-
-
-@pytest.fixture()
-def unit_test_injector() -> injector.Injector:
-    return injector.Injector(
-        [
-            CommandBusMod(),
-            Lex(),
-            configure_for_tests
-        ]
-    )
 
 
 @pytest.fixture()

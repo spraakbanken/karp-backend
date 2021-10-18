@@ -185,6 +185,20 @@ class FakeEntryUnitOfWork(
         return self._entries
 
 
+class FakeEntryUnitOfWork2(
+    FakeUnitOfWork, lex_repositories.EntryUnitOfWork
+):
+    def __init__(self, entity_id, name: str, config: typing.Dict):
+        self._entries = FakeEntryRepository()
+        self.id = entity_id
+        self.name = name
+        self.config = config
+
+    @property
+    def repo(self) -> lex_repositories.EntryRepository:
+        return self._entries
+
+
 class FakeResourceUnitOfWork(FakeUnitOfWork, lex_repositories.ResourceUnitOfWork):
     def __init__(self):
         self._resources = FakeResourceRepository()
@@ -220,12 +234,9 @@ class FakeEntryUowFactory(lex_repositories.EntryUowFactory):
         return entry_uow
 
 
-class FakeEntryRepositoryUnitOfWorkFactory(
-    lex_repositories.EntryRepositoryUnitOfWorkFactory
-):
-    def create(
+class FakeEntryUnitOfWorkCreator:
+    def __call__(
         self,
-        repository_type: str,
         entity_id: UniqueId,
         name: str,
         config: Dict,
@@ -235,6 +246,18 @@ class FakeEntryRepositoryUnitOfWorkFactory(
             name=name,
             config=config,
         )
+
+
+def create_entry_uow2(
+    entity_id: UniqueId,
+    name: str,
+    config: Dict,
+) -> lex_repositories.EntryUnitOfWork:
+    return FakeEntryUnitOfWork2(
+        entity_id=entity_id,
+        name=name,
+        config=config,
+    )
 
 
 class FakeEntryUowRepository(lex_repositories.EntryUowRepository):
@@ -268,9 +291,14 @@ class FakeLexInfrastructure(injector.Module):
     def entry_uow_repo_uow(self) -> lex_repositories.EntryUowRepositoryUnitOfWork:
         return FakeEntryUowRepositoryUnitOfWork()
 
-    @injector.provider
-    def entry_uow_factory(self) -> lex_repositories.EntryRepositoryUnitOfWorkFactory:
-        return FakeEntryRepositoryUnitOfWorkFactory()
+    # @injector.provider
+    # def entry_uow_factory(self) -> lex_repositories.EntryRepositoryUnitOfWorkFactory:
+    #     return FakeEntryRepositoryUnitOfWorkFactory()
+    @injector.multiprovider
+    def entry_uow_creator_map(
+        self
+    ) -> Dict[str, lex_repositories.EntryUnitOfWorkCreator]:
+        return {"fake": FakeEntryUnitOfWorkCreator(), "fake2": create_entry_uow2}
 
     @injector.provider
     @injector.singleton

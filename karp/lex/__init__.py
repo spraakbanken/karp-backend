@@ -5,6 +5,7 @@ from karp.lex.application import handlers
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
+    InjectorEntryUnitOfWorkRepoFactory,
     ResourceUnitOfWork,
 )
 from karp.lex.domain.commands import (
@@ -15,6 +16,10 @@ from karp.lex.domain import commands
 
 
 class Lex(injector.Module):
+    @injector.provider
+    def entry_uow_factory(self, container: injector.Injector) -> EntryRepositoryUnitOfWorkFactory:
+        return InjectorEntryUnitOfWorkRepoFactory(container)
+
     @injector.provider
     def create_entry_repository(
         self,
