@@ -68,6 +68,7 @@ class FakeSearchServiceUnitOfWork(
     FakeUnitOfWork, SearchServiceUnitOfWork
 ):
     def __init__(self):
+        super().__init__()
         self._index = FakeSearchService()
 
     @property

@@ -156,13 +156,16 @@ def publish_search_service(
 
 
 class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.ResourceCreated]):
-    def __init__(self, search_service_uow: SearchServiceUnitOfWork):
+    def __init__(
+        self,
+        search_service_uow: SearchServiceUnitOfWork
+    ):
         self.search_service_uow = search_service_uow
 
     def collect_new_events(self) -> Iterable[foundation_events.Event]:
         yield from self.search_service_uow.collect_new_events()
 
-    def execute(self, evt: events.ResourceCreated):
+    def __call__(self, evt: events.ResourceCreated):
         print(f"search_service_handlers.create_search_service: evt = {evt}")
         with self.search_service_uow:
             self.search_service_uow.repo.create_search_service(

@@ -12,6 +12,7 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
         self.rollback()
 
     def commit(self):
+        print('karp.foundation.UnitOfWork.commit')
         self._commit()
 
     def collect_new_events(self) -> typing.Iterable:
@@ -21,7 +22,7 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
 
     @abc.abstractmethod
     def _commit(self):
-        pass
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def rollback(self):

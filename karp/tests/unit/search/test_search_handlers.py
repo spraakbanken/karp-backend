@@ -22,6 +22,8 @@ class TestSearchServiceReactsOnLexEvents:
 
         search_service_uow = search_unit_ctx.container.get(
             SearchServiceUnitOfWork)
+        assert search_service_uow.was_committed
+
         assert search_service_uow.repo.indicies[resource_created.resource_id].created
 
 
