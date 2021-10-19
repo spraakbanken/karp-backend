@@ -27,5 +27,7 @@ class InjectorCommandBus(CommandBus):
         self._injector = injector
 
     def dispatch(self, command: Command) -> None:
-        cmd_handler = self._injector.get(CommandHandler[type(command)])
+        cmd_cls = type(command)
+        cmd_handler = self._injector.get(
+            CommandHandler[cmd_cls])  # type: ignore
         cmd_handler(command)

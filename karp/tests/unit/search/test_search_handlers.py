@@ -2,26 +2,26 @@ import pytest
 
 from karp.lex.domain.events import ResourceCreated
 
-
-from karp.tests.unit import factories
-from karp.tests.unit.adapters import bootstrap_test_app, FakeSearchServiceUnitOfWork
+from karp.search.application.repositories import SearchServiceUnitOfWork
+from karp.tests.unit.lex import factories as lex_factories
+from . import adapters
 
 
 @pytest.fixture(name="resource_created")
 def fixture_resource_created() -> ResourceCreated:
-    return factories.ResourceCreatedFactory()
+    return lex_factories.ResourceCreatedFactory()
 
 
 class TestSearchServiceReactsOnLexEvents:
     def test_ResourceCreated(
         self,
         resource_created: ResourceCreated,
-        search_service_uow: FakeSearchServiceUnitOfWork
+        search_unit_ctx: adapters.SearchUnitTestContext,
     ):
-        bus = bootstrap_test_app(search_service_uow=search_service_uow)
+        search_unit_ctx.event_bus.post(resource_created)
 
-        bus.handle(resource_created)
-
+        search_service_uow = search_unit_ctx.container.get(
+            SearchServiceUnitOfWork)
         assert search_service_uow.repo.indicies[resource_created.resource_id].created
 
 
