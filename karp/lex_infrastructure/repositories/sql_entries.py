@@ -439,6 +439,44 @@ class SqlEntryRepository(
         return _entry
 
 
+class SqlEntryUnitOfWork(
+    SqlUnitOfWork,
+    repositories.EntryUnitOfWork
+):
+    def __init__(
+        self,
+        repo_settings: Dict,
+        resource_config: typing.Dict,
+        session_factory=DEFAULT_SESSION_FACTORY,
+    ):
+        super().__init__()
+        self.session_factory = session_factory
+        self._entries = None
+        self.repo_settings = repo_settings
+        self.resource_config = resource_config
+
+    def __enter__(self):
+        self._session = self.session_factory()
+        self._entries = SqlEntryRepository.from_dict(
+            self.repo_settings, self.resource_config, session=self._session
+        )
+        return super().__enter__()
+
+    @property
+    def repo(self) -> SqlEntryRepository:
+        if self._entries is None:
+            raise RuntimeError("No entries")
+        return self._entries
+
+    @classmethod
+    def from_dict(cls, settings: typing.Dict, resource_config, **kwargs):
+        return cls(repo_settings=settings, resource_config=resource_config, **kwargs)
+
+    def collect_new_events(self) -> typing.Iterable:
+        if self._entries:
+            return super().collect_new_events()
+        else:
+            return []
 # ===== Value objects =====
 # class SqlEntryRepositorySettings(EntryRepositorySettings):
 #     def __init__(self, *, table_name: str, config: Dict):

@@ -169,6 +169,26 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             "discarded": resource.discarded,
         }
 
+
+class SqlResourceUnitOfWork(
+    SqlUnitOfWork,
+    ResourceUnitOfWork
+):
+    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+        super().__init__()
+        self.session_factory = session_factory
+        self._resources = None
+
+    def __enter__(self):
+        self._session = self.session_factory()
+        self._resources = SqlResourceRepository(self._session)
+        return super().__enter__()
+
+    @property
+    def repo(self) -> SqlResourceRepository:
+        if self._resources is None:
+            raise RuntimeError("No resources")
+        return self._resources
     # def _resource_to_row(
     #     self, resource: Resource
     # ) -> Tuple[
