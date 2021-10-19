@@ -8,14 +8,15 @@ from typing import Dict, List, Optional, Tuple, Iterable
 
 from karp.foundation import messagebus, events as foundation_events
 from karp.lex.domain import events as lex_events
-from karp.search.application.unit_of_work import SearchServiceUnitOfWork
+from karp.search.application.repositories import SearchServiceUnitOfWork
 # from .search_service import SearchServiceModule
 # import karp.resourcemgr as resourcemgr
 # import karp.resourcemgr.entryread as entryread
 # from karp.resourcemgr.resource import Resource
 from karp import errors as karp_errors
 from karp.lex.domain import events, entities
-from karp.search.domain import commands, search_service  #, errors, events, search_service, model
+# , errors, events, search_service, model
+from karp.search.domain import commands, search_service
 from karp.search.domain.search_service import SearchService, IndexEntry
 from karp.lex.domain.entities.entry import Entry, create_entry
 # from karp.domain.models.resource import Resource
@@ -107,7 +108,8 @@ def research_service_resource(cmd: commands.ReindexResource):
         if not resource:
             raise errors.ResourceNotFound(resource_id=cmd.resource_id)
     with ctx.search_service_uow as search_service_uw:
-        search_service_uw.repo.create_search_service(cmd.resource_id, resource.config)
+        search_service_uw.repo.create_search_service(
+            cmd.resource_id, resource.config)
         search_service_uw.repo.add_entries(
             cmd.resource_id, pre_process_resource(cmd.resource_id, ctx)
         )
@@ -118,11 +120,13 @@ def research_service(
     evt: events.ResourcePublished,
 ):
     print("creating search_service ...")
-    search_service_name = search_serviceer.create_search_service(resource.resource_id, resource.config)
+    search_service_name = search_serviceer.create_search_service(
+        resource.resource_id, resource.config)
 
     if not search_entries:
         print("preprocessing entries ...")
-        search_entries = pre_process_resource(resource, resource_repo, search_serviceer)
+        search_entries = pre_process_resource(
+            resource, resource_repo, search_serviceer)
     print(f"adding entries to '{search_service_name}' ...")
     # add_entries(
     #     resource_repo,
@@ -134,7 +138,8 @@ def research_service(
     # )
     search_serviceer.add_entries(search_service_name, search_entries)
     print("publishing ...")
-    search_serviceer.publish_search_service(resource.resource_id, search_service_name)
+    search_serviceer.publish_search_service(
+        resource.resource_id, search_service_name)
 
 
 # def publish_search_service(resource_id: str, version: Optional[int] = None) -> None:
@@ -150,7 +155,7 @@ def publish_search_service(
     #     resourcemgr.publish_resource(resource_id, version)
 
 
-class CreateSearchServiceHandler(messagebus.Handler[lex_events.ResourceCreated]):
+class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.ResourceCreated]):
     def __init__(self, search_service_uow: SearchServiceUnitOfWork):
         self.search_service_uow = search_service_uow
 
@@ -247,7 +252,8 @@ def add_entries(
 
 def delete_entry(evt: events.EntryDeleted):
     with ctx.search_service_uow:
-        ctx.search_service_uow.repo.delete_entry(evt.resource_id, entry_id=evt.entry_id)
+        ctx.search_service_uow.repo.delete_entry(
+            evt.resource_id, entry_id=evt.entry_id)
         with ctx.resource_uow:
             resource = ctx.resource_uow.repo.by_resource_id(evt.resource_id)
             if not resource:
@@ -398,7 +404,8 @@ def _evaluate_function(
                 list_of_sub_fields,
                 ctx,
             )
-            ctx.search_service_uow.repo.add_to_list_field(res, search_service_entry.entry["tmp"])
+            ctx.search_service_uow.repo.add_to_list_field(
+                res, search_service_entry.entry["tmp"])
     elif "plugin" in function_conf:
         plugin_id = function_conf["plugin"]
         import karp.pluginmanager as plugins
