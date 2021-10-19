@@ -6,7 +6,7 @@ from faker import Faker
 from faker.providers import BaseProvider
 
 from karp.lex.domain import events as lex_events, commands as lex_commands, entities as lex_entities
-from karp.lex.domain.value_objects import factories as lex_factories
+from karp.foundation.value_objects import factories as lex_factories
 from karp.utility.time import utc_now
 
 
@@ -46,7 +46,7 @@ class EntryFactory(factory.Factory):
     last_modified_by = factory.Faker("email")
     last_modified = factory.LazyFunction(utc_now)
     message = 'entry created'
-    body={}
+    body = {}
 
 
 def random_resource(config: typing.Optional[typing.Dict] = None):

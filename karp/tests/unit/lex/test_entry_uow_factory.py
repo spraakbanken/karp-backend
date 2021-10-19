@@ -1,5 +1,5 @@
 from karp.lex.application import repositories
-from karp.lex.domain.value_objects import unique_id
+from karp.foundation.value_objects import unique_id
 from . import adapters
 
 

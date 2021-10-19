@@ -10,7 +10,7 @@ from karp.domain.common import _now, _unknown_user
 from karp.domain.errors import ConfigurationError
 from karp.domain.models import event_handler
 from karp.foundation.entity import TimestampedVersionedEntity
-from karp.lex.domain.value_objects import unique_id
+from karp.foundation.value_objects import unique_id
 
 logger = logging.getLogger("karp")
 
@@ -35,7 +35,8 @@ class Entry(TimestampedVersionedEntity):
         body: Dict,
         message: str,
         resource_id: str,
-        status: EntryStatus = EntryStatus.IN_PROGRESS,  # IN-PROGRESS, IN-REVIEW, OK, PUBLISHED
+        # IN-PROGRESS, IN-REVIEW, OK, PUBLISHED
+        status: EntryStatus = EntryStatus.IN_PROGRESS,
         op: EntryOp = EntryOp.ADDED,
         version: int = 1,
         **kwargs,

@@ -14,7 +14,7 @@ from karp.foundation.commands import CommandHandler
 from karp.lex.domain import errors, entities
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
-from karp.lex.domain.value_objects import unique_id
+from karp.foundation.value_objects import unique_id
 from karp.errors import (ClientErrorCodes, EntryIdMismatch, EntryNotFoundError,
                          KarpError, UpdateConflict)
 from karp.foundation import events as foundation_events
@@ -159,7 +159,7 @@ class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry])
         _validate_entry(schema, cmd.entry)
 
         with self.entry_uow_repo_uow.repo.get_by_id(
-            resource.entry_repository_id) as uw:
+                resource.entry_repository_id) as uw:
             try:
                 current_db_entry = uw.repo.by_entry_id(
                     cmd.entry_id

@@ -13,9 +13,6 @@ import environs
 
 from karp.application import config
 from karp.domain import events
-from karp.auth_infrastructure.jwt import jwt_auth_service
-from karp.lex_infrastructure.sql import sql_unit_of_work
-from karp.auth.domain import auth_service
 
 # from .containers import AppContainer
 
@@ -25,7 +22,7 @@ class AppContext:
     container: str
 
 
-def bootstrap_app(container = None) -> AppContext:
+def bootstrap_app(container=None) -> AppContext:
     config_path = os.environ.get("CONFIG_PATH", ".env")
     print(f"loading config from '{config_path}'")
     dotenv.load_dotenv(config_path)

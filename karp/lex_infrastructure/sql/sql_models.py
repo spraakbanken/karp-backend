@@ -3,7 +3,7 @@ from typing import Dict
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
-from karp.lex_infrastructure.sql import db
+from karp.db_infrastructure import db
 
 
 class ResourceDTO(db.Base):

@@ -2,7 +2,7 @@ import typing
 
 import pydantic
 
-from karp.lex.domain.value_objects import unique_id
+from karp.foundation.value_objects import unique_id
 from .base import Command
 from karp.utility import time
 

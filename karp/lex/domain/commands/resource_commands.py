@@ -2,7 +2,7 @@ import typing
 
 import pydantic
 
-from karp.lex.domain.value_objects import unique_id
+from karp.foundation.value_objects import unique_id
 from karp.utility import time
 
 from karp.lex.domain import errors
@@ -57,4 +57,3 @@ class PublishResource(Command):
     resource_id: str
     message: str
     user: str
-

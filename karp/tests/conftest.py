@@ -2,6 +2,8 @@
 
 # pylint: disable=wrong-import-position,missing-function-docstring
 
+
+import elasticsearch_test  # pyre-ignore
 import json
 from typing import Dict
 
@@ -18,29 +20,21 @@ environ["TESTING"] = "True"
 environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
-import elasticsearch_test  # pyre-ignore
 
-from karp import config
-from karp import errors as karp_errors
-from karp.lex.domain import commands, errors
-from karp.lex.domain.value_objects import unique_id
-from karp.lex_infrastructure.sql.db import metadata
-import karp.lex_infrastructure.sql.sql_models
+from karp.tests import common_data, utils  # nopep8
+from karp.auth_infrastructure.testing import dummy_auth_service  # nopep8
+import karp.lex_infrastructure.sql.sql_models  # nopep8
+from karp.db_infrastructure.db import metadata  # nopep8
+from karp.lex.domain import commands, errors  # nopep8
+from karp import errors as karp_errors  # nopep8
+from karp import config  # nopep8
 # # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
-from karp.auth_infrastructure.testing import dummy_auth_service
-from karp.tests import common_data, utils
 
 # from karp.domain.models.resource import create_resource
 
 
-
 # # from karp.application.services import contexts, entries, resources
-
-
-
-
-
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
@@ -185,7 +179,8 @@ def fixture_resource_municipalities(use_main_index):
     with open("karp/tests/data/config/municipalities.json") as fp:
         municipalities_config = json.load(fp)
 
-    resource = model.create_resource(municipalities_config, created_by="local admin")
+    resource = model.create_resource(
+        municipalities_config, created_by="local admin")
 
     yield resource
     # print("cleaning up municipalities")
@@ -567,7 +562,8 @@ def fixture_use_main_index():
         yield "using sql"
     else:
         if not config.TEST_ES_HOME:
-            raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
+            raise RuntimeError(
+                "must set ES_HOME to run tests that use elasticsearch")
         with elasticsearch_test.ElasticsearchTest(
             port=9202, es_path=config.TEST_ES_HOME
         ):
