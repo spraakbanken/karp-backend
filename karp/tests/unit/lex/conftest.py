@@ -15,7 +15,6 @@ from .adapters import (
     FakeEntryUowRepositoryUnitOfWork,
     FakeEntryUowFactory,
     FakeResourceUnitOfWork,
-    FakeSearchServiceUnitOfWork,
 )
 from . import adapters, factories
 
@@ -43,11 +42,6 @@ def fixture_entry_uows() -> repositories.EntriesUnitOfWork:
 @pytest.fixture(name="entry_uow_factory")
 def fixture_entry_uow_factory() -> FakeEntryUowFactory:
     return FakeEntryUowFactory()
-
-
-@pytest.fixture()
-def search_service_uow() -> FakeSearchServiceUnitOfWork:
-    return FakeSearchServiceUnitOfWork()
 
 
 @pytest.fixture()

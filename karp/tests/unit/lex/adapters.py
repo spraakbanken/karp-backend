@@ -8,7 +8,6 @@ from karp.foundation.value_objects import UniqueId
 from karp.foundation.commands import CommandBus
 from karp.lex.domain import entities as lex_entities
 from karp.lex.application import repositories as lex_repositories
-from karp.main.bootstrap import bootstrap_message_bus
 from karp.tests.foundation.adapters import FakeUnitOfWork
 
 
