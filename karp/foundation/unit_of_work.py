@@ -13,6 +13,7 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
 
     def commit(self):
         print('karp.foundation.UnitOfWork.commit')
+        assert False
         self._commit()
 
     def collect_new_events(self) -> typing.Iterable:

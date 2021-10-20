@@ -49,9 +49,10 @@ class InjectorEventBus(EventBus):
             evt_handlers = self._container.get(
                 EventHandler[type(event)])  # type: ignore
         except injector.UnsatisfiedRequirement:
+            assert False
             pass
         else:
             assert isinstance(evt_handlers, list)
             for evt_handler in evt_handlers:
-
+                assert False
                 evt_handler(event)

@@ -19,6 +19,6 @@ def search_unit_ctx() -> adapters.SearchUnitTestContext:
     ], auto_bind=False)
     return adapters.SearchUnitTestContext(
         container=container,
-        command_bus=container.get(CommandBus),
-        event_bus=container.get(EventBus)
+        command_bus=container.get(CommandBus),  # type: ignore
+        event_bus=container.get(EventBus),  # type: ignore
     )
