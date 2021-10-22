@@ -1,12 +1,15 @@
 """Entity"""
 from karp.domain.common import _now, _unknown_user
-from karp.domain.errors import ConsistencyError, DiscardedEntityError
+from karp.domain.errors import ConsistencyError
+from karp.foundation import errors
 from karp.domain.models.events import DomainEvent
 from karp.foundation import events
 from karp.utility.time import monotonic_utc_now
 
 
 class Entity(events.EventMixin):
+    DiscardedEntityError = errors.DiscardedEntityError
+
     class Discarded(DomainEvent):
         def mutate(self, obj):
             obj._validate_event_applicability(self)
@@ -39,7 +42,7 @@ class Entity(events.EventMixin):
 
     def _check_not_discarded(self):
         if self._discarded:
-            raise DiscardedEntityError(f"Attempt to use {self!r}")
+            raise self.DiscardedEntityError(f"Attempt to use {self!r}")
 
     def _validate_event_applicability(self, event):
         if event.entity_id != self.id:

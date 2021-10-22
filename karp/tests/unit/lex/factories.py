@@ -53,6 +53,7 @@ def random_resource(config: typing.Optional[typing.Dict] = None):
     config = config or {"fields": {"wf": {"type" "string"}, "id": "wf"}}
     return lex_entities.create_resource(
         entity_id=lex_factories.make_unique_id(),
+        entry_repo_id=lex_factories.make_unique_id(),
         resource_id="resource",
         config=config,
         message="Resource add",

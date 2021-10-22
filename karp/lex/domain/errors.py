@@ -13,6 +13,17 @@ class LexDomainError(Exception):
         super().__init__(*args)
         self.extras = kwargs or {}
 
+class ConsistencyError(LexDomainError):
+    pass
+
+
+class ConstraintsError(LexDomainError):
+    pass
+
+
+class DiscardedEntityError(LexDomainError):
+    pass
+
 
 class EntryNotFound(NotFoundError, LexDomainError):
     entity_name = "Entry"

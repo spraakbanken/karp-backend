@@ -7,3 +7,11 @@ class NotFoundError(Exception):
         super().__init__(
             f"{self.entity_name} not found. {msg}", *args
         )
+
+
+class DiscardedEntityError(Exception):
+    """Raised when an attempt is made to use a discarded Entity."""
+
+    pass
+
+
