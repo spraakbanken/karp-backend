@@ -168,7 +168,7 @@ class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.Resou
     def __call__(self, evt: events.ResourceCreated):
         print(f"search_service_handlers.create_search_service: evt = {evt}")
         with self.search_service_uow as uw:
-            uw.repo.create_search_service(evt.resource_id, evt.config)
+            uw.repo.create_index(evt.resource_id, evt.config)
             uw.commit()
 
 
