@@ -3,12 +3,12 @@ from unittest import mock
 
 import pytest
 
-from karp.domain import errors, events, model
-from karp.domain.errors import (ConsistencyError, ConstraintsError,
+from karp.lex.domain import errors, events
+from karp.lex.domain.errors import (ConsistencyError, ConstraintsError,
                                 DiscardedEntityError)
-from karp.domain.models.resource import (Release, Resource, ResourceOp,
+from karp.lex.domain.entities.resource import (Release, Resource, ResourceOp,
                                          create_resource)
-from karp.domain.value_objects import unique_id
+from karp.foundation.value_objects import unique_id
 
 from .factories import random_resource
 
