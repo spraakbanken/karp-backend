@@ -1,6 +1,6 @@
 """Entity"""
 from karp.domain.common import _now, _unknown_user
-from karp.domain.errors import ConsistencyError
+from karp.foundation.errors import ConsistencyError
 from karp.foundation import errors
 from karp.domain.models.events import DomainEvent
 from karp.foundation import events
@@ -70,6 +70,14 @@ class VersionedEntity(Entity):
     def version(self) -> int:
         """An integer version for the entity."""
         return self._version
+
+    def discard(self, version: int) -> None:
+        if version != self.version:
+            raise ConsistencyError(
+                f"Entity version mismatch: {version} != {self.version}"
+            )
+        super().discard()
+        self._increment_version()
 
     def _increment_version(self):
         self._version += 1

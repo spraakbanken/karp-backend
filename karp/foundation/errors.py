@@ -12,6 +12,8 @@ class NotFoundError(Exception):
 class DiscardedEntityError(Exception):
     """Raised when an attempt is made to use a discarded Entity."""
 
-    pass
+
+class ConsistencyError(Exception):
+    """Raised when an internal consistency problem is detected."""
 
 
