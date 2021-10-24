@@ -2,9 +2,9 @@ from typing import List
 
 import pytest
 
-from karp.domain.index import QueryRequest
-from karp.domain.models.query import Query
-from karp.infrastructure.elasticsearch6 import EsQuery
+from karp.search.domain.search_service import QueryRequest
+from karp.search.domain.query import Query
+from karp.search_infrastructure.elasticsearch6 import EsQuery
 
 
 @pytest.fixture()

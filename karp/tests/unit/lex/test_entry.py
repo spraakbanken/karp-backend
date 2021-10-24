@@ -2,13 +2,14 @@ from typing import Dict
 
 import pytest
 
-from karp.domain import errors, events, model
-from karp.domain.value_objects import unique_id
+from karp.lex.domain import errors, events
+from karp.lex.domain import entities
+from karp.foundation.value_objects import unique_id
 from karp.tests import common_data
 
 
 def random_entry(entry_id: str = None, body: Dict = None):
-    return model.create_entry(
+    return entities.create_entry(
         entity_id=unique_id.make_unique_id(),
         entry_id=entry_id or "a",
         body=body or {},
@@ -37,7 +38,7 @@ def test_new_entry_has_event():
     [
         ("entry_id", "new..1"),
         ("body", {"b": "r"}),
-        ("status", model.EntryStatus.IN_REVIEW),
+        ("status", entities.EntryStatus.IN_REVIEW),
     ],
 )
 def test_discarded_entry_has_event(field, value):
@@ -62,7 +63,7 @@ def test_discarded_entry_has_event(field, value):
     [
         ("entry_id", "new..1"),
         ("body", {"b": "r"}),
-        ("status", model.EntryStatus.IN_REVIEW),
+        ("status", entities.EntryStatus.IN_REVIEW),
     ],
 )
 def test_entry_update_updates(field, value):
@@ -81,7 +82,7 @@ def test_entry_update_updates(field, value):
     assert entry.last_modified > previous_last_modified
     assert entry.last_modified_by != previous_last_modified_by
     assert entry.last_modified_by == user
-    assert entry.op == model.EntryOp.UPDATED
+    assert entry.op == entities.EntryOp.UPDATED
     assert entry.message == message
     assert entry.events[-1] == events.EntryUpdated(
         id=entry.id,

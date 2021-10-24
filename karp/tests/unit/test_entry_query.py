@@ -1,10 +1,10 @@
 import pytest
 
-from karp.domain import errors, index
-from karp.services import entry_query
-from karp.tests import random_refs
+# from karp.search.domain import errors, index
+# from karp.services import entry_query
+# from karp.tests import random_refs
 
-from .adapters import bootstrap_test_app
+# from .adapters import bootstrap_test_app
 
 pytestmark = pytest.mark.skip()
 

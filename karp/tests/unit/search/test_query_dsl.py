@@ -2,7 +2,7 @@ from itertools import zip_longest
 
 import pytest  # pyre-ignore
 
-from karp.query_dsl import op, parser
+from karp.search.domain.query_dsl import op, parser
 
 
 def _test_nodes(r, facit):

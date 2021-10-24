@@ -8,7 +8,7 @@ from uuid import UUID
 from karp.domain import constraints, events
 from karp.domain.common import _now, _unknown_user
 from karp.domain.errors import ConfigurationError
-from karp.domain.models import event_handler
+from karp.lex.domain import errors
 from karp.foundation.entity import TimestampedVersionedEntity
 from karp.foundation.value_objects import unique_id
 
@@ -28,6 +28,8 @@ class EntryStatus(enum.Enum):
 
 
 class Entry(TimestampedVersionedEntity):
+    DiscardedEntityError = errors.DiscardedEntityError
+
     def __init__(
         self,
         *,

@@ -1,6 +1,6 @@
-from karp.domain import value_objects
-from karp.domain.models.morphology import Morphology
-from karp.domain.models.resource import Resource
+from karp.foundation import value_objects
+from karp.lex.domain.entities.morphology import Morphology
+from karp.lex.domain.entities.resource import Resource
 
 from .factories import random_resource
 

@@ -4,20 +4,19 @@ import typing
 # from karp.infrastructure.unit_of_work import unit_of_work
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
-from karp.domain import model
-from karp.domain.models.entry import Entry
-from karp.domain.repository import ResourceRepository
+from karp.lex.domain import entities
+from karp.lex.domain.entities.entry import Entry
+from karp.lex.application.repositories import ResourceRepository
 # from karp.resourcemgr import get_resource
 # import karp.resourcemgr.entryread as entryread
-from karp.errors import EntryNotFoundError
-from karp.services import context
+from karp.lex.domain.errors import EntryNotFound
+# from karp.services import context
 
 
 def get_referenced_entries(
-    resource: model.Resource,
+    resource: entities.Resource,
     version: typing.Optional[int],
     entry_id: str,
-    ctx: context.Context,
 ) -> typing.Iterator[typing.Dict[str, typing.Any]]:
     print(f"network.get_referenced_entries: resource={resource.resource_id}")
     print(f"network.get_referenced_entries: entry_id={entry_id}")
@@ -66,7 +65,7 @@ def get_referenced_entries(
 
 
 def get_refs(
-    resource_id, ctx: context.Context, version=None
+    resource_id, version=None
 ) -> Tuple[List[Tuple[str, int, str, Dict]], List[Tuple[str, int, str, Dict]]]:
     """
     Goes through all other resource configs finding resources and fields that refer to this resource

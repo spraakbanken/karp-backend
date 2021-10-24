@@ -1,5 +1,5 @@
-from karp.domain.models.entry import create_entry
-from karp.domain.value_objects import unique_id
+from karp.lex.domain.entities.entry import create_entry
+from karp.foundation.value_objects import unique_id
 from karp.services import network_handlers
 
 
