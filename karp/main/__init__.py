@@ -10,14 +10,13 @@ try:
 except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
-import dotenv
-import environs
 import injector
 from sqlalchemy.engine import Engine, create_engine, url as sa_url
 
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import LexInfrastructure
+from karp.main import config
 from karp.main.modules import CommandBusMod, Db, EventBusMod
 from karp.search import Search
 
@@ -28,24 +27,8 @@ class AppContext:
 
 
 def bootstrap_app(container=None) -> AppContext:
-    config_path = os.environ.get("CONFIG_PATH", ".env")
-    print(f"loading config from '{config_path}'")
-    # dotenv.load_dotenv(config_path)
-    env = environs.Env()
-    env.read_env(config_path)
-    env.add_parser('sqlalchemy_url', sqlalchemy_url)
-    try:
-        db_url = env.sqlalchemy_url('DB_URL')
-    except environs.EnvError:
-        db_url = sa_url.URL.create(
-            drivername=env('DB_DRIVER', 'mysql+pymysql'),
-            username=env('DB_USER', None),
-            password=env('DB_PASSWORD', None),
-            host=env('DB_HOST', None),
-            port=env.int('DB_PORT', None),
-            database=env('DB_DATABASE', None),
-            query={'charset': 'utf8mb4'}
-        )
+    env = config.load_env()
+    db_url = config.parse_sqlalchemy_url(env)
     # if n ot container:
     # container = AppContainer()
     # container.config.core.logging.from_value(_logging_config())

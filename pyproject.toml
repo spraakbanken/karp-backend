@@ -38,6 +38,7 @@ karp-cli = "karp.cliapp.main:cliapp"
 "jwt" = "karp.infrastructure.jwt"
 [tool.poetry.plugins."karp.clicommands"]
 "entries" = "karp.cliapp.subapp_entries"
+"entry_repo" = "karp.cliapp.subapp_entry_repo"
 "resource" = "karp.cliapp.subapp_resource"
 
 [tool.poetry.urls]

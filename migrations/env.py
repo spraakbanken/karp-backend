@@ -2,8 +2,8 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
 
-from karp.application import config as karp_config
-from karp.infrastructure.sql import db
+from karp.main import config as karp_config
+from karp.db_infrastructure import db
 
 # from karp.migration_helper import entry_tables, history_tables, database_uri
 
@@ -29,7 +29,8 @@ def run_migrations_online():
 
     """
     alembic_config = config.get_section(config.config_ini_section)
-    alembic_config["sqlalchemy.url"] = karp_config.DB_URL
+    env = karp_config.load_env()
+    alembic_config["sqlalchemy.url"] = karp_config.parse_sqlalchemy_url(env)
 
     connectable = engine_from_config(
         alembic_config, prefix="sqlalchemy.", poolclass=pool.NullPool

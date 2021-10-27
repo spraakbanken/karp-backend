@@ -97,6 +97,18 @@ class ResourceDTO(db.Base):
         )
 
 
+class EntryUowModel(db.Base):
+    __tablename__ = "entry_repos"
+    history_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.UUIDType, nullable=False)
+    name = db.Column(db.String(64), nullable=False)
+    config = db.Column(db.NestedMutableJson, nullable=False)
+    last_modified = db.Column(db.Float, nullable=False)
+    last_modified_by = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.String(100), nullable=False)
+    discarded = db.Column(db.Boolean, default=False)
+
+
 class BaseRuntimeEntry:
     entry_id = db.Column(
         # db.String(100, collation="utf8mb4_swedish_ci"), primary_key=True
