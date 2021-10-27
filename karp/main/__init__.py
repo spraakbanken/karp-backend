@@ -10,38 +10,56 @@ except ImportError:
 
 import dotenv
 import environs
+import injector
+from sqlalchemy.engine import Engine, create_engine
 
-from karp.application import config
-from karp.domain import events
-
-# from .containers import AppContainer
+from karp.lex import Lex
+from karp.lex_infrastructure import LexInfrastructure
+from karp.main.modules import CommandBusMod, Db, EventBusMod
+from karp.search import Search
 
 
 @dataclass
 class AppContext:
-    container: str
+    injector: injector.Injector
 
 
 def bootstrap_app(container=None) -> AppContext:
     config_path = os.environ.get("CONFIG_PATH", ".env")
     print(f"loading config from '{config_path}'")
     dotenv.load_dotenv(config_path)
-    if not container:
-        container = AppContainer()
-    container.config.core.logging.from_value(_logging_config())
-    container.config.db.url.from_value(config.DB_URL)
-    container.config.search_service.type.from_env(
-        "SEARCH_CONTEXT", "sql_search_service"
-    )
-    container.config.search_service.elasticsearch_hosts.from_value(
-        config.ELASTICSEARCH_HOST
-    )
-    container.config.debug.from_value(config.DEBUG)
-    container.core.init_resources()
-    bus = container.bus()
-    bus.handle(events.AppStarted())  # needed? ?
+    # if not container:
+        # container = AppContainer()
+    # container.config.core.logging.from_value(_logging_config())
+    # container.config.db.url.from_value(config.DB_URL)
+    # container.config.search_service.type.from_env(
+        # "SEARCH_CONTEXT", "sql_search_service"
+    # )
+    # container.config.search_service.elasticsearch_hosts.from_value(
+        # config.ELASTICSEARCH_HOST
+    # )
+    # container.config.debug.from_value(config.DEBUG)
+    # container.core.init_resources()
+    # bus = container.bus()
+    # bus.handle(events.AppStarted())  # needed? ?
 
-    return AppContext(container)
+    engine = create_engine(os.environ['DB_URL'])
+    dependency_injector = _setup_dependency_injection(engine)
+    return AppContext(dependency_injector)
+
+
+def _setup_dependency_injection(engine: Engine) -> injector.Injector:
+    return injector.Injector(
+        [
+            Db(engine),
+            CommandBusMod(),
+            EventBusMod(),
+            Lex(),
+            LexInfrastructure(),
+            Search(),
+        ],
+        auto_bind=False,
+    )
 
 
 def _logging_config() -> typing.Dict[str, typing.Any]:

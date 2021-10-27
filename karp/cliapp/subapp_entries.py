@@ -8,11 +8,11 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 # from karp.application.services import entries
-from karp.domain import commands
-from karp.errors import ResourceAlreadyPublished
+from karp.lex.domain import commands
+# from karp.lex.domain.errors import ResourceAlreadyPublished
 
-from . import app_config
 from .utility import cli_error_handler, cli_timer
+from .typer_injector import inject_from_ctx
 
 logger = logging.getLogger("karp")
 
@@ -23,7 +23,12 @@ subapp = typer.Typer()
 @subapp.command("import")
 @cli_error_handler
 @cli_timer
-def import_resource(resource_id: str, version: Optional[int], data: Path):
+def import_resource(
+    resource_id: str,
+    version: Optional[int],
+    data: Path,
+    ctx: typer.Context,
+):
     cmd = commands.AddEntries(
         resource_id=resource_id,
         entries=tqdm(

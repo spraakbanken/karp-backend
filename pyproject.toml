@@ -37,8 +37,8 @@ karp-cli = "karp.cliapp.main:cliapp"
 "testing" = "karp.infrastructure.testing"
 "jwt" = "karp.infrastructure.jwt"
 [tool.poetry.plugins."karp.clicommands"]
-"entries" = "karp.cliapp.subapp"
-"resource" = "karp.cliapp.subapp"
+"entries" = "karp.cliapp.subapp_entries"
+"resource" = "karp.cliapp.subapp_resource"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/spraakbanken/karp-tng-backend/issues"

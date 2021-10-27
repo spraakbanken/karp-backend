@@ -1,4 +1,6 @@
 import injector
+from sqlalchemy.engine import Connection, Engine
+
 from karp.foundation.commands import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
 
@@ -13,3 +15,13 @@ class EventBusMod(injector.Module):
     @injector.provider
     def event_bus(self, inj: injector.Injector) -> EventBus:
         return InjectorEventBus(inj)
+
+
+class Db(injector.Module):
+    def __init__(self, engine: Engine) -> None:
+        self._engine = engine
+
+    # @request
+    @injector.provider
+    def connection(self) -> Connection:
+        return self._engine.connect()

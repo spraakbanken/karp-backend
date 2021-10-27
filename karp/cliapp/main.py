@@ -8,7 +8,7 @@ except ImportError:
 
 import typer
 
-from . import app_config
+from karp.main import bootstrap_app
 
 logger = logging.getLogger("karp")
 
@@ -18,17 +18,19 @@ __version__ = "0.8.1"
 def create_app():
     app = typer.Typer(help="Karp CLI")
 
-    @app.command()
-    def main(
+    @app.callback()
+    def set_app_context(
+        ctx: typer.Context,
         version: Optional[bool] = typer.Option(
             None, "--version", callback=version_callback, is_eager=True
         )
     ):
-        pass
-
-    # from karp.application.services.contexts import init_context
-
-    # init_context()
+        if ctx.invoked_subcommand is None:
+            typer.echo("empty")
+        else:
+            typer.echo("setting app_context")
+            ctx.obj = {}
+            ctx.obj['app_context'] = bootstrap_app()
 
     load_commands(app)
 
@@ -42,6 +44,9 @@ def version_callback(value: bool):
 
 
 def load_commands(app=None):
+    if "karp.clicommands" not in entry_points():
+        return
+
     for ep in entry_points()["karp.clicommands"]:
         logger.info("Loading cli module: %s", ep.name)
         print("Loading cli module: %s" % ep.name)

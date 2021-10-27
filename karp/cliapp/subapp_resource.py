@@ -6,16 +6,12 @@ import typer
 from json_streams import jsonlib
 from tabulate import tabulate
 
-from karp.domain import commands
-# from karp.application import ctx
-# from karp.application.services import resources
+from karp.lex.domain import commands
+from karp.lex.application.queries import GetPublishedResources
 from karp.errors import ResourceAlreadyPublished
 
-from . import app_config
 from .utility import cli_error_handler, cli_timer
-
-# from karp.infrastructure.unit_of_work import unit_of_work
-
+from .typer_injector import inject_from_ctx
 
 
 logger = logging.getLogger("karp")
@@ -154,17 +150,15 @@ def reindex(resource_id: str):
 @cli_error_handler
 @cli_timer
 def list_resources(
-    show_active: Optional[bool] = typer.Option(True, "--show-active/--show-all")
+    ctx: typer.Context,
+    show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all")
 ):
-    resources_ = resources.get_published_resources()
-    if not resources_:
-        typer.echo("No resources published.")
-        raise typer.Exit()
+    query = inject_from_ctx(GetPublishedResources, ctx)
     typer.echo(
         tabulate(
             [
                 [resource.resource_id, resource.version, resource.is_published]
-                for resource in resources_
+                for resource in query.query()
             ],
             headers=["resource_id", "version", "published"],
         )
