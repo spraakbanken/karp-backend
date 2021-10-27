@@ -3,6 +3,8 @@ import os
 import typing
 from dataclasses import dataclass
 
+from marshmallow.fields import URL
+
 try:
     from importlib.metadata import entry_points
 except ImportError:
@@ -11,8 +13,9 @@ except ImportError:
 import dotenv
 import environs
 import injector
-from sqlalchemy.engine import Engine, create_engine
+from sqlalchemy.engine import Engine, create_engine, url as sa_url
 
+from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import LexInfrastructure
 from karp.main.modules import CommandBusMod, Db, EventBusMod
@@ -27,23 +30,38 @@ class AppContext:
 def bootstrap_app(container=None) -> AppContext:
     config_path = os.environ.get("CONFIG_PATH", ".env")
     print(f"loading config from '{config_path}'")
-    dotenv.load_dotenv(config_path)
-    # if not container:
-        # container = AppContainer()
+    # dotenv.load_dotenv(config_path)
+    env = environs.Env()
+    env.read_env(config_path)
+    env.add_parser('sqlalchemy_url', sqlalchemy_url)
+    try:
+        db_url = env.sqlalchemy_url('DB_URL')
+    except environs.EnvError:
+        db_url = sa_url.URL.create(
+            drivername=env('DB_DRIVER', 'mysql+pymysql'),
+            username=env('DB_USER', None),
+            password=env('DB_PASSWORD', None),
+            host=env('DB_HOST', None),
+            port=env.int('DB_PORT', None),
+            database=env('DB_DATABASE', None),
+            query={'charset': 'utf8mb4'}
+        )
+    # if n ot container:
+    # container = AppContainer()
     # container.config.core.logging.from_value(_logging_config())
     # container.config.db.url.from_value(config.DB_URL)
     # container.config.search_service.type.from_env(
-        # "SEARCH_CONTEXT", "sql_search_service"
+    # "SEARCH_CONTEXT", "sql_search_service"
     # )
     # container.config.search_service.elasticsearch_hosts.from_value(
-        # config.ELASTICSEARCH_HOST
+    # config.ELASTICSEARCH_HOST
     # )
     # container.config.debug.from_value(config.DEBUG)
     # container.core.init_resources()
     # bus = container.bus()
     # bus.handle(events.AppStarted())  # needed? ?
 
-    engine = create_engine(os.environ['DB_URL'])
+    engine = create_engine(db_url)
     dependency_injector = _setup_dependency_injection(engine)
     return AppContext(dependency_injector)
 
