@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, Protocol
+from typing import Dict, Protocol, Optional
 
 import injector
 
@@ -26,6 +26,10 @@ class EntryUnitOfWorkCreator(Protocol):
         entity_id: UniqueId,
         name: str,
         config: Dict,
+        connection_str: Optional[str],
+        user: str,
+        message: str,
+        timestamp: float,
     ) -> EntryUnitOfWork:
         pass
 
@@ -42,9 +46,22 @@ class InjectorEntryUnitOfWorkRepoFactory(
         entity_id: UniqueId,
         name: str,
         config: Dict,
+        connection_str: Optional[str],
+        user: str,
+        message: str,
+        timestamp: float,
     ) -> EntryUnitOfWork:
-        uow_factory = self._container.get(
+        uow_factory_cls = self._container.get(
             Dict[str, EntryUnitOfWorkCreator]
         )[repository_type]
 
-        return uow_factory(entity_id, name, config)
+        uow_factory = self._container.create_object(uow_factory_cls)
+        return uow_factory(
+            entity_id=entity_id,
+            name=name,
+            config=config,
+            connection_str=connection_str,
+            user=user,
+            message=message,
+            timestamp=timestamp,
+        )

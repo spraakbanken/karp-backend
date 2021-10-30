@@ -1,5 +1,6 @@
 import injector
 from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.orm import sessionmaker
 
 from karp.foundation.commands import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
@@ -25,3 +26,7 @@ class Db(injector.Module):
     @injector.provider
     def connection(self) -> Connection:
         return self._engine.connect()
+
+    @injector.provider
+    def session_factory(self) -> sessionmaker:
+        return sessionmaker(bind=self._engine)

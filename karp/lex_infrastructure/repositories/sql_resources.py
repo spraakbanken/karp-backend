@@ -4,12 +4,16 @@ import typing
 from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
+from sqlalchemy.orm import sessionmaker, Session
+
 from karp.lex.domain import errors, entities
 from karp.lex.application import repositories
 from karp.lex.domain.errors import IntegrityError, RepositoryStatusError
 from karp.lex.domain.entities.resource import Resource, ResourceOp
 
-from . import db, sql_models
+from karp.db_infrastructure import db
+from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
+from . import sql_models
 from .sql_models import ResourceDTO
 from .sql_repository import SqlRepository
 
@@ -174,7 +178,7 @@ class SqlResourceUnitOfWork(
     SqlUnitOfWork,
     ResourceUnitOfWork
 ):
-    def __init__(self, session_factory=DEFAULT_SESSION_FACTORY):
+    def __init__(self, session_factory: sessionmaker):
         super().__init__()
         self.session_factory = session_factory
         self._resources = None

@@ -1,15 +1,14 @@
 """Base class for SQL repositories."""
 import logging
 
-
-from karp.lex_infrastructure.sql import db
+from sqlalchemy.orm import Session
 
 logger = logging.getLogger("karp")
 
 
 class SqlRepository:
-    def __init__(self, session: db.Session) -> None:
-        self._session: db.Session = session
+    def __init__(self, session: Session) -> None:
+        self._session: Session = session
 
     def set_session(self, session):
         self._session = session
@@ -21,10 +20,3 @@ class SqlRepository:
         if self._session is None:
             raise RuntimeError("No session, use with unit_of_work.")
 
-
-_create_new = object()
-
-
-# @unit_of_work.create_unit_of_work.register(SqlRepository)
-# def _(repo: SqlRepository, *, session=_create_new):
-#     return SqlUnitOfWork(repo, session=session)

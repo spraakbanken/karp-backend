@@ -19,5 +19,5 @@ class SqlListEntryRepos(ListEntryRepos, SqlQuery):
         return EntryRepoDto(
             name=row_proxy.name,
             id=row_proxy.id,
-            typ=row_proxy.type,
+            repository_type=row_proxy.type,
         )

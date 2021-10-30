@@ -20,6 +20,10 @@ class CreateEntryRepositoryHandler:
             entity_id=command.entity_id,
             name=command.name,
             config=command.config,
+            connection_str=command.connection_str,
+            user=command.user,
+            timestamp=command.timestamp,
+            message=command.message,
         )
         with self._entry_repo_repo_uow as uow:
             uow.repo.save(entry_repo)

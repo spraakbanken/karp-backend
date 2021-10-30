@@ -23,6 +23,8 @@ def upgrade():
         "entry_repos",
         sa.Column("history_id", sa.Integer(), nullable=False),
         sa.Column("id", UUIDType, nullable=False),
+        sa.Column('type', sa.String(length=64), nullable=False),
+        sa.Column('connection_str', sa.String(length=128)),
         sa.Column("name", sa.String(length=64), nullable=False),
         sa.Column("config", NestedMutableJson, nullable=False),
         sa.Column("last_modified", sa.Float, nullable=False),

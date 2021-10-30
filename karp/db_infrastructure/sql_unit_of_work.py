@@ -8,12 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from karp.application import config
-from karp.lex_infrastructure.sql.sql_entry_repository import SqlEntryRepository
-from karp.lex_infrastructure.sql.sql_resource_repository import \
-    SqlResourceRepository
-from karp.lex.application import repositories
 
-# from .sql_index import SqlSearchService
 
 DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 

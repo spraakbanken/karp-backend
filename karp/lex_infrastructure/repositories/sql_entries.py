@@ -4,15 +4,21 @@ import typing
 from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
+import injector
 import regex
+from sqlalchemy.orm import sessionmaker
 
+from karp.foundation.value_objects import UniqueId
+from karp.foundation.entity import TimestampedEntity
 from karp.lex.domain import errors
 from karp.lex.application import repositories
 from karp.domain.errors import NonExistingField, RepositoryError
 from karp.lex.domain.entities.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
     Entry, EntryOp, EntryStatus)
-from karp.lex_infrastructure.sql import db, sql_models
-from karp.lex_infrastructure.sql.sql_repository import SqlRepository
+from karp.db_infrastructure import db
+from karp.lex_infrastructure.sql import sql_models
+from karp.db_infrastructure.sql_repository import SqlRepository
+from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 
 logger = logging.getLogger("karp")
 
@@ -47,7 +53,7 @@ class SqlEntryRepository(
     @classmethod
     def from_dict(
         cls,
-        settings: Dict,
+        name: str,
         resource_config: typing.Dict,
         *,
         session: db.Session,
@@ -441,24 +447,28 @@ class SqlEntryRepository(
 
 class SqlEntryUnitOfWork(
     SqlUnitOfWork,
-    repositories.EntryUnitOfWork
+    repositories.EntryUnitOfWork,
 ):
+    repository_type: str = 'sql_entries_v1'
+
     def __init__(
         self,
-        repo_settings: Dict,
-        resource_config: typing.Dict,
-        session_factory=DEFAULT_SESSION_FACTORY,
+        session_factory: sessionmaker,
+        *args,
+        **kwargs,
     ):
-        super().__init__()
+        SqlUnitOfWork.__init__(self)
+        repositories.EntryUnitOfWork.__init__(
+            self, *args, **kwargs)
         self.session_factory = session_factory
         self._entries = None
-        self.repo_settings = repo_settings
-        self.resource_config = resource_config
 
     def __enter__(self):
         self._session = self.session_factory()
         self._entries = SqlEntryRepository.from_dict(
-            self.repo_settings, self.resource_config, session=self._session
+            name=self.name,
+            resource_config=self.config,
+            session=self._session
         )
         return super().__enter__()
 
@@ -494,3 +504,29 @@ class SqlEntryUnitOfWork(
 #         runtime_table_name, history_model, settings.config
 #     )
 #     return SqlEntryRepository(history_model, runtime_model, settings.config)
+
+class SqlEntryUowCreator:
+    @injector.inject
+    def __init__(self, session_factory: sessionmaker):
+        self._session_factory = session_factory
+
+    def __call__(
+        self,
+        entity_id: UniqueId,
+        name: str,
+        config: Dict,
+        connection_str: Optional[str],
+        user: str,
+        message: str,
+        timestamp: float,
+    ) -> SqlEntryUnitOfWork:
+        return SqlEntryUnitOfWork(
+            entity_id=entity_id,
+            name=name,
+            config=config,
+            connection_str=connection_str,
+            last_modified_by=user,
+            message=message,
+            last_modified=timestamp,
+            session_factory=self._session_factory,
+        )

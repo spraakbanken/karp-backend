@@ -1,9 +1,10 @@
 """Unit of Work"""
 import abc
 import logging
-import typing
+from typing import Dict, Optional, Iterable
 from functools import singledispatch
 
+from karp.foundation import entity
 from karp.foundation.unit_of_work import UnitOfWork
 from karp.lex.application import repositories
 
@@ -17,16 +18,53 @@ class ResourceUnitOfWork(UnitOfWork[repositories.ResourceRepository]):
         return self.repo
 
 
-class EntryUnitOfWork(UnitOfWork[repositories.EntryRepository]):
+class EntryUnitOfWork(
+    UnitOfWork[repositories.EntryRepository],
+    entity.TimestampedEntity,
+):
+    repository_type: str
+
+    def __init__(
+        self,
+        name: str,
+        config: Dict,
+        connection_str: Optional[str],
+        message: str,
+        *args,
+        **kwargs,
+    ):
+        UnitOfWork.__init__(self)
+        entity.TimestampedEntity.__init__(
+            self, *args, **kwargs)
+        self._name = name
+        self._connection_str = connection_str
+        self._config = config
+        self._message = message
 
     @property
     def entries(self) -> repositories.EntryRepository:
         return self.repo
 
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def connection_str(self) -> Optional[str]:
+        return self._connection_str
+
+    @property
+    def config(self) -> Dict:
+        return self._config
+
+    @property
+    def message(self) -> str:
+        return self._message
+
 
 class EntriesUnitOfWork:
     def __init__(self, entry_uows=None):
-        self.entry_uows: typing.Dict[str, EntryUnitOfWork] = (
+        self.entry_uows: Dict[str, EntryUnitOfWork] = (
             {key: uow for key, uow in entry_uows} if entry_uows else {}
         )
 
@@ -43,7 +81,7 @@ class EntriesUnitOfWork:
     def repo(self):
         return self
 
-    def collect_new_events(self) -> typing.Iterable:
+    def collect_new_events(self) -> Iterable:
         for uow in self.entry_uows.values():
             yield from uow.collect_new_events()
 
@@ -53,8 +91,8 @@ class EntryUowFactory(abc.ABC):
     def create(
         self,
         resource_id: str,
-        resource_config: typing.Dict,
-        entry_repositories_settings: typing.Optional[typing.Dict],
+        resource_config: Dict,
+        entry_repositories_settings: Optional[Dict],
     ) -> EntryUnitOfWork:
         raise NotImplementedError
 
@@ -63,8 +101,8 @@ class DefaultEntryUowFactory(EntryUowFactory):
     def create(
         self,
         resource_id: str,
-        resource_config: typing.Dict,
-        entry_repositories_settings: typing.Optional[typing.Dict],
+        resource_config: Dict,
+        entry_repositories_settings: Optional[Dict],
     ) -> EntryUnitOfWork:
         entry_repositories_type = resource_config["entry_repositories_type"]
         if not entry_repositories_settings:

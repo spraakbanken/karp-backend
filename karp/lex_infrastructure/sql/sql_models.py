@@ -3,6 +3,7 @@ from typing import Dict
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
+from karp.lex.application.repositories import EntryUnitOfWork
 from karp.db_infrastructure import db
 
 
@@ -101,12 +102,29 @@ class EntryUowModel(db.Base):
     __tablename__ = "entry_repos"
     history_id = db.Column(db.Integer, primary_key=True)
     id = db.Column(db.UUIDType, nullable=False)
+    type = db.Column(db.String(64), nullable=False)
+    connection_str = db.Column(db.String(128))
     name = db.Column(db.String(64), nullable=False)
     config = db.Column(db.NestedMutableJson, nullable=False)
     last_modified = db.Column(db.Float, nullable=False)
     last_modified_by = db.Column(db.String(100), nullable=False)
     message = db.Column(db.String(100), nullable=False)
     discarded = db.Column(db.Boolean, default=False)
+
+    @staticmethod
+    def from_entity(entry_uow: EntryUnitOfWork) -> 'EntryUowModel':
+        return EntryUowModel(
+            history_id=None,
+            id=entry_uow.id,
+            type=entry_uow.repository_type,
+            connection_str=entry_uow.connection_str,
+            name=entry_uow.name,
+            config=entry_uow.config,
+            last_modified=entry_uow.last_modified,
+            last_modified_by=entry_uow.last_modified_by,
+            message=entry_uow.message,
+            discarded=entry_uow.discarded,
+        )
 
 
 class BaseRuntimeEntry:
