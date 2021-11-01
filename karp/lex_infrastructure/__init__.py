@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from karp.lex.application.queries import (
     GetPublishedResources,
+    GetResources,
     ResourceDto,
     ListEntryRepos,
     EntryRepoDto,
@@ -17,6 +18,7 @@ from karp.lex.application.repositories import (
 )
 from karp.lex_infrastructure.queries import (
     SqlGetPublishedResources,
+    SqlGetResources,
     SqlListEntryRepos,
 )
 from karp.lex_infrastructure.repositories import (
@@ -30,6 +32,10 @@ class LexInfrastructure(injector.Module):
     @injector.provider
     def get_published_resources(self, conn: Connection) -> GetPublishedResources:
         return SqlGetPublishedResources(conn)
+
+    @injector.provider
+    def get_resources(self, conn: Connection) -> GetResources:
+        return SqlGetResources(conn)
 
     @injector.provider
     def list_entry_repos(self, conn: Connection) -> ListEntryRepos:

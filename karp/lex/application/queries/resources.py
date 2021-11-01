@@ -3,11 +3,13 @@ from typing import Iterable
 
 import pydantic
 
+from karp.foundation.value_objects import UniqueId
+
 
 class ResourceDto(pydantic.BaseModel):
     resource_id: str
-    id: str
-    published: bool
+    id: UniqueId
+    is_published: bool
     version: int
     last_modified: float
 
@@ -17,3 +19,8 @@ class GetPublishedResources(abc.ABC):
     def query(self) -> Iterable[ResourceDto]:
         pass
 
+
+class GetResources(abc.ABC):
+    @abc.abstractmethod
+    def query(self) -> Iterable[ResourceDto]:
+        pass

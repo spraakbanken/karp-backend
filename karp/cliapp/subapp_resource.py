@@ -8,7 +8,11 @@ from tabulate import tabulate
 
 from karp.foundation.commands import CommandBus
 from karp.lex.domain import commands
-from karp.lex.application.queries import GetPublishedResources, ListEntryRepos
+from karp.lex.application.queries import (
+    GetPublishedResources,
+    ListEntryRepos,
+    GetResources,
+)
 from karp.errors import ResourceAlreadyPublished
 
 from .utility import cli_error_handler, cli_timer
@@ -172,7 +176,10 @@ def list_resources(
     ctx: typer.Context,
     show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all")
 ):
-    query = inject_from_ctx(GetPublishedResources, ctx)
+    if show_published:
+        query = inject_from_ctx(GetPublishedResources, ctx)
+    else:
+        query = inject_from_ctx(GetResources, ctx)
     typer.echo(
         tabulate(
             [
