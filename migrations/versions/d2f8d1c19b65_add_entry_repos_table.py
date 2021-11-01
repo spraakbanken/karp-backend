@@ -13,7 +13,7 @@ from sqlalchemy_json import NestedMutableJson
 
 # revision identifiers, used by Alembic.
 revision = 'd2f8d1c19b65'
-down_revision = 'fcafe9c1edbd'
+down_revision = '5bb29472d33f'
 branch_labels = None
 depends_on = None
 
