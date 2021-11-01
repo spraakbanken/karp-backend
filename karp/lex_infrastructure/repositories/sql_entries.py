@@ -506,6 +506,8 @@ class SqlEntryUnitOfWork(
 #     return SqlEntryRepository(history_model, runtime_model, settings.config)
 
 class SqlEntryUowCreator:
+    repository_type: str = SqlEntryUnitOfWork.repository_type
+
     @injector.inject
     def __init__(self, session_factory: sessionmaker):
         self._session_factory = session_factory

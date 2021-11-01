@@ -11,7 +11,9 @@ from karp.lex.application.queries import (
 )
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
+    EntryRepositoryUnitOfWorkFactory,
     EntryUnitOfWorkCreator,
+    ResourceUnitOfWork,
 )
 from karp.lex_infrastructure.queries import (
     SqlGetPublishedResources,
@@ -20,6 +22,7 @@ from karp.lex_infrastructure.queries import (
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
     SqlEntryUowCreator,
+    SqlResourceUnitOfWork,
 )
 
 
@@ -33,12 +36,23 @@ class LexInfrastructure(injector.Module):
         return SqlListEntryRepos(conn)
 
     @injector.provider
-    def entry_uow_repo(self, session_factory: sessionmaker) -> EntryUowRepositoryUnitOfWork:
-        return SqlEntryUowRepositoryUnitOfWork(session_factory)
+    def entry_uow_repo(
+        self,
+        session_factory: sessionmaker,
+        entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+    ) -> EntryUowRepositoryUnitOfWork:
+        return SqlEntryUowRepositoryUnitOfWork(
+            session_factory=session_factory,
+            entry_uow_factory=entry_uow_factory,
+        )
+
+    @injector.provider
+    def resources_uow(self, session_factory: sessionmaker) -> ResourceUnitOfWork:
+        return SqlResourceUnitOfWork(session_factory)
 
     @injector.multiprovider
     def entry_uow_creator_map(self) -> Dict[str, EntryUnitOfWorkCreator]:
         return {
             'default': SqlEntryUowCreator,
-            'sql_entries': SqlEntryUowCreator,
+            SqlEntryUowCreator.repository_type: SqlEntryUowCreator,
         }

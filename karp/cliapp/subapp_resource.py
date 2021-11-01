@@ -1,13 +1,14 @@
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Callable, List, Optional, TypeVar
 
 import typer
 from json_streams import jsonlib
 from tabulate import tabulate
 
+from karp.foundation.commands import CommandBus
 from karp.lex.domain import commands
-from karp.lex.application.queries import GetPublishedResources
+from karp.lex.application.queries import GetPublishedResources, ListEntryRepos
 from karp.errors import ResourceAlreadyPublished
 
 from .utility import cli_error_handler, cli_timer
@@ -20,15 +21,33 @@ logger = logging.getLogger("karp")
 subapp = typer.Typer()
 
 
+T = TypeVar('T')
+
+
+def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
+    for i, choice in enumerate(choices):
+        typer.echo(f'{i}) {choice_fmt(choice)}')
+    while True:
+        number = typer.prompt(f'Choose from above with (0-{len(choices)-1}):')
+        return choices[int(number)]
+
+
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def create(config: Path):
-
+def create(config: Path, ctx: typer.Context):
+    bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
         data = jsonlib.load_from_file(config)
-        cmd = commands.CreateResource.from_dict(data, created_by="local admin")
-        app_config.bus.handle(cmd)
+        query = inject_from_ctx(ListEntryRepos, ctx)
+        entry_repos = list(query.query())
+        entry_repo = choose_from(entry_repos, lambda x: f'{x.name} {x.repository_type}')
+        cmd = commands.CreateResource.from_dict(
+            data,
+            created_by="local admin",
+            entry_repo_id=entry_repo.id,
+        )
+        bus.dispatch(cmd)
         typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.id})")
 
     elif config.is_dir():

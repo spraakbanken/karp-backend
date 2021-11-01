@@ -1,9 +1,9 @@
 from typing import Iterable
 
-from sqlalchemy.sql import select
+from sqlalchemy import sql
 
 from karp.lex.application.queries import GetPublishedResources, ResourceDto
-from karp.lex_infrastructure.sql.sql_models import ResourceDTO
+from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.lex_infrastructure.queries.base import SqlQuery
 
 
@@ -12,7 +12,7 @@ class SqlGetPublishedResources(
     SqlQuery
 ):
     def query(self) -> Iterable[ResourceDto]:
-        stmt = select(ResourceDTO).where(ResourceDTO.is_published == True)
+        stmt = sql.select(ResourceModel).where(ResourceModel.is_published == True)
         return (
             self._row_to_dto(row)
             for row in self._conn.execute(stmt)

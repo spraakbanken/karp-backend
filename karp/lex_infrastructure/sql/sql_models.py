@@ -7,11 +7,12 @@ from karp.lex.application.repositories import EntryUnitOfWork
 from karp.db_infrastructure import db
 
 
-class ResourceDTO(db.Base):
+class ResourceModel(db.Base):
     __tablename__ = "resources"
     history_id = db.Column(db.Integer, primary_key=True)
     id = db.Column(db.UUIDType, nullable=False)
     resource_id = db.Column(db.String(32), nullable=False)
+    resource_type = db.Column(db.String(32), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(64), nullable=False)
     entry_repo_id = db.Column(db.UUIDType, nullable=False)
@@ -80,11 +81,12 @@ class ResourceDTO(db.Base):
         )
 
     @staticmethod
-    def from_entity(resource: entities.Resource) -> "ResourceDTO":
-        return ResourceDTO(
+    def from_entity(resource: entities.Resource) -> "ResourceModel":
+        return ResourceModel(
             history_id=None,
             id=resource.id,
             resource_id=resource.resource_id,
+            resource_type=resource.resource_type,
             version=resource.version,
             name=resource.name,
             config=resource.config,

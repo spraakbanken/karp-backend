@@ -29,20 +29,8 @@ class ResourceOp(enum.Enum):
 
 class Resource(TimestampedVersionedEntity):
     DiscardedEntityError = errors.DiscardedEntityError
-    _registry: Dict[str, Type] = {}
-    _type: str = "Resource"
+    resource_type: str = "resource"
 
-    def __init_subclass__(cls, resource_type: str, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if resource_type is None:
-            raise RuntimeError("Unallowed resource_type: resource_type = None")
-        if resource_type in cls._registry:
-            raise RuntimeError(
-                f"A Resource with type '{resource_type}' already exists: {cls._registry[resource_type]!r}"
-            )
-
-        cls._type = resource_type
-        cls._registry[resource_type] = cls
 
     @classmethod
     def create_resource(cls, resource_type: str, resource_config: Dict):

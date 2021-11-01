@@ -23,6 +23,7 @@ class CreateResource(Command):
     def from_dict(
         cls,
         data: typing.Dict,
+        entry_repo_id: unique_id.UniqueId,
         created_by: typing.Optional[str] = None,
         message: typing.Optional[str] = None,
     ):
@@ -39,6 +40,7 @@ class CreateResource(Command):
             resource_id=resource_id,
             name=name,
             config=data,
+            entry_repo_id=entry_repo_id,
             created_by=created_by or "Unknown user",
             message=message or f"Resource '{resource_id}' created.",
         )

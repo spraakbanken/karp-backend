@@ -13,9 +13,8 @@ from karp.lex.domain.entities.resource import Resource, ResourceOp
 
 from karp.db_infrastructure import db
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
-from . import sql_models
-from .sql_models import ResourceDTO
-from .sql_repository import SqlRepository
+from karp.lex_infrastructure.sql.sql_models import ResourceModel
+from karp.db_infrastructure.sql_repository import SqlRepository
 
 _logger = logging.getLogger("karp")
 
@@ -24,7 +23,6 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
     def __init__(self, session: db.Session):
         repositories.ResourceRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
-        self.table = sql_models.ResourceDTO
 
     def check_status(self):
         self._check_has_session()
@@ -55,25 +53,25 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
                 resource.resource_id) + 1
 
         # self._session.execute(
-        #     db.insert(self.table).values(**self._resource_to_dict(resource))
+        #     db.insert(ResourceModel).values(**self._resource_to_dict(resource))
         # )
-        resource_dto = ResourceDTO.from_entity(resource)
+        resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
 
     def resource_ids(self) -> List[str]:
         self._check_has_session()
-        query = self._session.query(ResourceDTO)
-        return [row.resource_id for row in query.group_by(self.table.resource_id).all()]
+        query = self._session.query(ResourceModel)
+        return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
 
     def _by_id(
         self, id: Union[UUID, str], *, version: Optional[int] = None
     ) -> typing.Optional[entities.Resource]:
         self._check_has_session()
-        query = self._session.query(ResourceDTO).filter_by(id=id)
+        query = self._session.query(ResourceModel).filter_by(id=id)
         if version:
             query = query.filter_by(version=version)
         else:
-            query = query.order_by(ResourceDTO.version.desc())
+            query = query.order_by(ResourceModel.version.desc())
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
@@ -82,11 +80,11 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
     ) -> Optional[Resource]:
         self._check_has_session()
         query = self._session.query(
-            ResourceDTO).filter_by(resource_id=resource_id)
+            ResourceModel).filter_by(resource_id=resource_id)
         if version:
             query = query.filter_by(version=version)
         else:
-            query = query.order_by(ResourceDTO.version.desc())
+            query = query.order_by(ResourceModel.version.desc())
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
@@ -97,14 +95,14 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         self, resource_id: str, version: int
     ) -> Optional[Resource]:
         self._check_has_session()
-        query = self._session.query(ResourceDTO)
+        query = self._session.query(ResourceModel)
         resource_dto = query.filter_by(
             resource_id=resource_id, version=version).first()
         return resource_dto.to_entity() if resource_dto else None
 
     def get_active_resource(self, resource_id: str) -> Optional[Resource]:
         self._check_has_session()
-        query = self._session.query(self.table)
+        query = self._session.query(ResourceModel)
         resource_dto = query.filter_by(
             resource_id=resource_id, is_published=True
         ).one_or_none()
@@ -113,8 +111,8 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
     def get_latest_version(self, resource_id: str) -> int:
         self._check_has_session()
         row = (
-            self._session.query(self.table)
-            .order_by(self.table.version.desc())
+            self._session.query(ResourceModel)
+            .order_by(ResourceModel.version.desc())
             .filter_by(resource_id=resource_id)
             .first()
         )
@@ -124,11 +122,11 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
 
     def history_by_resource_id(self, resource_id: str) -> typing.List[entities.Resource]:
         self._check_has_session()
-        query = self._session.query(ResourceDTO)
+        query = self._session.query(ResourceModel)
         return [
             resource_dto.to_entity()
             for resource_dto in query.filter_by(resource_id=resource_id)
-            .order_by(ResourceDTO.version.desc())
+            .order_by(ResourceModel.version.desc())
             .all()
         ]
 
@@ -136,18 +134,18 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         self._check_has_session()
         subq = (
             self._session.query(
-                ResourceDTO.resource_id,
-                db.func.max(ResourceDTO.last_modified).label("maxdate"),
+                ResourceModel.resource_id,
+                db.func.max(ResourceModel.last_modified).label("maxdate"),
             )
-            .group_by(ResourceDTO.resource_id)
+            .group_by(ResourceModel.resource_id)
             .subquery("t2")
         )
-        query = self._session.query(ResourceDTO).join(
+        query = self._session.query(ResourceModel).join(
             subq,
             db.and_(
-                ResourceDTO.resource_id == subq.c.resource_id,
-                ResourceDTO.last_modified == subq.c.maxdate,
-                ResourceDTO.is_published == True,
+                ResourceModel.resource_id == subq.c.resource_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.is_published == True,
             ),
         )
 
@@ -176,7 +174,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
 
 class SqlResourceUnitOfWork(
     SqlUnitOfWork,
-    ResourceUnitOfWork
+    repositories.ResourceUnitOfWork
 ):
     def __init__(self, session_factory: sessionmaker):
         super().__init__()
