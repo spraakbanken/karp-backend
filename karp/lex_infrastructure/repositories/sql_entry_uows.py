@@ -3,6 +3,7 @@ from typing import Optional
 from sqlalchemy import sql
 from sqlalchemy import orm as sa_orm
 
+from karp.foundation.events import EventBus
 from karp.foundation.value_objects import UniqueId
 from karp.lex.application.repositories import (
     EntryUnitOfWork,
@@ -65,9 +66,11 @@ class SqlEntryUowRepositoryUnitOfWork(
     def __init__(
         self,
         session_factory: sa_orm.sessionmaker,
+        event_bus: EventBus,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
     ):
-        super().__init__()
+        SqlUnitOfWork.__init__(self)
+        EntryUowRepositoryUnitOfWork.__init__(self, event_bus)
         self.session_factory = session_factory
         self.entry_uow_factory = entry_uow_factory
         self._repo = None

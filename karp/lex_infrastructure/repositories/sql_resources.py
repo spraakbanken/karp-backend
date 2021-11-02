@@ -6,6 +6,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import sessionmaker, Session
 
+from karp.foundation.events import EventBus
 from karp.lex.domain import errors, entities
 from karp.lex.application import repositories
 from karp.lex.domain.errors import IntegrityError, RepositoryStatusError
@@ -176,8 +177,13 @@ class SqlResourceUnitOfWork(
     SqlUnitOfWork,
     repositories.ResourceUnitOfWork
 ):
-    def __init__(self, session_factory: sessionmaker):
-        super().__init__()
+    def __init__(
+        self,
+        session_factory: sessionmaker,
+        event_bus: EventBus,
+    ):
+        SqlUnitOfWork.__init__(self)
+        repositories.ResourceUnitOfWork.__init__(self, event_bus)
         self.session_factory = session_factory
         self._resources = None
 

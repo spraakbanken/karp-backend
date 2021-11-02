@@ -9,7 +9,7 @@ import regex
 from sqlalchemy.orm import sessionmaker
 
 from karp.foundation.value_objects import UniqueId
-from karp.foundation.entity import TimestampedEntity
+from karp.foundation.events import EventBus
 from karp.lex.domain import errors
 from karp.lex.application import repositories
 from karp.domain.errors import NonExistingField, RepositoryError
@@ -35,7 +35,7 @@ class SqlEntryRepository(
         history_model,
         runtime_model,
         resource_config: Dict,
-        resource_id: str,
+        # resource_id: str,
         # mapped_class: Any
         *,
         session: db.Session,
@@ -48,7 +48,7 @@ class SqlEntryRepository(
         self.runtime_model = runtime_model
         self.resource_config = resource_config
         # self.mapped_class = mapped_class
-        self.resource_id = resource_id
+        # self.resource_id = resource_id
 
     @classmethod
     def from_dict(
@@ -61,7 +61,7 @@ class SqlEntryRepository(
         if not session:
             raise TypeError("session can't be None")
         try:
-            table_name = settings.get("table_name") or settings["resource_id"]
+            table_name = name
         except KeyError:
             raise ValueError("Missing 'table_name' in settings.")
 
@@ -94,7 +94,7 @@ class SqlEntryRepository(
             history_model=history_model,
             runtime_model=runtime_model,
             resource_config=resource_config,
-            resource_id=settings["resource_id"],
+            # resource_id=settings["resource_id"],
             session=session,
         )
 
@@ -113,22 +113,36 @@ class SqlEntryRepository(
         history_id = self._insert_history(entry)
 
         runtime_entry_raw = self._entry_to_runtime_dict(history_id, entry)
-
         try:
-            update_result = self._session.query(
-                self.runtime_model
-            ).filter_by(
-                id=entry.id
-            ).update(
-                runtime_entry_raw,
+            current_db_entry = (
+                self._session.query(self.runtime_model)
+                .filter_by(id=entry.id)
+                .first()
             )
 
-            if update_result != 1:
-                self._session.add(
+            if not current_db_entry:
+                return self._session.add(
                     self.runtime_model(
                         **runtime_entry_raw
                     )
                 )
+
+            for key, value in runtime_entry_raw.items():
+                setattr(current_db_entry, key, value)
+#            update_result = self._session.query(
+#                self.runtime_model
+#            ).filter_by(
+#                id=entry.id
+#            ).update(
+#                runtime_entry_raw,
+#            )
+#
+#            if update_result != 1:
+#                self._session.add(
+#                    self.runtime_model(
+#                        **runtime_entry_raw
+#                    )
+#                )
             # return self._session.add(runtime_entry)
         except db.exc.DBAPIError as exc:
             raise errors.RepositoryError("db failure") from exc
@@ -454,12 +468,12 @@ class SqlEntryUnitOfWork(
     def __init__(
         self,
         session_factory: sessionmaker,
-        *args,
+        event_bus: EventBus,
         **kwargs,
     ):
         SqlUnitOfWork.__init__(self)
         repositories.EntryUnitOfWork.__init__(
-            self, *args, **kwargs)
+            self, event_bus=event_bus, **kwargs)
         self.session_factory = session_factory
         self._entries = None
 
@@ -509,8 +523,13 @@ class SqlEntryUowCreator:
     repository_type: str = SqlEntryUnitOfWork.repository_type
 
     @injector.inject
-    def __init__(self, session_factory: sessionmaker):
+    def __init__(
+        self,
+        session_factory: sessionmaker,
+        event_bus: EventBus,
+    ):
         self._session_factory = session_factory
+        self.event_bus = event_bus
 
     def __call__(
         self,
@@ -531,4 +550,5 @@ class SqlEntryUowCreator:
             message=message,
             last_modified=timestamp,
             session_factory=self._session_factory,
+            event_bus=self.event_bus,
         )

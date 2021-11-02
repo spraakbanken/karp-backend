@@ -5,6 +5,7 @@ from typing import Dict, Optional, Iterable
 from functools import singledispatch
 
 from karp.foundation import entity
+from karp.foundation.events import EventBus
 from karp.foundation.unit_of_work import UnitOfWork
 from karp.lex.application import repositories
 
@@ -13,6 +14,9 @@ logger = logging.getLogger("karp")
 
 
 class ResourceUnitOfWork(UnitOfWork[repositories.ResourceRepository]):
+    def __init__(self, event_bus: EventBus):
+        UnitOfWork.__init__(self, event_bus)
+
     @property
     def resources(self) -> repositories.ResourceRepository:
         return self.repo
@@ -30,10 +34,11 @@ class EntryUnitOfWork(
         config: Dict,
         connection_str: Optional[str],
         message: str,
+        event_bus: EventBus,
         *args,
         **kwargs,
     ):
-        UnitOfWork.__init__(self)
+        UnitOfWork.__init__(self, event_bus)
         entity.TimestampedEntity.__init__(
             self, *args, **kwargs)
         self._name = name

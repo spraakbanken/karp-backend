@@ -50,6 +50,10 @@ class IntegrityError(LexDomainError):
     pass
 
 
+class RepositoryError(LexDomainError):
+    pass
+
+
 class RepositoryStatusError(LexDomainError):
     pass
 

@@ -65,6 +65,17 @@ class Lex(injector.Module):
         )
 
     @injector.provider
+    def add_entries(
+        self,
+        resource_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork
+    ) -> CommandHandler[commands.AddEntries]:
+        return handlers.AddEntriesHandler(
+            resource_uow=resource_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow
+        )
+
+    @injector.provider
     def update_entry(
         self,
         resource_uow: ResourceUnitOfWork,

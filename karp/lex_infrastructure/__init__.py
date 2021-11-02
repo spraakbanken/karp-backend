@@ -3,6 +3,7 @@ import injector
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import sessionmaker
 
+from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
     GetPublishedResources,
     GetResources,
@@ -46,15 +47,24 @@ class LexInfrastructure(injector.Module):
         self,
         session_factory: sessionmaker,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+        event_bus: EventBus,
     ) -> EntryUowRepositoryUnitOfWork:
         return SqlEntryUowRepositoryUnitOfWork(
             session_factory=session_factory,
             entry_uow_factory=entry_uow_factory,
+            event_bus=event_bus,
         )
 
     @injector.provider
-    def resources_uow(self, session_factory: sessionmaker) -> ResourceUnitOfWork:
-        return SqlResourceUnitOfWork(session_factory)
+    def resources_uow(
+        self,
+        session_factory: sessionmaker,
+        event_bus: EventBus,
+    ) -> ResourceUnitOfWork:
+        return SqlResourceUnitOfWork(
+            session_factory=session_factory,
+            event_bus=event_bus,
+        )
 
     @injector.multiprovider
     def entry_uow_creator_map(self) -> Dict[str, EntryUnitOfWorkCreator]:

@@ -65,7 +65,10 @@ def create(config: Path, ctx: typer.Context):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def update(config: Path):
+def update(
+    ctx: typer.Context,
+    config: Path):
+    bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
         with open(config) as fp:
             new_resource = resources.update_resource_from_file(fp)
@@ -85,14 +88,17 @@ def update(config: Path):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def publish(resource_id: str):
+def publish(
+    ctx: typer.Context,
+        resource_id: str):
+    bus = inject_from_ctx(CommandBus, ctx)
     try:
         cmd = commands.PublishResource(
             resource_id=resource_id,
             message=f"Publish '{resource_id}",
             user="local admin",
         )
-        app_config.bus.handle(cmd)
+        bus.dispatch(cmd)
     except ResourceAlreadyPublished:
         typer.echo("Resource already published.")
     else:
@@ -102,9 +108,12 @@ def publish(resource_id: str):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex(resource_id: str):
+def reindex(
+    ctx: typer.Context,
+    resource_id: str):
+    bus = inject_from_ctx(CommandBus, ctx)
     cmd = commands.ReindexResource(resource_id=resource_id)
-    app_config.bus.handle(cmd)
+    bus.dispatch(cmd)
 
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
@@ -226,13 +235,19 @@ def list_resources(
 #     )
 
 
-# @cli.command("set_permissions")
+@subapp.command()
 # @click.option("--resource_id", required=True)
 # @click.option("--version", required=True)
 # @click.option("--level", required=True)
-# @cli_error_handler
-# @cli_timer
-# def set_permissions(resource_id, version, level):
+@cli_error_handler
+@cli_timer
+def set_permissions(
+    ctx: typer.Context,
+    resource_id: str,
+    version: int,
+    level: str,
+):
+    bus = inject_from_ctx(CommandBus, ctx)
 #     # TODO use level
 #     permissions = {"write": True, "read": True}
 #     resourcemgr.set_permissions(resource_id, version, permissions)

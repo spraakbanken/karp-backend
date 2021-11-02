@@ -226,66 +226,67 @@ def add_entries_from_file(
     )
 
 
-def add_entries(
-    cmd: commands.AddEntries,
-) -> List[Entry]:
-    """
-    Add entries to DB and INDEX (if present and resource is active).
+class AddEntriesHandler(
+    BaseEntryHandler,
+    CommandHandler[commands.AddEntries]
+):
+    def __call__(self, cmd: commands.AddEntries):
+        """
+        Add entries to DB and INDEX (if present and resource is active).
 
-    Raises
-    ------
-    RuntimeError
-        If the resource.entry_json_schema fails to compile.
-    KarpError
-        - If an entry fails to be validated against the json schema.
-        - If the DB interaction fails.
+        Raises
+        ------
+        RuntimeError
+            If the resource.entry_json_schema fails to compile.
+        KarpError
+            - If an entry fails to be validated against the json schema.
+            - If the DB interaction fails.
 
-    Returns
-    -------
-    List
-        List of the id's of the created entries.
-    """
-    print(f"event_handlers.add_entries: cmd = {cmd}")
+        Returns
+        -------
+        List
+            List of the id's of the created entries.
+        """
+        print(f"event_handlers.add_entries: cmd = {cmd}")
 
-    if not isinstance(cmd.resource_id, str):
-        raise ValueError(
-            f"'resource_id' must be of type 'str', were '{type(cmd.resource_id)}'"
-        )
-    with ctx.resource_uow:
-        resource = ctx.resource_uow.resources.by_resource_id(cmd.resource_id)
-
-    if not resource:
-        raise errors.ResourceNotFound(cmd.resource_id)
-    # resource = get_resource(resource_id, version=resource_version)
-    # resource_conf = resource.config
-
-    validate_entry = _compile_schema(resource.entry_json_schema)
-
-    created_db_entries = []
-    with ctx.entry_uows.get(cmd.resource_id) as uw:
-        for entry_raw in cmd.entries:
-            _validate_entry(validate_entry, entry_raw)
-
-            entry = resource.create_entry_from_dict(
-                entry_raw,
-                user=cmd.user,
-                message=cmd.message,
-                entity_id=unique_id.make_unique_id(),
+        if not isinstance(cmd.resource_id, str):
+            raise ValueError(
+                f"'resource_id' must be of type 'str', were '{type(cmd.resource_id)}'"
             )
-            uw.entries.put(entry)
-            created_db_entries.append(entry)
-        uw.commit()
+        with self.resource_uow:
+            resource = self.resource_uow.resources.by_resource_id(cmd.resource_id)
 
-    # if resource.is_published:
-    #     print(f"services.entries.add_entries: indexing entries ...")
-    #     indexing.add_entries(
-    #         ctx.resource_repo,
-    #         ctx.search_service,
-    #         resource,
-    #         created_db_entries,
-    #     )
+        if not resource:
+            raise errors.ResourceNotFound(cmd.resource_id)
 
-    return created_db_entries
+        validate_entry = _compile_schema(resource.entry_json_schema)
+
+        created_db_entries = []
+        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(
+                resource.entry_repository_id) as uw:
+            for entry_raw in cmd.entries:
+                _validate_entry(validate_entry, entry_raw)
+
+                entry = resource.create_entry_from_dict(
+                    entry_raw,
+                    user=cmd.user,
+                    message=cmd.message,
+                    entity_id=unique_id.make_unique_id(),
+                )
+                uw.entries.save(entry)
+                created_db_entries.append(entry)
+            uw.commit()
+
+        # if resource.is_published:
+        #     print(f"services.entries.add_entries: indexing entries ...")
+        #     indexing.add_entries(
+        #         ctx.resource_repo,
+        #         ctx.search_service,
+        #         resource,
+        #         created_db_entries,
+        #     )
+
+        return created_db_entries
 
 
 # def add_entries(

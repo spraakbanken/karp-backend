@@ -1,7 +1,12 @@
 import abc
+import logging
 from typing import List, Generic, TypeVar
 
 import injector
+
+
+logger = logging.getLogger(__name__)
+
 
 T = TypeVar("T")
 
@@ -50,9 +55,14 @@ class InjectorEventBus(EventBus):
                 List[EventHandler[type(event)]]  # type: ignore
             )
         except injector.UnsatisfiedRequirement:
-            assert False
-            pass
+            logger.info('No event handler for event %s', event)
         else:
-            assert isinstance(evt_handlers, list)
             for evt_handler in evt_handlers:
-                evt_handler(event)
+                logger.debug(
+                    'handling event %s with handler %s',
+                    event, evt_handler
+                )
+                try:
+                    evt_handler(event)
+                except Exception:
+                    logger.exception('Exception handling event %s', event)

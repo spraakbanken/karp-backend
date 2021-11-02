@@ -7,7 +7,7 @@ import typer
 from tabulate import tabulate
 from tqdm import tqdm
 
-# from karp.application.services import entries
+from karp.foundation.commands import CommandBus
 from karp.lex.domain import commands
 # from karp.lex.domain.errors import ResourceAlreadyPublished
 
@@ -25,19 +25,23 @@ subapp = typer.Typer()
 @cli_timer
 def import_resource(
     resource_id: str,
-    version: Optional[int],
+    # version: Optional[int],
     data: Path,
     ctx: typer.Context,
 ):
+    bus = inject_from_ctx(CommandBus, ctx)
     cmd = commands.AddEntries(
         resource_id=resource_id,
+        # entries=json_streams.load_from_file(data),
         entries=tqdm(
-            json_streams.load_from_file(data), desc="Importing", unit=" entries"
+            json_streams.load_from_file(data),
+            desc="Importing",
+            unit=" entries"
         ),
         user="local admin",
         message="imported through cli",
     )
-    app_config.bus.handle(cmd)
+    bus.dispatch(cmd)
     typer.echo(f"Successfully imported entries to {resource_id}")
 
 

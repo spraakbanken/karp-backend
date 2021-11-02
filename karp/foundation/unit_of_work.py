@@ -1,10 +1,16 @@
 import abc
 import typing
 
+from karp.foundation.events import EventBus
+
+
 RepositoryType = typing.TypeVar("RepositoryType")
 
 
 class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
+    def __init__(self, event_bus: EventBus) -> None:
+        self.event_bus = event_bus
+
     def __enter__(self):
         return self
 
@@ -14,6 +20,8 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
     def commit(self):
         print('karp.foundation.UnitOfWork.commit')
         self._commit()
+        for event in self.collect_new_events():
+            self.event_bus.post(event)
 
     def collect_new_events(self) -> typing.Iterable:
         for entity in self.repo.seen:
