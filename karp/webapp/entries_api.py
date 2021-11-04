@@ -1,22 +1,20 @@
-from dependency_injector import wiring
 from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
                      status)
 from starlette import responses
 
 from karp import errors as karp_errors
-from karp.domain import commands, errors
-from karp.domain.models.user import User
-from karp.domain.value_objects import PermissionLevel, unique_id
-from karp.services import entry_views
+from karp.lex.domain import commands, errors
+from karp.auth import User
+from karp.foundation.commands import CommandBus
+from karp.foundation.value_objects import PermissionLevel, unique_id
 # from karp.errors import KarpError
 # import karp.auth.auth as auth
 # from karp.util import convert
-from karp.services.auth_service import AuthService
-from karp.services.messagebus import MessageBus
+from karp.auth import AuthService
 from karp.webapp import schemas
 
 from .app_config import get_current_user
-from .containers import WebAppContainer
+from .fastapi_injector import inject_from_req
 
 # from karp.application.services import entries
 
@@ -39,13 +37,12 @@ router = APIRouter(tags=["Editing"])
 
 
 @router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED)
-@wiring.inject
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Security(get_current_user, scopes=["write"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -55,7 +52,7 @@ def add_entry(
         )
     print("calling entrywrite")
     id_ = unique_id.make_unique_id()
-    bus.handle(
+    bus.dispatch(
         commands.AddEntry(
             resource_id=resource_id,
             id=id_,
@@ -73,15 +70,14 @@ def add_entry(
 
 @router.post("/{resource_id}/{entry_id}/update")
 # @auth.auth.authorization("WRITE", add_user=True)
-@wiring.inject
 def update_entry(
     response: Response,
     resource_id: str,
     entry_id: str,
     data: schemas.EntryUpdate,
     user: User = Security(get_current_user, scopes=["write"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -99,7 +95,7 @@ def update_entry(
     #         raise KarpError("Missing version, entry or message")
     try:
         entry = entry_views.get_by_entry_id(resource_id, entry_id, bus.ctx)
-        bus.handle(
+        bus.dispatch(
             commands.UpdateEntry(
                 resource_id=resource_id,
                 id=entry.id,
@@ -134,13 +130,12 @@ def update_entry(
 
 @router.delete("/{resource_id}/{entry_id}/delete")
 # @auth.auth.authorization("WRITE", add_user=True)
-@wiring.inject
 def delete_entry(
     resource_id: str,
     entry_id: str,
     user: User = Security(get_current_user, scopes=["write"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     """Delete a entry from a resource.
 
@@ -158,7 +153,7 @@ def delete_entry(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
-    bus.handle(
+    bus.dispatch(
         commands.DeleteEntry(
             resource_id=resource_id,
             entry_id=entry_id,

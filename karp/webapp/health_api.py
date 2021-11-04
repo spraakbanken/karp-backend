@@ -4,15 +4,13 @@ Perform health checks on the server.
 Used to perform readiness and liveness probes on the server.
 """
 
-from dependency_injector import wiring
 from fastapi import APIRouter, Depends, Response, status
 
 from karp.application import schemas
-from karp.services import system_monitor
-from karp.services.auth_service import AuthService
-from karp.services.messagebus import MessageBus
+# from karp.services import system_monitor
+# from karp.services.auth_service import AuthService
+# from karp.services.messagebus import MessageBus
 
-from .containers import WebAppContainer
 
 router = APIRouter(tags=["Health"])
 
@@ -22,10 +20,9 @@ router = APIRouter(tags=["Health"])
 @router.get(
     "/healthz", response_model=schemas.SystemMonitorResponse, include_in_schema=False
 )
-@wiring.inject
 def perform_health_check(
     response: Response,
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    # bus: MessageBus = Depends(inject_from_req[WebAppContainer.context.bus]),
 ):
     db_status = system_monitor.check_database_status(bus.ctx)
     if not db_status:

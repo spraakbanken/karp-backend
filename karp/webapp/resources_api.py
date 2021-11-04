@@ -1,11 +1,12 @@
-from dependency_injector import wiring
+# from dependency_injector import wiring
 from fastapi import APIRouter, Depends
 
-from karp.services import resource_views
+from karp.auth.application.queries import GetResourcePermissions
 from karp.services.messagebus import MessageBus
 
-from . import app_config
-from .containers import WebAppContainer
+from .fastapi_injector import inject_from_req
+# from . import app_config
+# from .containers import WebAppContainer
 
 # from karp.infrastructure.unit_of_work import unit_of_work
 
@@ -16,12 +17,11 @@ router = APIRouter(tags=["Resources"])
 
 
 @router.get("/resources")
-@wiring.inject
-def list_resources(
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+def list_resource_permissions(
+    query: GetResourcePermissions = Depends(inject_from_req(GetResourcePermissions)),
 ):
     result = []
-    for resource in resource_views.get_published_resources(bus.ctx):
+    for resource in query.query():
         resource_obj = {"resource_id": resource.resource_id}
 
         protected_conf = resource.config.get("protected")

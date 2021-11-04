@@ -4,21 +4,18 @@ Query API.
 import logging
 from typing import List, Optional
 
-from dependency_injector import wiring
 from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
                      status)
 
-from karp import errors as karp_errors
-from karp.domain import index, value_objects
-from karp.domain.models.user import User
-# from karp.webapp.auth import get_current_user
-from karp.services import entry_query
-from karp.services.auth_service import AuthService
-from karp.services.messagebus import MessageBus
+from karp import errors as karp_errors, auth
+from karp.search.application.queries import EntryQuery
+# from karp.search.domain import index, value_objects
+# from karp.services import entry_query
+# from karp.services.messagebus import MessageBus
 from karp.webapp import schemas
 
 from .app_config import get_current_user
-from .containers import WebAppContainer
+from .fastapi_injector import inject_from_req
 
 # from karp.domain.models.auth_service import PermissionLevel
 
@@ -41,7 +38,6 @@ router = APIRouter(tags=["Querying"])
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
 )
-@wiring.inject
 def query(
     resources: str = Path(
         ...,
@@ -74,9 +70,9 @@ def query(
         alias="format",
         description="Will return the result in the specified format.",
     ),
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
+    entry_query: EntryQuery = Depends(inject_from_req(EntryQuery)),
 ):
     """
     # Query DSL
@@ -166,7 +162,6 @@ def query(
     description="Returns a list of entries matching the given ids",
     name="Get lexical entries by id",
 )
-@wiring.inject
 def get_entries_by_id(
     resource_id: str = Path(..., description="The resource to perform operation on"),
     entry_ids: str = Path(
@@ -174,9 +169,9 @@ def get_entries_by_id(
         description="Comma-separated. The ids to perform operation on.",
         regex=r"^\w(,\w)*",
     ),
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
+    entry_query: EntryQuery = Depends(inject_from_req(EntryQuery)),
 ):
     print("webapp.views.get_entries_by_id")
     if not auth_service.authorize(
@@ -191,7 +186,6 @@ def get_entries_by_id(
 
 
 @router.get("/query_split/{resources}", name="Query per resource")
-@wiring.inject
 def query_split(
     resources: str = Path(
         ...,
@@ -223,9 +217,9 @@ def query_split(
         schemas.EntryFormat.json,
         description="Will return the result in the specified format.",
     ),
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
+    entry_query: EntryQuery = Depends(inject_from_req(EntryQuery)),
 ):
     print("webapp.views.query.query_split: called with resources={}".format(resources))
     resource_list = resources.split(",")

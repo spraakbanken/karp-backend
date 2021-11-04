@@ -13,7 +13,6 @@ from fastapi.responses import JSONResponse
 from karp import main
 
 from . import app_config
-from .containers import WebAppContainer
 
 __version__ = "0.8.1"
 
@@ -32,10 +31,10 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     app = FastAPI(
         title="Karp API", redoc_url="/", version=__version__, openapi_tags=tags_metadata
     )
-    container = WebAppContainer()
-    container.config.auth.type.from_env("AUTH_CONTEXT")
-    container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
-    main.bootstrap_app(container.context)
+    # container = WebAppContainer()
+    # container.config.auth.type.from_env("AUTH_CONTEXT")
+    # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
+    app_context = main.bootstrap_app()
 
     # from karp.application.logger import setup_logging
 
@@ -52,17 +51,17 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     from . import (entries_api, health_api, history_api, query_api,
                    resources_api, stats_api)
 
-    container.wire(
-        modules=[
-            app_config,
-            entries_api,
-            health_api,
-            history_api,
-            query_api,
-            resources_api,
-            stats_api,
-        ]
-    )
+    # container.wire(
+    #     modules=[
+    #         app_config,
+    #         entries_api,
+    #         health_api,
+    #         history_api,
+    #         query_api,
+    #         resources_api,
+    #         stats_api,
+    #     ]
+    # )
 
     entries_api.init_app(app)
     health_api.init_app(app)
@@ -71,7 +70,8 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     resources_api.init_app(app)
     stats_api.init_app(app)
 
-    app.state.container = container
+    app.state.app_context = app_context
+    app.state.container = app_context.container
 
     load_modules(app)
 
@@ -86,6 +86,13 @@ def create_app(*, with_context: bool = True) -> FastAPI:
             status_code=exc.http_return_code,
             content={"error": exc.message, "errorCode": exc.code},
         )
+
+    @app.middleware('http')
+    async def injector_middleware(request: Request, call_next):
+        request.state.container = app_context.container
+        response = await call_next(request)
+        print('request.state.injector.close')
+        return response
 
     return app
 
