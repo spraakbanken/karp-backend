@@ -23,7 +23,7 @@ from karp.search import Search
 
 @dataclass
 class AppContext:
-    injector: injector.Injector
+    container: injector.Injector
 
 
 def bootstrap_app(container=None) -> AppContext:

@@ -9,8 +9,10 @@ except ImportError:
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+import injector
 
 from karp import main
+from karp.auth_infrastructure import AuthInfrastructure
 
 from . import app_config
 
@@ -36,6 +38,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
     app_context = main.bootstrap_app()
 
+    load_auth(app_context.container)
     # from karp.application.logger import setup_logging
 
     # logger = setup_logging()
@@ -81,7 +84,6 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     async def _karp_error_handler(request: Request, exc: KarpError):
         logger = logging.getLogger("karp")
         logger.exception(exc)
-        # traceback.print_exception(KarpError, exc, None)
         return JSONResponse(
             status_code=exc.http_return_code,
             content={"error": exc.message, "errorCode": exc.code},
@@ -95,6 +97,10 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         return response
 
     return app
+
+
+def load_auth(container: injector.Injector):
+    container.binder.install(AuthInfrastructure())
 
 
 def load_modules(app=None):

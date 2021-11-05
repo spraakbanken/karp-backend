@@ -2,7 +2,6 @@
 from fastapi import APIRouter, Depends
 
 from karp.auth.application.queries import GetResourcePermissions
-from karp.services.messagebus import MessageBus
 
 from .fastapi_injector import inject_from_req
 # from . import app_config

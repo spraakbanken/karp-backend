@@ -1,32 +1,25 @@
-from dependency_injector import wiring
 from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
                      status)
 
-from karp.domain.models.user import User
-from karp.domain.value_objects import PermissionLevel
-from karp.services import entry_query
-from karp.services.auth_service import AuthService
-from karp.services.messagebus import MessageBus
+from karp import auth
+from karp.foundation.value_objects import PermissionLevel
+from karp.search.application.queries import EntryQuery
 from karp.webapp import schemas
 
 from .app_config import get_current_user
-from .containers import WebAppContainer
-
-# from karp.application import ctx
-
+from .fastapi_injector import inject_from_req
 
 
 router = APIRouter(tags=["Statistics"])
 
 
 @router.get("/stats/{resource_id}/{field}")
-@wiring.inject
 def get_field_values(
     resource_id: str,
     field: str,
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
+    entry_query: EntryQuery = Depends(inject_from_req(EntryQuery)),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
