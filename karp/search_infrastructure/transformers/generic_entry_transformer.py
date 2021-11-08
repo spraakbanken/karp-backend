@@ -250,3 +250,36 @@ class GenericEntryTransformer(EntryTransformer):
         else:
             raise NotImplementedError()
         return res
+
+def _update_references(
+    # resource_id: str,
+    # resource_repo: ResourceRepository,
+    # search_serviceer: SearchService,
+    resource: entities.Resource,
+    entries: List[Entry],
+) -> None:
+    add = collections.defaultdict(list)
+    with ctx.resource_uow:
+        for src_entry in entries:
+            refs = network_handlers.get_referenced_entries(
+                resource, None, src_entry.entry_id, ctx
+            )
+            for field_ref in refs:
+                ref_resource_id = field_ref["resource_id"]
+                ref_resource = ctx.resource_uow.repo.by_resource_id(
+                    ref_resource_id, version=(field_ref["resource_version"])
+                )
+                if ref_resource:
+                    ref_search_service_entry = transform_to_search_service_entry(
+                        # resource_repo,
+                        # search_serviceer,
+                        ref_resource,
+                        field_ref["entry"],
+                        # ref_resource.config["fields"].items(),
+                        ctx,
+                    )
+                    # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
+                    add[ref_resource_id].append(ref_search_service_entry)
+
+    for ref_resource_id, ref_entries in add.items():
+        ctx.search_service_uow.repo.add_entries(ref_resource_id, ref_entries)
