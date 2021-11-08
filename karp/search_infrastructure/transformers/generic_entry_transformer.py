@@ -1,21 +1,27 @@
+import logging
 import typing
 
 from karp.lex.domain import entities
 from karp.lex.application.repositories import ResourceUnitOfWork
 from karp.search.application.transformers import EntryTransformer
-from karp.search.application.repositories import SearchServiceUnitOfWork
+from karp.search.application.repositories import SearchServiceUnitOfWork, EntryUowRepositoryUnitOfWork
 from karp.search.domain import search_service
+
+
+logger = logging.getLogger("karp")
 
 
 class GenericEntryTransformer(EntryTransformer):
     def __init__(
         self,
         search_service_uow: SearchServiceUnitOfWork,
-        resource_uow: ResourceUnitOfWork
+        resource_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> None:
         super().__init__()
         self.search_service_uow = search_service_uow
         self.resource_uow = resource_uow
+        self.entry_uow_repo_uow = entry_uow_repo_uow
 
     def _get_resource(self, resource_id: str) -> entities.Resource:
         with self.resource_uow as uw:
@@ -62,16 +68,16 @@ class GenericEntryTransformer(EntryTransformer):
         for field_name, field_conf in fields:
             if field_conf.get("virtual"):
                 print("found virtual field")
-                res = _evaluate_function(
-                    field_conf["function"], _src_entry, resource, ctx)
+                res = self._evaluate_function(
+                    field_conf["function"], _src_entry, resource)
                 print(f"res = {res}")
                 if res:
-                    ctx.search_service_uow.repo.assign_field(
+                    self.search_service_uow.repo.assign_field(
                         _search_service_entry, "v_" + field_name, res)
             elif field_conf.get("ref"):
                 ref_field = field_conf["ref"]
                 if ref_field.get("resource_id"):
-                    ref_resource = ctx.resource_uow.repo.by_resource_id(
+                    ref_resource = self.resource_uow.repo.by_resource_id(
                         ref_field["resource_id"], version=ref_field["resource_version"]
                     )
                     # if not ref_resource:
@@ -82,8 +88,8 @@ class GenericEntryTransformer(EntryTransformer):
                         ref_objs = []
                         if ref_resource:
                             for ref_id in _src_entry[field_name]:
-                                with ctx.entry_uows.get(
-                                    ref_resource.resource_id
+                                with self.entry_uow_repo_uow.get_by_id(
+                                    ref_resource.entry_repository_id
                                 ) as ref_resource_entries_uw:
                                     ref_entry_body = (
                                         ref_resource_entries_uw.repo.by_entry_id(
@@ -95,22 +101,21 @@ class GenericEntryTransformer(EntryTransformer):
                                     ref_entry = {
                                         field_name: ref_entry_body.body}
                                     ref_search_service_entry = (
-                                        ctx.search_service_uow.repo.create_empty_object()
+                                        self.search_service_uow.repo.create_empty_object()
                                     )
                                     list_of_sub_fields = (
                                         (field_name, ref_field["field"]),)
-                                    _transform_to_search_service_entry(
+                                    self._transform_to_index_entry(
                                         resource,
                                         # resource_repo,
                                         # search_serviceer,
                                         ref_entry,
                                         ref_search_service_entry,
                                         list_of_sub_fields,
-                                        ctx,
                                     )
                                     ref_objs.append(
                                         ref_search_service_entry.entry[field_name])
-                        ctx.search_service_uow.repo.assign_field(
+                        self.search_service_uow.repo.assign_field(
                             _search_service_entry, "v_" + field_name, ref_objs
                         )
                     else:
@@ -123,27 +128,26 @@ class GenericEntryTransformer(EntryTransformer):
                         ref_id = [ref_id]
 
                     for elem in ref_id:
-                        with ctx.entry_uows.get(
-                            resource.resource_id
+                        with self.entry_uow_repo_uow.get_by_id(
+                            resource.entry_repository_id
                         ) as resource_entries_uw:
                             ref = resource_entries_uw.repo.by_entry_id(
                                 str(elem))
                             resource_entries_uw.commit()
                         if ref:
                             ref_entry = {field_name: ref.body}
-                            ref_search_service_entry = ctx.search_service_uow.repo.create_empty_object()
+                            ref_search_service_entry = self.search_service_uow.repo.create_empty_object()
                             list_of_sub_fields = (
                                 (field_name, ref_field["field"]),)
-                            _transform_to_search_service_entry(
+                            self._transform_to_index_entry(
                                 resource,
                                 # resource_repo,
                                 # search_serviceer,
                                 ref_entry,
                                 ref_search_service_entry,
                                 list_of_sub_fields,
-                                ctx,
                             )
-                            ctx.search_service_uow.repo.assign_field(
+                            self.search_service_uow.repo.assign_field(
                                 _search_service_entry,
                                 "v_" + field_name,
                                 ref_search_service_entry.entry[field_name],
@@ -151,25 +155,25 @@ class GenericEntryTransformer(EntryTransformer):
 
             if field_conf["type"] == "object":
                 print("found field with type 'object'")
-                field_content = ctx.search_service_uow.repo.create_empty_object()
+                field_content = self.search_service_uow.repo.create_empty_object()
                 if field_name in _src_entry:
-                    _transform_to_search_service_entry(
+                    self._transform_to_index_entry(
                         resource,
                         # resource_repo,
                         # search_serviceer,
                         _src_entry[field_name],
                         field_content,
                         field_conf["fields"].items(),
-                        ctx,
                     )
             else:
                 field_content = _src_entry.get(field_name)
 
             if field_content:
-                ctx.search_service_uow.repo.assign_field(
+                self.search_service_uow.repo.assign_field(
                     _search_service_entry, field_name, field_content)
 
     def _evaluate_function(
+        self,
         # resource_repo: ResourceRepository,
         # search_serviceer: SearchService,
         function_conf: typing.Dict,
@@ -186,7 +190,7 @@ class GenericEntryTransformer(EntryTransformer):
                 print(
                     f"search_serviceing._evaluate_function: trying to find '{function_conf['resource_id']}'"
                 )
-                target_resource = ctx.resource_uow.repo.by_resource_id(
+                target_resource = self.resource_uow.repo.by_resource_id(
                     function_conf["resource_id"], version=function_conf["resource_version"]
                 )
                 if target_resource is None:
@@ -194,7 +198,7 @@ class GenericEntryTransformer(EntryTransformer):
                         "Didn't find the resource with resource_id='%s'",
                         function_conf["resource_id"],
                     )
-                    return ctx.search_service_uow.repo.create_empty_list()
+                    return self.search_service_uow.repo.create_empty_list()
             else:
                 target_resource = src_resource
             print(
@@ -212,8 +216,8 @@ class GenericEntryTransformer(EntryTransformer):
                     # target_entries = entryread.get_entries_by_column(
                     #     target_resource, filters
                     # )
-                    with ctx.entry_uows.get(
-                        target_resource.resource_id
+                    with self.entry_uow_repo_uow.get_by_id(
+                        target_resource.entry_repository_id
                     ) as target_entries_uw:
                         target_entries = target_entries_uw.repo.by_referenceable(
                             filters)
@@ -222,20 +226,19 @@ class GenericEntryTransformer(EntryTransformer):
             else:
                 raise NotImplementedError()
 
-            res = ctx.search_service_uow.repo.create_empty_list()
+            res = self.search_service_uow.repo.create_empty_list()
             for entry in target_entries:
-                search_service_entry = ctx.search_service_uow.repo.create_empty_object()
+                search_service_entry = self.search_service_uow.repo.create_empty_object()
                 list_of_sub_fields = (("tmp", function_conf["result"]),)
-                _transform_to_search_service_entry(
+                self._transform_to_index_entry(
                     target_resource,
                     # resource_repo,
                     # search_serviceer,
                     {"tmp": entry.body},
                     search_service_entry,
                     list_of_sub_fields,
-                    ctx,
                 )
-                ctx.search_service_uow.repo.add_to_list_field(
+                self.search_service_uow.repo.add_to_list_field(
                     res, search_service_entry.entry["tmp"])
         elif "plugin" in function_conf:
             plugin_id = function_conf["plugin"]
