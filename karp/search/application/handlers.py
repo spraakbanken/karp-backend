@@ -143,16 +143,24 @@ def research_service(
 
 
 # def publish_search_service(resource_id: str, version: Optional[int] = None) -> None:
-def publish_search_service(
-    evt: events.ResourcePublished,
-) -> None:
-    print("calling research_service ...")
-    # research_service(evt, ctx)
-    with ctx.search_service_uow:
-        ctx.search_service_uow.repo.publish_search_service(evt.resource_id)
-        ctx.search_service_uow.commit()
-    # if version:
-    #     resourcemgr.publish_resource(resource_id, version)
+class ResourcePublishedHandler(foundation_events.EventHandler[lex_events.ResourcePublished]):
+    def __init__(
+        self,
+        search_service_uow: SearchServiceUnitOfWork
+    ):
+        self.search_service_uow = search_service_uow
+
+    def __call__(
+        self,
+        evt: events.ResourcePublished,
+    ) -> None:
+        print("calling research_service ...")
+        # research_service(evt, ctx)
+        with self.search_service_uow as uw:
+            uw.repo.publish_index(evt.resource_id)
+            uw.commit()
+        # if version:
+        #     resourcemgr.publish_resource(resource_id, version)
 
 
 class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.ResourceCreated]):
@@ -182,21 +190,34 @@ class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.Resou
 #         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
-def add_entry(
-    evt: events.EntryAdded,
-):
-    with ctx.search_service_uow:
-        entry = entities.Entry(
-            entity_id=evt.id,
-            entry_id=evt.entry_id,
-            resource_id=evt.resource_id,
-            body=evt.body,
-            message=evt.message,
-            last_modified=evt.timestamp,
-            last_modified_by=evt.user,
-        )
-        add_entries(evt.resource_id, [entry], ctx)
-        ctx.search_service_uow.commit()
+class EntryAddedHandler(foundation_events.EventHandler[lex_events.ResourcePublished]):
+    def __init__(
+        self,
+        search_service_uow: SearchServiceUnitOfWork,
+        entry_transformer: EntryTransformer,
+    ):
+        self.search_service_uow = search_service_uow
+        self.entry_transformer = entry_transformer
+
+    def __call__(
+        self,
+        evt: events.EntryAdded,
+    ):
+        with self.search_service_uow as uw:
+            entry = entities.Entry(
+                entity_id=evt.id,
+                entry_id=evt.entry_id,
+                resource_id=evt.resource_id,
+                body=evt.body,
+                message=evt.message,
+                last_modified=evt.timestamp,
+                last_modified_by=evt.user,
+            )
+            uw.repo.add_entries(
+                evt.resource_id,
+                [self.entry_transformer.transform(entry)]
+            )
+            uw.commit()
 
 
 def update_entry(

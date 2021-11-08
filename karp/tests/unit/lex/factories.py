@@ -74,6 +74,33 @@ class ResourceCreatedFactory(factory.Factory):
     message = 'resource created'
 
 
+class ResourcePublishedFactory(factory.Factory):
+    class Meta:
+        model = lex_events.ResourcePublished
+
+    timestamp = factory.LazyFunction(utc_now)
+    id = factory.LazyFunction(lex_factories.make_unique_id)
+    resource_id = factory.Faker('word')
+    name = factory.Faker('word')
+    config = factory.Faker('resource_config')
+    user = factory.Faker('email')
+    version = factory.Sequence(int)
+    message = 'resource created'
+
+
+class EntryAddedFactory(factory.Factory):
+    class Meta:
+        model = lex_events.EntryAdded
+
+    timestamp = factory.LazyFunction(utc_now)
+    id = factory.LazyFunction(lex_factories.make_unique_id)
+    resource_id = factory.Faker('word')
+    entry_id = factory.Faker('word')
+    body = factory.Faker('resource_config')
+    user = factory.Faker('email')
+    message = 'resource created'
+
+
 class CreateEntryRepositoryFactory(factory.Factory):
     class Meta:
         model = lex_commands.CreateEntryRepository

@@ -19,3 +19,25 @@ class Search(injector.Module):
                 search_service_uow
             )
         ]
+
+    @injector.multiprovider
+    def publish_index(
+        self,
+        search_service_uow: SearchServiceUnitOfWork
+    ) -> List[EventHandler[lex_events.ResourcePublished]]:
+        return [
+            handlers.ResourcePublishedHandler(
+                search_service_uow
+            )
+        ]
+
+    @injector.multiprovider
+    def add_entry(
+        self,
+        search_service_uow: SearchServiceUnitOfWork
+    ) -> List[EventHandler[lex_events.EntryAdded]]:
+        return [
+            handlers.EntryAddedHandler(
+                search_service_uow
+            )
+        ]
