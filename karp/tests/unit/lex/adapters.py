@@ -3,6 +3,7 @@ import typing
 from typing import Dict, List, Optional
 
 import injector
+from karp.foundation.events import EventBus
 
 from karp.foundation.value_objects import UniqueId
 from karp.foundation.commands import CommandBus
@@ -102,11 +103,13 @@ class FakeEntryRepository(lex_repositories.EntryRepository):
 class FakeEntryUnitOfWork(
     FakeUnitOfWork, lex_repositories.EntryUnitOfWork
 ):
-    def __init__(self, entity_id, name: str, config: typing.Dict):
+    def __init__(self, entity_id, name: str, config: typing.Dict, connection_str: typing.Optional[str], message: str, user: str, event_bus: EventBus):
+        lex_repositories.EntryUnitOfWork.__init__(
+            self, entity_id=entity_id, name=name, config=config, connection_str=connection_str, message=message, event_bus=event_bus)
         self._entries = FakeEntryRepository()
-        self.id = entity_id
-        self.name = name
-        self.config = config
+        # self.id = entity_id
+        # self.name = name
+        # self.config = config
 
     @property
     def repo(self) -> lex_repositories.EntryRepository:
@@ -117,10 +120,12 @@ class FakeEntryUnitOfWork2(
     FakeUnitOfWork, lex_repositories.EntryUnitOfWork
 ):
     def __init__(self, entity_id, name: str, config: typing.Dict):
+        lex_repositories.EntryUnitOfWork.__init__(
+            self, entity_id=entity_id, name=name, config=config)
         self._entries = FakeEntryRepository()
-        self.id = entity_id
-        self.name = name
-        self.config = config
+        # self.id = entity_id
+        # self.name = name
+        # self.config = config
 
     @property
     def repo(self) -> lex_repositories.EntryRepository:
@@ -128,7 +133,8 @@ class FakeEntryUnitOfWork2(
 
 
 class FakeResourceUnitOfWork(FakeUnitOfWork, lex_repositories.ResourceUnitOfWork):
-    def __init__(self):
+    def __init__(self, event_bus: EventBus):
+        super().__init__(event_bus=event_bus)
         self._resources = FakeResourceRepository()
 
     @property
@@ -152,16 +158,28 @@ class FakeEntryUowFactory(lex_repositories.EntryUowFactory):
 
 
 class FakeEntryUnitOfWorkCreator:
+    @injector.inject
+    def __init__(self, event_bus: EventBus) -> None:
+        self.event_bus = event_bus
+
     def __call__(
         self,
         entity_id: UniqueId,
         name: str,
         config: Dict,
+        connection_str: Optional[str],
+        user: str,
+        message: str,
+        timestamp: float,
     ) -> lex_repositories.EntryUnitOfWork:
         return FakeEntryUnitOfWork(
             entity_id=entity_id,
             name=name,
             config=config,
+            connection_str=connection_str,
+            message=message,
+            user=user,
+            event_bus=self.event_bus,
         )
 
 
@@ -193,8 +211,8 @@ class FakeEntryUowRepository(lex_repositories.EntryUowRepository):
 
 
 class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, event_bus: EventBus) -> None:
+        super().__init__(event_bus=event_bus)
         self._repo = FakeEntryUowRepository()
 
     @property
@@ -205,8 +223,8 @@ class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUow
 class FakeLexInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
-    def entry_uow_repo_uow(self) -> lex_repositories.EntryUowRepositoryUnitOfWork:
-        return FakeEntryUowRepositoryUnitOfWork()
+    def entry_uow_repo_uow(self, event_bus: EventBus) -> lex_repositories.EntryUowRepositoryUnitOfWork:
+        return FakeEntryUowRepositoryUnitOfWork(event_bus=event_bus)
 
     # @injector.provider
     # def entry_uow_factory(self) -> lex_repositories.EntryRepositoryUnitOfWorkFactory:
@@ -215,12 +233,12 @@ class FakeLexInfrastructure(injector.Module):
     def entry_uow_creator_map(
         self
     ) -> Dict[str, lex_repositories.EntryUnitOfWorkCreator]:
-        return {"fake": FakeEntryUnitOfWorkCreator(), "fake2": create_entry_uow2}
+        return {"fake": FakeEntryUnitOfWorkCreator}
 
     @injector.provider
     @injector.singleton
-    def resource_uow(self) -> lex_repositories.ResourceUnitOfWork:
-        return FakeResourceUnitOfWork()
+    def resource_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:
+        return FakeResourceUnitOfWork(event_bus=event_bus)
 
 
 # def bootstrap_test_app(

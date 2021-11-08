@@ -109,6 +109,8 @@ class CreateEntryRepositoryFactory(factory.Factory):
     name = factory.Faker('word')
     repository_type = 'fake'
     config = factory.Faker('resource_config')
+    message = 'entry repository created'
+    user = factory.Faker('email')
 
 
 class CreateResourceFactory(factory.Factory):

@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import List, Generic, TypeVar
+from typing import List, Generic, TypeVar, Any
 
 import injector
 
@@ -36,7 +36,8 @@ class EventHandler(Generic[T]):
     e.g EventHandler[ResourceCreated].
     """
 
-    pass
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        raise NotImplementedError()
 
 
 class EventBus(abc.ABC):
@@ -66,3 +67,4 @@ class InjectorEventBus(EventBus):
                     evt_handler(event)
                 except Exception:
                     logger.exception('Exception handling event %s', event)
+                    raise

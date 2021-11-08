@@ -8,7 +8,7 @@ from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
 )
-from karp.main.modules import CommandBusMod
+from karp.main.modules import CommandBusMod, EventBusMod
 from karp.lex.application import repositories
 
 from .adapters import (
@@ -48,9 +48,11 @@ def fixture_entry_uow_factory() -> FakeEntryUowFactory:
 def lex_ctx() -> adapters.UnitTestContext:
     container = injector.Injector([
         CommandBusMod(),
+        EventBusMod(),
         Lex(),
-        adapters.FakeLexInfrastructure()
-    ])
+        adapters.FakeLexInfrastructure(),
+
+    ], auto_bind=False)
     return adapters.UnitTestContext(
         container=container,
         command_bus=container.get(CommandBus)
