@@ -9,6 +9,7 @@ from typing import Dict, List, Optional, Tuple, Iterable
 from karp.foundation import messagebus, events as foundation_events
 from karp.lex.domain import events as lex_events
 from karp.search.application.repositories import SearchServiceUnitOfWork
+from karp.search.application.transformers import EntryTransformer
 # from .search_service import SearchServiceModule
 # import karp.resourcemgr as resourcemgr
 # import karp.resourcemgr.entryread as entryread
