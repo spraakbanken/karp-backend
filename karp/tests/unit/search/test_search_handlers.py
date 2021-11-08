@@ -17,7 +17,6 @@ def fixture_resource_created() -> ResourceCreated:
 @pytest.mark.parametrize('event_factory,predicate', [
     (None, lambda x: x.created),
     (lex_factories.ResourcePublishedFactory, lambda x: x.published),
-    (lex_factories.EntryAddedFactory, lambda x: len(x.entries) == 1),
 
 ])
 def test_index_reacts_on_lex_events(
@@ -47,6 +46,10 @@ def test_index_reacts_on_EntryAdded(
     create_resource = lex_factories.CreateResourceFactory(
         entry_repo_id=create_entry_repo.entity_id)
     search_unit_ctx.command_bus.dispatch(create_resource)
+    create_entry = lex_factories.AddEntryFactory(
+        resource_id=create_resource.resource_id
+    )
+    search_unit_ctx.command_bus.dispatch(create_entry)
     # if event_factory:
     #     event = event_factory(resource_id=create_resource.resource_id)
     #     search_unit_ctx.event_bus.post(event)
@@ -55,7 +58,11 @@ def test_index_reacts_on_EntryAdded(
         SearchServiceUnitOfWork)
     assert search_service_uow.was_committed
 
-    assert search_service_uow.repo.indicies[create_resource.resource_id]
+    assert search_service_uow.repo.indicies[create_resource.resource_id].created
+    assert len(search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
+    assert 'bra' in search_service_uow.repo.indicies[
+        create_resource.resource_id
+    ].entries
 
 
 def test_transform_to_index_entry():

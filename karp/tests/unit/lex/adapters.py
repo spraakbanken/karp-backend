@@ -216,7 +216,7 @@ class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUow
         self._repo = FakeEntryUowRepository()
 
     @property
-    def repo(self) -> lex_repositories.EntryRepositoryRepository:
+    def repo(self) -> lex_repositories.EntryUowRepository:
         return self._repo
 
 

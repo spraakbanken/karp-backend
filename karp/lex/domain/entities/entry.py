@@ -107,7 +107,7 @@ class Entry(TimestampedVersionedEntity):
         self._last_modified_by = user
         self._last_modified = timestamp
         self._version += 1
-        self.queue_event(
+        self._record_event(
             events.EntryDeleted(
                 id=self.id,
                 entry_id=self.entry_id,
@@ -132,7 +132,7 @@ class Entry(TimestampedVersionedEntity):
         super().stamp(user, timestamp=timestamp, increment_version=increment_version)
         self._message = message
         self._op = EntryOp.UPDATED
-        self.queue_event(
+        self._record_event(
             events.EntryUpdated(
                 timestamp=self.last_modified,
                 id=self.id,
@@ -175,6 +175,7 @@ def create_entry(
         entity_id=entity_id,
         last_modified=last_modified,
     )
+    print(f'create_entry id={entry.id}')
     entry.queue_event(
         events.EntryAdded(
             resource_id=resource_id,

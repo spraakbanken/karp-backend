@@ -20,10 +20,9 @@ class Entity(events.EventMixin):
         self._id = entity_id
         self._discarded = discarded
         self._root = aggregate_root
-        self.events = []
 
     def queue_event(self, event):
-        self.events.append(event)
+        self._record_event(event)
 
     @property
     def id(self):

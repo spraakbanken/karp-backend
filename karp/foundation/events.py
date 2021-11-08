@@ -1,6 +1,6 @@
 import abc
 import logging
-from typing import List, Generic, TypeVar, Any
+from typing import List, Generic, TypeVar, Any, Iterable
 
 import injector
 
@@ -24,6 +24,9 @@ class EventMixin:
 
     @property
     def domain_events(self) -> List[Event]:
+        return self._pending_domain_events[:]
+
+    def collect_new_events(self) -> Iterable[Event]:
         return self._pending_domain_events[:]
 
     def clear_events(self) -> None:
@@ -51,6 +54,7 @@ class InjectorEventBus(EventBus):
         self._container = container
 
     def post(self, event: Event) -> None:
+        print(f'handling event {event}')
         try:
             evt_handlers = self._container.get(
                 List[EventHandler[type(event)]]  # type: ignore

@@ -24,9 +24,12 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
             self.event_bus.post(event)
 
     def collect_new_events(self) -> typing.Iterable:
+        print(f'collect_new_events for unit_of_work {type(self)}')
         for entity in self.repo.seen:
-            while entity.events:
-                yield entity.events.pop(0)
+            print(f'  from entity ({type(entity)}) with id {entity.id}')
+            # yield from entity.domain_events
+            yield from entity.collect_new_events()
+            entity.clear_events()
 
     @abc.abstractmethod
     def _commit(self):

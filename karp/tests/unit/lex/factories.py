@@ -147,7 +147,9 @@ class AddEntryFactory(factory.Factory):
 
     entity_id = factory.LazyFunction(lex_factories.make_unique_id)
     resource_id = factory.Faker('word')
-    entry = {}
+    entry = {
+        'baseform': 'bra',
+    }
     user = factory.Faker('email')
     message = 'added'
 
