@@ -1,0 +1,1 @@
+from .generic_entry_transformer import GenericEntryTransformer

@@ -3,8 +3,11 @@ import pytest
 
 from karp.foundation.commands import CommandBus
 from karp.foundation.events import EventBus
+from karp.lex import Lex
 from karp.main.modules import CommandBusMod, EventBusMod
 from karp.search import Search
+from karp.search_infrastructure import SearchInterface
+from karp.tests.unit.lex.adapters import FakeLexInfrastructure
 
 from . import adapters
 
@@ -15,6 +18,9 @@ def search_unit_ctx() -> adapters.SearchUnitTestContext:
         CommandBusMod(),
         EventBusMod(),
         Search(),
+        SearchInterface(),
+        Lex(),
+        FakeLexInfrastructure(),
         adapters.FakeSearchInfrastructure(),
     ], auto_bind=False)
     return adapters.SearchUnitTestContext(
