@@ -218,6 +218,7 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
                 evt.resource_id,
                 [self.entry_transformer.transform(evt.resource_id, entry)]
             )
+            self.entry_transformer.update_references(evt.resource_id, [entry])
             uw.commit()
 
 

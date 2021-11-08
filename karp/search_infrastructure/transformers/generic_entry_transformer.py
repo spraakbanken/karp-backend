@@ -2,6 +2,7 @@ import logging
 import typing
 
 from karp.lex.domain import entities
+from karp.lex.application.queries import GetReferencedEntries
 from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
 from karp.search.application.transformers import EntryTransformer
 from karp.search.application.repositories import SearchServiceUnitOfWork
@@ -17,11 +18,13 @@ class GenericEntryTransformer(EntryTransformer):
         search_service_uow: SearchServiceUnitOfWork,
         resource_uow: ResourceUnitOfWork,
         entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        get_referenced_entries: GetReferencedEntries,
     ) -> None:
         super().__init__()
         self.search_service_uow = search_service_uow
         self.resource_uow = resource_uow
         self.entry_uow_repo_uow = entry_uow_repo_uow
+        self.get_referenced_entries = get_referenced_entries
 
     def _get_resource(self, resource_id: str) -> entities.Resource:
         with self.resource_uow as uw:
@@ -251,35 +254,36 @@ class GenericEntryTransformer(EntryTransformer):
             raise NotImplementedError()
         return res
 
-def _update_references(
-    # resource_id: str,
-    # resource_repo: ResourceRepository,
-    # search_serviceer: SearchService,
-    resource: entities.Resource,
-    entries: List[Entry],
-) -> None:
-    add = collections.defaultdict(list)
-    with ctx.resource_uow:
-        for src_entry in entries:
-            refs = network_handlers.get_referenced_entries(
-                resource, None, src_entry.entry_id, ctx
-            )
-            for field_ref in refs:
-                ref_resource_id = field_ref["resource_id"]
-                ref_resource = ctx.resource_uow.repo.by_resource_id(
-                    ref_resource_id, version=(field_ref["resource_version"])
+    def update_references(
+        self,
+        resource_id: str,
+        # resource_repo: ResourceRepository,
+        # search_serviceer: SearchService,
+        # resource: entities.Resource,
+        entries: typing.List[entities.Entry],
+    ) -> None:
+        add = collections.defaultdict(list)
+        with ctx.resource_uow:
+            for src_entry in entries:
+                refs = network_handlers.get_referenced_entries(
+                    resource, None, src_entry.entry_id, ctx
                 )
-                if ref_resource:
-                    ref_search_service_entry = transform_to_search_service_entry(
-                        # resource_repo,
-                        # search_serviceer,
-                        ref_resource,
-                        field_ref["entry"],
-                        # ref_resource.config["fields"].items(),
-                        ctx,
+                for field_ref in refs:
+                    ref_resource_id = field_ref["resource_id"]
+                    ref_resource = ctx.resource_uow.repo.by_resource_id(
+                        ref_resource_id, version=(field_ref["resource_version"])
                     )
-                    # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
-                    add[ref_resource_id].append(ref_search_service_entry)
+                    if ref_resource:
+                        ref_search_service_entry = transform_to_search_service_entry(
+                            # resource_repo,
+                            # search_serviceer,
+                            ref_resource,
+                            field_ref["entry"],
+                            # ref_resource.config["fields"].items(),
+                            ctx,
+                        )
+                        # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
+                        add[ref_resource_id].append(ref_search_service_entry)
 
-    for ref_resource_id, ref_entries in add.items():
-        ctx.search_service_uow.repo.add_entries(ref_resource_id, ref_entries)
+        for ref_resource_id, ref_entries in add.items():
+            ctx.search_service_uow.repo.add_entries(ref_resource_id, ref_entries)
