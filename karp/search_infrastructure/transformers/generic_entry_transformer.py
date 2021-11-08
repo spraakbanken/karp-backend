@@ -2,9 +2,9 @@ import logging
 import typing
 
 from karp.lex.domain import entities
-from karp.lex.application.repositories import ResourceUnitOfWork
+from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
 from karp.search.application.transformers import EntryTransformer
-from karp.search.application.repositories import SearchServiceUnitOfWork, EntryUowRepositoryUnitOfWork
+from karp.search.application.repositories import SearchServiceUnitOfWork
 from karp.search.domain import search_service
 
 

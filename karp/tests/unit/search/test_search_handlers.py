@@ -55,8 +55,7 @@ def test_index_reacts_on_EntryAdded(
         SearchServiceUnitOfWork)
     assert search_service_uow.was_committed
 
-    assert predicate(
-        search_service_uow.repo.indicies[create_resource.resource_id])
+    assert search_service_uow.repo.indicies[create_resource.resource_id]
 
 
 def test_transform_to_index_entry():
