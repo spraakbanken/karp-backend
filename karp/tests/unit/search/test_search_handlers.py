@@ -38,7 +38,7 @@ def test_index_reacts_on_lex_events(
         search_service_uow.repo.indicies[resource_created.resource_id])
 
 
-def test_index_reacts_on_EntryAdded(
+def test_index_reacts_on_entry_added_event(
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
@@ -47,7 +47,8 @@ def test_index_reacts_on_EntryAdded(
         entry_repo_id=create_entry_repo.entity_id)
     search_unit_ctx.command_bus.dispatch(create_resource)
     create_entry = lex_factories.AddEntryFactory(
-        resource_id=create_resource.resource_id
+        resource_id=create_resource.resource_id,
+        entry={'baseform': 'bra'},
     )
     search_unit_ctx.command_bus.dispatch(create_entry)
     # if event_factory:
@@ -63,6 +64,40 @@ def test_index_reacts_on_EntryAdded(
     assert 'bra' in search_service_uow.repo.indicies[
         create_resource.resource_id
     ].entries
+
+
+def test_index_reacts_on_entry_updated_event(
+    search_unit_ctx: adapters.SearchUnitTestContext,
+):
+    create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
+    search_unit_ctx.command_bus.dispatch(create_entry_repo)
+    create_resource = lex_factories.CreateResourceFactory(
+        entry_repo_id=create_entry_repo.entity_id)
+    search_unit_ctx.command_bus.dispatch(create_resource)
+    create_entry = lex_factories.AddEntryFactory(
+        resource_id=create_resource.resource_id,
+        entry={'baseform': 'bra'},
+    )
+    search_unit_ctx.command_bus.dispatch(create_entry)
+
+    update_entry = lex_factories.UpdateEntryFactory(
+        resource_id=create_resource.resource_id,
+        entry_id='bra',
+        entry={'baseform': 'bra', 'wordclass': 'adjektiv'},
+        version=1,
+    )
+    search_unit_ctx.command_bus.dispatch(update_entry)
+
+    search_service_uow = search_unit_ctx.container.get(
+        SearchServiceUnitOfWork)
+    assert search_service_uow.was_committed
+
+    assert search_service_uow.repo.indicies[create_resource.resource_id].created
+    assert len(search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
+    entry = search_service_uow.repo.indicies[
+        create_resource.resource_id
+    ].entries['bra']
+    assert entry.entry['wordclass'] == 'adjektiv'
 
 
 def test_transform_to_index_entry():

@@ -159,7 +159,8 @@ class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry])
         _validate_entry(schema, cmd.entry)
 
         with self.entry_uow_repo_uow.repo.get_by_id(
-                resource.entry_repository_id) as uw:
+            resource.entry_repository_id
+        ) as uw:
             try:
                 current_db_entry = uw.repo.by_entry_id(
                     cmd.entry_id
@@ -168,8 +169,9 @@ class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry])
                 raise errors.EntryNotFound(
                     cmd.resource_id,
                     cmd.entry_id,
-                    entry_version=cmd.version,
-                    resource_version=resource.version,
+                    entity_id=None,
+                    # entry_version=cmd.version,
+                    # resource_version=resource.version,
                 ) from err
 
             diff = jsondiff.compare(current_db_entry.body, cmd.entry)

@@ -14,7 +14,10 @@ class ResourceConfigProvider(BaseProvider):
     def resource_config(self) -> typing.Dict:
         return {
             "sort": ["baseform"],
-            "fields": {"baseform": {"type": "string", "required": True}},
+            "fields": {
+                "baseform": {"type": "string", "required": True},
+                'wordclass': {'type': 'string'},
+            },
             "id": "baseform",
         }
 
