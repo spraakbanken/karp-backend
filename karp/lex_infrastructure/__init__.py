@@ -10,6 +10,7 @@ from karp.lex.application.queries import (
     ResourceDto,
     ListEntryRepos,
     EntryRepoDto,
+    GetReferencedEntries,
 )
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
@@ -21,6 +22,7 @@ from karp.lex_infrastructure.queries import (
     SqlGetPublishedResources,
     SqlGetResources,
     SqlListEntryRepos,
+    GenericGetReferencedEntries,
 )
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
@@ -72,3 +74,7 @@ class LexInfrastructure(injector.Module):
             'default': SqlEntryUowCreator,
             SqlEntryUowCreator.repository_type: SqlEntryUowCreator,
         }
+
+    @injector.provider
+    def get_referenced_entries(self) -> GetReferencedEntries:
+        return GenericGetReferencedEntries()
