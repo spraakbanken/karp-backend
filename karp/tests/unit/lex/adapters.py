@@ -43,7 +43,7 @@ class FakeResourceRepository(lex_repositories.ResourceRepository):
         return len(self.resources)
 
     def _get_published_resources(self) -> typing.Iterable[lex_entities.Resource]:
-        return (res for res in self.resources if res.is_published)
+        return (res for res in self.resources.values() if res.is_published)
 
     def resource_ids(self) -> typing.Iterable[str]:
         return (res.resource_id for res in self.resources)

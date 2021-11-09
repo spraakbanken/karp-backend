@@ -222,22 +222,40 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
             uw.commit()
 
 
-def update_entry(
-    evt: events.EntryUpdated,
+class EntryUpdatedHandler(
+    foundation_events.EventHandler[lex_events.EntryUpdated]
 ):
-    with ctx.search_service_uow:
-        entry = entities.Entry(
-            entity_id=evt.id,
-            entry_id=evt.entry_id,
-            resource_id=evt.resource_id,
-            body=evt.body,
-            message=evt.message,
-            last_modified=evt.timestamp,
-            last_modified_by=evt.user,
-            version=evt.version,
-        )
-        add_entries(evt.resource_id, [entry], ctx)
-        ctx.search_service_uow.commit()
+    def __init__(
+        self,
+        search_service_uow: SearchServiceUnitOfWork,
+        entry_transformer: EntryTransformer,
+    ):
+        self.search_service_uow = search_service_uow
+        self.entry_transformer = entry_transformer
+
+    def __call__(
+        self,
+        evt: events.EntryUpdated,
+    ):
+        with self.search_service_uow as uw:
+            entry = entities.Entry(
+                entity_id=evt.id,
+                entry_id=evt.entry_id,
+                resource_id=evt.resource_id,
+                body=evt.body,
+                message=evt.message,
+                last_modified=evt.timestamp,
+                last_modified_by=evt.user,
+                version=evt.version,
+            )
+            uw.repo.add_entries(
+                evt.resource_id,
+                [self.entry_transformer.transform(evt.resource_id, entry)]
+            )
+            self.entry_transformer.update_references(evt.resource_id, [entry])
+            uw.commit()
+            # add_entries(evt.resource_id, [entry], ctx)
+            # ctx.search_service_uow.commit()
 
     # def add_entries(
     #     resource_repo: ResourceRepository,

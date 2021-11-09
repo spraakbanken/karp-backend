@@ -75,6 +75,15 @@ class LexInfrastructure(injector.Module):
             SqlEntryUowCreator.repository_type: SqlEntryUowCreator,
         }
 
+
+class GenericLexInfrastructure(injector.Module):
     @injector.provider
-    def get_referenced_entries(self) -> GetReferencedEntries:
-        return GenericGetReferencedEntries()
+    def get_referenced_entries(
+        self,
+        resources_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+    ) -> GetReferencedEntries:
+        return GenericGetReferencedEntries(
+            resource_uow=resources_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow,
+        )

@@ -59,7 +59,8 @@ class InjectorEventBus(EventBus):
             evt_handlers = self._container.get(
                 List[EventHandler[type(event)]]  # type: ignore
             )
-        except injector.UnsatisfiedRequirement:
+        except injector.UnsatisfiedRequirement as err:
+            print(f'no event handler: {str(err)}')
             logger.info('No event handler for event %s', event)
         else:
             for evt_handler in evt_handlers:
@@ -69,6 +70,7 @@ class InjectorEventBus(EventBus):
                 )
                 try:
                     evt_handler(event)
-                except Exception:
+                except Exception as err:
+                    print(f'error: {str(err)}')
                     logger.exception('Exception handling event %s', event)
                     raise

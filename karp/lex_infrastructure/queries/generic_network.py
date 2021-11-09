@@ -7,7 +7,7 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.application.queries import GetReferencedEntries, ReferenceDto
-from karp.lex.application.repositories import ResourceRepository
+from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
 # from karp.resourcemgr import get_resource
 # import karp.resourcemgr.entryread as entryread
 from karp.lex.domain.errors import EntryNotFound
@@ -15,12 +15,29 @@ from karp.lex.domain.errors import EntryNotFound
 
 
 class GenericGetReferencedEntries(GetReferencedEntries):
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        resource_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+    ) -> None:
         super().__init__()
+        self.resource_uow = resource_uow
+        self.entry_uow_repo_uow = entry_uow_repo_uow
 
-    def _get_resource(self, resource_id: str) -> entities.Resource:
+    def _get_resource(
+        self,
+        resource_id: str,
+        version: typing.Optional[int] = None
+    ) -> entities.Resource:
         with self.resource_uow:
-            return self.resource_uow.repo.by_resource_id(resource_id)
+            return self.resource_uow.repo.by_resource_id(
+                resource_id,
+                version=version,
+            )
+
+    def _get_published_resources(self):
+        with self.resource_uow:
+            return self.resource_uow.repo.get_published_resources()
 
     def query(
         self,
@@ -28,7 +45,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         # version: typing.Optional[int],
         entry_id: str,
     ) -> typing.Iterable[ReferenceDto]:
-        print(f"network.get_referenced_entries: resource={resource.resource_id}")
+        print(f"network.get_referenced_entries: resource_id={resource_id}")
         print(f"network.get_referenced_entries: entry_id={entry_id}")
         resource_refs, resource_backrefs = self.get_refs(
             resource_id, #  version=version
@@ -36,15 +53,15 @@ class GenericGetReferencedEntries(GetReferencedEntries):
 
         resource = self._get_resource(resource_id)
 
-        with self.entry_uow_repo_uow.get_by_id(resource.entry_repository_id) as uw:
-            src_entry = uw.repo.by_entry_id(entry_id, version=version)
+        with self.entry_uow_repo_uow.repo.get_by_id(resource.entry_repository_id) as uw:
+            src_entry = uw.repo.by_entry_id(entry_id, # version=version
+                                            )
             if not src_entry:
                 raise EntryNotFoundError(
                     resource.resource_id, entry_id, resource_version=resource.version
                 )
-            uw.commit()
 
-        with ctx.resource_uow:
+        with self.resource_uow:
             for (
                 ref_resource_id,
                 ref_resource_version,
@@ -86,15 +103,13 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         resource_backrefs = collections.defaultdict(lambda: collections.defaultdict(dict))
         resource_refs = collections.defaultdict(lambda: collections.defaultdict(dict))
 
-        with ctx.resource_uow as uw:
-            src_resource = uw.repo.by_resource_id(resource_id, version=version)
+        src_resource = self._get_resource(resource_id, version=version)
 
-            all_other_resources = [
-                resource
-                for resource in uw.repo.get_published_resources()
-                if resource.resource_id != resource_id
-                # or resource_def.version != version
-            ]
+        all_other_resources = [
+            resource
+            for resource in self._get_published_resources()
+            if resource.resource_id != resource_id
+        ]
 
         for field_name, field in src_resource.config["fields"].items():
             if "ref" in field:
