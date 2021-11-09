@@ -21,7 +21,6 @@ from sqlalchemy.types import VARCHAR, Boolean, Float, Time, TypeDecorator
 from sqlalchemy_json import NestedMutableJson
 from sqlalchemy_utils import UUIDType
 
-from karp.application import config
 
 # engine = sqlalchemy.create_engine(config.DB_URL, echo=True)
 

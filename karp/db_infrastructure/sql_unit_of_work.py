@@ -7,8 +7,6 @@ import regex
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from karp.application import config
-
 
 DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 
