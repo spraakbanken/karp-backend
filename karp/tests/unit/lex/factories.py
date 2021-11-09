@@ -166,3 +166,13 @@ class UpdateEntryFactory(factory.Factory):
     entry = {}
     user = factory.Faker('email')
     message = 'added'
+
+
+class DeleteEntryFactory(factory.Factory):
+    class Meta:
+        model = lex_commands.DeleteEntry
+
+    resource_id = factory.Faker('word')
+    entry_id = factory.Faker('word')
+    user = factory.Faker('email')
+    message = 'deleted'

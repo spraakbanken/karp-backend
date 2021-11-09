@@ -100,5 +100,37 @@ def test_index_reacts_on_entry_updated_event(
     assert entry.entry['wordclass'] == 'adjektiv'
 
 
+def test_index_reacts_on_entry_deleted_event(
+    search_unit_ctx: adapters.SearchUnitTestContext,
+):
+    create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
+    search_unit_ctx.command_bus.dispatch(create_entry_repo)
+    create_resource = lex_factories.CreateResourceFactory(
+        entry_repo_id=create_entry_repo.entity_id)
+    search_unit_ctx.command_bus.dispatch(create_resource)
+    create_entry = lex_factories.AddEntryFactory(
+        resource_id=create_resource.resource_id,
+        entry={'baseform': 'bra'},
+    )
+    search_unit_ctx.command_bus.dispatch(create_entry)
+
+    delete_entry = lex_factories.DeleteEntryFactory(
+        resource_id=create_resource.resource_id,
+        entry_id='bra',
+        version=1,
+    )
+    search_unit_ctx.command_bus.dispatch(delete_entry)
+
+    search_service_uow = search_unit_ctx.container.get(
+        SearchServiceUnitOfWork)
+    assert search_service_uow.was_committed
+
+    assert search_service_uow.repo.indicies[create_resource.resource_id].created
+    assert len(search_service_uow.repo.indicies[create_resource.resource_id].entries) == 0
+    assert 'bra' not in search_service_uow.repo.indicies[
+        create_resource.resource_id
+    ].entries
+
+
 def test_transform_to_index_entry():
     pass

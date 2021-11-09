@@ -218,7 +218,7 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
                 evt.resource_id,
                 [self.entry_transformer.transform(evt.resource_id, entry)]
             )
-            self.entry_transformer.update_references(evt.resource_id, [entry])
+            self.entry_transformer.update_references(evt.resource_id, [evt.entry_id])
             uw.commit()
 
 
@@ -252,7 +252,7 @@ class EntryUpdatedHandler(
                 evt.resource_id,
                 [self.entry_transformer.transform(evt.resource_id, entry)]
             )
-            self.entry_transformer.update_references(evt.resource_id, [entry])
+            self.entry_transformer.update_references(evt.resource_id, [evt.entry_id])
             uw.commit()
             # add_entries(evt.resource_id, [entry], ctx)
             # ctx.search_service_uow.commit()
@@ -293,21 +293,32 @@ def add_entries(
         ctx.search_service_uow.commit()
 
 
-def delete_entry(evt: events.EntryDeleted):
-    with ctx.search_service_uow:
-        ctx.search_service_uow.repo.delete_entry(
-            evt.resource_id, entry_id=evt.entry_id)
-        with ctx.resource_uow:
-            resource = ctx.resource_uow.repo.by_resource_id(evt.resource_id)
-            if not resource:
-                raise errors.ResourceNotFound(evt.resource_id)
-            with ctx.entry_uows.get(evt.resource_id) as uow:
-                entry = uow.repo.by_entry_id(evt.entry_id)
-                if not entry:
-                    raise errors.EntryNotFound(evt.entry_id, evt.resource_id)
-                _update_references(resource, [entry], ctx)
-                uow.commit()
-            ctx.resource_uow.commit()
-        ctx.search_service_uow.commit()
+
+
+class EntryDeletedHandler(
+    foundation_events.EventHandler[lex_events.EntryDeleted]
+):
+    def __init__(
+        self,
+        search_service_uow: SearchServiceUnitOfWork,
+        entry_transformer: EntryTransformer,
+    ):
+        self.search_service_uow = search_service_uow
+        self.entry_transformer = entry_transformer
+
+    def __call__(
+        self,
+        evt: events.EntryDeleted
+    ):
+        with self.search_service_uow as uw:
+            uw.repo.delete_entry(
+                evt.resource_id,
+                entry_id=evt.entry_id
+            )
+            self.entry_transformer.update_references(
+                evt.resource_id,
+                [evt.entry_id]
+            )
+            uw.commit()
 
 

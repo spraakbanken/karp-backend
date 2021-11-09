@@ -261,13 +261,13 @@ class GenericEntryTransformer(EntryTransformer):
         # resource_repo: ResourceRepository,
         # search_serviceer: SearchService,
         # resource: entities.Resource,
-        entries: typing.List[entities.Entry],
+        entry_ids: typing.Iterable[str],
     ) -> None:
         add = collections.defaultdict(list)
         with self.resource_uow:
-            for src_entry in entries:
+            for src_entry_id in entry_ids:
                 refs = self.get_referenced_entries.query(
-                    resource_id, src_entry.entry_id
+                    resource_id, src_entry_id
                 )
                 for field_ref in refs:
                     ref_resource_id = field_ref["resource_id"]

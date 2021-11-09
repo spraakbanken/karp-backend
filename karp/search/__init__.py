@@ -57,3 +57,16 @@ class Search(injector.Module):
                 entry_transformer=entry_transformer,
             )
         ]
+
+    @injector.multiprovider
+    def delete_entry(
+        self,
+        search_service_uow: SearchServiceUnitOfWork,
+        entry_transformer: EntryTransformer,
+    ) -> List[EventHandler[lex_events.EntryDeleted]]:
+        return [
+            handlers.EntryDeletedHandler(
+                search_service_uow=search_service_uow,
+                entry_transformer=entry_transformer,
+            )
+        ]
