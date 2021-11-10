@@ -6,10 +6,14 @@ import sys
 import typing
 from typing import Dict, List, Optional, Tuple, Iterable
 
-from karp.foundation import messagebus, events as foundation_events
+from karp.foundation import (
+    events as foundation_events,
+    commands as foundation_commands,
+)
 from karp.lex.domain import events as lex_events
+from karp.search.application.queries import GetResourceConfig
 from karp.search.application.repositories import SearchServiceUnitOfWork
-from karp.search.application.transformers import EntryTransformer
+from karp.search.application.transformers import EntryTransformer, PreProcessor
 # from .search_service import SearchServiceModule
 # import karp.resourcemgr as resourcemgr
 # import karp.resourcemgr.entryread as entryread
@@ -49,18 +53,6 @@ logger = logging.getLogger("karp")
 #         for entry in entries
 #     ]
 
-
-def pre_process_resource(
-    resource_id: str,
-) -> typing.Iterable[IndexEntry]:
-    with ctx.resource_uow as uw:
-        resource = uw.repo.by_resource_id(resource_id)
-        if not resource:
-            raise errors.ResourceNotFound(resource_id=resource_id)
-
-    with ctx.entry_uows.get(resource_id) as uw:
-        for entry in uw.repo.all_entries():
-            yield transform_to_search_service_entry(resource, entry, ctx)
 
     # metadata = resourcemgr.get_all_metadata(resource_obj)
     # fields = resource_obj.config["fields"].items()
@@ -102,19 +94,34 @@ def pre_process_resource(
 # ):
 
 
-def research_service_resource(cmd: commands.ReindexResource):
-    logger.debug("Reindexing resource '%s'", cmd.resource_id)
-    with ctx.resource_uow as resource_uw:
-        resource = resource_uw.resources.by_resource_id(cmd.resource_id)
-        if not resource:
-            raise errors.ResourceNotFound(resource_id=cmd.resource_id)
-    with ctx.search_service_uow as search_service_uw:
-        search_service_uw.repo.create_search_service(
-            cmd.resource_id, resource.config)
-        search_service_uw.repo.add_entries(
-            cmd.resource_id, pre_process_resource(cmd.resource_id, ctx)
-        )
-        search_service_uw.commit()
+class ReindexResourceHandler(
+    foundation_commands.CommandHandler[commands.ReindexResource]
+):
+    def __init__(
+        self,
+        search_service_uow: SearchServiceUnitOfWork,
+        get_resource_config: GetResourceConfig,
+        pre_processor: PreProcessor,
+    ) -> None:
+        super().__init__()
+        self.search_service_uow = search_service_uow
+        self.get_resource_config = get_resource_config
+
+    def __call__(
+        self,
+        cmd: commands.ReindexResource
+    ) -> None:
+        logger.debug("Reindexing resource '%s'", cmd.resource_id)
+        with self.search_service_uow as uw:
+            uw.repo.create_search_service(
+                cmd.resource_id,
+                self.get_resource_config.query(cmd.resource_id),
+            )
+            uw.repo.add_entries(
+                cmd.resource_id,
+                self.pre_processor.process(cmd.resource_id)
+            )
+            search_service_uw.commit()
 
 
 def research_service(
