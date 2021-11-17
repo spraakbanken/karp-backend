@@ -3,18 +3,19 @@
 
 PYTHON = python3
 PLATFORM := ${shell uname -o}
-INVENV_PATH = ${shell which invenv}
+# INVENV_PATH = ${shell which invenv}
 
 
 
 ifeq (${VIRTUAL_ENV},)
   VENV_NAME = .venv
-  ${info invenv: ${INVENV_PATH}}
-  ifeq (${INVENV_PATH},)
-    INVENV = export VIRTUAL_ENV="${VENV_NAME}"; export PATH="${VENV_BIN}:${PATH}"; unset PYTHON_HOME;
-  else
-    INVENV = invenv -C ${VENV_NAME}
-  endif
+  INVENV = poetry run
+#   ${info invenv: ${INVENV_PATH}}
+#   ifeq (${INVENV_PATH},)
+#     INVENV = export VIRTUAL_ENV="${VENV_NAME}"; export PATH="${VENV_BIN}:${PATH}"; unset PYTHON_HOME;
+#   else
+#     INVENV = invenv -C ${VENV_NAME}
+#   endif
 else
   VENV_NAME = ${VIRTUAL_ENV}
   INVENV =
@@ -36,35 +37,23 @@ endif
 help:
 	@echo "Available commands:"
 
-venv: ${VENV_NAME}/venv.created
-
-install: venv ${VENV_NAME}/req.installed
+install:
+	poetry install --no-dev
+dev: install-dev
 install-dev:
 	poetry install
 
-${VENV_NAME}/venv.created:
-	@python3 -c "import sys; assert sys.version_info >= (3, 6)" || echo "Python >= 3.6 is needed"
-	test -d ${VENV_NAME} || python3 -m venv ${VENV_NAME}
-	${INVENV} pip install pip-tools wheel
-	@touch $@
+install-mysql:
+	poetry install -E mysql --no-dev
 
-${VENV_NAME}/req.installed: requirements.txt
-	${INVENV} pip install -Ur $<
-	${INVENV} pip install -e .
-	@touch $@
+install-dev-mysql:
+	poetry install -E mysql
 
-${VENV_NAME}/req-dev.installed: ${VENV_NAME}/req.installed setup.py setup.cfg
-	${INVENV} pip install -e .[dev]
-	@touch $@
+install-elasticsearch6:
+	poetry install --no-dev -E elasticsearch6
 
-install-mysql: venv
-	${INVENV} pip install -e .[mysql]
-
-install-elasticsearch6: venv
-	${INVENV} pip install -e .[elasticsearch6]
-
-install-elasticsearch7: venv
-	${INVENV} pip install -e .[elasticsearch7]
+install-elasticsearch7:
+	poetry install --no-dev -E elasticsearch7
 
 init-db:
 	${INVENV} alembic upgrade head
@@ -88,7 +77,7 @@ check-security-issues: install-dev
 
 test: unit-tests
 run-all-tests: unit-tests run-integration-tests
-run-all-tests-w-coverage: run-unit-tests-w-coverage run-integration-tests-w-coverage
+run-all-tests-w-coverage: run-unit-tests-w-coverage run-integration-tests-w-coverage run-e2e-tests-w-coverage
 
 .PHONY: unit-tests
 unit-tests: clean-pyc
@@ -100,7 +89,7 @@ e2e-tests: install-dev clean-pyc
 
 .PHONY: run-e2e-tests-w-coverage
 run-e2e-tests-w-coverage: install-dev clean-pyc
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/e2e
+	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/e2e
 
 .PHONY: integration-tests
 integration-tests: install-dev clean-pyc
@@ -110,16 +99,16 @@ run-slow-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/quick_tests karp/tests/slow_tests
 
 run-unit-tests-w-coverage: install-dev clean-pyc
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/unit
+	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/unit
 
 run-integration-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/integration
 
 run-integration-tests-w-coverage: install-dev clean-pyc
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests/integration
+	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/integration
 
 test-log: install-dev clean-pyc lint-syntax-errors
-	${INVENV} pytest -vv --cov-config=setup.cfg --cov=karp --cov-report=term-missing karp/tests > pytest.log
+	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests > pytest.log
 
 prepare-release: venv setup.py requirements.txt setup.cfg
 	${INVENV} pip-compile --output-file=deploy/requirements.txt setup.py
