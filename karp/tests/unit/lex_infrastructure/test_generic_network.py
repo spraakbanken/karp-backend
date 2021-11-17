@@ -1,6 +1,6 @@
 from karp.lex.domain.entities.entry import create_entry
 from karp.foundation.value_objects import unique_id
-from karp.services import network_handlers
+from karp.lex_infrastructure.queries import generic_network
 
 
 def test__create_ref():
@@ -16,7 +16,7 @@ def test__create_ref():
         resource_id=resource_id,
     )
 
-    ref = network_handlers._create_ref(resource_id, resource_version, entry)
+    ref = generic_network._create_ref(resource_id, resource_version, entry)
 
     assert ref["resource_id"] == resource_id
     assert ref["resource_version"] == resource_version

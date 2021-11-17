@@ -48,13 +48,13 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         print(f"network.get_referenced_entries: resource_id={resource_id}")
         print(f"network.get_referenced_entries: entry_id={entry_id}")
         resource_refs, resource_backrefs = self.get_refs(
-            resource_id, #  version=version
+            resource_id,  # version=version
         )
 
         resource = self._get_resource(resource_id)
 
         with self.entry_uow_repo_uow.repo.get_by_id(resource.entry_repository_id) as uw:
-            src_entry = uw.repo.by_entry_id(entry_id, # version=version
+            src_entry = uw.repo.by_entry_id(entry_id,  # version=version
                                             )
             if not src_entry:
                 raise EntryNotFoundError(
@@ -80,7 +80,8 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                 ids = src_entry.body.get(field_name)
                 if not field.get("collection", False):
                     ids = [ids]
-                ref_resource = ctx.resource_uow.repo.by_resource_id(ref_resource_id)
+                ref_resource = ctx.resource_uow.repo.by_resource_id(
+                    ref_resource_id)
                 if ref_resource:
                     with ctx.entry_uows.get(ref_resource.resource_id) as entries_uw:
                         for ref_entry_id in ids:
@@ -92,7 +93,6 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                                     ref_resource_id, ref_resource_version, entry
                                 )
 
-
     def get_refs(
         self,
         resource_id, version=None
@@ -100,8 +100,10 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         """
         Goes through all other resource configs finding resources and fields that refer to this resource
         """
-        resource_backrefs = collections.defaultdict(lambda: collections.defaultdict(dict))
-        resource_refs = collections.defaultdict(lambda: collections.defaultdict(dict))
+        resource_backrefs = collections.defaultdict(
+            lambda: collections.defaultdict(dict))
+        resource_refs = collections.defaultdict(
+            lambda: collections.defaultdict(dict))
 
         src_resource = self._get_resource(resource_id, version=version)
 
@@ -150,17 +152,18 @@ class GenericGetReferencedEntries(GetReferencedEntries):
             for ref_resource_id, versions in ref_dict.items():
                 for ref_version, field_names in versions.items():
                     for field_name, field in field_names.items():
-                        ref_list.append((ref_resource_id, ref_version, field_name, field))
+                        ref_list.append(
+                            (ref_resource_id, ref_version, field_name, field))
             return ref_list
 
         return flatten_dict(resource_refs), flatten_dict(resource_backrefs)
 
 
-    def _create_ref(
-        resource_id: str, resource_version: int, entry: Entry
-    ) -> Dict[str, Any]:
-        return {
-            "resource_id": resource_id,
-            "resource_version": resource_version,
-            "entry": entry,
-        }
+def _create_ref(
+    resource_id: str, resource_version: int, entry: Entry
+) -> Dict[str, Any]:
+    return {
+        "resource_id": resource_id,
+        "resource_version": resource_version,
+        "entry": entry,
+    }
