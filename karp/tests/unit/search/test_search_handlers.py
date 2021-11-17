@@ -60,7 +60,8 @@ def test_index_reacts_on_entry_added_event(
     assert search_service_uow.was_committed
 
     assert search_service_uow.repo.indicies[create_resource.resource_id].created
-    assert len(search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
+    assert len(
+        search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
     assert 'bra' in search_service_uow.repo.indicies[
         create_resource.resource_id
     ].entries
@@ -93,7 +94,8 @@ def test_index_reacts_on_entry_updated_event(
     assert search_service_uow.was_committed
 
     assert search_service_uow.repo.indicies[create_resource.resource_id].created
-    assert len(search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
+    assert len(
+        search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
     entry = search_service_uow.repo.indicies[
         create_resource.resource_id
     ].entries['bra']
@@ -126,7 +128,8 @@ def test_index_reacts_on_entry_deleted_event(
     assert search_service_uow.was_committed
 
     assert search_service_uow.repo.indicies[create_resource.resource_id].created
-    assert len(search_service_uow.repo.indicies[create_resource.resource_id].entries) == 0
+    assert len(
+        search_service_uow.repo.indicies[create_resource.resource_id].entries) == 0
     assert 'bra' not in search_service_uow.repo.indicies[
         create_resource.resource_id
     ].entries
@@ -157,7 +160,8 @@ def test_reindex_resource_command(
     assert search_service_uow.was_committed
 
     assert search_service_uow.repo.indicies[create_resource.resource_id].created
-    assert len(search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
+    assert len(
+        search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
     entry = search_service_uow.repo.indicies[
         create_resource.resource_id
     ].entries['bra']
