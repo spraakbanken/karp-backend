@@ -5,8 +5,14 @@ from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowReposi
 from karp.lex.domain.entities import entry
 from karp.search.application.repositories import SearchServiceUnitOfWork
 
-from karp.search.application.transformers import EntryTransformer
-from karp.search_infrastructure.transformers import GenericEntryTransformer
+from karp.search.application.transformers import (
+    EntryTransformer,
+    PreProcessor,
+)
+from karp.search_infrastructure.transformers import (
+    GenericEntryTransformer,
+    GenericPreProcessor,
+)
 
 
 class SearchInterface(injector.Module):
@@ -23,4 +29,13 @@ class SearchInterface(injector.Module):
             resource_uow=resource_uow,
             entry_uow_repo_uow=entry_uow_repo_uow,
             get_referenced_entries=get_referenced_entries,
+        )
+
+    @injector.provider
+    def pre_processor(
+        self,
+        entry_transformer: EntryTransformer,
+    ) -> PreProcessor:
+        return GenericPreProcessor(
+            entry_transformer=entry_transformer,
         )

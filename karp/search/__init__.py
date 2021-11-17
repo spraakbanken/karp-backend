@@ -2,14 +2,29 @@ from typing import List
 
 import injector
 
+from karp.foundation.commands import CommandHandler
 from karp.foundation.events import EventHandler
 from karp.lex.domain import events as lex_events
+from karp.search.domain import commands
 from karp.search.application import handlers
+from karp.search.application.queries import GetResourceConfig
 from karp.search.application.repositories import SearchServiceUnitOfWork
-from karp.search.application.transformers.entry_transformer import EntryTransformer
+from karp.search.application.transformers import (
+    EntryTransformer,
+    PreProcessor,
+)
 
 
 class Search(injector.Module):
+    @injector.provider
+    def reindex_resource(
+        self,
+        search_service_uow: SearchServiceUnitOfWork,
+        pre_processor: PreProcessor,
+        get_resource_config: GetResourceConfig,
+    ) -> CommandHandler[commands.ReindexResource]:
+        return handlers.ReindexResourceHandler()
+
     @injector.multiprovider
     def create_index(
         self,
