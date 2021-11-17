@@ -1,3 +1,4 @@
 from .entry_repos import SqlListEntryRepos
 from .generic_network import GenericGetReferencedEntries
+from .generic_resources import GenericGetEntryRepositoryId
 from .resources import SqlGetPublishedResources, SqlGetResources

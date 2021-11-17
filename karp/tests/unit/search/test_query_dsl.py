@@ -31,7 +31,8 @@ def _test_nodes(r, facit):
                 (op.STRING, "äpple"),
             ],
         ),
-        ("freetext|stort hus", [(op.FREETEXT, None), (op.STRING, "stort hus")]),
+        ("freetext|stort hus", [
+         (op.FREETEXT, None), (op.STRING, "stort hus")]),
         (
             "freetext||not|stort hus",
             [(op.FREETEXT, None), (op.ARG_NOT, None), (op.STRING, "stort hus")],
@@ -86,7 +87,8 @@ def _test_nodes(r, facit):
             [(op.REGEXP, None), (op.STRING, "wf"), (op.STRING, ".*o.*a")],
         ),
         ("exists|sense", [(op.EXISTS, None), (op.STRING, "sense")]),
-        ("not||exists|sense", [("NOT", None), (op.EXISTS, None), (op.STRING, "sense")]),
+        ("not||exists|sense", [("NOT", None),
+         (op.EXISTS, None), (op.STRING, "sense")]),
         (
             "and||equals|wf|sitta||not||equals|wf|satt",
             [
@@ -224,9 +226,12 @@ def _test_nodes(r, facit):
         #   ('lt|#(child)|2',[('ROOT', None),]),
         ("lt|field|1", [(op.LT, None), (op.STRING, "field"), (op.INT, 1)]),
         ("lte|field|2", [(op.LTE, None), (op.STRING, "field"), (op.INT, 2)]),
-        ("gt|field|3.0", [(op.GT, None), (op.STRING, "field"), (op.FLOAT, 3.0)]),
-        ("gt|field|hej", [(op.GT, None), (op.STRING, "field"), (op.STRING, "hej")]),
-        ("gte|field|3.14", [(op.GTE, None), (op.STRING, "field"), (op.FLOAT, 3.14)]),
+        ("gt|field|3.0", [(op.GT, None),
+         (op.STRING, "field"), (op.FLOAT, 3.0)]),
+        ("gt|field|hej", [(op.GT, None),
+         (op.STRING, "field"), (op.STRING, "hej")]),
+        ("gte|field|3.14", [(op.GTE, None),
+         (op.STRING, "field"), (op.FLOAT, 3.14)]),
         #    ('range|field|3.14|4.16',[
         #        ('ROOT', None),
         #    ]),
@@ -303,6 +308,16 @@ def _test_nodes(r, facit):
                 (op.CONTAINS, None),
                 (op.STRING, "wf"),
                 (op.STRING, "sitta"),
+            ],
+        ),
+        (
+            "contains|name||or|vi|bo",
+            [
+                (op.CONTAINS, None),
+                (op.STRING, "name"),
+                (op.ARG_OR, None),
+                (op.STRING, "vi"),
+                (op.STRING, "bo"),
             ],
         ),
         (

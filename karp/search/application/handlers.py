@@ -53,18 +53,17 @@ logger = logging.getLogger("karp")
 #         for entry in entries
 #     ]
 
-
-    # metadata = resourcemgr.get_all_metadata(resource_obj)
-    # fields = resource_obj.config["fields"].items()
-    # entries = resource_obj.entities.query.filter_by(deleted=False)
-    # return [
-    #     (
-    #         entry.entry_id,
-    #         metadata[entry.id],
-    #         transform_to_search_service_entry(resource_obj, json.loads(entry.body), fields),
-    #     )
-    #     for entry in entries
-    # ]
+# metadata = resourcemgr.get_all_metadata(resource_obj)
+# fields = resource_obj.config["fields"].items()
+# entries = resource_obj.entities.query.filter_by(deleted=False)
+# return [
+#     (
+#         entry.entry_id,
+#         metadata[entry.id],
+#         transform_to_search_service_entry(resource_obj, json.loads(entry.body), fields),
+#     )
+#     for entry in entries
+# ]
 
 
 # def research_service(
@@ -106,6 +105,7 @@ class ReindexResourceHandler(
         super().__init__()
         self.search_service_uow = search_service_uow
         self.get_resource_config = get_resource_config
+        self.pre_processor = pre_processor
 
     def __call__(
         self,
@@ -113,7 +113,7 @@ class ReindexResourceHandler(
     ) -> None:
         logger.debug("Reindexing resource '%s'", cmd.resource_id)
         with self.search_service_uow as uw:
-            uw.repo.create_search_service(
+            uw.repo.create_index(
                 cmd.resource_id,
                 self.get_resource_config.query(cmd.resource_id),
             )
@@ -121,7 +121,7 @@ class ReindexResourceHandler(
                 cmd.resource_id,
                 self.pre_processor.process(cmd.resource_id)
             )
-            search_service_uw.commit()
+            uw.commit()
 
 
 def research_service(
@@ -225,7 +225,8 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
                 evt.resource_id,
                 [self.entry_transformer.transform(evt.resource_id, entry)]
             )
-            self.entry_transformer.update_references(evt.resource_id, [evt.entry_id])
+            self.entry_transformer.update_references(
+                evt.resource_id, [evt.entry_id])
             uw.commit()
 
 
@@ -259,7 +260,8 @@ class EntryUpdatedHandler(
                 evt.resource_id,
                 [self.entry_transformer.transform(evt.resource_id, entry)]
             )
-            self.entry_transformer.update_references(evt.resource_id, [evt.entry_id])
+            self.entry_transformer.update_references(
+                evt.resource_id, [evt.entry_id])
             uw.commit()
             # add_entries(evt.resource_id, [entry], ctx)
             # ctx.search_service_uow.commit()
@@ -300,8 +302,6 @@ def add_entries(
         ctx.search_service_uow.commit()
 
 
-
-
 class EntryDeletedHandler(
     foundation_events.EventHandler[lex_events.EntryDeleted]
 ):
@@ -327,5 +327,3 @@ class EntryDeletedHandler(
                 [evt.entry_id]
             )
             uw.commit()
-
-

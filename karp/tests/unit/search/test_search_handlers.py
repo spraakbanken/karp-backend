@@ -153,6 +153,9 @@ def test_reindex_resource_command(
         resource_id=create_resource.resource_id,
         version=1,
     )
+    search_service_uow = search_unit_ctx.container.get(
+        SearchServiceUnitOfWork)
+    previous_created_at = search_service_uow.repo.indicies[create_resource.resource_id].created_at
     search_unit_ctx.command_bus.dispatch(reindex_resource)
 
     search_service_uow = search_unit_ctx.container.get(
@@ -162,10 +165,9 @@ def test_reindex_resource_command(
     assert search_service_uow.repo.indicies[create_resource.resource_id].created
     assert len(
         search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
-    entry = search_service_uow.repo.indicies[
+    assert search_service_uow.repo.indicies[
         create_resource.resource_id
-    ].entries['bra']
-    assert entry.entry['wordclass'] == 'adjektiv'
+    ].created_at > previous_created_at
 
 
 def test_transform_to_index_entry():

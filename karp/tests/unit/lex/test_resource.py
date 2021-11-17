@@ -5,9 +5,9 @@ import pytest
 
 from karp.lex.domain import errors, events
 from karp.lex.domain.errors import (ConsistencyError, ConstraintsError,
-                                DiscardedEntityError)
+                                    DiscardedEntityError)
 from karp.lex.domain.entities.resource import (Release, Resource, ResourceOp,
-                                         create_resource)
+                                               create_resource)
 from karp.foundation.value_objects import unique_id
 
 from . import factories
@@ -46,7 +46,7 @@ def test_create_resource_creates_resource():
     assert int(resource.last_modified) == 12345
     assert resource.message == "Resource added."
     assert resource.op == ResourceOp.ADDED
-    assert resource.events[-1] == events.ResourceCreated(
+    assert resource.domain_events[-1] == events.ResourceCreated(
         timestamp=resource.last_modified,
         id=resource.id,
         resource_id=resource.resource_id,
@@ -78,7 +78,7 @@ def test_resource_stamp_changes_last_modified_and_version():
     assert resource.last_modified > previous_last_modified
     assert resource.last_modified_by == "Test"
     assert resource.version == (previous_version + 1)
-    assert resource.events[-1] == events.ResourceUpdated(
+    assert resource.domain_events[-1] == events.ResourceUpdated(
         timestamp=resource.last_modified,
         id=resource.id,
         resource_id=resource.resource_id,
@@ -209,7 +209,7 @@ def test_discarded_resource_has_event(field, value):
     resource = random_resource()
     resource.discard(user="alice@example.org", message="bad", timestamp=123.45)
     assert resource.discarded
-    assert resource.events[-1] == events.ResourceDiscarded(
+    assert resource.domain_events[-1] == events.ResourceDiscarded(
         id=resource.id,
         resource_id=resource.resource_id,
         user=resource.last_modified_by,
@@ -229,7 +229,7 @@ def test_published_resource_has_event():
     resource.publish(user="kristoff@example.com", message="publish")
     assert resource.is_published
     assert resource.version == (previous_version + 1)
-    assert resource.events[-1] == events.ResourcePublished(
+    assert resource.domain_events[-1] == events.ResourcePublished(
         id=resource.id,
         resource_id=resource.resource_id,
         user=resource.last_modified_by,

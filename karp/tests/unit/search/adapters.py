@@ -5,6 +5,7 @@ import injector
 
 from karp.foundation.commands import CommandBus
 from karp.foundation.events import EventBus
+from karp.foundation.time import utc_now
 from karp.search.application.repositories import SearchServiceUnitOfWork
 from karp.search.domain import search_service
 from karp.tests.foundation.adapters import FakeUnitOfWork
@@ -21,6 +22,7 @@ class FakeSearchService(search_service.SearchService):
     @dataclasses.dataclass
     class Index:
         config: Dict
+        created_at: float
         entries: Dict[str, search_service.IndexEntry] = dataclasses.field(
             default_factory=dict
         )
@@ -33,7 +35,8 @@ class FakeSearchService(search_service.SearchService):
         self.seen = []
 
     def create_index(self, resource_id: str, config: Dict):
-        self.indicies[resource_id] = FakeSearchService.Index(config=config)
+        self.indicies[resource_id] = FakeSearchService.Index(
+            config=config, created_at=utc_now())
 
     def publish_index(self, alias_name: str, index_name: str = None):
         self.indicies[alias_name].published = True

@@ -24,3 +24,9 @@ class GetResources(abc.ABC):
     @abc.abstractmethod
     def query(self) -> Iterable[ResourceDto]:
         pass
+
+
+class GetEntryRepositoryId(abc.ABC):
+    @abc.abstractmethod
+    def query(self, resource_id: str) -> UniqueId:
+        raise NotImplementedError()

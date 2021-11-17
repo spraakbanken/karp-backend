@@ -31,18 +31,10 @@ class Resource(TimestampedVersionedEntity):
     DiscardedEntityError = errors.DiscardedEntityError
     resource_type: str = "resource"
 
-
     @classmethod
     def create_resource(cls, resource_type: str, resource_config: Dict):
-        if resource_type == cls._type:
+        if resource_type == cls.resource_type:
             return cls.from_dict(resource_config)
-        try:
-            resource_cls = cls._registry[resource_type]
-        except KeyError:
-            raise ConfigurationError(
-                f"Can't create a Resource of type '{resource_type}"
-            )
-        return resource_cls.from_dict(resource_config)
 
     @classmethod
     def from_dict(cls, config: Dict, **kwargs):

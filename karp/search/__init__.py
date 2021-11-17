@@ -23,7 +23,11 @@ class Search(injector.Module):
         pre_processor: PreProcessor,
         get_resource_config: GetResourceConfig,
     ) -> CommandHandler[commands.ReindexResource]:
-        return handlers.ReindexResourceHandler()
+        return handlers.ReindexResourceHandler(
+            search_service_uow=search_service_uow,
+            pre_processor=pre_processor,
+            get_resource_config=get_resource_config,
+        )
 
     @injector.multiprovider
     def create_index(

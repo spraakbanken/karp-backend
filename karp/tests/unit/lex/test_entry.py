@@ -22,7 +22,7 @@ def random_entry(entry_id: str = None, body: Dict = None):
 
 def test_new_entry_has_event():
     entry = random_entry()
-    assert entry.events[-1] == events.EntryAdded(
+    assert entry.domain_events[-1] == events.EntryAdded(
         id=entry.id,
         entry_id=entry.entry_id,
         resource_id=entry.resource_id,
@@ -45,7 +45,7 @@ def test_discarded_entry_has_event(field, value):
     entry = random_entry()
     entry.discard(user="alice@example.org", message="bad", timestamp=123.45)
     assert entry.discarded
-    assert entry.events[-1] == events.EntryDeleted(
+    assert entry.domain_events[-1] == events.EntryDeleted(
         id=entry.id,
         entry_id=entry.entry_id,
         resource_id=entry.resource_id,
@@ -84,7 +84,7 @@ def test_entry_update_updates(field, value):
     assert entry.last_modified_by == user
     assert entry.op == entities.EntryOp.UPDATED
     assert entry.message == message
-    assert entry.events[-1] == events.EntryUpdated(
+    assert entry.domain_events[-1] == events.EntryUpdated(
         id=entry.id,
         entry_id=entry.entry_id,
         resource_id=entry.resource_id,
