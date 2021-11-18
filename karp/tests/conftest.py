@@ -233,39 +233,43 @@ def fixture_municipalites_published(
 
     with open("karp/tests/data/config/municipalities.json") as fp:
         municipalities_config = json.load(fp)
-    bus = app.state.container.context.bus()
+
+    resource_id = 'municipalities'
+
+    bus = app.state.container.get(CommandBus)
 
     try:
-        bus.handle(
-            commands.CreateResource(
-                id=resource_municipalities.id,
-                resource_id=resource_municipalities.resource_id,
-                name=resource_municipalities.name,
-                config=resource_municipalities.config,
-                created_by=resource_municipalities.last_modified_by,
-                message=resource_municipalities.message,
-            )
+        cmd = commands.CreateEntryRepository(
+            entity_id=make_unique_id(),
+            repository_type='default',
+            name=resource_id,
+            config=municipalities_config,
+            user='local admin',
+            message='added',
         )
+        bus.dispatch(cmd)
+        cmd = commands.CreateResource.from_dict(
+            municipalities_config,
+            entry_repo_id=cmd.entity_id,
+            created_by=cmd.user,
+        )
+        bus.dispatch(cmd)
     except errors.IntegrityError:
         pass
     try:
-        bus.handle(
+        bus.dispatch(
             commands.PublishResource(
-                resource_id=resource_municipalities.resource_id,
-                name=resource_municipalities.name,
-                config=resource_municipalities.config,
-                user=resource_municipalities.last_modified_by,
-                message=resource_municipalities.message,
+                resource_id=cmd.resource_id,
+                name=cmd.name,
+                config=cmd.config,
+                user=cmd.created_by,
+                message=cmd.message,
             )
         )
     except karp_errors.ResourceAlreadyPublished:
         pass
-    # resource_municipalites.is_published = True
-    # with app_config.bus.ctx.resource_uow as uow:
-    #     uow.resources.put(resource_municipalites)
-    #     uow.commit()
 
-    return resource_municipalities
+    return municipalities_config
 
 
 @pytest.fixture(scope="session", name="fa_data_client")
