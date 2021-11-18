@@ -5,10 +5,10 @@ import typing
 from typing import Dict, List, Optional
 from uuid import UUID
 
-from karp.domain import constraints, events
+from karp.domain import constraints
 from karp.domain.common import _now, _unknown_user
 from karp.domain.errors import ConfigurationError
-from karp.lex.domain import errors
+from karp.lex.domain import errors, events
 from karp.foundation.entity import TimestampedVersionedEntity
 from karp.foundation.value_objects import unique_id
 
@@ -36,7 +36,8 @@ class Entry(TimestampedVersionedEntity):
         entry_id: str,
         body: Dict,
         message: str,
-        resource_id: str,
+        # resource_id: str,
+        repository_id: unique_id.UniqueId,
         # IN-PROGRESS, IN-REVIEW, OK, PUBLISHED
         status: EntryStatus = EntryStatus.IN_PROGRESS,
         op: EntryOp = EntryOp.ADDED,
@@ -49,8 +50,13 @@ class Entry(TimestampedVersionedEntity):
         self._body = body
         self._op = op
         self._message = "Entry added." if message is None else message
-        self.resource_id = resource_id
+        # self.resource_id = resource_id
         self._status = status
+        self._repo_id = repository_id
+
+    @property
+    def repo_id(self) -> unique_id.UniqueId:
+        return self._repo_id
 
     @property
     def entry_id(self):
@@ -109,13 +115,13 @@ class Entry(TimestampedVersionedEntity):
         self._version += 1
         self._record_event(
             events.EntryDeleted(
-                id=self.id,
+                entity_id=self.id,
                 entry_id=self.entry_id,
                 timestamp=self.last_modified,
                 user=user,
                 message=message,
                 version=self.version,
-                resource_id=self.resource_id,
+                repo_id=self.repo_id,
             )
         )
         # event.mutate(self)
@@ -135,8 +141,8 @@ class Entry(TimestampedVersionedEntity):
         self._record_event(
             events.EntryUpdated(
                 timestamp=self.last_modified,
-                id=self.id,
-                resource_id=self.resource_id,
+                entity_id=self.id,
+                repo_id=self.repo_id,
                 entry_id=self.entry_id,
                 body=self.body,
                 message=self.message,
@@ -155,7 +161,7 @@ def create_entry(
     body: Dict,
     *,
     entity_id: unique_id.UniqueId,
-    resource_id: str,
+    repo_id: unique_id.UniqueId,
     last_modified_by: str = None,
     message: Optional[str] = None,
     last_modified: typing.Optional[float] = None,
@@ -171,15 +177,15 @@ def create_entry(
         # entity_id=unique_id.make_unique_id(),
         version=1,
         last_modified_by="Unknown user" if not last_modified_by else last_modified_by,
-        resource_id=resource_id,
+        repository_id=repo_id,
         entity_id=entity_id,
         last_modified=last_modified,
     )
     print(f'create_entry id={entry.id}')
     entry.queue_event(
         events.EntryAdded(
-            resource_id=resource_id,
-            id=entry.id,
+            repo_id=repo_id,
+            entity_id=entry.id,
             entry_id=entry.entry_id,
             body=entry.body,
             message=entry.message,

@@ -143,6 +143,7 @@ class BaseRuntimeEntry:
 class BaseHistoryEntry:
     history_id = db.Column(db.Integer, primary_key=True)
     id = db.Column(db.UUIDType, nullable=False)
+    repo_id = db.Column(db.UUIDType, nullable=False)
     entry_id = db.Column(db.String(100), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     last_modified = db.Column(db.Float(53), nullable=False)
@@ -172,6 +173,7 @@ class BaseHistoryEntry:
             message=entry.message,
             op=entry.op,
             discarded=entry.discarded,
+            repo_id=entry.repo_id,
         )
 
 

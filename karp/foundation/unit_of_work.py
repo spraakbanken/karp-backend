@@ -12,6 +12,7 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
         self.event_bus = event_bus
 
     def __enter__(self):
+        print('foundation.UnitOfWork.__enter__ called')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

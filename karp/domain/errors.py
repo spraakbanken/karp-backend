@@ -133,16 +133,6 @@ class AuthError(DomainError):
         super().__init__(message, **kwargs)
 
 
-class UpdateConflict(DomainError):
-    def __init__(self, diff):
-        super().__init__(
-            "Version conflict. Please update entry.",
-            code=errors.ClientErrorCodes.VERSION_CONFLICT,
-        )
-        self.error_obj = {"diff": diff,
-                          "errorCode": self.code, "error": self.message}
-
-
 class InvalidEntry(DomainError):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, code=errors.ClientErrorCodes.ENTRY_NOT_VALID)

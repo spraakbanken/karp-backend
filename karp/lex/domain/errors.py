@@ -13,6 +13,7 @@ class LexDomainError(Exception):
         super().__init__(*args)
         self.extras = kwargs or {}
 
+
 class ConsistencyError(LexDomainError):
     pass
 
@@ -68,3 +69,12 @@ class MissingIdField(InvalidEntry):
             f"Missing ID field for resource '{resource_id}' in '{entry}'")
         self.error_obj = {
             'loc': {'resource_id': resource_id}, 'data': {'entry': entry}, 'error': {'message': str(self), 'code': 'missing id field'}}
+
+
+class UpdateConflict(LexDomainError):
+    def __init__(self, diff):
+        super().__init__(
+            "Version conflict. Please update entry.",
+        )
+        self.error_obj = {"diff": diff,
+                          "error": str(self)}

@@ -2,14 +2,14 @@ import injector
 
 from karp.lex.application.queries import GetReferencedEntries, GetEntryRepositoryId
 from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
-from karp.search.application.queries import GetResourceConfig
+from karp.search.application.queries import ResourceViews
 from karp.search.application.repositories import SearchServiceUnitOfWork
 
 from karp.search.application.transformers import (
     EntryTransformer,
     PreProcessor,
 )
-from karp.search_infrastructure.queries import GenericGetResourceConfig
+from karp.search_infrastructure.queries import GenericResourceViews
 from karp.search_infrastructure.transformers import (
     GenericEntryTransformer,
     GenericPreProcessor,
@@ -48,7 +48,7 @@ class SearchInterface(injector.Module):
 
 class GenericSearchInterface(injector.Module):
     @injector.provider
-    def get_resource_config(self, resource_uow: ResourceUnitOfWork) -> GetResourceConfig:
-        return GenericGetResourceConfig(
+    def get_resource_config(self, resource_uow: ResourceUnitOfWork) -> ResourceViews:
+        return GenericResourceViews(
             resource_uow=resource_uow
         )

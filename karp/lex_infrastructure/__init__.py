@@ -12,6 +12,8 @@ from karp.lex.application.queries import (
     EntryRepoDto,
     GetReferencedEntries,
     GetEntryRepositoryId,
+    EntryViews,
+
 )
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
@@ -25,6 +27,7 @@ from karp.lex_infrastructure.queries import (
     SqlListEntryRepos,
     GenericGetReferencedEntries,
     GenericGetEntryRepositoryId,
+    GenericEntryViews,
 )
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
@@ -97,4 +100,15 @@ class GenericLexInfrastructure(injector.Module):
     ) -> GetEntryRepositoryId:
         return GenericGetEntryRepositoryId(
             resource_uow=resources_uow,
+        )
+
+    @injector.provider
+    def entry_views(
+        self,
+        resources_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+    ) -> EntryViews:
+        return GenericEntryViews(
+            resource_uow=resources_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow,
         )

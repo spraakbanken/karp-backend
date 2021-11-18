@@ -69,7 +69,7 @@ class TestAddEntry:
         assert entry is not None
         assert entry.id == cmd3.entity_id
         assert entry.entry_id == entry_id
-        assert entry.resource_id == cmd3.resource_id
+        # assert entry.repo_id == cmd3.resource_id
 
         assert entry.body == {"baseform": entry_id}
         assert entry.last_modified_by == cmd3.user

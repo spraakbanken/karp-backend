@@ -1,5 +1,8 @@
 import logging
+from os import stat
 import traceback
+
+from karp.errors import ClientErrorCodes
 
 try:
     from importlib.metadata import entry_points
@@ -13,6 +16,7 @@ import injector
 
 from karp import main
 from karp.auth_infrastructure import AuthInfrastructure
+from karp.lex.domain import errors as lex_errors
 
 from . import app_config
 
@@ -27,6 +31,8 @@ tags_metadata = [
     {"name": "Resources"},
     {"name": "Health"},
 ]
+
+logger = logging.getLogger("karp")
 
 
 def create_app(*, with_context: bool = True) -> FastAPI:
@@ -82,12 +88,16 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
     @app.exception_handler(KarpError)
     async def _karp_error_handler(request: Request, exc: KarpError):
-        logger = logging.getLogger("karp")
         logger.exception(exc)
         return JSONResponse(
             status_code=exc.http_return_code,
             content={"error": exc.message, "errorCode": exc.code},
         )
+
+    @app.exception_handler(lex_errors.LexDomainError)
+    def _lex_error_handler(request: Request, exc: lex_errors.LexDomainError):
+        logger.exception(exc)
+        return lex_exc2response(exc)
 
     @app.middleware('http')
     async def injector_middleware(request: Request, call_next):
@@ -115,3 +125,18 @@ def load_modules(app=None):
                 init_app = getattr(mod, "init_app", None)
                 if init_app:
                     init_app(app)
+
+
+def lex_exc2response(exc: lex_errors.LexDomainError) -> JSONResponse:
+    status_code = 503
+    content = {"message": "Internal server error"}
+    if isinstance(exc, lex_errors.UpdateConflict):
+        status_code = 400
+        content = {
+            "message": str(exc),
+            "errorCode": ClientErrorCodes.VERSION_CONFLICT,
+        }
+    return JSONResponse(
+        status_code=status_code,
+        content=content,
+    )

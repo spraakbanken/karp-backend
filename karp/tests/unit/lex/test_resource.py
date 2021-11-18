@@ -48,7 +48,8 @@ def test_create_resource_creates_resource():
     assert resource.op == ResourceOp.ADDED
     assert resource.domain_events[-1] == events.ResourceCreated(
         timestamp=resource.last_modified,
-        id=resource.id,
+        entity_id=resource.id,
+        entry_repo_id=resource.entry_repository_id,
         resource_id=resource.resource_id,
         name=resource.name,
         config=resource.config,
@@ -80,7 +81,8 @@ def test_resource_stamp_changes_last_modified_and_version():
     assert resource.version == (previous_version + 1)
     assert resource.domain_events[-1] == events.ResourceUpdated(
         timestamp=resource.last_modified,
-        id=resource.id,
+        entity_id=resource.id,
+        entry_repo_id=resource.entry_repository_id,
         resource_id=resource.resource_id,
         name=resource.name,
         config=resource.config,
@@ -210,7 +212,8 @@ def test_discarded_resource_has_event(field, value):
     resource.discard(user="alice@example.org", message="bad", timestamp=123.45)
     assert resource.discarded
     assert resource.domain_events[-1] == events.ResourceDiscarded(
-        id=resource.id,
+        entity_id=resource.id,
+        entry_repo_id=resource.entry_repository_id,
         resource_id=resource.resource_id,
         user=resource.last_modified_by,
         timestamp=resource.last_modified,
@@ -230,7 +233,8 @@ def test_published_resource_has_event():
     assert resource.is_published
     assert resource.version == (previous_version + 1)
     assert resource.domain_events[-1] == events.ResourcePublished(
-        id=resource.id,
+        entity_id=resource.id,
+        entry_repo_id=resource.entry_repository_id,
         resource_id=resource.resource_id,
         user=resource.last_modified_by,
         timestamp=resource.last_modified,

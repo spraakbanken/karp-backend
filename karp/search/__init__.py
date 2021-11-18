@@ -7,7 +7,7 @@ from karp.foundation.events import EventHandler
 from karp.lex.domain import events as lex_events
 from karp.search.domain import commands
 from karp.search.application import handlers
-from karp.search.application.queries import GetResourceConfig
+from karp.search.application.queries import ResourceViews
 from karp.search.application.repositories import SearchServiceUnitOfWork
 from karp.search.application.transformers import (
     EntryTransformer,
@@ -21,12 +21,12 @@ class Search(injector.Module):
         self,
         search_service_uow: SearchServiceUnitOfWork,
         pre_processor: PreProcessor,
-        get_resource_config: GetResourceConfig,
+        resource_views: ResourceViews,
     ) -> CommandHandler[commands.ReindexResource]:
         return handlers.ReindexResourceHandler(
             search_service_uow=search_service_uow,
             pre_processor=pre_processor,
-            get_resource_config=get_resource_config,
+            resource_views=resource_views,
         )
 
     @injector.multiprovider
@@ -56,11 +56,13 @@ class Search(injector.Module):
         self,
         search_service_uow: SearchServiceUnitOfWork,
         entry_transformer: EntryTransformer,
+        resource_views: ResourceViews,
     ) -> List[EventHandler[lex_events.EntryAdded]]:
         return [
             handlers.EntryAddedHandler(
                 search_service_uow=search_service_uow,
                 entry_transformer=entry_transformer,
+                resource_views=resource_views,
             )
         ]
 
@@ -69,11 +71,13 @@ class Search(injector.Module):
         self,
         search_service_uow: SearchServiceUnitOfWork,
         entry_transformer: EntryTransformer,
+        resource_views: ResourceViews,
     ) -> List[EventHandler[lex_events.EntryUpdated]]:
         return [
             handlers.EntryUpdatedHandler(
                 search_service_uow=search_service_uow,
                 entry_transformer=entry_transformer,
+                resource_views=resource_views,
             )
         ]
 
@@ -82,10 +86,12 @@ class Search(injector.Module):
         self,
         search_service_uow: SearchServiceUnitOfWork,
         entry_transformer: EntryTransformer,
+        resource_views: ResourceViews,
     ) -> List[EventHandler[lex_events.EntryDeleted]]:
         return [
             handlers.EntryDeletedHandler(
                 search_service_uow=search_service_uow,
                 entry_transformer=entry_transformer,
+                resource_views=resource_views,
             )
         ]

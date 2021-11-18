@@ -3,6 +3,7 @@ from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
 from starlette import responses
 
 from karp import errors as karp_errors
+from karp.lex.application.queries import EntryViews
 from karp.lex.domain import commands, errors
 from karp.auth import User
 from karp.foundation.commands import CommandBus
@@ -43,6 +44,7 @@ def add_entry(
     user: User = Security(get_current_user, scopes=["write"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
     bus: CommandBus = Depends(inject_from_req(CommandBus)),
+    entry_views: EntryViews = Depends(inject_from_req(EntryViews)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -52,19 +54,24 @@ def add_entry(
         )
     print("calling entrywrite")
     id_ = unique_id.make_unique_id()
-    bus.dispatch(
-        commands.AddEntry(
-            resource_id=resource_id,
-            entity_id=id_,
-            user=user.identifier,
-            message=data.message,
-            entry=data.entry,
+    try:
+        bus.dispatch(
+            commands.AddEntry(
+                resource_id=resource_id,
+                entity_id=id_,
+                user=user.identifier,
+                message=data.message,
+                entry=data.entry,
+            )
         )
-    )
+    except errors.IntegrityError as exc:
+        return responses.JSONResponse(status_code=400, content={'error': str(exc), 'errorCode': karp_errors.ClientErrorCodes.DB_INTEGRITY_ERROR})
+    except errors.InvalidEntry as exc:
+        return responses.JSONResponse(status_code=400, content={'error': str(exc), 'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_VALID})
     # new_entry = entries.add_entry(
     #     resource_id, data.entry, user.identifier, message=data.message
     # )
-    entry = entry_views.get_by_id(resource_id, id_, bus.ctx)
+    entry = entry_views.get_by_id(resource_id, id_)
     return {"newID": entry.entry_id, "uuid": id_}
 
 
@@ -78,6 +85,7 @@ def update_entry(
     user: User = Security(get_current_user, scopes=["write"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
     bus: CommandBus = Depends(inject_from_req(CommandBus)),
+    entry_views: EntryViews = Depends(inject_from_req(EntryViews)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -94,11 +102,11 @@ def update_entry(
     #     if not (version and entry and message):
     #         raise KarpError("Missing version, entry or message")
     try:
-        entry = entry_views.get_by_entry_id(resource_id, entry_id, bus.ctx)
+        entry = entry_views.get_by_entry_id(resource_id, entry_id)
         bus.dispatch(
             commands.UpdateEntry(
                 resource_id=resource_id,
-                id=entry.id,
+                entity_id=entry.entry_uuid,
                 entry_id=entry_id,
                 version=data.version,
                 user=user.identifier,
@@ -118,13 +126,15 @@ def update_entry(
         #     message=data.message,
         #     # force=force_update,
         # )
-        entry = entry_views.get_by_id(resource_id, entry.id, bus.ctx)
-        return {"newID": entry.entry_id, "uuid": entry.id}
+        entry = entry_views.get_by_id(resource_id, entry.entry_uuid)
+        return {"newID": entry.entry_id, "uuid": entry.entry_uuid}
     except errors.EntryNotFound as err:
-        raise errors.EntryNotFound(resource_id=resource_id, entry_id=entry_id) from err
+        raise errors.EntryNotFound(entity_id=None,
+                                   resource_id=resource_id, entry_id=entry_id) from err
 
     except errors.UpdateConflict as err:
         response.status_code = status.HTTP_400_BAD_REQUEST
+        err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return err.error_obj
 
 

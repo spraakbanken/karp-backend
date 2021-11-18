@@ -156,6 +156,30 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             if resource_dto is not None
         ]
 
+    def _get_all_resources(self) -> typing.List[entities.Resource]:
+        self._check_has_session()
+        subq = (
+            self._session.query(
+                ResourceModel.resource_id,
+                db.func.max(ResourceModel.last_modified).label("maxdate"),
+            )
+            .group_by(ResourceModel.resource_id)
+            .subquery("t2")
+        )
+        query = self._session.query(ResourceModel).join(
+            subq,
+            db.and_(
+                ResourceModel.resource_id == subq.c.resource_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+            ),
+        )
+
+        return [
+            resource_dto.to_entity()
+            for resource_dto in query
+            if resource_dto is not None
+        ]
+
     def _resource_to_dict(self, resource: Resource) -> typing.Dict:
         return {
             "history_id": None,
@@ -187,10 +211,11 @@ class SqlResourceUnitOfWork(
         self.session_factory = session_factory
         self._resources = None
 
-    def __enter__(self):
+    def _begin(self):
+        print(f'SqlResourceUnitOfWork._begin called: {self=}')
         self._session = self.session_factory()
         self._resources = SqlResourceRepository(self._session)
-        return super().__enter__()
+        return self
 
     @property
     def repo(self) -> SqlResourceRepository:

@@ -1,35 +1,33 @@
 import uuid
-from dataclasses import dataclass
 from typing import Dict
 
-from karp.foundation import events
-from karp.utility import time
+from pydantic import BaseModel
+
+from karp.foundation import events, time
+from karp.foundation.value_objects import unique_id
 
 
-@dataclass
-class Event(events.Event):
+class Event(events.Event, BaseModel):
     timestamp: float
 
 
-@dataclass
 class AppStarted(Event):
     def __init__(self):
         self.timestamp = time.utc_now()
 
 
-@dataclass
 class ResourceCreated(Event):
-    id: uuid.UUID
+    entity_id: unique_id.UniqueId
     resource_id: str
+    entry_repo_id: unique_id.UniqueId
     name: str
     config: Dict
     user: str
     message: str
 
 
-@dataclass
 class ResourceLoaded(Event):
-    id: uuid.UUID
+    entity_id: unique_id.UniqueId
     resource_id: str
     name: str
     config: Dict
@@ -38,9 +36,8 @@ class ResourceLoaded(Event):
     version: int
 
 
-@dataclass
 class ResourceDiscarded(Event):
-    id: uuid.UUID
+    entity_id: unique_id.UniqueId
     resource_id: str
     name: str
     config: Dict
@@ -49,10 +46,10 @@ class ResourceDiscarded(Event):
     version: int
 
 
-@dataclass
 class ResourcePublished(Event):
-    id: uuid.UUID
+    entity_id: unique_id.UniqueId
     resource_id: str
+    entry_repo_id: unique_id.UniqueId
     version: int
     name: str
     config: Dict
@@ -60,10 +57,10 @@ class ResourcePublished(Event):
     message: str
 
 
-@dataclass
 class ResourceUpdated(Event):
-    id: uuid.UUID
+    entity_id: unique_id.UniqueId
     resource_id: str
+    entry_repo_id: unique_id.UniqueId
     version: int
     name: str
     config: Dict
@@ -71,20 +68,18 @@ class ResourceUpdated(Event):
     message: str
 
 
-@dataclass
 class EntryAdded(Event):
-    id: uuid.UUID
-    resource_id: str
+    entity_id: unique_id.UniqueId
+    repo_id: unique_id.UniqueId
     entry_id: str
     body: Dict
     message: str
     user: str
 
 
-@dataclass
 class EntryUpdated(Event):
-    id: uuid.UUID
-    resource_id: str
+    entity_id: unique_id.UniqueId
+    repo_id: unique_id.UniqueId
     entry_id: str
     body: Dict
     message: str
@@ -92,10 +87,9 @@ class EntryUpdated(Event):
     version: int
 
 
-@dataclass
 class EntryDeleted(Event):
-    id: uuid.UUID
-    resource_id: str
+    entity_id: unique_id.UniqueId
+    repo_id: unique_id.UniqueId
     entry_id: str
     version: int
     message: str

@@ -5,14 +5,14 @@ import typing
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 from uuid import UUID
 
-from karp.domain import constraints, events
+from karp.domain import constraints
 from karp.domain.errors import ConfigurationError
 from karp.domain.models import event_handler
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
 from karp.foundation.value_objects import PermissionLevel
 from .entry import Entry, create_entry
 from karp.domain.models.events import DomainEvent
-from karp.lex.domain import errors
+from karp.lex.domain import errors, events
 from karp.foundation.value_objects import unique_id
 from karp.utility import json_schema, time
 from karp.utility.container import create_field_getter
@@ -192,7 +192,7 @@ class Resource(TimestampedVersionedEntity):
             self._version += 1
         self.queue_event(
             events.ResourceUpdated(
-                id=self.id,
+                entity_id=self.id,
                 resource_id=self.resource_id,
                 name=self.name,
                 config=self.config,
@@ -200,6 +200,7 @@ class Resource(TimestampedVersionedEntity):
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 message=self.message,
+                entry_repo_id=self.entry_repository_id,
             )
         )
 
@@ -215,8 +216,9 @@ class Resource(TimestampedVersionedEntity):
         self.is_published = True
         self.queue_event(
             events.ResourcePublished(
-                id=self.id,
+                entity_id=self.id,
                 resource_id=self.resource_id,
+                entry_repo_id=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -263,8 +265,9 @@ class Resource(TimestampedVersionedEntity):
         self._version += 1
         self.queue_event(
             events.ResourceDiscarded(
-                id=self.id,
+                entity_id=self.id,
                 version=self.version,
+                entry_repo_id=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 message=self.message,
@@ -299,7 +302,8 @@ class Resource(TimestampedVersionedEntity):
         return create_entry(
             id_getter(entry_raw),
             entry_raw,
-            resource_id=self.resource_id,
+            repo_id=self.entry_repository_id,
+            # resource_id=self.resource_id,
             last_modified_by=user,
             message=message,
             entity_id=entity_id,
@@ -380,8 +384,9 @@ def create_resource(
     )
     resource.queue_event(
         events.ResourceCreated(
-            id=resource.id,
+            entity_id=resource.id,
             resource_id=resource.resource_id,
+            entry_repo_id=resource.entry_repository_id,
             name=resource.name,
             config=resource.config,
             timestamp=resource.last_modified,

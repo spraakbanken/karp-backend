@@ -45,11 +45,11 @@ class EntryFactory(factory.Factory):
 
     entity_id = factory.LazyFunction(lex_factories.make_unique_id)
     entry_id = factory.Faker("word")
-    resource_id = factory.Faker("word")
     last_modified_by = factory.Faker("email")
     last_modified = factory.LazyFunction(utc_now)
     message = 'entry created'
     body = {}
+    repository_id = factory.LazyFunction(lex_factories.make_unique_id)
 
 
 def random_resource(config: typing.Optional[typing.Dict] = None):
@@ -69,7 +69,8 @@ class ResourceCreatedFactory(factory.Factory):
         model = lex_events.ResourceCreated
 
     timestamp = factory.LazyFunction(utc_now)
-    id = factory.LazyFunction(lex_factories.make_unique_id)
+    entity_id = factory.LazyFunction(lex_factories.make_unique_id)
+    entry_repo_id = factory.LazyFunction(lex_factories.make_unique_id)
     resource_id = factory.Faker('word')
     name = factory.Faker('word')
     config = factory.Faker('resource_config')
@@ -82,7 +83,8 @@ class ResourcePublishedFactory(factory.Factory):
         model = lex_events.ResourcePublished
 
     timestamp = factory.LazyFunction(utc_now)
-    id = factory.LazyFunction(lex_factories.make_unique_id)
+    entity_id = factory.LazyFunction(lex_factories.make_unique_id)
+    entry_repo_id = factory.LazyFunction(lex_factories.make_unique_id)
     resource_id = factory.Faker('word')
     name = factory.Faker('word')
     config = factory.Faker('resource_config')

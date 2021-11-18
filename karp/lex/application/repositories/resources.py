@@ -62,3 +62,14 @@ class ResourceRepository(repository.Repository[entities.Resource]):
     @abc.abstractmethod
     def _get_published_resources(self) -> typing.Iterable[entities.Resource]:
         raise NotImplementedError()
+
+    def get_all_resources(self) -> typing.List[entities.Resource]:
+        all_resources = []
+        for resource in self._get_all_resources():
+            self.seen.add(resource)
+            all_resources.append(resource)
+        return all_resources
+
+    @abc.abstractmethod
+    def _get_all_resources(self) -> typing.Iterable[entities.Resource]:
+        raise NotImplementedError()

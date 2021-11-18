@@ -11,7 +11,8 @@ from karp.foundation import (
     commands as foundation_commands,
 )
 from karp.lex.domain import events as lex_events
-from karp.search.application.queries import GetResourceConfig
+from karp.lex.domain.entities import resource
+from karp.search.application.queries import ResourceViews
 from karp.search.application.repositories import SearchServiceUnitOfWork
 from karp.search.application.transformers import EntryTransformer, PreProcessor
 # from .search_service import SearchServiceModule
@@ -99,12 +100,12 @@ class ReindexResourceHandler(
     def __init__(
         self,
         search_service_uow: SearchServiceUnitOfWork,
-        get_resource_config: GetResourceConfig,
+        resource_views: ResourceViews,
         pre_processor: PreProcessor,
     ) -> None:
         super().__init__()
         self.search_service_uow = search_service_uow
-        self.get_resource_config = get_resource_config
+        self.resource_views = resource_views
         self.pre_processor = pre_processor
 
     def __call__(
@@ -115,7 +116,7 @@ class ReindexResourceHandler(
         with self.search_service_uow as uw:
             uw.repo.create_index(
                 cmd.resource_id,
-                self.get_resource_config.query(cmd.resource_id),
+                self.resource_views.get_resource_config(cmd.resource_id),
             )
             uw.repo.add_entries(
                 cmd.resource_id,
@@ -203,9 +204,11 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
         self,
         search_service_uow: SearchServiceUnitOfWork,
         entry_transformer: EntryTransformer,
+        resource_views: ResourceViews,
     ):
         self.search_service_uow = search_service_uow
         self.entry_transformer = entry_transformer
+        self.resource_views = resource_views
 
     def __call__(
         self,
@@ -213,20 +216,21 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
     ):
         with self.search_service_uow as uw:
             entry = entities.Entry(
-                entity_id=evt.id,
+                entity_id=evt.entity_id,
                 entry_id=evt.entry_id,
-                resource_id=evt.resource_id,
+                repository_id=evt.repo_id,
                 body=evt.body,
                 message=evt.message,
                 last_modified=evt.timestamp,
                 last_modified_by=evt.user,
             )
-            uw.repo.add_entries(
-                evt.resource_id,
-                [self.entry_transformer.transform(evt.resource_id, entry)]
-            )
-            self.entry_transformer.update_references(
-                evt.resource_id, [evt.entry_id])
+            for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
+                uw.repo.add_entries(
+                    resource_id,
+                    [self.entry_transformer.transform(resource_id, entry)]
+                )
+                self.entry_transformer.update_references(
+                    resource_id, [evt.entry_id])
             uw.commit()
 
 
@@ -237,9 +241,11 @@ class EntryUpdatedHandler(
         self,
         search_service_uow: SearchServiceUnitOfWork,
         entry_transformer: EntryTransformer,
+        resource_views: ResourceViews,
     ):
         self.search_service_uow = search_service_uow
         self.entry_transformer = entry_transformer
+        self.resource_views = resource_views
 
     def __call__(
         self,
@@ -247,21 +253,22 @@ class EntryUpdatedHandler(
     ):
         with self.search_service_uow as uw:
             entry = entities.Entry(
-                entity_id=evt.id,
+                entity_id=evt.entity_id,
                 entry_id=evt.entry_id,
-                resource_id=evt.resource_id,
+                repository_id=evt.repo_id,
                 body=evt.body,
                 message=evt.message,
                 last_modified=evt.timestamp,
                 last_modified_by=evt.user,
                 version=evt.version,
             )
-            uw.repo.add_entries(
-                evt.resource_id,
-                [self.entry_transformer.transform(evt.resource_id, entry)]
-            )
-            self.entry_transformer.update_references(
-                evt.resource_id, [evt.entry_id])
+            for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
+                uw.repo.add_entries(
+                    resource_id,
+                    [self.entry_transformer.transform(resource_id, entry)]
+                )
+                self.entry_transformer.update_references(
+                    resource_id, [evt.entry_id])
             uw.commit()
             # add_entries(evt.resource_id, [entry], ctx)
             # ctx.search_service_uow.commit()
@@ -309,21 +316,24 @@ class EntryDeletedHandler(
         self,
         search_service_uow: SearchServiceUnitOfWork,
         entry_transformer: EntryTransformer,
+        resource_views: ResourceViews,
     ):
         self.search_service_uow = search_service_uow
         self.entry_transformer = entry_transformer
+        self.resource_views = resource_views
 
     def __call__(
         self,
         evt: events.EntryDeleted
     ):
         with self.search_service_uow as uw:
-            uw.repo.delete_entry(
-                evt.resource_id,
-                entry_id=evt.entry_id
-            )
-            self.entry_transformer.update_references(
-                evt.resource_id,
-                [evt.entry_id]
-            )
+            for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
+                uw.repo.delete_entry(
+                    resource_id,
+                    entry_id=evt.entry_id
+                )
+                self.entry_transformer.update_references(
+                    resource_id,
+                    [evt.entry_id]
+                )
             uw.commit()

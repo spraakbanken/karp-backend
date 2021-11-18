@@ -1,1 +1,1 @@
-from .generic_resources import GenericGetResourceConfig
+from .generic_resources import GenericResourceViews

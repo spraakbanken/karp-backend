@@ -76,7 +76,7 @@ class SqlEntryUowRepositoryUnitOfWork(
         self._repo = None
 
     def __enter__(self):
-        print(f'{self=} called')
+        print(f'{self=}.__enter__ called')
         self._session = self.session_factory()
         self._repo = SqlEntryUowRepository(
             entry_uow_factory=self.entry_uow_factory,
@@ -84,8 +84,17 @@ class SqlEntryUowRepositoryUnitOfWork(
         )
         return super().__enter__()
 
+    def _begin(self):
+        print(f'{self=}._begin called')
+        self._session = self.session_factory()
+        self._repo = SqlEntryUowRepository(
+            entry_uow_factory=self.entry_uow_factory,
+            session=self._session,
+        )
+        return self
+
     @property
     def repo(self) -> SqlEntryUowRepository:
         if self._repo is None:
-            raise RuntimeError("No resources")
+            raise RuntimeError("No entry_uow_repository")
         return self._repo

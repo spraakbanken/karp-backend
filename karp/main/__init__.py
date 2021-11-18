@@ -15,7 +15,7 @@ from sqlalchemy.engine import Engine, create_engine, url as sa_url
 
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
-from karp.lex_infrastructure import LexInfrastructure
+from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.main import config
 from karp.main.modules import CommandBusMod, Db, EventBusMod
 from karp.search import Search
@@ -57,6 +57,7 @@ def _setup_dependency_injection(engine: Engine) -> injector.Injector:
             EventBusMod(),
             Lex(),
             LexInfrastructure(),
+            GenericLexInfrastructure(),
             Search(),
         ],
         auto_bind=False,

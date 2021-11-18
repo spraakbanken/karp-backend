@@ -11,6 +11,7 @@ import json_streams
 from sb_json_tools import jsondiff
 
 from karp.foundation.commands import CommandHandler
+from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain import errors, entities
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
@@ -96,6 +97,10 @@ class BaseEntryHandler:
         yield from self.resource_uow.collect_new_events()
         yield from self.entry_uow_repo_uow.collect_new_events()
 
+    def get_entry_uow(self, entry_repo_id: unique_id.UniqueId) -> EntryUnitOfWork:
+        with self.entry_uow_repo_uow as uw:
+            return uw.repo.get_by_id(entry_repo_id)
+
 
 class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
 
@@ -114,8 +119,9 @@ class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
             ) from err
         validate_entry = _compile_schema(resource.entry_json_schema)
 
-        entry_uow = self.entry_uow_repo_uow.repo.get_by_id(resource.entry_repository_id)
-        with entry_uow as uw:
+        print(f'About to call get: {self=}')
+
+        with self.get_entry_uow(resource.entry_repository_id) as uw:
             try:
                 existing_entry = uw.repo.by_entry_id(entry_id)
                 if (
@@ -159,9 +165,7 @@ class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry])
         schema = _compile_schema(resource.entry_json_schema)
         _validate_entry(schema, cmd.entry)
 
-        with self.entry_uow_repo_uow.repo.get_by_id(
-            resource.entry_repository_id
-        ) as uw:
+        with self.get_entry_uow(resource.entry_repository_id) as uw:
             try:
                 current_db_entry = uw.repo.by_entry_id(
                     cmd.entry_id
@@ -257,7 +261,8 @@ class AddEntriesHandler(
                 f"'resource_id' must be of type 'str', were '{type(cmd.resource_id)}'"
             )
         with self.resource_uow:
-            resource = self.resource_uow.resources.by_resource_id(cmd.resource_id)
+            resource = self.resource_uow.resources.by_resource_id(
+                cmd.resource_id)
 
         if not resource:
             raise errors.ResourceNotFound(cmd.resource_id)

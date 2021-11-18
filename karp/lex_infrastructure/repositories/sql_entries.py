@@ -418,6 +418,7 @@ class SqlEntryRepository(
             "message": entry.message,
             "op": entry.op,
             "discarded": entry.discarded,
+            'repo_id': entry.repo_id,
         }
 
     def _history_row_to_entry(self, row) -> Entry:
@@ -433,7 +434,8 @@ class SqlEntryRepository(
             last_modified_by=row.last_modified_by,
             discarded=row.discarded,
             version=row.version,
-            resource_id=self.resource_id,
+            repository_id=row.repo_id,
+            # resource_id=self.resource_id,
         )
 
     def _entry_to_runtime_dict(self, history_id: int, entry: Entry) -> Dict:
