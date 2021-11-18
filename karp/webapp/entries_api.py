@@ -65,7 +65,13 @@ def add_entry(
             )
         )
     except errors.IntegrityError as exc:
-        return responses.JSONResponse(status_code=400, content={'error': str(exc), 'errorCode': karp_errors.ClientErrorCodes.DB_INTEGRITY_ERROR})
+        return responses.JSONResponse(
+            status_code=400,
+            content={
+                'error': str(exc),
+                'errorCode': karp_errors.ClientErrorCodes.DB_INTEGRITY_ERROR
+            }
+        )
     except errors.InvalidEntry as exc:
         return responses.JSONResponse(status_code=400, content={'error': str(exc), 'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_VALID})
     # new_entry = entries.add_entry(
@@ -128,17 +134,24 @@ def update_entry(
         # )
         entry = entry_views.get_by_id(resource_id, entry.entry_uuid)
         return {"newID": entry.entry_id, "uuid": entry.entry_uuid}
-    except errors.EntryNotFound as err:
-        raise errors.EntryNotFound(entity_id=None,
-                                   resource_id=resource_id, entry_id=entry_id) from err
-
+    except errors.EntryNotFound:
+        return responses.JSONResponse(
+            status_code=404,
+            content={
+                'error': f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
+                'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
+                'resource': resource_id,
+                'entry_id': entry_id,
+            }
+        )
     except errors.UpdateConflict as err:
         response.status_code = status.HTTP_400_BAD_REQUEST
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return err.error_obj
 
 
-@router.delete("/{resource_id}/{entry_id}/delete")
+@router.delete('/{resource_id}/{entry_id}/delete')
+@router.delete('/{resource_id}/{entry_id}')
 # @auth.auth.authorization("WRITE", add_user=True)
 def delete_entry(
     resource_id: str,
@@ -163,15 +176,24 @@ def delete_entry(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
-    bus.dispatch(
-        commands.DeleteEntry(
-            resource_id=resource_id,
-            entry_id=entry_id,
-            user=user.identifier,
-            # message=data.message,
-            # entry=data.entry,
+    try:
+        bus.dispatch(
+            commands.DeleteEntry(
+                resource_id=resource_id,
+                entry_id=entry_id,
+                user=user.identifier,
+            )
         )
-    )
+    except errors.EntryNotFound:
+        return responses.JSONResponse(
+            status_code=404,
+            content={
+                'error': f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
+                'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
+                'resource': resource_id,
+                'entry_id': entry_id,
+            }
+        )
     # entries.delete_entry(resource_id, entry_id, user.identifier)
     return "", 204
 

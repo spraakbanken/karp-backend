@@ -119,7 +119,7 @@ class Entry(TimestampedVersionedEntity):
                 entry_id=self.entry_id,
                 timestamp=self.last_modified,
                 user=user,
-                message=message,
+                message=self._message,
                 version=self.version,
                 repo_id=self.repo_id,
             )

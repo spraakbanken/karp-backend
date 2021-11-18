@@ -418,26 +418,16 @@ class DeleteEntryHandler(BaseEntryHandler, CommandHandler[commands.DeleteEntry])
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(cmd.resource_id)
 
-        with self.entry_uow_repo_uow.repo.get_by_id(
+        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(
             resource.entry_repository_id
         ) as uw:
-            try:
-                entry = uw.repo.by_entry_id(cmd.entry_id)
-
-            #     resource = get_resource(resource_id)
-            #     entry = resource.model.query.filter_by(entry_id=entry_id, deleted=False).first()
-            except errors.EntryNotFound as err:
-                raise errors.EntryNotFound(
-                    resource_id=cmd.resource_id,
-                    entry_id=cmd.entry_id,
-                ) from err
+            entry = uw.repo.by_entry_id(cmd.entry_id)
 
             entry.discard(
                 user=cmd.user,
                 message=cmd.message,
                 timestamp=cmd.timestamp,
             )
-            assert entry.discarded
             uw.repo.save(entry)
             uw.commit()
 

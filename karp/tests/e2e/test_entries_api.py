@@ -193,7 +193,7 @@ def test_delete_non_existing_fails(fa_client):
         f"places/{entry_id}/delete", headers={"Authorization": "Bearer 1234"}
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 404
 
     response_data = response.json()
 
@@ -227,7 +227,7 @@ def test_update_non_existing_fails(fa_client):
         #         ),
         #         content_type="application/json",
     )
-    assert response.status_code == 400
+    assert response.status_code == 404
     response_data = response.json()
     assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_FOUND
 
@@ -239,7 +239,7 @@ def test_update_non_existing_fails(fa_client):
 
 @pytest.mark.usefixtures("places_published")
 @pytest.mark.usefixtures("main_db")
-def test_update_wo_changes_fails(fa_client):
+def test_update_wo_changes_succeeds(fa_client):
     entry_id = 206
     entry_name = f"update{entry_id}"
     response = fa_client.post(
@@ -278,11 +278,7 @@ def test_update_wo_changes_fails(fa_client):
         #         ),
         #         content_type="application/json",
     )
-    assert response.status_code == 400
-    response_data = response.json()
-    assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_CHANGED
-
-    assert response_data["error"] == "No changes made"
+    assert response.status_code == 200
 
 
 @pytest.mark.skip()

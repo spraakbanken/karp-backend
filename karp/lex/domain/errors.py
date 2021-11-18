@@ -29,7 +29,7 @@ class DiscardedEntityError(LexDomainError):
 class EntryNotFound(NotFoundError, LexDomainError):
     entity_name = "Entry"
 
-    def __init__(self, *args, entity_id, **kwargs):
+    def __init__(self, *args, entity_id=None, **kwargs):
         super().__init__(entity_id, *args, **kwargs)
 
 
