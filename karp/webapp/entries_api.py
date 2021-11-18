@@ -55,7 +55,7 @@ def add_entry(
     bus.dispatch(
         commands.AddEntry(
             resource_id=resource_id,
-            id=id_,
+            entity_id=id_,
             user=user.identifier,
             message=data.message,
             entry=data.entry,

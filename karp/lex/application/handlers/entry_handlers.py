@@ -114,7 +114,8 @@ class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
             ) from err
         validate_entry = _compile_schema(resource.entry_json_schema)
 
-        with self.entry_uow_repo_uow.repo.get_by_id(resource.entry_repository_id) as uw:
+        entry_uow = self.entry_uow_repo_uow.repo.get_by_id(resource.entry_repository_id)
+        with entry_uow as uw:
             try:
                 existing_entry = uw.repo.by_entry_id(entry_id)
                 if (

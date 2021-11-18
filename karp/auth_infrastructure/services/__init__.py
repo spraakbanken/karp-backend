@@ -1,1 +1,1 @@
-from . import dummy_auth_service
+from .dummy_auth_service import DummyAuthService

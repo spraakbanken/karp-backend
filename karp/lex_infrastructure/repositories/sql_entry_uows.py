@@ -76,6 +76,7 @@ class SqlEntryUowRepositoryUnitOfWork(
         self._repo = None
 
     def __enter__(self):
+        print(f'{self=} called')
         self._session = self.session_factory()
         self._repo = SqlEntryUowRepository(
             entry_uow_factory=self.entry_uow_factory,

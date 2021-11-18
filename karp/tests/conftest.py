@@ -22,12 +22,15 @@ environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
 
 from karp.tests import common_data, utils  # nopep8
-from karp.auth_infrastructure.testing import dummy_auth_service  # nopep8
+from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
 import karp.lex_infrastructure.sql.sql_models  # nopep8
 from karp.db_infrastructure.db import metadata  # nopep8
-from karp.lex.domain import commands, errors  # nopep8
+from karp.lex.domain import commands, errors, entities  # nopep8
 from karp import errors as karp_errors  # nopep8
 from karp import config  # nopep8
+from karp.foundation.commands import CommandBus
+from karp.foundation.value_objects import make_unique_id
+
 # # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
 
@@ -103,11 +106,8 @@ def fixture_app():
     from karp.webapp import main as webapp_main
 
     app = webapp_main.create_app()
-    with app.state.container.auth_service.override(
-        dummy_auth_service.DummyAuthService()
-    ):
-        yield app
-    app.state.container.unwire()
+    app.state.container.binder.install(TestAuthInfrastructure())
+    yield app
 
 
 @pytest.fixture(name="fa_client", scope="session")
@@ -136,10 +136,7 @@ def fixture_fa_client(use_main_index, app):  # db_setup, es):
 
 @pytest.fixture(name="use_dummy_authenticator")
 def fixture_use_dummy_authenticator(app):
-    with app.state.container.auth_service.override(
-        dummy_auth_service.DummyAuthService()
-    ):
-        yield app
+    app.state.container.binder.install(TestAuthInfrastructure())
 
 
 # @pytest.fixture(name="fa_client_scope_session", scope="session")
@@ -149,19 +146,6 @@ def fixture_use_dummy_authenticator(app):
 #         yield client
 #         print("releasing testclient")
 
-
-@pytest.fixture(name="resource_places", scope="session")
-def fixture_resource_places(use_main_index):
-
-    with open("karp/tests/data/config/places.json") as fp:
-        places_config = json.load(fp)
-
-    resource = model.create_resource(places_config, created_by="local admin")
-
-    yield resource
-
-    # if resource._entry_repository:
-    # resource.entry_repository.teardown()
 
 
 # @pytest.fixture(name="places_scope_module", scope="module")
@@ -174,17 +158,6 @@ def fixture_resource_places(use_main_index):
 #     resource.entry_repository.teardown()
 
 
-@pytest.fixture(name="resource_municipalities", scope="session")
-def fixture_resource_municipalities(use_main_index):
-    with open("karp/tests/data/config/municipalities.json") as fp:
-        municipalities_config = json.load(fp)
-
-    resource = model.create_resource(
-        municipalities_config, created_by="local admin")
-
-    yield resource
-    # print("cleaning up municipalities")
-    # resource.entry_repository.teardown()
 
 
 # @pytest.fixture(name="context")
@@ -203,31 +176,44 @@ def fixture_resource_municipalities(use_main_index):
 
 
 @pytest.fixture(name="places_published", scope="session")
-def fixture_places_published(resource_places, app):  # , db_setup):
+def fixture_places_published(use_main_index, app):  # , db_setup):
 
-    bus = app.state.container.context.bus()
+    with open("karp/tests/data/config/places.json") as fp:
+        places_config = json.load(fp)
+    resource_id = 'places'
+
+    bus = app.state.container.get(CommandBus)
 
     try:
-        bus.handle(
+        cmd = commands.CreateEntryRepository(
+            entity_id=make_unique_id(),
+            repository_type='default',
+            name=resource_id,
+            config=places_config,
+            user='local admin',
+            message='added',
+        )
+        bus.dispatch(cmd)
+        bus.dispatch(
             commands.CreateResource(
-                id=resource_places.id,
-                resource_id=resource_places.resource_id,
-                name=resource_places.name,
-                config=resource_places.config,
-                created_by=resource_places.last_modified_by,
-                message=resource_places.message,
+                resource_id=resource_id,
+                name=resource_id,
+                entry_repo_id=cmd.entity_id,
+                config=places_config,
+                created_by='local admin',
+                message='added',
             )
         )
     except errors.IntegrityError:
         pass
     try:
-        bus.handle(
+        bus.dispatch(
             commands.PublishResource(
-                resource_id=resource_places.resource_id,
-                name=resource_places.name,
-                config=resource_places.config,
-                user=resource_places.last_modified_by,
-                message=resource_places.message,
+                resource_id=resource_id,
+                name=resource_id,
+                config=places_config,
+                user=cmd.user,
+                message=cmd.message,
             )
         )
     except karp_errors.ResourceAlreadyPublished:
@@ -237,14 +223,16 @@ def fixture_places_published(resource_places, app):  # , db_setup):
     #     uow.resources.put(resource_places)
     #     uow.commit()
 
-    return resource_places
+    return places_config
 
 
 @pytest.fixture(name="municipalites_published", scope="session")
 def fixture_municipalites_published(
-    resource_municipalities, main_db, app
+    use_main_index, main_db, app
 ):  # , db_setup):
 
+    with open("karp/tests/data/config/municipalities.json") as fp:
+        municipalities_config = json.load(fp)
     bus = app.state.container.context.bus()
 
     try:

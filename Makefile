@@ -80,11 +80,11 @@ run-all-tests: unit-tests run-integration-tests
 run-all-tests-w-coverage: run-unit-tests-w-coverage run-integration-tests-w-coverage run-e2e-tests-w-coverage
 
 .PHONY: unit-tests
-unit-tests: clean-pyc
+unit-tests:
 	poetry run pytest -vv karp/tests/unit
 
 .PHONY: e2e-tests
-e2e-tests: install-dev clean-pyc
+e2e-tests:
 	poetry run pytest -vv karp/tests/e2e
 
 .PHONY: run-e2e-tests-w-coverage
