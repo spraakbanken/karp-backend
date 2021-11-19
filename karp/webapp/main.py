@@ -15,6 +15,7 @@ from fastapi.responses import JSONResponse
 import injector
 
 from karp import main
+from karp.foundation import errors as foundation_errors
 from karp.auth_infrastructure import AuthInfrastructure
 from karp.lex.domain import errors as lex_errors
 
@@ -92,6 +93,15 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         return JSONResponse(
             status_code=exc.http_return_code,
             content={"error": exc.message, "errorCode": exc.code},
+        )
+
+    @app.exception_handler(foundation_errors.NotFoundError)
+    async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):
+        return JSONResponse(
+            status_code=404,
+            content={
+                'detail': str(exc),
+            }
         )
 
     @app.exception_handler(lex_errors.LexDomainError)

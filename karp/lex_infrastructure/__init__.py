@@ -13,7 +13,7 @@ from karp.lex.application.queries import (
     GetReferencedEntries,
     GetEntryRepositoryId,
     EntryViews,
-
+    GetEntryDiff,
 )
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
@@ -28,6 +28,7 @@ from karp.lex_infrastructure.queries import (
     GenericGetReferencedEntries,
     GenericGetEntryRepositoryId,
     GenericEntryViews,
+    GenericGetEntryDiff,
 )
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
@@ -94,6 +95,17 @@ class GenericLexInfrastructure(injector.Module):
         )
 
     @injector.provider
+    def gey_entry_diff(
+        self,
+        resources_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+    ) -> GetEntryDiff:
+        return GenericGetEntryDiff(
+            resource_uow=resources_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow,
+        )
+
+    @injector.provider
     def get_entry_repo_id(
         self,
         resources_uow: ResourceUnitOfWork,
@@ -112,3 +124,4 @@ class GenericLexInfrastructure(injector.Module):
             resource_uow=resources_uow,
             entry_uow_repo_uow=entry_uow_repo_uow,
         )
+

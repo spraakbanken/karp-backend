@@ -31,13 +31,15 @@ def username(name: str) -> str:
 
 
 @pytest.fixture(name="fa_history_data_client", scope="session")
-def fixture_fa_history_data_client(fa_client):
+def fixture_fa_history_data_client(fa_client, main_db, places_published):
     for entry in places[0:2]:
-        fa_client.post(
+        response = fa_client.post(
             "/places/add",
             json={"entry": entry, "message": "Add it"},
             headers={"Authorization": "Bearer user1"},
         )
+        print(f'{response.json()=}')
+        assert response.status_code == 201
         # entries.add_entry("places", entry, "user1", message="Add it")
         time.sleep(1)
     for entry in places[2:]:

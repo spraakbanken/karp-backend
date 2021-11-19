@@ -4,9 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 
 from karp.auth import AuthService
 from karp import auth
+
 from karp.lex.application.queries import (
     EntryDiffDto,
     EntryDto,
+    EntryDiffRequest,
+    EntryHistoryRequest,
     GetEntryDiff,
     GetHistory,
     GetEntryHistory,
@@ -52,7 +55,7 @@ def get_diff(
     get_entry_diff: GetEntryDiff = Depends(inject_from_req(GetEntryDiff)),
 ):
     if not auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id]
+        auth.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -81,7 +84,7 @@ def get_diff(
     #         "entry": request.get_json(),
     #     }
     #
-    diff_request = entry_views.EntryDiffRequest(
+    diff_request = EntryDiffRequest(
         resource_id=resource_id,
         entry_id=entry_id,
         from_version=from_version,
@@ -90,10 +93,7 @@ def get_diff(
         to_date=to_date,
         entry=entry,
     )
-    return entry_views.diff(
-        diff_request,
-        ctx=bus.ctx,
-    )
+    return get_entry_diff.query(diff_request)
 
 
 @router.get(
@@ -114,14 +114,14 @@ def get_history(
     history_query: GetHistory = Depends(inject_from_req(GetHistory)),
 ):
     if not auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id]
+        auth.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="admin"'},
         )
-    history_request = entry_views.EntryHistoryRequest(
+    history_request = EntryHistoryRequest(
         page_size=page_size,
         current_page=current_page,
         from_date=from_date,
@@ -131,10 +131,9 @@ def get_history(
         from_version=from_version,
         to_version=to_version,
     )
-    history, total = entry_views.get_history(
+    history, total = get_history.query(
         resource_id,
         history_request,
-        ctx=bus.ctx,
     )
     return {"history": history, "total": total}
 
@@ -150,7 +149,7 @@ def get_history_for_entry(
     entry_history_query: GetEntryHistory = Depends(inject_from_req(GetEntryHistory)),
 ):
     if not auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id]
+        auth.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

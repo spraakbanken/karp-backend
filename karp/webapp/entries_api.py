@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
                      status)
 from starlette import responses
@@ -35,6 +37,8 @@ from .fastapi_injector import inject_from_req
 # edit_api = Blueprint("edit_api", __name__)
 
 router = APIRouter(tags=["Editing"])
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED)
@@ -74,9 +78,7 @@ def add_entry(
         )
     except errors.InvalidEntry as exc:
         return responses.JSONResponse(status_code=400, content={'error': str(exc), 'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_VALID})
-    # new_entry = entries.add_entry(
-    #     resource_id, data.entry, user.identifier, message=data.message
-    # )
+
     entry = entry_views.get_by_id(resource_id, id_)
     return {"newID": entry.entry_id, "uuid": id_}
 
