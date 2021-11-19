@@ -111,7 +111,7 @@ def get_history(
     current_page: int = Query(0),
     page_size: int = Query(100),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
-    history_query: GetHistory = Depends(inject_from_req(GetHistory)),
+    get_history: GetHistory = Depends(inject_from_req(GetHistory)),
 ):
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [resource_id]
@@ -122,6 +122,7 @@ def get_history(
             headers={"WWW-Authenticate": 'Bearer scope="admin"'},
         )
     history_request = EntryHistoryRequest(
+        resource_id=resource_id,
         page_size=page_size,
         current_page=current_page,
         from_date=from_date,
@@ -131,10 +132,7 @@ def get_history(
         from_version=from_version,
         to_version=to_version,
     )
-    history, total = get_history.query(
-        resource_id,
-        history_request,
-    )
+    history, total = get_history.query(history_request)
     return {"history": history, "total": total}
 
 
@@ -146,7 +144,8 @@ def get_history_for_entry(
     version: int,
     user: auth.User = Security(get_current_user, scopes=["read"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
-    entry_history_query: GetEntryHistory = Depends(inject_from_req(GetEntryHistory)),
+    get_entry_history: GetEntryHistory = Depends(
+        inject_from_req(GetEntryHistory)),
 ):
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [resource_id]
@@ -156,8 +155,8 @@ def get_history_for_entry(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    historical_entry = entry_views.get_entry_history(
-        resource_id, entry_id, version=version, ctx=bus.ctx
+    historical_entry = get_entry_history.query(
+        resource_id, entry_id, version=version
     )
 
     return historical_entry

@@ -7,6 +7,7 @@ from sb_json_tools import jsondiff
 from karp import errors as karp_errors
 from karp.foundation.value_objects import unique_id
 from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
+from karp.lex.domain.entities.entry import EntryOp
 
 
 # pylint: disable=unsubscriptable-object
@@ -15,7 +16,7 @@ class EntryDto(pydantic.BaseModel):
     entry_uuid: unique_id.UniqueId
     resource: str
     version: int
-    body: typing.Dict
+    entry: typing.Dict
     last_modified: float
     last_modified_by: str
 
@@ -48,6 +49,16 @@ class EntryDiffDto(pydantic.BaseModel):
     to_version: typing.Optional[int]
 
 
+class HistoryDto(pydantic.BaseModel):
+    timestamp: float
+    message: str
+    entry_id: str
+    version: int
+    op: EntryOp
+    user_id: str
+    diff: typing.Dict
+
+
 class GetEntryDiff(abc.ABC):
     @abc.abstractmethod
     def query(self, req: EntryDiffRequest) -> EntryDiffDto:
@@ -67,7 +78,10 @@ class GetEntryHistory(abc.ABC):
 
 class GetHistory(abc.ABC):
     @abc.abstractmethod
-    def query(self, req: EntryHistoryRequest):
+    def query(
+        self,
+        req: EntryHistoryRequest
+    ) -> typing.Tuple[typing.List[HistoryDto], int]:
         pass
 
 

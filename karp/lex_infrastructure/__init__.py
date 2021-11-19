@@ -14,6 +14,8 @@ from karp.lex.application.queries import (
     GetEntryRepositoryId,
     EntryViews,
     GetEntryDiff,
+    GetEntryHistory,
+    GetHistory,
 )
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
@@ -29,6 +31,9 @@ from karp.lex_infrastructure.queries import (
     GenericGetEntryRepositoryId,
     GenericEntryViews,
     GenericGetEntryDiff,
+    GenericEntryQuery,
+    GenericGetEntryHistory,
+    GenericGetHistory,
 )
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
@@ -125,3 +130,24 @@ class GenericLexInfrastructure(injector.Module):
             entry_uow_repo_uow=entry_uow_repo_uow,
         )
 
+    @injector.provider
+    def get_history(
+        self,
+        resources_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+    ) -> GetHistory:
+        return GenericGetHistory(
+            resource_uow=resources_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow,
+        )
+
+    @injector.provider
+    def get_entry_history(
+        self,
+        resources_uow: ResourceUnitOfWork,
+        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+    ) -> GetEntryHistory:
+        return GenericGetEntryHistory(
+            resource_uow=resources_uow,
+            entry_uow_repo_uow=entry_uow_repo_uow,
+        )

@@ -91,7 +91,8 @@ def fixture_fa_history_data_client(fa_client, main_db, places_published):
         changed_entry["name"] = places[0]["name"] * i
         response = fa_client.post(
             f"places/{diff_entry_id}/update",
-            json={"entry": changed_entry, "message": "changes", "version": i - 1},
+            json={"entry": changed_entry,
+                  "message": "changes", "version": i - 1},
             headers={"Authorization": "Bearer user4"},
         )
         print(f"response = {response.json()}")
@@ -101,13 +102,15 @@ def fixture_fa_history_data_client(fa_client, main_db, places_published):
 
 
 def test_empty_user_history(fa_history_data_client):
-    response_data = get_helper(fa_history_data_client, "/places/history?user_id=user3")
+    response_data = get_helper(
+        fa_history_data_client, "/places/history?user_id=user3")
     assert len(response_data["history"]) == 0
     assert response_data["total"] == 0
 
 
 def test_user1_history(fa_history_data_client):
-    response_data = get_helper(fa_history_data_client, "places/history?user_id=user1")
+    response_data = get_helper(
+        fa_history_data_client, "places/history?user_id=user1")
     assert len(response_data["history"]) == 4
     assert response_data["total"] == 4
     for history_entry in response_data["history"]:
@@ -115,13 +118,15 @@ def test_user1_history(fa_history_data_client):
 
 
 def test_user2_history(fa_history_data_client):
-    response_data = get_helper(fa_history_data_client, "places/history?user_id=user2")
+    response_data = get_helper(
+        fa_history_data_client, "places/history?user_id=user2")
     assert 4 == len(response_data["history"])
     assert response_data["history"][0]["op"] == "ADDED"
     assert response_data["history"][1]["op"] == "ADDED"
     assert "UPDATED" == response_data["history"][2]["op"]
     assert "UPDATED" == response_data["history"][3]["op"]
-    assert re.match(r"^\d{10}\.\d{3,6}$", str(response_data["history"][3]["timestamp"]))
+    assert re.match(r"^\d{10}\.\d{3,6}$", str(
+        response_data["history"][3]["timestamp"]))
     for history_entry in response_data["history"]:
         assert "user2" == history_entry["user_id"]
 
@@ -143,7 +148,8 @@ def test_user_history_to_date(fa_history_data_client):
 
 
 def test_entry_id(fa_history_data_client):
-    response_data = get_helper(fa_history_data_client, "places/history?entry_id=104")
+    response_data = get_helper(
+        fa_history_data_client, "places/history?entry_id=104")
     assert 2 == len(response_data["history"])
     for history_entry in response_data["history"]:
         assert "104" == history_entry["entry_id"]

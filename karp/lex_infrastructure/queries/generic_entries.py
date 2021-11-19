@@ -1,5 +1,7 @@
 import typing
 
+from sb_json_tools import jsondiff
+
 from karp.lex.domain.entities import Entry
 from karp.lex.application.queries import EntryViews, EntryDto, EntryDiffDto, GetEntryDiff, GetEntryHistory, GetHistory, EntryHistoryRequest, EntryDiffRequest
 from karp.foundation.value_objects import unique_id
@@ -72,17 +74,18 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
         version: typing.Optional[int],
     ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id(resource_id)
-        with self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
             result = uw.repo.by_entry_id(entry_id, version=version)
 
-        return {
-            "entry_id": entry_id,
-            "resource": resource_id,
-            "version": version,
-            "entry": result.body,
-            "last_modified_by": result.last_modified_by,
-            "last_modified": result.last_modified,
-        }
+        return EntryDto(
+            entry_id=entry_id,
+            entry_uuid=result.id,
+            resource=resource_id,
+            version=version,
+            entry=result.body,
+            last_modified_by=result.last_modified_by,
+            last_modified=result.last_modified,
+        )
 
 
 class GenericGetHistory(GenericEntryQuery, GetHistory):
@@ -91,7 +94,7 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
         history_request: EntryHistoryRequest,
     ):
         entry_repo_id = self.get_entry_repo_id(history_request.resource_id)
-        with self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
             paged_query, total = uw.repo.get_history(
                 entry_id=history_request.entry_id,
                 user_id=history_request.user_id,
@@ -139,8 +142,8 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
         print(f"entry_vies.diff({diff_request})")
 
         entry_repo_id = self.get_entry_repo_id(diff_request.resource_id)
-        with self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
-            db_entry = entries_uw.repo.by_entry_id(diff_request.entry_id)
+        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+            db_entry = uw.repo.by_entry_id(diff_request.entry_id)
 
             #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
             #
@@ -148,22 +151,22 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
             #     timestamp_field = resource_obj.history_model.timestamp
             #
             if diff_request.from_version:
-                obj1 = entries_uw.repo.by_id(
+                obj1 = uw.repo.by_id(
                     db_entry.id, version=diff_request.from_version)
             elif diff_request.from_date is not None:
-                obj1 = entries_uw.repo.by_id(
+                obj1 = uw.repo.by_id(
                     db_entry.id, after_date=diff_request.from_date)
             else:
-                obj1 = entries_uw.repo.by_id(db_entry.id, oldest_first=True)
+                obj1 = uw.repo.by_id(db_entry.id, oldest_first=True)
 
             obj1_body = obj1.body if obj1 else None
 
             if diff_request.to_version:
-                obj2 = entries_uw.repo.by_id(
+                obj2 = uw.repo.by_id(
                     db_entry.id, version=diff_request.to_version)
                 obj2_body = obj2.body
             elif diff_request.to_date is not None:
-                obj2 = entries_uw.repo.by_id(
+                obj2 = uw.repo.by_id(
                     db_entry.id, before_date=diff_request.to_date)
                 obj2_body = obj2.body
             elif diff_request.entry is not None:
