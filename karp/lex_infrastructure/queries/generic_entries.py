@@ -46,7 +46,7 @@ class GenericEntryViews(EntryViews):
             entry_uuid=entry.id,
             resource=resource_id,
             version=entry.version,
-            body=entry.body,
+            entry=entry.body,
             last_modified=entry.last_modified,
             last_modified_by=entry.last_modified_by,
         )
