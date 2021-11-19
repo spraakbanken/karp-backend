@@ -202,6 +202,7 @@ class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry])
             current_db_entry.stamp(
                 cmd.user, message=cmd.message, timestamp=cmd.timestamp)
             if new_entry_id != cmd.entry_id:
+                print(f'updating entry_id: {cmd.entry_id} => {new_entry_id}')
                 current_db_entry.entry_id = new_entry_id
                 # uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
                 uw.repo.save(current_db_entry)

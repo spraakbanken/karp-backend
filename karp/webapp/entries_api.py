@@ -150,6 +150,9 @@ def update_entry(
         response.status_code = status.HTTP_400_BAD_REQUEST
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return err.error_obj
+    except Exception as err:
+        print(f'{err=}')
+        raise
 
 
 @router.delete('/{resource_id}/{entry_id}/delete')

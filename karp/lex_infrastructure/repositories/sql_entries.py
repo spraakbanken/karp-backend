@@ -145,6 +145,7 @@ class SqlEntryRepository(
 #                )
             # return self._session.add(runtime_entry)
         except db.exc.DBAPIError as exc:
+            print(f'db error: {str(exc)}')
             raise errors.RepositoryError("db failure") from exc
 
     def _update(self, entry: Entry):
