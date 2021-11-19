@@ -5,7 +5,7 @@ from karp.search.application.repositories import SearchServiceUnitOfWork
 from karp.search.domain import search_service, errors
 
 
-class EntryQuery:
+class SearchQuery:
     def __init__(
         self,
         resource_uow: ResourceUnitOfWork,
