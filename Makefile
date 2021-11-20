@@ -63,11 +63,11 @@ run: install
 
 .PHONY: serve
 serve: install-dev
-	poetry run uvicorn asgi:app
+	${INVENV} uvicorn asgi:app
 
 .PHONY: serve-w-reload
 serve-w-reload: install-dev
-	poetry run uvicorn --reload asgi:app
+	${INVENV} uvicorn --reload asgi:app
 
 lint-syntax-errors: install-dev
 	${INVENV} flake8 karp karp/tests setup.py run.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
@@ -81,11 +81,11 @@ run-all-tests-w-coverage: run-unit-tests-w-coverage run-integration-tests-w-cove
 
 .PHONY: unit-tests
 unit-tests:
-	poetry run pytest -vv karp/tests/unit
+	${INVENV} pytest -vv karp/tests/unit
 
 .PHONY: e2e-tests
 e2e-tests:
-	poetry run pytest -vv karp/tests/e2e
+	${INVENV} pytest -vv karp/tests/e2e
 
 .PHONY: run-e2e-tests-w-coverage
 run-e2e-tests-w-coverage: install-dev clean-pyc
