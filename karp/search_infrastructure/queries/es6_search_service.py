@@ -9,13 +9,16 @@ import elasticsearch.helpers  # pyre-ignore
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 
 # from karp import query_dsl
-from karp.search.domain import search_service
+from karp.search.application.queries import (
+    QueryRequest,
+    SearchService,
+)
 from karp.search.domain.errors import \
     UnsupportedField  # IncompleteQuery,; UnsupportedQuery,
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
 
-from . import es_config
+from karp.search_infrastructure.elasticsearch6 import es_config
 from .es_query import EsQuery
 
 # from karp.query_dsl import basic_ast as ast, op, is_a
@@ -27,7 +30,7 @@ KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
 
-class Es6SearchService(search_service.SearchService):
+class Es6SearchService(SearchService):
     def __init__(self, es: elasticsearch.Elasticsearch):
         self.es: elasticsearch.Elasticsearch = es
         if not self.es.indices.exists(index=KARP_CONFIGINDEX):
@@ -51,94 +54,11 @@ class Es6SearchService(search_service.SearchService):
         self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
         self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
 
-    def create_index(self, resource_id, config):
-        print("creating es mapping ...")
-        mapping = _create_es_mapping(config)
-
-        properties = mapping["properties"]
-        properties["freetext"] = {"type": "text"}
-        disabled_property = {"enabled": False}
-        properties["_entry_version"] = disabled_property
-        properties["_last_modified"] = disabled_property
-        properties["_last_modified_by"] = disabled_property
-
-        body = {
-            "settings": {
-                "number_of_shards": 1,
-                "number_of_replicas": 1,
-                "refresh_interval": -1,
-            },
-            "mappings": {"entry": mapping},
-        }
-
-        date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
-        index_name = resource_id + "_" + date
-        print(f"creating index '{index_name}' ...")
-        result = self.es.indices.create(index=index_name, body=body)
-        if "error" in result:
-            print("failed to create index")
-            raise RuntimeError("failed to create index")
-        print("index created")
-        self._set_index_name_for_resource(resource_id, index_name)
-        return index_name
-
-    def _set_index_name_for_resource(self, resource_id: str, index_name: str):
-        self.es.index(
-            index=KARP_CONFIGINDEX,
-            id=resource_id,
-            doc_type=KARP_CONFIGINDEX_TYPE,
-            body={"index_name": index_name},
-        )
-
     def _get_index_name_for_resource(self, resource_id: str) -> str:
         res = self.es.get(
             index=KARP_CONFIGINDEX, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
         )
         return res["_source"]["index_name"]
-
-    def publish_index(self, resource_id: str):
-        if self.es.indices.exists_alias(name=resource_id):
-            self.es.indices.delete_alias(name=resource_id, index="*")
-
-        index_name = self._get_index_name_for_resource(resource_id)
-        self.on_publish_resource(resource_id, index_name)
-        print(f"publishing '{resource_id}' => '{index_name}'")
-        self.es.indices.put_alias(name=resource_id, index=index_name)
-
-    def add_entries(self, resource_id: str, entries: List[search_service.IndexEntry]):
-        index_name = self._get_index_name_for_resource(resource_id)
-        index_to_es = []
-        for entry in entries:
-            assert isinstance(entry, search_service.IndexEntry)
-            # entry.update(metadata.to_dict())
-            index_to_es.append(
-                {
-                    "_index": index_name,
-                    "_id": entry.id,
-                    "_type": "entry",
-                    "_source": entry.entry,
-                }
-            )
-
-        elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
-
-    def delete_entry(
-        self,
-        resource_id: str,
-        *,
-        entry_id: Optional[str] = None,
-        entry: Optional[Entry] = None,
-    ):
-        if not entry and not entry_id:
-            raise ValueError("Must give either 'entry' or 'entry_id'.")
-        if entry:
-            entry_id = entry.entry_id
-        self.es.delete(
-            index=resource_id,
-            doc_type="entry",
-            id=entry_id,
-            refresh=True,
-        )
 
     @staticmethod
     def get_analyzed_fields_from_mapping(
@@ -251,12 +171,12 @@ class Es6SearchService(search_service.SearchService):
         }
         return result
 
-    def query(self, request: search_service.QueryRequest):
+    def query(self, request: QueryRequest):
         print(f"query called with {request}")
         query = EsQuery.from_query_request(request)
         return self.search_with_query(query)
 
-    def query_split(self, request: search_service.QueryRequest):
+    def query_split(self, request: QueryRequest):
         print(f"query called with {request}")
         query = EsQuery.from_query_request(request)
         query.split_results = True

@@ -1,7 +1,7 @@
 import abc
 import typing
 
-from karp.search.domain.search_service import IndexEntry
+from karp.search.application.repositories import IndexEntry
 
 
 class PreProcessor(abc.ABC):

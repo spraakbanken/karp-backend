@@ -8,9 +8,9 @@ from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
                      status)
 
 from karp import errors as karp_errors, auth
-from karp.search.application.queries import EntryQuery
+from karp.search.application.queries import SearchService, QueryRequest
 # from karp.search.domain import index, value_objects
-# from karp.services import entry_query
+# from karp.services import search_service
 # from karp.services.messagebus import MessageBus
 from karp.webapp import schemas
 
@@ -72,7 +72,7 @@ def query(
     ),
     user: auth.User = Security(get_current_user, scopes=["read"]),
     auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
-    entry_query: EntryQuery = Depends(inject_from_req(EntryQuery)),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     """
     # Query DSL
@@ -132,7 +132,7 @@ def query(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    query_request = index.QueryRequest(
+    query_request = QueryRequest(
         resource_ids=resource_list,
         q=q,
         from_=from_,
@@ -144,7 +144,7 @@ def query(
         lexicon_stats=lexicon_stats,
     )
     try:
-        response = entry_query.query(query_request, ctx=bus.ctx)
+        response = search_service.query(query_request)
 
     except karp_errors.KarpError as err:
         _logger.exception(
@@ -171,7 +171,7 @@ def get_entries_by_id(
     ),
     user: auth.User = Security(get_current_user, scopes=["read"]),
     auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
-    entry_query: EntryQuery = Depends(inject_from_req(EntryQuery)),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     print("webapp.views.get_entries_by_id")
     if not auth_service.authorize(
@@ -182,7 +182,7 @@ def get_entries_by_id(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    return entry_query.search_ids(resource_id, entry_ids, ctx=bus.ctx)
+    return search_service.search_ids(resource_id, entry_ids)
 
 
 @router.get("/query_split/{resources}", name="Query per resource")
@@ -219,7 +219,7 @@ def query_split(
     ),
     user: auth.User = Security(get_current_user, scopes=["read"]),
     auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
-    entry_query: EntryQuery = Depends(inject_from_req(EntryQuery)),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     print("webapp.views.query.query_split: called with resources={}".format(resources))
     resource_list = resources.split(",")
@@ -231,7 +231,7 @@ def query_split(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    query_request = index.QueryRequest(
+    query_request = QueryRequest(
         resource_ids=resource_list,
         q=q,
         from_=from_,
@@ -239,7 +239,7 @@ def query_split(
         lexicon_stats=lexicon_stats,
     )
     try:
-        response = entry_query.query_split(query_request, ctx=bus.ctx)
+        response = search_service.query_split(query_request)
 
     except karp_errors.KarpError as err:
         _logger.exception(

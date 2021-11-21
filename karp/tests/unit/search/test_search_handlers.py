@@ -4,7 +4,7 @@ import pytest
 
 from karp.lex.domain.events import ResourceCreated
 
-from karp.search.application.repositories import SearchServiceUnitOfWork
+from karp.search.application.repositories import IndexUnitOfWork
 from karp.tests.unit.lex import factories as lex_factories
 from . import adapters, factories
 
@@ -30,12 +30,12 @@ def test_index_reacts_on_lex_events(
         event = event_factory(resource_id=resource_created.resource_id)
         search_unit_ctx.event_bus.post(event)
 
-    search_service_uow = search_unit_ctx.container.get(
-        SearchServiceUnitOfWork)
-    assert search_service_uow.was_committed
+    index_uow = search_unit_ctx.container.get(
+        IndexUnitOfWork)
+    assert index_uow.was_committed
 
     assert predicate(
-        search_service_uow.repo.indicies[resource_created.resource_id])
+        index_uow.repo.indicies[resource_created.resource_id])
 
 
 def test_index_reacts_on_entry_added_event(
@@ -55,14 +55,14 @@ def test_index_reacts_on_entry_added_event(
     #     event = event_factory(resource_id=create_resource.resource_id)
     #     search_unit_ctx.event_bus.post(event)
 
-    search_service_uow = search_unit_ctx.container.get(
-        SearchServiceUnitOfWork)
-    assert search_service_uow.was_committed
+    index_uow = search_unit_ctx.container.get(
+        IndexUnitOfWork)
+    assert index_uow.was_committed
 
-    assert search_service_uow.repo.indicies[create_resource.resource_id].created
+    assert index_uow.repo.indicies[create_resource.resource_id].created
     assert len(
-        search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
-    assert 'bra' in search_service_uow.repo.indicies[
+        index_uow.repo.indicies[create_resource.resource_id].entries) == 1
+    assert 'bra' in index_uow.repo.indicies[
         create_resource.resource_id
     ].entries
 
@@ -89,14 +89,14 @@ def test_index_reacts_on_entry_updated_event(
     )
     search_unit_ctx.command_bus.dispatch(update_entry)
 
-    search_service_uow = search_unit_ctx.container.get(
-        SearchServiceUnitOfWork)
-    assert search_service_uow.was_committed
+    index_uow = search_unit_ctx.container.get(
+        IndexUnitOfWork)
+    assert index_uow.was_committed
 
-    assert search_service_uow.repo.indicies[create_resource.resource_id].created
+    assert index_uow.repo.indicies[create_resource.resource_id].created
     assert len(
-        search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
-    entry = search_service_uow.repo.indicies[
+        index_uow.repo.indicies[create_resource.resource_id].entries) == 1
+    entry = index_uow.repo.indicies[
         create_resource.resource_id
     ].entries['bra']
     assert entry.entry['wordclass'] == 'adjektiv'
@@ -123,14 +123,14 @@ def test_index_reacts_on_entry_deleted_event(
     )
     search_unit_ctx.command_bus.dispatch(delete_entry)
 
-    search_service_uow = search_unit_ctx.container.get(
-        SearchServiceUnitOfWork)
-    assert search_service_uow.was_committed
+    index_uow = search_unit_ctx.container.get(
+        IndexUnitOfWork)
+    assert index_uow.was_committed
 
-    assert search_service_uow.repo.indicies[create_resource.resource_id].created
+    assert index_uow.repo.indicies[create_resource.resource_id].created
     assert len(
-        search_service_uow.repo.indicies[create_resource.resource_id].entries) == 0
-    assert 'bra' not in search_service_uow.repo.indicies[
+        index_uow.repo.indicies[create_resource.resource_id].entries) == 0
+    assert 'bra' not in index_uow.repo.indicies[
         create_resource.resource_id
     ].entries
 
@@ -153,19 +153,18 @@ def test_reindex_resource_command(
         resource_id=create_resource.resource_id,
         version=1,
     )
-    search_service_uow = search_unit_ctx.container.get(
-        SearchServiceUnitOfWork)
-    previous_created_at = search_service_uow.repo.indicies[create_resource.resource_id].created_at
+    index_uow = search_unit_ctx.container.get(
+        IndexUnitOfWork)
+    previous_created_at = index_uow.repo.indicies[create_resource.resource_id].created_at
     search_unit_ctx.command_bus.dispatch(reindex_resource)
 
-    search_service_uow = search_unit_ctx.container.get(
-        SearchServiceUnitOfWork)
-    assert search_service_uow.was_committed
+    index_uow = search_unit_ctx.container.get(IndexUnitOfWork)
+    assert index_uow.was_committed
 
-    assert search_service_uow.repo.indicies[create_resource.resource_id].created
+    assert index_uow.repo.indicies[create_resource.resource_id].created
     assert len(
-        search_service_uow.repo.indicies[create_resource.resource_id].entries) == 1
-    assert search_service_uow.repo.indicies[
+        index_uow.repo.indicies[create_resource.resource_id].entries) == 1
+    assert index_uow.repo.indicies[
         create_resource.resource_id
     ].created_at > previous_created_at
 

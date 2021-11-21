@@ -1,11 +1,12 @@
 import typing
 
 from karp.lex.application.repositories import ResourceUnitOfWork
+from karp.search.application.queries import SearchQuery
 from karp.search.application.repositories import SearchServiceUnitOfWork
 from karp.search.domain import search_service, errors
 
 
-class SearchQuery:
+class GenericSearchQuery(SearchQuery):
     def __init__(
         self,
         resource_uow: ResourceUnitOfWork,

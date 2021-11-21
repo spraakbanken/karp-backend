@@ -13,7 +13,7 @@ from karp.foundation import (
 from karp.lex.domain import events as lex_events
 from karp.lex.domain.entities import resource
 from karp.search.application.queries import ResourceViews
-from karp.search.application.repositories import SearchServiceUnitOfWork
+from karp.search.application.repositories import IndexUnitOfWork
 from karp.search.application.transformers import EntryTransformer, PreProcessor
 # from .search_service import SearchServiceModule
 # import karp.resourcemgr as resourcemgr
@@ -22,8 +22,8 @@ from karp.search.application.transformers import EntryTransformer, PreProcessor
 from karp import errors as karp_errors
 from karp.lex.domain import events, entities
 # , errors, events, search_service, model
-from karp.search.domain import commands, search_service
-from karp.search.domain.search_service import SearchService, IndexEntry
+from karp.search.domain import commands
+# from karp.search.domain.search_service import SearchService, IndexEntry
 from karp.lex.domain.entities.entry import Entry, create_entry
 # from karp.domain.models.resource import Resource
 # from karp.domain.repository import ResourceRepository
@@ -99,12 +99,12 @@ class ReindexResourceHandler(
 ):
     def __init__(
         self,
-        search_service_uow: SearchServiceUnitOfWork,
+        index_uow: IndexUnitOfWork,
         resource_views: ResourceViews,
         pre_processor: PreProcessor,
     ) -> None:
         super().__init__()
-        self.search_service_uow = search_service_uow
+        self.index_uow = index_uow
         self.resource_views = resource_views
         self.pre_processor = pre_processor
 
@@ -113,7 +113,7 @@ class ReindexResourceHandler(
         cmd: commands.ReindexResource
     ) -> None:
         logger.debug("Reindexing resource '%s'", cmd.resource_id)
-        with self.search_service_uow as uw:
+        with self.index_uow as uw:
             uw.repo.create_index(
                 cmd.resource_id,
                 self.resource_views.get_resource_config(cmd.resource_id),
@@ -155,9 +155,9 @@ def research_service(
 class ResourcePublishedHandler(foundation_events.EventHandler[lex_events.ResourcePublished]):
     def __init__(
         self,
-        search_service_uow: SearchServiceUnitOfWork
+        index_uow: IndexUnitOfWork
     ):
-        self.search_service_uow = search_service_uow
+        self.index_uow = index_uow
 
     def __call__(
         self,
@@ -165,7 +165,7 @@ class ResourcePublishedHandler(foundation_events.EventHandler[lex_events.Resourc
     ) -> None:
         print("calling research_service ...")
         # research_service(evt, ctx)
-        with self.search_service_uow as uw:
+        with self.index_uow as uw:
             uw.repo.publish_index(evt.resource_id)
             uw.commit()
         # if version:
@@ -175,16 +175,16 @@ class ResourcePublishedHandler(foundation_events.EventHandler[lex_events.Resourc
 class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.ResourceCreated]):
     def __init__(
         self,
-        search_service_uow: SearchServiceUnitOfWork
+        index_uow: IndexUnitOfWork
     ):
-        self.search_service_uow = search_service_uow
+        self.index_uow = index_uow
 
     def collect_new_events(self) -> Iterable[foundation_events.Event]:
-        yield from self.search_service_uow.collect_new_events()
+        yield from self.index_uow.collect_new_events()
 
     def __call__(self, evt: events.ResourceCreated):
         print(f"search_service_handlers.create_search_service: evt = {evt}")
-        with self.search_service_uow as uw:
+        with self.index_uow as uw:
             uw.repo.create_index(evt.resource_id, evt.config)
             uw.commit()
 
@@ -202,11 +202,11 @@ class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.Resou
 class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
     def __init__(
         self,
-        search_service_uow: SearchServiceUnitOfWork,
+        index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
         resource_views: ResourceViews,
     ):
-        self.search_service_uow = search_service_uow
+        self.index_uow = index_uow
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
 
@@ -214,7 +214,7 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
         self,
         evt: events.EntryAdded,
     ):
-        with self.search_service_uow as uw:
+        with self.index_uow as uw:
             entry = entities.Entry(
                 entity_id=evt.entity_id,
                 entry_id=evt.entry_id,
@@ -239,11 +239,11 @@ class EntryUpdatedHandler(
 ):
     def __init__(
         self,
-        search_service_uow: SearchServiceUnitOfWork,
+        index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
         resource_views: ResourceViews,
     ):
-        self.search_service_uow = search_service_uow
+        self.index_uow = index_uow
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
 
@@ -251,7 +251,7 @@ class EntryUpdatedHandler(
         self,
         evt: events.EntryUpdated,
     ):
-        with self.search_service_uow as uw:
+        with self.index_uow as uw:
             entry = entities.Entry(
                 entity_id=evt.entity_id,
                 entry_id=evt.entry_id,
@@ -271,7 +271,7 @@ class EntryUpdatedHandler(
                     resource_id, [evt.entry_id])
             uw.commit()
             # add_entries(evt.resource_id, [entry], ctx)
-            # ctx.search_service_uow.commit()
+            # ctx.index_uow.commit()
 
     # def add_entries(
     #     resource_repo: ResourceRepository,
@@ -293,12 +293,12 @@ def add_entries(
 ):
     if not search_service_name:
         search_service_name = resource_id
-    with ctx.search_service_uow:
+    with ctx.index_uow:
         with ctx.resource_uow:
             resource = ctx.resource_uow.repo.by_resource_id(resource_id)
             if not resource:
                 raise errors.ResourceNotFound(resource_id)
-            ctx.search_service_uow.repo.add_entries(
+            ctx.index_uow.repo.add_entries(
                 search_service_name,
                 [transform_to_search_service_entry(resource, entry, ctx)
                  for entry in entries],
@@ -306,7 +306,7 @@ def add_entries(
             if update_refs:
                 _update_references(resource, entries, ctx)
             ctx.resource_uow.commit()
-        ctx.search_service_uow.commit()
+        ctx.index_uow.commit()
 
 
 class EntryDeletedHandler(
@@ -314,11 +314,11 @@ class EntryDeletedHandler(
 ):
     def __init__(
         self,
-        search_service_uow: SearchServiceUnitOfWork,
+        index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
         resource_views: ResourceViews,
     ):
-        self.search_service_uow = search_service_uow
+        self.index_uow = index_uow
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
 
@@ -326,7 +326,7 @@ class EntryDeletedHandler(
         self,
         evt: events.EntryDeleted
     ):
-        with self.search_service_uow as uw:
+        with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
                 uw.repo.delete_entry(
                     resource_id,

@@ -2,7 +2,7 @@ import typing
 
 from karp.lex.application.queries import GetEntryRepositoryId
 from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
-from karp.search.domain.search_service import IndexEntry
+from karp.search.application.repositories import IndexEntry
 from karp.search.application.transformers import PreProcessor, EntryTransformer
 
 

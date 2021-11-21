@@ -212,7 +212,6 @@ class SqlResourceUnitOfWork(
         self._resources = None
 
     def _begin(self):
-        print(f'SqlResourceUnitOfWork._begin called: {self=}')
         self._session = self.session_factory()
         self._resources = SqlResourceRepository(self._session)
         return self

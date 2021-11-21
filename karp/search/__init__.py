@@ -8,7 +8,7 @@ from karp.lex.domain import events as lex_events
 from karp.search.domain import commands
 from karp.search.application import handlers
 from karp.search.application.queries import ResourceViews
-from karp.search.application.repositories import SearchServiceUnitOfWork
+from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry
 from karp.search.application.transformers import (
     EntryTransformer,
     PreProcessor,
@@ -19,12 +19,12 @@ class Search(injector.Module):
     @injector.provider
     def reindex_resource(
         self,
-        search_service_uow: SearchServiceUnitOfWork,
+        index_uow: IndexUnitOfWork,
         pre_processor: PreProcessor,
         resource_views: ResourceViews,
     ) -> CommandHandler[commands.ReindexResource]:
         return handlers.ReindexResourceHandler(
-            search_service_uow=search_service_uow,
+            index_uow=index_uow,
             pre_processor=pre_processor,
             resource_views=resource_views,
         )
@@ -32,35 +32,35 @@ class Search(injector.Module):
     @injector.multiprovider
     def create_index(
         self,
-        search_service_uow: SearchServiceUnitOfWork
+        index_uow: IndexUnitOfWork
     ) -> List[EventHandler[lex_events.ResourceCreated]]:
         return [
             handlers.CreateSearchServiceHandler(
-                search_service_uow
+                index_uow
             )
         ]
 
     @injector.multiprovider
     def publish_index(
         self,
-        search_service_uow: SearchServiceUnitOfWork
+        index_uow: IndexUnitOfWork
     ) -> List[EventHandler[lex_events.ResourcePublished]]:
         return [
             handlers.ResourcePublishedHandler(
-                search_service_uow
+                index_uow
             )
         ]
 
     @injector.multiprovider
     def add_entry(
         self,
-        search_service_uow: SearchServiceUnitOfWork,
+        index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
         resource_views: ResourceViews,
     ) -> List[EventHandler[lex_events.EntryAdded]]:
         return [
             handlers.EntryAddedHandler(
-                search_service_uow=search_service_uow,
+                index_uow=index_uow,
                 entry_transformer=entry_transformer,
                 resource_views=resource_views,
             )
@@ -69,13 +69,13 @@ class Search(injector.Module):
     @injector.multiprovider
     def update_entry(
         self,
-        search_service_uow: SearchServiceUnitOfWork,
+        index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
         resource_views: ResourceViews,
     ) -> List[EventHandler[lex_events.EntryUpdated]]:
         return [
             handlers.EntryUpdatedHandler(
-                search_service_uow=search_service_uow,
+                index_uow=index_uow,
                 entry_transformer=entry_transformer,
                 resource_views=resource_views,
             )
@@ -84,13 +84,13 @@ class Search(injector.Module):
     @injector.multiprovider
     def delete_entry(
         self,
-        search_service_uow: SearchServiceUnitOfWork,
+        index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
         resource_views: ResourceViews,
     ) -> List[EventHandler[lex_events.EntryDeleted]]:
         return [
             handlers.EntryDeletedHandler(
-                search_service_uow=search_service_uow,
+                index_uow=index_uow,
                 entry_transformer=entry_transformer,
                 resource_views=resource_views,
             )

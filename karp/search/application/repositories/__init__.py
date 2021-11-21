@@ -1,1 +1,1 @@
-from .search_service_unit_of_work import SearchServiceUnitOfWork
+from .indicies import IndexUnitOfWork, Index, IndexEntry

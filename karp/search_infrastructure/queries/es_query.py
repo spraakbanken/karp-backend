@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import elasticsearch_dsl as es_dsl
 
 from karp.search.domain import query_dsl  # pyre-ignore
-from karp.search.domain import search_service
+from karp.search.application.queries import QueryRequest
 from karp.search.domain.errors import IncompleteQuery, UnsupportedQuery
 from karp.search.domain.query import Query
 from karp.search.domain.query_dsl import basic_ast as ast
@@ -31,7 +31,7 @@ class EsQuery(Query):
         return "EsQuery query={} resource_str={}".format(self.query, self.resource_str)
 
     @classmethod
-    def from_query_request(cls, request: search_service.QueryRequest):
+    def from_query_request(cls, request: QueryRequest):
         query = cls(fields=[], resources=request.resource_ids, sort=[])
         query.from_ = request.from_
         query.size = request.size

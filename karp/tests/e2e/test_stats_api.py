@@ -24,5 +24,5 @@ def test_stats(fa_data_client):
     assert response.status_code == 200
 
     entries = response.json()
-
-    assert len(entries) == 3
+    print(f'{entries=}')
+    assert len(entries) == 4

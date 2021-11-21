@@ -1,12 +1,14 @@
 from typing import Dict, List, Optional
 
-# from karp.domain.models.search_service import SearchService, IndexEntry
-from karp.search.domain import search_service
+from karp.search.application.repositories import Index,IndexUnitOfWork, IndexEntry
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
 
 
-class SqlSearchService(search_service.SearchService):
+class SqlSearchService(Index):
+    def __init__(self):
+        self.seen = []
+
     def create_index(self, resource_id: str, resource_config: Dict):
         pass
 
@@ -25,7 +27,7 @@ class SqlSearchService(search_service.SearchService):
     def statistics(self):
         pass
 
-    def add_entries(self, resource_id, entries: List[search_service.IndexEntry]):
+    def add_entries(self, resource_id, entries: List[IndexEntry]):
         pass
 
     def delete_entry(
@@ -36,3 +38,32 @@ class SqlSearchService(search_service.SearchService):
         entry_id: Optional[str] = None
     ):
         pass
+
+
+class SqlIndexUnitOfWork(IndexUnitOfWork):
+    @classmethod
+    def from_dict(cls, **kwargs):
+        print(f"SqlIndexUnitOfWork.from_dict: kwargs = {kwargs}")
+        return cls()
+
+    def __init__(
+        self,
+        session_factory,
+        event_bus,
+    ):
+        super().__init__(event_bus)
+        # session_factory=DEFAULT_SESSION_FACTORY):
+        self.session_factory = session_factory
+        self._index = SqlSearchService()
+
+    def _commit(self):
+        pass
+
+    def rollback(self):
+        pass
+
+    @property
+    def repo(self):
+        if not self._index:
+            raise RuntimeError()
+        return self._index

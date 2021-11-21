@@ -40,8 +40,6 @@ class SqlEntryUowRepository(EntryUowRepository, SqlRepository):
             EntryUowModel
         ).filter_by(id=id_).order_by(EntryUowModel.last_modified.desc())
         row = stmt.first()
-        print(f'row = {row}')
-        print(f'row.dict = {row.__dict__}')
         if row:
             return self._row_to_entity(row)
         return None
@@ -76,7 +74,6 @@ class SqlEntryUowRepositoryUnitOfWork(
         self._repo = None
 
     def __enter__(self):
-        print(f'{self=}.__enter__ called')
         self._session = self.session_factory()
         self._repo = SqlEntryUowRepository(
             entry_uow_factory=self.entry_uow_factory,
@@ -85,7 +82,6 @@ class SqlEntryUowRepositoryUnitOfWork(
         return super().__enter__()
 
     def _begin(self):
-        print(f'{self=}._begin called')
         self._session = self.session_factory()
         self._repo = SqlEntryUowRepository(
             entry_uow_factory=self.entry_uow_factory,

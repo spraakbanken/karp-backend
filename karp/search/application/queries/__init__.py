@@ -1,2 +1,2 @@
-from .entry_query import EntryQuery
+from .search_service import SearchService, QueryRequest, StatisticsDto
 from .resources import ResourceViews

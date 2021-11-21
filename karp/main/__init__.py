@@ -16,6 +16,7 @@ from sqlalchemy.engine import Engine, create_engine, url as sa_url
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
+from karp.search_infrastructure import GenericSearchInfrastructure, SearchServiceMod
 from karp.main import config
 from karp.main.modules import CommandBusMod, Db, EventBusMod
 from karp.search import Search
@@ -44,12 +45,16 @@ def bootstrap_app(container=None) -> AppContext:
     # bus = container.bus()
     # bus.handle(events.AppStarted())  # needed? ?
 
+    search_service = env('SEARCH_CONTEXT', 'sql_search_service')
     engine = create_engine(db_url)
-    dependency_injector = _setup_dependency_injection(engine)
+    dependency_injector = _setup_dependency_injection(engine, search_service)
     return AppContext(dependency_injector)
 
 
-def _setup_dependency_injection(engine: Engine) -> injector.Injector:
+def _setup_dependency_injection(
+    engine: Engine,
+    search_service: str,
+) -> injector.Injector:
     return injector.Injector(
         [
             Db(engine),
@@ -59,6 +64,8 @@ def _setup_dependency_injection(engine: Engine) -> injector.Injector:
             LexInfrastructure(),
             GenericLexInfrastructure(),
             Search(),
+            GenericSearchInfrastructure(),
+            SearchServiceMod(search_service),
         ],
         auto_bind=False,
     )

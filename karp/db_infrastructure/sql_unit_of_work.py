@@ -40,7 +40,6 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
     #     return self._repo
 
     def __enter__(self):
-        print(f'SqlUnitOfWork.__enter__ called: {self=}')
         return self.begin()
 
     # def __exit__(self, exc_type, exc_val, exc_tb):
@@ -55,13 +54,11 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
     #     return False  # re-raise
 
     def begin(self):
-        print(f'SqlUnitOfWork.begin called: {self=}')
         self._check_state(expected_state=SqlUnitOfWork.State.initialized)
         self._state = SqlUnitOfWork.State.begun
         return self._begin()
 
     def _begin(self):
-        print('SqlUnitOfWork._begin called')
         return self
 
     def _check_state(self, expected_state):
