@@ -16,9 +16,9 @@ from sqlalchemy.engine import Engine, create_engine, url as sa_url
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
-from karp.search_infrastructure import GenericSearchInfrastructure, SearchServiceMod
+from karp.search_infrastructure import GenericSearchInfrastructure, Es6SearchIndexMod, GenericSearchIndexMod
 from karp.main import config
-from karp.main.modules import CommandBusMod, Db, EventBusMod
+from karp.main.modules import CommandBusMod, Db, EventBusMod, ElasticSearchMod
 from karp.search import Search
 
 
@@ -30,6 +30,7 @@ class AppContext:
 def bootstrap_app(container=None) -> AppContext:
     env = config.load_env()
     db_url = config.parse_sqlalchemy_url(env)
+    es_url = env('ELASTICSEARCH_HOST')
     # if n ot container:
     # container = AppContainer()
     # container.config.core.logging.from_value(_logging_config())
@@ -47,28 +48,37 @@ def bootstrap_app(container=None) -> AppContext:
 
     search_service = env('SEARCH_CONTEXT', 'sql_search_service')
     engine = create_engine(db_url)
-    dependency_injector = _setup_dependency_injection(engine, search_service)
+    dependency_injector = _setup_dependency_injection(engine, es_url=es_url)
+    _setup_search_context(dependency_injector, search_service)
     return AppContext(dependency_injector)
 
 
 def _setup_dependency_injection(
     engine: Engine,
-    search_service: str,
+    es_url: str,
 ) -> injector.Injector:
     return injector.Injector(
         [
             Db(engine),
             CommandBusMod(),
             EventBusMod(),
+            ElasticSearchMod(es_url),
             Lex(),
             LexInfrastructure(),
             GenericLexInfrastructure(),
             Search(),
             GenericSearchInfrastructure(),
-            SearchServiceMod(search_service),
+            # SearchServiceMod(search_service),
         ],
         auto_bind=False,
     )
+
+
+def _setup_search_context(container: injector.Injector, search_service: str) -> None:
+    if search_service.lower() == 'es6_search_service':
+        container.binder.install(Es6SearchIndexMod())
+    else:
+        container.binder.install(GenericSearchIndexMod())
 
 
 def _logging_config() -> typing.Dict[str, typing.Any]:

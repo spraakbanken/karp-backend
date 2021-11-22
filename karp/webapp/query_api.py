@@ -9,20 +9,10 @@ from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
 
 from karp import errors as karp_errors, auth
 from karp.search.application.queries import SearchService, QueryRequest
-# from karp.search.domain import index, value_objects
-# from karp.services import search_service
-# from karp.services.messagebus import MessageBus
 from karp.webapp import schemas
 
 from .app_config import get_current_user
 from .fastapi_injector import inject_from_req
-
-# from karp.domain.models.auth_service import PermissionLevel
-
-# from karp.application import ctx
-# from karp.application.services import resources as resources_service
-
-
 
 
 _logger = logging.getLogger("karp")
@@ -58,7 +48,8 @@ def query(
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^\w+\|(asc|desc)",
     ),
-    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
+    lexicon_stats: bool = Query(
+        True, description="Show the hit count per lexicon"),
     include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
@@ -71,7 +62,8 @@ def query(
         description="Will return the result in the specified format.",
     ),
     user: auth.User = Security(get_current_user, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
+    auth_service: auth.AuthService = Depends(
+        inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     """
@@ -125,7 +117,7 @@ def query(
     )
     resource_list = resources.split(",")
     if not auth_service.authorize(
-        value_objects.PermissionLevel.read, user, resource_list
+        auth.PermissionLevel.read, user, resource_list
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -144,6 +136,7 @@ def query(
         lexicon_stats=lexicon_stats,
     )
     try:
+        print(f'{search_service=}')
         response = search_service.query(query_request)
 
     except karp_errors.KarpError as err:
@@ -163,19 +156,21 @@ def query(
     name="Get lexical entries by id",
 )
 def get_entries_by_id(
-    resource_id: str = Path(..., description="The resource to perform operation on"),
+    resource_id: str = Path(...,
+                            description="The resource to perform operation on"),
     entry_ids: str = Path(
         ...,
         description="Comma-separated. The ids to perform operation on.",
         regex=r"^\w(,\w)*",
     ),
     user: auth.User = Security(get_current_user, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
+    auth_service: auth.AuthService = Depends(
+        inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     print("webapp.views.get_entries_by_id")
     if not auth_service.authorize(
-        value_objects.PermissionLevel.read, user, [resource_id]
+        auth.PermissionLevel.read, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -206,7 +201,8 @@ def query_split(
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^\w+\|(asc|desc)",
     ),
-    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
+    lexicon_stats: bool = Query(
+        True, description="Show the hit count per lexicon"),
     include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
@@ -218,13 +214,14 @@ def query_split(
         description="Will return the result in the specified format.",
     ),
     user: auth.User = Security(get_current_user, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
+    auth_service: auth.AuthService = Depends(
+        inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     print("webapp.views.query.query_split: called with resources={}".format(resources))
     resource_list = resources.split(",")
     if not auth_service.authorize(
-        value_objects.PermissionLevel.read, user, resource_list
+        auth.PermissionLevel.read, user, resource_list
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

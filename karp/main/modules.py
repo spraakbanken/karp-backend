@@ -38,5 +38,5 @@ class ElasticSearchMod(injector.Module):
         self._url = es_url
 
     @injector.provider
-    def es(self) -> elasticsearch.ElasticSearch:
-        return elasticsearch.ElasticSearch(self._url)
+    def es(self) -> elasticsearch.Elasticsearch:
+        return elasticsearch.Elasticsearch(self._url)

@@ -1,3 +1,4 @@
+import elasticsearch
 import injector
 from sqlalchemy.orm import sessionmaker
 
@@ -23,6 +24,7 @@ from karp.search.application.transformers import (
 from karp.search_infrastructure.queries import (
     GenericResourceViews,
     GenericSearchService,
+    Es6SearchService,
 )
 from karp.search_infrastructure.transformers import (
     GenericEntryTransformer,
@@ -31,6 +33,7 @@ from karp.search_infrastructure.transformers import (
 from karp.search_infrastructure.repositories import (
     # SqlIndexUnitOfWork,
     NoOpIndexUnitOfWork,
+    Es6IndexUnitOfWork,
 )
 
 
@@ -72,9 +75,7 @@ class GenericSearchInfrastructure(injector.Module):
         )
 
 
-class SearchServiceMod(injector.Module):
-    def __init__(self, search_service: str):
-        pass
+class GenericSearchIndexMod(injector.Module):
 
     @injector.provider
     def generic_search_service(
@@ -92,3 +93,24 @@ class SearchServiceMod(injector.Module):
         self,
     ) -> IndexUnitOfWork:
         return NoOpIndexUnitOfWork()
+
+
+class Es6SearchIndexMod(injector.Module):
+
+    @injector.provider
+    def es6_search_service(
+        self,
+        es: elasticsearch.Elasticsearch,
+    ) -> SearchService:
+        return Es6SearchService(es=es)
+
+    @injector.provider
+    def es6_index_uow(
+        self,
+        es: elasticsearch.Elasticsearch,
+        event_bus: EventBus,
+    ) -> IndexUnitOfWork:
+        return Es6IndexUnitOfWork(
+            es=es,
+            event_bus=event_bus
+        )

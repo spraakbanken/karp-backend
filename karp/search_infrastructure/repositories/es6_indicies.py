@@ -1,12 +1,18 @@
+from datetime import datetime
+import logging
+import re
+from typing import Dict, List, Optional, Any, Tuple, Union
+
 import elasticsearch
 
+from karp.foundation.events import EventBus
+
+from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
     Index,
     IndexEntry,
     IndexUnitOfWork,
 )
-
-
 
 
 logger = logging.getLogger("karp")
@@ -38,6 +44,10 @@ class Es6Index(Index):
         analyzed_fields, sortable_fields = self._init_field_mapping()
         self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
         self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
+
+    @property
+    def seen(self):
+        return []
 
     def create_index(self, resource_id, config):
         print("creating es mapping ...")
@@ -204,127 +214,6 @@ class Es6Index(Index):
                 index_names.append((alias, index))
         return index_names
 
-    def build_query(self, args, resource_str: str) -> EsQuery:
-        query = EsQuery()
-        query.parse_arguments(args, resource_str)
-        return query
-
-    def _format_result(self, resource_ids, response):
-        logger.debug(
-            "es6_index_format_result called with resource_ids=%s", resource_ids
-        )
-
-        def format_entry(entry):
-
-            dict_entry = entry.to_dict()
-            version = dict_entry.pop("_entry_version", None)
-            last_modified_by = dict_entry.pop("_last_modified_by", None)
-            last_modified = dict_entry.pop("_last_modified", None)
-            return {
-                "id": entry.meta.id,
-                "version": version,
-                "last_modified": last_modified,
-                "last_modified_by": last_modified_by,
-                "resource": next(
-                    resource
-                    for resource in resource_ids
-                    if entry.meta.indexstartswith(resource)
-                ),
-                "entry": dict_entry,
-            }
-
-        result = {
-            "total": response.hits.total,
-            "hits": [format_entry(entry) for entry in response],
-        }
-        return result
-
-    def query(self, request: QueryRequest):
-        print(f"query called with {request}")
-        query = EsQuery.from_query_request(request)
-        return self.search_with_query(query)
-
-    def query_split(self, request: QueryRequest):
-        print(f"query called with {request}")
-        query = EsQuery.from_query_request(request)
-        query.split_results = True
-        return self.search_with_query(query)
-
-    def search_with_query(self, query: EsQuery):
-        logger.info("search_with_query called with query=%s", query)
-        print("search_with_query called with query={}".format(query))
-        if query.split_results:
-            ms = es_dsl.MultiSearch(using=self.es)
-
-            for resource in query.resources:
-                s = es_dsl.Search(index=resource)
-
-                if query.query is not None:
-                    s = s.query(query.query)
-                s = s[query.from_: query.from_ + query.size]
-                if query.sort:
-                    s = s.sort(
-                        *self.translate_sort_fields([resource], query.sort))
-                elif resource in query.sort_dict:
-                    s = s.sort(
-                        *self.translate_sort_fields(
-                            [resource], query.sort_dict[resource]
-                        )
-                    )
-                ms = ms.add(s)
-
-            responses = ms.execute()
-            result = {"total": 0, "hits": {}}
-            for i, response in enumerate(responses):
-                result["hits"][query.resources[i]] = self._format_result(
-                    query.resources, response
-                ).get("hits", [])
-                result["total"] += response.hits.total
-                if query.lexicon_stats:
-                    if "distribution" not in result:
-                        result["distribution"] = {}
-                    result["distribution"][query.resources[i]
-                                           ] = response.hits.total
-            return result
-        else:
-            s = es_dsl.Search(
-                using=self.es, index=query.resources, doc_type="entry")
-            if query.query is not None:
-                s = s.query(query.query)
-
-            s = s[query.from_: query.from_ + query.size]
-
-            if query.lexicon_stats:
-                s.aggs.bucket(
-                    "distribution", "terms", field="_index", size=len(query.resources)
-                )
-            if query.sort:
-                s = s.sort(
-                    *self.translate_sort_fields(query.resources, query.sort))
-            elif query.sort_dict:
-                sort_fields = []
-                for resource, sort in query.sort_dict.items():
-                    sort_fields.extend(
-                        self.translate_sort_fields([resource], sort))
-                s = s.sort(*sort_fields)
-            logger.debug("s = %s", s.to_dict())
-            response = s.execute()
-
-            # TODO format response in a better way, because the whole response takes up too much space in the logs
-            # logger.debug('response = {}'.format(response.to_dict()))
-
-            logger.debug("calling _format_result")
-            result = self._format_result(query.resources, response)
-            if query.lexicon_stats:
-                result["distribution"] = {}
-                for bucket in response.aggregations.distribution.buckets:
-                    key = bucket["key"]
-                    value = bucket["doc_count"]
-                    result["distribution"][key.rsplit("_", 1)[0]] = value
-
-            # logger.debug("return result = %s", result)
-            return result
-
     def translate_sort_fields(
         self, resources: List[str], sort_values: List[str]
     ) -> List[Union[str, Dict[str, Dict[str, str]]]]:
@@ -368,42 +257,6 @@ class Es6Index(Index):
             raise UnsupportedField(
                 f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
             )
-
-    def search_ids(self, resource_id: str, entry_ids: str):
-        logger.info(
-            "Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:"
-        )
-        logger.info("  resource_id = {}".format(resource_id))
-        logger.info("  entry_ids = {}".format(entry_ids))
-        entries = entry_ids.split(",")
-        query = es_dsl.Q("terms", _id=entries)
-        logger.debug("query = {}".format(query))
-        s = es_dsl.Search(using=self.es, index=resource_id).query(query)
-        logger.debug("s = {}".format(s.to_dict()))
-        response = s.execute()
-
-        return self._format_result([resource_id], response)
-
-    def statistics(self, resource_id: str, field: str):
-        s = es_dsl.Search(using=self.es, index=resource_id)
-        s = s[0:0]
-
-        if field in self.analyzed_fields[resource_id]:
-            field += ".raw"
-
-        logger.debug("Statistics: analyzed fields are:")
-        logger.debug(json.dumps(self.analyzed_fields, indent=4))
-        logger.debug(
-            "Doing aggregations on resource_id: {resource_id}, on field {field}".format(
-                resource_id=resource_id, field=field
-            )
-        )
-        s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
-        response = s.execute()
-        return [
-            {"value": bucket["key"], "count": bucket["doc_count"]}
-            for bucket in response.aggregations.field_values.buckets
-        ]
 
     def on_publish_resource(self, alias_name: str, index_name: str):
         mapping = self._get_index_mappings(index=index_name)
@@ -525,19 +378,24 @@ def _create_es_mapping(config):
 
     return es_mapping
 
+
 class Es6IndexUnitOfWork(
     IndexUnitOfWork
 ):
-    def __init__(self, es6_index: Es6Index) -> None:
-        super().__init__()
-        self._index = es6_index
+    def __init__(
+        self,
+        es: elasticsearch.Elasticsearch,
+        event_bus: EventBus,
+    ) -> None:
+        super().__init__(event_bus=event_bus)
+        self._index = Es6Index(es=es)
 
-    @classmethod
-    def from_dict(cls, **kwargs):
-        return cls()
+    # @classmethod
+    # def from_dict(cls, **kwargs):
+    #     return cls()
 
     def _commit(self):
-        return super()._commit()
+        logger.debug('Calling _commit in Es6IndexUnitOfWork')
 
     def rollback(self):
         return super().rollback()
