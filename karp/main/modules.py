@@ -1,3 +1,4 @@
+import elasticsearch
 import injector
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import sessionmaker
@@ -30,3 +31,12 @@ class Db(injector.Module):
     @injector.provider
     def session_factory(self) -> sessionmaker:
         return sessionmaker(bind=self._engine)
+
+
+class ElasticSearchMod(injector.Module):
+    def __init__(self, es_url: str) -> None:
+        self._url = es_url
+
+    @injector.provider
+    def es(self) -> elasticsearch.ElasticSearch:
+        return elasticsearch.ElasticSearch(self._url)
