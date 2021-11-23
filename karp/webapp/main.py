@@ -113,7 +113,6 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     async def injector_middleware(request: Request, call_next):
         request.state.container = app_context.container
         response = await call_next(request)
-        print('request.state.injector.close')
         return response
 
     return app

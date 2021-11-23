@@ -177,6 +177,7 @@ def test_query_split(fa_data_client):
         headers={"Authorization": "Bearer 1234"},
     )
 
+    print(f'{fa_data_client.app.state.container}')
     assert entries["distribution"] == {"municipalities": 3, "places": 22}
 
 

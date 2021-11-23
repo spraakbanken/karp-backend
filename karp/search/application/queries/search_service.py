@@ -10,6 +10,26 @@ from karp.search.domain.query import Query
 logger = logging.getLogger("karp")
 
 
+class EntryDto(pydantic.BaseModel):
+    id: str
+    version: int
+    last_modified: float
+    last_modified_by: str
+    resource: str
+    entry: typing.Dict
+
+
+class QueryResponse(pydantic.BaseModel):
+    hits: typing.List[EntryDto]
+    total: int
+
+
+class QuerySplitResponse(pydantic.BaseModel):
+    hits: typing.List[EntryDto]
+    total: int
+    distribution: typing.Dict[str, int]
+
+
 class StatisticsDto(pydantic.BaseModel):
     value: str
     count: int

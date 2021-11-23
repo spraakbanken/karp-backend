@@ -423,7 +423,6 @@ class SqlEntryRepository(
         }
 
     def _history_row_to_entry(self, row) -> Entry:
-        print(f"row = {row!r}")
         return Entry(
             entry_id=row.entry_id,
             body=row.body,

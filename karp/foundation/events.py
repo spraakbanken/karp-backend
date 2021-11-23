@@ -54,14 +54,14 @@ class InjectorEventBus(EventBus):
         self._container = container
 
     def post(self, event: Event) -> None:
-        print(f'handling event {event}')
+        logger.debug('handling event %s', event)
         try:
             evt_handlers = self._container.get(
                 List[EventHandler[type(event)]]  # type: ignore
             )
         except injector.UnsatisfiedRequirement as err:
-            print(f'no event handler: {str(err)}')
-            logger.info('No event handler for event %s', event)
+            logger.info('No event handler for event %s?', event)
+            logger.info('Got error "%s"', err)
         else:
             for evt_handler in evt_handlers:
                 logger.debug(
@@ -71,6 +71,5 @@ class InjectorEventBus(EventBus):
                 try:
                     evt_handler(event)
                 except Exception as err:
-                    print(f'error: {str(err)}')
                     logger.exception('Exception handling event %s', event)
                     raise

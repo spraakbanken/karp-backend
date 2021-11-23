@@ -56,7 +56,6 @@ def add_entry(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
-    print("calling entrywrite")
     id_ = unique_id.make_unique_id()
     try:
         bus.dispatch(

@@ -181,7 +181,6 @@ def create_entry(
         entity_id=entity_id,
         last_modified=last_modified,
     )
-    print(f'create_entry id={entry.id}')
     entry.queue_event(
         events.EntryAdded(
             repo_id=repo_id,

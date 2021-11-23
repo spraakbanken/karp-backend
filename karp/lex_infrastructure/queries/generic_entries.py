@@ -20,9 +20,6 @@ class GenericEntryViews(EntryViews):
         self.entry_uow_repo_uow = entry_uow_repo_uow
 
     def get_by_id(self, resource_id: str, entry_uuid: unique_id.UniqueId) -> EntryDto:
-        print(
-            f"entry_views.get_by_id: resource_id = {resource_id}, entry_uuid = {entry_uuid}"
-        )
         with self._resource_uow as uw:
             entry_repo_id = uw.repo.by_resource_id(
                 resource_id).entry_repository_id
@@ -139,7 +136,6 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
         self,
         diff_request: EntryDiffRequest,
     ) -> EntryDiffDto:
-        print(f"entry_vies.diff({diff_request})")
 
         entry_repo_id = self.get_entry_repo_id(diff_request.resource_id)
         with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:

@@ -163,7 +163,6 @@ class ResourcePublishedHandler(foundation_events.EventHandler[lex_events.Resourc
         self,
         evt: events.ResourcePublished,
     ) -> None:
-        print("calling research_service ...")
         # research_service(evt, ctx)
         with self.index_uow as uw:
             uw.repo.publish_index(evt.resource_id)
@@ -183,7 +182,6 @@ class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.Resou
         yield from self.index_uow.collect_new_events()
 
     def __call__(self, evt: events.ResourceCreated):
-        print(f"search_service_handlers.create_search_service: evt = {evt}")
         with self.index_uow as uw:
             uw.repo.create_index(evt.resource_id, evt.config)
             uw.commit()

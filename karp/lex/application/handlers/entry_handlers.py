@@ -105,7 +105,6 @@ class BaseEntryHandler:
 class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
 
     def __call__(self, cmd: commands.AddEntry):
-        print(f"event_handlers.add_entry: cmd = {cmd}")
         with self.resource_uow:
             resource = self.resource_uow.resources.by_resource_id(
                 cmd.resource_id)
@@ -119,7 +118,6 @@ class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
             ) from err
         validate_entry = _compile_schema(resource.entry_json_schema)
 
-        print(f'About to call get: {self=}')
 
         with self.get_entry_uow(resource.entry_repository_id) as uw:
             try:
@@ -255,7 +253,6 @@ class AddEntriesHandler(
         List
             List of the id's of the created entries.
         """
-        print(f"event_handlers.add_entries: cmd = {cmd}")
 
         if not isinstance(cmd.resource_id, str):
             raise ValueError(
