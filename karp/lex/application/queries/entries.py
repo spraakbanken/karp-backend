@@ -101,3 +101,7 @@ class EntryViews(abc.ABC):
         entry_id: str,
     ) -> EntryDto:
         pass
+
+    @abc.abstractmethod
+    def get_total(self, resource_id: str) -> int:
+        pass
