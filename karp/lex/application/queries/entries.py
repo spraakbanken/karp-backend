@@ -105,3 +105,7 @@ class EntryViews(abc.ABC):
     @abc.abstractmethod
     def get_total(self, resource_id: str) -> int:
         pass
+
+    @abc.abstractmethod
+    def get_by_referenceable(self, resource_id: str, filter) -> typing.List[EntryDto]:
+        pass

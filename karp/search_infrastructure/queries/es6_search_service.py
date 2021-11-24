@@ -332,6 +332,7 @@ class Es6SearchService(SearchService):
         )
         s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
         response = s.execute()
+        print(f'{response=}')
         return [
             {"value": bucket["key"], "count": bucket["doc_count"]}
             for bucket in response.aggregations.field_values.buckets

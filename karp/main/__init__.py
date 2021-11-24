@@ -1,3 +1,4 @@
+import logging.config
 import logging
 import os
 import typing
@@ -16,7 +17,7 @@ from sqlalchemy.engine import Engine, create_engine, url as sa_url
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
-from karp.search_infrastructure import GenericSearchInfrastructure, Es6SearchIndexMod, GenericSearchIndexMod
+from karp.search_infrastructure import GenericSearchInfrastructure, Es6SearchIndexMod, GenericSearchIndexMod, SearchInfrastructure
 from karp.main import config
 from karp.main.modules import CommandBusMod, Db, EventBusMod, ElasticSearchMod
 from karp.search import Search
@@ -45,7 +46,7 @@ def bootstrap_app(container=None) -> AppContext:
     # container.core.init_resources()
     # bus = container.bus()
     # bus.handle(events.AppStarted())  # needed? ?
-
+    logging.config.dictConfig(_logging_config())  # type: ignore
     search_service = env('SEARCH_CONTEXT', 'sql_search_service')
     engine = create_engine(db_url)
     dependency_injector = _setup_dependency_injection(engine, es_url=es_url)
@@ -68,6 +69,7 @@ def _setup_dependency_injection(
             GenericLexInfrastructure(),
             Search(),
             GenericSearchInfrastructure(),
+            SearchInfrastructure(),
             # SearchServiceMod(search_service),
         ],
         auto_bind=False,
@@ -93,22 +95,23 @@ def _logging_config() -> typing.Dict[str, typing.Any]:
             "console": {
                 "class": "logging.StreamHandler",
                 "formatter": "standard",
+                "level": 'DEBUG',
                 "stream": "ext://sys.stderr",
             },
-            "email": {
-                "class": "logging.handlers.SMTPHandler",
-                "mailhost": "localhost",
-                "formatter": "standard",
-                "level": "WARNING",
-                "fromaddr": config.LOG_MAIL_FROM,
-                "toaddrs": config.LOG_MAIL_TOS,
-                "subject": "Error in Karp backend!",
-            },
+            # "email": {
+            #     "class": "logging.handlers.SMTPHandler",
+            #     "mailhost": "localhost",
+            #     "formatter": "standard",
+            #     "level": "WARNING",
+            #     "fromaddr": config.LOG_MAIL_FROM,
+            #     "toaddrs": config.LOG_MAIL_TOS,
+            #     "subject": "Error in Karp backend!",
+            # },
         },
         "loggers": {
             "karp": {
-                "handlers": ["console", "email"],
-                "level": config.CONSOLE_LOG_LEVEL,
+                "handlers": ['console'],  # ["console", "email"],
+                "level": 'DEBUG',  # config.CONSOLE_LOG_LEVEL,
             }
         },
     }

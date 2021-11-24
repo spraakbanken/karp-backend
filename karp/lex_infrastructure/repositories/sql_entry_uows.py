@@ -72,21 +72,26 @@ class SqlEntryUowRepositoryUnitOfWork(
         self.session_factory = session_factory
         self.entry_uow_factory = entry_uow_factory
         self._repo = None
+        self._session = None
 
     def __enter__(self):
-        self._session = self.session_factory()
-        self._repo = SqlEntryUowRepository(
-            entry_uow_factory=self.entry_uow_factory,
-            session=self._session,
-        )
+        if self._session is None:
+            self._session = self.session_factory()
+        if self._repo is None:
+            self._repo = SqlEntryUowRepository(
+                entry_uow_factory=self.entry_uow_factory,
+                session=self._session,
+            )
         return super().__enter__()
 
     def _begin(self):
-        self._session = self.session_factory()
-        self._repo = SqlEntryUowRepository(
-            entry_uow_factory=self.entry_uow_factory,
-            session=self._session,
-        )
+        if self._session is None:
+            self._session = self.session_factory()
+        if self._repo is None:
+            self._repo = SqlEntryUowRepository(
+                entry_uow_factory=self.entry_uow_factory,
+                session=self._session,
+            )
         return self
 
     @property

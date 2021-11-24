@@ -1,5 +1,5 @@
 import abc
-from typing import Iterable
+from typing import Iterable, Optional, Dict
 
 import pydantic
 
@@ -12,6 +12,7 @@ class ResourceDto(pydantic.BaseModel):
     is_published: bool
     version: int
     last_modified: float
+    config: Dict
 
 
 class GetPublishedResources(abc.ABC):
@@ -30,3 +31,9 @@ class GetEntryRepositoryId(abc.ABC):
     @abc.abstractmethod
     def query(self, resource_id: str) -> UniqueId:
         raise NotImplementedError()
+
+
+class ReadOnlyResourceRepository(abc.ABC):
+    @abc.abstractmethod
+    def get_by_resource_id(self, resource_id: str, version: Optional[int] = None) -> Optional[ResourceDto]:
+        pass

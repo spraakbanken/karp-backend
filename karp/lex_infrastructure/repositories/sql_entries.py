@@ -478,14 +478,17 @@ class SqlEntryUnitOfWork(
             self, event_bus=event_bus, **kwargs)
         self.session_factory = session_factory
         self._entries = None
+        self._session = None
 
     def __enter__(self):
-        self._session = self.session_factory()
-        self._entries = SqlEntryRepository.from_dict(
-            name=self.name,
-            resource_config=self.config,
-            session=self._session
-        )
+        if self._session is None:
+            self._session = self.session_factory()
+        if self._entries is None:
+            self._entries = SqlEntryRepository.from_dict(
+                name=self.name,
+                resource_config=self.config,
+                session=self._session
+            )
         return super().__enter__()
 
     @property
@@ -532,6 +535,7 @@ class SqlEntryUowCreator:
     ):
         self._session_factory = session_factory
         self.event_bus = event_bus
+        self.cache = {}
 
     def __call__(
         self,
@@ -543,14 +547,16 @@ class SqlEntryUowCreator:
         message: str,
         timestamp: float,
     ) -> SqlEntryUnitOfWork:
-        return SqlEntryUnitOfWork(
-            entity_id=entity_id,
-            name=name,
-            config=config,
-            connection_str=connection_str,
-            last_modified_by=user,
-            message=message,
-            last_modified=timestamp,
-            session_factory=self._session_factory,
-            event_bus=self.event_bus,
-        )
+        if entity_id not in self.cache:
+            self.cache[entity_id] = SqlEntryUnitOfWork(
+                entity_id=entity_id,
+                name=name,
+                config=config,
+                connection_str=connection_str,
+                last_modified_by=user,
+                message=message,
+                last_modified=timestamp,
+                session_factory=self._session_factory,
+                event_bus=self.event_bus,
+            )
+        return self.cache[entity_id]

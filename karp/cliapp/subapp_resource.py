@@ -7,7 +7,8 @@ from json_streams import jsonlib
 from tabulate import tabulate
 
 from karp.foundation.commands import CommandBus
-from karp.lex.domain import commands
+from karp.lex import commands as lex_commands
+from karp.search import commands as search_commands
 from karp.lex.application.queries import (
     GetPublishedResources,
     ListEntryRepos,
@@ -45,8 +46,9 @@ def create(config: Path, ctx: typer.Context):
         data = jsonlib.load_from_file(config)
         query = inject_from_ctx(ListEntryRepos, ctx)
         entry_repos = list(query.query())
-        entry_repo = choose_from(entry_repos, lambda x: f'{x.name} {x.repository_type}')
-        cmd = commands.CreateResource.from_dict(
+        entry_repo = choose_from(
+            entry_repos, lambda x: f'{x.name} {x.repository_type}')
+        cmd = lex_commands.CreateResource.from_dict(
             data,
             created_by="local admin",
             entry_repo_id=entry_repo.id,
@@ -66,8 +68,8 @@ def create(config: Path, ctx: typer.Context):
 @cli_error_handler
 @cli_timer
 def update(
-    ctx: typer.Context,
-    config: Path):
+        ctx: typer.Context,
+        config: Path):
     bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
         with open(config) as fp:
@@ -82,7 +84,8 @@ def update(
         if version is None:
             typer.echo(f"Nothing to do for resource '{resource_id}'")
         else:
-            typer.echo(f"Updated version {version} of resource '{resource_id}'")
+            typer.echo(
+                f"Updated version {version} of resource '{resource_id}'")
 
 
 @subapp.command()
@@ -93,7 +96,7 @@ def publish(
         resource_id: str):
     bus = inject_from_ctx(CommandBus, ctx)
     try:
-        cmd = commands.PublishResource(
+        cmd = lex_commands.PublishResource(
             resource_id=resource_id,
             message=f"Publish '{resource_id}",
             user="local admin",
@@ -109,10 +112,10 @@ def publish(
 @cli_error_handler
 @cli_timer
 def reindex(
-    ctx: typer.Context,
-    resource_id: str):
+        ctx: typer.Context,
+        resource_id: str):
     bus = inject_from_ctx(CommandBus, ctx)
-    cmd = commands.ReindexResource(resource_id=resource_id)
+    cmd = search_commands.ReindexResource(resource_id=resource_id)
     bus.dispatch(cmd)
 
     typer.echo(f"Successfully reindexed all data in {resource_id}")
@@ -183,7 +186,8 @@ def reindex(
 @cli_timer
 def list_resources(
     ctx: typer.Context,
-    show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all")
+    show_published: Optional[bool] = typer.Option(
+        True, "--show-published/--show-all")
 ):
     if show_published:
         query = inject_from_ctx(GetPublishedResources, ctx)

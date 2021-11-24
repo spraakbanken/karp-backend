@@ -23,7 +23,8 @@ def get_field_values(
     resource_id: str,
     field: str,
     user: auth.User = Security(get_current_user, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(inject_from_req(auth.AuthService)),
+    auth_service: auth.AuthService = Depends(
+        inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
@@ -32,7 +33,7 @@ def get_field_values(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    print("calling statistics ...")
+    print(f"calling statistics ... from {search_service=}")
     return search_service.statistics(resource_id, field)
 
 

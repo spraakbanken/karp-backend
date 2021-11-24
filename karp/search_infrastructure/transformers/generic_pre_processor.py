@@ -24,7 +24,7 @@ class GenericPreProcessor(PreProcessor):
     ) -> typing.Iterable[IndexEntry]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
 
-        with self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
-            for entry in uw.repo.all_entries():
-                yield self.entry_transformer.transform(resource_id, entry)
-
+        with self.entry_uow_repo_uow:
+            with self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+                for entry in uw.repo.all_entries():
+                    yield self.entry_transformer.transform(resource_id, entry)

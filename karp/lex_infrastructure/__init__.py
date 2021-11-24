@@ -56,6 +56,7 @@ class LexInfrastructure(injector.Module):
         return SqlListEntryRepos(conn)
 
     @injector.provider
+    @injector.singleton
     def entry_uow_repo(
         self,
         session_factory: sessionmaker,
