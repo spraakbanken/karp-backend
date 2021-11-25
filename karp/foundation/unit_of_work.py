@@ -16,6 +16,7 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.rollback()
+        self.close()
 
     def commit(self):
         self._commit()
@@ -39,4 +40,7 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
     @property
     @abc.abstractmethod
     def repo(self) -> RepositoryType:
+        pass
+
+    def close(self):
         pass
