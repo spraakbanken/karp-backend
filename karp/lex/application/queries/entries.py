@@ -107,5 +107,9 @@ class EntryViews(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_by_referenceable(self, resource_id: str, filter) -> typing.List[EntryDto]:
+    def get_by_referenceable(self, resource_id: str, filters) -> typing.Iterable[EntryDto]:
+        pass
+
+    @abc.abstractmethod
+    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
         pass

@@ -8,6 +8,7 @@ from karp.lex.application.queries import (
     GetReferencedEntries,
     ReadOnlyResourceRepository,
     EntryViews,
+    EntryDto,
 )
 from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
 from karp.search.application.transformers import EntryTransformer
@@ -31,7 +32,7 @@ class GenericEntryTransformer(EntryTransformer):
         self.entry_views = entry_views
         self.get_referenced_entries = get_referenced_entries
 
-    def transform(self, resource_id: str, src_entry: entities.Entry) -> IndexEntry:
+    def transform(self, resource_id: str, src_entry: EntryDto) -> IndexEntry:
         """
         TODO This is very slow (for resources with references) because of db-lookups everywhere in the code
         TODO We can pre-fetch the needed entries (same code that only looks for refs?) or
@@ -56,7 +57,7 @@ class GenericEntryTransformer(EntryTransformer):
             resource,
             # resource_repo,
             # indexer,
-            src_entry.body,
+            src_entry.entry,
             index_entry,
             resource.config["fields"].items(),
         )
@@ -247,27 +248,26 @@ class GenericEntryTransformer(EntryTransformer):
         entry_ids: typing.Iterable[str],
     ) -> None:
         add = collections.defaultdict(list)
-        with self.resource_repo:
-            for src_entry_id in entry_ids:
-                refs = self.get_referenced_entries.query(
-                    resource_id, src_entry_id
+        for src_entry_id in entry_ids:
+            refs = self.get_referenced_entries.query(
+                resource_id, src_entry_id
+            )
+            for field_ref in refs:
+                ref_resource_id = field_ref["resource_id"]
+                ref_resource = self.resource_repo.get_by_resource_id(
+                    ref_resource_id,
+                    version=(field_ref["resource_version"])
                 )
-                for field_ref in refs:
-                    ref_resource_id = field_ref["resource_id"]
-                    ref_resource = self._get_resource(
-                        ref_resource_id,
-                        version=(field_ref["resource_version"])
+                if ref_resource:
+                    ref_index_entry = self.transform_to_index_entry(
+                        # resource_repo,
+                        # indexer,
+                        ref_resource,
+                        field_ref["entry"],
+                        # ref_resource.config["fields"].items(),
                     )
-                    if ref_resource:
-                        ref_index_entry = self.transform_to_index_entry(
-                            # resource_repo,
-                            # indexer,
-                            ref_resource,
-                            field_ref["entry"],
-                            # ref_resource.config["fields"].items(),
-                        )
-                        # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
-                        add[ref_resource_id].append(ref_index_entry)
+                    # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
+                    add[ref_resource_id].append(ref_index_entry)
 
         for ref_resource_id, ref_entries in add.items():
             self.index_uow.repo.add_entries(ref_resource_id, ref_entries)

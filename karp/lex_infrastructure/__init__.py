@@ -123,11 +123,11 @@ class GenericLexInfrastructure(injector.Module):
     @injector.provider
     def entry_views(
         self,
-        resources_uow: ResourceUnitOfWork,
+        get_entry_repo_id: GetEntryRepositoryId,
         entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> EntryViews:
         return GenericEntryViews(
-            resource_uow=resources_uow,
+            get_entry_repo_id=get_entry_repo_id,
             entry_uow_repo_uow=entry_uow_repo_uow,
         )
 

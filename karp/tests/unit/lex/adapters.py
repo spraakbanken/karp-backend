@@ -9,6 +9,10 @@ from karp.foundation.value_objects import UniqueId
 from karp.foundation.commands import CommandBus
 from karp.lex.domain import entities as lex_entities
 from karp.lex.application import repositories as lex_repositories
+from karp.lex.application.queries import (
+    ReadOnlyResourceRepository,
+    ResourceDto,
+)
 from karp.tests.foundation.adapters import FakeUnitOfWork
 
 
@@ -50,6 +54,29 @@ class FakeResourceRepository(lex_repositories.ResourceRepository):
 
     def resource_ids(self) -> typing.Iterable[str]:
         return (res.resource_id for res in self.resources)
+
+
+class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
+    def __init__(self, resources: Dict):
+        self.resources = resources
+
+    def get_by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
+        return next(
+            (
+                ResourceDto(
+                    id=res.id,
+                    resource_id=res.resource_id,
+                    last_modified=res.last_modified,
+                    last_modified_by=res.last_modified_by,
+                    version=res.version,
+                    config=res.config,
+                    is_published=res.is_published,
+                )
+                for res in self.resources.values()
+                if res.resource_id == resource_id
+             ),
+            None)
+
 
 
 class FakeEntryRepository(lex_repositories.EntryRepository):
@@ -243,6 +270,15 @@ class FakeLexInfrastructure(injector.Module):
     def resource_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:
         return FakeResourceUnitOfWork(event_bus=event_bus)
 
+    @injector.provider
+    @injector.singleton
+    def resource_repo(
+        self,
+        resource_uow: lex_repositories.ResourceUnitOfWork,
+    ) -> ReadOnlyResourceRepository:
+        return InMemoryReadResourceRepository(
+            resources=resource_uow.repo.resources,
+        )
 
 # def bootstrap_test_app(
 #     resource_uow: lex_repositories.ResourceUnitOfWork = None,

@@ -12,6 +12,7 @@ from karp.foundation import (
 )
 from karp.lex.domain import events as lex_events
 from karp.lex.domain.entities import resource
+from karp.lex.application.queries import EntryDto
 from karp.search.application.queries import ResourceViews
 from karp.search.application.repositories import IndexUnitOfWork
 from karp.search.application.transformers import EntryTransformer, PreProcessor
@@ -213,14 +214,15 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
         evt: events.EntryAdded,
     ):
         with self.index_uow as uw:
-            entry = entities.Entry(
-                entity_id=evt.entity_id,
+            entry = EntryDto(
+                entry_uuid=evt.entity_id,
                 entry_id=evt.entry_id,
                 repository_id=evt.repo_id,
-                body=evt.body,
+                entry=evt.body,
                 message=evt.message,
                 last_modified=evt.timestamp,
                 last_modified_by=evt.user,
+                version=1,
             )
             for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
                 uw.repo.add_entries(

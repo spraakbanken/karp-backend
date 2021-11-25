@@ -3,7 +3,7 @@ import typing
 from sb_json_tools import jsondiff
 
 from karp.lex.domain.entities import Entry
-from karp.lex.application.queries import EntryViews, EntryDto, EntryDiffDto, GetEntryDiff, GetEntryHistory, GetHistory, EntryHistoryRequest, EntryDiffRequest
+from karp.lex.application.queries import EntryViews, EntryDto, EntryDiffDto, GetEntryDiff, GetEntryHistory, GetHistory, EntryHistoryRequest, EntryDiffRequest, GetEntryRepositoryId
 from karp.foundation.value_objects import unique_id
 from karp.lex.application.repositories.entry_repositories import EntryUowRepositoryUnitOfWork
 from karp.lex.application.repositories.unit_of_work import ResourceUnitOfWork
@@ -12,39 +12,53 @@ from karp.lex.application.repositories.unit_of_work import ResourceUnitOfWork
 class GenericEntryViews(EntryViews):
     def __init__(
         self,
-        resource_uow: ResourceUnitOfWork,
+        get_entry_repo_id: GetEntryRepositoryId,
         entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> None:
         super().__init__()
-        self._resource_uow = resource_uow
+        self.get_entry_repo_id = get_entry_repo_id
         self.entry_uow_repo_uow = entry_uow_repo_uow
 
     def get_by_id(self, resource_id: str, entry_uuid: unique_id.UniqueId) -> EntryDto:
-        with self._resource_uow as uw:
-            entry_repo_id = uw.repo.by_resource_id(
-                resource_id).entry_repository_id
+        entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_uow_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return self._entry_to_entry_dto(uw.repo.by_id(entry_uuid), resource_id)
 
     def get_by_entry_id(self, resource_id: str, entry_id: str) -> EntryDto:
-        with self._resource_uow as uw:
-            entry_repo_id = uw.repo.by_resource_id(
-                resource_id).entry_repository_id
+        entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_uow_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return self._entry_to_entry_dto(uw.repo.by_entry_id(entry_id), resource_id)
 
     def get_total(self, resource_id: str) -> int:
-        with self._resource_uow as uw:
-            entry_repo_id = uw.repo.by_resource_id(
-                resource_id).entry_repository_id
+        entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_uow_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return len(uw.repo.all_entries())
+
+    def get_by_referenceable(self, resource_id: str, filters):
+        entry_repo_id = self.get_entry_repo_id.query(resource_id)
+        with self.entry_uow_repo_uow as uw:
+            entry_uow = uw.repo.get_by_id(entry_repo_id)
+        with entry_uow as uw:
+            return (
+                self._entry_to_entry_dto(entry, resource_id)
+                for entry in uw.repo.by_referencable(filters)
+            )
+
+    def all_entries(self, resource_id: str):
+        entry_repo_id = self.get_entry_repo_id.query(resource_id)
+        with self.entry_uow_repo_uow as uw:
+            entry_uow = uw.repo.get_by_id(entry_repo_id)
+        with entry_uow as uw:
+            return (
+                self._entry_to_entry_dto(entry, resource_id)
+                for entry in uw.repo.all_entries()
+            )
 
     def _entry_to_entry_dto(self, entry: Entry, resource_id: str) -> EntryDto:
         return EntryDto(
