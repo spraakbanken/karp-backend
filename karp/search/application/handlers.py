@@ -214,17 +214,19 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
         evt: events.EntryAdded,
     ):
         with self.index_uow as uw:
-            entry = EntryDto(
-                entry_uuid=evt.entity_id,
-                entry_id=evt.entry_id,
-                repository_id=evt.repo_id,
-                entry=evt.body,
-                message=evt.message,
-                last_modified=evt.timestamp,
-                last_modified_by=evt.user,
-                version=1,
-            )
+
             for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
+                entry = EntryDto(
+                    entry_uuid=evt.entity_id,
+                    entry_id=evt.entry_id,
+                    repository_id=evt.repo_id,
+                    resource=resource_id,
+                    entry=evt.body,
+                    message=evt.message,
+                    last_modified=evt.timestamp,
+                    last_modified_by=evt.user,
+                    version=1,
+                )
                 uw.repo.add_entries(
                     resource_id,
                     [self.entry_transformer.transform(resource_id, entry)]
@@ -252,17 +254,19 @@ class EntryUpdatedHandler(
         evt: events.EntryUpdated,
     ):
         with self.index_uow as uw:
-            entry = entities.Entry(
-                entity_id=evt.entity_id,
-                entry_id=evt.entry_id,
-                repository_id=evt.repo_id,
-                body=evt.body,
-                message=evt.message,
-                last_modified=evt.timestamp,
-                last_modified_by=evt.user,
-                version=evt.version,
-            )
+
             for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
+                entry = EntryDto(
+                    entry_uuid=evt.entity_id,
+                    entry_id=evt.entry_id,
+                    repository_id=evt.repo_id,
+                    resource=resource_id,
+                    entry=evt.body,
+                    message=evt.message,
+                    last_modified=evt.timestamp,
+                    last_modified_by=evt.user,
+                    version=evt.version,
+                )
                 uw.repo.add_entries(
                     resource_id,
                     [self.entry_transformer.transform(resource_id, entry)]

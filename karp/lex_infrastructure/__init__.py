@@ -17,6 +17,7 @@ from karp.lex.application.queries import (
     GetEntryHistory,
     GetHistory,
 )
+from karp.lex.application.queries.resources import ReadOnlyResourceRepository
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
@@ -34,7 +35,7 @@ from karp.lex_infrastructure.queries import (
     GenericEntryQuery,
     GenericGetEntryHistory,
     GenericGetHistory,
-)
+    SqlReadOnlyResourceRepository,)
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
     SqlEntryUowCreator,
@@ -50,6 +51,10 @@ class LexInfrastructure(injector.Module):
     @injector.provider
     def get_resources(self, conn: Connection) -> GetResources:
         return SqlGetResources(conn)
+
+    @injector.provider
+    def read_only_resource_repo(self, conn: Connection) -> ReadOnlyResourceRepository:
+        return SqlReadOnlyResourceRepository(conn)
 
     @injector.provider
     def list_entry_repos(self, conn: Connection) -> ListEntryRepos:
