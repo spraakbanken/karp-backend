@@ -46,11 +46,15 @@ def bootstrap_app(container=None) -> AppContext:
     # container.core.init_resources()
     # bus = container.bus()
     # bus.handle(events.AppStarted())  # needed? ?
-    logging.config.dictConfig(_logging_config())  # type: ignore
+    print("logging: before init")
+    setup_logging()
+    # logging.config.dictConfig(_logging_config())  # type: ignore
+    print("logging: after init")
     search_service = env('SEARCH_CONTEXT', 'sql_search_service')
     engine = create_engine(db_url)
     dependency_injector = _setup_dependency_injection(engine, es_url=es_url)
     _setup_search_context(dependency_injector, search_service)
+    print("bootstrap: about to return")
     return AppContext(dependency_injector)
 
 
@@ -161,7 +165,7 @@ def setup_logging():
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     )
     console_handler.setFormatter(formatter)
-    logger.setLevel(config.CONSOLE_LOG_LEVEL)
+    logger.setLevel(logging.DEBUG)
     logger.addHandler(console_handler)
     return logger
 

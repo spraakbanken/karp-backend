@@ -4,6 +4,7 @@ from sqlalchemy import sql
 
 from karp.lex.application.queries import GetPublishedResources, ResourceDto, GetResources
 from karp.lex.application.queries.resources import ReadOnlyResourceRepository
+from karp.lex.domain.entities import resource
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.lex_infrastructure.queries.base import SqlQuery
 
@@ -42,7 +43,11 @@ class SqlReadOnlyResourceRepository(
         resource_id: str,
         version: Optional[int] = None
     ) -> Optional[ResourceDto]:
-        return None
+        stmt = sql.select(ResourceModel).where(
+            ResourceModel.resource_id == resource_id)
+        row = self._conn.execute(stmt).first()
+
+        return _row_to_dto(row) if row else None
 
 
 def _row_to_dto(row_proxy) -> ResourceDto:
@@ -50,6 +55,7 @@ def _row_to_dto(row_proxy) -> ResourceDto:
         id=row_proxy.id,
         resource_id=row_proxy.resource_id,
         version=row_proxy.version,
+        config=row_proxy.config,
         is_published=row_proxy.is_published,
         last_modified=row_proxy.last_modified,
         last_modified_by=row_proxy.last_modified_by,

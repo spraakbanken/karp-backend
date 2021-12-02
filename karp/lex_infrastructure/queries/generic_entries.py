@@ -47,7 +47,7 @@ class GenericEntryViews(EntryViews):
         with entry_uow as uw:
             return (
                 self._entry_to_entry_dto(entry, resource_id)
-                for entry in uw.repo.by_referencable(filters)
+                for entry in uw.repo.by_referenceable(filters)
             )
 
     def all_entries(self, resource_id: str):

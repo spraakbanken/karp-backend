@@ -39,7 +39,7 @@ class GenericEntryTransformer(EntryTransformer):
         TODO somehow get the needed entries in bulk after transforming some entries and insert them into
         TODO the transformed entries afterward. Very tricky.
         """
-        print(f"transforming entry_id={src_entry.entry_id}")
+        print(f"transforming entry_id={src_entry.entry_id}, {resource_id=}")
         index_entry = self.index_uow.repo.create_empty_object()
         index_entry.id = src_entry.entry_id
         self.index_uow.repo.assign_field(

@@ -30,21 +30,25 @@ class EntryNotFound(NotFoundError, LexDomainError):
     entity_name = "Entry"
 
     def __init__(self, *args, entity_id=None, **kwargs):
-        super().__init__(entity_id, *args, **kwargs)
+        NotFoundError.__init__(self, entity_id, *args)
+        LexDomainError.__init__(self, **kwargs)
+        # super().__init__(entity_id, *args, **kwargs)
 
 
 class EntryRepoNotFound(NotFoundError, LexDomainError):
     entity_name = "EntryRepository"
 
     def __init__(self, entity_id, *args, **kwargs):
-        super().__init__(entity_id, *args, **kwargs)
+        NotFoundError.__init__(self, entity_id, *args)
+        LexDomainError.__init__(self, entity_id, *args, **kwargs)
 
 
 class ResourceNotFound(NotFoundError, LexDomainError):
     entity_name = "Resource"
 
     def __init__(self, entity_id, *args, **kwargs):
-        super().__init__(entity_id, *args, **kwargs)
+        NotFoundError.__init__(self, entity_id, *args)
+        LexDomainError.__init__(self, entity_id, *args, **kwargs)
 
 
 class IntegrityError(LexDomainError):
