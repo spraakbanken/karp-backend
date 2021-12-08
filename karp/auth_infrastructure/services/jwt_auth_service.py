@@ -15,7 +15,6 @@ from karp.lex.application import repositories
 # from karp.infrastructure.repositories import repositories
 
 
-
 def load_jwt_key(path: Path) -> str:
     with open(path) as fp:
         return fp.read()
