@@ -1,1 +1,1 @@
-from .lex_resources import LexGetResourcePermissions
+from .lex_resources import LexGetResourcePermissions, LexIsResourceProtected

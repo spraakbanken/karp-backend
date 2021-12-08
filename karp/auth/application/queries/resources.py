@@ -4,6 +4,8 @@ import typing
 
 import pydantic
 
+from karp.foundation.value_objects.permission_level import PermissionLevel
+
 
 class Scope(str, enum.Enum):
     admin = 'ADMIN'
@@ -20,3 +22,9 @@ class GetResourcePermissions(abc.ABC):
     @abc.abstractmethod
     def query(self) -> typing.List[ResourcePermissionDto]:
         pass
+
+
+class IsResourceProtected(abc.ABC):
+    @abc.abstractmethod
+    def query(self, resource_id: str, level: PermissionLevel) -> bool:
+        return True

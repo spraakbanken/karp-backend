@@ -5,13 +5,17 @@ from typing import List
 
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
+
+
 from karp.foundation import value_objects
+from karp.auth.application.queries import IsResourceProtected
 from karp.domain import errors
 from karp.domain.errors import AuthError
 from karp.auth.domain.entities.user import User
 from karp.errors import ClientErrorCodes, KarpError
 from karp.auth.domain import auth_service
 from karp.lex.application import repositories
+from karp.lex.domain.entities import resource
 # from karp.infrastructure.repositories import repositories
 
 
@@ -23,14 +27,14 @@ def load_jwt_key(path: Path) -> str:
 # jwt_key = load_jwt_key(config.JWT_AUTH_PUBKEY_PATH)
 
 
-class JWTAuthenticator(
+class JWTAuthService(
     auth_service.AuthService, auth_service_type="jwt_auth", is_default=True
 ):
     def __init__(
-        self, pubkey_path: Path, resource_uow: repositories.ResourceUnitOfWork
+        self, pubkey_path: Path, is_resource_protected: IsResourceProtected
     ) -> None:
         self._jwt_key = load_jwt_key(pubkey_path)
-        self._resource_uow = resource_uow
+        self.is_resource_protected = is_resource_protected
         print("JWTAuthenticator created")
 
     def authenticate(self, _scheme: str, credentials: str) -> User:
@@ -58,16 +62,7 @@ class JWTAuthenticator(
         user: User,
         resource_ids: List[str],
     ):
-
-        with self._resource_uow as resources_uw:
-            for resource_id in resource_ids:
-                resource = resources_uw.resources.by_resource_id(resource_id)
-                if not resource:
-                    raise errors.ResourceNotFound(resource_id=resource_id)
-                if resource.is_protected(level) and (
-                    not user
-                    or not user.permissions.get(resource_id)
-                    or user.permissions[resource_id] < user.levels[level]
-                ):
-                    return False
-        return True
+        return not any(self.is_resource_protected.query(resource_id, level) and (
+            not user
+            or not user.has_enough_permissions(resource_id, level)
+        ) for resource_id in resource_ids)

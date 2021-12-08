@@ -1,3 +1,5 @@
+from pathlib import Path
+from typing import Dict
 import elasticsearch
 import injector
 from sqlalchemy.engine import Connection, Engine
@@ -5,6 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from karp.foundation.commands import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
+from karp.auth_infrastructure import TestAuthInfrastructure, JwtAuthInfrastructure
 
 
 class CommandBusMod(injector.Module):
@@ -41,3 +44,15 @@ class ElasticSearchMod(injector.Module):
     @injector.singleton
     def es(self) -> elasticsearch.Elasticsearch:
         return elasticsearch.Elasticsearch(self._url)
+
+
+def install_auth_service(
+    container: injector.Injector,
+    auth_service_name: str,
+    settings: Dict[str, str]
+):
+    if auth_service_name.upper() == "DUMMY_AUTH":
+        container.binder.install(TestAuthInfrastructure())
+    else:
+        container.binder.install(JwtAuthInfrastructure(
+            Path(settings['auth.jwt.pubkey_path'])))
