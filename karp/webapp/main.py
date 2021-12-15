@@ -46,7 +46,8 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
     app_context = main.bootstrap_app()
 
-    load_auth(app_context.container)
+    main.install_auth_service(
+        app_context.container, app_context.settings)
     # from karp.application.logger import setup_logging
 
     # logger = setup_logging()
@@ -121,10 +122,6 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         allow_origins=app_context.settings.get('web.cors.origins', '*')
     )
     return app
-
-
-def load_auth(container: injector.Injector):
-    container.binder.install(AuthInfrastructure())
 
 
 def load_modules(app=None):

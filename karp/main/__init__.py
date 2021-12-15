@@ -19,7 +19,7 @@ from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import GenericSearchInfrastructure, Es6SearchIndexMod, GenericSearchIndexMod, SearchInfrastructure
 from karp.main import config
-from karp.main.modules import CommandBusMod, Db, EventBusMod, ElasticSearchMod
+from karp.main.modules import CommandBusMod, Db, EventBusMod, ElasticSearchMod, install_auth_service
 from karp.search import Search
 
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 
 from karp.foundation.commands import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
-from karp.auth_infrastructure import TestAuthInfrastructure, JwtAuthInfrastructure
+from karp.auth_infrastructure import AuthInfrastructure, TestAuthInfrastructure, JwtAuthInfrastructure
 
 
 class CommandBusMod(injector.Module):
@@ -46,12 +46,17 @@ class ElasticSearchMod(injector.Module):
         return elasticsearch.Elasticsearch(self._url)
 
 
+TEST_AUTH_SERVICE = 'DUMMY_AUTH'
+
+
 def install_auth_service(
     container: injector.Injector,
-    auth_service_name: str,
     settings: Dict[str, str]
 ):
-    if auth_service_name.upper() == "DUMMY_AUTH":
+    auth_service_name = settings.get('auth.name', "")
+    container.binder.install(AuthInfrastructure())
+
+    if auth_service_name.upper() == TEST_AUTH_SERVICE:
         container.binder.install(TestAuthInfrastructure())
     else:
         container.binder.install(JwtAuthInfrastructure(
