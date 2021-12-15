@@ -26,12 +26,14 @@ from karp.search import Search
 @dataclass
 class AppContext:
     container: injector.Injector
+    settings: typing.Dict
 
 
 def bootstrap_app(container=None) -> AppContext:
     env = config.load_env()
     db_url = config.parse_sqlalchemy_url(env)
     es_url = env('ELASTICSEARCH_HOST')
+    settings = {}
     # if n ot container:
     # container = AppContainer()
     # container.config.core.logging.from_value(_logging_config())
@@ -55,7 +57,7 @@ def bootstrap_app(container=None) -> AppContext:
     dependency_injector = _setup_dependency_injection(engine, es_url=es_url)
     _setup_search_context(dependency_injector, search_service)
     print("bootstrap: about to return")
-    return AppContext(dependency_injector)
+    return AppContext(dependency_injector, settings)
 
 
 def _setup_dependency_injection(

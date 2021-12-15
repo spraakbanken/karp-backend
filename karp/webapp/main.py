@@ -11,6 +11,7 @@ except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import injector
 
@@ -115,6 +116,10 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         response = await call_next(request)
         return response
 
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=app_context.settings.get('web.cors.origins', '*')
+    )
     return app
 
 
