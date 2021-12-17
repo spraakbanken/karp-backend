@@ -1,5 +1,6 @@
 import typing
 
+from karp.auth.domain import errors
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto, IsResourceProtected
 from karp.foundation.value_objects.permission_level import PermissionLevel
 from karp.lex.application.queries import GetPublishedResources, ReadOnlyResourceRepository
@@ -48,5 +49,6 @@ class LexIsResourceProtected(IsResourceProtected):
         resource = self.resource_repo.get_by_resource_id(
             resource_id=resource_id)
         if not resource:
-            raise RuntimeError(f"Can't find resource '{resource_id}'")
+            raise errors.ResourceNotFound(
+                f"Can't find resource '{resource_id}'")
         return resource.config.get('protected', {}).get('read', False)

@@ -3,15 +3,25 @@
 Borrowed from https://bitbucket.org/sixty-north/d5-kanban-python
 """
 import uuid
+try:
+    import fastuuid  #
+except ModuleNotFoundError:
+    fastuuid = None
 
 
-def make_unique_id():
-    """Make a new UniqueId."""
-    return uuid.uuid4()
+# def make_unique_id():
+#     """Make a new UniqueId."""
+#     return uuid.uuid4()
     # return UniqueId(uuid.uuid4())
 
-
-UniqueId = uuid.UUID
+if fastuuid is not None:
+    make_unique_id = fastuuid.uuid4
+    UniqueId = fastuuid.UUID
+    UniqueIdType = (fastuuid.UUID, uuid.UUID)
+else:
+    make_unique_id = uuid.uuid4
+    UniqueId = uuid.UUID
+    UniqueIdType = uuid.UUID
 # class UniqueId:
 #     """A UUID-based unique id with global formatting control.
 

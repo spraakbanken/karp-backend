@@ -4,6 +4,7 @@ import re
 from typing import Dict, List, Optional, Any, Tuple, Union
 
 import elasticsearch
+from elasticsearch import exceptions as es_exceptions
 
 from karp.foundation.events import EventBus
 
@@ -80,18 +81,24 @@ class Es6Index(Index):
         self._set_index_name_for_resource(resource_id, index_name)
         return index_name
 
-    def _set_index_name_for_resource(self, resource_id: str, index_name: str):
+    def _set_index_name_for_resource(self, resource_id: str, index_name: str) -> str:
         self.es.index(
             index=KARP_CONFIGINDEX,
             id=resource_id,
             doc_type=KARP_CONFIGINDEX_TYPE,
             body={"index_name": index_name},
         )
+        return index_name
 
     def _get_index_name_for_resource(self, resource_id: str) -> str:
-        res = self.es.get(
-            index=KARP_CONFIGINDEX, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
-        )
+        try:
+            res = self.es.get(
+                index=KARP_CONFIGINDEX, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
+            )
+        except es_exceptions.NotFoundError as err:
+            logger.debug(
+                "didn't find index_name for resource '%s' details: %s", resource_id, err)
+            return self._set_index_name_for_resource(resource_id, resource_id)
         return res["_source"]["index_name"]
 
     def publish_index(self, resource_id: str):

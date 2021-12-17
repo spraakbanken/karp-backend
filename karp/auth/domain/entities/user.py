@@ -7,5 +7,9 @@ class User:
         self._permissions = permissions
         self._levels = levels
 
+    @property
+    def identifier(self):
+        return self._identifier
+
     def has_enough_permissions(self, resource_id: str, level: PermissionLevel) -> bool:
         return self._permissions.get(resource_id) and (self._permissions[resource_id] >= self._levels[level])

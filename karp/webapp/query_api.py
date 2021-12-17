@@ -15,7 +15,7 @@ from .app_config import get_current_user
 from .fastapi_injector import inject_from_req
 
 
-_logger = logging.getLogger("karp")
+logger = logging.getLogger("karp")
 
 
 router = APIRouter(tags=["Querying"])
@@ -112,8 +112,8 @@ def query(
     and||missing|pos||equals|wf||or|blomma|äpple
     and||equals|wf|sitta||not||equals|wf|satt
     """
-    print(
-        f"Called 'query' called with resources={resources}, from={from_}m size={size}"
+    logger.debug(
+        "Called 'query' called with resources=%s, from=%d, size=%d", resources, from_, size
     )
     resource_list = resources.split(",")
     if not auth_service.authorize(
@@ -140,7 +140,7 @@ def query(
         response = search_service.query(query_request)
 
     except karp_errors.KarpError as err:
-        _logger.exception(
+        logger.exception(
             "Error occured when calling 'query' with resources='%s' and q='%s'. e.msg='%s'",
             resources,
             q,
@@ -218,7 +218,8 @@ def query_split(
         inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
-    print("webapp.views.query.query_split: called with resources={}".format(resources))
+    logger.debug(
+        "webapp.views.query.query_split: called with resources=%s", resources)
     resource_list = resources.split(",")
     if not auth_service.authorize(
         auth.PermissionLevel.read, user, resource_list
@@ -239,7 +240,7 @@ def query_split(
         response = search_service.query_split(query_request)
 
     except karp_errors.KarpError as err:
-        _logger.exception(
+        logger.exception(
             "Error occured when calling 'query_split' with resources='%s' and q='%s'. msg='%s'",
             resources,
             q,

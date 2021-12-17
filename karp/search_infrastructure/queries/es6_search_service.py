@@ -17,7 +17,7 @@ from karp.search.domain.errors import \
     UnsupportedField  # IncompleteQuery,; UnsupportedQuery,
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
-
+from karp.search.domain import query_dsl
 from karp.search_infrastructure.elasticsearch6 import es_config
 from .es_query import EsQuery
 
@@ -30,9 +30,92 @@ KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
 
+class EsQueryBuilder(query_dsl.NodeWalker):
+    def walk_object(self, node):
+        return node
+
+    def walk__and(self, node):
+        result = self.walk(node.exps[0])
+        for n in node.exps[1:]:
+            result = result & self.walk(n)
+
+        return result
+
+    def walk__contains(self, node):
+        return es_dsl.Q(
+            "regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}.*"}
+        )
+
+    def walk__endswith(self, node):
+        return es_dsl.Q("regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}"})
+
+    # def walk__equals(self, node):
+    #     return es_dsl.Q(
+    #         "match",
+    #         **{
+    #             self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}
+    #         },
+    #     )
+
+    def walk__equals(self, node):
+        return es_dsl.Q(
+            "match",
+            **{self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}}
+        )
+
+    def walk__exists(self, node):
+        return es_dsl.Q("exists", field=self.walk(node.field))
+
+    def walk__freergxp(self, node):
+        return es_dsl.Q(
+            "query_string", query=f"/{self.walk(node.arg)}/", default_field="*"
+        )
+
+    def walk__freetext_string(self, node):
+        return es_dsl.Q("multi_match", query=self.walk(node.arg), fuzziness=1)
+
+    def walk__freetext_any_but_string(self, node):
+        return es_dsl.Q("multi_match", query=self.walk(node.arg))
+
+    def walk_range(self, node):
+        return es_dsl.Q(
+            "range",
+            **{self.walk(node.field): {self.walk(node.op): self.walk(node.arg)}},
+        )
+
+    walk__gt = walk_range
+    walk__gte = walk_range
+    walk__lt = walk_range
+    walk__lte = walk_range
+
+    def walk__missing(self, node):
+        return es_dsl.Q(
+            "bool", must_not=es_dsl.Q("exists", field=self.walk(node.field))
+        )
+
+    def walk__not(self, node):
+        return ~self.walk(node.expr)
+
+    def walk__or(self, node):
+        result = self.walk(node.exps[0])
+        for n in node.exps[1:]:
+            result = result | self.walk(n)
+
+        return result
+
+    def walk__regexp(self, node):
+        return es_dsl.Q("regexp", **{self.walk(node.field): self.walk(node.arg)})
+
+    def walk__startswith(self, node):
+        return es_dsl.Q("regexp", **{self.walk(node.field): f"{self.walk(node.arg)}.*"})
+
+
 class Es6SearchService(SearchService):
     def __init__(self, es: elasticsearch.Elasticsearch):
         self.es: elasticsearch.Elasticsearch = es
+        self.query_builder = EsQueryBuilder()
+        self.parser = query_dsl.KarpQueryV6Parser(
+            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics())
         if not self.es.indices.exists(index=KARP_CONFIGINDEX):
             self.es.indices.create(
                 index=KARP_CONFIGINDEX,
@@ -160,7 +243,7 @@ class Es6SearchService(SearchService):
                 "resource": next(
                     resource
                     for resource in resource_ids
-                    if entry.meta.search_servicestartswith(resource)
+                    if entry.meta.index.startswith(resource)
                 ),
                 "entry": dict_entry,
             }
@@ -185,14 +268,18 @@ class Es6SearchService(SearchService):
     def search_with_query(self, query: EsQuery):
         logger.info("search_with_query called with query=%s", query)
         print("search_with_query called with query={}".format(query))
+        es_query = None
+        if query.q:
+            model = self.parser(query.q)
+            es_query = self.query_builder.walk(model)
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
 
             for resource in query.resources:
                 s = es_dsl.Search(index=resource)
 
-                if query.query is not None:
-                    s = s.query(query.query)
+                if es_query is not None:
+                    s = s.query(es_query)
                 s = s[query.from_: query.from_ + query.size]
                 if query.sort:
                     s = s.sort(
@@ -221,8 +308,8 @@ class Es6SearchService(SearchService):
         else:
             s = es_dsl.Search(
                 using=self.es, index=query.resources, doc_type="entry")
-            if query.query is not None:
-                s = s.query(query.query)
+            if es_query is not None:
+                s = s.query(es_query)
 
             s = s[query.from_: query.from_ + query.size]
 

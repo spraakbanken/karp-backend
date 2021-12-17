@@ -1,43 +1,31 @@
 import collections
-import json
+import logging
 import typing
 # from karp.infrastructure.unit_of_work import unit_of_work
 from typing import Any, Dict, Iterator, List, Optional, Tuple
+from karp.lex.application.queries.entries import EntryDto
 
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import Entry
-from karp.lex.application.queries import GetReferencedEntries, ReferenceDto
-from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
+from karp.lex.application.queries import GetReferencedEntries, ReferenceDto, ReadOnlyResourceRepository
+from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 # from karp.resourcemgr import get_resource
 # import karp.resourcemgr.entryread as entryread
 from karp.lex.domain.errors import EntryNotFound
 # from karp.services import context
 
+logger = logging.getLogger(__name__)
+
 
 class GenericGetReferencedEntries(GetReferencedEntries):
     def __init__(
         self,
-        resource_uow: ResourceUnitOfWork,
+        resource_repo: ReadOnlyResourceRepository,
         entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> None:
         super().__init__()
-        self.resource_uow = resource_uow
+        self.resource_repo = resource_repo
         self.entry_uow_repo_uow = entry_uow_repo_uow
-
-    def _get_resource(
-        self,
-        resource_id: str,
-        version: typing.Optional[int] = None
-    ) -> entities.Resource:
-        with self.resource_uow:
-            return self.resource_uow.repo.by_resource_id(
-                resource_id,
-                version=version,
-            )
-
-    def _get_published_resources(self):
-        with self.resource_uow:
-            return self.resource_uow.repo.get_published_resources()
 
     def query(
         self,
@@ -45,53 +33,59 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         # version: typing.Optional[int],
         entry_id: str,
     ) -> typing.Iterable[ReferenceDto]:
-        print(f"network.get_referenced_entries: resource_id={resource_id}")
-        print(f"network.get_referenced_entries: entry_id={entry_id}")
+        logger.debug(
+            f"network.get_referenced_entries: resource_id={resource_id}")
+        logger.debug(f"network.get_referenced_entries: entry_id={entry_id}")
         resource_refs, resource_backrefs = self.get_refs(
             resource_id,  # version=version
         )
 
-        resource = self._get_resource(resource_id)
+        resource = self.resource_repo.get_by_resource_id(resource_id)
+        if not resource:
+            raise RuntimeError(f"resource '{resource_id}' not found")
 
         with self.entry_uow_repo_uow.repo.get_by_id(resource.entry_repository_id) as uw:
             src_entry = uw.repo.by_entry_id(entry_id,  # version=version
                                             )
-            if not src_entry:
-                raise EntryNotFoundError(
-                    resource.resource_id, entry_id, resource_version=resource.version
-                )
+            # if not src_entry:
+            #     raise EntryNotFoundError(
+            #         resource.resource_id, entry_id, resource_version=resource.version
+            #     )
 
-        with self.resource_uow:
-            for (
-                ref_resource_id,
-                ref_resource_version,
-                field_name,
-                field,
-            ) in resource_backrefs:
-                other_resource = ctx.resource_uow.repo.by_resource_id(
-                    ref_resource_id, version=version
-                )
-                with ctx.entry_uows.get(other_resource.resource_id) as entries_uw:
-                    for entry in entries_uw.repo.by_referenceable({field_name: entry_id}):
-                        yield _create_ref(ref_resource_id, ref_resource_version, entry)
+        for (
+            ref_resource_id,
+            ref_resource_version,
+            field_name,
+            field,
+        ) in resource_backrefs:
+            other_resource = self.resource_repo.get_by_resource_id(
+                ref_resource_id  # , version=version
+            )
+            if not other_resource:
+                logger.info('resource %s not found, skipping ...',
+                            ref_resource_id)
+                continue
+            with self.entry_uow_repo_uow.repo.get_by_id(other_resource.resource_id) as entries_uw:
+                for entry in entries_uw.repo.by_referenceable({field_name: entry_id}):
+                    yield _create_ref(ref_resource_id, ref_resource_version, entry)
 
-            # src_body = json.loads(src_entry.body)
-            for (ref_resource_id, ref_resource_version, field_name, field) in resource_refs:
-                ids = src_entry.body.get(field_name)
-                if not field.get("collection", False):
-                    ids = [ids]
-                ref_resource = ctx.resource_uow.repo.by_resource_id(
-                    ref_resource_id)
-                if ref_resource:
-                    with ctx.entry_uows.get(ref_resource.resource_id) as entries_uw:
-                        for ref_entry_id in ids:
-                            entry = entries_uw.repo.by_entry_id(
-                                ref_entry_id, version=ref_resource_version
+        # src_body = json.loads(src_entry.body)
+        for (ref_resource_id, ref_resource_version, field_name, field) in resource_refs:
+            ids = src_entry.body.get(field_name)
+            if not field.get("collection", False):
+                ids = [ids]
+            ref_resource = self.resource_repo.get_by_resource_id(
+                ref_resource_id)
+            if ref_resource:
+                with self.entry_uow_repo_uow.repo.get_by_id(ref_resource.resource_id) as entries_uw:
+                    for ref_entry_id in ids:
+                        entry = entries_uw.repo.by_entry_id(
+                            ref_entry_id, version=ref_resource_version
+                        )
+                        if entry:
+                            yield _create_ref(
+                                ref_resource_id, ref_resource_version, entry
                             )
-                            if entry:
-                                yield _create_ref(
-                                    ref_resource_id, ref_resource_version, entry
-                                )
 
     def get_refs(
         self,
@@ -105,11 +99,14 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         resource_refs = collections.defaultdict(
             lambda: collections.defaultdict(dict))
 
-        src_resource = self._get_resource(resource_id, version=version)
+        src_resource = self.resource_repo.get_by_resource_id(
+            resource_id, version=version)
 
+        if not src_resource:
+            raise RuntimeError(f"Can't find resource '{resource_id}'")
         all_other_resources = [
             resource
-            for resource in self._get_published_resources()
+            for resource in self.resource_repo.get_published_resources()
             if resource.resource_id != resource_id
         ]
 
@@ -161,9 +158,9 @@ class GenericGetReferencedEntries(GetReferencedEntries):
 
 def _create_ref(
     resource_id: str, resource_version: int, entry: Entry
-) -> Dict[str, Any]:
-    return {
-        "resource_id": resource_id,
-        "resource_version": resource_version,
-        "entry": entry,
-    }
+) -> ReferenceDto:
+    return ReferenceDto(
+        resource_id=resource_id,
+        resource_version=resource_version,
+        entry=EntryDto(**entry.dict()),
+    )

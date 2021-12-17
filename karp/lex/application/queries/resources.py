@@ -13,6 +13,7 @@ class ResourceDto(pydantic.BaseModel):
     version: int
     last_modified: float
     config: Dict
+    entry_repository_id: UniqueId
 
 
 class GetPublishedResources(abc.ABC):
@@ -36,4 +37,8 @@ class GetEntryRepositoryId(abc.ABC):
 class ReadOnlyResourceRepository(abc.ABC):
     @abc.abstractmethod
     def get_by_resource_id(self, resource_id: str, version: Optional[int] = None) -> Optional[ResourceDto]:
+        pass
+
+    @abc.abstractmethod
+    def get_published_resources(self) -> Iterable[ResourceDto]:
         pass

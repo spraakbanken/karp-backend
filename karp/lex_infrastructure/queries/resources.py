@@ -49,6 +49,14 @@ class SqlReadOnlyResourceRepository(
 
         return _row_to_dto(row) if row else None
 
+    def get_published_resources(self) -> Iterable[ResourceDto]:
+        stmt = sql.select(ResourceModel).where(
+            ResourceModel.is_published == True)
+        return (
+            _row_to_dto(row)
+            for row in self._conn.execute(stmt)
+        )
+
 
 def _row_to_dto(row_proxy) -> ResourceDto:
     return ResourceDto(
@@ -57,6 +65,7 @@ def _row_to_dto(row_proxy) -> ResourceDto:
         version=row_proxy.version,
         config=row_proxy.config,
         is_published=row_proxy.is_published,
+        entry_repository_id=row_proxy.entry_repo_id,
         last_modified=row_proxy.last_modified,
         last_modified_by=row_proxy.last_modified_by,
     )

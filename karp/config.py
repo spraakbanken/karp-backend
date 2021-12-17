@@ -64,11 +64,14 @@ TEST_ES_HOME = config("TEST_ES_HOME", cast=Path, default=None)
 #     # CONSOLE_LOG_LEVEL = logging.getLevelName(
 #     #     os.environ.get("CONSOLE_LOG_LEVEL", "INFO")
 #     # )
+
+
 def get_loglevel(loglevel: str) -> int:
     return getattr(logging, loglevel.upper(), logging.WARNING)
 
 
-CONSOLE_LOG_LEVEL = config("CONSOLE_LOG_LEVEL", cast=get_loglevel, default="INFO")
+CONSOLE_LOG_LEVEL = config(
+    "CONSOLE_LOG_LEVEL", cast=get_loglevel, default="INFO")
 #     LOG_TO_SLACK = strtobool(os.environ.get("LOG_TO_SLACK", "n"))
 #     SLACK_SECRET = os.environ.get("SLACK_SECRET")
 #     JWT_AUTH = strtobool(os.environ.get("JWT_AUTH", "n"))
@@ -77,7 +80,8 @@ if TESTING:
     print("Using testing jwt key")
     JWT_AUTH_PUBKEY_PATH = Path(__file__).parent / "../tests/data/pubkey.pem"
 else:
-    JWT_AUTH_PUBKEY_PATH = config("JWT_AUTH_PUBKEY_PATH", cast=Path, default=None)
+    JWT_AUTH_PUBKEY_PATH = config(
+        "JWT_AUTH_PUBKEY_PATH", cast=Path, default=None)
 
 MYSQL_FORMAT = "mysql://{user}:{passwd}@{dbhost}/{dbname}"
 
@@ -92,10 +96,8 @@ class Config:
         if "ELASTICSEARCH_HOST" in os.environ
         else None
     )
-    ELASTICSEARCH_ENABLED = strtobool(os.environ.get("ELASTICSEARCH_ENABLED", "n"))
-    # CONSOLE_LOG_LEVEL = logging.getLevelName(
-    #     os.environ.get("CONSOLE_LOG_LEVEL", "INFO")
-    # )
+    ELASTICSEARCH_ENABLED = strtobool(
+        os.environ.get("ELASTICSEARCH_ENABLED", "n"))
     CONSOLE_LOG_LEVEL = getattr(
         logging, os.environ.get("CONSOLE_LOG_LEVEL", "INFO"), logging.INFO
     )

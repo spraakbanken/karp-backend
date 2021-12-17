@@ -15,8 +15,8 @@ def test__create_ref():
 
     ref = generic_network._create_ref(resource_id, resource_version, entry)
 
-    assert ref["resource_id"] == resource_id
-    assert ref["resource_version"] == resource_version
+    assert ref.resource_id == resource_id
+    assert ref.resource_version == resource_version
     # assert ref["entry"]["id"] == _id
-    assert ref["entry"].entry_id == entry_id
-    assert ref["entry"].body == entry_body
+    assert ref.entry.entry_id == entry_id
+    assert ref.entry.entry == entry_body

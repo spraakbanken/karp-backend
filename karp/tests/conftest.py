@@ -3,6 +3,8 @@
 # pylint: disable=wrong-import-position,missing-function-docstring
 
 
+from karp.foundation.value_objects import make_unique_id
+from karp.foundation.commands import CommandBus
 import elasticsearch_test  # pyre-ignore
 import json
 from typing import Dict
@@ -28,8 +30,6 @@ from karp.db_infrastructure.db import metadata  # nopep8
 from karp.lex.domain import commands, errors, entities  # nopep8
 from karp import errors as karp_errors  # nopep8
 from karp import config  # nopep8
-from karp.foundation.commands import CommandBus
-from karp.foundation.value_objects import make_unique_id
 
 # # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
@@ -44,7 +44,9 @@ from karp.foundation.value_objects import make_unique_id
 def fixture_in_memory_sqlite_db():
     engine = create_engine("sqlite:///:memory:")
     metadata.create_all(engine)
-    return engine
+    yield engine
+    session.close_all_sessions()
+    metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
@@ -80,7 +82,7 @@ def main_db():
     yield engine
     print("running alembic downgrade ...")
     session.close_all_sessions()
-    alembic_main(["--raiseerr", "downgrade", "base"])
+    # alembic_main(["--raiseerr", "downgrade", "base"])
     metadata.drop_all(bind=engine)
     # return engine
 
@@ -147,7 +149,6 @@ def fixture_use_dummy_authenticator(app):
 #         print("releasing testclient")
 
 
-
 # @pytest.fixture(name="places_scope_module", scope="module")
 # def fixture_places_scope_module(context_scope_module):
 #     with open("karp/tests/data/config/places.json") as fp:
@@ -156,8 +157,6 @@ def fixture_use_dummy_authenticator(app):
 #     yield resource
 #     print("cleaning up places")
 #     resource.entry_repository.teardown()
-
-
 
 
 # @pytest.fixture(name="context")
@@ -183,16 +182,16 @@ def fixture_places_published(use_main_index, app):  # , db_setup):
     resource_id = 'places'
 
     bus = app.state.container.get(CommandBus)
-
+    cmd = commands.CreateEntryRepository(
+        entity_id=make_unique_id(),
+        repository_type='default',
+        name=resource_id,
+        config=places_config,
+        user='local admin',
+        message='added',
+    )
     try:
-        cmd = commands.CreateEntryRepository(
-            entity_id=make_unique_id(),
-            repository_type='default',
-            name=resource_id,
-            config=places_config,
-            user='local admin',
-            message='added',
-        )
+
         bus.dispatch(cmd)
         bus.dispatch(
             commands.CreateResource(
@@ -218,10 +217,6 @@ def fixture_places_published(use_main_index, app):  # , db_setup):
         )
     except karp_errors.ResourceAlreadyPublished:
         pass
-    # resource_places.is_published = True
-    # with app_config.bus.ctx.resource_uow as uow:
-    #     uow.resources.put(resource_places)
-    #     uow.commit()
 
     return places_config
 

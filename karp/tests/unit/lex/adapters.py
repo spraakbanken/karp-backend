@@ -1,6 +1,6 @@
 import dataclasses
 import typing
-from typing import Dict, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 import injector
 from karp.foundation.events import EventBus
@@ -60,23 +60,33 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
     def __init__(self, resources: Dict):
         self.resources = resources
 
-    def get_by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
+    def get_by_resource_id(self, resource_id: str, version=None) -> Optional[ResourceDto]:
         return next(
             (
-                ResourceDto(
-                    id=res.id,
-                    resource_id=res.resource_id,
-                    last_modified=res.last_modified,
-                    last_modified_by=res.last_modified_by,
-                    version=res.version,
-                    config=res.config,
-                    is_published=res.is_published,
-                )
+                self._row_to_dto(res)
                 for res in self.resources.values()
                 if res.resource_id == resource_id
-             ),
+            ),
             None)
 
+    def _row_to_dto(self, res) -> ResourceDto:
+        return ResourceDto(
+            id=res.id,
+            resource_id=res.resource_id,
+            last_modified=res.last_modified,
+            last_modified_by=res.last_modified_by,
+            version=res.version,
+            config=res.config,
+            is_published=res.is_published,
+            entry_repository_id=res.entry_repository_id,
+        )
+
+    def get_published_resources(self) -> Iterable[ResourceDto]:
+        return (
+            self._row_to_dto(res)
+            for res in self.resources.values()
+            if res.is_published
+        )
 
 
 class FakeEntryRepository(lex_repositories.EntryRepository):

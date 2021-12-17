@@ -60,4 +60,4 @@ def install_auth_service(
         container.binder.install(TestAuthInfrastructure())
     else:
         container.binder.install(JwtAuthInfrastructure(
-            Path(settings['auth.jwt.pubkey_path'])))
+            Path(settings['auth.jwt.pubkey.path'])))

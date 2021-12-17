@@ -2,8 +2,7 @@
 import enum
 import logging
 import typing
-from typing import Dict, List, Optional
-from uuid import UUID
+from typing import Dict, List, Optional, Any
 
 from karp.domain import constraints
 from karp.domain.common import _now, _unknown_user
@@ -98,6 +97,17 @@ class Entry(TimestampedVersionedEntity):
     def message(self):
         """The message for the latest operation of this entry."""
         return self._message
+
+    def dict(self) -> Dict[str, Any]:
+        return {
+            "entry_id": self._entry_id,
+            "entry_uuid": self.id,
+            "resource": "",
+            "version": self._version,
+            "entry": self._body,
+            "last_modified": self._last_modified,
+            "last_modified_by": self._last_modified_by,
+        }
 
     def discard(
         self,

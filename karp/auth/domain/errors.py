@@ -4,3 +4,7 @@ class AuthDomainError(Exception):
 
 class AuthError(AuthDomainError):
     pass
+
+
+class ResourceNotFound(AuthError):
+    pass

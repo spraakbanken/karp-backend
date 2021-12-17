@@ -2,11 +2,11 @@
 
 [![Build Status](https://github.com/spraakbanken/karp-tng-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-tng-backend/actions)
 
-This in the next version of Karp backend
+This in the version 6 of Karp backend.
 
 ## Setup
 
-This project uses [pipenv](https://pipenv.readthedocs.io/) and
+This project uses [poetry](https://python-poetry.org) and
 [MariaDB](https://mariadb.org/).
 
 1. Run `make install` or `make install-dev` for a develop-install (VENV_NAME defaults to .venv)
@@ -17,6 +17,7 @@ This project uses [pipenv](https://pipenv.readthedocs.io/) and
    export MARIADB_USER=<database user>
    export MARIADB_PASSWORD=<user's password>
    export MARIADB_HOST=localhost
+   export AUTH_JWT_PUBKEY_PATH=/path/to/pubkey
    ```
 4. Activate the virtual environment by running: `source <VENV_NAME>/bin/activate` (VENV_NAME defaults to .venv)
 5. Run `make init-db` to initialize database

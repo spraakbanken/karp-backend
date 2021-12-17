@@ -97,11 +97,11 @@ class GenericLexInfrastructure(injector.Module):
     @injector.provider
     def get_referenced_entries(
         self,
-        resources_uow: ResourceUnitOfWork,
+        resources_repo: ReadOnlyResourceRepository,
         entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> GetReferencedEntries:
         return GenericGetReferencedEntries(
-            resource_uow=resources_uow,
+            resource_repo=resources_repo,
             entry_uow_repo_uow=entry_uow_repo_uow,
         )
 

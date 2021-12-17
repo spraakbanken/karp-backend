@@ -39,8 +39,9 @@ help:
 
 install:
 	poetry install --no-dev
+
 dev: install-dev
-install-dev:
+install-dev: karp/search/domain/query_dsl/karp_query_v6_parser.py karp/search/domain/query_dsl/karp_query_v6_model.py
 	poetry install
 
 install-mysql:
@@ -57,6 +58,12 @@ install-elasticsearch7:
 
 init-db:
 	${INVENV} alembic upgrade head
+
+karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
+	${INVENV} tatsu $< > $@
+
+karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
+	${INVENV} tatsu --object-model $< > $@
 
 run: install
 	${INVENV} python run.py 8081
