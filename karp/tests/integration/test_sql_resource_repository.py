@@ -6,8 +6,8 @@ import pytest
 
 from karp.lex.domain.errors import IntegrityError
 from karp.lex.domain.entities.resource import Resource, ResourceOp, create_resource
-from karp.lex_infrastructure.sql import db
-from karp.lex_infrastructure.sql.sql_resource_repository import \
+# from karp.lex_infrastructure.sql import db
+from karp.lex_infrastructure.repositories.sql_resources import \
     SqlResourceRepository
 # from karp.domain.models.lexical_resource import LexicalResource
 # from karp.infrastructure.unit_of_work import unit_of_work
@@ -43,7 +43,8 @@ def test_sql_resource_repo_put_resource(resource_repo):
     assert resource_copy_1.message == resource.message
     assert resource_copy_1.op == ResourceOp.ADDED
 
-    resource_id_history = resource_repo.history_by_resource_id(resource.resource_id)
+    resource_id_history = resource_repo.history_by_resource_id(
+        resource.resource_id)
     assert len(resource_id_history) == 1
 
     test_lex = resource_repo.by_resource_id(resource.resource_id)
@@ -138,7 +139,8 @@ def test_sql_resource_repo_putting_already_existing_resource_id_raises(resource_
     with pytest.raises(IntegrityError) as exc_info:
         resource_repo.save(resource_2)
 
-    assert f"Resource with resource_id '{resource.resource_id}' already exists." in str(exc_info)
+    assert f"Resource with resource_id '{resource.resource_id}' already exists." in str(
+        exc_info)
 
 
 def test_sql_resource_repo_update_resource(resource_repo):
@@ -151,7 +153,7 @@ def test_sql_resource_repo_update_resource(resource_repo):
     resource.stamp(
         message="change config",
         user="Test user",
-        #timestamp=time.utc_now(),
+        # timestamp=time.utc_now(),
     )
     # session = db.SessionLocal()
     resource_repo.save(resource)
@@ -159,16 +161,18 @@ def test_sql_resource_repo_update_resource(resource_repo):
     assert resource_repo.by_id(resource.id).version == 2
     assert resource_repo.by_resource_id(resource.resource_id).version == 2
 
-    assert resource_repo.resource_with_id_and_version(resource.resource_id, 1).version == 1
+    assert resource_repo.resource_with_id_and_version(
+        resource.resource_id, 1).version == 1
 
     assert resource_repo.by_id(resource.id, version=1).version == 1
-    assert resource_repo.by_resource_id(resource.resource_id, version=1).version == 1
-
+    assert resource_repo.by_resource_id(
+        resource.resource_id, version=1).version == 1
 
     lex = resource_repo.by_resource_id(resource.resource_id)
     assert lex is not None
     assert lex.resource_id == resource.resource_id
-    assert resource_repo.get_latest_version(resource.resource_id) == resource.version
+    assert resource_repo.get_latest_version(
+        resource.resource_id) == resource.version
 
     lex._version = 3
     resource_repo.save(lex)
@@ -182,7 +186,8 @@ def test_sql_resource_repo_2nd_active_raises(resource_repo):
     resource_version = 2
     with pytest.raises(Exception):
         with unit_of_work(using=resource_repo) as uw:
-            resource = uw.resource_with_id_and_version(resource_id, resource_version)
+            resource = uw.resource_with_id_and_version(
+                resource_id, resource_version)
             resource.is_published = True
             resource.stamp(user="Admin", message="make active")
             uw.update(resource)
@@ -195,7 +200,8 @@ def test_sql_resource_repo_version_change_to_existing_raises(resource_repo):
     resource_version = 2
     with pytest.raises(Exception):
         with unit_of_work(using=resource_repo) as uw:
-            resource = uw.resource_with_id_and_version(resource_id, resource_version)
+            resource = uw.resource_with_id_and_version(
+                resource_id, resource_version)
             resource.version = 1
 
 
@@ -206,7 +212,8 @@ def test_sql_resource_repo_put_another_resource(resource_repo):
     resource2 = factories.ResourceFactory()
     resource_repo.save(resource2)
 
-    assert set(resource_repo.resource_ids()) == {resource.resource_id, resource2.resource_id}
+    assert set(resource_repo.resource_ids()) == {
+        resource.resource_id, resource2.resource_id}
 
 
 # def test_sql_resource_repo_deep_update_of_resource(resource_repo):
