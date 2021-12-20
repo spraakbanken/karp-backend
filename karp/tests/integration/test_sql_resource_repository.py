@@ -1,27 +1,18 @@
 """Tests for SQLResourceRepository"""
-# from karp.cli import publish_resource
-import uuid
 
 import pytest
 
 from karp.lex.domain.errors import IntegrityError
-from karp.lex.domain.entities.resource import Resource, ResourceOp, create_resource
-# from karp.lex_infrastructure.sql import db
+from karp.lex.domain.entities.resource import Resource, ResourceOp
 from karp.lex_infrastructure.repositories.sql_resources import \
     SqlResourceRepository
-# from karp.domain.models.lexical_resource import LexicalResource
-# from karp.infrastructure.unit_of_work import unit_of_work
-# from karp.services import handlers
 from karp.tests.unit.lex import factories
-
-# pytestmark = pytest.mark.usefixtures("db_setup")
 
 
 @pytest.fixture(name="resource_repo")  # , scope="module")
 def fixture_resource_repo(sqlite_session_factory):
     session = sqlite_session_factory()
     return SqlResourceRepository(session)
-    # return resource_repo
 
 
 def test_sql_resource_repo_empty(resource_repo):
@@ -34,7 +25,6 @@ def test_sql_resource_repo_put_resource(resource_repo):
 
     resource_repo.save(resource)
     expected_version = 1
-    # assert resource.config == {}
 
     assert resource_repo.resource_ids() == [resource.resource_id]
 
@@ -155,7 +145,6 @@ def test_sql_resource_repo_update_resource(resource_repo):
         user="Test user",
         # timestamp=time.utc_now(),
     )
-    # session = db.SessionLocal()
     resource_repo.save(resource)
 
     assert resource_repo.by_id(resource.id).version == 2
@@ -180,6 +169,7 @@ def test_sql_resource_repo_update_resource(resource_repo):
     assert resource_repo.by_resource_id(resource.resource_id).version == 3
 
 
+@pytest.mark.skip(reason="tested in other place")
 def test_sql_resource_repo_2nd_active_raises(resource_repo):
     resource = factories.ResourceFactory()
     resource_id = "test_id"
@@ -194,6 +184,7 @@ def test_sql_resource_repo_2nd_active_raises(resource_repo):
             assert resource.is_published is True
 
 
+@pytest.mark.skip(reason="tested in other place")
 def test_sql_resource_repo_version_change_to_existing_raises(resource_repo):
     resource = factories.ResourceFactory()
     resource_id = "test_id"
