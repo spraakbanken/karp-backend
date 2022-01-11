@@ -1,12 +1,12 @@
 # Karp TNG backend
 
-[![Build Status](https://github.com/spraakbanken/karp-tng-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-tng-backend/actions)
+[![Build Status](https://github.com/spraakbanken/karp-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-backend/actions)
 
-This in the next version of Karp backend
+This in the next version of Karp backend, [for the legacy version (v5)](https://github.com/spraakbanken/karp-backend-v5).
 
 ## Setup
 
-This project uses [pipenv](https://pipenv.readthedocs.io/) and
+This project uses [poetry](https://) and
 [MariaDB](https://mariadb.org/).
 
 1. Run `make install` or `make install-dev` for a develop-install (VENV_NAME defaults to .venv)
