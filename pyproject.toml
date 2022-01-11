@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "karp-tng-backend"
+name = "karp-backend"
 version = "0.8.1"
 license = "MIT"
 description = "Karp backend"
@@ -9,8 +9,8 @@ authors = [
 ]
 homepage = "https://spraakbanken.gu.se"
 
-documentation = "https://github.com/spraakbanken/karp-tng-backend"
-repository = "https://github.com/spraakbanken/karp-tng-backend"
+documentation = "https://github.com/spraakbanken/karp-backend"
+repository = "https://github.com/spraakbanken/karp-backend"
 classifiers = [
 	"Development Status :: 2 - Pre-Alpha",
 	"Intended Audience :: Developers",
@@ -42,7 +42,7 @@ karp-cli = "karp.cliapp.main:cliapp"
 "resource" = "karp.cliapp.subapp_resource"
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/spraakbanken/karp-tng-backend/issues"
+"Bug Tracker" = "https://github.com/spraakbanken/karp-backend/issues"
 
 [tool.poetry.dependencies]
 python = "^3.9"
