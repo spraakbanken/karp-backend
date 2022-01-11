@@ -6,12 +6,10 @@ from karp.utility.time import monotonic_utc_now
 
 
 class DomainEvent:
-    def __init__(
-        self,
-        timestamp=_now,
-        **kwargs
-    ):
-        self.__dict__["timestamp"] = monotonic_utc_now() if timestamp is _now else timestamp
+    def __init__(self, timestamp=_now, **kwargs):
+        self.__dict__["timestamp"] = (
+            monotonic_utc_now() if timestamp is _now else timestamp
+        )
         self.__dict__.update(kwargs)
 
     def __setattr__(self, key, value):
@@ -24,7 +22,7 @@ class DomainEvent:
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
-            raise NotImplemented
+            return NotImplemented
         return self.__dict__ == other.__dict__
 
     def __hash__(self):

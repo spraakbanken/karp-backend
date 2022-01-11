@@ -7,4 +7,4 @@ class ResourceFactory(factory.Factory):
     class Meta:
         model = Resource
 
-    entity_id = factory.
+    # entity_id = factory.

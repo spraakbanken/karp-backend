@@ -1,19 +1,15 @@
 import logging
 
 import sqlalchemy
-from sqlalchemy import (Table, Column, MetaData, String, Integer, Text,
-                        create_engine)
-from sqlalchemy.orm import mapper, scoped_session, sessionmaker, composite
 import sqlalchemy.exc
 import sqlalchemy.orm.exc
-
+from sqlalchemy import (Column, Integer, MetaData, String, Table, Text,
+                        create_engine)
+from sqlalchemy.orm import composite, mapper, scoped_session, sessionmaker
 from sqlalchemy_utils.functions import create_database, drop_database
 
 from karp.domain.model import Resource, ResourceReporter
-from karp.domain.ports import (
-    UnitOfWork,
-    UnitOfWorkManager,
-)
+from karp.domain.ports import UnitOfWork, UnitOfWorkManager
 
 
 class SqlAlchemyUnitOfWorkManager(UnitOfWorkManager):

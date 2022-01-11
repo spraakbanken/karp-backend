@@ -1,31 +1,31 @@
-from dependency_injector import wiring
-from fastapi import APIRouter, Security, HTTPException, status, Response, Depends
+import typing
 
-from karp.domain.models.user import User
-from karp.domain.value_objects import PermissionLevel
+from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
+                     status)
 
-from karp.services import entry_query
-from karp.services.auth_service import AuthService
-from karp.services.messagebus import MessageBus
-
-# from karp.application import ctx
-
+from karp import auth
+from karp.foundation.value_objects import PermissionLevel
+from karp.search.application.queries import SearchService, StatisticsDto
 from karp.webapp import schemas
+
 from .app_config import get_current_user
-from .containers import WebAppContainer
+from .fastapi_injector import inject_from_req
 
 
 router = APIRouter(tags=["Statistics"])
 
 
-@router.get("/stats/{resource_id}/{field}")
-@wiring.inject
+@router.get(
+    "/stats/{resource_id}/{field}",
+    response_model=typing.List[StatisticsDto],
+)
 def get_field_values(
     resource_id: str,
     field: str,
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(
+        inject_from_req(auth.AuthService)),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
@@ -33,8 +33,8 @@ def get_field_values(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    print("calling statistics ...")
-    return entry_query.statistics(resource_id, field, bus.ctx)
+    print(f"calling statistics ... from {search_service=}")
+    return search_service.statistics(resource_id, field)
 
 
 def init_app(app):

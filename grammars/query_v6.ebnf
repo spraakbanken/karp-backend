@@ -1,0 +1,148 @@
+@@grammar::KarpQueryV6
+
+start
+    =
+    expression $
+    ;
+
+expression
+    =
+    | logical_expression
+    | query_expression
+    ;
+
+query_expression
+    =
+    | contains
+    | endswith
+    | equals
+    | exists
+    | freergxp
+    | freetext
+    | gt
+    | gte
+    | lt
+    | lte
+    | missing
+    | regexp
+    | startswith
+    ;
+
+logical_expression
+    =
+    | and
+    | or
+    | not
+    ;
+
+and::And
+    =
+    op:'and' '(' exps+:expression {'||' exps+:expression}* ')'
+    ;
+
+contains::Contains
+    =
+    op:'contains' '|' field:string '|' arg:string
+    ;
+
+endswith::Endswith
+    =
+    op:'endswith' '|' field:string '|' arg:string
+    ;
+
+equals::Equals
+    =
+    op:'equals' '|' field:string '|' arg:argument
+    ;
+
+exists::Exists
+    =
+    op:'exists' '|' field:string
+    ;
+
+freergxp::Freergxp
+    =
+    op:'freergxp' '|' arg:string
+    ;
+
+freetext
+    =
+    | freetext_any
+    | freetext_string
+    ;
+
+freetext_any::FreetextAnyButString
+    =
+    op:'freetext' '|' arg:any_but_string
+    ;
+
+freetext_string::FreetextString
+    =
+    op:'freetext' '|' arg:string
+    ;
+
+gt::Gt
+    =
+    op:'gt' '|' field:string '|' arg:argument
+    ;
+
+gte::Gte
+    =
+    op:'gte' '|' field:string '|' arg:argument
+    ;
+
+lt::Lt
+    =
+    op:'lt' '|' field:string '|' arg:argument
+    ;
+
+lte::Lte
+    =
+    op:'lte' '|' field:string '|' arg:argument
+    ;
+
+missing::Missing
+    =
+    op:'missing' '|' field:string
+    ;
+
+not::Not
+    =
+    op:'not' '(' expr:expression ')'
+    ;
+
+or::Or
+    =
+    op:'or' '(' exps+:expression {'||' exps+:expression}* ')'
+    ;
+
+regexp::Regexp
+    =
+    op:'regexp' '|' field:string '|' arg:string
+    ;
+
+startswith::Startswith
+    =
+    op:'startswith' '|' field:string '|' arg:string
+    ;
+
+argument
+    =
+    | integer
+    | string
+    ;
+
+any_but_string
+    =
+    integer
+    ;
+
+string
+    =
+    /[^|()]+/
+    ;
+
+integer::int
+    =
+    /\d+/
+    ;

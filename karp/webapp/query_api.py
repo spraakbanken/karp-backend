@@ -4,31 +4,18 @@ Query API.
 import logging
 from typing import List, Optional
 
-from dependency_injector import wiring
-from fastapi import APIRouter, Security, HTTPException, status, Query, Path, Depends
+from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
+                     status)
 
-from karp import errors as karp_errors
-
-from karp.domain import value_objects, index
-
-from karp.domain.models.user import User
-
-# from karp.domain.models.auth_service import PermissionLevel
-
-# from karp.application import ctx
-# from karp.application.services import resources as resources_service
-
+from karp import errors as karp_errors, auth
+from karp.search.application.queries import SearchService, QueryRequest
 from karp.webapp import schemas
 
-# from karp.webapp.auth import get_current_user
-from karp.services import entry_query
-from karp.services.auth_service import AuthService
-from karp.services.messagebus import MessageBus
 from .app_config import get_current_user
-from .containers import WebAppContainer
+from .fastapi_injector import inject_from_req
 
 
-_logger = logging.getLogger("karp")
+logger = logging.getLogger("karp")
 
 
 router = APIRouter(tags=["Querying"])
@@ -41,7 +28,6 @@ router = APIRouter(tags=["Querying"])
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
 )
-@wiring.inject
 def query(
     resources: str = Path(
         ...,
@@ -62,7 +48,8 @@ def query(
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^\w+\|(asc|desc)",
     ),
-    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
+    lexicon_stats: bool = Query(
+        True, description="Show the hit count per lexicon"),
     include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
@@ -74,9 +61,10 @@ def query(
         alias="format",
         description="Will return the result in the specified format.",
     ),
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(
+        inject_from_req(auth.AuthService)),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     """
     # Query DSL
@@ -124,19 +112,19 @@ def query(
     and||missing|pos||equals|wf||or|blomma|äpple
     and||equals|wf|sitta||not||equals|wf|satt
     """
-    print(
-        f"Called 'query' called with resources={resources}, from={from_}m size={size}"
+    logger.debug(
+        "Called 'query' called with resources=%s, from=%d, size=%d", resources, from_, size
     )
     resource_list = resources.split(",")
     if not auth_service.authorize(
-        value_objects.PermissionLevel.read, user, resource_list
+        auth.PermissionLevel.read, user, resource_list
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    query_request = index.QueryRequest(
+    query_request = QueryRequest(
         resource_ids=resource_list,
         q=q,
         from_=from_,
@@ -148,10 +136,11 @@ def query(
         lexicon_stats=lexicon_stats,
     )
     try:
-        response = entry_query.query(query_request, ctx=bus.ctx)
+        print(f'{search_service=}')
+        response = search_service.query(query_request)
 
     except karp_errors.KarpError as err:
-        _logger.exception(
+        logger.exception(
             "Error occured when calling 'query' with resources='%s' and q='%s'. e.msg='%s'",
             resources,
             q,
@@ -166,32 +155,32 @@ def query(
     description="Returns a list of entries matching the given ids",
     name="Get lexical entries by id",
 )
-@wiring.inject
 def get_entries_by_id(
-    resource_id: str = Path(..., description="The resource to perform operation on"),
+    resource_id: str = Path(...,
+                            description="The resource to perform operation on"),
     entry_ids: str = Path(
         ...,
         description="Comma-separated. The ids to perform operation on.",
         regex=r"^\w(,\w)*",
     ),
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(
+        inject_from_req(auth.AuthService)),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     print("webapp.views.get_entries_by_id")
     if not auth_service.authorize(
-        value_objects.PermissionLevel.read, user, [resource_id]
+        auth.PermissionLevel.read, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    return entry_query.search_ids(resource_id, entry_ids, ctx=bus.ctx)
+    return search_service.search_ids(resource_id, entry_ids)
 
 
 @router.get("/query_split/{resources}", name="Query per resource")
-@wiring.inject
 def query_split(
     resources: str = Path(
         ...,
@@ -212,7 +201,8 @@ def query_split(
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^\w+\|(asc|desc)",
     ),
-    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
+    lexicon_stats: bool = Query(
+        True, description="Show the hit count per lexicon"),
     include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
@@ -223,21 +213,23 @@ def query_split(
         schemas.EntryFormat.json,
         description="Will return the result in the specified format.",
     ),
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(
+        inject_from_req(auth.AuthService)),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
-    print("webapp.views.query.query_split: called with resources={}".format(resources))
+    logger.debug(
+        "webapp.views.query.query_split: called with resources=%s", resources)
     resource_list = resources.split(",")
     if not auth_service.authorize(
-        value_objects.PermissionLevel.read, user, resource_list
+        auth.PermissionLevel.read, user, resource_list
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    query_request = index.QueryRequest(
+    query_request = QueryRequest(
         resource_ids=resource_list,
         q=q,
         from_=from_,
@@ -245,10 +237,10 @@ def query_split(
         lexicon_stats=lexicon_stats,
     )
     try:
-        response = entry_query.query_split(query_request, ctx=bus.ctx)
+        response = search_service.query_split(query_request)
 
     except karp_errors.KarpError as err:
-        _logger.exception(
+        logger.exception(
             "Error occured when calling 'query_split' with resources='%s' and q='%s'. msg='%s'",
             resources,
             q,

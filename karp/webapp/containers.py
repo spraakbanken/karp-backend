@@ -1,8 +1,7 @@
 from dependency_injector import containers, providers
 
-
-from karp.main.containers import AppContainer
 from karp.infrastructure.jwt import jwt_auth_service
+from karp.main.containers import AppContainer
 
 
 class WebAppContainer(containers.DeclarativeContainer):

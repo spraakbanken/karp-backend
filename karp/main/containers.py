@@ -1,15 +1,16 @@
 import logging.config
 
+import elasticsearch
 from dependency_injector import containers, providers
 
-import elasticsearch
-
-
 from karp import db_infrastructure
-from karp.services import messagebus, unit_of_work
-from karp.infrastructure.sql import sql_unit_of_work
-from karp.infrastructure import elasticsearch6
-from karp.infrastructure.jwt import jwt_auth_service
+from karp.search_infrastructure import elasticsearch6
+from karp.search_infrastructure.sql.sql_search_service import SqlSearchService
+from karp.search_infrastructure.sql.unit_of_work import SqlSearchServiceUnitOfWork
+from karp.auth_infrastructure.jwt import jwt_auth_service
+from karp.lex_infrastructure.sql import sql_unit_of_work
+from karp.lex.application import unit_of_work
+from .bootstrap import bootstrap_message_bus
 
 
 class Core(containers.DeclarativeContainer):
@@ -39,23 +40,23 @@ class AppContainer(containers.DeclarativeContainer):
 
     entry_uows = providers.Singleton(unit_of_work.EntriesUnitOfWork)
 
-    entry_uow_factory = providers.Singleton(unit_of_work.DefaultEntryUowFactory)
+    # entry_uow_factory = providers.Singleton(unit_of_work.DefaultEntryUowFactory)
 
     es6 = providers.Singleton(
         elasticsearch.Elasticsearch, hosts=config.search_service.elasticsearch_hosts
     )
 
     es6_search_service = providers.Singleton(
-        elasticsearch6.es6_index.Es6Index, es=es6.provided
+        elasticsearch6.es6_search_service.Es6SearchService, es=es6.provided
     )
 
     es6_search_service_uow = providers.Singleton(
-        elasticsearch6.es6_unit_of_work.Es6IndexUnitOfWork,
+        elasticsearch6.es6_unit_of_work.Es6SearchServiceUnitOfWork,
         es6_search_service=es6_search_service.provided,
     )
 
     sql_search_service_uow = providers.Singleton(
-        sql_unit_of_work.SqlIndexUnitOfWork,
+        SqlSearchServiceUnitOfWork,
         session_factory=db.provided.session_factory,
     )
 
@@ -66,7 +67,7 @@ class AppContainer(containers.DeclarativeContainer):
     )
 
     bus = providers.Singleton(
-        messagebus.MessageBus,
+        bootstrap_message_bus,
         resource_uow=resource_uow.provided,
         entry_uows=entry_uows.provided,
         search_service_uow=search_service_uow.provided,

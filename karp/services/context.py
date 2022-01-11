@@ -1,15 +1,17 @@
 from typing import Dict
 
+# from karp.application.config import Config
+from karp.domain import index, repository  # ResourceRepository
+
+from . import unit_of_work
+from .auth_service import AuthService
+
 # from functools import singledispatch
 
-# from karp.application.config import Config
-from karp.domain import repository, index  # ResourceRepository
-from .auth_service import AuthService
 
 # from karp.domain.services.auth.auth import Auth
 # from karp.domain.models.search_service import SearchService
 
-from . import unit_of_work
 
 
 class Context:

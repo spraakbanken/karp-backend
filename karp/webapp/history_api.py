@@ -1,19 +1,29 @@
-from karp.webapp import schemas
 from typing import Dict, Optional
 
-from dependency_injector import wiring
-from fastapi import APIRouter, Query, Security, HTTPException, status, Depends
+from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 
-from karp.domain import value_objects, model
-from karp.domain.models.user import User
+from karp.auth import AuthService
+from karp import auth
 
+from karp.lex.application.queries import (
+    EntryDiffDto,
+    EntryDto,
+    EntryDiffRequest,
+    EntryHistoryRequest,
+    GetEntryDiff,
+    GetHistory,
+    GetEntryHistory,
+)
+# from karp.domain import model, value_objects
+# from karp.domain.models.user import User
+# from karp.domain.value_objects import unique_id
+# from karp.services import entry_views
+# from karp.services.auth_service import AuthService
+# from karp.services.messagebus import MessageBus
+from karp.webapp import schemas
 
-from karp.services import entry_views
-from karp.services.auth_service import AuthService
-from karp.services.messagebus import MessageBus
-from karp.utility import unique_id
 from .app_config import get_current_user
-from .containers import WebAppContainer
+from .fastapi_injector import inject_from_req
 
 # from flask import Blueprint, jsonify, request  # pyre-ignore
 
@@ -28,25 +38,24 @@ router = APIRouter(tags=["History"])
 
 
 @router.get(
-    "/{resource_id}/{entry_id}/diff", response_model=entry_views.EntryDiffResponse
+    "/{resource_id}/{entry_id}/diff", response_model=EntryDiffDto
 )
 # @router.post("/{resource_id}/{entry_id}/diff")
 # @auth.auth.authorization("ADMIN")
-@wiring.inject
 def get_diff(
     resource_id: str,
     entry_id: str,
-    user: model.User = Security(get_current_user, scopes=["admin"]),
+    user: auth.User = Security(get_current_user, scopes=["admin"]),
     from_version: Optional[int] = None,
     to_version: Optional[int] = None,
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    get_entry_diff: GetEntryDiff = Depends(inject_from_req(GetEntryDiff)),
 ):
     if not auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id]
+        auth.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -75,7 +84,7 @@ def get_diff(
     #         "entry": request.get_json(),
     #     }
     #
-    diff_request = entry_views.EntryDiffRequest(
+    diff_request = EntryDiffRequest(
         resource_id=resource_id,
         entry_id=entry_id,
         from_version=from_version,
@@ -84,19 +93,15 @@ def get_diff(
         to_date=to_date,
         entry=entry,
     )
-    return entry_views.diff(
-        diff_request,
-        ctx=bus.ctx,
-    )
+    return get_entry_diff.query(diff_request)
 
 
 @router.get(
     "/{resource_id}/history",
 )
-@wiring.inject
 def get_history(
     resource_id: str,
-    user: User = Security(get_current_user, scopes=["admin"]),
+    user: auth.User = Security(get_current_user, scopes=["admin"]),
     user_id: Optional[str] = Query(None),
     entry_id: Optional[str] = Query(None),
     from_date: Optional[float] = Query(None),
@@ -105,18 +110,19 @@ def get_history(
     from_version: Optional[int] = Query(None),
     current_page: int = Query(0),
     page_size: int = Query(100),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    get_history: GetHistory = Depends(inject_from_req(GetHistory)),
 ):
     if not auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id]
+        auth.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="admin"'},
         )
-    history_request = entry_views.EntryHistoryRequest(
+    history_request = EntryHistoryRequest(
+        resource_id=resource_id,
         page_size=page_size,
         current_page=current_page,
         from_date=from_date,
@@ -126,35 +132,31 @@ def get_history(
         from_version=from_version,
         to_version=to_version,
     )
-    history, total = entry_views.get_history(
-        resource_id,
-        history_request,
-        ctx=bus.ctx,
-    )
+    history, total = get_history.query(history_request)
     return {"history": history, "total": total}
 
 
-@router.get("/{resource_id}/{entry_id}/{version}/history", response_model=schemas.Entry)
+@router.get("/{resource_id}/{entry_id}/{version}/history", response_model=EntryDto)
 # @auth.auth.authorization("ADMIN")
-@wiring.inject
 def get_history_for_entry(
     resource_id: str,
     entry_id: str,
     version: int,
-    user: User = Security(get_current_user, scopes=["read"]),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-    bus: MessageBus = Depends(wiring.Provide[WebAppContainer.context.bus]),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    get_entry_history: GetEntryHistory = Depends(
+        inject_from_req(GetEntryHistory)),
 ):
     if not auth_service.authorize(
-        value_objects.PermissionLevel.admin, user, [resource_id]
+        auth.PermissionLevel.admin, user, [resource_id]
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
-    historical_entry = entry_views.get_entry_history(
-        resource_id, entry_id, version=version, ctx=bus.ctx
+    historical_entry = get_entry_history.query(
+        resource_id, entry_id, version=version
     )
 
     return historical_entry

@@ -1,10 +1,10 @@
 from typing import Any, List, Tuple
 
-from paradigmextract import morphparser, paradigm as pe_paradigm
+from paradigmextract import morphparser
+from paradigmextract import paradigm as pe_paradigm
 
 from karp.domain.models.entry import Entry, EntryOp, EntryStatus
-
-from karp.utility import unique_id
+from karp.domain.value_objects import unique_id
 
 
 class MorphologicalEntry(Entry):

@@ -1,6 +1,6 @@
 from karp.application import schemas
-from karp.services import context
 from karp.domain.errors import RepositoryStatusError
+from karp.services import context
 
 
 def check_database_status(ctx: context.Context) -> schemas.SystemResponse:

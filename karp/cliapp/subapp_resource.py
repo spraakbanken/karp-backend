@@ -1,24 +1,24 @@
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Callable, List, Optional, TypeVar
 
 import typer
-
+from json_streams import jsonlib
 from tabulate import tabulate
 
-from json_streams import jsonlib
-
-from karp.domain import commands
-
-# from karp.application import ctx
-# from karp.application.services import resources
+from karp.foundation.commands import CommandBus
+from karp.lex import commands as lex_commands
+from karp.search import commands as search_commands
+from karp.lex.application.queries import (
+    GetPublishedResources,
+    ListEntryRepos,
+    GetResources,
+)
 from karp.errors import ResourceAlreadyPublished
 
-# from karp.infrastructure.unit_of_work import unit_of_work
-
 from .utility import cli_error_handler, cli_timer
+from .typer_injector import inject_from_ctx
 
-from . import app_config
 
 logger = logging.getLogger("karp")
 
@@ -26,15 +26,34 @@ logger = logging.getLogger("karp")
 subapp = typer.Typer()
 
 
+T = TypeVar('T')
+
+
+def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
+    for i, choice in enumerate(choices):
+        typer.echo(f'{i}) {choice_fmt(choice)}')
+    while True:
+        number = typer.prompt(f'Choose from above with (0-{len(choices)-1}):')
+        return choices[int(number)]
+
+
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def create(config: Path):
-
+def create(config: Path, ctx: typer.Context):
+    bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
         data = jsonlib.load_from_file(config)
-        cmd = commands.CreateResource.from_dict(data, created_by="local admin")
-        app_config.bus.handle(cmd)
+        query = inject_from_ctx(ListEntryRepos, ctx)
+        entry_repos = list(query.query())
+        entry_repo = choose_from(
+            entry_repos, lambda x: f'{x.name} {x.repository_type}')
+        cmd = lex_commands.CreateResource.from_dict(
+            data,
+            created_by="local admin",
+            entry_repo_id=entry_repo.id,
+        )
+        bus.dispatch(cmd)
         typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.id})")
 
     elif config.is_dir():
@@ -48,7 +67,10 @@ def create(config: Path):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def update(config: Path):
+def update(
+        ctx: typer.Context,
+        config: Path):
+    bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
         with open(config) as fp:
             new_resource = resources.update_resource_from_file(fp)
@@ -62,20 +84,24 @@ def update(config: Path):
         if version is None:
             typer.echo(f"Nothing to do for resource '{resource_id}'")
         else:
-            typer.echo(f"Updated version {version} of resource '{resource_id}'")
+            typer.echo(
+                f"Updated version {version} of resource '{resource_id}'")
 
 
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def publish(resource_id: str):
+def publish(
+    ctx: typer.Context,
+        resource_id: str):
+    bus = inject_from_ctx(CommandBus, ctx)
     try:
-        cmd = commands.PublishResource(
+        cmd = lex_commands.PublishResource(
             resource_id=resource_id,
             message=f"Publish '{resource_id}",
             user="local admin",
         )
-        app_config.bus.handle(cmd)
+        bus.dispatch(cmd)
     except ResourceAlreadyPublished:
         typer.echo("Resource already published.")
     else:
@@ -85,9 +111,12 @@ def publish(resource_id: str):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex(resource_id: str):
-    cmd = commands.ReindexResource(resource_id=resource_id)
-    app_config.bus.handle(cmd)
+def reindex(
+        ctx: typer.Context,
+        resource_id: str):
+    bus = inject_from_ctx(CommandBus, ctx)
+    cmd = search_commands.ReindexResource(resource_id=resource_id)
+    bus.dispatch(cmd)
 
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
@@ -156,17 +185,19 @@ def reindex(resource_id: str):
 @cli_error_handler
 @cli_timer
 def list_resources(
-    show_active: Optional[bool] = typer.Option(True, "--show-active/--show-all")
+    ctx: typer.Context,
+    show_published: Optional[bool] = typer.Option(
+        True, "--show-published/--show-all")
 ):
-    resources_ = resources.get_published_resources()
-    if not resources_:
-        typer.echo("No resources published.")
-        raise typer.Exit()
+    if show_published:
+        query = inject_from_ctx(GetPublishedResources, ctx)
+    else:
+        query = inject_from_ctx(GetResources, ctx)
     typer.echo(
         tabulate(
             [
                 [resource.resource_id, resource.version, resource.is_published]
-                for resource in resources_
+                for resource in query.query()
             ],
             headers=["resource_id", "version", "published"],
         )
@@ -208,13 +239,19 @@ def list_resources(
 #     )
 
 
-# @cli.command("set_permissions")
+@subapp.command()
 # @click.option("--resource_id", required=True)
 # @click.option("--version", required=True)
 # @click.option("--level", required=True)
-# @cli_error_handler
-# @cli_timer
-# def set_permissions(resource_id, version, level):
+@cli_error_handler
+@cli_timer
+def set_permissions(
+    ctx: typer.Context,
+    resource_id: str,
+    version: int,
+    level: str,
+):
+    bus = inject_from_ctx(CommandBus, ctx)
 #     # TODO use level
 #     permissions = {"write": True, "read": True}
 #     resourcemgr.set_permissions(resource_id, version, permissions)

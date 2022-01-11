@@ -1,4 +1,5 @@
-from typing import Any, Set, Optional
+from typing import Any, Optional, Set
+
 import attr
 
 

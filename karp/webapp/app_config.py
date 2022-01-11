@@ -1,21 +1,20 @@
 import logging
 from typing import Optional
-from fastapi import Depends, HTTPException, status
-from fastapi.param_functions import Header
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, SecurityScopes
-from fastapi.security import utils as security_utils
 
 from dependency_injector import wiring
+from fastapi import Depends, HTTPException, status
+from fastapi.param_functions import Header
+from fastapi.security import (HTTPAuthorizationCredentials, HTTPBearer,
+                              SecurityScopes)
+from fastapi.security import utils as security_utils
 
-from karp import bootstrap, services
-
-from karp.domain import model
-from karp.services.auth_service import AuthService
-
+# from karp import bootstrap, services
+from karp import auth
 # from karp.auth.auth import auth
 from karp.errors import ClientErrorCodes, KarpError
-from .containers import WebAppContainer
-
+from karp.auth.domain.auth_service import AuthService
+from .fastapi_injector import inject_from_req
+# from .containers import WebAppContainer
 
 # bus = bootstrap.bootstrap()
 
@@ -39,8 +38,8 @@ def bearer_scheme(authorization=Header(None)):
 def get_current_user(
     security_scopes: SecurityScopes,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
-    auth_service: AuthService = Depends(wiring.Provide[WebAppContainer.auth_service]),
-) -> Optional[model.User]:
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+) -> Optional[auth.User]:
     if not credentials:
         return None
     if security_scopes.scopes:

@@ -2,55 +2,51 @@
 
 # pylint: disable=wrong-import-position,missing-function-docstring
 
+
+from karp.foundation.value_objects import make_unique_id
+from karp.foundation.commands import CommandBus
+import elasticsearch_test  # pyre-ignore
 import json
-import os
-import time
 from typing import Dict
 
 import pytest  # pyre-ignore
-
 from sqlalchemy import create_engine, pool
-from sqlalchemy.orm import sessionmaker, session
+from sqlalchemy.orm import session, sessionmaker
+from starlette.config import environ
+from starlette.testclient import TestClient
+from tenacity import retry, stop_after_delay
 
 from alembic.config import main as alembic_main
-
-from starlette.testclient import TestClient
-from starlette.config import environ
-from tenacity import retry, stop_after_delay
 
 environ["TESTING"] = "True"
 environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
-import elasticsearch_test  # pyre-ignore
 
-# from karp.domain.models.resource import create_resource
+from karp.tests import common_data, utils  # nopep8
+from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
+import karp.lex_infrastructure.sql.sql_models  # nopep8
+from karp.db_infrastructure.db import metadata  # nopep8
+from karp.lex.domain import commands, errors, entities  # nopep8
+from karp import errors as karp_errors  # nopep8
+from karp import config  # nopep8
 
 # # from karp.infrastructure.unit_of_work import unit_of_work
 # from karp.infrastructure.sql import sql_entry_repository
-from karp.infrastructure.testing import dummy_auth_service
-from karp import errors as karp_errors
-from karp.domain import model, commands, errors
 
-from karp import config
+# from karp.domain.models.resource import create_resource
+
 
 # # from karp.application.services import contexts, entries, resources
-
-
-from karp.utility import unique_id
-
-from karp.tests import common_data, utils
-
-
-from karp.infrastructure.sql.db import metadata
-from karp.infrastructure.sql import sql_models
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
 def fixture_in_memory_sqlite_db():
     engine = create_engine("sqlite:///:memory:")
     metadata.create_all(engine)
-    return engine
+    yield engine
+    session.close_all_sessions()
+    metadata.drop_all(bind=engine)
 
 
 @pytest.fixture
@@ -86,7 +82,7 @@ def main_db():
     yield engine
     print("running alembic downgrade ...")
     session.close_all_sessions()
-    alembic_main(["--raiseerr", "downgrade", "base"])
+    # alembic_main(["--raiseerr", "downgrade", "base"])
     metadata.drop_all(bind=engine)
     # return engine
 
@@ -112,9 +108,8 @@ def fixture_app():
     from karp.webapp import main as webapp_main
 
     app = webapp_main.create_app()
-    with app.container.auth_service.override(dummy_auth_service.DummyAuthService()):
-        yield app
-    app.container.unwire()
+    app.state.container.binder.install(TestAuthInfrastructure())
+    yield app
 
 
 @pytest.fixture(name="fa_client", scope="session")
@@ -143,8 +138,7 @@ def fixture_fa_client(use_main_index, app):  # db_setup, es):
 
 @pytest.fixture(name="use_dummy_authenticator")
 def fixture_use_dummy_authenticator(app):
-    with app.container.auth_service.override(dummy_auth_service.DummyAuthService()):
-        yield app
+    app.state.container.binder.install(TestAuthInfrastructure())
 
 
 # @pytest.fixture(name="fa_client_scope_session", scope="session")
@@ -155,20 +149,6 @@ def fixture_use_dummy_authenticator(app):
 #         print("releasing testclient")
 
 
-@pytest.fixture(name="resource_places", scope="session")
-def fixture_resource_places(use_main_index):
-
-    with open("karp/tests/data/config/places.json") as fp:
-        places_config = json.load(fp)
-
-    resource = model.create_resource(places_config, created_by="local admin")
-
-    yield resource
-
-    # if resource._entry_repository:
-    # resource.entry_repository.teardown()
-
-
 # @pytest.fixture(name="places_scope_module", scope="module")
 # def fixture_places_scope_module(context_scope_module):
 #     with open("karp/tests/data/config/places.json") as fp:
@@ -177,18 +157,6 @@ def fixture_resource_places(use_main_index):
 #     yield resource
 #     print("cleaning up places")
 #     resource.entry_repository.teardown()
-
-
-@pytest.fixture(name="resource_municipalities", scope="session")
-def fixture_resource_municipalities(use_main_index):
-    with open("karp/tests/data/config/municipalities.json") as fp:
-        municipalities_config = json.load(fp)
-
-    resource = model.create_resource(municipalities_config, created_by="local admin")
-
-    yield resource
-    # print("cleaning up municipalities")
-    # resource.entry_repository.teardown()
 
 
 # @pytest.fixture(name="context")
@@ -207,81 +175,96 @@ def fixture_resource_municipalities(use_main_index):
 
 
 @pytest.fixture(name="places_published", scope="session")
-def fixture_places_published(resource_places, app):  # , db_setup):
+def fixture_places_published(use_main_index, app):  # , db_setup):
 
-    bus = app.container.context.bus()
+    with open("karp/tests/data/config/places.json") as fp:
+        places_config = json.load(fp)
+    resource_id = 'places'
 
+    bus = app.state.container.get(CommandBus)
+    cmd = commands.CreateEntryRepository(
+        entity_id=make_unique_id(),
+        repository_type='default',
+        name=resource_id,
+        config=places_config,
+        user='local admin',
+        message='added',
+    )
     try:
-        bus.handle(
+
+        bus.dispatch(cmd)
+        bus.dispatch(
             commands.CreateResource(
-                id=resource_places.id,
-                resource_id=resource_places.resource_id,
-                name=resource_places.name,
-                config=resource_places.config,
-                created_by=resource_places.last_modified_by,
-                message=resource_places.message,
+                resource_id=resource_id,
+                name=resource_id,
+                entry_repo_id=cmd.entity_id,
+                config=places_config,
+                created_by='local admin',
+                message='added',
             )
         )
     except errors.IntegrityError:
         pass
     try:
-        bus.handle(
+        bus.dispatch(
             commands.PublishResource(
-                resource_id=resource_places.resource_id,
-                name=resource_places.name,
-                config=resource_places.config,
-                user=resource_places.last_modified_by,
-                message=resource_places.message,
+                resource_id=resource_id,
+                name=resource_id,
+                config=places_config,
+                user=cmd.user,
+                message=cmd.message,
             )
         )
     except karp_errors.ResourceAlreadyPublished:
         pass
-    # resource_places.is_published = True
-    # with app_config.bus.ctx.resource_uow as uow:
-    #     uow.resources.put(resource_places)
-    #     uow.commit()
 
-    return resource_places
+    return places_config
 
 
 @pytest.fixture(name="municipalites_published", scope="session")
 def fixture_municipalites_published(
-    resource_municipalities, main_db, app
+    use_main_index, main_db, app
 ):  # , db_setup):
 
-    bus = app.container.context.bus()
+    with open("karp/tests/data/config/municipalities.json") as fp:
+        municipalities_config = json.load(fp)
+
+    resource_id = 'municipalities'
+
+    bus = app.state.container.get(CommandBus)
 
     try:
-        bus.handle(
-            commands.CreateResource(
-                id=resource_municipalities.id,
-                resource_id=resource_municipalities.resource_id,
-                name=resource_municipalities.name,
-                config=resource_municipalities.config,
-                created_by=resource_municipalities.last_modified_by,
-                message=resource_municipalities.message,
-            )
+        cmd = commands.CreateEntryRepository(
+            entity_id=make_unique_id(),
+            repository_type='default',
+            name=resource_id,
+            config=municipalities_config,
+            user='local admin',
+            message='added',
         )
+        bus.dispatch(cmd)
+        cmd = commands.CreateResource.from_dict(
+            municipalities_config,
+            entry_repo_id=cmd.entity_id,
+            created_by=cmd.user,
+        )
+        bus.dispatch(cmd)
     except errors.IntegrityError:
         pass
     try:
-        bus.handle(
+        bus.dispatch(
             commands.PublishResource(
-                resource_id=resource_municipalities.resource_id,
-                name=resource_municipalities.name,
-                config=resource_municipalities.config,
-                user=resource_municipalities.last_modified_by,
-                message=resource_municipalities.message,
+                resource_id=cmd.resource_id,
+                name=cmd.name,
+                config=cmd.config,
+                user=cmd.created_by,
+                message=cmd.message,
             )
         )
     except karp_errors.ResourceAlreadyPublished:
         pass
-    # resource_municipalites.is_published = True
-    # with app_config.bus.ctx.resource_uow as uow:
-    #     uow.resources.put(resource_municipalites)
-    #     uow.commit()
 
-    return resource_municipalities
+    return municipalities_config
 
 
 @pytest.fixture(scope="session", name="fa_data_client")
@@ -566,7 +549,8 @@ def fixture_use_main_index():
         yield "using sql"
     else:
         if not config.TEST_ES_HOME:
-            raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
+            raise RuntimeError(
+                "must set ES_HOME to run tests that use elasticsearch")
         with elasticsearch_test.ElasticsearchTest(
             port=9202, es_path=config.TEST_ES_HOME
         ):

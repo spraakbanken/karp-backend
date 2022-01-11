@@ -1,4 +1,5 @@
 from typing import Dict
+
 from karp import errors
 
 
@@ -7,15 +8,6 @@ class DomainError(errors.KarpError):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-
-class NotFoundError(DomainError):
-    entity_name: str
-
-    def __init__(self, entity_id, *args, **kwargs):
-        super().__init__(
-            f"{self.entity_name} not found, id: {entity_id}", *args, **kwargs
-        )
 
 
 class EntryNotFound(DomainError):
@@ -71,7 +63,8 @@ class ResourceNotPublished(DomainError):
     """Raised when a resource is not published."""
 
     def __init__(self, resource_id, **kwargs):
-        super().__init__(f"Resource '{resource_id}' is not published.", **kwargs)
+        super().__init__(
+            f"Resource '{resource_id}' is not published.", **kwargs)
 
 
 class RepositoryError(DomainError):
@@ -138,15 +131,6 @@ class AuthError(DomainError):
         if "code" not in kwargs:
             kwargs["code"] = errors.ClientErrorCodes.AUTH_GENERAL_ERROR
         super().__init__(message, **kwargs)
-
-
-class UpdateConflict(DomainError):
-    def __init__(self, diff):
-        super().__init__(
-            "Version conflict. Please update entry.",
-            code=errors.ClientErrorCodes.VERSION_CONFLICT,
-        )
-        self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}
 
 
 class InvalidEntry(DomainError):
