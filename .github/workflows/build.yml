@@ -124,6 +124,8 @@ jobs:
           #- name: Setup sql index
           #if: ! ${{ matrix.es.use }}
           #run: echo "SEARCH_CONTEXT=sql_index" >> .env
+      - name: List tree
+        run: tree .
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
         env:
