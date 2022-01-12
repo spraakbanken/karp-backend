@@ -7,7 +7,7 @@ import pkg_resources
 # import werkzeug.exceptions
 
 
-__version__ = "0.8.1"
+__version__ = "6.0.0"
 
 
 # TODO handle settings correctly

@@ -22,7 +22,7 @@ from karp.lex.domain import errors as lex_errors
 
 from . import app_config
 
-__version__ = "0.8.1"
+__version__ = "6.0.0"
 
 
 tags_metadata = [
