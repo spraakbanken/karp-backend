@@ -22,7 +22,7 @@ environ["TESTING"] = "True"
 environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
-
+print("importing karp stuf ...")
 from karp.tests import common_data, utils  # nopep8
 from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
 import karp.lex_infrastructure.sql.sql_models  # nopep8
