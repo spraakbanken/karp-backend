@@ -66,15 +66,14 @@ alembic = "^1.7.4"
 regex = "^2021.9.30"
 python-dotenv = "^0.19.0"
 environs = "^9.3.4"
+elasticsearch = "^6"
 dependency-injector = "^4.36.2"
-elasticsearch-dsl = { version = "^6", optional = true }
-elasticsearch = { version = "^6", optional = true }
+elasticsearch-dsl = "^6"
 mysqlclient = { version = "^2.1.0", optional = true }
 TatSu = "^5.6"
 
 [tool.poetry.extras]
 mysql = ["mysqlclient"]
-elasticsearch6 = ["elasticsearch", "elasticsearch-dsl"]
 
 [tool.poetry.dev-dependencies]
 flake8 = "<3.9.1"

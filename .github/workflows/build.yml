@@ -110,7 +110,7 @@ jobs:
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es.version }}`" >> .env
           echo "SEARCH_CONTEXT=es6_search_service" >> .env
           cat .env
-          make install-dev-elasticsearch6
+          # make install-dev-elasticsearch6
           # pip install -e .[elasticsearch6]
 
       - name: Install Elasticsearch 7
