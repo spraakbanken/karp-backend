@@ -53,8 +53,14 @@ install-dev-mysql:
 install-elasticsearch6:
 	poetry install --no-dev -E elasticsearch6
 
+install-dev-elasticsearch6:
+	poetry install -E elasticsearch6
+
 install-elasticsearch7:
 	poetry install --no-dev -E elasticsearch7
+
+install-dev-elasticsearch7:
+	poetry install -E elasticsearch7
 
 init-db:
 	${INVENV} alembic upgrade head
