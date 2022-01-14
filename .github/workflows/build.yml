@@ -100,6 +100,7 @@ jobs:
         run: |
           make install-dev
           make install-dev-mysql
+          cp -v .env.ci .env
 
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es.version, '6')
