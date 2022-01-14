@@ -3,6 +3,7 @@
 Borrowed from https://bitbucket.org/sixty-north/d5-kanban-python
 """
 import uuid
+import typing
 try:
     import fastuuid  #
 except ModuleNotFoundError:
@@ -18,10 +19,12 @@ if fastuuid is not None:
     make_unique_id = fastuuid.uuid4
     UniqueId = fastuuid.UUID
     UniqueIdType = (fastuuid.UUID, uuid.UUID)
+    typing_UniqueId = typing.Union[fastuuid.UUID, uuid.UUID]
 else:
     make_unique_id = uuid.uuid4
     UniqueId = uuid.UUID
     UniqueIdType = uuid.UUID
+    typing_UniqueId = uuid.UUID
 # class UniqueId:
 #     """A UUID-based unique id with global formatting control.
 
