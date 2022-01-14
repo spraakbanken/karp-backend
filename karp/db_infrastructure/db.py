@@ -19,13 +19,13 @@ from sqlalchemy.schema import (ForeignKeyConstraint, PrimaryKeyConstraint,
 from sqlalchemy.sql import delete, insert, update
 from sqlalchemy.types import VARCHAR, Boolean, Float, Time, TypeDecorator
 from sqlalchemy_json import NestedMutableJson
-from .sqlalchemy_types import UUIDType
-# from sqlalchemy_utils import UUIDType
+# from .sqlalchemy_types import UUIDType
+from sqlalchemy_utils import UUIDType
 
 
 # engine = sqlalchemy.create_engine(config.DB_URL, echo=True)
 
-print(f"Creating metatdata")
+print(f"Creating metadata")
 metadata = MetaData()
 
 Base = declarative_base(metadata=metadata)
