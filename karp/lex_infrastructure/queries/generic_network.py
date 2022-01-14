@@ -65,7 +65,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                 logger.info('resource %s not found, skipping ...',
                             ref_resource_id)
                 continue
-            with self.entry_uow_repo_uow.repo.get_by_id(other_resource.resource_id) as entries_uw:
+            with self.entry_uow_repo_uow.repo.get_by_id(other_resource.entry_repository_id) as entries_uw:
                 for entry in entries_uw.repo.by_referenceable({field_name: entry_id}):
                     yield _create_ref(ref_resource_id, ref_resource_version, entry)
 
@@ -77,7 +77,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
             ref_resource = self.resource_repo.get_by_resource_id(
                 ref_resource_id)
             if ref_resource:
-                with self.entry_uow_repo_uow.repo.get_by_id(ref_resource.resource_id) as entries_uw:
+                with self.entry_uow_repo_uow.repo.get_by_id(ref_resource.entry_repository_id) as entries_uw:
                     for ref_entry_id in ids:
                         entry = entries_uw.repo.by_entry_id(
                             ref_entry_id, version=ref_resource_version
