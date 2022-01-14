@@ -4,8 +4,8 @@ from typing import Dict, List, Optional
 
 import pydantic
 
-from karp.search.domain import query_dsl  # , resourcemgr
-from karp.domain import errors
+from karp.search.domain import errors, query_dsl  # , resourcemgr
+# from karp.domain import errors
 from karp.util import convert as util_convert
 from karp.utility.container import arg_get
 
@@ -57,7 +57,8 @@ class Query(pydantic.BaseModel):
         self.resources = resource_str.split(",")
         self.from_ = arg_get(args, "from", int, 0)
         self.size = arg_get(args, "size", int, 25)
-        self.lexicon_stats = arg_get(args, "lexicon_stats", util_convert.str2bool, True)
+        self.lexicon_stats = arg_get(
+            args, "lexicon_stats", util_convert.str2bool, True)
         self.include_fields = arg_get(
             args, "include_fields", util_convert.str2list(",")
         )
@@ -68,7 +69,8 @@ class Query(pydantic.BaseModel):
         self.format = arg_get(args, "format")
         self.format_query = arg_get(args, "format_query")
         self.q = arg_get(args, "q") or ""
-        self.sort: List[str] = arg_get(args, "sort", util_convert.str2list(",")) or []
+        self.sort: List[str] = arg_get(
+            args, "sort", util_convert.str2list(",")) or []
         # self.sort_dict: Dict[str, List[str]] = {}
         #         if not self.sort:
         #             if len(self.resources) == 1:
@@ -99,7 +101,8 @@ class Query(pydantic.BaseModel):
         def translate_node(node: query_dsl.Node):
             print("node = {node!r}".format(node=node))
             if query_dsl.is_a(
-                node, [query_dsl.op.FREERGXP, query_dsl.op.FREETEXT, query_dsl.op.ARGS]
+                node, [query_dsl.op.FREERGXP,
+                       query_dsl.op.FREETEXT, query_dsl.op.ARGS]
             ):
                 return
 
@@ -122,14 +125,17 @@ class Query(pydantic.BaseModel):
                     translate_node(field)
             # elif query_dsl.is_a(node, query_dsl.op.ARG_LOGICAL):
             elif query_dsl.is_a(node, query_dsl.op.ARG_OR):
-                print("|ARG_OR| node.children = {node.children}".format(node=node))
+                print(
+                    "|ARG_OR| node.children = {node.children}".format(node=node))
 
                 for child in node.children:
                     if child.value in field_translations:
                         for _ft in field_translations[child.value]:
-                            node.add_child(query_dsl.Node(query_dsl.op.STRING, 0, _ft))
+                            node.add_child(query_dsl.Node(
+                                query_dsl.op.STRING, 0, _ft))
             elif query_dsl.is_a(node, query_dsl.op.ARG_LOGICAL):  # ARG_OR handled above
-                print("|ARG_AND| node.children = {node.children}".format(node=node))
+                print(
+                    "|ARG_AND| node.children = {node.children}".format(node=node))
                 changes = []
                 for i, child in enumerate(node.children):
                     if child.value in field_translations:
@@ -143,7 +149,8 @@ class Query(pydantic.BaseModel):
                 print("|ARG_AND| changes = {changes}".format(changes=changes))
                 for i, fields in changes:
                     node.children[i] = fields
-                print("|ARG_AND| node.children = {node.children}".format(node=node))
+                print(
+                    "|ARG_AND| node.children = {node.children}".format(node=node))
 
         translate_node(self.ast.root)
         # TODO rewrite

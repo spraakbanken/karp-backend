@@ -12,7 +12,7 @@ from karp.foundation.value_objects import UniqueId
 from karp.foundation.events import EventBus
 from karp.lex.domain import errors
 from karp.lex.application import repositories
-from karp.domain.errors import NonExistingField, RepositoryError
+# from karp.domain.errors import NonExistingField, RepositoryError
 from karp.lex.domain.entities.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
     Entry, EntryOp, EntryStatus)
 from karp.db_infrastructure import db
@@ -181,7 +181,7 @@ class SqlEntryRepository(
             raise errors.RepositoryError(f"Could not find {entry.entry_id}")
         db_entry.discarded = True
 
-        return self.put(entry)
+        return self.save(entry)
 
     def delete(self, entry: Entry):
         self._check_has_session()
@@ -331,9 +331,10 @@ class SqlEntryRepository(
         except db.exc.InvalidRequestError as exc:
             match = NO_PROPERTY_PATTERN.search(str(exc))
             if match:
-                raise NonExistingField(match.group(1)) from exc
+                raise errors.NonExistingField(match.group(1)) from exc
             else:
-                raise RepositoryError("Unknown invalid request") from exc
+                raise errors.RepositoryError(
+                    "Unknown invalid request") from exc
 
         for child_filters in joined_filters:
             print(
@@ -387,22 +388,22 @@ class SqlEntryRepository(
         total = query.count()
         return [self._history_row_to_entry(row) for row in paged_query.all()], total
 
-    def _entry_to_history_row(
-        self, entry: Entry
-    ) -> Tuple[None, UUID, str, int, float, str, Dict, EntryStatus, str, EntryOp, bool]:
-        return (
-            None,  # history_id
-            entry.id,  # id
-            entry.entry_id,  # entry_id
-            entry.version,  # version
-            entry.last_modified,  # last_modified
-            entry.last_modified_by,  # last_modified_by
-            entry.body,  # body
-            entry.status,  # version
-            entry.message,  # message
-            entry.op,  # op
-            entry.discarded,
-        )
+    # def _entry_to_history_row(
+    #     self, entry: Entry
+    # ) -> Tuple[None, UUID, str, int, float, str, Dict, EntryStatus, str, EntryOp, bool]:
+    #     return (
+    #         None,  # history_id
+    #         entry.id,  # id
+    #         entry.entry_id,  # entry_id
+    #         entry.version,  # version
+    #         entry.last_modified,  # last_modified
+    #         entry.last_modified_by,  # last_modified_by
+    #         entry.body,  # body
+    #         entry.status,  # version
+    #         entry.message,  # message
+    #         entry.op,  # op
+    #         entry.discarded,
+    #     )
 
     def _entry_to_history_dict(
         self, entry: Entry, history_id: Optional[int] = None

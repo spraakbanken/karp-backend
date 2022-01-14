@@ -10,11 +10,11 @@ def test_morphology():
     entry = {"baseform": "Appalacherna",
              "paradigm": "pm_plg_alperna", "pos": "pm"}
 
-    morphology = Morphology.create_resource(
-        resource_type='SaldoMorphology',
-        resource_config={},
-        # entity_id=value_objects.make_unique_id(),
-    )
+    # morphology = Morphology.create_resource(
+    #     resource_type='SaldoMorphology',
+    #     resource_config={},
+    #     # entity_id=value_objects.make_unique_id(),
+    # )
     # morphological_entry = {"entry_id": "pm_plg_alperna"}
 
     # needed_field_names = morphology.inflection_fields()

@@ -92,102 +92,102 @@ def test_resource_stamp_changes_last_modified_and_version():
     )
 
 
-def test_resource_add_new_release_creates_release():
-    resource = factories.ResourceFactory()
+# def test_resource_add_new_release_creates_release():
+#     resource = factories.ResourceFactory()
 
-    previous_last_modified = resource.last_modified
+#     previous_last_modified = resource.last_modified
 
-    resource.add_new_release(name="v1.0.0", user="Admin", description="")
+#     resource.add_new_release(name="v1.0.0", user="Admin", description="")
 
-    assert len(resource.releases) == 1
-    assert resource.releases[0].name == "v1.0.0"
-    assert resource.releases[0].publication_date == resource.last_modified
-    assert resource.releases[0].description == ""
-    assert resource.releases[0].root.id == resource.id
-    assert resource.last_modified > previous_last_modified
-    assert resource.last_modified_by == "Admin"
-    assert resource.message == "Release 'v1.0.0' created."
-    assert resource.version == 2
-
-
-def test_resource_release_with_name_on_discarded_raises_discarded_entity_error():
-    resource = factories.ResourceFactory()
-
-    resource.discard(user="Test", message="Discard")
-
-    assert resource.discarded
-
-    with pytest.raises(DiscardedEntityError):
-        resource.release_with_name("test")
+#     assert len(resource.releases) == 1
+#     assert resource.releases[0].name == "v1.0.0"
+#     assert resource.releases[0].publication_date == resource.last_modified
+#     assert resource.releases[0].description == ""
+#     assert resource.releases[0].root.id == resource.id
+#     assert resource.last_modified > previous_last_modified
+#     assert resource.last_modified_by == "Admin"
+#     assert resource.message == "Release 'v1.0.0' created."
+#     assert resource.version == 2
 
 
-def test_resource_add_new_release_on_discarded_raises_discarded_entity_error():
-    resource = factories.ResourceFactory()
+# def test_resource_release_with_name_on_discarded_raises_discarded_entity_error():
+#     resource = factories.ResourceFactory()
 
-    resource.discard(user="Test", message="Discard")
+#     resource.discard(user="Test", message="Discard")
 
-    assert resource.discarded
+#     assert resource.discarded
 
-    with pytest.raises(DiscardedEntityError):
-        resource.add_new_release(name="test", user="TEST", description="")
-
-
-@pytest.mark.skip()
-def test_resource_add_new_release_with_invalid_name_raises_constraints_error():
-    resource = factories.ResourceFactory()
-
-    with pytest.raises(ConstraintsError):
-        resource.add_new_release(name="", user="Test", description="")
+#     with pytest.raises(DiscardedEntityError):
+#         resource.release_with_name("test")
 
 
-@pytest.mark.skip()
-def test_resource_new_release_added_with_wrong_version_raises_consistency_error():
-    resource = factories.ResourceFactory()
-    event = Resource.NewReleaseAdded(
-        entity_id=resource.id,
-        entity_version=12,
-    )
-    with pytest.raises(ConsistencyError):
-        event.mutate(resource)
+# def test_resource_add_new_release_on_discarded_raises_discarded_entity_error():
+#     resource = factories.ResourceFactory()
+
+#     resource.discard(user="Test", message="Discard")
+
+#     assert resource.discarded
+
+#     with pytest.raises(DiscardedEntityError):
+#         resource.add_new_release(name="test", user="TEST", description="")
 
 
-@pytest.mark.skip()
-def test_resource_new_release_added_with_wrong_last_modified_raises_consistency_error():
-    resource = factories.ResourceFactory()
-    event = Resource.NewReleaseAdded(
-        entity_id=resource.id, entity_version=resource.version, entity_last_modified=2
-    )
-    with pytest.raises(ConsistencyError):
-        event.mutate(resource)
+# @pytest.mark.skip()
+# def test_resource_add_new_release_with_invalid_name_raises_constraints_error():
+#     resource = factories.ResourceFactory()
+
+#     with pytest.raises(ConstraintsError):
+#         resource.add_new_release(name="", user="Test", description="")
 
 
-def test_release_created_has_id():
-    release = Release(
-        entity_id="e", name="e-name", publication_date=12345.0, description="ee"
-    )
+# @pytest.mark.skip()
+# def test_resource_new_release_added_with_wrong_version_raises_consistency_error():
+#     resource = factories.ResourceFactory()
+#     event = Resource.NewReleaseAdded(
+#         entity_id=resource.id,
+#         entity_version=12,
+#     )
+#     with pytest.raises(ConsistencyError):
+#         event.mutate(resource)
 
-    assert release.id == "e"
-    assert release.name == "e-name"
-    assert release.publication_date == 12345.0
-    assert release.description == "ee"
-    assert release.root.id == release.id
+
+# @pytest.mark.skip()
+# def test_resource_new_release_added_with_wrong_last_modified_raises_consistency_error():
+#     resource = factories.ResourceFactory()
+#     event = Resource.NewReleaseAdded(
+#         entity_id=resource.id, entity_version=resource.version, entity_last_modified=2
+#     )
+#     with pytest.raises(ConsistencyError):
+#         event.mutate(resource)
 
 
-def test_release_created_w_resource_has_id():
-    resource = factories.ResourceFactory()
-    release = Release(
-        entity_id="e",
-        name="e-name",
-        publication_date=12345.0,
-        description="ee",
-        aggregate_root=resource,
-    )
+# def test_release_created_has_id():
+#     release = Release(
+#         entity_id="e", name="e-name", publication_date=12345.0, description="ee"
+#     )
 
-    assert release.id == "e"
-    assert release.name == "e-name"
-    assert release.publication_date == 12345.0
-    assert release.description == "ee"
-    assert release.root.id == resource.id
+#     assert release.id == "e"
+#     assert release.name == "e-name"
+#     assert release.publication_date == 12345.0
+#     assert release.description == "ee"
+#     assert release.root.id == release.id
+
+
+# def test_release_created_w_resource_has_id():
+#     resource = factories.ResourceFactory()
+#     release = Release(
+#         entity_id="e",
+#         name="e-name",
+#         publication_date=12345.0,
+#         description="ee",
+#         aggregate_root=resource,
+#     )
+
+#     assert release.id == "e"
+#     assert release.name == "e-name"
+#     assert release.publication_date == 12345.0
+#     assert release.description == "ee"
+#     assert release.root.id == resource.id
 
 
 def test_resource_has_entry_json_schema():
@@ -213,7 +213,7 @@ def test_discarded_resource_has_event(field, value):
     assert resource.discarded
     assert resource.domain_events[-1] == events.ResourceDiscarded(
         entity_id=resource.id,
-        entry_repo_id=resource.entry_repository_id,
+        # entry_repo_id=resource.entry_repository_id,
         resource_id=resource.resource_id,
         user=resource.last_modified_by,
         timestamp=resource.last_modified,

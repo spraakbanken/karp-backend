@@ -19,7 +19,7 @@ from karp.utility.time import utc_now
 # from tests.utils import get_json
 
 # from tests.integration_tests.common_fixtures import (
-#     fixture_fa_client,
+#     fixture_fa_data_client,
 #     fixture_places,
 # )
 
@@ -47,12 +47,10 @@ pytestmark = pytest.mark.usefixtures(
     "use_dummy_authenticator")  # , "use_main_index")
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_add(fa_client, app):  # fa_client):
-    # client = init(fa_client, es, [])
+def test_add(fa_data_client):  # fa_data_client):
+    # client = init(fa_data_client, es, [])
 
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -72,7 +70,8 @@ def test_add(fa_client, app):  # fa_client):
     assert "newID" in response_data
     assert response_data["newID"] == "203"
 
-    entry_uow = get_entry_uow(app.state.container, resource_id='places')
+    entry_uow = get_entry_uow(
+        fa_data_client.app.state.container, resource_id='places')
     with entry_uow as uw:
         entries = uw.repo.entry_ids()
         assert len(entries) == 1
@@ -82,13 +81,11 @@ def test_add(fa_client, app):  # fa_client):
     # assert entries["hits"][0]["entry"]["name"] == "test3"
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_adding_existing_fails(fa_client):
-    #     client = init(fa_client, es, [])
+def test_adding_existing_fails(fa_data_client):
+    #     client = init(fa_data_client, es, [])
     entry_id = 204
     entry_name = f"add{entry_id}"
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -106,7 +103,7 @@ def test_adding_existing_fails(fa_client):
 
     assert response.status_code == 201
 
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -132,10 +129,8 @@ def test_adding_existing_fails(fa_client):
     )
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_add_fails_with_invalid_entry(fa_client):
-    response = fa_client.post(
+def test_add_fails_with_invalid_entry(fa_data_client):
+    response = fa_data_client.post(
         "/places/add", json={"entry": {}}, headers={"Authorization": "Bearer 1234"}
     )
 
@@ -146,12 +141,10 @@ def test_add_fails_with_invalid_entry(fa_client):
     assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_delete(fa_client, app):
+def test_delete(fa_data_client):
     entry_id = 205
     entry_name = f"delete{entry_id}"
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -169,11 +162,12 @@ def test_delete(fa_client, app):
 
     assert response.status_code == 201
 
-    entry_uow = get_entry_uow(app.state.container, resource_id='places')
+    entry_uow = get_entry_uow(
+        fa_data_client.app.state.container, resource_id='places')
     with entry_uow as uw:
         assert f"{entry_id}" in uw.repo.entry_ids()
 
-    response = fa_client.delete(
+    response = fa_data_client.delete(
         f"places/{entry_id}/delete", headers={"Authorization": "Bearer 1234"}
     )
 
@@ -183,13 +177,11 @@ def test_delete(fa_client, app):
         assert str(entry_id) not in uw.repo.entry_ids()
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_delete_non_existing_fails(fa_client):
+def test_delete_non_existing_fails(fa_data_client):
 
     entry_id = "non_existing_id"
 
-    response = fa_client.delete(
+    response = fa_data_client.delete(
         f"places/{entry_id}/delete", headers={"Authorization": "Bearer 1234"}
     )
 
@@ -205,11 +197,9 @@ def test_delete_non_existing_fails(fa_client):
     )
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_update_non_existing_fails(fa_client):
+def test_update_non_existing_fails(fa_data_client):
     entry_id = "non-existent"
-    response = fa_client.post(
+    response = fa_data_client.post(
         f"/places/{entry_id}/update",
         json={
             "entry": {
@@ -237,12 +227,10 @@ def test_update_non_existing_fails(fa_client):
     )
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_update_wo_changes_succeeds(fa_client):
+def test_update_wo_changes_succeeds(fa_data_client):
     entry_id = 206
     entry_name = f"update{entry_id}"
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -260,7 +248,7 @@ def test_update_wo_changes_succeeds(fa_client):
 
     assert response.status_code == 201
 
-    response = fa_client.post(
+    response = fa_data_client.post(
         f"places/{entry_id}/update",
         json={
             "entry": {
@@ -282,8 +270,8 @@ def test_update_wo_changes_succeeds(fa_client):
 
 
 @pytest.mark.skip()
-def test_update_wrong_id(fa_client):
-    response = fa_client.post(
+def test_update_wrong_id(fa_data_client):
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -310,7 +298,7 @@ def test_update_wrong_id(fa_client):
         assert len(entries) == 1
         assert entries[0] == "3"
 
-    response = fa_client.post(
+    response = fa_data_client.post(
         f"places/{entry_id}/update",
         json={
             "entry": {
@@ -335,11 +323,9 @@ def test_update_wrong_id(fa_client):
     assert response_data["error"] == "entry_id '4' does not equal '3'"
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_update_wrong_version_fails(fa_client):
+def test_update_wrong_version_fails(fa_data_client):
     entry_id = 207
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -357,7 +343,7 @@ def test_update_wrong_version_fails(fa_client):
 
     assert response.status_code == 201
 
-    response = fa_client.post(
+    response = fa_data_client.post(
         f"places/{entry_id}/update",
         json={
             "entry": {
@@ -385,12 +371,10 @@ def test_update_wrong_version_fails(fa_client):
     ]
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_update(fa_client, app):
+def test_update(fa_data_client):
     entry_id = 208
     entry_name = f"update{entry_id}"
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -408,7 +392,7 @@ def test_update(fa_client, app):
 
     assert response.status_code == 201
 
-    response = fa_client.post(
+    response = fa_data_client.post(
         f"places/{entry_id}/update",
         json={
             "entry": {
@@ -435,24 +419,23 @@ def test_update(fa_client, app):
     #     assert entries["hits"][0]["id"] == entry_id
     #     assert entries["hits"][0]["entry"]["population"] == 5
 
-    entry_uow = get_entry_uow(app.state.container, resource_id='places')
+    entry_uow = get_entry_uow(
+        fa_data_client.app.state.container, resource_id='places')
     with entry_uow as uw:
         assert uw.repo.by_entry_id(str(entry_id)).body["population"] == 5
         assert str(entry_id) in uw.repo.entry_ids()
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_update_several_times(fa_client):
+def test_update_several_times(fa_data_client):
     entry_id = 209
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={"entry": {"code": entry_id, "name": "a", "municipality": [1]}},
         headers={"Authorization": "Bearer 1234"},
     )
     assert response.status_code == 201
     for i in range(2, 10):
-        response = fa_client.post(
+        response = fa_data_client.post(
             f"places/{entry_id}/update",
             json={
                 "entry": {"code": entry_id, "name": "a" * i, "municipality": [1]},
@@ -466,11 +449,9 @@ def test_update_several_times(fa_client):
 
 
 @pytest.mark.xfail()
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_update_entry_id(fa_client, app):
+def test_update_entry_id(fa_data_client):
     entry_id = 210
-    response = fa_client.post(
+    response = fa_data_client.post(
         "places/add",
         json={
             "entry": {
@@ -486,7 +467,7 @@ def test_update_entry_id(fa_client, app):
     )
     assert response.status_code == 201
 
-    response = fa_client.post(
+    response = fa_data_client.post(
         f"places/{entry_id}/update",
         json={
             "entry": {
@@ -509,7 +490,8 @@ def test_update_entry_id(fa_client, app):
     #     # check that the old entry with old id has been removed
     #     entries = get_json(client, "places/query")
     #     assert 1 == len(entries["hits"])
-    entry_uow = get_entry_uow(app.state.container, resource_id='places')
+    entry_uow = get_entry_uow(
+        fa_data_client.app.state.container, resource_id='places')
     with entry_uow as uw:
         entry_ids = uw.repo.entry_ids()
         assert str(entry_id) not in entry_ids
@@ -517,11 +499,9 @@ def test_update_entry_id(fa_client, app):
 
 
 @pytest.mark.skip()
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_refs(fa_client):
+def test_refs(fa_data_client):
     client = init(
-        fa_client,
+        fa_data_client,
         [
             {
                 "code": 1,
@@ -561,11 +541,9 @@ def test_refs(fa_client):
 
 
 @pytest.mark.skip()
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_external_refs(es, fa_client):
+def test_external_refs(fa_data_client):
     client = init(
-        fa_client,
+        fa_data_client,
         [
             {
                 "code": 1,
@@ -657,11 +635,9 @@ def test_external_refs(es, fa_client):
 
 
 @pytest.mark.skip()
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_update_refs(es, fa_client):
+def test_update_refs(fa_data_client):
     client = init(
-        fa_client,
+        fa_data_client,
         es,
         [
             {
@@ -703,10 +679,8 @@ def test_update_refs(es, fa_client):
 
 
 @pytest.mark.skip()
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_update_refs2(es, fa_client):
-    client = init(fa_client, es, [
+def test_update_refs2(fa_data_client):
+    client = init(fa_data_client, es, [
                   {"code": 3, "name": "test3", "municipality": [2, 3]}])
 
     client.post(
@@ -735,14 +709,12 @@ def test_update_refs2(es, fa_client):
         assert db_entry.municipality[0].municipality == 2
 
 
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_last_modified(fa_client, app):
+def test_last_modified(fa_data_client, app):
     entry_id = 212
     before_add = utc_now()
 
     # time.sleep(1)
-    init(fa_client, [
+    init(fa_data_client, [
          {"code": entry_id, "name": "last_modified1", "municipality": [1]}])
     # time.sleep(1)
 
@@ -759,7 +731,7 @@ def test_last_modified(fa_client, app):
     # assert before_add < hit["last_modified"]
     # assert after_add > hit["last_modified"]
 
-    fa_client.post(
+    fa_data_client.post(
         f"places/{entry_id}/update",
         json={
             "entry": {"code": entry_id, "name": "last_modified2", "municipality": [1]},

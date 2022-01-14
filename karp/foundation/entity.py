@@ -1,19 +1,12 @@
 """Entity"""
-from karp.domain.common import _now, _unknown_user
 from karp.foundation.errors import ConsistencyError
 from karp.foundation import errors
-from karp.domain.models.events import DomainEvent
 from karp.foundation import events
 from karp.utility.time import monotonic_utc_now
 
 
 class Entity(events.EventMixin):
     DiscardedEntityError = errors.DiscardedEntityError
-
-    class Discarded(DomainEvent):
-        def mutate(self, obj):
-            obj._validate_event_applicability(self)
-            obj._discarded = True
 
     def __init__(self, entity_id, discarded: bool = False, aggregate_root=None):
         super().__init__()
@@ -39,6 +32,9 @@ class Entity(events.EventMixin):
         """The aggregate root or self."""
         return self if self._root is None else self._root
 
+    def discard(self) -> None:
+        self._discarded = True
+
     def _check_not_discarded(self):
         if self._discarded:
             raise self.DiscardedEntityError(f"Attempt to use {self!r}")
@@ -51,15 +47,6 @@ class Entity(events.EventMixin):
 
 
 class VersionedEntity(Entity):
-    class Discarded(Entity.Discarded):
-        def mutate(self, obj):
-            super().mutate(obj)
-            obj._increment_version()
-
-    class Stamped(DomainEvent):
-        def mutate(self, obj):
-            obj._validate_event_applicability(self)
-            obj._increment_version()
 
     def __init__(self, entity_id, version: int, discarded: bool = False):
         super().__init__(entity_id, discarded=discarded)
@@ -93,31 +80,20 @@ class VersionedEntity(Entity):
 
 
 class TimestampedEntity(Entity):
-    class Discarded(Entity.Discarded):
-        def mutate(self, obj):
-            super().mutate(obj)
-            obj._last_modified = self.timestamp
-            obj._last_modified_by = self.user
-
-    class Stamped(DomainEvent):
-        def mutate(self, obj):
-            obj._validate_event_applicability(self)
-            obj._last_modified = self.timestamp
-            obj._last_modified_by = self.user
 
     def __init__(
         self,
         entity_id,
-        last_modified: float = _now,
-        last_modified_by: str = _unknown_user,
+        last_modified: float = None,
+        last_modified_by: str = None,
         discarded: bool = False,
     ) -> None:
         super().__init__(entity_id, discarded=discarded)
         self._last_modified = (
-            monotonic_utc_now() if last_modified is _now else last_modified
+            monotonic_utc_now() if last_modified is None else last_modified
         )
         self._last_modified_by = (
-            _unknown_user if last_modified_by is _unknown_user else last_modified_by
+            "Unknown user" if last_modified_by is None else last_modified_by
         )
 
     @property
@@ -140,10 +116,10 @@ class TimestampedEntity(Entity):
         self._check_not_discarded()
         self._last_modified_by = user
 
-    def stamp(self, user, *, timestamp: float = _now):
+    def stamp(self, user, *, timestamp: float = None):
         self._check_not_discarded()
         self._last_modified_by = user
-        self._last_modified = monotonic_utc_now() if timestamp is _now else timestamp
+        self._last_modified = monotonic_utc_now() if timestamp is None else timestamp
 
     def _validate_event_applicability(self, event):
         if event.entity_id != self.id:
@@ -157,21 +133,6 @@ class TimestampedEntity(Entity):
 
 
 class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
-    class Discarded(VersionedEntity.Discarded, TimestampedEntity.Discarded):
-        def mutate(self, obj):
-            super().mutate(obj)
-
-    class Stamped(VersionedEntity.Stamped, TimestampedEntity.Stamped):
-        def __init__(self, *, increment_version: bool = True, **kwargs):
-            super().__init__(**kwargs)
-            self.increment_version = increment_version
-
-        def mutate(self, obj):
-            obj._validate_event_applicability(self)
-            obj._last_modified = self.timestamp
-            obj._last_modified_by = self.user
-            if self.increment_version:
-                obj._increment_version()
 
     def __init__(
         self,
@@ -187,7 +148,7 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
             monotonic_utc_now() if last_modified is None else last_modified
         )
         self._last_modified_by = (
-            _unknown_user if last_modified_by is None else last_modified_by
+            "unknown_user" if last_modified_by is None else last_modified_by
         )
 
     @property
@@ -210,21 +171,13 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
         self._check_not_discarded()
         self._last_modified_by = user
 
-    def stamp(self, user, *, timestamp: float = _now, increment_version: bool = True):
+    def stamp(self, user, *, timestamp: float = None, increment_version: bool = True):
         self._check_not_discarded()
-        event = TimestampedVersionedEntity.Stamped(
-            timestamp=timestamp,
-            entity_id=self.id,
-            entity_version=self.version,
-            entity_last_modified=self.last_modified,
-            user=user,
-            increment_version=increment_version,
-        )
-        event.mutate(self)
-        # self._last_modified_by = user
-        # self._last_modified = monotonic_utc_now() if timestamp is _now else timestamp
-        # if increment_version:
-        #     self._increment_version()
+
+        self._last_modified_by = user
+        self._last_modified = monotonic_utc_now() if timestamp is None else timestamp
+        if increment_version:
+            self._increment_version()
 
     def _validate_event_applicability(self, event):
         VersionedEntity._validate_event_applicability(self, event)

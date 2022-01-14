@@ -3,7 +3,7 @@ import logging
 from typing import List, Optional
 
 from karp.foundation import value_objects
-from karp.domain import errors
+from karp.auth.domain import errors
 from karp.auth.domain.entities.user import User
 
 # from karp.services import context
@@ -25,23 +25,9 @@ class AuthService(abc.ABC):
             )
         cls._registry[auth_service_type] = cls
         if is_default or None not in cls._registry:
-            logger.info("Setting default AuthService type to '%s'", auth_service_type)
+            logger.info("Setting default AuthService type to '%s'",
+                        auth_service_type)
             cls._registry[None] = auth_service_type
-
-    @classmethod
-    def create(cls, auth_service_type: Optional[str]):
-        if auth_service_type is None:
-            auth_service_type = cls._registry[None]
-        else:
-            auth_service_type = auth_service_type.lower()
-
-        try:
-            index_cls = cls._registry[auth_service_type]
-        except KeyError as err:
-            raise errors.ConfigurationError(
-                f"Can't create a AuthService of type '{auth_service_type}'"
-            ) from err
-        return index_cls()
 
     @abc.abstractmethod
     def authenticate(self, scheme: str, credentials: str) -> User:

@@ -5,7 +5,7 @@ Borrowed from https://bitbucket.org/sixty-north/d5-kanban-python
 import uuid
 import typing
 try:
-    import fastuuid  #
+    import fastuuid  # type: ignore
 except ModuleNotFoundError:
     fastuuid = None
 

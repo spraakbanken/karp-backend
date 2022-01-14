@@ -63,6 +63,15 @@ class RepositoryStatusError(LexDomainError):
     pass
 
 
+class NonExistingField(RepositoryError):
+    """Raised when a field doesn't exist in a repo."""
+
+    def __init__(self, field: str, **kwargs):
+        # if "code" not in kwargs:
+        #     kwargs["code"] = errors.ClientErrorCodes.DB_GENERAL_ERROR
+        super().__init__(f"Field '{field}' doesn't exist.", **kwargs)
+
+
 class InvalidEntry(LexDomainError):
     pass
 

@@ -9,14 +9,9 @@ import jwt.exceptions as jwte  # pyre-ignore
 
 from karp.foundation import value_objects
 from karp.auth.application.queries import IsResourceProtected
-from karp.domain import errors
-from karp.domain.errors import AuthError
+from karp.auth.domain.errors import ExpiredJWTError, GeneralJWTError
 from karp.auth.domain.entities.user import User
-from karp.errors import ClientErrorCodes, KarpError
 from karp.auth.domain import auth_service
-from karp.lex.application import repositories
-from karp.lex.domain.entities import resource
-# from karp.infrastructure.repositories import repositories
 
 
 def load_jwt_key(path: Path) -> str:
@@ -45,11 +40,9 @@ class JWTAuthService(
                 credentials, key=self._jwt_key, algorithms=["RS256"]
             )
         except jwte.ExpiredSignatureError as exc:
-            raise AuthError(
-                "The given jwt have expired", code=ClientErrorCodes.EXPIRED_JWT
-            ) from exc
+            raise ExpiredJWTError() from exc
         except jwte.DecodeError as exc:
-            raise AuthError("General JWT error") from exc
+            raise GeneralJWTError() from exc
 
         lexicon_permissions = {}
         if "scope" in user_token and "lexica" in user_token["scope"]:

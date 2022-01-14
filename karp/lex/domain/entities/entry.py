@@ -4,9 +4,7 @@ import logging
 import typing
 from typing import Dict, List, Optional, Any
 
-from karp.domain import constraints
-from karp.domain.common import _now, _unknown_user
-from karp.domain.errors import ConfigurationError
+from karp.foundation import constraints
 from karp.lex.domain import errors, events
 from karp.foundation.entity import TimestampedVersionedEntity
 from karp.foundation.value_objects import unique_id
@@ -142,7 +140,7 @@ class Entry(TimestampedVersionedEntity):
         user: str,
         *,
         message: str = None,
-        timestamp: float = _now,
+        timestamp: float = None,
         increment_version: bool = True,
     ):
         super().stamp(user, timestamp=timestamp, increment_version=increment_version)
@@ -155,7 +153,7 @@ class Entry(TimestampedVersionedEntity):
                 repo_id=self.repo_id,
                 entry_id=self.entry_id,
                 body=self.body,
-                message=self.message,
+                message=self.message or "",
                 user=self.last_modified_by,
                 version=self.version,
             )
@@ -197,7 +195,7 @@ def create_entry(
             entity_id=entry.id,
             entry_id=entry.entry_id,
             body=entry.body,
-            message=entry.message,
+            message=entry.message or "",
             user=entry.last_modified_by,
             timestamp=entry.last_modified,
         )

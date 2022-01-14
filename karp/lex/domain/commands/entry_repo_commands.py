@@ -11,7 +11,7 @@ class CreateEntryRepository(Command):
     entity_id: UniqueId
     repository_type: str
     name: str
-    connection_str: Optional[str]
+    connection_str: Optional[str] = None
     config: Dict
     message: str
     user: str

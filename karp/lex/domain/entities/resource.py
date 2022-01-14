@@ -5,13 +5,10 @@ import typing
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 from uuid import UUID
 
-from karp.domain import constraints
-from karp.domain.errors import ConfigurationError
-from karp.domain.models import event_handler
+from karp.foundation import constraints
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
 from karp.foundation.value_objects import PermissionLevel
 from .entry import Entry, create_entry
-from karp.domain.models.events import DomainEvent
 from karp.lex.domain import errors, events
 from karp.foundation.value_objects import unique_id
 from karp.utility import json_schema, time
@@ -31,60 +28,61 @@ class Resource(TimestampedVersionedEntity):
     DiscardedEntityError = errors.DiscardedEntityError
     resource_type: str = "resource"
 
-    @classmethod
-    def create_resource(cls, resource_type: str, resource_config: Dict):
-        if resource_type == cls.resource_type:
-            return cls.from_dict(resource_config)
+    # @classmethod
+    # def create_resource(cls, resource_type: str, resource_config: Dict):
+    #     if resource_type == cls.resource_type:
+    #         return cls.from_dict(resource_config)
 
-    @classmethod
-    def from_dict(cls, config: Dict, **kwargs):
+    # @classmethod
+    # def from_dict(cls, config: Dict, **kwargs):
 
-        resource_id = config.pop("resource_id")
-        resource_name = config.pop("resource_name")
+    #     resource_id = config.pop("resource_id")
+    #     resource_name = config.pop("resource_name")
 
-        #     entry_repository = EntryRepository.create(
-        #         config["entry_repository_type"],
-        #         entry_repository_settings
-        #     )
+    #     #     entry_repository = EntryRepository.create(
+    #     #         config["entry_repository_type"],
+    #     #         entry_repository_settings
+    #     #     )
 
-        resource = cls(
-            resource_id=resource_id,
-            name=resource_name,
-            config=config,
-            message="Resource added.",
-            op=ResourceOp.ADDED,
-            entity_id=unique_id.make_unique_id(),
-            version=1,
-            **kwargs,
-        )
-        resource.queue_event(
-            events.ResourceCreated(
-                id=resource.id,
-                resource_id=resource.resource_id,
-                name=resource.name,
-                config=resource.config,
-                timestamp=resource.last_modified,
-                user=resource.last_modified_by,
-                message=resource.message,
-            )
-        )
-        return resource
+    #     resource = cls(
+    #         resource_id=resource_id,
+    #         name=resource_name,
+    #         config=config,
+    #         message="Resource added.",
+    #         op=ResourceOp.ADDED,
+    #         entity_id=unique_id.make_unique_id(),
+    #         version=1,
+    #         **kwargs,
+    #     )
+    #     resource.queue_event(
+    #         events.ResourceCreated(
+    #             entity_id=resource.id,
+    #             id=resource.id,
+    #             resource_id=resource.resource_id,
+    #             name=resource.name,
+    #             config=resource.config,
+    #             timestamp=resource.last_modified,
+    #             user=resource.last_modified_by,
+    #             message=resource.message,
+    #         )
+    #     )
+    #     return resource
 
-    class NewReleaseAdded(DomainEvent):
-        def mutate(self, obj):
-            obj._validate_event_applicability(self)
-            release = Release(
-                entity_id=self.release_id,
-                name=self.release_name,
-                publication_date=self.timestamp,
-                description=self.release_description,
-                aggregate_root=obj,
-            )
-            obj._releases.append(release)
-            obj._last_modified = self.timestamp
-            obj._last_modified_by = self.user
-            obj._message = f"Release '{self.release_name}' created."
-            obj._increment_version()
+    # class NewReleaseAdded:
+    #     def mutate(self, obj):
+    #         obj._validate_event_applicability(self)
+    #         release = Release(
+    #             entity_id=self.release_id,
+    #             name=self.release_name,
+    #             publication_date=self.timestamp,
+    #             description=self.release_description,
+    #             aggregate_root=obj,
+    #         )
+    #         obj._releases.append(release)
+    #         obj._last_modified = self.timestamp
+    #         obj._last_modified_by = self.user
+    #         obj._message = f"Release '{self.release_name}' created."
+    #         obj._increment_version()
 
     def __init__(
         self,
@@ -237,23 +235,23 @@ class Resource(TimestampedVersionedEntity):
 
     def add_new_release(self, *, name: str, user: str, description: str):
         self._check_not_discarded()
-        event = Resource.NewReleaseAdded(
-            entity_id=self.id,
-            entity_version=self.version,
-            entity_last_modified=self.last_modified,
-            release_id=unique_id.make_unique_id(),
-            release_name=constraints.length_gt_zero("name", name),
-            user=user,
-            release_description=description,
-        )
-        event.mutate(self)
-        event_handler.publish(event)
+        raise NotImplementedError()
+        # event = Resource.NewReleaseAdded(
+        #     entity_id=self.id,
+        #     entity_version=self.version,
+        #     entity_last_modified=self.last_modified,
+        #     release_id=unique_id.make_unique_id(),
+        #     release_name=constraints.length_gt_zero("name", name),
+        #     user=user,
+        #     release_description=description,
+        # )
+        # event.mutate(self)
 
-        return self.release_with_name(name)
+        # return self.release_with_name(name)
 
     def release_with_name(self, name: str):
         self._check_not_discarded()
-        pass
+        raise NotImplementedError()
 
     def discard(self, *, user: str, message: str, timestamp: float = None):
         self._check_not_discarded()
@@ -267,7 +265,7 @@ class Resource(TimestampedVersionedEntity):
             events.ResourceDiscarded(
                 entity_id=self.id,
                 version=self.version,
-                entry_repo_id=self.entry_repository_id,
+                # entry_repo_id=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 message=self.message,

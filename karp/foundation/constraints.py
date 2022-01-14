@@ -1,5 +1,10 @@
 """Constraints."""
-from karp.domain.errors import ConstraintsError
+
+
+class ConstraintsError(ValueError):
+    """Raised when a constraint is not met."""
+
+    pass
 
 
 def length_gt_zero(attribute, value):
