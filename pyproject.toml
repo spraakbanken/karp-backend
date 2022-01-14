@@ -71,9 +71,10 @@ dependency-injector = "^4.36.2"
 elasticsearch-dsl = "^6"
 mysqlclient = { version = "^2.1.0", optional = true }
 TatSu = "^5.6"
+PyMySQL = { version = "^1.0.2", optional = true }
 
 [tool.poetry.extras]
-mysql = ["mysqlclient"]
+mysql = ["mysqlclient", "PyMySQL"]
 
 [tool.poetry.dev-dependencies]
 flake8 = "<3.9.1"
