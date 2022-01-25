@@ -31,9 +31,9 @@ def username(name: str) -> str:
 
 
 @pytest.fixture(name="fa_history_data_client", scope="session")
-def fixture_fa_history_data_client(fa_client, main_db, places_published):
+def fixture_fa_history_data_client(fa_data_client):
     for entry in places[0:2]:
-        response = fa_client.post(
+        response = fa_data_client.post(
             "/places/add",
             json={"entry": entry, "message": "Add it"},
             headers={"Authorization": "Bearer user1"},
@@ -43,7 +43,7 @@ def fixture_fa_history_data_client(fa_client, main_db, places_published):
         # entries.add_entry("places", entry, "user1", message="Add it")
         time.sleep(1)
     for entry in places[2:]:
-        fa_client.post(
+        fa_data_client.post(
             "/places/add",
             json={"entry": entry, "message": "Add it"},
             headers={"Authorization": "Bearer user2"},
@@ -53,7 +53,7 @@ def fixture_fa_history_data_client(fa_client, main_db, places_published):
     for entry in places[0:2]:
         changed_entry = entry.copy()
         changed_entry["name"] = entry["name"] + entry["name"]
-        fa_client.post(
+        fa_data_client.post(
             f"/places/{entry['code']}/update",
             json={"entry": changed_entry, "message": "change it", "version": 1},
             headers={"Authorization": "Bearer user2"},
@@ -70,7 +70,7 @@ def fixture_fa_history_data_client(fa_client, main_db, places_published):
     for entry in places[2:]:
         changed_entry = entry.copy()
         changed_entry["name"] = entry["name"] + entry["name"]
-        fa_client.post(
+        fa_data_client.post(
             f"/places/{entry['code']}/update",
             json={"entry": changed_entry, "message": "change it", "version": 1},
             headers={"Authorization": "Bearer user1"},
@@ -89,7 +89,7 @@ def fixture_fa_history_data_client(fa_client, main_db, places_published):
     for i in range(3, 10):
         changed_entry = places[0].copy()
         changed_entry["name"] = places[0]["name"] * i
-        response = fa_client.post(
+        response = fa_data_client.post(
             f"places/{diff_entry_id}/update",
             json={"entry": changed_entry,
                   "message": "changes", "version": i - 1},
@@ -98,7 +98,7 @@ def fixture_fa_history_data_client(fa_client, main_db, places_published):
         print(f"response = {response.json()}")
         assert response.status_code == 200
         time.sleep(1)
-    return fa_client
+    return fa_data_client
 
 
 def test_empty_user_history(fa_history_data_client):

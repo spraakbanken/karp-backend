@@ -3,11 +3,8 @@ import pytest
 # pytestmark = pytest.mark.usefixtures("use_main_index")
 
 
-@pytest.mark.usefixtures("municipalites_published")
-@pytest.mark.usefixtures("places_published")
-@pytest.mark.usefixtures("main_db")
-def test_get_resources(fa_client):
-    response = fa_client.get("/resources")
+def test_get_resources(fa_data_client):
+    response = fa_data_client.get("/resources")
 
     assert response.status_code == 200
 
