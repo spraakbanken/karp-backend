@@ -184,19 +184,19 @@ def places_published(app):
             )
         )
     except errors.IntegrityError:
-        pass
+        raise
     try:
         bus.dispatch(
             commands.PublishResource(
                 resource_id=resource_id,
-                name=resource_id,
-                config=places_config,
+                # name=resource_id,
+                # config=places_config,
                 user=cmd.user,
                 message=cmd.message,
             )
         )
     except karp_errors.ResourceAlreadyPublished:
-        pass
+        raise
 
     return places_config
 
@@ -227,19 +227,19 @@ def municipalities_published(app):
         )
         bus.dispatch(cmd)
     except errors.IntegrityError:
-        pass
+        raise
     try:
         bus.dispatch(
             commands.PublishResource(
                 resource_id=cmd.resource_id,
-                name=cmd.name,
-                config=cmd.config,
+                # name=cmd.name,
+                # config=cmd.config,
                 user=cmd.created_by,
                 message=cmd.message,
             )
         )
     except karp_errors.ResourceAlreadyPublished:
-        pass
+        raise
 
     return municipalities_config
 
