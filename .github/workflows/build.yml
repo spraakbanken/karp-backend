@@ -72,7 +72,7 @@ jobs:
           - use: false
             version: NO
           - use: true
-            version: 6.8.18
+            version: 6.8.23
         os: [ubuntu-latest]
         task:
           - name: Integration tests
