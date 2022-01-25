@@ -18,7 +18,7 @@ from tenacity import retry, stop_after_delay
 
 from alembic.config import main as alembic_main
 
-# environ["TESTING"] = "True"
+environ["TESTING"] = "True"
 # environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 # environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - mariadb
+    volumes:
+      - .:/backend
+    command: uvicorn asgi:app --reload --workers 1 --host 0.0.0.0 --port 8000
+    ports:
+      - 8000:8000
+    environment:
+      - DB_DATABASE=karp
+      - DB_USER=karp_user
+      - DB_HOST=karp_db
+      - DB_PASSWORD=karp_pass
+
+  mariadb:
+    image: mariadb
+    container_name: karp_db
+    environment:
+      MYSQL_ROOT_PASSWORD: karp_test
+      MYSQL_DATABASE: karp
+      MYSQL_USER: karp_user
+      MYSQL_PASSWORD: karp_pass
+    ports:
+      - "3307:3306"
+    restart: always
+

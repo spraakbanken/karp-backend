@@ -20,7 +20,7 @@ DB_PASSWORD = config("DB_PASSWORD", cast=str, default=None)
 DB_DATABASE = config("DB_DATABASE", default=None)
 DB_TEST_DATABASE = config("DB_TEST_DATABASE", default=None)
 if TESTING is True:
-    DB_DATABASE = DB_TEST_DATABASE or f"test_{DB_DATABASE}"
+    DB_DATABASE = DB_TEST_DATABASE or f"{DB_DATABASE}_test"
 if DB_DRIVER != "sqlite" and not DB_HOST:
     DB_HOST = "localhost"
 DB_URL = config(
