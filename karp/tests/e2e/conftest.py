@@ -1,8 +1,10 @@
 """Pytest entry point."""
 
 # pylint: disable=wrong-import-position,missing-function-docstring
+import os
 
-
+import alembic
+import alembic.config
 from karp.foundation.value_objects import make_unique_id
 from karp.foundation.commands import CommandBus
 import elasticsearch_test  # pyre-ignore
@@ -69,22 +71,26 @@ def wait_for_main_db_to_come_up(engine):
 
 
 @pytest.fixture(scope="session")
-def main_db():
-    print(f"creating engine uri = {config.DB_URL}")
-    kwargs = {}
-    if str(config.DB_URL).startswith("sqlite"):
-        kwargs["poolclass"] = pool.SingletonThreadPool
-    engine = create_engine(config.DB_URL, **kwargs)
-    wait_for_main_db_to_come_up(engine)
+def apply_migrations():
+    # print(f"creating engine uri = {config.DB_URL}")
+    # kwargs = {}
+    # if str(config.DB_URL).startswith("sqlite"):
+    #     kwargs["poolclass"] = pool.SingletonThreadPool
+    # engine = create_engine(config.DB_URL, **kwargs)
+    # wait_for_main_db_to_come_up(engine)
     # metadata.create_all(bind=engine)
     # metadata.drop_all(bind=engine)
+    os.environ["TESTING"] = "1"
+    config = alembic.config.Config("alembic.ini")
+
     print("running alembic upgrade ...")
-    alembic_main(["--raiseerr", "upgrade", "head"])
+    alembic.command.upgrade(config, 'head')
     # raise RuntimeError("main_db")
-    yield engine
+    yield
     print("running alembic downgrade ...")
     session.close_all_sessions()
-    alembic_main(["--raiseerr", "downgrade", "base"])
+    alembic.command.downgrade(config, 'base')
+    # alembic_main(["--raiseerr", "downgrade", "base"])
     # metadata.drop_all(bind=engine)
     # return engine
 
@@ -106,7 +112,7 @@ def main_db():
 #     print("running alembic downgrade ...")
 #     alembic_main(["--raiseerr", "downgrade", "base"])
 @pytest.fixture(name="app", scope="session")
-def fixture_app(main_db, use_main_index):
+def fixture_app(apply_migrations: None, use_main_index):
     print(f"use_main_index = {use_main_index}")
     from karp.webapp import main as webapp_main
 

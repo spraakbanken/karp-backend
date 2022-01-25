@@ -40,7 +40,9 @@ def run_migrations_online():
     if os.environ.get("TESTING"):
         # connect to primary db
         default_engine = create_engine(
-            DATABASE_URL, isolation_level="AUTOCOMMIT")
+            str(karp_config.parse_sqlalchemy_url_wo_db(karp_env)),
+            isolation_level="AUTOCOMMIT"
+        )
         # drop testing db if it exists and create a fresh one
         with default_engine.connect() as default_conn:
             default_conn.execute(f"DROP DATABASE IF EXISTS {DATABASE_NAME}")
@@ -72,6 +74,11 @@ def run_migrations_offline() -> None:
     """
     Run migrations in 'offline' mode.
     """
+
+    if os.environ.get("TESTING"):
+        raise RuntimeError(
+            "Running testing migrations offline currently not permitted.")
+
     alembic.context.configure(url=DATABASE_URL)
     with alembic.context.begin_transaction():
         alembic.context.run_migrations()

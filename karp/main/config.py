@@ -34,3 +34,15 @@ def parse_sqlalchemy_database_name(env: environs.Env) -> str:
         database_name = env('DB_TEST_DATABASE',
                             None) or f'{database_name}_test'
     return database_name
+
+
+def parse_sqlalchemy_url_wo_db(env: environs.Env) -> sa_url.URL:
+    return sa_url.URL.create(
+        drivername=env('DB_DRIVER', 'mysql+pymysql'),
+        username=env('DB_USER', None),
+        password=env('DB_PASSWORD', None),
+        host=env('DB_HOST', None),
+        port=env.int('DB_PORT', None),
+        database='',
+        query={'charset': 'utf8mb4'}
+    )

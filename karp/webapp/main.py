@@ -103,6 +103,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
             status_code=404,
             content={
                 'detail': str(exc),
+                'type': type(exc),
             }
         )
 
