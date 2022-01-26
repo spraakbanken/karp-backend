@@ -32,7 +32,11 @@ class AppContext:
 def bootstrap_app(container=None) -> AppContext:
     env = config.load_env()
     db_url = config.parse_sqlalchemy_url(env)
-    es_url = env('ELASTICSEARCH_HOST')
+    es_enabled = env.bool('ELASTICSEARCH_ENABLED', False)
+    if es_enabled:
+        es_url = env('ELASTICSEARCH_HOST')
+    else:
+        es_url = env('ELASTICSEARCH_HOST', '')
     settings = {
         'auth.jwt.pubkey.path': env('AUTH_JWT_PUBKEY_PATH', None)
     }

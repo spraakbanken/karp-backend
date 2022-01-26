@@ -99,6 +99,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
     @app.exception_handler(foundation_errors.NotFoundError)
     async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):
+        raise exc
         return JSONResponse(
             status_code=404,
             content={

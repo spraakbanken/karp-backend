@@ -83,6 +83,20 @@ class EntryRepository(repository.Repository[entities.Entry]):
             entity_id=None,
         )
 
+    get_by_entry_id = by_entry_id
+
+    def get_by_entry_id_optional(
+        self,
+        entry_id: str,
+        *,
+        version: Optional[int] = None,
+    ) -> Optional[entities.Entry]:
+        entry = self._by_entry_id(entry_id, version=version)
+        if entry:
+            self.seen.add(entry)
+            return entry
+        return None
+
     @abc.abstractmethod
     def _by_entry_id(
         self, entry_id: str, *, version: Optional[int] = None

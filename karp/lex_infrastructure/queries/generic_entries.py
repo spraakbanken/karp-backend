@@ -33,6 +33,20 @@ class GenericEntryViews(EntryViews):
         with entry_uow as uw:
             return self._entry_to_entry_dto(uw.repo.by_entry_id(entry_id), resource_id)
 
+    def get_by_entry_id_optional(
+        self,
+        resource_id: str,
+        entry_id: str
+    ) -> typing.Optional[EntryDto]:
+        entry_repo_id = self.get_entry_repo_id.query(resource_id)
+        with self.entry_uow_repo_uow as uw:
+            entry_uow = uw.repo.get_by_id(entry_repo_id)
+        with entry_uow as uw:
+            entry = uw.repo.get_by_entry_id_optional(entry_id)
+            if entry:
+                return self._entry_to_entry_dto(entry, resource_id)
+        return None
+
     def get_total(self, resource_id: str) -> int:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_uow_repo_uow as uw:

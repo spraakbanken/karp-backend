@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 
 import alembic
 from sqlalchemy import engine_from_config, pool, create_engine
@@ -38,15 +39,19 @@ def run_migrations_online():
     """
     # handle testing config for migrations
     if os.environ.get("TESTING"):
-        # connect to primary db
-        default_engine = create_engine(
-            str(karp_config.parse_sqlalchemy_url_wo_db(karp_env)),
-            isolation_level="AUTOCOMMIT"
-        )
-        # drop testing db if it exists and create a fresh one
-        with default_engine.connect() as default_conn:
-            default_conn.execute(f"DROP DATABASE IF EXISTS {DATABASE_NAME}")
-            default_conn.execute(f"CREATE DATABASE {DATABASE_NAME}")
+        if DATABASE_URL.startswith("sqlite"):
+            db_file = pathlib.Path(DATABASE_NAME)
+            db_file.unlink(missing_ok=True)
+        else:
+            # connect to primary db
+            default_engine = create_engine(
+                str(karp_config.parse_sqlalchemy_url_wo_db(karp_env)),
+                isolation_level="AUTOCOMMIT"
+            )
+            # drop testing db if it exists and create a fresh one
+            with default_engine.connect() as default_conn:
+                default_conn.execute(f"DROP DATABASE IF EXISTS {DATABASE_NAME}")
+                default_conn.execute(f"CREATE DATABASE {DATABASE_NAME}")
 
     connectable = config.attributes.get('connection', None)
     config.set_main_option("sqlalchemy.url", DATABASE_URL)

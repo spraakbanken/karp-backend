@@ -15,9 +15,9 @@ class TestEntriesRoutes:
 
     @pytest.mark.parametrize("invalid_data", [
         ({},),
-        ({},),
+        ({"user": "a@b.se"},),
     ])
     def test_invalid_data_returns_422(self, fa_client, invalid_data):
         response = fa_client.post("/places/add", json=invalid_data)
         print(f'{response.json()=}')
-        assert response.status_code != status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

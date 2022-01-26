@@ -22,12 +22,16 @@ class Repository(Generic[EntityType], abc.ABC):
     def _save(self, entity: EntityType):
         raise NotImplementedError()
 
+    def _check_id_has_correct_type(self, id_) -> None:
+        if not isinstance(id_, unique_id.UniqueIdType):
+            raise ValueError(
+                f"expected UniqueId, got id_ = '{id_}' (type: ´{type(id_)}'"
+            )
+
     def by_id(
         self, id_: unique_id.typing_UniqueId, *, version: Optional[int] = None
     ) -> EntityType:
-        if not isinstance(id_, unique_id.UniqueIdType):
-            raise ValueError(
-                f"expected UniqueId, got id_ = '{id_}' (type: ´{type(id_)}'")
+        self._check_id_has_correct_type(id_)
         entity = self._by_id(id_, version=version)
         if entity:
             self.seen.add(entity)
@@ -36,6 +40,18 @@ class Repository(Generic[EntityType], abc.ABC):
         return entity
 
     get_by_id = by_id
+
+    def get_by_id_optional(
+        self,
+        id_: unique_id.typing_UniqueId,
+        *,
+        version: Optional[int] = None,
+    ) -> Optional[EntityType]:
+        self._check_id_has_correct_type(id_)
+        entity = self._by_id(id_, version=version)
+        if entity:
+            self.seen.add(entity)
+        return entity
 
     @abc.abstractmethod
     def _by_id(
