@@ -79,7 +79,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
             if ref_resource:
                 with self.entry_uow_repo_uow.repo.get_by_id(ref_resource.entry_repository_id) as entries_uw:
                     for ref_entry_id in ids:
-                        entry = entries_uw.repo.by_entry_id(
+                        entry = entries_uw.repo.get_by_entry_id_optional(
                             ref_entry_id, version=ref_resource_version
                         )
                         if entry:
