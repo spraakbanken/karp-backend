@@ -8,7 +8,7 @@ from .entries import EntryDto
 
 class ReferenceDto(pydantic.BaseModel):
     resource_id: str
-    resource_version: int
+    resource_version: typing.Optional[int]
     entry: EntryDto
 
 
