@@ -4,20 +4,14 @@ from fastapi import APIRouter, Depends
 
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto
 
-from .fastapi_injector import inject_from_req
-# from . import app_config
-# from .containers import WebAppContainer
-
-# from karp.infrastructure.unit_of_work import unit_of_work
-
-# import karp.resourcemgr as resourcemgr
+from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 
-router = APIRouter(tags=["Resources"])
+router = APIRouter()
 
 
 @router.get(
-    "/resources",
+    '/',
     response_model=List[ResourcePermissionDto])
 def list_resource_permissions(
     query: GetResourcePermissions = Depends(inject_from_req(GetResourcePermissions)),

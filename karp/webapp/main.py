@@ -19,9 +19,9 @@ from karp import main
 from karp.foundation import errors as foundation_errors
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
+from karp.webapp.routes import router as api_router
 from karp.webapp import tasks
 
-from . import app_config
 
 __version__ = "6.0.0"
 
@@ -46,7 +46,6 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         openapi_tags=tags_metadata
     )
 
-
     app_context = main.bootstrap_app()
     app.state.app_context = app_context
 
@@ -68,29 +67,8 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    # from karp.application.logger import setup_logging
 
-    # logger = setup_logging()
-
-    # if with_context:
-    #     from karp.application.services.contexts import init_context
-
-    #     init_context()
-    # container = WebAppContainer(context=app_context.container)
-
-    # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
-
-    from . import (entries_api, health_api, history_api, query_api,
-                   resources_api, stats_api)
-
-    entries_api.init_app(app)
-    health_api.init_app(app)
-    history_api.init_app(app)
-    query_api.init_app(app)
-    resources_api.init_app(app)
-    stats_api.init_app(app)
-
-    # app.state.container = app_context.container
+    app.include_router(api_router)
 
     load_modules(app)
 

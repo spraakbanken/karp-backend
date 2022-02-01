@@ -10,31 +10,11 @@ from karp.lex.domain import commands, errors
 from karp.auth import User
 from karp.foundation.commands import CommandBus
 from karp.foundation.value_objects import PermissionLevel, unique_id
-# from karp.errors import KarpError
-# import karp.auth.auth as auth
-# from karp.util import convert
 from karp.auth import AuthService
 from karp.webapp import schemas
 
-from .app_config import get_current_user
-from .fastapi_injector import inject_from_req
-
-# from karp.application.services import entries
-
-# from karp.application import ctx
-
-
-# from karp.webapp.auth import get_current_user
-
-
-# from flask import Blueprint  # pyre-ignore
-# from flask import jsonify as flask_jsonify  # pyre-ignore
-# from flask import request  # pyre-ignore
-
-# from karp.resourcemgr import entrywrite
-
-
-# edit_api = Blueprint("edit_api", __name__)
+from karp.webapp.dependencies.auth import get_current_user
+from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 router = APIRouter(tags=["Editing"])
 
