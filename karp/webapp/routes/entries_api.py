@@ -56,7 +56,13 @@ def add_entry(
             }
         )
     except errors.InvalidEntry as exc:
-        return responses.JSONResponse(status_code=400, content={'error': str(exc), 'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_VALID})
+        return responses.JSONResponse(
+            status_code=400,
+            content={
+                'error': str(exc),
+                'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_VALID
+            }
+        )
 
     entry = entry_views.get_by_id(resource_id, id_)
     return {"newID": entry.entry_id, "uuid": id_}
