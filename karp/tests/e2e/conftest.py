@@ -5,9 +5,7 @@ import os
 import json
 from typing import Dict
 
-from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
-from httpx import AsyncClient
 
 import alembic
 import alembic.config
@@ -37,13 +35,6 @@ from karp.lex.domain import commands, errors, entities  # nopep8
 from karp import errors as karp_errors  # nopep8
 from karp import config  # nopep8
 
-# # from karp.infrastructure.unit_of_work import unit_of_work
-# from karp.infrastructure.sql import sql_entry_repository
-
-# from karp.domain.models.resource import create_resource
-
-
-# # from karp.application.services import contexts, entries, resources
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
@@ -60,14 +51,6 @@ def sqlite_session_factory(in_memory_sqlite_db):
     yield sessionmaker(bind=in_memory_sqlite_db)
 
 
-# @pytest.fixture(name="db_setup")
-# def fixture_db_setup():
-#     print("running alembic upgrade ...")
-#     alembic_main(["--raiseerr", "upgrade", "head"])
-#     yield
-#     print("running alembic downgrade ...")
-#     alembic_main(["--raiseerr", "downgrade", "base"])
-
 
 @retry(stop=stop_after_delay(10))
 def wait_for_main_db_to_come_up(engine):
@@ -76,45 +59,17 @@ def wait_for_main_db_to_come_up(engine):
 
 @pytest.fixture(scope="session")
 def apply_migrations():
-    # print(f"creating engine uri = {config.DB_URL}")
-    # kwargs = {}
-    # if str(config.DB_URL).startswith("sqlite"):
-    #     kwargs["poolclass"] = pool.SingletonThreadPool
-    # engine = create_engine(config.DB_URL, **kwargs)
-    # wait_for_main_db_to_come_up(engine)
-    # metadata.create_all(bind=engine)
-    # metadata.drop_all(bind=engine)
     os.environ["TESTING"] = "1"
     config = alembic.config.Config("alembic.ini")
 
     print("running alembic upgrade ...")
     alembic.command.upgrade(config, 'head')
-    # raise RuntimeError("main_db")
     yield
     print("running alembic downgrade ...")
     session.close_all_sessions()
     alembic.command.downgrade(config, 'base')
-    # alembic_main(["--raiseerr", "downgrade", "base"])
-    # metadata.drop_all(bind=engine)
-    # return engine
 
 
-# @pytest.fixture(name="db_setup_scope_module", scope="module")
-# def fixture_db_setup_scope_module():
-#     print("running alembic upgrade ...")
-#     alembic_main(["--raiseerr", "upgrade", "head"])
-#     yield
-#     print("running alembic downgrade ...")
-#     alembic_main(["--raiseerr", "downgrade", "base"])
-
-
-# @pytest.fixture(name="db_setup_scope_session", scope="session")
-# def fixture_db_setup_scope_session():
-#     print("running alembic upgrade ...")
-#     alembic_main(["--raiseerr", "upgrade", "head"])
-#     yield
-#     print("running alembic downgrade ...")
-#     alembic_main(["--raiseerr", "downgrade", "base"])
 @pytest.fixture(name="app", scope='session')
 def fixture_app(apply_migrations: None, init_search_service: None):
     from karp.webapp.main import create_app
@@ -125,7 +80,7 @@ def fixture_app(apply_migrations: None, init_search_service: None):
 
 
 @pytest.fixture(name='fa_client', scope='session')
-def fixture_client(app) -> AsyncClient:
+def fixture_client(app) -> TestClient:
     with TestClient(app) as client:
         yield client
 
@@ -138,37 +93,6 @@ def fixture_client(app) -> AsyncClient:
 #             yield client
 
 
-# @pytest.fixture(name="fa_client_scope_session", scope="session")
-# def fixture_fa_client_scope_session(db_setup_scope_session):
-#     ctx.auth_service = dummy_auth_service.DummyAuthService()
-#     with TestClient(webapp_main.create_app()) as client:
-#         yield client
-#         print("releasing testclient")
-
-
-# @pytest.fixture(name="places_scope_module", scope="module")
-# def fixture_places_scope_module(context_scope_module):
-#     with open("karp/tests/data/config/places.json") as fp:
-#         resource = resources.create_new_resource_from_file(fp)
-
-#     yield resource
-#     print("cleaning up places")
-#     resource.entry_repository.teardown()
-
-
-# @pytest.fixture(name="context")
-# def fixture_context(db_setup, es):
-#     contexts.init_context()
-
-
-# @pytest.fixture(name="context_scope_module", scope="module")
-# def fixture_context_scope_module(db_setup_scope_module, es):
-#     contexts.init_context()
-
-
-# @pytest.fixture(name="context_scope_session", scope="session")
-# def fixture_context_scope_session(db_setup_scope_session, es):
-#     contexts.init_context()
 
 
 def places_published(app):
