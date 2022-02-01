@@ -6,12 +6,15 @@ class Database:
         kwargs = {}
         if str(db_url).startswith("sqlite"):
             kwargs["poolclass"] = pool.SingletonThreadPool
-        self._engine = create_engine(db_url, echo=True, **kwargs)
+        self._engine = create_engine(db_url, echo=True, future=True, **kwargs)
         self.session_factory = orm.sessionmaker(
             autocommit=False,
             autoflush=False,
             bind=self._engine,
         )
+
+    def disconnect(self):
+        pass
 
 #    @contextmanager
 #    def session(self) -> Callable[..., AbstractContextManager[Session]]:

@@ -12,6 +12,7 @@ except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
 import injector
+from sqlalchemy import pool
 from sqlalchemy.engine import Engine, create_engine, url as sa_url
 
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
@@ -31,7 +32,7 @@ class AppContext:
 
 def bootstrap_app(container=None) -> AppContext:
     env = config.load_env()
-    db_url = config.parse_sqlalchemy_url(env)
+    db_url = config.parse_database_url(env)
     es_enabled = env.bool('ELASTICSEARCH_ENABLED', False)
     if es_enabled:
         es_url = env('ELASTICSEARCH_HOST')
@@ -52,10 +53,17 @@ def bootstrap_app(container=None) -> AppContext:
     setup_logging()
     # logging.config.dictConfig(_logging_config())  # type: ignore
     search_service = env('SEARCH_CONTEXT', 'sql_search_service')
-    engine = create_engine(db_url)
+    engine = _create_db_engine(db_url)
     dependency_injector = _setup_dependency_injection(engine, es_url=es_url)
     _setup_search_context(dependency_injector, search_service)
     return AppContext(dependency_injector, settings)
+
+
+def _create_db_engine(db_url: config.DatabaseUrl):
+    kwargs = {}
+    if str(db_url).startswith("sqlite"):
+        kwargs["poolclass"] = pool.SingletonThreadPool
+    return create_engine(db_url, echo=True, future=True, **kwargs)
 
 
 def _setup_dependency_injection(

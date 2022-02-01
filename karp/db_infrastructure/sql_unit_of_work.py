@@ -105,5 +105,5 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
         self._session.rollback()
         self._state = SqlUnitOfWork.State.initialized
 
-    def close(self):
+    def _close(self):
         self._session.close()

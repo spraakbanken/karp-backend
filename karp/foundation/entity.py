@@ -23,6 +23,11 @@ class Entity(events.EventMixin):
         return self._id
 
     @property
+    def entity_id(self):
+        """A unique identifier for the entity."""
+        return self._id
+
+    @property
     def discarded(self) -> bool:
         """True if this entity is marked as deleted, otherwise False."""
         return self._discarded

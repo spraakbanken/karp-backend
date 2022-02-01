@@ -2,14 +2,18 @@
 
 # pylint: disable=wrong-import-position,missing-function-docstring
 import os
+import json
+from typing import Dict
+
+from asgi_lifespan import LifespanManager
+from fastapi import FastAPI
+from httpx import AsyncClient
 
 import alembic
 import alembic.config
 from karp.foundation.value_objects import make_unique_id
 from karp.foundation.commands import CommandBus
 import elasticsearch_test  # pyre-ignore
-import json
-from typing import Dict
 
 import pytest  # pyre-ignore
 from sqlalchemy import create_engine, pool
@@ -111,21 +115,27 @@ def apply_migrations():
 #     yield
 #     print("running alembic downgrade ...")
 #     alembic_main(["--raiseerr", "downgrade", "base"])
-@pytest.fixture(name="app", scope="session")
-def fixture_app(apply_migrations: None, use_main_index):
-    print(f"use_main_index = {use_main_index}")
-    from karp.webapp import main as webapp_main
+@pytest.fixture(name="app", scope='session')
+def fixture_app(apply_migrations: None, init_search_service: None):
+    from karp.webapp.main import create_app
 
-    app = webapp_main.create_app()
-    app.state.container.binder.install(TestAuthInfrastructure())
+    app = create_app()
+    app.state.app_context.container.binder.install(TestAuthInfrastructure())
     yield app
 
 
-@pytest.fixture(name="fa_client", scope="session")
-def fixture_fa_client(app):  # db_setup, es):
-
+@pytest.fixture(name='fa_client', scope='session')
+def fixture_client(app) -> AsyncClient:
     with TestClient(app) as client:
         yield client
+
+#     async with LifespanManager(app):
+#         async with AsyncClient(
+#             app=app,
+#             base_url="http://testserver",
+#             headers={"Content-Type": "application/json"}
+#         ) as client:
+#             yield client
 
 
 # @pytest.fixture(name="fa_client_scope_session", scope="session")
@@ -167,7 +177,7 @@ def places_published(app):
         places_config = json.load(fp)
     resource_id = 'places'
 
-    bus = app.state.container.get(CommandBus)
+    bus = app.state.app_context.container.get(CommandBus)
     cmd = commands.CreateEntryRepository(
         entity_id=make_unique_id(),
         repository_type='default',
@@ -214,7 +224,7 @@ def municipalities_published(app):
 
     resource_id = 'municipalities'
 
-    bus = app.state.container.get(CommandBus)
+    bus = app.state.app_context.container.get(CommandBus)
 
     try:
         cmd = commands.CreateEntryRepository(
@@ -525,13 +535,13 @@ def fixture_fa_data_client(
 # #     return app.test_cli_runner()
 # #
 # #
-@pytest.fixture(name="use_main_index", scope="session")
-def fixture_use_main_index():
+@pytest.fixture(name="init_search_service", scope="session")
+def fixture_init_search_service():
     print("fixture: use_main_index")
     if not config.TEST_ELASTICSEARCH_ENABLED:
         print("don't use elasticsearch")
         # pytest.skip()
-        yield "using sql"
+        yield
     else:
         if not config.TEST_ES_HOME:
             raise RuntimeError(
@@ -539,7 +549,7 @@ def fixture_use_main_index():
         with elasticsearch_test.ElasticsearchTest(
             port=9202, es_path=config.TEST_ES_HOME
         ):
-            yield "run"
+            yield
 
 
 @pytest.fixture

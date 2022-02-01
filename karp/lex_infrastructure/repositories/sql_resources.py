@@ -68,7 +68,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         self, id: Union[UUID, str], *, version: Optional[int] = None
     ) -> typing.Optional[entities.Resource]:
         self._check_has_session()
-        query = self._session.query(ResourceModel).filter_by(id=id)
+        query = self._session.query(ResourceModel).filter_by(entity_id=id)
         if version:
             query = query.filter_by(version=version)
         else:

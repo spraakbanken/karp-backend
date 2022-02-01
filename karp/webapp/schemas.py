@@ -4,6 +4,8 @@ from typing import Dict, Optional
 
 from pydantic import BaseModel
 
+from karp.foundation.value_objects import unique_id
+
 
 class SystemResponse(BaseModel):
     message: str = "ok"
@@ -59,3 +61,24 @@ class EntryAdd(EntryBase):
 class EntryUpdate(EntryBase):
     message: str
     version: int
+
+
+class EntityIdMixin(BaseModel):
+    entity_id: unique_id.UniqueId
+
+
+class ResourceBase(BaseModel):
+    resource_id: str
+    name: str
+    config: typing.Dict
+    message: str
+    entry_repo_id: unique_id.UniqueId
+
+
+class ResourceCreate(ResourceBase):
+    user: str
+
+
+class ResourcePublic(EntityIdMixin, ResourceBase):
+    last_modified: float
+    last_modified_by: str

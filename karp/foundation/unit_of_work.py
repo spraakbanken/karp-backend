@@ -42,5 +42,9 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
     def repo(self) -> RepositoryType:
         pass
 
-    def close(self):
+    @abc.abstractmethod
+    def _close(self):
         pass
+
+    def close(self):
+        self._close()

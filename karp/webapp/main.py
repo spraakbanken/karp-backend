@@ -19,6 +19,7 @@ from karp import main
 from karp.foundation import errors as foundation_errors
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
+from karp.webapp import tasks
 
 from . import app_config
 
@@ -39,15 +40,34 @@ logger = logging.getLogger("karp")
 
 def create_app(*, with_context: bool = True) -> FastAPI:
     app = FastAPI(
-        title="Karp API", redoc_url="/", version=__version__, openapi_tags=tags_metadata
+        title="Karp API",
+        redoc_url="/",
+        version=__version__,
+        openapi_tags=tags_metadata
     )
-    # container = WebAppContainer()
-    # container.config.auth.type.from_env("AUTH_CONTEXT")
-    # container.config.auth.jwt.pubkey_path.from_env("JWT_AUTH_PUBKEY_PATH")
+
+
     app_context = main.bootstrap_app()
+    app.state.app_context = app_context
+
+    app.add_event_handler(
+        "startup",
+        tasks.create_start_app_handler(app))
+    app.add_event_handler(
+        "shutdown",
+        tasks.create_stop_app_handler(app)
+    )
 
     main.install_auth_service(
         app_context.container, app_context.settings)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=app_context.settings.get('web.cors.origins', ['*']),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     # from karp.application.logger import setup_logging
 
     # logger = setup_logging()
@@ -63,18 +83,6 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     from . import (entries_api, health_api, history_api, query_api,
                    resources_api, stats_api)
 
-    # container.wire(
-    #     modules=[
-    #         app_config,
-    #         entries_api,
-    #         health_api,
-    #         history_api,
-    #         query_api,
-    #         resources_api,
-    #         stats_api,
-    #     ]
-    # )
-
     entries_api.init_app(app)
     health_api.init_app(app)
     history_api.init_app(app)
@@ -82,8 +90,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     resources_api.init_app(app)
     stats_api.init_app(app)
 
-    app.state.app_context = app_context
-    app.state.container = app_context.container
+    # app.state.container = app_context.container
 
     load_modules(app)
 
@@ -109,7 +116,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         )
 
     @app.exception_handler(auth_errors.ResourceNotFound)
-    async def _entity_not_found(request: Request, exc: auth_errors.ResourceNotFound):
+    async def _auth_entity_not_found(request: Request, exc: auth_errors.ResourceNotFound):
         return JSONResponse(
             status_code=404,
             content={
@@ -128,18 +135,15 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         response = await call_next(request)
         return response
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=app_context.settings.get('web.cors.origins', '*')
-    )
     return app
 
 
 def load_modules(app=None):
     logger = logging.getLogger("karp")
 
-    if "karp.modules" in entry_points():
-        for ep in entry_points()["karp.modules"]:
+    karp_modules = entry_points(group='karp.modules')
+    if karp_modules:
+        for ep in karp_modules:
             logger.info("Loading module: %s", ep.name)
             print("Loading module: %s" % ep.name)
             mod = ep.load()

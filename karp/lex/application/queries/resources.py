@@ -8,7 +8,7 @@ from karp.foundation.value_objects import UniqueId
 
 class ResourceDto(pydantic.BaseModel):
     resource_id: str
-    id: UniqueId
+    entity_id: UniqueId
     is_published: bool
     version: int
     last_modified: float

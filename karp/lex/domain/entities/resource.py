@@ -287,6 +287,24 @@ class Resource(TimestampedVersionedEntity):
     def id_getter(self) -> Callable[[Dict], str]:
         return create_field_getter(self.config["id"], str)
 
+
+    def dict(self) -> Dict:
+        return {
+            'entity_id': self.entity_id,
+            'resource_id': self.resource_id,
+            'name': self.name,
+            'version': self.version,
+            'last_modified': self.last_modified,
+            'last_modified_by': self.last_modified_by,
+            'op': self.op,
+            'message': self.message,
+            'entry_repo_id': self.entry_repository_id,
+            'is_published': self.is_published,
+            'discarded': self.discarded,
+            'resource_type': self.resource_type,
+            'config': self.config,
+        }
+
     def create_entry_from_dict(
         self,
         entry_raw: Dict,
@@ -344,8 +362,9 @@ class Release(Entity):
 
 def create_resource(
     config: Dict,
-    created_by: str,
     entry_repo_id: unique_id.UniqueId,
+    created_by: str = None,
+    user: str = None,
     created_at: float = None,
     entity_id: unique_id.UniqueId = None,
     resource_id: typing.Optional[str] = None,
@@ -378,7 +397,7 @@ def create_resource(
         op=ResourceOp.ADDED,
         version=1,
         last_modified=created_at or time.utc_now(),
-        last_modified_by=created_by,
+        last_modified_by=user or created_by or 'unknown',
     )
     resource.queue_event(
         events.ResourceCreated(

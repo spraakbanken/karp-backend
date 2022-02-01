@@ -21,7 +21,7 @@ def upgrade():
     op.create_table(
         "resources",
         sa.Column("history_id", sa.Integer(), nullable=False),
-        sa.Column("id", UUIDType, nullable=False),
+        sa.Column("entity_id", UUIDType, nullable=False),
         sa.Column("resource_id", sa.String(length=32), nullable=False),
         sa.Column("resource_type", sa.String(length=32), nullable=False),
         sa.Column('entry_repo_id', UUIDType),

@@ -60,7 +60,7 @@ class SqlReadOnlyResourceRepository(
 
 def _row_to_dto(row_proxy) -> ResourceDto:
     return ResourceDto(
-        id=row_proxy.id,
+        entity_id=row_proxy.entity_id,
         resource_id=row_proxy.resource_id,
         version=row_proxy.version,
         config=row_proxy.config,

@@ -21,9 +21,6 @@ config = alembic.context.config
 fileConfig(config.config_file_name)  # type: ignore
 logger = logging.getLogger('alembic.env')
 
-karp_env = karp_config.load_env()
-DATABASE_URL = str(karp_config.parse_sqlalchemy_url(karp_env))
-DATABASE_NAME = karp_config.parse_sqlalchemy_database_name(karp_env)
 
 
 # def include_object(object, name, type_, reflected, compare_to):
@@ -39,8 +36,8 @@ def run_migrations_online():
     """
     # handle testing config for migrations
     if os.environ.get("TESTING"):
-        if DATABASE_URL.startswith("sqlite"):
-            db_file = pathlib.Path(DATABASE_NAME)
+        if karp_config.DATABASE_URL.drivername.startswith("sqlite"):
+            db_file = pathlib.Path(karp_config.DATABASE_NAME)
             db_file.unlink(missing_ok=True)
         else:
             # connect to primary db
@@ -50,11 +47,11 @@ def run_migrations_online():
             )
             # drop testing db if it exists and create a fresh one
             with default_engine.connect() as default_conn:
-                default_conn.execute(f"DROP DATABASE IF EXISTS {DATABASE_NAME}")
-                default_conn.execute(f"CREATE DATABASE {DATABASE_NAME}")
+                default_conn.execute(f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}")
+                default_conn.execute(f"CREATE DATABASE {karp_config.DATABASE_NAME}")
 
     connectable = config.attributes.get('connection', None)
-    config.set_main_option("sqlalchemy.url", DATABASE_URL)
+    config.set_main_option("sqlalchemy.url", str(karp_config.DATABASE_URL))
 
     if connectable is None:
         connectable = engine_from_config(
@@ -67,7 +64,6 @@ def run_migrations_online():
         alembic.context.configure(
             connection=connection,
             target_metadata=db.metadata,
-            # include_object=include_object,
             compare_type=True,
         )
 
@@ -84,7 +80,7 @@ def run_migrations_offline() -> None:
         raise RuntimeError(
             "Running testing migrations offline currently not permitted.")
 
-    alembic.context.configure(url=DATABASE_URL)
+    alembic.context.configure(url=str(karp_config.DATABASE_URL))
     with alembic.context.begin_transaction():
         alembic.context.run_migrations()
 

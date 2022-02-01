@@ -34,5 +34,8 @@ class NoOpIndexUnitOfWork(IndexUnitOfWork):
     def _commit(self, *args, **kwargs):
         logger.debug('_commit called with args=%s, kwargs=%s', args, kwargs)
 
+    def _close(self, *args, **kwargs):
+        logger.debug('_close called with args=%s, kwargs=%s', args, kwargs)
+
     def rollback(self, *args, **kwargs):
         logger.debug('rollback called with args=%s, kwargs=%s', args, kwargs)

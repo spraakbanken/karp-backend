@@ -53,7 +53,7 @@ def install_auth_service(
     container: injector.Injector,
     settings: Dict[str, str]
 ):
-    auth_service_name = settings.get('auth.name', "")
+    auth_service_name = settings.get('auth.name', '')
     container.binder.install(AuthInfrastructure())
 
     if auth_service_name.upper() == TEST_AUTH_SERVICE:

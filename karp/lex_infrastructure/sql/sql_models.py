@@ -10,7 +10,7 @@ from karp.db_infrastructure import db
 class ResourceModel(db.Base):
     __tablename__ = "resources"
     history_id = db.Column(db.Integer, primary_key=True)
-    id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.UUIDType, nullable=False)
     resource_id = db.Column(db.String(32), nullable=False)
     resource_type = db.Column(db.String(32), nullable=False)
     version = db.Column(db.Integer, nullable=False)
@@ -41,7 +41,7 @@ class ResourceModel(db.Base):
     def __repr__(self):
         return """<ResourceDTO(
                     history_id={},
-                    id={},
+                    entity_id={},
                     resource_id={},
                     version={},
                     name={},
@@ -67,7 +67,7 @@ class ResourceModel(db.Base):
 
     def to_entity(self) -> entities.Resource:
         return entities.Resource(
-            entity_id=self.id,
+            entity_id=self.entity_id,
             resource_id=self.resource_id,
             version=self.version,
             name=self.name,
@@ -84,7 +84,7 @@ class ResourceModel(db.Base):
     def from_entity(resource: entities.Resource) -> "ResourceModel":
         return ResourceModel(
             history_id=None,
-            id=resource.id,
+            entity_id=resource.entity_id,
             resource_id=resource.resource_id,
             resource_type=resource.resource_type,
             version=resource.version,

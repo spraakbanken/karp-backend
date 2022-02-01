@@ -122,3 +122,4 @@ jwtRS256.key.pub
 pubkey.pem
 
 old_files/
+sketch/

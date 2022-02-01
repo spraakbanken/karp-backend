@@ -253,21 +253,20 @@ class GenericEntryTransformer(EntryTransformer):
                 resource_id, src_entry_id
             )
             for field_ref in refs:
-                ref_resource_id = field_ref["resource_id"]
                 ref_resource = self.resource_repo.get_by_resource_id(
-                    ref_resource_id,
-                    version=(field_ref["resource_version"])
+                    field_ref.resource_id,
+                    version=(field_ref.resource_version)
                 )
                 if ref_resource:
-                    ref_index_entry = self.transform_to_index_entry(
+                    ref_index_entry = self.transform(
                         # resource_repo,
                         # indexer,
-                        ref_resource,
-                        field_ref["entry"],
+                        ref_resource.resource_id,  # TODO use resource directly
+                        field_ref.entry,
                         # ref_resource.config["fields"].items(),
                     )
                     # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
-                    add[ref_resource_id].append(ref_index_entry)
+                    add[field_ref.resource_id].append(ref_index_entry)
 
         for ref_resource_id, ref_entries in add.items():
             self.index_uow.repo.add_entries(ref_resource_id, ref_entries)

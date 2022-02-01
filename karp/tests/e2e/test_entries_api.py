@@ -43,9 +43,6 @@ def init(client, entries):
     return client
 
 
-pytestmark = pytest.mark.usefixtures(
-    "use_dummy_authenticator")  # , "use_main_index")
-
 
 def test_add(fa_data_client):  # fa_data_client):
     # client = init(fa_data_client, es, [])

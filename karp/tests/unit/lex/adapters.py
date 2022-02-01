@@ -71,7 +71,7 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
 
     def _row_to_dto(self, res) -> ResourceDto:
         return ResourceDto(
-            id=res.id,
+            entity_id=res.entity_id,
             resource_id=res.resource_id,
             last_modified=res.last_modified,
             last_modified_by=res.last_modified_by,
@@ -144,8 +144,10 @@ class FakeEntryUnitOfWork(
     FakeUnitOfWork, lex_repositories.EntryUnitOfWork
 ):
     def __init__(self, entity_id, name: str, config: typing.Dict, connection_str: typing.Optional[str], message: str, user: str, event_bus: EventBus):
+        FakeUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
-            self, entity_id=entity_id, name=name, config=config, connection_str=connection_str, message=message, event_bus=event_bus)
+            self,
+            entity_id=entity_id, name=name, config=config, connection_str=connection_str, message=message, event_bus=event_bus)
         self._entries = FakeEntryRepository()
         # self.id = entity_id
         # self.name = name
@@ -160,6 +162,7 @@ class FakeEntryUnitOfWork2(
     FakeUnitOfWork, lex_repositories.EntryUnitOfWork
 ):
     def __init__(self, entity_id, name: str, config: typing.Dict):
+        FakeUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
             self, entity_id=entity_id, name=name, config=config)
         self._entries = FakeEntryRepository()
@@ -174,7 +177,8 @@ class FakeEntryUnitOfWork2(
 
 class FakeResourceUnitOfWork(FakeUnitOfWork, lex_repositories.ResourceUnitOfWork):
     def __init__(self, event_bus: EventBus):
-        super().__init__(event_bus=event_bus)
+        FakeUnitOfWork.__init__(self)
+        lex_repositories.ResourceUnitOfWork.__init__(self,event_bus=event_bus)
         self._resources = FakeResourceRepository()
 
     @property
@@ -252,7 +256,8 @@ class FakeEntryUowRepository(lex_repositories.EntryUowRepository):
 
 class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):
     def __init__(self, event_bus: EventBus) -> None:
-        super().__init__(event_bus=event_bus)
+        FakeUnitOfWork.__init__(self)
+        lex_repositories.EntryUowRepositoryUnitOfWork.__init__(self, event_bus=event_bus)
         self._repo = FakeEntryUowRepository()
 
     @property
