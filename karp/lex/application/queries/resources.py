@@ -11,6 +11,9 @@ class ResourceDto(pydantic.BaseModel):
     entity_id: UniqueId
     is_published: bool
     version: int
+    name: str
+    last_modified_by: str
+    message: str
     last_modified: float
     config: Dict
     entry_repository_id: UniqueId

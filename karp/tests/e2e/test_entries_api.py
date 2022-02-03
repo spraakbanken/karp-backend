@@ -7,6 +7,7 @@ from karp.errors import ClientErrorCodes
 from karp.lex.application.queries.resources import GetEntryRepositoryId
 from karp.lex.application.repositories.entry_repositories import EntryUowRepositoryUnitOfWork
 from karp.utility.time import utc_now
+from karp.lex.application.queries import EntryDto
 
 # from karp.application import ctx, config
 # from karp.infrastructure.unit_of_work import unit_of_work
@@ -50,6 +51,10 @@ class TestEntriesRoutes:
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 class TestAddEntry:
+    def test_put_route_exist(self, fa_data_client):
+        response = fa_data_client.put('/entries/places')
+        assert response.status_code != status.HTTP_404_NOT_FOUND
+
     @pytest.mark.parametrize('invalid_data', [
         ({},),
         ({'user': 'a@b.se'},),
@@ -65,8 +70,8 @@ class TestAddEntry:
 
     def test_add_with_valid_data_returns_201(self, fa_data_client):
 
-        response = fa_data_client.post(
-            '/entries/places/add',
+        response = fa_data_client.put(
+            '/entries/places',
             json={
                 'entry': {
                     'code': 203,
@@ -149,6 +154,7 @@ class TestAddEntry:
 
         assert response_data['error'] == "Missing ID field for resource 'places' in '{}'"
         assert response_data['errorCode'] == ClientErrorCodes.ENTRY_NOT_VALID
+
 
 
 class TestDeleteEntry:
@@ -499,6 +505,23 @@ class TestUpdateEntry:
             assert entry.last_modified > after_add
             assert entry.last_modified < after_update
 
+
+class TestGetEntry:
+    def test_get_version_by_entry_id(self, fa_data_client):
+        response = fa_data_client.get('/entries/places/204')
+        assert response.status_code == status.HTTP_200_OK
+
+        entry = EntryDto(**response.json())
+        assert entry.entry_id == '204'
+        assert entry.version == 1
+
+    def test_route_w_version_exist(self, fa_data_client):
+        response = fa_data_client.get('/entries/places/209/5')
+        assert response.status_code == status.HTTP_200_OK
+
+        entry = EntryDto(**response.json())
+        assert entry.entry_id == '209'
+        assert entry.version == 5
 
 
 @pytest.mark.skip()

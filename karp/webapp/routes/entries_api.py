@@ -1,11 +1,12 @@
 import logging
+from typing import Optional
 
 from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
-                     status)
+                     status, Path, Query)
 from starlette import responses
 
-from karp import errors as karp_errors
-from karp.lex.application.queries import EntryViews
+from karp import errors as karp_errors, auth
+from karp.lex.application.queries import EntryViews, EntryDto, GetEntryHistory
 from karp.lex.domain import commands, errors
 from karp.auth import User
 from karp.foundation.commands import CommandBus
@@ -16,12 +17,40 @@ from karp.webapp import schemas
 from karp.webapp.dependencies.auth import get_current_user
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
-router = APIRouter(tags=["Editing"])
+router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
 
-@router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED)
+@router.get('/{resource_id}/{entry_id}/{version}', response_model=EntryDto)
+@router.get('/{resource_id}/{entry_id}', response_model=EntryDto)
+# @auth.auth.authorization("ADMIN")
+def get_history_for_entry(
+    resource_id: str,
+    entry_id: str,
+    version: Optional[int] = Query(None),
+    user: auth.User = Security(get_current_user, scopes=["read"]),
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    get_entry_history: GetEntryHistory = Depends(
+        inject_from_req(GetEntryHistory)),
+):
+    if not auth_service.authorize(
+        auth.PermissionLevel.admin, user, [resource_id]
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": 'Bearer scope="read"'},
+        )
+    historical_entry = get_entry_history.query(
+        resource_id, entry_id, version=version
+    )
+
+    return historical_entry
+
+
+@router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["editing"])
+@router.put('/{resource_id}', status_code=status.HTTP_201_CREATED, tags=["editing"])
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
@@ -68,7 +97,8 @@ def add_entry(
     return {"newID": entry.entry_id, "uuid": id_}
 
 
-@router.post("/{resource_id}/{entry_id}/update")
+@router.post("/{resource_id}/{entry_id}/update", tags=["editing"])
+@router.post('/{resource_id}/{entry_id}', tags=["editing"])
 # @auth.auth.authorization("WRITE", add_user=True)
 def update_entry(
     response: Response,
@@ -140,8 +170,8 @@ def update_entry(
         raise
 
 
-@router.delete('/{resource_id}/{entry_id}/delete')
-@router.delete('/{resource_id}/{entry_id}')
+@router.delete('/{resource_id}/{entry_id}/delete', tags=["editing"])
+@router.delete('/{resource_id}/{entry_id}', tags=["editing"])
 # @auth.auth.authorization("WRITE", add_user=True)
 def delete_entry(
     resource_id: str,

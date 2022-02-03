@@ -115,7 +115,7 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
             entry_id=entry_id,
             entry_uuid=result.id,
             resource=resource_id,
-            version=version,
+            version=result.version,
             entry=result.body,
             last_modified_by=result.last_modified_by,
             last_modified=result.last_modified,

@@ -8,7 +8,7 @@ from .base import Command
 
 
 class CreateEntryRepository(Command):
-    entity_id: UniqueId
+    entity_id: UniqueId = pydantic.Field(default_factory=make_unique_id)
     repository_type: str
     name: str
     connection_str: Optional[str] = None

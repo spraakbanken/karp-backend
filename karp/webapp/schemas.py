@@ -72,11 +72,11 @@ class ResourceBase(BaseModel):
     name: str
     config: typing.Dict
     message: str
-    entry_repo_id: unique_id.UniqueId
+    entry_repo_id: Optional[unique_id.UniqueId]
 
 
 class ResourceCreate(ResourceBase):
-    user: str
+    pass
 
 
 class ResourcePublic(EntityIdMixin, ResourceBase):

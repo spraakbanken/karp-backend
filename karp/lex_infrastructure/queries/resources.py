@@ -68,4 +68,6 @@ def _row_to_dto(row_proxy) -> ResourceDto:
         entry_repository_id=row_proxy.entry_repo_id,
         last_modified=row_proxy.last_modified,
         last_modified_by=row_proxy.last_modified_by,
+        message=row_proxy.message,
+        name=row_proxy.name,
     )

@@ -1,7 +1,6 @@
 import logging
 from typing import Optional
 
-from dependency_injector import wiring
 from fastapi import Depends, HTTPException, status
 from fastapi.param_functions import Header
 from fastapi.security import (HTTPAuthorizationCredentials, HTTPBearer,
@@ -34,7 +33,6 @@ def bearer_scheme(authorization=Header(None)):
     return HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
 
 
-@wiring.inject
 def get_current_user(
     security_scopes: SecurityScopes,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
@@ -60,3 +58,35 @@ def get_current_user(
         return auth_service.authenticate(credentials.scheme, credentials.credentials)
     except KarpError:
         raise credentials_exception
+
+
+get_user_optional = get_current_user
+
+
+def get_user(
+    security_scopes: SecurityScopes,
+    credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
+    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+) -> auth.User:
+    if security_scopes.scopes:
+        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+    else:
+        authenticate_value = "Bearer"
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": authenticate_value},
+        # code=ClientErrorCodes.NOT_PERMITTED,
+    )
+    try:
+        logger.debug(
+            "webapp.app_config.get_current_user: Calling auth_service with credentials = %s",
+            credentials,
+        )
+        return auth_service.authenticate(
+            credentials.scheme,
+            credentials.credentials
+        )
+    except KarpError:
+        raise credentials_exception
+
