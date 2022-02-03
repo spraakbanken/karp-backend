@@ -16,7 +16,7 @@ router = APIRouter(tags=["Statistics"])
 
 
 @router.get(
-    "/stats/{resource_id}/{field}",
+    "/{resource_id}/{field}",
     response_model=typing.List[StatisticsDto],
 )
 def get_field_values(

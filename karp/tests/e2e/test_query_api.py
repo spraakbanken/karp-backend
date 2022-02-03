@@ -180,7 +180,7 @@ def test_query_split(fa_data_client):
     resources = ['places', 'municipalities']
     entries = get_json(
         fa_data_client,
-        "/query_split/{}".format(','.join(resources)),
+        "/query/split/{}".format(','.join(resources)),
         headers={"Authorization": "Bearer 1234"},
     )
 

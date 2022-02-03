@@ -23,7 +23,7 @@ router = APIRouter(tags=["Querying"])
 
 # @router.get("/{resources}/query")
 @router.get(
-    "/query/{resources}",
+    "/{resources}",
     description="Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.",
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
@@ -180,7 +180,7 @@ def get_entries_by_id(
     return search_service.search_ids(resource_id, entry_ids)
 
 
-@router.get("/query_split/{resources}", name="Query per resource")
+@router.get("/split/{resources}", name="Query per resource")
 def query_split(
     resources: str = Path(
         ...,
