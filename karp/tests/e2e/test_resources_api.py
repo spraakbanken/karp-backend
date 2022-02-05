@@ -88,9 +88,8 @@ class TestCreateResource:
         print(f'{response.json()=}')
         assert response.status_code == status.HTTP_201_CREATED
 
-        response_data = response.json()
         created_resource = ResourceCreate(
-            **response_data,
+            **response.json(),
         )
         assert created_resource == new_resource
 

@@ -59,6 +59,7 @@ config = load_env()
 DATABASE_URL = parse_database_url(config)
 DATABASE_NAME = parse_database_name(config)
 
+AUTH_JWT_AUDIENCE = 'spraakbanken:auth'
 
 def parse_sqlalchemy_url_wo_db(env: environs.Env) -> DatabaseUrl:
     return DatabaseUrl.create(

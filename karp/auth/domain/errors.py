@@ -1,18 +1,28 @@
-class AuthDomainError(Exception):
+
+
+class AuthError(Exception):
     '''Auth base exception.'''
-
-
-class AuthError(AuthDomainError):
-    pass
 
 
 class ResourceNotFound(AuthError):
     pass
 
 
-class ExpiredJWTError(AuthDomainError):
-    """The given JWT has expired."""
+class TokenError(AuthError):
+    """General token error."""
 
 
-class GeneralJWTError(AuthDomainError):
-    """General JWT error."""
+class ExpiredToken(TokenError):
+    """The given token has expired."""
+
+
+class InvalidTokenSignature(TokenError):
+    pass
+
+
+class InvalidTokenAudience(TokenError):
+    pass
+
+
+class InvalidTokenPayload(TokenError):
+    pass
