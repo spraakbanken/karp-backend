@@ -27,13 +27,14 @@ environ["TESTING"] = "True"
 # environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
 # print("importing karp stuf ...")
+from karp import auth
 from karp.tests import common_data, utils  # nopep8
 from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
 import karp.lex_infrastructure.sql.sql_models  # nopep8
 from karp.db_infrastructure.db import metadata  # nopep8
 from karp.lex.domain import commands, errors, entities  # nopep8
 from karp import errors as karp_errors  # nopep8
-from karp import config  # nopep8
+from karp.tests.integration.auth.adapters import create_access_token
 
 
 
@@ -199,6 +200,8 @@ def fixture_fa_data_client(
 
     return fa_client
 
+@pytest.fixture
+def user1_token() ->
 
 # @pytest.fixture(name="places_published_scope_module", scope="module")
 # def fixture_places_published_scope_module(places_scope_module):
