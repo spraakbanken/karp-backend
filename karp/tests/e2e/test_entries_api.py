@@ -1,8 +1,9 @@
+from typing import Dict, List
 
 import pytest  # pyre-ignore
 from starlette import status
 
-from karp import config
+from karp import auth
 from karp.errors import ClientErrorCodes
 from karp.lex.application.queries.resources import GetEntryRepositoryId
 from karp.lex.application.repositories.entry_repositories import EntryUowRepositoryUnitOfWork
@@ -28,13 +29,17 @@ def get_entry_uow(container, resource_id: str):
         return uw.repo.get_by_id(entry_repo_id)
 
 
-def init(client, entries):
+def init(
+    client,
+    entries: List[Dict],
+    access_token: auth.AccessToken,
+):
 
     for entry in entries:
         response = client.post(
             '/entries/places/add',
             json={'entry': entry},
-            headers={'Authorization': 'Bearer FAKETOKEN'},
+            headers=access_token.as_header(),
         )
         assert response.status_code < 300, response.status_code
     return client
@@ -50,6 +55,7 @@ class TestEntriesRoutes:
         response = fa_data_client.post(f'/entries/places/{route}')
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
+
 class TestAddEntry:
     def test_put_route_exist(self, fa_data_client):
         response = fa_data_client.put('/entries/places')
@@ -59,16 +65,25 @@ class TestAddEntry:
         ({},),
         ({'user': 'a@b.se'},),
     ])
-    def test_invalid_data_returns_422(self, fa_data_client, invalid_data):
+    def test_invalid_data_returns_422(
+        self,
+        fa_data_client,
+        invalid_data: Dict,
+        user1_token: auth.AccessToken,
+    ):
         response = fa_data_client.post(
             '/entries/places/add',
-            json=invalid_data
+            json=invalid_data,
+            headers=user1_token.as_header(),
         )
         print(f'{response.json()=}')
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-
-    def test_add_with_valid_data_returns_201(self, fa_data_client):
+    def test_add_with_valid_data_returns_201(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
 
         response = fa_data_client.put(
             '/entries/places',
@@ -82,7 +97,7 @@ class TestAddEntry:
                     'municipality': [2, 3],
                 }
             },
-            headers={'Authorization': 'Bearer FAKETOKEN'},
+            headers=user1_token.as_header(),
         )
         print(f'response. = {response.json()}')
         assert response.status_code == 201
@@ -97,7 +112,11 @@ class TestAddEntry:
         with entry_uow as uw:
             assert '203' in uw.repo.entry_ids()
 
-    def test_adding_existing_fails_with_400(self, fa_data_client):
+    def test_adding_existing_fails_with_400(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 204
         entry_name = f'add{entry_id}'
         response = fa_data_client.post(
@@ -112,7 +131,7 @@ class TestAddEntry:
                     'municipality': [2, 3],
                 }
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         print(f'response = {response.json()}')
 
@@ -130,7 +149,7 @@ class TestAddEntry:
                     'municipality': [2, 3],
                 }
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         assert response.status_code == 400
         response_data = response.json()
@@ -144,9 +163,15 @@ class TestAddEntry:
         )
 
 
-    def test_add_fails_with_invalid_entry(self, fa_data_client):
+    def test_add_fails_with_invalid_entry(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         response = fa_data_client.post(
-            '/entries/places/add', json={'entry': {}}, headers={'Authorization': 'Bearer 1234'}
+            '/entries/places/add',
+            json={'entry': {}},
+            headers=user1_token.as_header()
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -158,7 +183,11 @@ class TestAddEntry:
 
 
 class TestDeleteEntry:
-    def test_delete(self, fa_data_client):
+    def test_delete(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 205
         entry_name = f'delete{entry_id}'
         response = fa_data_client.post(
@@ -173,12 +202,12 @@ class TestDeleteEntry:
                     'municipality': [2, 3],
                 }
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
 
         response = fa_data_client.delete(
             f'/entries/places/{entry_id}/delete',
-            headers={'Authorization': 'Bearer 1234'}
+            headers=user1_token.as_header()
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -192,13 +221,17 @@ class TestDeleteEntry:
             assert str(entry_id) not in uw.repo.entry_ids()
 
 
-    def test_delete_non_existing_fails(self, fa_data_client):
+    def test_delete_non_existing_fails(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
 
         entry_id = 'non_existing_id'
 
         response = fa_data_client.delete(
             f'/entries/places/{entry_id}/delete',
-            headers={'Authorization': 'Bearer 1234'}
+            headers=user1_token.as_header()
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -214,7 +247,11 @@ class TestDeleteEntry:
 
 
 class TestUpdateEntry:
-    def test_update_non_existing_fails(self, fa_data_client):
+    def test_update_non_existing_fails(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 'non-existent'
         response = fa_data_client.post(
             f'/entries/places/{entry_id}/update',
@@ -230,7 +267,7 @@ class TestUpdateEntry:
                 'message': 'changes',
                 'version': 1,
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         assert response.status_code == status.HTTP_404_NOT_FOUND
         response_data = response.json()
@@ -242,7 +279,11 @@ class TestUpdateEntry:
         )
 
 
-    def test_update_wo_changes_succeeds(self, fa_data_client):
+    def test_update_wo_changes_succeeds(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 206
         entry_name = f'update{entry_id}'
         response = fa_data_client.post(
@@ -257,7 +298,7 @@ class TestUpdateEntry:
                     'municipality': [2, 3],
                 }
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         print(f'response = {response.json()}')
 
@@ -277,11 +318,15 @@ class TestUpdateEntry:
                 'message': 'changes',
                 'version': 1,
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
 
-    def test_update_wrong_version_fails(self, fa_data_client):
+    def test_update_wrong_version_fails(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 207
         response = fa_data_client.post(
             '/entries/places/add',
@@ -295,7 +340,7 @@ class TestUpdateEntry:
                     'municipality': [2, 3],
                 }
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         print(f'response = {response.json()}')
 
@@ -315,7 +360,7 @@ class TestUpdateEntry:
                 'message': 'changes',
                 'version': 2,
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
             #         ),
             #         content_type='application/json',
         )
@@ -329,7 +374,11 @@ class TestUpdateEntry:
         ]
 
 
-    def test_update_returns_200_on_valid_data(self, fa_data_client):
+    def test_update_returns_200_on_valid_data(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 208
         entry_name = f'update{entry_id}'
         response = fa_data_client.post(
@@ -344,7 +393,7 @@ class TestUpdateEntry:
                     'municipality': [2, 3],
                 }
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         print(f'response = {response.json()}')
 
@@ -364,7 +413,7 @@ class TestUpdateEntry:
                 'message': 'changes',
                 'version': 1,
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         assert response.status_code == 200
         response_data = response.json()
@@ -379,7 +428,11 @@ class TestUpdateEntry:
             assert str(entry_id) in uw.repo.entry_ids()
 
 
-    def test_update_several_times(self, fa_data_client):
+    def test_update_several_times(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 209
         response = fa_data_client.post(
             '/entries/places/add',
@@ -390,7 +443,7 @@ class TestUpdateEntry:
                     'municipality': [1]
                 }
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         assert response.status_code == status.HTTP_201_CREATED
 
@@ -406,14 +459,18 @@ class TestUpdateEntry:
                     'message': 'changes',
                     'version': i - 1,
                 },
-                headers={'Authorization': 'Bearer 1234'},
+                headers=user1_token.as_header(),
             )
             print(f'i = {i}: response = {response.json()}')
             assert response.status_code == status.HTTP_200_OK
 
 
     @pytest.mark.xfail()
-    def test_update_entry_id(fa_data_client):
+    def test_update_entry_id(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 210
         response = fa_data_client.post(
             '/entries/places/add',
@@ -427,7 +484,7 @@ class TestUpdateEntry:
                     'municipality': [2, 3],
                 }
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         assert response.status_code == 201
 
@@ -445,7 +502,7 @@ class TestUpdateEntry:
                 'message': 'changes',
                 'version': 1,
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
         response_data = response.json()
         print(f'{response.json()=}')
@@ -461,17 +518,25 @@ class TestUpdateEntry:
             assert str(entry_id + 1) in entry_ids
 
 
-    def test_update_changes_last_modified(self, fa_data_client):
+    def test_update_changes_last_modified(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
         entry_id = 212
         before_add = utc_now()
 
-        init(fa_data_client, [
-             {
-                 'code': entry_id,
-                 'name': 'last_modified1',
-                 'municipality': [1]
-             }
-        ])
+        init(
+            fa_data_client,
+            [
+                {
+                    'code': entry_id,
+                    'name': 'last_modified1',
+                    'municipality': [1]
+                },
+            ],
+            user1_token
+        )
 
         after_add = utc_now()
 
@@ -495,7 +560,7 @@ class TestUpdateEntry:
                 'message': 'changes',
                 'version': 1,
             },
-            headers={'Authorization': 'Bearer 1234'},
+            headers=user1_token.as_header(),
         )
 
         after_update = utc_now()
@@ -507,16 +572,45 @@ class TestUpdateEntry:
 
 
 class TestGetEntry:
-    def test_get_version_by_entry_id(self, fa_data_client):
+    def test_get_entry_wo_auth_returns_403(self, fa_data_client):
         response = fa_data_client.get('/entries/places/204')
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    def test_get_entry_w_lower_auth_returns_401(
+        self,
+        fa_data_client,
+        user1_token: auth.AccessToken,
+    ):
+        response = fa_data_client.get(
+            '/entries/places/204',
+            headers=user1_token.as_header(),
+        )
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+    def test_get_entry_by_entry_id(
+        self,
+        fa_data_client,
+        admin_token: auth.AccessToken,
+    ):
+        response = fa_data_client.get(
+            '/entries/places/204',
+            headers=admin_token.as_header(),
+        )
         assert response.status_code == status.HTTP_200_OK
 
         entry = EntryDto(**response.json())
         assert entry.entry_id == '204'
         assert entry.version == 1
 
-    def test_route_w_version_exist(self, fa_data_client):
-        response = fa_data_client.get('/entries/places/209/5')
+    def test_route_w_version_exist(
+        self,
+        fa_data_client,
+        admin_token: auth.AccessToken,
+    ):
+        response = fa_data_client.get(
+            '/entries/places/209/5',
+            headers=admin_token.as_header(),
+        )
         assert response.status_code == status.HTTP_200_OK
 
         entry = EntryDto(**response.json())
@@ -538,7 +632,7 @@ def test_update_wrong_id(fa_data_client):
                 'municipality': [2, 3],
             }
         },
-        headers={'Authorization': 'Bearer 1234'},
+        headers=user1_token.as_header(),
     )
     print(f'response = {response.json()}')
 
@@ -567,9 +661,7 @@ def test_update_wrong_id(fa_data_client):
             'message': 'changes',
             'version': 1,
         },
-        headers={'Authorization': 'Bearer 1234'},
-        #         ),
-        #         content_type='application/json',
+        headers=user1_token.as_header(),
     )
     assert response.status_code == 400
     response_data = response.json()

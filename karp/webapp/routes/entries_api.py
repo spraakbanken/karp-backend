@@ -14,7 +14,7 @@ from karp.foundation.value_objects import PermissionLevel, unique_id
 from karp.auth import AuthService
 from karp.webapp import schemas
 
-from karp.webapp.dependencies.auth import get_current_user
+from karp.webapp.dependencies.auth import get_user
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 router = APIRouter()
@@ -29,7 +29,7 @@ def get_history_for_entry(
     resource_id: str,
     entry_id: str,
     version: Optional[int] = Query(None),
-    user: auth.User = Security(get_current_user, scopes=["read"]),
+    user: auth.User = Security(get_user, scopes=["admin"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
     get_entry_history: GetEntryHistory = Depends(
         inject_from_req(GetEntryHistory)),
@@ -40,7 +40,7 @@ def get_history_for_entry(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="read"'},
+            headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
     historical_entry = get_entry_history.query(
         resource_id, entry_id, version=version
@@ -54,7 +54,7 @@ def get_history_for_entry(
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
-    user: User = Security(get_current_user, scopes=["write"]),
+    user: User = Security(get_user, scopes=["write"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
     bus: CommandBus = Depends(inject_from_req(CommandBus)),
     entry_views: EntryViews = Depends(inject_from_req(EntryViews)),
@@ -105,7 +105,7 @@ def update_entry(
     resource_id: str,
     entry_id: str,
     data: schemas.EntryUpdate,
-    user: User = Security(get_current_user, scopes=["write"]),
+    user: User = Security(get_user, scopes=["write"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
     bus: CommandBus = Depends(inject_from_req(CommandBus)),
     entry_views: EntryViews = Depends(inject_from_req(EntryViews)),
@@ -176,7 +176,7 @@ def update_entry(
 def delete_entry(
     resource_id: str,
     entry_id: str,
-    user: User = Security(get_current_user, scopes=["write"]),
+    user: User = Security(get_user, scopes=["write"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
     bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):

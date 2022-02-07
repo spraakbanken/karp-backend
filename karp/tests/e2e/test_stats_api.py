@@ -1,27 +1,25 @@
 import pytest
-
-# from karp.application.services import entries, resources
-
-# from karp.tests.common_data import MUNICIPALITIES, PLACES
-# from karp.tests.utils import get_json, add_entries
+from fastapi import status
+from karp import auth
 
 
-# @pytest.fixture(scope="session", name="fa_stats_data_client")
-# def fixture_fa_stats_data_client(fa_client_w_places_w_municipalities_scope_module):
-#     add_entries(
-#         fa_client_w_places_w_municipalities_scope_module,
-#         {"places": PLACES, "municipalities": MUNICIPALITIES},
-#     )
-
-#     return fa_client_w_places_w_municipalities_scope_module
-
-
-def test_stats(fa_data_client):
+def test_stats_wo_auth(fa_data_client):
     response = fa_data_client.get(
         "/stats/places/area",
-        headers={"Authorization": "Bearer 1234"},
     )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
+
+    entries = response.json()
+    print(f'{entries=}')
+    assert len(entries) == 4
+
+
+def test_stats_w_auth(fa_data_client, read_token: auth.AccessToken):
+    response = fa_data_client.get(
+        "/stats/places/area",
+        headers=read_token.as_header(),
+    )
+    assert response.status_code == status.HTTP_200_OK
 
     entries = response.json()
     print(f'{entries=}')

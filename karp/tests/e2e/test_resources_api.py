@@ -1,6 +1,7 @@
 import pytest
 from starlette import status
 
+from karp import auth
 from karp.foundation.value_objects import unique_id
 from karp.webapp.schemas import ResourceCreate, ResourcePublic
 
@@ -18,11 +19,6 @@ def new_resource() -> ResourceCreate:
             'id': 'foo',
         },
     )
-
-
-@pytest.fixture
-def auth_header_value() -> str:
-    return 'Bearer FAKETOKEN'
 
 
 class TestResourcesRoutes:
@@ -64,12 +60,12 @@ class TestCreateResource:
     def test_invalid_data_returns_422(
         self,
         fa_data_client,
-        auth_header_value: str
+        admin_token: auth.AccessToken
     ):
         response = fa_data_client.post(
             "/resources/",
             json={},
-            headers={'Authorization': auth_header_value},
+            headers=admin_token.as_header(),
         )
         print(f'{response.json()=}')
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -78,12 +74,12 @@ class TestCreateResource:
         self,
         fa_data_client,
         new_resource: ResourceCreate,
-        auth_header_value: str
+        admin_token: auth.AccessToken
     ):
         response = fa_data_client.post(
             '/resources/',
             json=new_resource.dict(),
-            headers={'Authorization': auth_header_value},
+            headers=admin_token.as_header(),
         )
         print(f'{response.json()=}')
         assert response.status_code == status.HTTP_201_CREATED

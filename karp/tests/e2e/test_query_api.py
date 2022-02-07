@@ -2,25 +2,12 @@ import json
 from typing import Callable, Dict, List, Optional, Tuple
 
 import pytest  # pyre-ignore
+from fastapi import status
+
+from karp import auth
 from karp.lex.application.queries import EntryViews
 from karp.tests.common_data import MUNICIPALITIES, PLACES
 from karp.tests.utils import add_entries, get_json
-
-# import time
-
-
-
-
-# @pytest.fixture(scope="session", name="fa_data_client")
-# @pytest.mark.usefixtures("places_published")
-# @pytest.mark.usefixtures("main_db")
-# def fixture_fa_data_client(fa_client, municipalites_published):
-#     add_entries(
-#         fa_client,
-#         {"places": PLACES, "municipalities": MUNICIPALITIES},
-#     )
-
-#     return fa_client
 
 
 def extract_names(entries):
@@ -32,11 +19,20 @@ def extract_names_set(entries):
 
 
 def _test_path(
-    client, path: str, expected_result: List[str], *, headers: Optional[Dict] = None
-):
-    if headers is None:
-        headers = {"Authorization": "Bearer 1234"}
-    entries = get_json(client, path, headers=headers)
+    client, path: str,
+    expected_result: List[str],
+    *,
+    access_token: Optional[auth.AccessToken] = None,
+    headers: Optional[Dict] = None,
+) -> None:
+    if access_token:
+        if headers is None:
+            headers = access_token.as_header()
+        else:
+            headers.extend(access_token.as_header())
+    kwargs = {'headers': headers} if headers else {}
+
+    entries = get_json(client, path, **kwargs)
 
     names = extract_names(entries)
     print("names = {names}".format(names=names))
@@ -51,11 +47,21 @@ def _test_path(
 
 
 def _test_path_has_expected_length(
-    client, path: str, expected_length: int, *, headers: Optional[Dict] = None
-):
-    if headers is None:
-        headers = {"Authorization": "Bearer 1234"}
-    entries = get_json(client, path, headers=headers)
+    client,
+    path: str,
+    expected_length: int,
+    *,
+    access_token: Optional[auth.AccessToken] = None,
+    headers: Optional[Dict] = None,
+) -> None:
+    if access_token:
+        if headers is None:
+            headers = access_token.as_header()
+        else:
+            headers.extend(access_token.as_header())
+    kwargs = {'headers': headers} if headers else {}
+
+    entries = get_json(client, path, **kwargs)
 
     assert len(entries["hits"]) == expected_length
 
@@ -67,11 +73,17 @@ def _test_against_entries(
     predicate: Callable,
     expected_n_hits: int = None,
     *,
+    access_token: Optional[auth.AccessToken] = None,
     headers: Optional[Dict] = None,
-):
-    if headers is None:
-        headers = {"Authorization": "Bearer 1234"}
-    entries = get_json(client, path, headers=headers)
+) -> None:
+    if access_token:
+        if headers is None:
+            headers = access_token.as_header()
+        else:
+            headers.extend(access_token.as_header())
+    kwargs = {'headers': headers} if headers else {}
+
+    entries = get_json(client, path, **kwargs)
     names = extract_names(entries)
 
     if field.endswith(".raw"):
@@ -99,11 +111,17 @@ def _test_against_entries_general(
     predicate: Callable,
     expected_n_hits: int = None,
     *,
+    access_token: Optional[auth.AccessToken] = None,
     headers: Optional[Dict] = None,
-):
-    if headers is None:
-        headers = {"Authorization": "Bearer 1234"}
-    entries = get_json(client, path, headers=headers)
+) -> None:
+    if access_token:
+        if headers is None:
+            headers = access_token.as_header()
+        else:
+            headers.extend(access_token.as_header())
+    kwargs = {'headers': headers} if headers else {}
+
+    entries = get_json(client, path, **kwargs)
     names = extract_names(entries)
 
     print("names = {names}".format(names=names))
@@ -114,16 +132,9 @@ def _test_against_entries_general(
     for field in fields:
         print("field = {field}".format(field=field))
 
-    # assert len(names) == sum(1 for entry in PLACES
-    #                          if all(field in entry for field in fields) and predicate([entry[field]
-    #                          for field in fields]))
-
     num_names_to_match = len(names)
     for entry in PLACES:
         print("entry = {entry}".format(entry=entry))
-        # if all(field in entry for field in fields) and predicate(
-        #     [entry[field] for field in fields]
-        # ):
         if predicate(entry, fields):
             print("entry '{entry}' satisfied predicate".format(entry=entry))
             assert entry["name"] in names
@@ -134,15 +145,26 @@ def _test_against_entries_general(
         assert len(entries["hits"]) == expected_n_hits
 
 
-def test_query_no_q(fa_data_client):
+class TestQuery:
+    def test_route_exist(self, fa_data_client):
+        response = fa_data_client.get('/query/places')
+        print(f'{response.json()=}')
+        assert response.status_code != status.HTTP_404_NOT_FOUND
+
+def test_query_no_q(
+    fa_data_client,
+    read_token: auth.AccessToken,
+):
     resource = 'places'
     entries = get_json(
-        fa_data_client, f'/query/{resource}', headers={"Authorization": "Bearer 1234"}
+        fa_data_client,
+        f'/query/{resource}',
+        headers=read_token.as_header(),
     )
 
     names = extract_names(entries)
 
-    entry_views = fa_data_client.app.state.container.get(EntryViews)
+    entry_views = fa_data_client.app.state.app_context.container.get(EntryViews)
     expected_result = {}
     expected_total = entry_views.get_total(resource)
     print(f"entries = {entries}")
@@ -176,15 +198,18 @@ def test_query_no_q(fa_data_client):
             assert "v_smaller_places" in entries["hits"][i]["entry"]
 
 
-def test_query_split(fa_data_client):
+def test_query_split(
+    fa_data_client,
+    read_token: auth.AccessToken,
+):
     resources = ['places', 'municipalities']
     entries = get_json(
         fa_data_client,
         "/query/split/{}".format(','.join(resources)),
-        headers={"Authorization": "Bearer 1234"},
+        headers=read_token.as_header(),
     )
 
-    entry_views = fa_data_client.app.state.container.get(EntryViews)
+    entry_views = fa_data_client.app.state.app_context.container.get(EntryViews)
     expected_result = {}
     for resource in resources:
         expected_result[resource] = entry_views.get_total(resource)
@@ -200,7 +225,11 @@ def test_query_split(fa_data_client):
         (["regexp|name|.*bo.*", "equals|area|50000", "missing|density"], ["Hambo"]),
     ],
 )
-def test_and(fa_data_client, queries: List[str], expected_result: List[str]):
+def test_and(
+    fa_data_client,
+    queries: List[str],
+    expected_result: List[str],
+):
     query = "/query/places?q=and||{queries}".format(queries="||".join(queries))
     _test_path(fa_data_client, query, expected_result)
 
@@ -259,7 +288,7 @@ def test_contains_and_separate_calls(
     for field, value in zip(fields, values):
         query = f"/query/places?q=contains|{field}|{value}"
         entries = get_json(
-            fa_data_client, query, headers={"Authorization": "Bearer 1234"}
+            fa_data_client, query,
         )
         if not names:
             print("names is empty")
@@ -925,7 +954,6 @@ def test_pagination_explicit_0_5(fa_data_client):
     json_data = get_json(
         fa_data_client,
         f"/query/{resource}?from=0&size=5",
-        headers={"Authorization": "Bearer 1234"},
     )
     assert "hits" in json_data
     assert "distribution" in json_data
@@ -936,7 +964,6 @@ def test_pagination_explicit_0_5(fa_data_client):
 
     response = fa_data_client.get(
         f"/query/{resource}?from=3&size=5&lexicon_stats=false",
-        headers={"Authorization": "Bearer 1234"},
     )
     assert response.status_code == 200
     json_data = response.json()
@@ -974,7 +1001,7 @@ def test_pagination_fewer(fa_data_client):
     # client = init_data(client_with_data_f, es, 5)
     resource = "places"
     response = fa_data_client.get(
-        f"/query/{resource}?from=10", headers={"Authorization": "Bearer 1234"}
+        f"/query/{resource}?from=10",
     )
     assert response.status_code == 200
     json_data = response.json()
@@ -1018,7 +1045,6 @@ def test_distribution_in_result(fa_data_client, query: str, endpoint: str):
     result = get_json(
         fa_data_client,
         f"/{endpoint}/places?{f'q={query}&' if query else ''}lexicon_stats=true",
-        headers={"Authorization": "Bearer 1234"},
     )
 
     assert "distribution" in result
@@ -1029,7 +1055,6 @@ def test_sorting(fa_data_client, endpoint: str):
     result = get_json(
         fa_data_client,
         f"/{endpoint}/places?sort=population|desc",
-        headers={"Authorization": "Bearer 1234"},
     )
 
     assert (
@@ -1043,7 +1068,6 @@ def test_query_include_fields(fa_data_client, fields: List[str]) -> None:
     result = get_json(
         fa_data_client,
         f"/query/places?{'&'.join((f'include_field={field}' for field in fields))}",
-        headers={"Authorization": "Bearer 1234"},
     )
 
     for entry in (entry["entry"] for entry in result["hits"]):

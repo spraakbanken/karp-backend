@@ -8,8 +8,8 @@ from karp.foundation.value_objects import PermissionLevel
 from karp.search.application.queries import SearchService, StatisticsDto
 from karp.webapp import schemas
 
-from .app_config import get_current_user
-from .fastapi_injector import inject_from_req
+from karp.webapp.dependencies.auth import get_current_user
+from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 
 router = APIRouter(tags=["Statistics"])

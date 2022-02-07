@@ -3,6 +3,7 @@
 # pylint: disable=wrong-import-position,missing-function-docstring
 import os
 import json
+import typing
 from typing import Dict
 
 from fastapi import FastAPI
@@ -27,14 +28,14 @@ environ["TESTING"] = "True"
 # environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
 # print("importing karp stuf ...")
-from karp import auth
+from karp import auth, config
 from karp.tests import common_data, utils  # nopep8
 from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
 import karp.lex_infrastructure.sql.sql_models  # nopep8
 from karp.db_infrastructure.db import metadata  # nopep8
 from karp.lex.domain import commands, errors, entities  # nopep8
 from karp import errors as karp_errors  # nopep8
-from karp.tests.integration.auth.adapters import create_access_token
+from karp.tests.integration.auth.adapters import create_bearer_token
 
 
 
@@ -76,7 +77,7 @@ def fixture_app(apply_migrations: None, init_search_service: None):
     from karp.webapp.main import create_app
 
     app = create_app()
-    app.state.app_context.container.binder.install(TestAuthInfrastructure())
+    # app.state.app_context.container.binder.install(TestAuthInfrastructure())
     yield app
 
 
@@ -189,279 +190,100 @@ def municipalities_published(app):
 # @pytest.mark.usefixtures("places_published")
 # @pytest.mark.usefixtures("main_db")
 def fixture_fa_data_client(
-    fa_client
+    fa_client,
+    admin_token: auth.AccessToken,
 ):
     places_published(fa_client.app)
     municipalities_published(fa_client.app)
     utils.add_entries(
         fa_client,
         {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
+        access_token=admin_token,
     )
 
     return fa_client
 
-@pytest.fixture
-def user1_token() ->
 
-# @pytest.fixture(name="places_published_scope_module", scope="module")
-# def fixture_places_published_scope_module(places_scope_module):
-#     resources.publish_resource(places_scope_module.resource_id)
+@pytest.fixture(scope='session')
+def auth_levels() -> typing.Dict[str, int]:
+    curr_level = 10
+    levels = {}
+    for level in auth.PermissionLevel:
+        levels[level.name] = curr_level
+        curr_level += 10
 
-#     return places_scope_module
-
-
-# @pytest.fixture(name="municipalities_published_scope_module", scope="module")
-# def fixture_municipalities_published_scope_module(municipalities_scope_module):
-#     resources.publish_resource(municipalities_scope_module.resource_id)
-
-#     return municipalities_scope_module
+    return levels
 
 
-# @pytest.fixture(name="fa_client_w_places")
-# def fixture_fa_client_w_places(fa_client, places_published, es):
-
-#     return fa_client
-
-
-# @pytest.fixture(name="fa_client_w_places_scope_module", scope="module")
-# def fixture_fa_client_w_places_scope_module(
-#     fa_client_scope_module, places_published_scope_module, es
-# ):
-
-#     return fa_client_scope_module
-
-
-# @pytest.fixture(name="fa_client_w_places_w_municipalities_scope_module", scope="module")
-# def fixture_fa_client_w_places_w_municipalities_scope_module(
-#     fa_client_scope_module,
-#     places_published_scope_module,
-#     municipalities_published_scope_module,
-#     es,
-# ):
-
-#     return fa_client_scope_module
+@pytest.fixture(scope='session')
+def user1_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+    return create_bearer_token(
+        user='user1',
+        levels=auth_levels,
+        scope={
+            'lexica': {
+                'places': auth_levels[auth.PermissionLevel.write],
+            }
+        }
+    )
 
 
-# # from dotenv import load_dotenv
-# #
-# # load_dotenv(dotenv_path=".env")
-# #
-# #
-# # from karp.infrastructure.sql.sql_models import db
-# # from karp import create_app  # noqa: E402
-# # from karp.config import Config  # noqa: E402
-# # import karp.resourcemgr as resourcemgr  # noqa: E402
-# # import karp.indexmgr as indexmgr  # noqa: E402
-# # from karp.database import ResourceDefinition  # noqa: E402
-# #
-# #
+@pytest.fixture(scope='session')
+def user2_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+    return create_bearer_token(
+        user='user2',
+        levels=auth_levels,
+        scope={
+            'lexica': {
+                'places': auth_levels[auth.PermissionLevel.write],
+            }
+        }
+    )
 
-# #
-# #
-# # class ConfigTest(Config):
-# #     """[summary]
-# #
-# #     Arguments:
-# #         Config {[type]} -- [description]
-# #     """
-# #
-# #     SQLALCHEMY_DATABASE_URI = "sqlite://"
-# #     TESTING = True
-# #     SETUP_DATABASE = False
-# #     JWT_AUTH = False
-# #     ELASTICSEARCH_ENABLED = False
-# #     CONSOLE_LOG_LEVEL = "WARNING"
-# #
-# #     def __init__(self, use_elasticsearch=False):
-# #         if use_elasticsearch:
-# #             self.ELASTICSEARCH_ENABLED = True
-# #             self.ELASTICSEARCH_HOST = "http://localhost:9201"
-# #
-# #
-# # @pytest.fixture(name="app_f")
-# # def fixture_app_f():
-# #     """[summary]
-# #
-# #     Returns:
-# #         [type] -- [description]
-# #
-# #     Yields:
-# #         [type] -- [description]
-# #     """
-# #
-# #     def fun(**kwargs):
-# #         app = create_app(ConfigTest(**kwargs))
-# #         with app.app_context():
-# #             ResourceDefinition.__table__.create(bind=db.engine)
-# #             yield app
-# #
-# #             db.session.remove()
-# #             db.drop_all()
-# #
-# #     return fun
-# #
-# #
-# # @pytest.fixture(name="app_f_scope_module", scope="module")
-# # def fixture_app_f_scope_module():
-# #     def fun(**kwargs):
-# #         app = create_app(ConfigTest(**kwargs))
-# #         with app.app_context():
-# #             ResourceDefinition.__table__.create(bind=db.engine)
-# #             yield app
-# #
-# #             db.session.remove()
-# #             db.drop_all()
-# #
-# #     return fun
-# #
-# #
-# # @pytest.fixture(name="app_f_scope_session", scope="session")
-# # def fixture_app_f_scope_session():
-# #     def fun(**kwargs):
-# #         app = create_app(ConfigTest(**kwargs))
-# #         with app.app_context():
-# #             ResourceDefinition.__table__.create(bind=db.engine)
-# #             yield app
-# #
-# #             db.session.remove()
-# #             db.drop_all()
-# #
-# #     return fun
-# #
-# #
-# # @pytest.fixture(name="app_scope_module", scope="module")
-# # def fixture_app_scope_module():
-# #     app = create_app(ConfigTest)
-# #     with app.app_context():
-# #         ResourceDefinition.__table__.create(bind=db.engine)
-# #         yield app
-# #
-# #         db.session.remove()
-# #         db.drop_all()
-# #
-# #
-# # @pytest.fixture(name="app_with_data_f")
-# # def fixture_app_with_data_f(app_f):
-# #     def fun(**kwargs):
-# #         app = next(app_f(**kwargs))
-# #         with app.app_context():
-# #             for file in [
-# #                 "karp/tests/data/config/places.json",
-# #                 "karp/tests/data/config/municipalities.json",
-# #             ]:
-# #                 with open(file) as fp:
-# #                     resource, version = resourcemgr.create_new_resource_from_file(fp)
-# #                     resourcemgr.setup_resource_class(resource, version)
-# #                     if kwargs.get("use_elasticsearch", False):
-# #                         indexmgr.publish_index(resource, version)
-# #         return app
-# #
-# #     yield fun
-# #
-# #
-# # @pytest.fixture(name="app_with_data_f_scope_module", scope="module")
-# # def fixture_app_with_data_f_scope_module(app_f_scope_module):
-# #     def fun(**kwargs):
-# #         app = next(app_f_scope_module(**kwargs))
-# #         with app.app_context():
-# #             for file in [
-# #                 "karp/tests/data/config/places.json",
-# #                 "karp/tests/data/config/municipalities.json",
-# #             ]:
-# #                 with open(file) as fp:
-# #                     resource, version = resourcemgr.create_new_resource_from_file(fp)
-# #                     resourcemgr.setup_resource_class(resource, version)
-# #                     if kwargs.get("use_elasticsearch", False):
-# #                         indexmgr.publish_index(resource, version)
-# #         return app
-# #
-# #     yield fun
-# #
-# #
-# # @pytest.fixture(name="app_with_data_f_scope_session", scope="session")
-# # def fixture_app_with_data_f_scope_session(app_f_scope_session):
-# #     def fun(**kwargs):
-# #         app = next(app_f_scope_session(**kwargs))
-# #         with app.app_context():
-# #             for file in [
-# #                 "karp/tests/data/config/places.json",
-# #                 "karp/tests/data/config/municipalities.json",
-# #             ]:
-# #                 with open(file) as fp:
-# #                     resource, version = resourcemgr.create_new_resource(fp)
-# #                     resourcemgr.setup_resource_class(resource, version)
-# #                     if kwargs.get("use_elasticsearch", False):
-# #                         indexmgr.publish_index(resource, version)
-# #         return app
-# #
-# #     yield fun
-# #
-# #
-# # @pytest.fixture(name="app_with_data")
-# # def fixture_app_with_data(app):
-# #     with app.app_context():
-# #         with open("karp/tests/data/config/places.json") as fp:
-# #             resourcemgr.create_new_resource_from_file(fp)
-# #         with open("karp/tests/data/config/municipalities.json") as fp:
-# #             resourcemgr.create_new_resource_from_file(fp)
-# #     return app
-# #
-# #
-# # @pytest.fixture(name="app_with_data_scope_module", scope="module")
-# # def fixture_app_with_data_scope_module(app_scope_module):
-# #     with app_scope_module.app_context():
-# #         with open("karp/tests/data/config/places.json") as fp:
-# #             resourcemgr.create_new_resource_from_file(fp)
-# #         with open("karp/tests/data/config/municipalities.json") as fp:
-# #             resourcemgr.create_new_resource_from_file(fp)
-# #
-# #     return app_scope_module
-# #
-# #
-# # @pytest.fixture(name="client")
-# # def fixture_client(app_f):
-# #     app = next(app_f())
-# #     return app.test_client()
-# #
-# #
-# # @pytest.fixture
-# # def client_with_data_f(app_with_data_f):
-# #     def fun(**kwargs):
-# #         app_with_data = app_with_data_f(**kwargs)
-# #         return app_with_data.test_client()
-# #
-# #     return fun
-# #
-# #
-# # @pytest.fixture(scope="module")
-# # def client_with_data_f_scope_module(app_with_data_f_scope_module):
-# #     def fun(**kwargs):
-# #         app_with_data = app_with_data_f_scope_module(**kwargs)
-# #         return app_with_data.test_client()
-# #
-# #     return fun
-# #
-# #
-# # @pytest.fixture(name="client_with_data_f_scope_session", scope="session")
-# # def fixture_client_with_data_f_scope_session(app_with_data_f_scope_session):
-# #     def fun(**kwargs):
-# #         app_with_data = app_with_data_f_scope_session(**kwargs)
-# #         return app_with_data.test_client()
-# #
-# #     return fun
-# #
-# #
-# # @pytest.fixture(name="client_with_data_scope_module", scope="module")
-# # def fixture_client_with_data_scope_module(app_with_data_scope_module):
-# #     return app_with_data_scope_module.test_client()
-# #
-# #
-# # @pytest.fixture
-# # def runner(app_f):
-# #     app = next(app_f())
-# #     return app.test_cli_runner()
-# #
-# #
+
+@pytest.fixture(scope='session')
+def user4_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+    return create_bearer_token(
+        user='user4',
+        levels=auth_levels,
+        scope={
+            'lexica': {
+                'places': auth_levels[auth.PermissionLevel.admin],
+            }
+        }
+    )
+
+
+@pytest.fixture(scope='session')
+def admin_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+    return create_bearer_token(
+        user='alice@example.com',
+        levels=auth_levels,
+        scope={
+            'lexica': {
+                'places': auth_levels[auth.PermissionLevel.admin],
+                'test_resource': auth_levels[auth.PermissionLevel.admin],
+                'municipalities': auth_levels[auth.PermissionLevel.admin],
+            }
+        }
+    )
+
+
+@pytest.fixture(scope='session')
+def read_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+    return create_bearer_token(
+        user='alice@example.com',
+        levels=auth_levels,
+        scope={
+            'lexica': {
+                'places': auth_levels[auth.PermissionLevel.read],
+                'test_resource': auth_levels[auth.PermissionLevel.read],
+                'municipalities': auth_levels[auth.PermissionLevel.read],
+            }
+        }
+    )
+
+
 @pytest.fixture(name="init_search_service", scope="session")
 def fixture_init_search_service():
     print("fixture: use_main_index")

@@ -6,6 +6,7 @@ import jwt
 
 from karp.foundation.time import utc_now
 
+from karp.auth import AccessToken
 from karp.main.config import AUTH_JWT_AUDIENCE
 
 
@@ -52,3 +53,13 @@ def create_access_token(
     )
     return access_token
 
+
+def create_bearer_token(
+    user: str,
+    levels: Dict,
+    scope: Optional[Dict] = None,
+) -> AccessToken:
+    return AccessToken(
+        access_token=create_access_token(user, levels, scope),
+        token_type='bearer',
+    )
