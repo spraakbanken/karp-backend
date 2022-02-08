@@ -52,7 +52,7 @@ class Es6Index(Index):
 
     def create_index(self, resource_id, config):
         print("creating es mapping ...")
-        mapping = _create_es_mapping(config)
+        mapping = create_es6_mapping(config)
 
         properties = mapping["properties"]
         properties["freetext"] = {"type": "text"}
@@ -366,10 +366,12 @@ def _create_es_mapping(config):
                 mapped_type = "boolean"
             elif parent_field_def["type"] == "string":
                 mapped_type = "text"
+            elif parent_field_def['type'] == 'long_string':
+                mapped_type = 'text'
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
-            if mapped_type == "text" and not parent_field_def.get("skip_raw", False):
+            if parent_field_def['type'] == 'string':
                 result["fields"] = {"raw": {"type": "keyword"}}
         else:
             result = {"properties": {}}
@@ -384,6 +386,62 @@ def _create_es_mapping(config):
         recursive_field(es_mapping, field_name, field_def)
 
     return es_mapping
+
+
+def create_es6_mapping(config: Dict) -> Dict:
+    mapping = _create_es_mapping(config)
+    mapping['settings'] = {
+        'analysis': {
+            'analyzer': {
+                'default': {
+                    'char_filter': [
+                        'compound',
+                        'swedish_aa',
+                        'swedish_ae',
+                        'swedish_oe'
+                    ],
+                    'filter': [
+                        'swedish_folding',
+                        'lowercase'
+                    ],
+                    'tokenizer': 'standard'
+                }
+            },
+            'char_filter': {
+                'compound': {
+                    'pattern': '-',
+                    'replacement': '',
+                    'type': 'pattern_replace'
+                },
+                'swedish_aa': {
+                    'pattern': '[Ǻǻ]',
+                    'replacement': 'å',
+                    'type': 'pattern_replace'
+                },
+                'swedish_ae': {
+                    'pattern': '[æÆǞǟ]',
+                    'replacement': 'ä',
+                    'type': 'pattern_replace'
+                },
+                'swedish_oe': {
+                    'pattern': '[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]',
+                    'replacement': 'ö',
+                    'type': 'pattern_replace'
+                },
+            },
+            'filter': {
+                'swedish_folding': {
+                    'type': 'icu_folding',
+                    'unicodeSetFilter': '[^åäöÅÄÖ]'
+                },
+                'swedish_sort': {
+                    'language': 'sv',
+                    'type': 'icu_collation'
+                }
+            }
+        }
+    }
+    return mapping
 
 
 class Es6IndexUnitOfWork(
