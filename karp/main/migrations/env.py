@@ -42,7 +42,7 @@ def run_migrations_online():
         else:
             # connect to primary db
             default_engine = create_engine(
-                str(karp_config.parse_sqlalchemy_url_wo_db(karp_env)),
+                karp_config.DATABASE_URL,
                 isolation_level="AUTOCOMMIT"
             )
             # drop testing db if it exists and create a fresh one
