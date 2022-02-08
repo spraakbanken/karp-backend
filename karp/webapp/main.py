@@ -1,6 +1,7 @@
 import logging
 from os import stat
 import traceback
+import sys
 
 from karp.errors import ClientErrorCodes
 
@@ -119,7 +120,10 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 def load_modules(app=None):
     logger = logging.getLogger("karp")
 
-    karp_modules = entry_points(group='karp.modules')
+    if sys.version_info.minor < 10:
+        karp_modules = entry_points().get('karp.modules')
+    else:
+        karp_modules = entry_points(group='karp.modules')
     if karp_modules:
         for ep in karp_modules:
             logger.info("Loading module: %s", ep.name)
