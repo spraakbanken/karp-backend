@@ -544,3 +544,7 @@ def _create_es_mapping(config):
         recursive_field(es_mapping, field_name, field_def)
 
     return es_mapping
+
+
+def create_es6_mapping(config: Dict) -> Dict:
+    return _create_es_mapping(config)
