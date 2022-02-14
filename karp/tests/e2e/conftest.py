@@ -1,6 +1,8 @@
 """Pytest entry point."""
 
 # pylint: disable=wrong-import-position,missing-function-docstring
+from karp.tests.integration.auth.adapters import create_bearer_token
+from karp import auth, config
 import os
 import json
 import typing
@@ -23,20 +25,17 @@ from tenacity import retry, stop_after_delay
 
 from alembic.config import main as alembic_main
 
-environ["TESTING"] = "True"
+# environ["TESTING"] = "True"
 # environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 # environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
 # print("importing karp stuf ...")
-from karp import auth, config
 from karp.tests import common_data, utils  # nopep8
 from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
 import karp.lex_infrastructure.sql.sql_models  # nopep8
 from karp.db_infrastructure.db import metadata  # nopep8
 from karp.lex.domain import commands, errors, entities  # nopep8
 from karp import errors as karp_errors  # nopep8
-from karp.tests.integration.auth.adapters import create_bearer_token
-
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
@@ -53,23 +52,27 @@ def sqlite_session_factory(in_memory_sqlite_db):
     yield sessionmaker(bind=in_memory_sqlite_db)
 
 
-
 @retry(stop=stop_after_delay(10))
 def wait_for_main_db_to_come_up(engine):
     return engine.connect()
 
 
+@pytest.fixture(scope='session')
+def setup_environment() -> None:
+    os.environ['TESTING'] = '1'
+    os.environ['AUTH_JWT_PUBKEY_PATH'] = 'karp/tests/data/pubkey.pem'
+
+
 @pytest.fixture(scope="session")
-def apply_migrations():
-    os.environ["TESTING"] = "1"
+def apply_migrations(setup_environment: None):
     config = alembic.config.Config("alembic.ini")
 
     print("running alembic upgrade ...")
     alembic.command.upgrade(config, 'head')
     yield
     print("running alembic downgrade ...")
-    session.close_all_sessions()
-    alembic.command.downgrade(config, 'base')
+    # session.close_all_sessions()
+    # alembic.command.downgrade(config, 'base')
 
 
 @pytest.fixture(name="app", scope='session')
@@ -79,6 +82,8 @@ def fixture_app(apply_migrations: None, init_search_service: None):
     app = create_app()
     # app.state.app_context.container.binder.install(TestAuthInfrastructure())
     yield app
+    print("dropping app")
+    app = None
 
 
 @pytest.fixture(name='fa_client', scope='session')
@@ -93,8 +98,6 @@ def fixture_client(app) -> TestClient:
 #             headers={"Content-Type": "application/json"}
 #         ) as client:
 #             yield client
-
-
 
 
 def places_published(app):

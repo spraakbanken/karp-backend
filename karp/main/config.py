@@ -5,11 +5,10 @@ from sqlalchemy.engine import URL as DatabaseUrl, make_url
 from starlette.config import Config
 from starlette.datastructures import Secret
 
-PROJECT_NAME = "phresh"
-VERSION = "1.0.0"
+PROJECT_NAME = "karp"
+VERSION = "6.0.0"
 API_PREFIX = "/"
 # SECRET_KEY = config("SECRET_KEY", cast=Secret, default="CHANGEME")
-
 
 
 def load_env() -> environs.Env:
@@ -53,13 +52,26 @@ def parse_database_url(env: environs.Env) -> DatabaseUrl:
     )
 
 
+def parse_database_url_wo_db(env: environs.Env) -> DatabaseUrl:
+    return DatabaseUrl.create(
+        drivername=env('DB_DRIVER', 'mysql+pymysql'),
+        username=env('DB_USER', None),
+        password=env('DB_PASSWORD', None),
+        host=env('DB_HOST', None),
+        port=env.int('DB_PORT', None),
+        query={'charset': 'utf8mb4'}
+    )
+
+
 config = load_env()
 
 
 DATABASE_URL = parse_database_url(config)
+DATABASE_URL_WO_DB = parse_database_url_wo_db(config)
 DATABASE_NAME = parse_database_name(config)
 
 AUTH_JWT_AUDIENCE = 'spraakbanken:auth'
+
 
 def parse_sqlalchemy_url_wo_db(env: environs.Env) -> DatabaseUrl:
     return DatabaseUrl.create(

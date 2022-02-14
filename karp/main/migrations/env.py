@@ -22,7 +22,6 @@ fileConfig(config.config_file_name)  # type: ignore
 logger = logging.getLogger('alembic.env')
 
 
-
 # def include_object(object, name, type_, reflected, compare_to):
 #     return not (type_ == "table" and (name in entry_tables or name in history_tables))
 
@@ -42,14 +41,23 @@ def run_migrations_online():
         else:
             # connect to primary db
             default_engine = create_engine(
-                karp_config.DATABASE_URL,
+                karp_config.DATABASE_URL_WO_DB,
                 isolation_level="AUTOCOMMIT"
             )
             # drop testing db if it exists and create a fresh one
             with default_engine.connect() as default_conn:
-                default_conn.execute(f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}")
-                default_conn.execute(f"CREATE DATABASE {karp_config.DATABASE_NAME}")
+                logger.warning('dropping database: %s',
+                               karp_config.DATABASE_NAME)
+                default_conn.execute(
+                    f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}")
+                logger.warning('creating database: %s',
+                               karp_config.DATABASE_NAME)
 
+                result = default_conn.execute(
+                    f"CREATE DATABASE {karp_config.DATABASE_NAME}")
+                logger.warning('db response: %s', result)
+
+    logger.info('migrating url: %s', karp_config.DATABASE_URL)
     connectable = config.attributes.get('connection', None)
     config.set_main_option("sqlalchemy.url", str(karp_config.DATABASE_URL))
 

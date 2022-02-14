@@ -54,6 +54,14 @@ class Es6Index(Index):
         print("creating es mapping ...")
         mapping = create_es6_mapping(config)
 
+        settings = {
+            "number_of_shards": 1,
+            "number_of_replicas": 1,
+            "refresh_interval": -1,
+        }
+        if 'settings' in mapping:
+            settings.update(mapping['settings'])
+            del mapping['settings']
         properties = mapping["properties"]
         properties["freetext"] = {"type": "text"}
         disabled_property = {"enabled": False}
@@ -62,11 +70,7 @@ class Es6Index(Index):
         properties["_last_modified_by"] = disabled_property
 
         body = {
-            "settings": {
-                "number_of_shards": 1,
-                "number_of_replicas": 1,
-                "refresh_interval": -1,
-            },
+            "settings": settings,
             "mappings": {"entry": mapping},
         }
 
