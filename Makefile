@@ -1,4 +1,4 @@
-.PHONY: test test-log pytest build-dev run-tests clean clean-pyc help lint lint-syntax-errors run-all-tests-w-coverage run-unit-tests run-unit-tests-w-coverage run-integration-tests run-integration-tests-w-coverage run-all-tests run-all-tests-w-coverage
+.PHONY: test-log pytest build-dev clean clean-pyc help lint lint-syntax-errors
 .DEFAULT: test
 
 PYTHON = python3
@@ -88,36 +88,35 @@ lint-syntax-errors: install-dev
 check-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
 
+.PHONY: test
 test: unit-tests
-run-all-tests: unit-tests run-integration-tests
-run-all-tests-w-coverage: run-unit-tests-w-coverage run-integration-tests-w-coverage run-e2e-tests-w-coverage
+.PHONY: all-tests
+all-tests: unit-tests integration-tests e2e-tests
+.PHONY: all-tests-w-coverage
+all-tests-w-coverage: unit-tests-w-coverage integration-tests-w-coverage e2e-tests-w-coverage
 
 .PHONY: unit-tests
 unit-tests:
 	${INVENV} pytest -vv karp/tests/unit
 
 .PHONY: e2e-tests
-e2e-tests:
+e2e-tests: install-dev clean-pyc
 	${INVENV} pytest -vv karp/tests/e2e
 
 .PHONY: run-e2e-tests-w-coverage
-run-e2e-tests-w-coverage: install-dev clean-pyc
+e2e-tests-w-coverage: install-dev clean-pyc
 	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/e2e
 
 .PHONY: integration-tests
-integration-tests: install-dev clean-pyc
+integration-tests: clean-pyc
 	${INVENV} pytest -vv karp/tests/integration
 
-run-slow-tests: install-dev clean-pyc
-	${INVENV} pytest -vv karp/tests/quick_tests karp/tests/slow_tests
-
-run-unit-tests-w-coverage: install-dev clean-pyc
+.PHONY: unit-tests-w-coverage
+unit-tests-w-coverage: clean-pyc
 	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/unit
 
-run-integration-tests: install-dev clean-pyc
-	${INVENV} pytest -vv karp/tests/integration
-
-run-integration-tests-w-coverage: install-dev clean-pyc
+.PHONY: integration-tests-w-coverage
+integration-tests-w-coverage: clean-pyc
 	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/integration
 
 test-log: install-dev clean-pyc lint-syntax-errors
