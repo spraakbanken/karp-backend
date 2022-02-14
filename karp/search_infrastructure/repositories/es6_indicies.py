@@ -468,3 +468,6 @@ class Es6IndexUnitOfWork(
     @property
     def repo(self) -> Es6Index:
         return self._index
+
+    def _close(self):
+        pass
