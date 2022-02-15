@@ -1,13 +1,65 @@
 from pathlib import Path
-from typing import Dict
+import threading
+from typing import Dict, Type
+
 import elasticsearch
 import injector
+from injector import Provider, T
 from sqlalchemy.engine import Connection, Engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 
 from karp.foundation.commands import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
 from karp.auth_infrastructure import AuthInfrastructure, TestAuthInfrastructure, JwtAuthInfrastructure
+
+
+# from foundation.events import EventBus, InjectorEventBus, RunAsyncHandler
+# from foundation.locks import Lock, LockFactory
+#
+# from customer_relationship import CustomerRelationshipConfig
+# from main.async_handler_task import async_handler_generic_task
+# from main.redis import RedisLock
+# from payments import PaymentsConfig
+
+
+class RequestScope(injector.Scope):
+    REGISTRY_KEY = "RequestScopeRegistry"
+
+    def configure(self) -> None:
+        self._locals = threading.local()
+
+    def enter(self) -> None:
+        assert not hasattr(self._locals, self.REGISTRY_KEY)
+        setattr(self._locals, self.REGISTRY_KEY, {})
+
+    def exit(self) -> None:
+        for key, provider in getattr(self._locals, self.REGISTRY_KEY).items():
+            provider.get(self.injector).close()
+            delattr(self._locals, repr(key))
+
+        delattr(self._locals, self.REGISTRY_KEY)
+
+    def __enter__(self) -> None:
+        self.enter()
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
+        self.exit()
+
+    def get(self, key: Type[T], provider: Provider[T]) -> Provider[T]:
+        try:
+            return getattr(self._locals, repr(key))  # type: ignore
+        except AttributeError:
+            provider = injector.InstanceProvider(provider.get(self.injector))
+            setattr(self._locals, repr(key), provider)
+            try:
+                registry = getattr(self._locals, self.REGISTRY_KEY)
+            except AttributeError:
+                raise Exception(f"{key} is request scoped, but no RequestScope entered!")
+            registry[key] = provider
+            return provider
+
+
+request = injector.ScopeDecorator(RequestScope)
 
 
 class CommandBusMod(injector.Module):
@@ -26,14 +78,15 @@ class Db(injector.Module):
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
-    # @request
+    @request
     @injector.provider
     def connection(self) -> Connection:
         return self._engine.connect()
 
+    @request
     @injector.provider
-    def session_factory(self) -> sessionmaker:
-        return sessionmaker(bind=self._engine)
+    def session(self, connection: Connection) -> Session:
+        return sessionmaker(bind=connection)
 
 
 class ElasticSearchMod(injector.Module):
