@@ -196,13 +196,13 @@ def fixture_fa_data_client(
     fa_client,
     admin_token: auth.AccessToken,
 ):
-    places_published(fa_client.app)
-    municipalities_published(fa_client.app)
-    utils.add_entries(
-        fa_client,
-        {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
-        access_token=admin_token,
-    )
+    # places_published(fa_client.app)
+    # municipalities_published(fa_client.app)
+    # utils.add_entries(
+    #     fa_client,
+    #     {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
+    #     access_token=admin_token,
+    # )
 
     return fa_client
 

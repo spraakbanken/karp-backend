@@ -3,7 +3,6 @@ from os import stat
 import traceback
 import sys
 
-from karp.errors import ClientErrorCodes
 
 try:
     from importlib.metadata import entry_points
@@ -15,11 +14,15 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import injector
+from sqlalchemy.engine import Connection
+from sqlalchemy.orm import Session
 
 from karp import main
 from karp.foundation import errors as foundation_errors
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
+from karp.errors import ClientErrorCodes
+from karp.main.modules import RequestScope
 from karp.webapp.routes import router as api_router
 from karp.webapp import tasks
 
@@ -110,8 +113,22 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
     @app.middleware('http')
     async def injector_middleware(request: Request, call_next):
+        logger.info('injector_middleware started')
+        scope = app_context.container.get(RequestScope)
+        scope.enter()
+
         request.state.container = app_context.container
+        request.state.connection = app_context.container.get(Connection)
+        request.state.tx = request.state.connection.begin()
+        request.state.session = app_context.container.get(Session)
+
         response = await call_next(request)
+
+        try:
+            if hasattr(request.state, 'tx') and response.status_code < 400:
+                request.state.tx.commit()
+        finally:
+            scope.exit()
         return response
 
     return app

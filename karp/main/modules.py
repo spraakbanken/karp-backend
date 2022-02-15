@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 import threading
 from typing import Dict, Type
@@ -22,6 +23,9 @@ from karp.auth_infrastructure import AuthInfrastructure, TestAuthInfrastructure,
 # from payments import PaymentsConfig
 
 
+logger = logging.getLogger(__name__)
+
+
 class RequestScope(injector.Scope):
     REGISTRY_KEY = "RequestScopeRegistry"
 
@@ -29,10 +33,12 @@ class RequestScope(injector.Scope):
         self._locals = threading.local()
 
     def enter(self) -> None:
+        logger.warning('entering request scope')
         assert not hasattr(self._locals, self.REGISTRY_KEY)
         setattr(self._locals, self.REGISTRY_KEY, {})
 
     def exit(self) -> None:
+        logger.warning('exiting request scope')
         for key, provider in getattr(self._locals, self.REGISTRY_KEY).items():
             provider.get(self.injector).close()
             delattr(self._locals, repr(key))
@@ -54,7 +60,8 @@ class RequestScope(injector.Scope):
             try:
                 registry = getattr(self._locals, self.REGISTRY_KEY)
             except AttributeError:
-                raise Exception(f"{key} is request scoped, but no RequestScope entered!")
+                raise Exception(
+                    f"{key} is request scoped, but no RequestScope entered!")
             registry[key] = provider
             return provider
 
@@ -86,7 +93,7 @@ class Db(injector.Module):
     @request
     @injector.provider
     def session(self, connection: Connection) -> Session:
-        return sessionmaker(bind=connection)
+        return Session(bind=connection)
 
 
 class ElasticSearchMod(injector.Module):
