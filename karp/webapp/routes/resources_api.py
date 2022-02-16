@@ -8,6 +8,7 @@ from karp import auth
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto
 
 from karp.webapp.schemas import ResourceCreate, ResourcePublic
+from karp.webapp import dependencies as deps
 from karp.webapp.dependencies.auth import get_current_user, get_user
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
@@ -25,7 +26,7 @@ router = APIRouter()
 
 @router.get(
     '/permissions',
-    response_model=List[ResourcePermissionDto])
+    response_model=list[ResourcePermissionDto])
 def list_resource_permissions(
     query: GetResourcePermissions = Depends(inject_from_req(GetResourcePermissions)),
 ):
@@ -33,7 +34,7 @@ def list_resource_permissions(
 
 
 @router.get('/')
-async def get_all_resources() -> List[Dict]:
+async def get_all_resources() -> list[dict]:
     resources = [
         {'resource_id': 'places'},
     ]

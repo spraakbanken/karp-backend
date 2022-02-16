@@ -7,7 +7,7 @@ import elasticsearch
 import injector
 from injector import Provider, T
 from sqlalchemy.engine import Connection, Engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from karp.foundation.commands import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
@@ -85,15 +85,13 @@ class Db(injector.Module):
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
-    @request
     @injector.provider
     def connection(self) -> Connection:
         return self._engine.connect()
 
-    @request
     @injector.provider
-    def session(self, connection: Connection) -> Session:
-        return Session(bind=connection)
+    def session(self) -> sessionmaker:
+        return sessionmaker(bind=self._engine)
 
 
 class ElasticSearchMod(injector.Module):
