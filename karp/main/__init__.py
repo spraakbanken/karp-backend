@@ -63,6 +63,9 @@ def _create_db_engine(db_url: config.DatabaseUrl):
     kwargs = {}
     if str(db_url).startswith("sqlite"):
         kwargs["poolclass"] = pool.SingletonThreadPool
+        kwargs['connect_args'] = {
+            'check_same_thread': False
+        }
     return create_engine(db_url, echo=True, future=True, **kwargs)
 
 

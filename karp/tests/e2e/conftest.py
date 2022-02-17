@@ -124,7 +124,7 @@ def places_published(app):
                 name=resource_id,
                 entry_repo_id=cmd.entity_id,
                 config=places_config,
-                created_by='local admin',
+                user='local admin',
                 message='added',
             )
         )
@@ -134,8 +134,6 @@ def places_published(app):
         bus.dispatch(
             commands.PublishResource(
                 resource_id=resource_id,
-                # name=resource_id,
-                # config=places_config,
                 user=cmd.user,
                 message=cmd.message,
             )
@@ -168,7 +166,7 @@ def municipalities_published(app):
         cmd = commands.CreateResource.from_dict(
             municipalities_config,
             entry_repo_id=cmd.entity_id,
-            created_by=cmd.user,
+            user=cmd.user,
         )
         bus.dispatch(cmd)
     except errors.IntegrityError:
@@ -177,9 +175,7 @@ def municipalities_published(app):
         bus.dispatch(
             commands.PublishResource(
                 resource_id=cmd.resource_id,
-                # name=cmd.name,
-                # config=cmd.config,
-                user=cmd.created_by,
+                user=cmd.user,
                 message=cmd.message,
             )
         )
@@ -196,8 +192,8 @@ def fixture_fa_data_client(
     fa_client,
     admin_token: auth.AccessToken,
 ):
-    # places_published(fa_client.app)
-    # municipalities_published(fa_client.app)
+    places_published(fa_client.app)
+    municipalities_published(fa_client.app)
     # utils.add_entries(
     #     fa_client,
     #     {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},

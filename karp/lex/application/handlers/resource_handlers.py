@@ -198,13 +198,13 @@ class CreateResourceHandler(CommandHandler[commands.CreateResource], BaseResourc
             _entry_repo_exists = entry_uow_repo_uow.repo.get_by_id(
                 cmd.entry_repo_id)
             resource = entities.create_resource(
-                entity_id=cmd.id,
+                entity_id=cmd.entity_id,
                 resource_id=cmd.resource_id,
                 config=cmd.config,
                 message=cmd.message,
                 entry_repo_id=cmd.entry_repo_id,
                 created_at=cmd.timestamp,
-                created_by=cmd.created_by,
+                created_by=cmd.user,
                 name=cmd.name,
             )
 

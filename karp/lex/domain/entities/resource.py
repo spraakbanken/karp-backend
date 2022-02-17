@@ -298,7 +298,7 @@ class Resource(TimestampedVersionedEntity):
             'last_modified_by': self.last_modified_by,
             'op': self.op,
             'message': self.message,
-            'entry_repo_id': self.entry_repository_id,
+            'entry_repository_id': self.entry_repository_id,
             'is_published': self.is_published,
             'discarded': self.discarded,
             'resource_type': self.resource_type,

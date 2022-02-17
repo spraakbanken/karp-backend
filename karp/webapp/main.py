@@ -121,20 +121,12 @@ def create_app(*, with_context: bool = True) -> FastAPI:
             }
         )
         try:
-            # scope = app_context.container.get(RequestScope)
-            # scope.enter()
-
             request.state.container = app_context.container
             request.state.connection = app_context.container.get(Connection)
-            request.state.tx = request.state.connection.begin()
             request.state.session = Session(bind=request.state.connection)
 
             response = await call_next(request)
-
-            if hasattr(request.state, 'tx') and response.status_code < 400:
-                request.state.tx.commit()
         finally:
-            # scope.exit()
             request.state.connection.close()
 
         return response

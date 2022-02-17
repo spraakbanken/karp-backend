@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Security
@@ -23,6 +24,7 @@ from karp.lex.application.queries import ReadOnlyResourceRepository
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get(
@@ -49,7 +51,6 @@ async def get_all_resources() -> list[dict]:
 )
 def create_new_resource(
     new_resource: ResourceCreate = Body(...),
-    bus: CommandBus = Depends(inject_from_req(CommandBus)),
     user: auth.User = Security(get_user, scopes=["admin"]),
     resource_repo: ReadOnlyResourceRepository = Depends(inject_from_req(ReadOnlyResourceRepository)),
     creating_resource_uc: CreatingResource = Depends(deps.get_lex_uc(CreatingResource)),
@@ -66,10 +67,11 @@ def create_new_resource(
             )
             new_resource.entry_repo_id = entry_repo.entity_id
         create_resource = commands.CreateResource(
-            created_by=user.identifier,
+            user=user.identifier,
             **new_resource.dict(),
         )
         resource = creating_resource_uc.execute(create_resource)
+        logger.info('resource created: %s', resource)
         return resource
     except Exception as err:
         print(f'{err=}')

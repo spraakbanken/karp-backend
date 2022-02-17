@@ -31,9 +31,10 @@ class Lex(injector.Module):
     def create_entry_repository(
         self,
         uow: EntryUowRepositoryUnitOfWork,
-        uow_factory: EntryRepositoryUnitOfWorkFactory,
     ) -> CommandHandler[CreateEntryRepository]:
-        return handlers.CreateEntryRepositoryHandler(uow, uow_factory)
+        return handlers.CreateEntryRepositoryHandler(
+            entry_repo_uow=uow,
+        )
 
     @injector.provider
     def create_resource(

@@ -10,13 +10,13 @@ from .base import Command
 
 
 class CreateResource(Command):
-    id: unique_id.UniqueId = pydantic.Field(
+    entity_id: unique_id.UniqueId = pydantic.Field(
         default_factory=unique_id.make_unique_id)
     resource_id: str
     name: str
     config: typing.Dict
     message: str
-    created_by: str
+    user: str
     entry_repo_id: unique_id.UniqueId
 
     @classmethod
@@ -24,7 +24,7 @@ class CreateResource(Command):
         cls,
         data: typing.Dict,
         entry_repo_id: unique_id.UniqueId,
-        created_by: typing.Optional[str] = None,
+        user: typing.Optional[str] = None,
         message: typing.Optional[str] = None,
     ):
         try:
@@ -41,7 +41,7 @@ class CreateResource(Command):
             name=name,
             config=data,
             entry_repo_id=entry_repo_id,
-            created_by=created_by or "Unknown user",
+            user=user or "Unknown user",
             message=message or f"Resource '{resource_id}' created.",
         )
 
