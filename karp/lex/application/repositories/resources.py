@@ -4,7 +4,7 @@ import typing
 import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
-from karp.foundation import repository
+from karp.foundation import events, repository, unit_of_work
 from karp.lex.domain import entities
 
 from karp.lex.domain import errors
@@ -83,3 +83,16 @@ class ResourceRepository(repository.Repository[entities.Resource]):
     @abc.abstractmethod
     def _get_all_resources(self) -> typing.Iterable[entities.Resource]:
         raise NotImplementedError()
+
+
+class ResourceUnitOfWork(
+    unit_of_work.UnitOfWork[ResourceRepository]
+):
+    def __init__(self, event_bus: events.EventBus):
+        unit_of_work.UnitOfWork.__init__(self, event_bus=event_bus)
+
+    @property
+    def resources(self) -> ResourceRepository:
+        return self.repo
+
+

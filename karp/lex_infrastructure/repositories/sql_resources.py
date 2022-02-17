@@ -203,16 +203,19 @@ class SqlResourceUnitOfWork(
 ):
     def __init__(
         self,
-        session_factory: sessionmaker,
         event_bus: EventBus,
+        *,
+        session_factory: sessionmaker = None,
+        session: Session = None,
     ):
-        SqlUnitOfWork.__init__(self)
+        SqlUnitOfWork.__init__(self, session=session)
         repositories.ResourceUnitOfWork.__init__(self, event_bus)
         self.session_factory = session_factory
         self._resources = None
 
     def _begin(self):
-        self._session = self.session_factory()
+        if self._session_is_created_here:
+            self._session = self.session_factory()
         self._resources = SqlResourceRepository(self._session)
         return self
 

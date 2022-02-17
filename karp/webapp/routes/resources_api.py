@@ -12,13 +12,14 @@ from karp.webapp import dependencies as deps
 from karp.webapp.dependencies.auth import get_current_user, get_user
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
-
-
-
-from karp.lex import ResourceUnitOfWork
+from karp.lex import (
+    CreatingEntryRepo,
+    CreatingResource,
+    ResourceUnitOfWork,
+    ResourceDto,
+)
 from karp.lex.domain import commands
 from karp.lex.application.queries import ReadOnlyResourceRepository
-
 
 
 router = APIRouter()
@@ -43,7 +44,7 @@ async def get_all_resources() -> list[dict]:
 
 @router.post(
     '/',
-    response_model=ResourcePublic,
+    response_model=ResourceDto,
     status_code=status.HTTP_201_CREATED
 )
 def create_new_resource(
@@ -51,29 +52,31 @@ def create_new_resource(
     bus: CommandBus = Depends(inject_from_req(CommandBus)),
     user: auth.User = Security(get_user, scopes=["admin"]),
     resource_repo: ReadOnlyResourceRepository = Depends(inject_from_req(ReadOnlyResourceRepository)),
-) -> ResourcePublic:
+    creating_resource_uc: CreatingResource = Depends(deps.get_lex_uc(CreatingResource)),
+    creating_entry_repo_uc: CreatingEntryRepo = Depends(deps.get_lex_uc(CreatingEntryRepo)),
+) -> ResourceDto:
     try:
-        if not new_resource.entry_repo_id:
-            create_entry_repo = commands.CreateEntryRepository(
-                repository_type='default',
-                user=user.identifier,
-                **new_resource.dict()
+        if new_resource.entry_repo_id is None:
+            entry_repo = creating_entry_repo_uc.execute(
+                commands.CreateEntryRepository(
+                    repository_type='default',
+                    user=user.identifier,
+                    **new_resource.dict(),
+                )
             )
-            bus.dispatch(create_entry_repo)
-            new_resource.entry_repo_id = create_entry_repo.entity_id
+            new_resource.entry_repo_id = entry_repo.entity_id
         create_resource = commands.CreateResource(
             created_by=user.identifier,
             **new_resource.dict(),
         )
-        bus.dispatch(create_resource)
+        resource = creating_resource_uc.execute(create_resource)
+        return resource
     except Exception as err:
         print(f'{err=}')
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'{err=}',
         )
-    resource = resource_repo.get_by_resource_id(create_resource.resource_id)
-    return resource.dict()
 
 
 @router.get(

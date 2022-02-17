@@ -65,3 +65,14 @@ class InjectorEntryUnitOfWorkRepoFactory(
             message=message,
             timestamp=timestamp,
         )
+
+
+class ResourceUnitOfWork(UnitOfWork[ResourceRepository]):
+    def __init__(self, event_bus: EventBus):
+        UnitOfWork.__init__(self, event_bus)
+
+    @property
+    def resources(self) -> ResourceRepository:
+        return self.repo
+
+

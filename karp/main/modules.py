@@ -85,12 +85,19 @@ class Db(injector.Module):
     def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
+    # @request
     @injector.provider
     def connection(self) -> Connection:
         return self._engine.connect()
 
+    # @request
     @injector.provider
-    def session(self) -> sessionmaker:
+    def session(self, connection: Connection) -> Session:
+        return sessionmaker(bind=connection)
+
+    # @request
+    @injector.provider
+    def session_factory(self) -> sessionmaker:
         return sessionmaker(bind=self._engine)
 
 

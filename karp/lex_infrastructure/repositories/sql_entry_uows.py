@@ -63,33 +63,37 @@ class SqlEntryUowRepositoryUnitOfWork(
 ):
     def __init__(
         self,
-        session_factory: sa_orm.sessionmaker,
+        *,
         event_bus: EventBus,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+        session_factory: sa_orm.sessionmaker = None,
+        session: sa_orm.Session = None,
     ):
-        SqlUnitOfWork.__init__(self)
-        EntryUowRepositoryUnitOfWork.__init__(self, event_bus)
+        SqlUnitOfWork.__init__(self, session=session)
+        EntryUowRepositoryUnitOfWork.__init__(
+            self,
+            event_bus=event_bus,
+            entry_uow_factory=entry_uow_factory,
+        )
         self.session_factory = session_factory
-        self.entry_uow_factory = entry_uow_factory
         self._repo = None
-        self._session = None
 
     def __enter__(self):
-        if self._session is None:
+        if self._session_is_created_here:
             self._session = self.session_factory()
         if self._repo is None:
             self._repo = SqlEntryUowRepository(
-                entry_uow_factory=self.entry_uow_factory,
+                entry_uow_factory=self.factory,
                 session=self._session,
             )
         return super().__enter__()
 
     def _begin(self):
-        if self._session is None:
+        if self._session_is_created_here:
             self._session = self.session_factory()
         if self._repo is None:
             self._repo = SqlEntryUowRepository(
-                entry_uow_factory=self.entry_uow_factory,
+                entry_uow_factory=self.factory,
                 session=self._session,
             )
         return self

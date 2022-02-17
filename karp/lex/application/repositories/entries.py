@@ -2,7 +2,7 @@ import abc
 import typing
 from typing import Dict, List, Optional, Tuple
 
-from karp.foundation import repository
+from karp.foundation import entity, events, repository, unit_of_work
 from karp.lex.domain import entities, errors
 from karp.lex.domain.value_objects import UniqueId
 
@@ -130,3 +130,50 @@ class EntryRepository(repository.Repository[entities.Entry]):
     def all_entries(self) -> typing.Iterable[entities.Entry]:
         """Return all entries."""
         return []
+
+
+class EntryUnitOfWork(
+    unit_of_work.UnitOfWork[EntryRepository],
+    entity.TimestampedEntity,
+):
+    repository_type: str
+
+    def __init__(
+        self,
+        name: str,
+        config: Dict,
+        connection_str: Optional[str],
+        message: str,
+        event_bus: events.EventBus,
+        *args,
+        **kwargs,
+    ):
+        unit_of_work.UnitOfWork.__init__(self, event_bus)
+        entity.TimestampedEntity.__init__(
+            self, *args, **kwargs)
+        self._name = name
+        self._connection_str = connection_str
+        self._config = config
+        self._message = message
+
+    @property
+    def entries(self) -> EntryRepository:
+        return self.repo
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def connection_str(self) -> Optional[str]:
+        return self._connection_str
+
+    @property
+    def config(self) -> Dict:
+        return self._config
+
+    @property
+    def message(self) -> str:
+        return self._message
+
+

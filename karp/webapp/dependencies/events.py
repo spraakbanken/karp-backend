@@ -7,4 +7,4 @@ from karp.foundation.events import EventBus
 
 
 def get_eventbus(request: Request) -> EventBus:
-    return request.app.state.eventbus
+    return request.state.container.get(EventBus)

@@ -6,16 +6,14 @@ class CreateEntryRepositoryHandler:
     def __init__(
         self,
         entry_repo_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
-        entry_repo_uow_factory: repositories.EntryRepositoryUnitOfWorkFactory
     ):
         self._entry_repo_repo_uow = entry_repo_repo_uow
-        self._entry_repo_uow_factory = entry_repo_uow_factory
 
     def __call__(
         self,
         command: commands.CreateEntryRepository
     ) -> None:
-        entry_repo = self._entry_repo_uow_factory.create(
+        entry_repo = self._entry_repo_repo_uow.factory.create(
             repository_type=command.repository_type,
             entity_id=command.entity_id,
             name=command.name,

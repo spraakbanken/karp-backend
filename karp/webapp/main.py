@@ -114,21 +114,29 @@ def create_app(*, with_context: bool = True) -> FastAPI:
     @app.middleware('http')
     async def injector_middleware(request: Request, call_next):
         logger.info('injector_middleware started')
-        scope = app_context.container.get(RequestScope)
-        scope.enter()
-
-        request.state.container = app_context.container
-        request.state.connection = app_context.container.get(Connection)
-        request.state.tx = request.state.connection.begin()
-        request.state.session = app_context.container.get(Session)
-
-        response = await call_next(request)
-
+        response = JSONResponse(
+            status_code=500,
+            content={
+                'detail': 'Internal server error'
+            }
+        )
         try:
+            # scope = app_context.container.get(RequestScope)
+            # scope.enter()
+
+            request.state.container = app_context.container
+            request.state.connection = app_context.container.get(Connection)
+            request.state.tx = request.state.connection.begin()
+            request.state.session = Session(bind=request.state.connection)
+
+            response = await call_next(request)
+
             if hasattr(request.state, 'tx') and response.status_code < 400:
                 request.state.tx.commit()
         finally:
-            scope.exit()
+            # scope.exit()
+            request.state.connection.close()
+
         return response
 
     return app

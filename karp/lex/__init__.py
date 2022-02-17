@@ -13,6 +13,13 @@ from karp.lex.domain.commands import (
     CreateResource,
 )
 from karp.lex.domain import commands
+from karp.lex.application.use_cases import (
+    CreatingEntryRepo,
+    CreatingResource,
+)
+from karp.lex.application.queries import (
+    ResourceDto,
+)
 
 
 class Lex(injector.Module):
