@@ -1,5 +1,6 @@
 from typing import Callable, Type
 from fastapi import Depends
+from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 
@@ -16,3 +17,6 @@ def get_database(request: Request) -> Database:
 def get_session(request: Request) -> Session:
     return request.state.session
 
+
+def get_connection(request: Request) -> Connection:
+    return request.state.connection

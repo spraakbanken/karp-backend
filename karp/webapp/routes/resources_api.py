@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
     '/permissions',
     response_model=list[ResourcePermissionDto])
 def list_resource_permissions(
-    query: GetResourcePermissions = Depends(inject_from_req(GetResourcePermissions)),
+    query: GetResourcePermissions = Depends(deps.get_resource_permissions),
 ):
     return query.query()
 
@@ -52,7 +52,6 @@ async def get_all_resources() -> list[dict]:
 def create_new_resource(
     new_resource: ResourceCreate = Body(...),
     user: auth.User = Security(get_user, scopes=["admin"]),
-    resource_repo: ReadOnlyResourceRepository = Depends(inject_from_req(ReadOnlyResourceRepository)),
     creating_resource_uc: CreatingResource = Depends(deps.get_lex_uc(CreatingResource)),
     creating_entry_repo_uc: CreatingEntryRepo = Depends(deps.get_lex_uc(CreatingEntryRepo)),
 ) -> ResourceDto:
@@ -87,7 +86,7 @@ def create_new_resource(
 )
 def get_resource_by_resource_id(
     resource_id: str,
-    resource_repo: ReadOnlyResourceRepository = Depends(inject_from_req(ReadOnlyResourceRepository)),
+    resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
 ) -> ResourcePublic:
     resource = resource_repo.get_by_resource_id(resource_id)
     if not resource:

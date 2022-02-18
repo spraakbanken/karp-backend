@@ -8,14 +8,13 @@ from fastapi.security import (HTTPAuthorizationCredentials, HTTPBearer,
 from fastapi.security import utils as security_utils
 
 # from karp import bootstrap, services
-from karp import auth
+from karp import auth, lex
 # from karp.auth.auth import auth
 from karp.errors import ClientErrorCodes, KarpError
 from karp.auth.domain.auth_service import AuthService
+from karp.auth_infrastructure import LexGetResourcePermissions
+from . import lex_deps
 from .fastapi_injector import inject_from_req
-# from .containers import WebAppContainer
-
-# bus = bootstrap.bootstrap()
 
 
 auth_scheme = HTTPBearer()
@@ -26,7 +25,6 @@ logger = logging.getLogger("karp")
 def bearer_scheme(authorization=Header(None)):
     if not authorization:
         return None
-    # authorization: str = authorization.get("Authorization")
     scheme, credentials = security_utils.get_authorization_scheme_param(authorization)
     if not (scheme and credentials):
         return None
@@ -90,3 +88,11 @@ def get_user(
     except KarpError:
         raise credentials_exception
 
+
+def get_resource_permissions(
+    query: lex.GetPublishedResources = Depends(lex_deps.get_published_resources)
+) -> auth.GetResourcePermissions:
+    return LexGetResourcePermissions(query)
+
+# def get_resource_permissions(conn: Connection = Depends(database.get_connection)) -> GetResourcePermissions:
+#     return

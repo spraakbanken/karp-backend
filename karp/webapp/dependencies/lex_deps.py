@@ -1,14 +1,17 @@
 from typing import Callable, Type
 from fastapi import Depends
+from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 
+from karp import lex
 from karp.lex import (
     EntryRepositoryUnitOfWorkFactory,
     EntryUowRepositoryUnitOfWork,
     ResourceUnitOfWork,
 )
-from karp.webapp.dependencies.database import get_database, get_session
+from karp.webapp.dependencies import db_deps
+from karp.webapp.dependencies.db_deps import get_database, get_session
 from karp.webapp.dependencies.events import get_eventbus, EventBus
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
@@ -16,7 +19,9 @@ from karp.db_infrastructure import Database
 
 from karp.lex_infrastructure import (
     SqlEntryUowRepositoryUnitOfWork,
+    SqlGetPublishedResources,
     SqlResourceUnitOfWork,
+    SqlReadOnlyResourceRepository,
 )
 from karp.lex_infrastructure.repositories import SqlResourceRepository
 
@@ -58,3 +63,13 @@ def get_lex_uc(Use_case_type: Type) -> Callable:
     return factory
 
 
+def get_resources_read_repo(
+    conn: Connection = Depends(db_deps.get_connection)
+) -> lex.ReadOnlyResourceRepository:
+    return SqlReadOnlyResourceRepository(conn)
+
+
+def get_published_resources(
+    conn: Connection = Depends(db_deps.get_connection)
+) -> lex.GetPublishedResources:
+    return SqlGetPublishedResources(conn)
