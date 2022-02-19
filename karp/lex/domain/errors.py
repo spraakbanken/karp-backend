@@ -91,3 +91,11 @@ class UpdateConflict(LexDomainError):
         )
         self.error_obj = {"diff": diff,
                           "error": str(self)}
+
+
+class LogicError(LexDomainError):
+    pass
+
+
+class InvalidEntrySchema(ValueError, LogicError):
+    pass

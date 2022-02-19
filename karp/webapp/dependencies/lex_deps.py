@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from starlette.requests import Request
 
 from karp import lex
+from karp.foundation.events import EventBus
 from karp.lex import (
     EntryRepositoryUnitOfWorkFactory,
     EntryUowRepositoryUnitOfWork,
@@ -12,12 +13,13 @@ from karp.lex import (
 )
 from karp.webapp.dependencies import db_deps
 from karp.webapp.dependencies.db_deps import get_database, get_session
-from karp.webapp.dependencies.events import get_eventbus, EventBus
+from karp.webapp.dependencies import event_deps
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 from karp.db_infrastructure import Database
 
 from karp.lex_infrastructure import (
+    GenericGetEntryHistory,
     SqlEntryUowRepositoryUnitOfWork,
     SqlGetPublishedResources,
     SqlResourceUnitOfWork,
@@ -32,7 +34,7 @@ def get_resource_repository(db_session: Session = Depends(get_session)) -> SqlRe
 
 def get_resource_unit_of_work(
     db_session: Session = Depends(get_session),
-    event_bus: EventBus = Depends(get_eventbus),
+    event_bus: EventBus = Depends(event_deps.get_eventbus),
 ) -> ResourceUnitOfWork:
     return SqlResourceUnitOfWork(
         event_bus=event_bus,
@@ -42,7 +44,7 @@ def get_resource_unit_of_work(
 def get_entry_repo_uow(
     db_session: Session = Depends(get_session),
     entry_uow_factory: EntryRepositoryUnitOfWorkFactory = Depends(inject_from_req(EntryRepositoryUnitOfWorkFactory)),
-    event_bus: EventBus = Depends(get_eventbus),
+    event_bus: EventBus = Depends(event_deps.get_eventbus),
 ) -> EntryUowRepositoryUnitOfWork:
     return SqlEntryUowRepositoryUnitOfWork(
         event_bus=event_bus,
@@ -73,3 +75,13 @@ def get_published_resources(
     conn: Connection = Depends(db_deps.get_connection)
 ) -> lex.GetPublishedResources:
     return SqlGetPublishedResources(conn)
+
+
+def get_entry_history(
+    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
+) -> lex.GetEntryHistory:
+    return GenericGetEntryHistory(
+        resource_uow=resource_uow,
+        entry_repo_uow=entry_repo_uow,
+    )

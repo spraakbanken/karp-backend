@@ -13,22 +13,22 @@ class GenericEntryViews(EntryViews):
     def __init__(
         self,
         get_entry_repo_id: GetEntryRepositoryId,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> None:
         super().__init__()
         self.get_entry_repo_id = get_entry_repo_id
-        self.entry_uow_repo_uow = entry_uow_repo_uow
+        self.entry_repo_uow = entry_repo_uow
 
     def get_by_id(self, resource_id: str, entry_uuid: unique_id.UniqueId) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_uow_repo_uow as uw:
+        with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return self._entry_to_entry_dto(uw.repo.by_id(entry_uuid), resource_id)
 
     def get_by_entry_id(self, resource_id: str, entry_id: str) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_uow_repo_uow as uw:
+        with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return self._entry_to_entry_dto(uw.repo.by_entry_id(entry_id), resource_id)
@@ -39,7 +39,7 @@ class GenericEntryViews(EntryViews):
         entry_id: str
     ) -> typing.Optional[EntryDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_uow_repo_uow as uw:
+        with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             entry = uw.repo.get_by_entry_id_optional(entry_id)
@@ -49,14 +49,14 @@ class GenericEntryViews(EntryViews):
 
     def get_total(self, resource_id: str) -> int:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_uow_repo_uow as uw:
+        with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return len(uw.repo.all_entries())
 
     def get_by_referenceable(self, resource_id: str, filters):
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_uow_repo_uow as uw:
+        with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return (
@@ -66,7 +66,7 @@ class GenericEntryViews(EntryViews):
 
     def all_entries(self, resource_id: str):
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_uow_repo_uow as uw:
+        with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return (
@@ -90,10 +90,10 @@ class GenericEntryQuery:
     def __init__(
         self,
         resource_uow: ResourceUnitOfWork,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ):
         self._resource_uow = resource_uow
-        self.entry_uow_repo_uow = entry_uow_repo_uow
+        self.entry_repo_uow = entry_repo_uow
 
     def get_entry_repo_id(self, resource_id: str) -> unique_id.UniqueId:
         with self._resource_uow as uw:
@@ -108,7 +108,7 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
         version: typing.Optional[int],
     ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id(resource_id)
-        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(entry_repo_id) as uw:
             result = uw.repo.by_entry_id(entry_id, version=version)
 
         return EntryDto(
@@ -128,7 +128,7 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
         history_request: EntryHistoryRequest,
     ):
         entry_repo_id = self.get_entry_repo_id(history_request.resource_id)
-        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(entry_repo_id) as uw:
             paged_query, total = uw.repo.get_history(
                 entry_id=history_request.entry_id,
                 user_id=history_request.user_id,
@@ -175,7 +175,7 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
     ) -> EntryDiffDto:
 
         entry_repo_id = self.get_entry_repo_id(diff_request.resource_id)
-        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(entry_repo_id) as uw:
             db_entry = uw.repo.by_entry_id(diff_request.entry_id)
 
             #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()

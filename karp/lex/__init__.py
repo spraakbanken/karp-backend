@@ -14,10 +14,14 @@ from karp.lex.domain.commands import (
 )
 from karp.lex.domain import commands
 from karp.lex.application.use_cases import (
+    AddingEntry,
     CreatingEntryRepo,
     CreatingResource,
 )
 from karp.lex.application.queries import (
+    GetEntryDiff,
+    GetEntryHistory,
+    GetHistory,
     GetPublishedResources,
     ResourceDto,
     ReadOnlyResourceRepository,
