@@ -471,22 +471,3 @@ def _src_entry_to_index_entry(resource: Resource, src_entry: Entry) -> Dict:
 #     _validate_entry(validate_entry, entry)
 #     return _src_entry_to_index_entry(resource, entry)
 
-
-def _compile_schema(json_schema):
-    try:
-        validate_entry = fastjsonschema.compile(json_schema)
-        return validate_entry
-    except fastjsonschema.JsonSchemaDefinitionException as e:
-        raise RuntimeError(e)
-
-
-def _validate_entry(schema, json_obj):
-    try:
-        schema(json_obj)
-    except fastjsonschema.JsonSchemaException as e:
-        _logger.warning(
-            "Entry not valid:\n{entry}\nMessage: {message}".format(
-                entry=json.dumps(json_obj, indent=2), message=e.message
-            )
-        )
-        raise KarpError("entry not valid", ClientErrorCodes.ENTRY_NOT_VALID)
