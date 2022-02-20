@@ -35,8 +35,7 @@ def get_entries_by_id(
         regex=r"^\w(,\w)*",
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(
-        inject_from_req(auth.AuthService)),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     print("webapp.views.get_entries_by_id")
@@ -85,8 +84,7 @@ def query_split(
         description="Will return the result in the specified format.",
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(
-        inject_from_req(auth.AuthService)),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     logger.debug(
@@ -161,8 +159,7 @@ def query(
         description="Will return the result in the specified format.",
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(
-        inject_from_req(auth.AuthService)),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     """

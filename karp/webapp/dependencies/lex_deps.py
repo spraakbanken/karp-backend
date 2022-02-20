@@ -19,7 +19,9 @@ from karp.webapp.dependencies.fastapi_injector import inject_from_req
 from karp.db_infrastructure import Database
 
 from karp.lex_infrastructure import (
+    GenericGetEntryDiff,
     GenericGetEntryHistory,
+    GenericGetHistory,
     SqlEntryUowRepositoryUnitOfWork,
     SqlGetPublishedResources,
     SqlResourceUnitOfWork,
@@ -77,11 +79,31 @@ def get_published_resources(
     return SqlGetPublishedResources(conn)
 
 
+def get_entry_diff(
+    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
+) -> lex.GetEntryDiff:
+    return GenericGetEntryDiff(
+        resource_uow=resource_uow,
+        entry_repo_uow=entry_repo_uow,
+    )
+
+
 def get_entry_history(
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
     entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> lex.GetEntryHistory:
     return GenericGetEntryHistory(
+        resource_uow=resource_uow,
+        entry_repo_uow=entry_repo_uow,
+    )
+
+
+def get_history(
+    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
+) -> lex.GetHistory:
+    return GenericGetHistory(
         resource_uow=resource_uow,
         entry_repo_uow=entry_repo_uow,
     )

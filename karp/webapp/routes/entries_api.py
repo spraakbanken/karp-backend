@@ -28,7 +28,7 @@ def get_history_for_entry(
     entry_id: str,
     version: Optional[int] = Query(None),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
-    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
     get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),
 ):
     if not auth_service.authorize(
@@ -52,7 +52,7 @@ def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    auth_service: AuthService = Depends(deps.get_auth_service),
     adding_entry_uc: lex.AddingEntry = Depends(deps.get_lex_uc(lex.AddingEntry)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -99,7 +99,7 @@ def update_entry(
     entry_id: str,
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    auth_service: AuthService = Depends(deps.get_auth_service),
     updating_entry_uc: lex.UpdatingEntry = Depends(deps.get_lex_uc(lex.UpdatingEntry)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -166,7 +166,7 @@ def delete_entry(
     resource_id: str,
     entry_id: str,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(inject_from_req(AuthService)),
+    auth_service: AuthService = Depends(deps.get_auth_service),
     deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry))
 ):
     """Delete a entry from a resource.
@@ -207,9 +207,12 @@ def delete_entry(
     return "", 204
 
 
-# @edit_api.route("/{resource_id}/preview", methods=["POST"])
+@router.post('/{resource_id}/preview')
 # @auth.auth.authorization("READ")
-# def preview_entry(resource_id):
+def preview_entry(
+    resource_id: str,
+):
+    pass
 #     data = request.get_json()
 #     preview = entrywrite.preview_entry(resource_id, data)
 #     return flask_jsonify(preview)

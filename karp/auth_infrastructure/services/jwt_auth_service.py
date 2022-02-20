@@ -12,7 +12,7 @@ from karp.foundation import value_objects
 from karp.auth.application.queries import IsResourceProtected
 from karp.auth.domain.errors import ExpiredToken, TokenError, InvalidTokenPayload
 from karp.auth.domain.entities.user import User
-from karp.auth.domain import auth_service
+from karp.auth import AuthService, AuthServiceConfig
 
 
 
@@ -38,12 +38,17 @@ def load_jwt_key(path: Path) -> str:
         return fp.read()
 
 
-# jwt_key = load_jwt_key(config.JWT_AUTH_PUBKEY_PATH)
+class JWTAuthServiceConfig(AuthServiceConfig):
+    def __init__(self, pubkey_path: str):
+        self._pubkey_path = Path(pubkey_path)
+
+    @property
+    def pubkey_path(self) -> Path:
+        return self._pubkey_path
 
 
-class JWTAuthService(
-    auth_service.AuthService, auth_service_type="jwt_auth", is_default=True
-):
+
+class JWTAuthService(AuthService):
     def __init__(
         self, pubkey_path: Path, is_resource_protected: IsResourceProtected
     ) -> None:

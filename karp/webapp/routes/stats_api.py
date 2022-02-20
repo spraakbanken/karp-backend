@@ -23,8 +23,7 @@ def get_field_values(
     resource_id: str,
     field: str,
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(
-        inject_from_req(auth.AuthService)),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):

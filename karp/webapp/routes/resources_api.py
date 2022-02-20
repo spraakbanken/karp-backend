@@ -51,6 +51,7 @@ async def get_all_resources() -> list[dict]:
 def create_new_resource(
     new_resource: ResourceCreate = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
     creating_resource_uc: CreatingResource = Depends(deps.get_lex_uc(CreatingResource)),
     creating_entry_repo_uc: CreatingEntryRepo = Depends(deps.get_lex_uc(CreatingEntryRepo)),
 ) -> ResourceDto:

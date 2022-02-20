@@ -1,10 +1,14 @@
 from pathlib import Path
 import injector
 
-from karp.auth.domain.auth_service import AuthService
-from karp.auth.application.queries import GetResourcePermissions, IsResourceProtected
+from karp.auth import (
+    AuthService,
+    AuthServiceConfig,
+    GetResourcePermissions,
+    IsResourceProtected,
+)
 from karp.auth_infrastructure.queries import LexGetResourcePermissions, LexIsResourceProtected
-from karp.auth_infrastructure.services import DummyAuthService, JWTAuthService
+from karp.auth_infrastructure.services import DummyAuthService, JWTAuthService, JWTAuthServiceConfig
 from karp.lex.application.queries import GetPublishedResources, ReadOnlyResourceRepository
 
 
@@ -34,6 +38,11 @@ class JwtAuthInfrastructure(injector.Module):
     def __init__(self, pubkey_path: Path) -> None:
         super().__init__()
         self.pubkey_path = pubkey_path
+
+    @injector.provider
+    @injector.singleton
+    def jwt_auth_service_config(self) -> AuthServiceConfig:
+        return JWTAuthServiceConfig(self.pubkey_path)
 
     @injector.provider
     def jwt_auth_service(

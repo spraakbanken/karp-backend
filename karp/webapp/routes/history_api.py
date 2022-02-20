@@ -39,8 +39,8 @@ def get_diff(
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
-    auth_service: AuthService = Depends(inject_from_req(AuthService)),
-    get_entry_diff: GetEntryDiff = Depends(inject_from_req(GetEntryDiff)),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    get_entry_diff: GetEntryDiff = Depends(deps.get_entry_diff),
 ):
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [resource_id]
@@ -80,8 +80,8 @@ def get_history(
     from_version: Optional[int] = Query(None),
     current_page: int = Query(0),
     page_size: int = Query(100),
-    auth_service: AuthService = Depends(inject_from_req(AuthService)),
-    get_history: GetHistory = Depends(inject_from_req(GetHistory)),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    get_history: GetHistory = Depends(deps.get_history),
 ):
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [resource_id]
