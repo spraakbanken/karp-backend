@@ -11,7 +11,7 @@ from karp import errors as karp_errors, auth
 from karp.search.application.queries import SearchService, QueryRequest
 from karp.webapp import schemas
 
-from karp.webapp.dependencies.auth import get_current_user
+from karp.webapp import dependencies as deps
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 
@@ -34,7 +34,7 @@ def get_entries_by_id(
         description="Comma-separated. The ids to perform operation on.",
         regex=r"^\w(,\w)*",
     ),
-    user: auth.User = Security(get_current_user, scopes=["read"]),
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(
         inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
@@ -84,7 +84,7 @@ def query_split(
         schemas.EntryFormat.json,
         description="Will return the result in the specified format.",
     ),
-    user: auth.User = Security(get_current_user, scopes=["read"]),
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(
         inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
@@ -160,7 +160,7 @@ def query(
         alias="format",
         description="Will return the result in the specified format.",
     ),
-    user: auth.User = Security(get_current_user, scopes=["read"]),
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(
         inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),

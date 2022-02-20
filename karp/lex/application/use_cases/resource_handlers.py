@@ -10,29 +10,11 @@ from karp.lex.domain.entities import Resource
 from karp.foundation import events as foundation_events
 from karp.foundation.commands import CommandHandler
 from karp.foundation import messagebus
+from karp.lex.application.queries import ResourceDto
 from karp.lex.application import repositories as lex_repositories
 from karp.lex.domain import commands
 from karp.lex.application import repositories
 
-
-# from karp.application import ctx
-
-# from karp.infrastructure.repositories import repositories
-
-# from karp import get_resource_string
-# from karp.database import db
-# from karp import database
-# from karp.util.json_schema import create_entry_json_schema
-# from karp.errors import KarpError
-# from karp.errors import ClientErrorCodes
-# from karp.errors import (
-#     ResourceNotFoundError,
-#     ResourceInvalidConfigError,
-#     ResourceConfigUpdateError,
-# )
-# from karp.errors import PluginNotFoundError
-# from .resource import Resource
-# from karp.resourcemgr.entrymetadata import EntryMetadata
 
 logger = logging.getLogger("karp")
 
@@ -49,7 +31,7 @@ def get_field_translations(resource_id: str) -> Optional[Dict]:
         return resource.config.get("field_mapping") if resource else None
 
 
-class BaseResourceHandler:
+class BasingResource:
     def __init__(
         self,
         resource_uow: repositories.ResourceUnitOfWork
@@ -173,30 +155,33 @@ def create_resource_from_path(config: Path) -> List[Resource]:
 # def update_resource_from_file(config_file: BinaryIO) -> Tuple[str, int]:
 #     return update_resource(config_file)
 
-class CreateResourceHandler(CommandHandler[commands.CreateResource], BaseResourceHandler):
+class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
     def __init__(
         self,
         resource_uow: repositories.ResourceUnitOfWork,
-        # entry_uow_factory: repositories.EntryUowFactory,
-        entry_uow_repo_uow: lex_repositories.EntryUowRepositoryUnitOfWork
+        entry_repo_uow: lex_repositories.EntryUowRepositoryUnitOfWork
     ) -> None:
         super().__init__(resource_uow=resource_uow)
-        # self.entry_uow_factory = entry_uow_factory
-        self.entry_uow_repo_uow = entry_uow_repo_uow
+        self.entry_repo_uow = entry_repo_uow
 
-    def __call__(self, cmd: commands.CreateResource):
-        with self.resource_uow as uow, self.entry_uow_repo_uow as entry_uow_repo_uow:
-            try:
-                existing_resource = uow.resources.by_resource_id(
+    def execute(self, cmd: commands.CreateResource) -> ResourceDto:
+        with self.entry_repo_uow as uow:
+            entry_repo_exists = uow.repo.get_by_id_optional(cmd.entry_repo_id)
+            if not entry_repo_exists:
+                raise RuntimeError(f"Entry repository '{cmd.entry_repo_id}' not found")
+
+        with self.resource_uow as uow:
+            existing_resource = uow.repo.get_by_resource_id_optional(
                     cmd.resource_id)
-                if existing_resource and existing_resource.id != cmd.id:
-                    raise errors.IntegrityError(
-                        f"Resource with resource_id='{cmd.resource_id}' already exists."
-                    )
-            except errors.ResourceNotFound:
-                pass
-            _entry_repo_exists = entry_uow_repo_uow.repo.get_by_id(
-                cmd.entry_repo_id)
+            if (
+                existing_resource
+                and not existing_resource.discarded
+                and existing_resource.id != cmd.id
+            ):
+                raise errors.IntegrityError(
+                    f"Resource with resource_id='{cmd.resource_id}' already exists."
+                )
+
             resource = entities.create_resource(
                 entity_id=cmd.entity_id,
                 resource_id=cmd.resource_id,
@@ -210,6 +195,7 @@ class CreateResourceHandler(CommandHandler[commands.CreateResource], BaseResourc
 
             uow.repo.save(resource)
             uow.commit()
+        return ResourceDto(**resource.dict())
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
@@ -300,11 +286,11 @@ def create_new_resource(config_file: IO, config_dir=None) -> Resource:
 
 #     return config
 
-class UpdateResourceHandler(CommandHandler[commands.UpdateResource], BaseResourceHandler):
+class UpdatingResource(CommandHandler[commands.UpdateResource], BasingResource):
     def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
         super().__init__(resource_uow=resource_uow)
 
-    def __call__(self, cmd: commands.UpdateResource):
+    def execute(self, cmd: commands.UpdateResource):
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(cmd.resource_id)
             found_changes = False
@@ -412,11 +398,11 @@ class UpdateResourceHandler(CommandHandler[commands.UpdateResource], BaseResourc
 
 #     return resource_id, resource_def.version
 
-class PublishResourceHandler(CommandHandler[commands.PublishResource], BaseResourceHandler):
+class PublishingResource(CommandHandler[commands.PublishResource], BasingResource):
     def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
         super().__init__(resource_uow=resource_uow)
 
-    def __call__(self, cmd: commands.PublishResource):
+    def execute(self, cmd: commands.PublishResource):
         print(f"publish_resource resource_id='{cmd.resource_id}' ...")
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(cmd.resource_id)

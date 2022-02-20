@@ -1,5 +1,5 @@
 import abc
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 import injector
 
@@ -8,7 +8,7 @@ CommandType = TypeVar('CommandType')
 
 
 class CommandHandler(Generic[CommandType]):
-    def __call__(self, command: CommandType) -> None:
+    def execute(self, command: CommandType) -> Any:
         raise NotImplementedError()
 
 
@@ -30,4 +30,4 @@ class InjectorCommandBus(CommandBus):
         cmd_cls = type(command)
         cmd_handler = self._injector.get(
             CommandHandler[cmd_cls])  # type: ignore
-        cmd_handler(command)
+        cmd_handler.execute(command)

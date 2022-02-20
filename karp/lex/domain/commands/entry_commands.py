@@ -10,8 +10,9 @@ from karp.lex.domain import errors
 
 
 class AddEntry(Command):
+    entity_id: unique_id.UniqueId = pydantic.Field(
+        default_factory=unique_id.make_unique_id)
     resource_id: str
-    entity_id: unique_id.UniqueId
     entry: typing.Dict
     user: str
     message: str

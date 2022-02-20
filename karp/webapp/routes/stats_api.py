@@ -8,7 +8,7 @@ from karp.foundation.value_objects import PermissionLevel
 from karp.search.application.queries import SearchService, StatisticsDto
 from karp.webapp import schemas
 
-from karp.webapp.dependencies.auth import get_current_user
+from karp.webapp import dependencies as deps
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 
@@ -22,7 +22,7 @@ router = APIRouter(tags=["Statistics"])
 def get_field_values(
     resource_id: str,
     field: str,
-    user: auth.User = Security(get_current_user, scopes=["read"]),
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(
         inject_from_req(auth.AuthService)),
     search_service: SearchService = Depends(inject_from_req(SearchService)),

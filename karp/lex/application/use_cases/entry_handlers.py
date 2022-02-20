@@ -21,6 +21,7 @@ from karp.errors import (ClientErrorCodes, EntryIdMismatch, EntryNotFoundError,
 from karp.foundation import events as foundation_events
 from karp.foundation import messagebus
 from karp.lex.domain import commands
+from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application import repositories
 
 # from . import context
@@ -83,30 +84,30 @@ _logger = logging.getLogger("karp")
 #     return cls.query.filter_by(entry_id=entry_id).first()
 #
 #
-class BaseEntryHandler:
+class BasingEntry:
     def __init__(
         self,
-        entry_uow_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
         resource_uow: repositories.ResourceUnitOfWork
     ) -> None:
         super().__init__()
-        self.entry_uow_repo_uow = entry_uow_repo_uow
+        self.entry_repo_uow = entry_repo_uow
         self.resource_uow = resource_uow
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
-        yield from self.entry_uow_repo_uow.collect_new_events()
+        yield from self.entry_repo_uow.collect_new_events()
 
     def get_entry_uow(self, entry_repo_id: unique_id.UniqueId) -> EntryUnitOfWork:
-        with self.entry_uow_repo_uow as uw:
+        with self.entry_repo_uow as uw:
             return uw.repo.get_by_id(entry_repo_id)
 
 
-class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
+class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
 
-    def __call__(self, cmd: commands.AddEntry):
+    def execute(self, cmd: commands.AddEntry):
         with self.resource_uow:
-            resource = self.resource_uow.resources.by_resource_id(
+            resource = self.resource_uow.repo.by_resource_id(
                 cmd.resource_id)
 
         try:
@@ -116,24 +117,20 @@ class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
                 resource_id=cmd.resource_id,
                 entry=cmd.entry
             ) from err
-        validate_entry = _compile_schema(resource.entry_json_schema)
-
+        entry_schema = EntrySchema(resource.entry_json_schema)
 
         with self.get_entry_uow(resource.entry_repository_id) as uw:
-            try:
-                existing_entry = uw.repo.by_entry_id(entry_id)
-                if (
-                    existing_entry
-                    and not existing_entry.discarded
-                    and existing_entry.id != cmd.entity_id
-                ):
-                    raise errors.IntegrityError(
-                        f"An entry with entry_id '{entry_id}' already exists."
-                    )
-            except errors.EntryNotFound:
-                pass
+            existing_entry = uw.repo.get_by_entry_id_optional(entry_id)
+            if (
+                existing_entry
+                and not existing_entry.discarded
+                and existing_entry.id != cmd.entity_id
+            ):
+                raise errors.IntegrityError(
+                    f"An entry with entry_id '{entry_id}' already exists."
+                )
 
-            _validate_entry(validate_entry, cmd.entry)
+            entry_schema.validate_entry(cmd.entry)
 
             entry = resource.create_entry_from_dict(
                 cmd.entry,
@@ -153,15 +150,15 @@ class AddEntryHandler(BaseEntryHandler, CommandHandler[commands.AddEntry]):
 #     return entry_json
 
 
-class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry]):
-    def __call__(self, cmd: commands.UpdateEntry):
+class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
+    def execute(self, cmd: commands.UpdateEntry):
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(
                 cmd.resource_id
             )
 
-        schema = _compile_schema(resource.entry_json_schema)
-        _validate_entry(schema, cmd.entry)
+        entry_schema = EntrySchema(resource.entry_json_schema)
+        entry_schema.validate_entry(cmd.entry)
 
         with self.get_entry_uow(resource.entry_repository_id) as uw:
             try:
@@ -173,13 +170,11 @@ class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry])
                     cmd.resource_id,
                     cmd.entry_id,
                     entity_id=None,
-                    # entry_version=cmd.version,
-                    # resource_version=resource.version,
                 ) from err
 
             diff = jsondiff.compare(current_db_entry.body, cmd.entry)
             if not diff:
-                return
+                return current_db_entry
 
             #     db_entry_json = json.dumps(entry)
             #     db_id = current_db_entry.id
@@ -207,14 +202,8 @@ class UpdateEntryHandler(BaseEntryHandler, CommandHandler[commands.UpdateEntry])
             else:
                 uw.repo.save(current_db_entry)
             uw.commit()
-        # if resource.is_published:
-        #     if new_entry_id != entry_id:
-        #         ctx.search_service.delete_entry(resource, entry_id=entry_id)
-        #     indexing.add_entries(
-        #         ctx.resource_repo, ctx.search_service, resource, [current_db_entry]
-        #     )
 
-    # return current_db_entry.entry_id
+        return current_db_entry
 
 
 def update_entries(*args, **kwargs):
@@ -232,11 +221,11 @@ def add_entries_from_file(
     )
 
 
-class AddEntriesHandler(
-    BaseEntryHandler,
+class AddingEntries(
+    BasingEntry,
     CommandHandler[commands.AddEntries]
 ):
-    def __call__(self, cmd: commands.AddEntries):
+    def execute(self, cmd: commands.AddEntries):
         """
         Add entries to DB and INDEX (if present and resource is active).
 
@@ -268,7 +257,7 @@ class AddEntriesHandler(
         validate_entry = _compile_schema(resource.entry_json_schema)
 
         created_db_entries = []
-        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
                 resource.entry_repository_id) as uw:
             for entry_raw in cmd.entries:
                 _validate_entry(validate_entry, entry_raw)
@@ -410,13 +399,13 @@ class AddEntriesHandler(
 #     return kwargs
 
 
-class DeleteEntryHandler(BaseEntryHandler, CommandHandler[commands.DeleteEntry]):
+class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):
 
-    def __call__(self, cmd: commands.DeleteEntry):
+    def execute(self, cmd: commands.DeleteEntry):
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(cmd.resource_id)
 
-        with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             resource.entry_repository_id
         ) as uw:
             entry = uw.repo.by_entry_id(cmd.entry_id)

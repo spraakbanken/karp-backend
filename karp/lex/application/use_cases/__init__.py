@@ -1,9 +1,12 @@
 from .entry_handlers import (
-    AddEntryHandler,
-    AddEntriesHandler,
-    DeleteEntryHandler,
-                             UpdateEntryHandler)
-from .entry_repo_handlers import CreateEntryRepositoryHandler
-from .resource_handlers import (CreateResourceHandler,
-                                PublishResourceHandler,
-                                UpdateResourceHandler)
+    AddingEntry,
+    AddingEntries,
+    DeletingEntry,
+    UpdatingEntry,
+)
+from .entry_repo_handlers import CreatingEntryRepo
+from .resource_handlers import (
+    CreatingResource,
+    PublishingResource,
+    UpdatingResource,
+)

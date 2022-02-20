@@ -1,7 +1,6 @@
 import injector
 
 from karp.foundation.commands import CommandHandler
-from karp.lex.application import handlers
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
@@ -14,9 +13,14 @@ from karp.lex.domain.commands import (
 )
 from karp.lex.domain import commands
 from karp.lex.application.use_cases import (
+    AddingEntries,
     AddingEntry,
     CreatingEntryRepo,
     CreatingResource,
+    DeletingEntry,
+    PublishingResource,
+    UpdatingEntry,
+    UpdatingResource,
 )
 from karp.lex.application.queries import (
     GetEntryDiff,
@@ -38,18 +42,18 @@ class Lex(injector.Module):
         self,
         uow: EntryUowRepositoryUnitOfWork,
     ) -> CommandHandler[CreateEntryRepository]:
-        return handlers.CreateEntryRepositoryHandler(
+        return CreatingEntryRepo(
             entry_repo_uow=uow,
         )
 
     @injector.provider
     def create_resource(
         self,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
         resource_uow: ResourceUnitOfWork,
     ) -> CommandHandler[CreateResource]:
-        return handlers.CreateResourceHandler(
-            entry_uow_repo_uow=entry_uow_repo_uow,
+        return CreatingResource(
+            entry_repo_uow=entry_repo_uow,
             resource_uow=resource_uow,
         )
 
@@ -58,55 +62,55 @@ class Lex(injector.Module):
         self,
         resource_uow: ResourceUnitOfWork,
     ) -> CommandHandler[commands.UpdateResource]:
-        return handlers.UpdateResourceHandler(resource_uow)
+        return UpdatingResource(resource_uow)
 
     @injector.provider
     def publish_resource(
         self,
         resource_uow: ResourceUnitOfWork,
     ) -> CommandHandler[commands.PublishResource]:
-        return handlers.PublishResourceHandler(resource_uow)
+        return PublishingResource(resource_uow)
 
     @injector.provider
     def add_entry(
         self,
         resource_uow: ResourceUnitOfWork,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork
+        entry_repo_uow: EntryUowRepositoryUnitOfWork
     ) -> CommandHandler[commands.AddEntry]:
-        return handlers.AddEntryHandler(
+        return AddingEntry(
             resource_uow=resource_uow,
-            entry_uow_repo_uow=entry_uow_repo_uow
+            entry_repo_uow=entry_repo_uow
         )
 
     @injector.provider
     def add_entries(
         self,
         resource_uow: ResourceUnitOfWork,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork
+        entry_repo_uow: EntryUowRepositoryUnitOfWork
     ) -> CommandHandler[commands.AddEntries]:
-        return handlers.AddEntriesHandler(
+        return AddingEntries(
             resource_uow=resource_uow,
-            entry_uow_repo_uow=entry_uow_repo_uow
+            entry_repo_uow=entry_repo_uow
         )
 
     @injector.provider
     def update_entry(
         self,
         resource_uow: ResourceUnitOfWork,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork
+        entry_repo_uow: EntryUowRepositoryUnitOfWork
     ) -> CommandHandler[commands.UpdateEntry]:
-        return handlers.UpdateEntryHandler(
+        return UpdatingEntry(
             resource_uow=resource_uow,
-            entry_uow_repo_uow=entry_uow_repo_uow
+            entry_repo_uow=entry_repo_uow
         )
 
     @injector.provider
     def delete_entry(
         self,
         resource_uow: ResourceUnitOfWork,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork
+        entry_repo_uow: EntryUowRepositoryUnitOfWork
     ) -> CommandHandler[commands.DeleteEntry]:
-        return handlers.DeleteEntryHandler(
+        return DeletingEntry(
             resource_uow=resource_uow,
-            entry_uow_repo_uow=entry_uow_repo_uow
+            entry_repo_uow=entry_repo_uow
         )

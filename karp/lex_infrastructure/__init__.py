@@ -98,22 +98,22 @@ class GenericLexInfrastructure(injector.Module):
     def get_referenced_entries(
         self,
         resources_repo: ReadOnlyResourceRepository,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> GetReferencedEntries:
         return GenericGetReferencedEntries(
             resource_repo=resources_repo,
-            entry_uow_repo_uow=entry_uow_repo_uow,
+            entry_repo_uow=entry_repo_uow,
         )
 
     @injector.provider
     def gey_entry_diff(
         self,
         resources_uow: ResourceUnitOfWork,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> GetEntryDiff:
         return GenericGetEntryDiff(
             resource_uow=resources_uow,
-            entry_uow_repo_uow=entry_uow_repo_uow,
+            entry_repo_uow=entry_repo_uow,
         )
 
     @injector.provider
@@ -129,31 +129,31 @@ class GenericLexInfrastructure(injector.Module):
     def entry_views(
         self,
         get_entry_repo_id: GetEntryRepositoryId,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> EntryViews:
         return GenericEntryViews(
             get_entry_repo_id=get_entry_repo_id,
-            entry_uow_repo_uow=entry_uow_repo_uow,
+            entry_repo_uow=entry_repo_uow,
         )
 
     @injector.provider
     def get_history(
         self,
         resources_uow: ResourceUnitOfWork,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> GetHistory:
         return GenericGetHistory(
             resource_uow=resources_uow,
-            entry_uow_repo_uow=entry_uow_repo_uow,
+            entry_repo_uow=entry_repo_uow,
         )
 
     @injector.provider
     def get_entry_history(
         self,
         resources_uow: ResourceUnitOfWork,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> GetEntryHistory:
         return GenericGetEntryHistory(
             resource_uow=resources_uow,
-            entry_uow_repo_uow=entry_uow_repo_uow,
+            entry_repo_uow=entry_repo_uow,
         )

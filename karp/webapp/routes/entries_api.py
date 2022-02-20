@@ -5,11 +5,10 @@ from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
                      status, Path, Query)
 from starlette import responses
 
-from karp import errors as karp_errors, auth
+from karp import errors as karp_errors, auth, lex
 from karp.lex.application.queries import EntryViews, EntryDto, GetEntryHistory
 from karp.lex.domain import commands, errors
 from karp.auth import User
-from karp.foundation.commands import CommandBus
 from karp.foundation.value_objects import PermissionLevel, unique_id
 from karp.auth import AuthService
 from karp.webapp import schemas, dependencies as deps
@@ -101,8 +100,7 @@ def update_entry(
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
-    bus: CommandBus = Depends(inject_from_req(CommandBus)),
-    entry_views: EntryViews = Depends(inject_from_req(EntryViews)),
+    updating_entry_uc: lex.UpdatingEntry = Depends(deps.get_lex_uc(lex.UpdatingEntry)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -119,11 +117,9 @@ def update_entry(
     #     if not (version and entry and message):
     #         raise KarpError("Missing version, entry or message")
     try:
-        entry = entry_views.get_by_entry_id(resource_id, entry_id)
-        bus.dispatch(
+        entry = updating_entry_uc.execute(
             commands.UpdateEntry(
                 resource_id=resource_id,
-                entity_id=entry.entry_uuid,
                 entry_id=entry_id,
                 version=data.version,
                 user=user.identifier,
@@ -143,8 +139,7 @@ def update_entry(
         #     message=data.message,
         #     # force=force_update,
         # )
-        entry = entry_views.get_by_id(resource_id, entry.entry_uuid)
-        return {"newID": entry.entry_id, "uuid": entry.entry_uuid}
+        return {"newID": entry.entry_id, "entityID": entry.entity_id}
     except errors.EntryNotFound:
         return responses.JSONResponse(
             status_code=404,
@@ -153,7 +148,7 @@ def update_entry(
                 'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
                 'resource': resource_id,
                 'entry_id': entry_id,
-            }
+            },
         )
     except errors.UpdateConflict as err:
         response.status_code = status.HTTP_400_BAD_REQUEST
@@ -172,7 +167,7 @@ def delete_entry(
     entry_id: str,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(inject_from_req(AuthService)),
-    bus: CommandBus = Depends(inject_from_req(CommandBus)),
+    deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry))
 ):
     """Delete a entry from a resource.
 
@@ -191,7 +186,7 @@ def delete_entry(
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
     try:
-        bus.dispatch(
+        deleting_entry_uc.execute(
             commands.DeleteEntry(
                 resource_id=resource_id,
                 entry_id=entry_id,

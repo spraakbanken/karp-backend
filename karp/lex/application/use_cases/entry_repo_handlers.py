@@ -2,14 +2,15 @@ from karp.lex.domain import commands
 from karp.lex.application import repositories
 
 
-class CreateEntryRepositoryHandler:
+class CreatingEntryRepo:
     def __init__(
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
+        **kwargs,
     ):
         self._entry_repo_uow = entry_repo_uow
 
-    def __call__(
+    def execute(
         self,
         command: commands.CreateEntryRepository
     ) -> None:
@@ -26,5 +27,6 @@ class CreateEntryRepositoryHandler:
         with self._entry_repo_uow as uow:
             uow.repo.save(entry_repo)
             uow.commit()
+        return entry_repo
 
 

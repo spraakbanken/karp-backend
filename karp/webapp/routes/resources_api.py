@@ -10,7 +10,6 @@ from karp.auth.application.queries import GetResourcePermissions, ResourcePermis
 
 from karp.webapp.schemas import ResourceCreate, ResourcePublic
 from karp.webapp import dependencies as deps
-from karp.webapp.dependencies.auth import get_current_user, get_user
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 from karp.lex import (
@@ -51,7 +50,7 @@ async def get_all_resources() -> list[dict]:
 )
 def create_new_resource(
     new_resource: ResourceCreate = Body(...),
-    user: auth.User = Security(get_user, scopes=["admin"]),
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),
     creating_resource_uc: CreatingResource = Depends(deps.get_lex_uc(CreatingResource)),
     creating_entry_repo_uc: CreatingEntryRepo = Depends(deps.get_lex_uc(CreatingEntryRepo)),
 ) -> ResourceDto:

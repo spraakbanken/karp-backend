@@ -16,7 +16,7 @@ from karp.lex.application.queries import (
 )
 from karp.webapp import schemas
 
-from karp.webapp.dependencies.auth import get_user
+from karp.webapp import dependencies as deps
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 
@@ -33,7 +33,7 @@ router = APIRouter()
 def get_diff(
     resource_id: str,
     entry_id: str,
-    user: auth.User = Security(get_user, scopes=["admin"]),
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),
     from_version: Optional[int] = None,
     to_version: Optional[int] = None,
     from_date: Optional[float] = None,
@@ -71,7 +71,7 @@ def get_diff(
 )
 def get_history(
     resource_id: str,
-    user: auth.User = Security(get_user, scopes=["admin"]),
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),
     user_id: Optional[str] = Query(None),
     entry_id: Optional[str] = Query(None),
     from_date: Optional[float] = Query(None),
