@@ -7,6 +7,7 @@ from karp.foundation.events import EventBus
 
 from karp.foundation.value_objects import UniqueId
 from karp.foundation.commands import CommandBus
+from karp.lex import EntryRepositoryUnitOfWorkFactory
 from karp.lex.domain import entities as lex_entities
 from karp.lex.application import repositories as lex_repositories
 from karp.lex.application.queries import (
@@ -180,7 +181,7 @@ class FakeEntryUnitOfWork2(
 class FakeResourceUnitOfWork(FakeUnitOfWork, lex_repositories.ResourceUnitOfWork):
     def __init__(self, event_bus: EventBus):
         FakeUnitOfWork.__init__(self)
-        lex_repositories.ResourceUnitOfWork.__init__(self,event_bus=event_bus)
+        lex_repositories.ResourceUnitOfWork.__init__(self, event_bus=event_bus)
         self._resources = FakeResourceRepository()
 
     @property
@@ -188,19 +189,19 @@ class FakeResourceUnitOfWork(FakeUnitOfWork, lex_repositories.ResourceUnitOfWork
         return self._resources
 
 
-class FakeEntryUowFactory(lex_repositories.EntryUowFactory):
-    def create(
-        self,
-        resource_id: str,
-        resource_config: typing.Dict,
-        entry_repository_settings,
-    ) -> lex_repositories.EntryUnitOfWork:
-        entry_uow = FakeEntryUnitOfWork(entry_repository_settings)
-        if "entry_repository_type" in resource_config:
-            entry_uow.repo.type = resource_config["entry_repository_type"]
-        if entry_repository_settings:
-            entry_uow.repo_settings = entry_repository_settings
-        return entry_uow
+# class FakeEntryUowFactory(lex_repositories.EntryUowFactory):
+#     def create(
+#         self,
+#         resource_id: str,
+#         resource_config: typing.Dict,
+#         entry_repository_settings,
+#     ) -> lex_repositories.EntryUnitOfWork:
+#         entry_uow = FakeEntryUnitOfWork(entry_repository_settings)
+#         if "entry_repository_type" in resource_config:
+#             entry_uow.repo.type = resource_config["entry_repository_type"]
+#         if entry_repository_settings:
+#             entry_uow.repo_settings = entry_repository_settings
+#         return entry_uow
 
 
 class FakeEntryUnitOfWorkCreator:
@@ -257,9 +258,17 @@ class FakeEntryUowRepository(lex_repositories.EntryUowRepository):
 
 
 class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):
-    def __init__(self, event_bus: EventBus) -> None:
+    def __init__(
+        self,
+        event_bus: EventBus,
+        entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+    ) -> None:
         FakeUnitOfWork.__init__(self)
-        lex_repositories.EntryUowRepositoryUnitOfWork.__init__(self, event_bus=event_bus)
+        lex_repositories.EntryUowRepositoryUnitOfWork.__init__(
+            self,
+            event_bus=event_bus,
+            entry_uow_factory=entry_uow_factory,
+        )
         self._repo = FakeEntryUowRepository()
 
     @property
@@ -270,8 +279,15 @@ class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUow
 class FakeLexInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
-    def entry_uow_repo_uow(self, event_bus: EventBus) -> lex_repositories.EntryUowRepositoryUnitOfWork:
-        return FakeEntryUowRepositoryUnitOfWork(event_bus=event_bus)
+    def entry_uow_repo_uow(
+        self,
+        event_bus: EventBus,
+        entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+    ) -> lex_repositories.EntryUowRepositoryUnitOfWork:
+        return FakeEntryUowRepositoryUnitOfWork(
+            event_bus=event_bus,
+            entry_uow_factory=entry_uow_factory,
+        )
 
     # @injector.provider
     # def entry_uow_factory(self) -> lex_repositories.EntryRepositoryUnitOfWorkFactory:

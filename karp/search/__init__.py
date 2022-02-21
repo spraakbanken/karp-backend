@@ -6,7 +6,7 @@ from karp.foundation.commands import CommandHandler
 from karp.foundation.events import EventHandler
 from karp.lex.domain import events as lex_events
 from karp.search.domain import commands
-from karp.search.application import handlers
+from karp.search.application.use_cases import ReindexingResource
 from karp.search.application.queries import ResourceViews
 from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry
 from karp.search.application.transformers import (
@@ -23,7 +23,7 @@ class Search(injector.Module):
         pre_processor: PreProcessor,
         resource_views: ResourceViews,
     ) -> CommandHandler[commands.ReindexResource]:
-        return handlers.ReindexResourceHandler(
+        return ReindexingResource(
             index_uow=index_uow,
             pre_processor=pre_processor,
             resource_views=resource_views,

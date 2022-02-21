@@ -1,11 +1,7 @@
 
-from karp.lex.application.handlers import (
-    CreateEntryRepositoryHandler,
-)
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
 )
-from karp.lex.domain.commands import CreateEntryRepository
 
 from . import adapters, factories
 

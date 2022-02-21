@@ -17,7 +17,7 @@ class TestCreateResource:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd = factories.CreateResourceFactory()
-        with pytest.raises(errors.EntryRepoNotFound):
+        with pytest.raises(errors.NoSuchEntryRepository):
             lex_ctx.command_bus.dispatch(cmd)
 
     def test_create_resource(
@@ -35,8 +35,8 @@ class TestCreateResource:
         assert resource_uow.was_committed
         assert len(resource_uow.resources) == 1
 
-        resource = resource_uow.resources.by_id(cmd.id)
-        assert resource.id == cmd.id
+        resource = resource_uow.resources.by_id(cmd.entity_id)
+        assert resource.entity_id == cmd.entity_id
         assert resource.resource_id == cmd.resource_id
         # assert len(resource.domain_events) == 1
 
@@ -89,7 +89,7 @@ class TestUpdateResource:
         assert resource.config == changed_config
         assert resource.version == 2
 
-        resource = resource_uow.resources.get_by_id(cmd2.id)
+        resource = resource_uow.resources.get_by_id(cmd2.entity_id)
         assert resource is not None
         assert resource.config == changed_config
         assert resource.version == 2
@@ -117,7 +117,7 @@ class TestPublishResource:
 
         assert resource_uow.was_committed  # type: ignore
 
-        resource = resource_uow.resources.by_id(cmd2.id)
+        resource = resource_uow.resources.by_id(cmd2.entity_id)
         assert resource.is_published
         assert resource.version == 2
         # assert index_uow.repo.indicies[resource_id].published

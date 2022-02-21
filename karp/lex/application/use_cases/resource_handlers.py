@@ -168,15 +168,16 @@ class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
         with self.entry_repo_uow as uow:
             entry_repo_exists = uow.repo.get_by_id_optional(cmd.entry_repo_id)
             if not entry_repo_exists:
-                raise RuntimeError(f"Entry repository '{cmd.entry_repo_id}' not found")
+                raise errors.NoSuchEntryRepository(
+                    f"Entry repository '{cmd.entry_repo_id}' not found")
 
         with self.resource_uow as uow:
             existing_resource = uow.repo.get_by_resource_id_optional(
-                    cmd.resource_id)
+                cmd.resource_id)
             if (
                 existing_resource
                 and not existing_resource.discarded
-                and existing_resource.id != cmd.id
+                and existing_resource.entity_id != cmd.entity_id
             ):
                 raise errors.IntegrityError(
                     f"Resource with resource_id='{cmd.resource_id}' already exists."

@@ -128,7 +128,7 @@ class CreateResourceFactory(factory.Factory):
     config = factory.Faker('resource_config')
     entry_repo_id = factory.LazyFunction(make_unique_id)
     message = 'created'
-    created_by = 'kristoff@example.com'
+    user = factory.Faker('email')
 
 
 class UpdateResourceFactory(factory.Factory):

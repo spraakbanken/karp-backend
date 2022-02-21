@@ -99,3 +99,7 @@ class LogicError(LexDomainError):
 
 class InvalidEntrySchema(ValueError, LogicError):
     pass
+
+
+class NoSuchEntryRepository(ValueError, LexDomainError):
+    pass

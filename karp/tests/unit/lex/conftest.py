@@ -13,7 +13,7 @@ from karp.lex.application import repositories
 
 from .adapters import (
     FakeEntryUowRepositoryUnitOfWork,
-    FakeEntryUowFactory,
+    # FakeEntryUowFactory,
     FakeResourceUnitOfWork,
 )
 from . import adapters, factories
@@ -34,14 +34,14 @@ def fixture_resource_uow() -> FakeResourceUnitOfWork:
     return FakeResourceUnitOfWork()
 
 
-@pytest.fixture(name="entry_uows")
-def fixture_entry_uows() -> repositories.EntriesUnitOfWork:
-    return repositories.EntriesUnitOfWork()
+# @pytest.fixture(name="entry_uows")
+# def fixture_entry_uows() -> repositories.EntriesUnitOfWork:
+#     return repositories.EntriesUnitOfWork()
 
 
-@pytest.fixture(name="entry_uow_factory")
-def fixture_entry_uow_factory() -> FakeEntryUowFactory:
-    return FakeEntryUowFactory()
+# @pytest.fixture(name="entry_uow_factory")
+# def fixture_entry_uow_factory() -> FakeEntryUowFactory:
+#     return FakeEntryUowFactory()
 
 
 @pytest.fixture()

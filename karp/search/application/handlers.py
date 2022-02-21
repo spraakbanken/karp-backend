@@ -95,7 +95,7 @@ logger = logging.getLogger("karp")
 # ):
 
 
-class ReindexResourceHandler(
+class ReindexingResource(
     foundation_commands.CommandHandler[commands.ReindexResource]
 ):
     def __init__(
@@ -109,7 +109,7 @@ class ReindexResourceHandler(
         self.resource_views = resource_views
         self.pre_processor = pre_processor
 
-    def __call__(
+    def execute(
         self,
         cmd: commands.ReindexResource
     ) -> None:
