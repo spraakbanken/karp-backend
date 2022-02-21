@@ -30,4 +30,5 @@ class InjectorCommandBus(CommandBus):
         cmd_cls = type(command)
         cmd_handler = self._injector.get(
             CommandHandler[cmd_cls])  # type: ignore
+
         cmd_handler.execute(command)

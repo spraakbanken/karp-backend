@@ -61,6 +61,7 @@ def wait_for_main_db_to_come_up(engine):
 def setup_environment() -> None:
     os.environ['TESTING'] = '1'
     os.environ['AUTH_JWT_PUBKEY_PATH'] = 'karp/tests/data/pubkey.pem'
+    os.environ['ELASTICSEARCH_HOST'] = 'localhost:9202'
 
 
 @pytest.fixture(scope="session")
@@ -115,9 +116,9 @@ def places_published(app):
         user='local admin',
         message='added',
     )
-    try:
 
-        bus.dispatch(cmd)
+    bus.dispatch(cmd)
+    try:
         bus.dispatch(
             commands.CreateResource(
                 resource_id=resource_id,
@@ -153,16 +154,16 @@ def municipalities_published(app):
 
     bus = app.state.app_context.container.get(CommandBus)
 
+    cmd = commands.CreateEntryRepository(
+        entity_id=make_unique_id(),
+        repository_type='default',
+        name=resource_id,
+        config=municipalities_config,
+        user='local admin',
+        message='added',
+    )
+    bus.dispatch(cmd)
     try:
-        cmd = commands.CreateEntryRepository(
-            entity_id=make_unique_id(),
-            repository_type='default',
-            name=resource_id,
-            config=municipalities_config,
-            user='local admin',
-            message='added',
-        )
-        bus.dispatch(cmd)
         cmd = commands.CreateResource.from_dict(
             municipalities_config,
             entry_repo_id=cmd.entity_id,

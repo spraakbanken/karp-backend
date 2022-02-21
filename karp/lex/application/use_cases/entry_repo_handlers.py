@@ -1,8 +1,9 @@
+from karp.foundation.commands import CommandHandler
 from karp.lex.domain import commands
 from karp.lex.application import repositories
 
 
-class CreatingEntryRepo:
+class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
     def __init__(
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
@@ -24,9 +25,8 @@ class CreatingEntryRepo:
             timestamp=command.timestamp,
             message=command.message,
         )
+
         with self._entry_repo_uow as uow:
             uow.repo.save(entry_repo)
             uow.commit()
         return entry_repo
-
-

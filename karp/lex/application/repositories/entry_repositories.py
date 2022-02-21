@@ -17,6 +17,10 @@ class EntryRepositoryUnitOfWorkFactory:
         entity_id: UniqueId,
         name: str,
         config: dict,
+        connection_str: Optional[str],
+        user: str,
+        message: str,
+        timestamp: float,
     ) -> EntryUnitOfWork:
         pass
 
@@ -32,7 +36,7 @@ class EntryUnitOfWorkCreator(Protocol):
         message: str,
         timestamp: float,
     ) -> EntryUnitOfWork:
-        pass
+        ...
 
 
 class InjectorEntryUnitOfWorkRepoFactory(
@@ -86,4 +90,3 @@ class EntryUowRepositoryUnitOfWork(unit_of_work.UnitOfWork[EntryUowRepository]):
     @property
     def factory(self) -> EntryRepositoryUnitOfWorkFactory:
         return self._entry_uow_factory
-

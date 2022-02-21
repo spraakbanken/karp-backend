@@ -72,6 +72,7 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
     def _commit(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         # try:
+
         self._session.commit()
         # self._state = SqlUnitOfWork.State.initialized
         # except db.exc.IntegrityError as err:
