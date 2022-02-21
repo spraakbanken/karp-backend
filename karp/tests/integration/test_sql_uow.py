@@ -21,7 +21,7 @@ class FakeEventBus(EventBus):
 class TestSqlResourceUnitOfWork:
     def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):
         uow = SqlResourceUnitOfWork(
-            sqlite_session_factory, event_bus=FakeEventBus())
+            session_factory=sqlite_session_factory, event_bus=FakeEventBus())
         with uow:
             resource = factories.ResourceFactory()
             uow.resources.save(resource)
@@ -36,7 +36,7 @@ class TestSqlResourceUnitOfWork:
             print(resource.to_string())
 
         uow = SqlResourceUnitOfWork(
-            sqlite_session_factory, event_bus=FakeEventBus())
+            session_factory=sqlite_session_factory, event_bus=FakeEventBus())
         with pytest.raises(AttributeError):
             with uow:
                 resource = factories.ResourceFactory()
