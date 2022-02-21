@@ -1,15 +1,14 @@
 import logging
 from typing import Dict, List
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Security
-from starlette import status
+from fastapi import APIRouter, Body, Depends, HTTPException, Security, status
 
 from karp.foundation.commands import CommandBus
-from karp import auth
+from karp import auth, lex
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto
 
 from karp.webapp.schemas import ResourceCreate, ResourcePublic
-from karp.webapp import dependencies as deps
+from karp.webapp import dependencies as deps, schemas
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 from karp.lex import (
@@ -55,6 +54,14 @@ def create_new_resource(
     creating_resource_uc: CreatingResource = Depends(deps.get_lex_uc(CreatingResource)),
     creating_entry_repo_uc: CreatingEntryRepo = Depends(deps.get_lex_uc(CreatingEntryRepo)),
 ) -> ResourceDto:
+    if not auth_service.authorize(
+        auth.PermissionLevel.admin, user, [new_resource.resource_id]
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
+        )
     try:
         if new_resource.entry_repo_id is None:
             entry_repo = creating_entry_repo_uc.execute(
@@ -72,6 +79,43 @@ def create_new_resource(
         resource = creating_resource_uc.execute(create_resource)
         logger.info('resource created: %s', resource)
         return resource
+    except Exception as err:
+        print(f'{err=}')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f'{err=}',
+        )
+
+
+@router.post(
+    '/{resource_id}/publish',
+    # response_model=ResourceDto,
+    status_code=status.HTTP_200_OK,
+)
+def publishing_resource(
+    resource_id: str,
+    resource_publish: schemas.ResourcePublish = Body(...),
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    publishing_resource_uc: lex.PublishingResource = Depends(deps.get_lex_uc(lex.PublishingResource)),
+):
+    if not auth_service.authorize(
+        auth.PermissionLevel.admin, user, [resource_id]
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
+        )
+    try:
+        resource_publish.resource_id = resource_id
+        publish_resource = commands.PublishResource(
+            user=user.identifier,
+            **resource_publish.dict(),
+        )
+        publishing_resource_uc.execute(publish_resource)
+        logger.info("resource '%s' published", resource_id)
+        return
     except Exception as err:
         print(f'{err=}')
         raise HTTPException(

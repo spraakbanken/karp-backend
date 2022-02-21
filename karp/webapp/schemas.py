@@ -82,3 +82,8 @@ class ResourceCreate(ResourceBase):
 class ResourcePublic(EntityIdMixin, ResourceBase):
     last_modified: float
     last_modified_by: str
+
+
+class ResourcePublish(BaseModel):
+    message: str
+    resource_id: Optional[str]

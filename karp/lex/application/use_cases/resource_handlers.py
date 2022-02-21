@@ -400,7 +400,11 @@ class UpdatingResource(CommandHandler[commands.UpdateResource], BasingResource):
 #     return resource_id, resource_def.version
 
 class PublishingResource(CommandHandler[commands.PublishResource], BasingResource):
-    def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
+    def __init__(
+        self,
+        resource_uow: repositories.ResourceUnitOfWork,
+        **kwargs,
+    ) -> None:
         super().__init__(resource_uow=resource_uow)
 
     def execute(self, cmd: commands.PublishResource):

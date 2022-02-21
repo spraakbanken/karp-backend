@@ -101,100 +101,59 @@ def fixture_client(app) -> TestClient:
 #             yield client
 
 
-def places_published(app):
+def create_and_publish_resource(
+    client: TestClient,
+    *,
+    path_to_config: str,
+    access_token: auth.AccessToken,
+):
+    from karp.webapp.schemas import ResourceCreate
 
-    with open("karp/tests/data/config/places.json") as fp:
-        places_config = json.load(fp)
-    resource_id = 'places'
+    with open(path_to_config) as fp:
+        resource_config = json.load(fp)
 
-    bus = app.state.app_context.container.get(CommandBus)
-    cmd = commands.CreateEntryRepository(
-        entity_id=make_unique_id(),
-        repository_type='default',
-        name=resource_id,
-        config=places_config,
-        user='local admin',
-        message='added',
+    resource_id = resource_config.pop('resource_id')
+    resource = ResourceCreate(
+        resource_id=resource_id,
+        name=resource_config.pop('resource_name'),
+        config=resource_config,
+        message=f'{resource_id} added',
     )
-
-    bus.dispatch(cmd)
-    try:
-        bus.dispatch(
-            commands.CreateResource(
-                resource_id=resource_id,
-                name=resource_id,
-                entry_repo_id=cmd.entity_id,
-                config=places_config,
-                user='local admin',
-                message='added',
-            )
-        )
-    except errors.IntegrityError:
-        raise
-    try:
-        bus.dispatch(
-            commands.PublishResource(
-                resource_id=resource_id,
-                user=cmd.user,
-                message=cmd.message,
-            )
-        )
-    except karp_errors.ResourceAlreadyPublished:
-        raise
-
-    return places_config
-
-
-def municipalities_published(app):
-
-    with open("karp/tests/data/config/municipalities.json") as fp:
-        municipalities_config = json.load(fp)
-
-    resource_id = 'municipalities'
-
-    bus = app.state.app_context.container.get(CommandBus)
-
-    cmd = commands.CreateEntryRepository(
-        entity_id=make_unique_id(),
-        repository_type='default',
-        name=resource_id,
-        config=municipalities_config,
-        user='local admin',
-        message='added',
+    response = client.post(
+        '/resources/',
+        json=resource.dict(),
+        headers=access_token.as_header(),
     )
-    bus.dispatch(cmd)
-    try:
-        cmd = commands.CreateResource.from_dict(
-            municipalities_config,
-            entry_repo_id=cmd.entity_id,
-            user=cmd.user,
-        )
-        bus.dispatch(cmd)
-    except errors.IntegrityError:
-        raise
-    try:
-        bus.dispatch(
-            commands.PublishResource(
-                resource_id=cmd.resource_id,
-                user=cmd.user,
-                message=cmd.message,
-            )
-        )
-    except karp_errors.ResourceAlreadyPublished:
-        raise
+    print(f'{response.json()=}')
+    assert response.status_code == 201
 
-    return municipalities_config
+    response = client.post(
+        f'/resources/{resource_id}/publish',
+        json={
+            'message': f'{resource_id} published',
+        },
+        headers=access_token.as_header(),
+    )
+    print(f'{response.json()=}')
+    assert response.status_code == 200
 
 
 @pytest.fixture(scope="session", name="fa_data_client")
-# @pytest.mark.usefixtures("places_published")
-# @pytest.mark.usefixtures("main_db")
 def fixture_fa_data_client(
     fa_client,
     admin_token: auth.AccessToken,
 ):
-    places_published(fa_client.app)
-    municipalities_published(fa_client.app)
+    create_and_publish_resource(
+        fa_client,
+        path_to_config='karp/tests/data/config/places.json',
+        access_token=admin_token,
+    )
+    create_and_publish_resource(
+        fa_client,
+        path_to_config='karp/tests/data/config/municipalities.json',
+        access_token=admin_token,
+    )
+    # municipalities_published(fa_client.app)
     # utils.add_entries(
     #     fa_client,
     #     {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
