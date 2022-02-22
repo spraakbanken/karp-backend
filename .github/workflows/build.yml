@@ -107,6 +107,7 @@ jobs:
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es.version }}.tar.gz
           tar -xzf elasticsearch-${{ matrix.es.version }}.tar.gz
+          ./elasticsearch-${{ matrix.es.version }}/bin/elasticsearch-plugin install analysis-icu
           echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es.version }}`" >> .env
           echo "SEARCH_CONTEXT=es6_search_service" >> .env
