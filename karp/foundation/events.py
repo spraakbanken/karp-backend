@@ -61,8 +61,7 @@ class InjectorEventBus(EventBus):
                 List[EventHandler[type(event)]]  # type: ignore
             )
         except injector.UnsatisfiedRequirement as err:
-            logger.info('No event handler for event?', karp_event=event)
-            logger.info('Got error "%s"', err)
+            logger.info('No event handler for event?', karp_event=event, err_message=err)
         else:
             for evt_handler in evt_handlers:
                 logger.debug(
