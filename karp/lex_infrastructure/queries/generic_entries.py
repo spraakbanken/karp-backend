@@ -1,12 +1,18 @@
 import typing
 
 from sb_json_tools import jsondiff
+import structlog
+
+from karp.lex import GetHistoryDto, HistoryDto
 
 from karp.lex.domain.entities import Entry
 from karp.lex.application.queries import EntryViews, EntryDto, EntryDiffDto, GetEntryDiff, GetEntryHistory, GetHistory, EntryHistoryRequest, EntryDiffRequest, GetEntryRepositoryId
 from karp.foundation.value_objects import unique_id
 from karp.lex.application.repositories.entry_repositories import EntryUowRepositoryUnitOfWork
 from karp.lex.application.repositories.unit_of_work import ResourceUnitOfWork
+
+
+logger = structlog.get_logger()
 
 
 class GenericEntryViews(EntryViews):
@@ -52,7 +58,7 @@ class GenericEntryViews(EntryViews):
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            return len(uw.repo.all_entries())
+            return uw.repo.get_total_entries()
 
     def get_by_referenceable(self, resource_id: str, filters):
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
@@ -126,7 +132,8 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
     def query(
         self,
         history_request: EntryHistoryRequest,
-    ):
+    ) -> GetHistoryDto:
+        logger.info('querying history', history_request=history_request)
         entry_repo_id = self.get_entry_repo_id(history_request.resource_id)
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(entry_repo_id) as uw:
             paged_query, total = uw.repo.get_history(
@@ -152,20 +159,21 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
             # else:
             #     previous_body = {}
             history_diff = jsondiff.compare(previous_body, history_entry.body)
+            logger.info('diff', diff=history_diff)
             result.append(
-                {
-                    "timestamp": history_entry.last_modified,
-                    "message": history_entry.message or "",
-                    "entry_id": history_entry.entry_id,
-                    "version": history_entry.version,
-                    "op": history_entry.op,
-                    "user_id": history_entry.last_modified_by,
-                    "diff": history_diff,
-                }
+                HistoryDto(
+                    timestamp=history_entry.last_modified,
+                    message=history_entry.message or "",
+                    entry_id=history_entry.entry_id,
+                    version=history_entry.version,
+                    op=history_entry.op,
+                    user_id=history_entry.last_modified_by,
+                    diff=history_diff,
+                )
             )
             previous_body = history_entry.body
 
-        return result, total
+        return GetHistoryDto(history=result, total=total)
 
 
 class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):

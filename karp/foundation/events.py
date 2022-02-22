@@ -3,9 +3,10 @@ import logging
 from typing import List, Generic, TypeVar, Any, Iterable
 
 import injector
+import structlog
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 T = TypeVar("T")
@@ -54,22 +55,23 @@ class InjectorEventBus(EventBus):
         self._container = container
 
     def post(self, event: Event) -> None:
-        logger.debug('handling event %s', event)
+        logger.info('handling event', karp_event=event)
         try:
             evt_handlers = self._container.get(
                 List[EventHandler[type(event)]]  # type: ignore
             )
         except injector.UnsatisfiedRequirement as err:
-            logger.info('No event handler for event %s?', event)
+            logger.info('No event handler for event?', karp_event=event)
             logger.info('Got error "%s"', err)
         else:
             for evt_handler in evt_handlers:
                 logger.debug(
-                    'handling event %s with handler %s',
-                    event, evt_handler
+                    'handling event with handler',
+                    karp_event=event, evt_handler=evt_handler,
                 )
                 try:
                     evt_handler(event)
                 except Exception as err:
-                    logger.exception('Exception handling event %s', event)
+                    logger.exception(
+                        'Exception handling event', karp_event=event)
                     raise

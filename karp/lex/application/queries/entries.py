@@ -56,7 +56,7 @@ class HistoryDto(pydantic.BaseModel):
     version: int
     op: EntryOp
     user_id: str
-    diff: typing.Dict
+    diff: list[dict]
 
 
 class GetEntryDiff(abc.ABC):
@@ -76,12 +76,17 @@ class GetEntryHistory(abc.ABC):
         pass
 
 
+class GetHistoryDto(pydantic.BaseModel):
+    history: list[HistoryDto]
+    total: int
+
+
 class GetHistory(abc.ABC):
     @abc.abstractmethod
     def query(
         self,
         req: EntryHistoryRequest
-    ) -> typing.Tuple[typing.List[HistoryDto], int]:
+    ) -> GetHistoryDto:
         pass
 
 

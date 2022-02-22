@@ -3,7 +3,7 @@ from typing import Dict, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 
 from karp.auth import AuthService
-from karp import auth
+from karp import auth, lex
 
 from karp.lex.application.queries import (
     EntryDiffDto,
@@ -65,9 +65,11 @@ def get_diff(
 
 @router.get(
     '/{resource_id}',
+    response_model=lex.GetHistoryDto,
 )
 @router.get(
     '/of-resource/{resource_id}',
+    response_model=lex.GetHistoryDto,
 )
 def get_history(
     resource_id: str,
@@ -102,10 +104,8 @@ def get_history(
         from_version=from_version,
         to_version=to_version,
     )
-    history, total = get_history.query(history_request)
+    return get_history.query(history_request)
     return {"history": history, "total": total}
-
-
 
 
 def init_app(app):

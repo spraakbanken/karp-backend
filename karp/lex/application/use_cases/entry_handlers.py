@@ -9,6 +9,7 @@ from typing import Any, Dict, Generic, List, Optional, Tuple
 import fastjsonschema  # pyre-ignore
 import json_streams
 from sb_json_tools import jsondiff
+import structlog
 
 from karp.foundation.commands import CommandHandler
 from karp.lex.application.repositories import EntryUnitOfWork
@@ -24,19 +25,8 @@ from karp.lex.domain import commands
 from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application import repositories
 
-# from . import context
 
-# from karp.domain.services import indexing
-
-# from karp.database import db
-# import karp.indexmgr as indexmgr
-# import karp.resourcemgr.entrymetadata as entrymetadata
-# from karp.application import ctx
-
-# from karp.infrastructure.repositories import repositories
-
-
-_logger = logging.getLogger("karp")
+logger = structlog.get_logger()
 
 
 # def get_entries_by_column(resource_obj: Resource, filters):
@@ -183,9 +173,9 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
             #         .order_by(resource.history_model.version.desc())
             #         .first()
             #     )
-            print(f"({current_db_entry.version}, {cmd.version})")
             if not cmd.force and current_db_entry.version != cmd.version:
-                print("version conflict")
+                logger.info(
+                    'version conflict', current_version=current_db_entry.version, version=cmd.version)
                 raise errors.UpdateConflict(diff)
 
             id_getter = resource.id_getter()
@@ -195,7 +185,8 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
             current_db_entry.stamp(
                 cmd.user, message=cmd.message, timestamp=cmd.timestamp)
             if new_entry_id != cmd.entry_id:
-                print(f'updating entry_id: {cmd.entry_id} => {new_entry_id}')
+                logger.info('updating entry_id',
+                            entry_id=cmd.entry_id, new_entry_id=new_entry_id)
                 current_db_entry.entry_id = new_entry_id
                 # uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
                 uw.repo.save(current_db_entry)
@@ -254,13 +245,13 @@ class AddingEntries(
         if not resource:
             raise errors.ResourceNotFound(cmd.resource_id)
 
-        validate_entry = _compile_schema(resource.entry_json_schema)
+        entry_schema = EntrySchema(resource.entry_json_schema)
 
         created_db_entries = []
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
                 resource.entry_repository_id) as uw:
             for entry_raw in cmd.entries:
-                _validate_entry(validate_entry, entry_raw)
+                entry_schema.validate_entry(entry_raw)
 
                 entry = resource.create_entry_from_dict(
                     entry_raw,
@@ -271,15 +262,6 @@ class AddingEntries(
                 uw.entries.save(entry)
                 created_db_entries.append(entry)
             uw.commit()
-
-        # if resource.is_published:
-        #     print(f"services.entries.add_entries: indexing entries ...")
-        #     indexing.add_entries(
-        #         ctx.resource_repo,
-        #         ctx.search_service,
-        #         resource,
-        #         created_db_entries,
-        #     )
 
         return created_db_entries
 
@@ -459,4 +441,3 @@ def _src_entry_to_index_entry(resource: Resource, src_entry: Entry) -> Dict:
 #     validate_entry = _compile_schema(resource.entry_json_schema)
 #     _validate_entry(validate_entry, entry)
 #     return _src_entry_to_index_entry(resource, entry)
-

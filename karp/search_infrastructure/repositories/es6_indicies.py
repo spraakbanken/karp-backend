@@ -4,7 +4,7 @@ import re
 from typing import Dict, List, Optional, Any, Tuple, Union
 
 import elasticsearch
-from elasticsearch import exceptions as es_exceptions
+import structlog
 
 from karp.foundation.events import EventBus
 
@@ -16,7 +16,7 @@ from karp.search.application.repositories import (
 )
 
 
-logger = logging.getLogger("karp")
+logger = structlog.get_logger()
 
 KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
@@ -51,7 +51,7 @@ class Es6Index(Index):
         return []
 
     def create_index(self, resource_id, config):
-        print("creating es mapping ...")
+        logger.info("creating es mapping")
         mapping = create_es6_mapping(config)
 
         settings = {
@@ -76,12 +76,13 @@ class Es6Index(Index):
 
         date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
         index_name = resource_id + "_" + date
-        print(f"creating index '{index_name}' ...")
+        logger.info('creating index', index_name=index_name)
         result = self.es.indices.create(index=index_name, body=body)
         if "error" in result:
-            print("failed to create index")
+            logger.error("failed to create index",
+                         index_name=index_name, body=body)
             raise RuntimeError("failed to create index")
-        print("index created")
+        logger.info("index created")
         self._set_index_name_for_resource(resource_id, index_name)
         return index_name
 
@@ -111,7 +112,8 @@ class Es6Index(Index):
 
         index_name = self._get_index_name_for_resource(resource_id)
         self.on_publish_resource(resource_id, index_name)
-        print(f"publishing '{resource_id}' => '{index_name}'")
+        logger.info('publishing resource',
+                    resource_id=resource_id, index_name=index_name)
         self.es.indices.put_alias(name=resource_id, index=index_name)
 
     def add_entries(self, resource_id: str, entries: List[IndexEntry]):
@@ -142,12 +144,19 @@ class Es6Index(Index):
             raise ValueError("Must give either 'entry' or 'entry_id'.")
         if entry:
             entry_id = entry.entry_id
-        self.es.delete(
-            index=resource_id,
-            doc_type="entry",
-            id=entry_id,
-            refresh=True,
-        )
+        logger.info('deleting entry', entry_id=entry_id,
+                    resource_id=resource_id)
+        index_name = self._get_index_name_for_resource(resource_id)
+        try:
+            self.es.delete(
+                index=index_name,
+                doc_type="entry",
+                id=entry_id,
+                refresh=True,
+            )
+        except elasticsearch.exceptions.ElasticsearchException:
+            logger.exception('Error deleting entry',
+                             entry_id=entry_id, resource_id=resource_id, index_name=index_name,)
 
     @staticmethod
     def get_analyzed_fields_from_mapping(

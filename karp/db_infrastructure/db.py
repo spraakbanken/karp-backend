@@ -25,7 +25,6 @@ from sqlalchemy_utils import UUIDType
 
 # engine = sqlalchemy.create_engine(config.DB_URL, echo=True)
 
-print(f"Creating metadata")
 metadata = MetaData()
 
 Base = declarative_base(metadata=metadata)

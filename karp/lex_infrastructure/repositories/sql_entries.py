@@ -7,6 +7,7 @@ from uuid import UUID
 import injector
 import regex
 from sqlalchemy.orm import sessionmaker
+import structlog
 
 from karp.foundation.value_objects import UniqueId
 from karp.foundation.events import EventBus
@@ -20,7 +21,7 @@ from karp.lex_infrastructure.sql import sql_models
 from karp.db_infrastructure.sql_repository import SqlRepository
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 
-logger = logging.getLogger("karp")
+logger = structlog.get_logger()
 
 DUPLICATE_PATTERN = r"Duplicate entry '(.+)' for key '(\w+)'"
 DUPLICATE_PROG = regex.compile(DUPLICATE_PATTERN)
@@ -145,7 +146,7 @@ class SqlEntryRepository(
 #                )
             # return self._session.add(runtime_entry)
         except db.exc.DBAPIError as exc:
-            print(f'db error: {str(exc)}')
+            logger.exception('db error')
             raise errors.RepositoryError("db failure") from exc
 
     def _update(self, entry: Entry):
@@ -271,15 +272,15 @@ class SqlEntryRepository(
 
     def teardown(self):
         """Use for testing purpose."""
-        print("starting teardown")
+        logger.info("starting teardown")
         #         for child_model in self.runtime_model.child_tables.values():
         #             print(f"droping child_model {child_model} ...")
         #             child_model.__table__.drop(bind=db.engine)
         #         print("droping runtime_model ...")
         #         self.runtime_model.__table__.drop(bind=db.engine)
-        print("droping history_model ...")
+        logger.info("droping history_model ...")
         self.history_model.__table__.drop(bind=self._session.bind)
-        print("dropped history_model")
+        logger.info("dropped history_model")
 
         # db.metadata.drop_all(
         #     bind=db.engine, tables=[self.runtime_model, self.history_model]
@@ -291,6 +292,12 @@ class SqlEntryRepository(
         query = self._session.query(
             self.history_model).filter_by(discarded=False)
         return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
+
+    def get_total_entries(self) -> int:
+        self._check_has_session()
+        query = self._session.query(
+            self.runtime_model.discarded).filter_by(discarded=False)
+        return query.count()
 
     def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
@@ -337,14 +344,13 @@ class SqlEntryRepository(
                     "Unknown invalid request") from exc
 
         for child_filters in joined_filters:
-            print(
-                f"list(child_filters.keys())[0] = {list(child_filters.keys())[0]}")
-            child_cls = self.runtime_model.child_tables[list(child_filters.keys())[
-                0]]
+            child_table_name = list(child_filters.keys())[0]
+            logger.debug('child table name', table_name=child_table_name)
+            child_cls = self.runtime_model.child_tables[child_table_name]
             child_query = self._session.query(
                 child_cls).filter_by(**child_filters)
             for child_e in child_query:
-                print(f"child hit = {child_e}")
+                logger.debug('child hit',  child_hit=child_e)
             query = query.join(child_cls).filter_by(**child_filters)
         # result = query.filter_by(**kwargs).all()
         # # query = self._session.query(self.history_model)

@@ -4,6 +4,8 @@ import typing
 from pathlib import Path
 from typing import IO, Dict, Generic, List, Optional, Tuple
 
+import structlog
+
 from karp import errors as karp_errors
 from karp.lex.domain import errors, events, entities
 from karp.lex.domain.entities import Resource
@@ -16,7 +18,7 @@ from karp.lex.domain import commands
 from karp.lex.application import repositories
 
 
-logger = logging.getLogger("karp")
+logger = structlog.get_logger()
 
 resource_models = {}  # Dict
 history_models = {}  # Dict
@@ -215,17 +217,17 @@ def setup_existing_resources(evt):
 
 
 def create_new_resource(config_file: IO, config_dir=None) -> Resource:
-    print("loading config with json ...")
+    logger.debug("loading config with json ...")
     config = json.load(config_file)
-    print("creating resource ...")
+    logger.debug("creating resource ...")
     resource = Resource.from_dict(config)
 
-    print("resource created. setting up repositories")
+    logger.debug("resource created. setting up repositories")
     with repositories(using=ctx.resource_repo) as uw:
-        print("adding resource to ctx.resource_repo ...")
+        logger.debuf("adding resource to ctx.resource_repo ...")
         uw.put(resource)
 
-    print("done! returning ...")
+    logger.debug("done! returning ...")
     return resource
 
 
@@ -408,22 +410,15 @@ class PublishingResource(CommandHandler[commands.PublishResource], BasingResourc
         super().__init__(resource_uow=resource_uow)
 
     def execute(self, cmd: commands.PublishResource):
-        print(f"publish_resource resource_id='{cmd.resource_id}' ...")
+        logger.info('publishing resource', resource_id=cmd.resource_id)
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(cmd.resource_id)
             if not resource:
                 raise errors.ResourceNotFound(cmd.resource_id)
-            # if resource.is_published:
-            #     print(f"'{cmd.resource_id}' already published!")
-            #     raise karp_errors.ResourceAlreadyPublished(cmd.resource_id)
-            # resource.is_published = True
             resource.publish(user=cmd.user, message=cmd.message,
                              timestamp=cmd.timestamp)
             uow.repo.save(resource)
             uow.commit()
-    # print("calling indexing.publish_index ...")
-    # indexing.publish_index(ctx.search_service, ctx.resource_repo, resource)
-    # print("index published")
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()

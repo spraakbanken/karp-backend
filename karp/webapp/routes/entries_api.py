@@ -4,6 +4,7 @@ from typing import Optional
 from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
                      status, Path, Query)
 from starlette import responses
+import structlog
 
 from karp import errors as karp_errors, auth, lex
 from karp.lex.application.queries import EntryViews, EntryDto, GetEntryHistory
@@ -17,7 +18,7 @@ from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 router = APIRouter()
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 @router.get('/{resource_id}/{entry_id}/{version}', response_model=EntryDto)
@@ -31,6 +32,7 @@ def get_history_for_entry(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),
 ):
+    log = logger.bind()
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [resource_id]
     ):
@@ -39,6 +41,8 @@ def get_history_for_entry(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
+    log.info('getting history for entry', resource_id=resource_id,
+             entry_id=entry_id, user=user)
     historical_entry = get_entry_history.query(
         resource_id, entry_id, version=version
     )
@@ -53,14 +57,18 @@ def add_entry(
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    adding_entry_uc: lex.AddingEntry = Depends(deps.get_lex_uc(lex.AddingEntry)),
+    adding_entry_uc: lex.AddingEntry = Depends(
+        deps.get_lex_uc(lex.AddingEntry)),
 ):
+    log = logger.bind()
+
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
+    log.info('adding entry', resource_id=resource_id, data=data)
     try:
         new_entry = adding_entry_uc.execute(
             commands.AddEntry(
@@ -100,8 +108,10 @@ def update_entry(
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    updating_entry_uc: lex.UpdatingEntry = Depends(deps.get_lex_uc(lex.UpdatingEntry)),
+    updating_entry_uc: lex.UpdatingEntry = Depends(
+        deps.get_lex_uc(lex.UpdatingEntry)),
 ):
+    log = logger.bind()
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -116,6 +126,8 @@ def update_entry(
     #     message = data.get("message")
     #     if not (version and entry and message):
     #         raise KarpError("Missing version, entry or message")
+    log.info('updating entry', resource_id=resource_id,
+             entry_id=entry_id, data=data, user=user.identifier)
     try:
         entry = updating_entry_uc.execute(
             commands.UpdateEntry(
@@ -155,7 +167,8 @@ def update_entry(
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return err.error_obj
     except Exception as err:
-        print(f'{err=}')
+        logger.exception('error occured', resource_id=resource_id,
+                         entry_id=entry_id, data=data)
         raise
 
 
@@ -167,7 +180,8 @@ def delete_entry(
     entry_id: str,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry))
+    deleting_entry_uc: lex.DeletingEntry = Depends(
+        deps.get_lex_uc(lex.DeletingEntry))
 ):
     """Delete a entry from a resource.
 

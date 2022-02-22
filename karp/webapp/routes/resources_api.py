@@ -2,6 +2,7 @@ import logging
 from typing import Dict, List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Security, status
+import structlog
 
 from karp.foundation.commands import CommandBus
 from karp import auth, lex
@@ -22,7 +23,7 @@ from karp.lex.application.queries import ReadOnlyResourceRepository
 
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger()
 
 
 @router.get(
@@ -51,9 +52,14 @@ def create_new_resource(
     new_resource: ResourceCreate = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    creating_resource_uc: CreatingResource = Depends(deps.get_lex_uc(CreatingResource)),
-    creating_entry_repo_uc: CreatingEntryRepo = Depends(deps.get_lex_uc(CreatingEntryRepo)),
+    creating_resource_uc: CreatingResource = Depends(
+        deps.get_lex_uc(CreatingResource)),
+    creating_entry_repo_uc: CreatingEntryRepo = Depends(
+        deps.get_lex_uc(CreatingEntryRepo)),
 ) -> ResourceDto:
+    log = logger.bind()
+    log.info('creating new resource', user=user.identifier,
+             resource=new_resource)
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [new_resource.resource_id]
     ):
@@ -77,17 +83,18 @@ def create_new_resource(
             **new_resource.dict(),
         )
         resource = creating_resource_uc.execute(create_resource)
-        logger.info('resource created: %s', resource)
+        log.info('resource created', resource=resource)
         return resource
     except Exception as err:
-        print(f'{err=}')
+        log.exception('error occured', user=user.identifier,
+                      resource=new_resource)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'{err=}',
         )
 
 
-@router.post(
+@ router.post(
     '/{resource_id}/publish',
     # response_model=ResourceDto,
     status_code=status.HTTP_200_OK,
@@ -97,8 +104,10 @@ def publishing_resource(
     resource_publish: schemas.ResourcePublish = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    publishing_resource_uc: lex.PublishingResource = Depends(deps.get_lex_uc(lex.PublishingResource)),
+    publishing_resource_uc: lex.PublishingResource = Depends(
+        deps.get_lex_uc(lex.PublishingResource)),
 ):
+    log = logger.bind()
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [resource_id]
     ):
@@ -107,6 +116,8 @@ def publishing_resource(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
+    log.info('publishing resource',
+             resource_id=resource_id, user=user.identifier)
     try:
         resource_publish.resource_id = resource_id
         publish_resource = commands.PublishResource(
@@ -117,20 +128,22 @@ def publishing_resource(
         logger.info("resource '%s' published", resource_id)
         return
     except Exception as err:
-        print(f'{err=}')
+        log.exception('error occured when publishing',
+                      resource_id=resource_id, user=user.identifier)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'{err=}',
         )
 
 
-@router.get(
+@ router.get(
     '/{resource_id}',
     response_model=ResourcePublic,
 )
 def get_resource_by_resource_id(
     resource_id: str,
-    resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
+    resource_repo: ReadOnlyResourceRepository = Depends(
+        deps.get_resources_read_repo),
 ) -> ResourcePublic:
     resource = resource_repo.get_by_resource_id(resource_id)
     if not resource:

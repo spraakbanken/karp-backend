@@ -26,7 +26,9 @@ from karp.lex.application.queries import (
     GetEntryDiff,
     GetEntryHistory,
     GetHistory,
+    GetHistoryDto,
     GetPublishedResources,
+    HistoryDto,
     ResourceDto,
     ReadOnlyResourceRepository,
 )

@@ -153,12 +153,11 @@ def fixture_fa_data_client(
         path_to_config='karp/tests/data/config/municipalities.json',
         access_token=admin_token,
     )
-    # municipalities_published(fa_client.app)
-    # utils.add_entries(
-    #     fa_client,
-    #     {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
-    #     access_token=admin_token,
-    # )
+    utils.add_entries(
+        fa_client,
+        {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
+        access_token=admin_token,
+    )
 
     return fa_client
 
@@ -231,13 +230,28 @@ def admin_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 @pytest.fixture(scope='session')
 def read_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
     return create_bearer_token(
-        user='alice@example.com',
+        user='bob@example.com',
         levels=auth_levels,
         scope={
             'lexica': {
                 'places': auth_levels[auth.PermissionLevel.read],
                 'test_resource': auth_levels[auth.PermissionLevel.read],
                 'municipalities': auth_levels[auth.PermissionLevel.read],
+            }
+        }
+    )
+
+
+@pytest.fixture(scope='session')
+def write_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+    return create_bearer_token(
+        user='charlie@example.com',
+        levels=auth_levels,
+        scope={
+            'lexica': {
+                'places': auth_levels[auth.PermissionLevel.write],
+                'test_resource': auth_levels[auth.PermissionLevel.write],
+                'municipalities': auth_levels[auth.PermissionLevel.write],
             }
         }
     )

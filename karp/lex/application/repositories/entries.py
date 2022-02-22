@@ -131,6 +131,9 @@ class EntryRepository(repository.Repository[entities.Entry]):
         """Return all entries."""
         return []
 
+    def get_total_entries(self) -> int:
+        return len(list(self.all_entries()))
+
 
 class EntryUnitOfWork(
     unit_of_work.UnitOfWork[EntryRepository],
@@ -175,5 +178,3 @@ class EntryUnitOfWork(
     @property
     def message(self) -> str:
         return self._message
-
-

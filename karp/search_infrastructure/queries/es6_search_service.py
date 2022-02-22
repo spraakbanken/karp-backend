@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import elasticsearch
 import elasticsearch.helpers  # pyre-ignore
 import elasticsearch_dsl as es_dsl  # pyre-ignore
+import structlog
 
 # from karp import query_dsl
 from karp.search.application.queries import (
@@ -24,7 +25,7 @@ from .es_query import EsQuery
 # from karp.query_dsl import basic_ast as ast, op, is_a
 
 
-logger = logging.getLogger("karp")
+logger = structlog.get_logger()
 
 KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
@@ -208,10 +209,10 @@ class Es6SearchService(SearchService):
         :return: a list of tuples (alias_name, index_name)
         """
         result = self.es.cat.aliases(h="alias,index")
-        print(f"{result}")
+        logger.debug('ES aliases and indicies', result=result)
         index_names = []
         for index_name in result.split("\n")[:-1]:
-            print(f"index_name = {index_name}")
+            logger.debug('existing index', index_name=index_name)
             if index_name[0] != ".":
                 groups = re.search(r"([^ ]*) +(.*)", index_name).groups()
                 alias = groups[0]
@@ -255,19 +256,18 @@ class Es6SearchService(SearchService):
         return result
 
     def query(self, request: QueryRequest):
-        print(f"query called with {request}")
+        logger.info('query called', request=request)
         query = EsQuery.from_query_request(request)
         return self.search_with_query(query)
 
     def query_split(self, request: QueryRequest):
-        print(f"query called with {request}")
+        logger.info('query_split called', request=request)
         query = EsQuery.from_query_request(request)
         query.split_results = True
         return self.search_with_query(query)
 
     def search_with_query(self, query: EsQuery):
-        logger.info("search_with_query called with query=%s", query)
-        print("search_with_query called with query={}".format(query))
+        logger.info('search_with_query called', query=query)
         es_query = None
         if query.q:
             model = self.parser(query.q)
@@ -378,8 +378,8 @@ class Es6SearchService(SearchService):
         return translated_sort_fields
 
     def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
-        print(
-            f"es6_search_servicetranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
+        logger.debug(
+            'sortable fields for resource', resource_id=resource_id, sortable_fields=self.sortable_fields[resource_id]
         )
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value]
@@ -419,7 +419,7 @@ class Es6SearchService(SearchService):
         )
         s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
         response = s.execute()
-        print(f'{response=}')
+        logger.debug('Elasticsearch response', response=response)
         return [
             {"value": bucket["key"], "count": bucket["doc_count"]}
             for bucket in response.aggregations.field_values.buckets
@@ -487,6 +487,3 @@ class Es6SearchService(SearchService):
 #     for prop_name, prop_value in properties.items():
 #         if prop_value["type"] in ["boolean", "date", "double", "keyword", "long", "ip"]:
 #             return [prop_name]
-
-
-

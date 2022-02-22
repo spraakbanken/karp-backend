@@ -6,6 +6,7 @@ from typing import Dict, List, Optional
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
 import pydantic
+import structlog
 
 
 from karp.foundation import value_objects
@@ -14,6 +15,8 @@ from karp.auth.domain.errors import ExpiredToken, TokenError, InvalidTokenPayloa
 from karp.auth.domain.entities.user import User
 from karp.auth import AuthService, AuthServiceConfig
 
+
+logger = structlog.get_logger()
 
 
 class JWTMeta(pydantic.BaseModel):
@@ -47,17 +50,16 @@ class JWTAuthServiceConfig(AuthServiceConfig):
         return self._pubkey_path
 
 
-
 class JWTAuthService(AuthService):
     def __init__(
         self, pubkey_path: Path, is_resource_protected: IsResourceProtected
     ) -> None:
         self._jwt_key = load_jwt_key(pubkey_path)
         self.is_resource_protected = is_resource_protected
-        print("JWTAuthenticator created")
+        logger.debug("JWTAuthenticator created")
 
     def authenticate(self, _scheme: str, credentials: str) -> User:
-        print("JWTAuthenticator.authenticate: called")
+        logger.debug("authenticate called", credentials=credentials)
 
         try:
             user_token = jwt.decode(
@@ -71,7 +73,6 @@ class JWTAuthService(AuthService):
         try:
             payload = JWTPayload(**user_token)
         except pydantic.ValidationError as exc:
-            print(f'{exc=}')
             raise InvalidTokenPayload() from exc
 
         lexicon_permissions = {}

@@ -155,34 +155,34 @@ class Query(pydantic.BaseModel):
         translate_node(self.ast.root)
         # TODO rewrite
 
-    def __repr__(self) -> str:
-        return """
-            {}(
-                q={}
-                resources={}
-                include_fields={}
-                exclude_fields={}
-                fields={}
-                sort={}
-                from={}, size={},
-                split_results={}, lexicon_stats={},
-                format={}
-                format_query={}
-            )""".format(
-            self._self_name(),
-            self.q,
-            self.resources,
-            self.include_fields,
-            self.exclude_fields,
-            self.fields,
-            self.sort,
-            self.from_,
-            self.size,
-            self.split_results,
-            self.lexicon_stats,
-            self.format,
-            self.format_query,
-        )
+    # def __repr__(self) -> str:
+    #     return """
+    #         {}(
+    #             q={}
+    #             resources={}
+    #             include_fields={}
+    #             exclude_fields={}
+    #             fields={}
+    #             sort={}
+    #             from={}, size={},
+    #             split_results={}, lexicon_stats={},
+    #             format={}
+    #             format_query={}
+    #         )""".format(
+    #         self._self_name(),
+    #         self.q,
+    #         self.resources,
+    #         self.include_fields,
+    #         self.exclude_fields,
+    #         self.fields,
+    #         self.sort,
+    #         self.from_,
+    #         self.size,
+    #         self.split_results,
+    #         self.lexicon_stats,
+    #         self.format,
+    #         self.format_query,
+    #     )
 
     def _self_name(self) -> str:
         return "Query"

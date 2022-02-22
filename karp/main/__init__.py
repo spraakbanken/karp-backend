@@ -1,3 +1,4 @@
+import json
 import logging.config
 import logging
 import os
@@ -12,8 +13,10 @@ except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
 import injector
+from json_streams import jsonlib
 from sqlalchemy import pool
 from sqlalchemy.engine import Engine, create_engine, url as sa_url
+import structlog
 
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
@@ -66,7 +69,8 @@ def _create_db_engine(db_url: config.DatabaseUrl):
         kwargs['connect_args'] = {
             'check_same_thread': False
         }
-    return create_engine(db_url, echo=True, future=True, **kwargs)
+    engine_echo = False
+    return create_engine(db_url, echo=engine_echo, future=True, **kwargs)
 
 
 def _setup_dependency_injection(
@@ -165,19 +169,39 @@ def _logging_config() -> typing.Dict[str, typing.Any]:
 
 
 def setup_logging():
-    logger = logging.getLogger("karp")
+
+    # Clear Gunicorn access log to remove duplicate requests logging
+    # logging.getLogger("gunicorn.access").handlers.clear()
+    logging.basicConfig(format="%(asctime)s %(message)s",
+                        datefmt="%Y-%m-%dT%H:%M:%S%z", level=logging.INFO)
+    logger = logging.getLogger('karp')
+    logger.setLevel(logging.INFO)
+    structlog.configure(
+        processors=[
+            structlog.stdlib.add_log_level,
+            structlog.threadlocal.merge_threadlocal,
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.JSONRenderer(
+                serializer=json.dumps, sort_keys=True),
+        ],
+        wrapper_class=structlog.stdlib.BoundLogger,
+        context_class=dict,
+        cache_logger_on_first_use=True,
+        logger_factory=structlog.stdlib.LoggerFactory(),
+    )
+    logger = structlog.get_logger()
     # if app.config.get("LOG_TO_SLACK"):
     #     slack_handler = slack_logging.get_slack_logging_handler(
     #         app.config.get("SLACK_SECRET")
     #     )
     #     logger.addHandler(slack_handler)
-    console_handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    console_handler.setFormatter(formatter)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(console_handler)
+    # console_handler = logging.StreamHandler()
+    # formatter = logging.Formatter(
+    #     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    # )
+    # console_handler.setFormatter(formatter)
+    # logger.setLevel(logging.DEBUG)
+    # logger.addHandler(console_handler)
     return logger
 
 
