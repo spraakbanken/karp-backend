@@ -151,6 +151,7 @@ class TestQuery:
         print(f'{response.json()=}')
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
+
 def test_query_no_q(
     fa_data_client,
     read_token: auth.AccessToken,
@@ -164,7 +165,8 @@ def test_query_no_q(
 
     names = extract_names(entries)
 
-    entry_views = fa_data_client.app.state.app_context.container.get(EntryViews)
+    entry_views = fa_data_client.app.state.app_context.container.get(
+        EntryViews)
     expected_result = {}
     expected_total = entry_views.get_total(resource)
     print(f"entries = {entries}")
@@ -209,7 +211,8 @@ def test_query_split(
         headers=read_token.as_header(),
     )
 
-    entry_views = fa_data_client.app.state.app_context.container.get(EntryViews)
+    entry_views = fa_data_client.app.state.app_context.container.get(
+        EntryViews)
     expected_result = {}
     for resource in resources:
         expected_result[resource] = entry_views.get_total(resource)
@@ -230,7 +233,7 @@ def test_and(
     queries: List[str],
     expected_result: List[str],
 ):
-    query = "/query/places?q=and||{queries}".format(queries="||".join(queries))
+    query = "/query/places?q=and({queries})".format(queries="||".join(queries))
     _test_path(fa_data_client, query, expected_result)
 
 
@@ -244,7 +247,8 @@ def test_and(
             "population",
             3122,
             ["Grund test"],
-            marks=pytest.mark.skip(reason="Can't search with regex on LONG fields"),
+            marks=pytest.mark.skip(
+                reason="Can't search with regex on LONG fields"),
         ),
         ("|and|name|v_larger_place.name|", "vi", ["Bjurvik"]),
         pytest.param(
@@ -259,7 +263,8 @@ def test_and(
             ["Hambo", "Alhamn", "Bjurvik", "Bjurvik2"],
             marks=pytest.mark.xfail(reason="?"),
         ),
-        ("|or|name|v_smaller_places.name|", "Al", ["Alvik", "Alhamn", "Hambo"]),
+        ("|or|name|v_smaller_places.name|",
+         "Al", ["Alvik", "Alhamn", "Hambo"]),
         ("name", "|and|un|es", ["Grund test"]),
         pytest.param(
             "name",
@@ -309,7 +314,8 @@ def test_contains_and_separate_calls(
         ("name", "est", ["Grund test", "Botten test"]),
         ("name", "unds", ["Grunds"]),
         ("name", "grund", ["Grund test"]),
-        pytest.param("population", 3122, ["Grund test"], marks=pytest.mark.skip),
+        pytest.param("population", 3122, [
+                     "Grund test"], marks=pytest.mark.skip),
         ("|and|name|v_smaller_places.name|", "vik", ["Alvik"]),
         ("|and|name|v_larger_place.name|", "vik", ["Bjurvik"]),
         pytest.param(
@@ -328,7 +334,8 @@ def test_contains_and_separate_calls(
             ],
             marks=pytest.mark.xfail(reason="Too restrictive"),
         ),
-        ("|or|name|v_smaller_places.name|", "otten", ["Botten test", "Bjurvik"]),
+        ("|or|name|v_smaller_places.name|",
+         "otten", ["Botten test", "Bjurvik"]),
         ("name", "|and|und|est", ["Grund test"]),
         ("name", "|or|vik|bo", ["Alvik", "Rutvik", "Bjurvik", "Hambo"]),
     ],
@@ -352,7 +359,8 @@ def test_endswith(fa_data_client, field: str, value, expected_result: List[str])
             "|and|area||or|population|density|",
             6312,
             ["Alvik", "Grund test"],
-            marks=pytest.mark.xfail(reason="Current query dsl can't handle this."),
+            marks=pytest.mark.xfail(
+                reason="Current query dsl can't handle this."),
         ),
         pytest.param(
             "|not|area|",
@@ -776,10 +784,13 @@ def test_binary_range_1st_arg_or(
     "field,lower,upper,expected_n_hits",
     [
         ("population", (3812,), (4133,), 1),
-        pytest.param("area", (6312,), (50000,), 1, marks=pytest.mark.xfail(reason="?")),
+        pytest.param("area", (6312,), (50000,), 1,
+                     marks=pytest.mark.xfail(reason="?")),
         # ("name", ("alhamn", "Alhamn"), ("bjurvik", "Bjurvik"), 2),
-        pytest.param("name", ("b", "B"), ("h", "H"), 1, marks=pytest.mark.xfail),
-        pytest.param("name", ("Alhamn",), ("Bjurvik",), 1, marks=pytest.mark.xfail),
+        pytest.param("name", ("b", "B"), ("h", "H"),
+                     1, marks=pytest.mark.xfail),
+        pytest.param("name", ("Alhamn",), ("Bjurvik",),
+                     1, marks=pytest.mark.xfail),
         pytest.param("name", ("B",), ("H",), 1, marks=pytest.mark.xfail),
         ("name.raw", ("Alhamn",), ("Bjurvik",), 1),
         pytest.param(
@@ -1033,12 +1044,12 @@ def test_pagination_fewer(fa_data_client):
 #     return client_with_data
 
 
-@pytest.mark.parametrize("endpoint", ["query", "query_split"])
+@pytest.mark.parametrize("endpoint", ["query", "query/split"])
 @pytest.mark.parametrize(
     "query",
     [
         (""),
-        ("freetext||eat my shorts"),
+        ("freetext|eat my shorts"),
     ],
 )
 def test_distribution_in_result(fa_data_client, query: str, endpoint: str):

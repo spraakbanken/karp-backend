@@ -7,7 +7,7 @@ from typing import List, Optional
 from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
                      status)
 
-from karp import errors as karp_errors, auth
+from karp import errors as karp_errors, auth, search
 from karp.search.application.queries import SearchService, QueryRequest
 from karp.webapp import schemas
 
@@ -107,7 +107,6 @@ def query_split(
     )
     try:
         response = search_service.query_split(query_request)
-
     except karp_errors.KarpError as err:
         logger.exception(
             "Error occured when calling 'query_split' with resources='%s' and q='%s'. msg='%s'",
@@ -116,6 +115,16 @@ def query_split(
             err.message,
         )
         raise
+    except search.IncompleteQuery as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                'errorCode': karp_errors.ClientErrorCodes.SEARCH_INCOMPLETE_QUERY,
+                'message': 'Error in query',
+                'failing_query': err.failing_query,
+                'error_description': err.error_description,
+            }
+        )
     return response
 
 

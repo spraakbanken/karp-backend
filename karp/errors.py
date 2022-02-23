@@ -1,9 +1,10 @@
+import enum
 from typing import IO, Optional
 
 NoIndexModuleConfigured = 10
 
 
-class ClientErrorCodes:
+class ClientErrorCodes(enum.Enum):
     UNKNOWN_ERROR = 1
     RESOURCE_DOES_NOT_EXIST = 20
     RESOURCE_NOT_PUBLISHED = 21
@@ -116,7 +117,8 @@ class UpdateConflict(KarpError):
             "Version conflict. Please update entry.",
             code=ClientErrorCodes.VERSION_CONFLICT,
         )
-        self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}
+        self.error_obj = {"diff": diff,
+                          "errorCode": self.code, "error": self.message}
 
 
 class EntryIdMismatch(UserError):

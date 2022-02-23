@@ -6,6 +6,7 @@ from karp.foundation.commands import CommandHandler
 from karp.foundation.events import EventHandler
 from karp.lex.domain import events as lex_events
 from karp.search.domain import commands
+from karp.search.domain.errors import IncompleteQuery
 from karp.search.application.use_cases import (
     CreateSearchServiceHandler,
     EntryAddedHandler,

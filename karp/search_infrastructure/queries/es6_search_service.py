@@ -8,12 +8,14 @@ import elasticsearch
 import elasticsearch.helpers  # pyre-ignore
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 import structlog
+from tatsu import exceptions as tatsu_exc
 
 # from karp import query_dsl
 from karp.search.application.queries import (
     QueryRequest,
     SearchService,
 )
+from karp.search.domain import errors
 from karp.search.domain.errors import \
     UnsupportedField  # IncompleteQuery,; UnsupportedQuery,
 from karp.lex.domain.entities.entry import Entry
@@ -270,8 +272,15 @@ class Es6SearchService(SearchService):
         logger.info('search_with_query called', query=query)
         es_query = None
         if query.q:
-            model = self.parser(query.q)
-            es_query = self.query_builder.walk(model)
+            try:
+                model = self.parser.parse(query.q)
+                es_query = self.query_builder.walk(model)
+            except tatsu_exc.FailedParse as err:
+                logger.debug('Parse error', err=err)
+                raise errors.IncompleteQuery(
+                    failing_query=query.q,
+                    error_description=str(err)
+                ) from err
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
 
@@ -284,7 +293,7 @@ class Es6SearchService(SearchService):
                 if query.sort:
                     s = s.sort(
                         *self.translate_sort_fields([resource], query.sort))
-                elif resource in query.sort_dict:
+                elif query.sort_dict and resource in query.sort_dict:
                     s = s.sort(
                         *self.translate_sort_fields(
                             [resource], query.sort_dict[resource]

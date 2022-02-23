@@ -319,7 +319,7 @@ class SqlEntryRepository(
             if filter_key in self.resource_config[
                 "referenceable"
             ] and self.resource_config["fields"][filter_key].get("collection"):
-                print(f"collection field: {filter_key}")
+                logger.debug('collection field', filter_key=filter_key)
                 # child_cls = self.runtime_model.child_tables[filter_key]
                 # tmp[child_cls.__tablename__][filter_key] = filters[filter_key]
                 # print(f"tmp.values() = {tmp.values()}")
