@@ -268,8 +268,9 @@ def fixture_init_search_service():
         if not config.TEST_ES_HOME:
             raise RuntimeError(
                 "must set ES_HOME to run tests that use elasticsearch")
+        es_port = int(os.environ.get('TEST_ELASTICSEARCH_PORT', '9202'))
         with elasticsearch_test.ElasticsearchTest(
-            port=9202, es_path=config.TEST_ES_HOME
+            port=es_port, es_path=config.TEST_ES_HOME
         ):
             yield
 

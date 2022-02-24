@@ -1,6 +1,7 @@
 """Unit tests for JWTAuthenticator"""
 from datetime import timedelta
 from typing import Dict, Optional
+import os
 
 import jwt
 
@@ -10,7 +11,10 @@ from karp.auth import AccessToken
 from karp.main.config import AUTH_JWT_AUDIENCE
 
 
-with open('karp/tests/data/private_key.pem') as fp:
+PRIVATE_KEY_PATH = os.environ.get(
+    'TEST_AUTH_JWT_PRIVATE_KEY_PATH', 'karp/tests/data/private_key.pem')
+
+with open(PRIVATE_KEY_PATH) as fp:
     jwt_private_key = fp.read()
 
 
