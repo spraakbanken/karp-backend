@@ -29,7 +29,7 @@ from karp.webapp.routes import router as api_router
 from karp.webapp import tasks
 
 
-__version__ = "6.0.3"
+__version__ = "6.0.4"
 
 
 tags_metadata = [
