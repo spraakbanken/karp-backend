@@ -43,8 +43,10 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         resource = self.resource_repo.get_by_resource_id(resource_id)
         if not resource:
             raise RuntimeError(f"resource '{resource_id}' not found")
-
-        with self.entry_repo_uow.repo.get_by_id(resource.entry_repository_id) as uw:
+        with self.entry_repo_uow:
+            entry_uow = self.entry_repo_uow.repo.get_by_id(
+                resource.entry_repository_id)
+        with entry_uow as uw:
             src_entry = uw.repo.by_entry_id(entry_id,  # version=version
                                             )
             # if not src_entry:
@@ -65,7 +67,10 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                 logger.info('resource %s not found, skipping ...',
                             ref_resource_id)
                 continue
-            with self.entry_repo_uow.repo.get_by_id(other_resource.entry_repository_id) as entries_uw:
+            with self.entry_repo_uow:
+                other_entry_uow = self.entry_repo_uow.repo.get_by_id(
+                    other_resource.entry_repository_id)
+            with other_entry_uow as entries_uw:
                 for entry in entries_uw.repo.by_referenceable({field_name: entry_id}):
                     yield _create_ref(ref_resource_id, ref_resource_version, entry)
 
