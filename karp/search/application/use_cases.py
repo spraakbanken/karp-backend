@@ -217,7 +217,7 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
 
             for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
                 entry = EntryDto(
-                    entry_uuid=evt.entity_id,
+                    entity_id=evt.entity_id,
                     entry_id=evt.entry_id,
                     repository_id=evt.repo_id,
                     resource=resource_id,
@@ -257,7 +257,7 @@ class EntryUpdatedHandler(
 
             for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
                 entry = EntryDto(
-                    entry_uuid=evt.entity_id,
+                    entity_id=evt.entity_id,
                     entry_id=evt.entry_id,
                     repository_id=evt.repo_id,
                     resource=resource_id,

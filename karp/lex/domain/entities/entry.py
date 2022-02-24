@@ -99,7 +99,7 @@ class Entry(TimestampedVersionedEntity):
     def dict(self) -> Dict[str, Any]:
         return {
             "entry_id": self._entry_id,
-            "entry_uuid": self.id,
+            "entity_id": self.entity_id,
             "resource": "",
             "version": self._version,
             "entry": self._body,

@@ -12,6 +12,7 @@ from karp.lex.domain.commands import (
     CreateResource,
 )
 from karp.lex.domain import commands
+from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application.use_cases import (
     AddingEntries,
     AddingEntry,
@@ -23,6 +24,7 @@ from karp.lex.application.use_cases import (
     UpdatingResource,
 )
 from karp.lex.application.queries import (
+    EntryDto,
     GetEntryDiff,
     GetEntryHistory,
     GetHistory,

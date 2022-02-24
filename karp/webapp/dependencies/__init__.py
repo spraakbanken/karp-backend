@@ -11,3 +11,4 @@ from karp.webapp.dependencies.auth_deps import (
     get_user_optional,
     get_resource_permissions,
 )
+from karp.webapp.dependencies.fastapi_injector import inject_from_req

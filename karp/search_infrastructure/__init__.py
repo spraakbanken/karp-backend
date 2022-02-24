@@ -13,6 +13,7 @@ from karp.lex.application.repositories import (
     ResourceUnitOfWork,
     EntryUowRepositoryUnitOfWork,
 )
+from karp import lex, search
 from karp.search.application.queries import (
     ResourceViews,
     SearchService,
@@ -24,6 +25,7 @@ from karp.search.application.transformers import (
     PreProcessor,
 )
 from karp.search_infrastructure.queries import (
+    GenericPreviewEntry,
     GenericResourceViews,
     GenericSearchService,
     Es6SearchService,
@@ -44,7 +46,7 @@ class SearchInfrastructure(injector.Module):
     def entry_transformer(
         self,
         index_uow: IndexUnitOfWork,
-        resource_repo: ReadOnlyResourceRepository,
+        resource_repo: lex.ReadOnlyResourceRepository,
         entry_views: EntryViews,
         get_referenced_entries: GetReferencedEntries,
     ) -> EntryTransformer:
@@ -66,10 +68,21 @@ class SearchInfrastructure(injector.Module):
             entry_views=entry_views,
         )
 
+    @injector.provider
+    def preview_entry(
+        self,
+        entry_transformer: EntryTransformer,
+        resource_uow: lex.ResourceUnitOfWork,
+    ) -> search.PreviewEntry:
+        return GenericPreviewEntry(
+            entry_transformer=entry_transformer,
+            resource_uow=resource_uow,
+        )
+
 
 class GenericSearchInfrastructure(injector.Module):
     @injector.provider
-    def get_resource_config(self, resource_uow: ResourceUnitOfWork) -> ResourceViews:
+    def get_resource_config(self, resource_uow: lex.ResourceUnitOfWork) -> ResourceViews:
         return GenericResourceViews(
             resource_uow=resource_uow
         )

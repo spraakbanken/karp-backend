@@ -15,7 +15,8 @@ from karp.search.application.use_cases import (
     ReindexingResource,
     ResourcePublishedHandler,
 )
-from karp.search.application.queries import ResourceViews
+from karp.search.application.queries import (
+    ResourceViews, PreviewEntry, PreviewEntryInputDto, EntryPreviewDto)
 from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry
 from karp.search.application.transformers import (
     EntryTransformer,

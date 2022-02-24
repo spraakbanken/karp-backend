@@ -1,6 +1,6 @@
 import abc
 
-from karp.lex.domain import entities as lex_entities
+from karp import lex
 from karp.search.application.repositories import IndexEntry
 
 
@@ -9,6 +9,6 @@ class EntryTransformer(abc.ABC):
     def transform(
         self,
         resource_id: str,
-        entry: lex_entities.Entry,
+        entry: lex.EntryDto,
     ) -> IndexEntry:
         pass

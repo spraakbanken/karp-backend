@@ -1,12 +1,13 @@
 import logging
 from typing import Optional
 
-from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
+from fastapi import (APIRouter, Body, Depends, HTTPException, Response, Security,
                      status, Path, Query)
+import pydantic
 from starlette import responses
 import structlog
 
-from karp import errors as karp_errors, auth, lex
+from karp import errors as karp_errors, auth, lex, search
 from karp.lex.application.queries import EntryViews, EntryDto, GetEntryHistory
 from karp.lex.domain import commands, errors
 from karp.auth import User
@@ -98,6 +99,40 @@ def add_entry(
     return {"newID": new_entry.entry_id, "entityID": new_entry.entity_id}
 
 
+@router.post('/{resource_id}/preview')
+# @auth.auth.authorization("READ")
+def preview_entry(
+    resource_id: str,
+    data: schemas.EntryAdd,
+    user: auth.User = Security(deps.get_user_optional, scopes=['read']),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    preview_entry: search.PreviewEntry = Depends(
+        deps.inject_from_req(search.PreviewEntry)),
+):
+    if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not enough permissions",
+            headers={'WWW-Authenticate': 'Bearer scope="lexica:read"'}
+        )
+    try:
+        input_dto = search.PreviewEntryInputDto(
+            resource_id=resource_id,
+            entry=data.entry,
+            user=user.identifier
+        )
+    except pydantic.ValidationError as err:
+        logger.exception('data is not valid')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={'error': str(err)})
+    else:
+        return preview_entry.query(input_dto)
+#     data = request.get_json()
+#     preview = entrywrite.preview_entry(resource_id, data)
+#     return flask_jsonify(preview)
+
+
 @router.post("/{resource_id}/{entry_id}/update", tags=["Editing"])
 @router.post('/{resource_id}/{entry_id}', tags=["Editing"])
 # @auth.auth.authorization("WRITE", add_user=True)
@@ -173,7 +208,7 @@ def update_entry(
 
 
 @router.delete('/{resource_id}/{entry_id}/delete', tags=["Editing"])
-@router.delete('/{resource_id}/{entry_id}', tags=["Editing"], status_code=status.)
+@router.delete('/{resource_id}/{entry_id}', tags=["Editing"], status_code=status.HTTP_204_NO_CONTENT)
 # @auth.auth.authorization("WRITE", add_user=True)
 def delete_entry(
     resource_id: str,
@@ -197,7 +232,7 @@ def delete_entry(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="write"'},
+            headers={"WWW-Authenticate": 'Bearer scope="lexica:write"'},
         )
     try:
         deleting_entry_uc.execute(
@@ -218,18 +253,7 @@ def delete_entry(
             }
         )
     # entries.delete_entry(resource_id, entry_id, user.identifier)
-    return "", 204
-
-
-@router.post('/{resource_id}/preview')
-# @auth.auth.authorization("READ")
-def preview_entry(
-    resource_id: str,
-):
-    pass
-#     data = request.get_json()
-#     preview = entrywrite.preview_entry(resource_id, data)
-#     return flask_jsonify(preview)
+    return
 
 
 def init_app(app):

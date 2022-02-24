@@ -1,4 +1,4 @@
-from starlette.requests import Request
+from fastapi import Request
 
 
 def inject_from_req(inject_cls):

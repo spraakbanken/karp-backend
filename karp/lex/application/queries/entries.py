@@ -13,7 +13,7 @@ from karp.lex.domain.entities.entry import EntryOp
 # pylint: disable=unsubscriptable-object
 class EntryDto(pydantic.BaseModel):
     entry_id: str
-    entry_uuid: unique_id.UniqueId
+    entity_id: typing.Optional[unique_id.UniqueId] = None
     resource: str
     version: int
     entry: typing.Dict
@@ -95,7 +95,7 @@ class EntryViews(abc.ABC):
     def get_by_id(
         self,
         resource_id: str,
-        entry_uuid: unique_id.UniqueId,
+        entity_id: unique_id.UniqueId,
     ) -> EntryDto:
         pass
 

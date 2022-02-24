@@ -1,7 +1,7 @@
 from typing import Dict, List
 
 import pytest  # pyre-ignore
-from starlette import status
+from fastapi import status
 
 from karp import auth
 from karp.errors import ClientErrorCodes
@@ -46,13 +46,17 @@ def init(
 
 
 class TestEntriesRoutes:
-    @pytest.mark.parametrize('route', [
-        'add',
-        'delete',
-        'update',
-    ])
-    def test_routes_exist(self, fa_data_client, route: str):
-        response = fa_data_client.post(f'/entries/places/{route}')
+    def test_routes_exist(self, fa_data_client):
+        response = fa_data_client.post('/entries/places/add')
+        assert response.status_code != status.HTTP_404_NOT_FOUND
+
+        response = fa_data_client.post('/entries/places/update')
+        assert response.status_code != status.HTTP_404_NOT_FOUND
+
+        response = fa_data_client.put('/entries/places')
+        assert response.status_code != status.HTTP_404_NOT_FOUND
+
+        response = fa_data_client.post('/entries/places/preview')
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
@@ -609,8 +613,35 @@ class TestGetEntry:
         assert entry.version == 5
 
 
+class TestPreviewEntry:
+    def test_preview_fails_with_422_on_invalid_data(self, fa_data_client, read_token: auth.AccessToken):
+        response = fa_data_client.post(
+            '/entries/places/preview', json={}, headers=read_token.as_header())
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+
+    def test_preview_returns_200_on_valid_data(self, fa_data_client, read_token: auth.AccessToken):
+        response = fa_data_client.post(
+            '/entries/places/preview',
+            json={
+                'entry': {
+                    'code': 3,
+                    'name': 'update3',
+                    'population': 4,
+                    'area': 50000,
+                    'density': 5,
+                    'municipality': [2, 3],
+                },
+                'message': 'test'
+            },
+            headers=read_token.as_header()
+        )
+        print(f'{response.json()=}')
+        assert response.status_code == status.HTTP_200_OK
+        assert response.json()['entry']['id'] == '3'
+
+
 @pytest.mark.skip()
-def test_update_wrong_id(fa_data_client):
+def test_update_wrong_id(fa_data_client, write_token: auth.AccessToken):
     response = fa_data_client.post(
         '/entries/places/add',
         json={

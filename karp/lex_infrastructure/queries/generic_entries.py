@@ -25,12 +25,12 @@ class GenericEntryViews(EntryViews):
         self.get_entry_repo_id = get_entry_repo_id
         self.entry_repo_uow = entry_repo_uow
 
-    def get_by_id(self, resource_id: str, entry_uuid: unique_id.UniqueId) -> EntryDto:
+    def get_by_id(self, resource_id: str, entity_id: unique_id.UniqueId) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            return self._entry_to_entry_dto(uw.repo.by_id(entry_uuid), resource_id)
+            return self._entry_to_entry_dto(uw.repo.by_id(entity_id), resource_id)
 
     def get_by_entry_id(self, resource_id: str, entry_id: str) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
@@ -83,7 +83,7 @@ class GenericEntryViews(EntryViews):
     def _entry_to_entry_dto(self, entry: Entry, resource_id: str) -> EntryDto:
         return EntryDto(
             entry_id=entry.entry_id,
-            entry_uuid=entry.id,
+            entity_id=entry.entity_id,
             resource=resource_id,
             version=entry.version,
             entry=entry.body,
@@ -119,7 +119,7 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
 
         return EntryDto(
             entry_id=entry_id,
-            entry_uuid=result.id,
+            entity_id=result.id,
             resource=resource_id,
             version=result.version,
             entry=result.body,
