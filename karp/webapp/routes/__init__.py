@@ -16,13 +16,13 @@ router = APIRouter()
 router.include_router(
     entries_api.router,
     prefix='/entries',
-    tags=['entries'],
+    tags=['Entries'],
 )
 router.include_router(health_api.router, prefix='/healthz')
 router.include_router(
     history_api.router,
     prefix='/history',
-    tags=['entries', 'history'],
+    tags=['Entries', 'History'],
 )
 router.include_router(
     query_api.router,
@@ -32,7 +32,7 @@ router.include_router(
 router.include_router(
     resources_api.router,
     prefix='/resources',
-    tags=['resources'],
+    tags=['Resources'],
 )
 router.include_router(
     stats_api.router,

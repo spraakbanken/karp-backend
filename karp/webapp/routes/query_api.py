@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
                      status)
+import structlog
 
 from karp import errors as karp_errors, auth, search
 from karp.search.application.queries import SearchService, QueryRequest
@@ -15,10 +16,10 @@ from karp.webapp import dependencies as deps
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 
-logger = logging.getLogger("karp")
+logger = structlog.get_logger()
 
 
-router = APIRouter(tags=["Querying"])
+router = APIRouter()
 
 
 @router.get(
@@ -87,8 +88,7 @@ def query_split(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
-    logger.debug(
-        "webapp.views.query.query_split: called with resources=%s", resources)
+    logger.debug('/query/split called', resources=resources)
     resource_list = resources.split(",")
     if not auth_service.authorize(
         auth.PermissionLevel.read, user, resource_list
@@ -109,7 +109,7 @@ def query_split(
         response = search_service.query_split(query_request)
     except karp_errors.KarpError as err:
         logger.exception(
-            "Error occured when calling 'query_split' with resources='%s' and q='%s'. msg='%s'",
+            "Error occured when calling '/query/split' with resources='%s' and q='%s'. msg='%s'",
             resources,
             q,
             err.message,

@@ -21,8 +21,8 @@ router = APIRouter()
 logger = structlog.get_logger()
 
 
-@router.get('/{resource_id}/{entry_id}/{version}', response_model=EntryDto)
-@router.get('/{resource_id}/{entry_id}', response_model=EntryDto)
+@router.get('/{resource_id}/{entry_id}/{version}', response_model=EntryDto, tags=["History"])
+@router.get('/{resource_id}/{entry_id}', response_model=EntryDto, tags=["History"])
 # @auth.auth.authorization("ADMIN")
 def get_history_for_entry(
     resource_id: str,
@@ -50,8 +50,8 @@ def get_history_for_entry(
     return historical_entry
 
 
-@router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["editing"])
-@router.put('/{resource_id}', status_code=status.HTTP_201_CREATED, tags=["editing"])
+@router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["Editing"])
+@router.put('/{resource_id}', status_code=status.HTTP_201_CREATED, tags=["Editing"])
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
@@ -98,8 +98,8 @@ def add_entry(
     return {"newID": new_entry.entry_id, "entityID": new_entry.entity_id}
 
 
-@router.post("/{resource_id}/{entry_id}/update", tags=["editing"])
-@router.post('/{resource_id}/{entry_id}', tags=["editing"])
+@router.post("/{resource_id}/{entry_id}/update", tags=["Editing"])
+@router.post('/{resource_id}/{entry_id}', tags=["Editing"])
 # @auth.auth.authorization("WRITE", add_user=True)
 def update_entry(
     response: Response,
@@ -172,8 +172,8 @@ def update_entry(
         raise
 
 
-@router.delete('/{resource_id}/{entry_id}/delete', tags=["editing"])
-@router.delete('/{resource_id}/{entry_id}', tags=["editing"])
+@router.delete('/{resource_id}/{entry_id}/delete', tags=["Editing"])
+@router.delete('/{resource_id}/{entry_id}', tags=["Editing"], status_code=status.)
 # @auth.auth.authorization("WRITE", add_user=True)
 def delete_entry(
     resource_id: str,

@@ -12,7 +12,7 @@ from karp.webapp import dependencies as deps
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 
-router = APIRouter(tags=["Statistics"])
+router = APIRouter()
 
 
 @router.get(
