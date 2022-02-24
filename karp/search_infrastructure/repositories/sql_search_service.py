@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
 
+from karp.search.domain import query_dsl
 from karp.search.application.repositories import Index,IndexUnitOfWork, IndexEntry
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
@@ -8,6 +9,8 @@ from karp.lex.domain.entities.resource import Resource
 class SqlSearchService(Index):
     def __init__(self):
         self.seen = []
+        self.parser = query_dsl.KarpQueryV6Parser(
+            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics())
 
     def create_index(self, resource_id: str, resource_config: Dict):
         pass

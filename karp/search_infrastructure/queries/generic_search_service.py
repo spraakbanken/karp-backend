@@ -16,6 +16,7 @@ from karp.search.application.queries import (
     SearchService,
     StatisticsDto,
 )
+from karp.search.domain import query_dsl
 
 
 class GenericSearchService(SearchService):
@@ -26,6 +27,8 @@ class GenericSearchService(SearchService):
     ) -> None:
         self.get_entry_repo_id = get_entry_repo_id
         self.entry_uow_repo_uow = entry_uow_repo_uow
+        self.parser = query_dsl.KarpQueryV6Parser(
+            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics())
 
     def statistics(self, resource_id: str, field: str) -> typing.List[StatisticsDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
@@ -40,6 +43,8 @@ class GenericSearchService(SearchService):
             )
 
     def query(self, request: QueryRequest):
+        if request.q:
+            model = self.parser.parse(request.q)
         resource_id = request.resource_ids[0]
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
@@ -61,6 +66,8 @@ class GenericSearchService(SearchService):
         )
 
     def query_split(self, request: QueryRequest):
+        if request.q:
+            model = self.parser.parse(request.q)
         dist = {}
         for resource_id in request.resource_ids:
             entry_repo_id = self.get_entry_repo_id.query(resource_id)
