@@ -12,7 +12,7 @@ from karp.main import bootstrap_app
 
 logger = logging.getLogger("karp")
 
-__version__ = "6.0.4"
+__version__ = "6.0.5"
 
 
 def create_app():
