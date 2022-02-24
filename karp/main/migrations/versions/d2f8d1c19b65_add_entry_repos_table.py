@@ -18,7 +18,7 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade():
+def create_entry_repos():
     op.create_table(
         "entry_repos",
         sa.Column("history_id", sa.Integer(), nullable=False),
@@ -34,6 +34,9 @@ def upgrade():
         sa.PrimaryKeyConstraint("history_id"),
     )
 
+
+def upgrade():
+    create_entry_repos()
 
 def downgrade():
     op.drop_table('entry_repos')

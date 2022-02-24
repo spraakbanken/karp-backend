@@ -140,7 +140,9 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
             response = await call_next(request)
         finally:
-            request.state.connection.close()
+            connection = getattr(request.state, 'connection', None)
+            if connection:
+                request.state.connection.close()
 
         return response
 
