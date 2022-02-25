@@ -50,18 +50,18 @@ def create(config: Path, ctx: typer.Context):
             entry_repos, lambda x: f'{x.name} {x.repository_type}')
         cmd = lex_commands.CreateResource.from_dict(
             data,
-            created_by="local admin",
+            user="local admin",
             entry_repo_id=entry_repo.id,
         )
         bus.dispatch(cmd)
         typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.id})")
 
     elif config.is_dir():
-        typer.Abort()
-        new_resources = resources.create_new_resource_from_dir(config)
+        typer.Abort('not supported yetls')
+        # new_resources = resources.create_new_resource_from_dir(config)
 
-        for resource_id in new_resources:
-            typer.echo(f"Created resource {resource_id}")
+        # for resource_id in new_resources:
+        #     typer.echo(f"Created resource {resource_id}")
 
 
 @subapp.command()

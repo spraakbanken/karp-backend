@@ -10,13 +10,16 @@ except ImportError:
     # used if python < 3.8
     from importlib_metadata import entry_points  # type: ignore
 
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.exception_handlers import http_exception_handler
 import injector
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 import structlog
+from asgi_correlation_id import CorrelationIdMiddleware
+from asgi_correlation_id.context import correlation_id
 
 from karp import main
 from karp.foundation import errors as foundation_errors
@@ -41,7 +44,7 @@ tags_metadata = [
     {"name": "Health"},
 ]
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 def create_app(*, with_context: bool = True) -> FastAPI:
@@ -75,6 +78,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(CorrelationIdMiddleware)
 
     app.include_router(api_router)
 
@@ -115,6 +119,20 @@ def create_app(*, with_context: bool = True) -> FastAPI:
         logger.exception(exc)
         return lex_exc2response(exc)
 
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception):
+        return await http_exception_handler(
+            request,
+            HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail='Internal server error',
+                headers={
+                    'X-Correlation-ID': correlation_id.get() or '',
+                    'Access-Control-Expose-Headers': 'X-Correlation-ID'
+                }
+            )
+        )
+
     @app.middleware('http')
     async def injector_middleware(request: Request, call_next):
         def request_configuration(conn: Connection, session: Session):
@@ -138,7 +156,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
                     session=request.state.session,
                 ))
 
-            response = await call_next(request)
+            response: Response = await call_next(request)
         finally:
             connection = getattr(request.state, 'connection', None)
             if connection:
@@ -146,35 +164,35 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
         return response
 
-    @app.middleware("http")
-    async def logging_middleware(request: Request, call_next) -> Response:
-        # clear the threadlocal context
-        structlog.threadlocal.clear_threadlocal()
-        # bind threadlocal
-        structlog.threadlocal.bind_threadlocal(
-            # logger="karp",
-            request_id=str(unique_id.make_unique_id()),
-            cookies=request.cookies,
-            scope=request.scope,
-            url=str(request.url),
-        )
-        response = JSONResponse(
-            status_code=500,
-            content={
-                'detail': 'Internal server error'
-            }
-        )
-        start_time = time.time()
-        try:
-            response: Response = await call_next(request)
-        finally:
-            process_time = time.time() - start_time
-            logger.info(
-                "processed a request",
-                status_code=response.status_code,
-                process_time=process_time,
-            )
-        return response
+    # @app.middleware("http")
+    # async def logging_middleware(request: Request, call_next) -> Response:
+    #     # clear the threadlocal context
+    #     structlog.threadlocal.clear_threadlocal()
+    #     # bind threadlocal
+    #     structlog.threadlocal.bind_threadlocal(
+    #         # logger="karp",
+    #         request_id=str(unique_id.make_unique_id()),
+    #         cookies=request.cookies,
+    #         scope=request.scope,
+    #         url=str(request.url),
+    #     )
+    #     response = JSONResponse(
+    #         status_code=500,
+    #         content={
+    #             'detail': 'Internal server error'
+    #         }
+    #     )
+    #     start_time = time.time()
+    #     try:
+    #         response: Response = await call_next(request)
+    #     finally:
+    #         process_time = time.time() - start_time
+    #         logger.info(
+    #             "processed a request",
+    #             status_code=response.status_code,
+    #             process_time=process_time,
+    #         )
+    #     return response
 
     return app
 

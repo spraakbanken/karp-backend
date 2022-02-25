@@ -1,11 +1,10 @@
 import json
-import logging.config
+import logging.config as logging_config
 import logging
 import os
 import typing
 from dataclasses import dataclass
 
-from marshmallow.fields import URL
 
 try:
     from importlib.metadata import entry_points
@@ -17,6 +16,7 @@ from json_streams import jsonlib
 from sqlalchemy import pool
 from sqlalchemy.engine import Engine, create_engine, url as sa_url
 import structlog
+from asgi_correlation_id.log_filters import correlation_id_filter
 
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
@@ -42,7 +42,8 @@ def bootstrap_app(container=None) -> AppContext:
     else:
         es_url = env('ELASTICSEARCH_HOST', '')
     settings = {
-        'auth.jwt.pubkey.path': env('AUTH_JWT_PUBKEY_PATH', None)
+        'auth.jwt.pubkey.path': env('AUTH_JWT_PUBKEY_PATH', None),
+        'auth.name': env('AUTH_NAME', ''),
     }
     # if n ot container:
     # container = AppContainer()
@@ -53,7 +54,7 @@ def bootstrap_app(container=None) -> AppContext:
     # )
     # bus = container.bus()
     # bus.handle(events.AppStarted())  # needed? ?
-    setup_logging()
+    configure_logging(settings=settings)
     # logging.config.dictConfig(_logging_config())  # type: ignore
     search_service = env('SEARCH_CONTEXT', 'sql_search_service')
     engine = _create_db_engine(db_url)
@@ -62,7 +63,7 @@ def bootstrap_app(container=None) -> AppContext:
     return AppContext(dependency_injector, settings)
 
 
-def _create_db_engine(db_url: config.DatabaseUrl):
+def _create_db_engine(db_url: config.DatabaseUrl) -> Engine:
     kwargs = {}
     if str(db_url).startswith("sqlite"):
         kwargs["poolclass"] = pool.SingletonThreadPool
@@ -102,38 +103,53 @@ def _setup_search_context(container: injector.Injector, search_service: str) -> 
         container.binder.install(GenericSearchIndexMod())
 
 
-def _logging_config() -> typing.Dict[str, typing.Any]:
-    return {
-        "version": 1,
-        "formatters": {
-            "standard": {
-                "format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s",
-            }
-        },
-        "handlers": {
-            "console": {
-                "class": "logging.StreamHandler",
-                "formatter": "standard",
-                "level": 'DEBUG',
-                "stream": "ext://sys.stderr",
+def configure_logging(settings: dict[str, str]) -> typing.Dict[str, typing.Any]:
+    logging_config.dictConfig(
+        {
+            "version": 1,
+            'disable_existing_loggers': False,
+            'filters': {
+                'correlation_id': {'()': correlation_id_filter(8 if not settings.get('environment', '') == 'local' else 32)}
             },
-            # "email": {
-            #     "class": "logging.handlers.SMTPHandler",
-            #     "mailhost": "localhost",
-            #     "formatter": "standard",
-            #     "level": "WARNING",
-            #     "fromaddr": config.LOG_MAIL_FROM,
-            #     "toaddrs": config.LOG_MAIL_TOS,
-            #     "subject": "Error in Karp backend!",
-            # },
-        },
-        "loggers": {
-            "karp": {
-                "handlers": ['console'],  # ["console", "email"],
-                "level": 'DEBUG',  # config.CONSOLE_LOG_LEVEL,
-            }
-        },
-    }
+            "formatters": {
+                'console': {
+                    'class': 'logging.Formatter',
+                    # 'datefmt':  '%H:%M:%S',
+                    'format': '%(levelname)s:\t\b%(asctime)s %(name)s:%(lineno)d [%(correlation_id)s] %(message)s',
+                },
+                "standard": {
+                    "format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s",
+                }
+            },
+            "handlers": {
+                "console": {
+                    "class": "logging.StreamHandler",
+                    'filters': ['correlation_id'],
+                    "formatter": 'console',
+                    # "level": 'DEBUG',
+                    "stream": "ext://sys.stderr",
+                },
+                # "email": {
+                #     "class": "logging.handlers.SMTPHandler",
+                #     "mailhost": "localhost",
+                #     "formatter": "standard",
+                #     "level": "WARNING",
+                #     "fromaddr": config.LOG_MAIL_FROM,
+                #     "toaddrs": config.LOG_MAIL_TOS,
+                #     "subject": "Error in Karp backend!",
+                # },
+            },
+            "loggers": {
+                "karp": {
+                    "handlers": ['console'],  # ["console", "email"],
+                    "level": 'DEBUG',  # config.CONSOLE_LOG_LEVEL,
+                    'propagate': True
+                },
+                # third-party package loggers
+                'sqlalchemy': {'handlers': ['console'], 'level': 'WARNING'},
+            },
+        }
+    )
 
 
 # def bootstrap(

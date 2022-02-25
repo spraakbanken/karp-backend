@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from sqlalchemy import sql
@@ -17,21 +18,29 @@ from karp.db_infrastructure.sql_repository import SqlRepository
 from karp.lex_infrastructure.sql.sql_models import EntryUowModel
 
 
+logger = logging.getLogger(__name__)
+
+
 class SqlEntryUowRepository(EntryUowRepository, SqlRepository):
     def __init__(
         self,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
         session: sa_orm.Session
     ) -> None:
+        logger.debug('create repo with session=%s', session)
         EntryUowRepository.__init__(self)
         SqlRepository.__init__(self, session)
         self.entry_uow_factory = entry_uow_factory
 
     def _save(self, entry_uow: EntryUnitOfWork):
+        logger.debug('saving entry_uow=%s', entry_uow)
+        logger.debug('using session=%s', self._session)
         self._check_has_session()
         self._session.add(
             EntryUowModel.from_entity(entry_uow)
         )
+        logger.debug('session=%s, session.new=%s',
+                     self._session, self._session.new)
 
     def _by_id(self, id_: UniqueId, **kwargs) -> Optional[EntryUnitOfWork]:
         # stmt = sql.select(EntryUowModel).where(EntryUowModel.id == id_)
@@ -78,19 +87,24 @@ class SqlEntryUowRepositoryUnitOfWork(
         self.session_factory = session_factory
         self._repo = None
 
-    def __enter__(self):
-        if self._session_is_created_here:
-            self._session = self.session_factory()
-        if self._repo is None:
-            self._repo = SqlEntryUowRepository(
-                entry_uow_factory=self.factory,
-                session=self._session,
-            )
-        return super().__enter__()
+    # def __enter__(self):
+    #     logger.debug('called __enter__')
+    #     if self._session_is_created_here:
+    #         self._session = self.session_factory()
+    #         logger.debug('created session=%s', self._session)
+    #     if self._repo is None:
+    #         logger.debug('creating repo')
+    #         self._repo = SqlEntryUowRepository(
+    #             entry_uow_factory=self.factory,
+    #             session=self._session,
+    #         )
+    #     return super().__enter__()
 
     def _begin(self):
+        logger.debug('called _begin')
         if self._session_is_created_here:
             self._session = self.session_factory()
+            logger.debug('created session=%s', self._session)
         if self._repo is None:
             self._repo = SqlEntryUowRepository(
                 entry_uow_factory=self.factory,

@@ -93,7 +93,7 @@ class Db(injector.Module):
     # @request
     @injector.provider
     def session(self, connection: Connection) -> Session:
-        return sessionmaker(bind=connection)
+        return Session(bind=connection)
 
     # @request
     @injector.provider

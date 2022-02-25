@@ -1,6 +1,11 @@
+import logging
+
 from karp.foundation.commands import CommandHandler
 from karp.lex.domain import commands
 from karp.lex.application import repositories
+
+
+logger = logging.getLogger(__name__)
 
 
 class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
@@ -26,7 +31,9 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
             message=command.message,
         )
 
+        logger.debug('Created entry repo: %s', entry_repo)
         with self._entry_repo_uow as uow:
+            logger.debug('Saving...')
             uow.repo.save(entry_repo)
             uow.commit()
         return entry_repo

@@ -1,10 +1,14 @@
 import abc
+import logging
 import typing
 
 from karp.foundation.events import EventBus
 
 
 RepositoryType = typing.TypeVar("RepositoryType")
+
+
+logger = logging.getLogger(__name__)
 
 
 class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
@@ -19,8 +23,10 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
         self.close()
 
     def commit(self):
+        logger.debug('called commit')
         self._commit()
         for event in self.collect_new_events():
+            logger.debug('collecting events')
             self.event_bus.post(event)
 
     def collect_new_events(self) -> typing.Iterable:

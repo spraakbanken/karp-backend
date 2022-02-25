@@ -12,7 +12,7 @@ DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 
 _create_new = object()
 
-logger = logging.getLogger("karp")
+logger = logging.getLogger(__name__)
 
 
 class SqlUnitOfWork:  # (repositories.UnitOfWork):
@@ -27,6 +27,7 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
         *,
         session: Optional[Session] = None,
     ):
+        logger.debug('Init sqlunitofwork session=%s', session)
         self._session = session
         self._session_is_created_here = self._session is None
         self._state = SqlUnitOfWork.State.initialized
@@ -72,8 +73,11 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
     def _commit(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         # try:
-
+        logger.info('About to commit to session=%s', self._session)
+        logger.info('changes in session: %s', self._session.new)
         self._session.commit()
+        logger.info('commited to session=%s', self._session)
+
         # self._state = SqlUnitOfWork.State.initialized
         # except db.exc.IntegrityError as err:
         #     logger.exception(err)
@@ -98,10 +102,12 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
         self._state = SqlUnitOfWork.State.initialized
 
     def rollback(self):
+        logger.debug('rollback called')
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         self._session.rollback()
         self._state = SqlUnitOfWork.State.initialized
 
     def _close(self):
         if self._session_is_created_here:
+            logger.debug('closing session=%s', self._session)
             self._session.close()

@@ -1,4 +1,6 @@
+import logging
 from typing import Dict
+
 import injector
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import sessionmaker
@@ -43,6 +45,9 @@ from karp.lex_infrastructure.repositories import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 class LexInfrastructure(injector.Module):
     @injector.provider
     def get_published_resources(self, conn: Connection) -> GetPublishedResources:
@@ -68,6 +73,8 @@ class LexInfrastructure(injector.Module):
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
         event_bus: EventBus,
     ) -> EntryUowRepositoryUnitOfWork:
+        logger.debug(
+            'creating entry_repo_uow with session_factory=%s', session_factory)
         return SqlEntryUowRepositoryUnitOfWork(
             session_factory=session_factory,
             entry_uow_factory=entry_uow_factory,

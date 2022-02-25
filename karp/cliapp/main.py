@@ -17,6 +17,7 @@ __version__ = "6.0.6"
 
 def create_app():
     app = typer.Typer(help="Karp CLI")
+    app_context = bootstrap_app()
 
     @app.callback()
     def set_app_context(
@@ -30,7 +31,7 @@ def create_app():
         else:
             typer.echo("setting app_context")
             ctx.obj = {}
-            ctx.obj['app_context'] = bootstrap_app()
+            ctx.obj['app_context'] = app_context
 
     load_commands(app)
 

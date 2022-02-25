@@ -479,6 +479,7 @@ class SqlEntryUnitOfWork(
         session_factory: sessionmaker,
         event_bus: EventBus,
         **kwargs,
+
     ):
         SqlUnitOfWork.__init__(self)
         repositories.EntryUnitOfWork.__init__(
@@ -487,7 +488,7 @@ class SqlEntryUnitOfWork(
         self._entries = None
         self._session = None
 
-    def __enter__(self):
+    def _begin(self):
         if self._session is None:
             self._session = self.session_factory()
         if self._entries is None:
