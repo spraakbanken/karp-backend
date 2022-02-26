@@ -110,9 +110,9 @@ def query_split(
     except karp_errors.KarpError as err:
         logger.exception(
             "Error occured when calling '/query/split' with resources='%s' and q='%s'. msg='%s'",
-            resources,
-            q,
-            err.message,
+            resources=resources,
+            q=q,
+            error_message=err.message,
         )
         raise
     except search.IncompleteQuery as err:
@@ -218,7 +218,7 @@ def query(
     and||equals|wf|sitta||not||equals|wf|satt
     """
     logger.debug(
-        "Called 'query' called with resources=%s, from=%d, size=%d", resources, from_, size
+        "Called 'query' called with resources=%s, from=%d, size=%d", resources=resources, from_=from_, size=size
     )
     resource_list = resources.split(",")
     if not auth_service.authorize(
@@ -247,9 +247,9 @@ def query(
     except karp_errors.KarpError as err:
         logger.exception(
             "Error occured when calling 'query' with resources='%s' and q='%s'. e.msg='%s'",
-            resources,
-            q,
-            err.message,
+            resources=resources,
+            q=q,
+            error_message=err.message,
         )
         raise
     return response

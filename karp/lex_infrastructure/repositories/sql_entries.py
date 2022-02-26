@@ -497,7 +497,7 @@ class SqlEntryUnitOfWork(
                 resource_config=self.config,
                 session=self._session
             )
-        return super().__enter__()
+        return self
 
     @property
     def repo(self) -> SqlEntryRepository:

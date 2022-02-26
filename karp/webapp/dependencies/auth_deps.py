@@ -113,8 +113,8 @@ def get_user(
     )
     try:
         logger.debug(
-            "webapp.app_config.get_current_user: Calling auth_service with credentials = %s",
-            credentials,
+            "webapp.app_config.get_current_user: Calling auth_service with credentials = %(credentials)s",
+            credentials=credentials,
         )
         return auth_service.authenticate(
             credentials.scheme,

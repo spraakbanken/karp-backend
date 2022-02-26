@@ -125,7 +125,7 @@ def publishing_resource(
             **resource_publish.dict(),
         )
         publishing_resource_uc.execute(publish_resource)
-        logger.info("resource '%s' published", resource_id)
+        logger.info("resource published", resource_id=resource_id)
         return
     except Exception as err:
         log.exception('error occured when publishing',
