@@ -7,4 +7,4 @@ T = TypeVar('T')
 
 
 def inject_from_ctx(klass: Type[T], ctx: typer.Context) -> T:
-    return ctx.obj['app_context'].container.get(klass)
+    return ctx.obj['container'].get(klass)

@@ -28,7 +28,7 @@ from karp.foundation.value_objects import unique_id
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.errors import ClientErrorCodes
-from karp.main.modules import RequestScope
+from karp.main import modules
 from karp.webapp.routes import router as api_router
 from karp.webapp import tasks
 
@@ -135,12 +135,7 @@ def create_app() -> FastAPI:
 
     @app.middleware('http')
     async def injector_middleware(request: Request, call_next):
-        def request_configuration(conn: Connection, session: Session):
-            def configure_request_container(binder):
-                binder.bind(Connection, to=injector.InstanceProvider(conn))
-                binder.bind(Session, to=injector.InstanceProvider(session))
 
-            return configure_request_container
         response: Response = JSONResponse(
             status_code=500,
             content={
@@ -151,7 +146,7 @@ def create_app() -> FastAPI:
             request.state.connection = app_context.container.get(Connection)
             request.state.session = Session(bind=request.state.connection)
             request.state.container = app_context.container.create_child_injector(
-                request_configuration(
+                modules.request_configuration(
                     conn=request.state.connection,
                     session=request.state.session,
                 ))

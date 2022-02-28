@@ -3,8 +3,9 @@ from typing import Dict
 
 import injector
 from sqlalchemy.engine import Connection
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import Session
 
+from karp import lex
 from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
     GetPublishedResources,
@@ -69,14 +70,14 @@ class LexInfrastructure(injector.Module):
     @injector.singleton
     def entry_uow_repo(
         self,
-        session_factory: sessionmaker,
+        session: Session,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
         event_bus: EventBus,
     ) -> EntryUowRepositoryUnitOfWork:
         logger.debug(
-            'creating entry_repo_uow with session_factory=%s', session_factory)
+            'creating entry_repo_uow with session=%s', session)
         return SqlEntryUowRepositoryUnitOfWork(
-            session_factory=session_factory,
+            session=session,
             entry_uow_factory=entry_uow_factory,
             event_bus=event_bus,
         )
@@ -84,11 +85,11 @@ class LexInfrastructure(injector.Module):
     @injector.provider
     def resources_uow(
         self,
-        session_factory: sessionmaker,
+        session: Session,
         event_bus: EventBus,
     ) -> ResourceUnitOfWork:
         return SqlResourceUnitOfWork(
-            session_factory=session_factory,
+            session=session,
             event_bus=event_bus,
         )
 
@@ -115,7 +116,7 @@ class GenericLexInfrastructure(injector.Module):
     @injector.provider
     def gey_entry_diff(
         self,
-        resources_uow: ResourceUnitOfWork,
+        resources_uow: lex.ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> GetEntryDiff:
         return GenericGetEntryDiff(

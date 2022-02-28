@@ -3,13 +3,13 @@ import typing
 from sb_json_tools import jsondiff
 import structlog
 
+from karp import lex
 from karp.lex import GetHistoryDto, HistoryDto
 
 from karp.lex.domain.entities import Entry
 from karp.lex.application.queries import EntryViews, EntryDto, EntryDiffDto, GetEntryDiff, GetEntryHistory, GetHistory, EntryHistoryRequest, EntryDiffRequest, GetEntryRepositoryId
 from karp.foundation.value_objects import unique_id
-from karp.lex.application.repositories.entry_repositories import EntryUowRepositoryUnitOfWork
-from karp.lex.application.repositories.unit_of_work import ResourceUnitOfWork
+from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 
 
 logger = structlog.get_logger()
@@ -95,7 +95,7 @@ class GenericEntryViews(EntryViews):
 class GenericEntryQuery:
     def __init__(
         self,
-        resource_uow: ResourceUnitOfWork,
+        resource_uow: lex.ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ):
         self._resource_uow = resource_uow

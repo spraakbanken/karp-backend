@@ -127,3 +127,11 @@ def install_auth_service(
     else:
         container.binder.install(JwtAuthInfrastructure(
             Path(settings['auth.jwt.pubkey.path'])))
+
+
+def request_configuration(conn: Connection, session: Session):
+    def configure_request_container(binder):
+        binder.bind(Connection, to=injector.InstanceProvider(conn))
+        binder.bind(Session, to=injector.InstanceProvider(session))
+
+    return configure_request_container

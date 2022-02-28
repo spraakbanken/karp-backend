@@ -6,9 +6,11 @@ try:
 except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
+from sqlalchemy.engine import Connection
+from sqlalchemy.orm import Session
 import typer
 
-from karp.main import bootstrap_app
+from karp.main import bootstrap_app, modules
 
 logger = logging.getLogger("karp")
 
@@ -27,11 +29,20 @@ def create_app():
         )
     ):
         if ctx.invoked_subcommand is None:
+            ctx.obj = {}
             typer.echo("empty")
         else:
             typer.echo("setting app_context")
             ctx.obj = {}
-            ctx.obj['app_context'] = app_context
+            ctx.obj['connection'] = app_context.container.get(Connection)
+            ctx.obj['session'] = Session(bind=ctx.obj['connection'])
+            ctx.obj['container'] = app_context.container.create_child_injector(
+                modules.request_configuration(
+                    conn=ctx.obj['connection'],
+                    session=ctx.obj['session'],
+                )
+            )
+            # ctx.obj['app_context'] = app_context
 
     load_commands(app)
 
