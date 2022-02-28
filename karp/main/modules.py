@@ -108,6 +108,7 @@ class ElasticSearchMod(injector.Module):
     @injector.provider
     @injector.singleton
     def es(self) -> elasticsearch.Elasticsearch:
+        logger.info('Creating ES client url=%s', self._url)
         return elasticsearch.Elasticsearch(self._url)
 
 

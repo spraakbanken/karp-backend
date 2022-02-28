@@ -1,6 +1,7 @@
 import elasticsearch
 import injector
 from sqlalchemy.orm import sessionmaker
+import structlog
 
 from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
@@ -39,6 +40,9 @@ from karp.search_infrastructure.repositories import (
     NoOpIndexUnitOfWork,
     Es6IndexUnitOfWork,
 )
+
+
+logger = structlog.get_logger()
 
 
 class SearchInfrastructure(injector.Module):
