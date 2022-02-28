@@ -21,7 +21,7 @@ from karp.lex_infrastructure.sql.sql_models import EntryUowModel
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryUowRepository(EntryUowRepository, SqlRepository):
+class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
     def __init__(
         self,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
@@ -75,8 +75,8 @@ class SqlEntryUowRepositoryUnitOfWork(
         *,
         event_bus: EventBus,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
-        session_factory: sa_orm.sessionmaker = None,
-        session: sa_orm.Session = None,
+        session_factory: Optional[sa_orm.sessionmaker] = None,
+        session: Optional[sa_orm.Session] = None,
     ):
         SqlUnitOfWork.__init__(self, session=session)
         EntryUowRepositoryUnitOfWork.__init__(
@@ -85,6 +85,8 @@ class SqlEntryUowRepositoryUnitOfWork(
             entry_uow_factory=entry_uow_factory,
         )
         self.session_factory = session_factory
+        if self._session_is_created_here and self.session_factory is None:
+            raise ValueError('Must provide one of session and session_factory')
         self._repo = None
 
     # def __enter__(self):
@@ -103,8 +105,8 @@ class SqlEntryUowRepositoryUnitOfWork(
     def _begin(self):
         logger.debug('called _begin')
         if self._session_is_created_here:
-            self._session = self.session_factory()
-            logger.debug('created session=%s', self._session)
+            self._session = self.session_factory()  # type: ignore
+            logger.debug('created session=%(session)s', session=self._session)
         if self._repo is None:
             self._repo = SqlEntryUowRepository(
                 entry_uow_factory=self.factory,

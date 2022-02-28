@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import elasticsearch
 import elasticsearch.helpers  # pyre-ignore
@@ -10,6 +10,7 @@ import elasticsearch_dsl as es_dsl  # pyre-ignore
 import structlog
 from tatsu import exceptions as tatsu_exc
 
+from karp import search
 # from karp import query_dsl
 from karp.search.application.queries import (
     QueryRequest,
@@ -113,7 +114,7 @@ class EsQueryBuilder(query_dsl.NodeWalker):
         return es_dsl.Q("regexp", **{self.walk(node.field): f"{self.walk(node.arg)}.*"})
 
 
-class Es6SearchService(SearchService):
+class Es6SearchService(search.SearchService):
     def __init__(self, es: elasticsearch.Elasticsearch):
         self.es: elasticsearch.Elasticsearch = es
         self.query_builder = EsQueryBuilder()
@@ -216,10 +217,12 @@ class Es6SearchService(SearchService):
         for index_name in result.split("\n")[:-1]:
             logger.debug('existing index', index_name=index_name)
             if index_name[0] != ".":
-                groups = re.search(r"([^ ]*) +(.*)", index_name).groups()
-                alias = groups[0]
-                index = groups[1]
-                index_names.append((alias, index))
+                opt_match = re.search(r"([^ ]*) +(.*)", index_name)
+                if opt_match:
+                    groups = opt_match.groups()
+                    alias = groups[0]
+                    index = groups[1]
+                    index_names.append((alias, index))
         return index_names
 
     def build_query(self, args, resource_str: str) -> EsQuery:
@@ -302,7 +305,7 @@ class Es6SearchService(SearchService):
                 ms = ms.add(s)
 
             responses = ms.execute()
-            result = {"total": 0, "hits": {}}
+            result: dict[str, Any] = {"total": 0, "hits": {}}
             for i, response in enumerate(responses):
                 result["hits"][query.resources[i]] = self._format_result(
                     query.resources, response
@@ -412,7 +415,7 @@ class Es6SearchService(SearchService):
 
         return self._format_result([resource_id], response)
 
-    def statistics(self, resource_id: str, field: str):
+    def statistics(self, resource_id: str, field: str) -> Iterable:
         s = es_dsl.Search(using=self.es, index=resource_id)
         s = s[0:0]
 
@@ -453,8 +456,8 @@ class Es6SearchService(SearchService):
             )
 
     @staticmethod
-    def create_sortable_map_from_mapping(properties: Dict) -> Dict[str, List[str]]:
-        sortable_map = {}
+    def create_sortable_map_from_mapping(properties: dict) -> dict[str, list[str]]:
+        sortable_map: dict[str, list[str]] = {}
 
         def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):
             if "properties" in prop_value:

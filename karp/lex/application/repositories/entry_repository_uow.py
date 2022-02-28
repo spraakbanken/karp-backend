@@ -55,7 +55,8 @@ class InjectorEntryUnitOfWorkRepoFactory(
             Dict[str, EntryUnitOfWorkCreator]
         )[repository_type]
 
-        uow_factory = self._container.create_object(uow_factory_cls)
+        uow_factory: EntryUnitOfWorkCreator = self._container.create_object(
+            uow_factory_cls)
         return uow_factory(
             entity_id=entity_id,
             name=name,
@@ -74,5 +75,3 @@ class ResourceUnitOfWork(UnitOfWork[ResourceRepository]):
     @property
     def resources(self) -> ResourceRepository:
         return self.repo
-
-

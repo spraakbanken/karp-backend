@@ -28,8 +28,6 @@ router = APIRouter()
 @router.get(
     "/diff/{resource_id}/{entry_id}", response_model=EntryDiffDto
 )
-# @router.post("/{resource_id}/{entry_id}/diff")
-# @auth.auth.authorization("ADMIN")
 def get_diff(
     resource_id: str,
     entry_id: str,
@@ -105,7 +103,6 @@ def get_history(
         to_version=to_version,
     )
     return get_history.query(history_request)
-    return {"history": history, "total": total}
 
 
 def init_app(app):

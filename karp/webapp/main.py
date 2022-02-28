@@ -3,6 +3,7 @@ from os import stat
 import traceback
 import sys
 import time
+from typing import Any
 
 try:
     from importlib.metadata import entry_points
@@ -47,7 +48,7 @@ tags_metadata = [
 logger = logging.getLogger(__name__)
 
 
-def create_app(*, with_context: bool = True) -> FastAPI:
+def create_app() -> FastAPI:
 
     app_context = main.bootstrap_app()
 
@@ -96,7 +97,6 @@ def create_app(*, with_context: bool = True) -> FastAPI:
 
     @app.exception_handler(foundation_errors.NotFoundError)
     async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):
-        raise exc
         return JSONResponse(
             status_code=404,
             content={
@@ -141,7 +141,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
                 binder.bind(Session, to=injector.InstanceProvider(session))
 
             return configure_request_container
-        response = JSONResponse(
+        response: Response = JSONResponse(
             status_code=500,
             content={
                 'detail': 'Internal server error'
@@ -156,7 +156,7 @@ def create_app(*, with_context: bool = True) -> FastAPI:
                     session=request.state.session,
                 ))
 
-            response: Response = await call_next(request)
+            response = await call_next(request)
         finally:
             connection = getattr(request.state, 'connection', None)
             if connection:
@@ -203,7 +203,7 @@ def load_modules(app=None):
     if sys.version_info.minor < 10:
         karp_modules = entry_points().get('karp.modules')
     else:
-        karp_modules = entry_points(group='karp.modules')
+        karp_modules = entry_points(group='karp.modules')  # type: ignore
     if karp_modules:
         for ep in karp_modules:
             logger.info("Loading module: %s", ep.name)
@@ -217,7 +217,7 @@ def load_modules(app=None):
 
 def lex_exc2response(exc: lex_errors.LexDomainError) -> JSONResponse:
     status_code = 503
-    content = {"message": "Internal server error"}
+    content: dict[str, Any] = {"message": "Internal server error"}
     if isinstance(exc, lex_errors.UpdateConflict):
         status_code = 400
         content = {

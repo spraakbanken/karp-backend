@@ -54,7 +54,7 @@ def create(config: Path, ctx: typer.Context):
             entry_repo_id=entry_repo.id,
         )
         bus.dispatch(cmd)
-        typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.id})")
+        typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.entity_id})")
 
     elif config.is_dir():
         typer.Abort('not supported yetls')

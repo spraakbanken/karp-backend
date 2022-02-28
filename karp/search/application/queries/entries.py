@@ -18,5 +18,5 @@ class EntryPreviewDto(pydantic.BaseModel):
 
 class PreviewEntry(abc.ABC):
     @abc.abstractmethod
-    def query(self, input: PreviewEntryInputDto) -> EntryPreviewDto:
+    def query(self, input_dto: PreviewEntryInputDto) -> EntryPreviewDto:
         ...

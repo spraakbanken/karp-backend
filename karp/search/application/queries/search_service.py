@@ -52,18 +52,18 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
 
 class SearchService(abc.ABC):
 
-    def build_query(self, args, resource_str: str) -> Query:
-        query = Query()
-        query.parse_arguments(args, resource_str)
-        return query
+    # def build_query(self, args, resource_str: str) -> Query:
+    #     query = Query()
+    #     query.parse_arguments(args, resource_str)
+    #     return query
 
-    def build_query_parsed(self, args, resource_str: str) -> Query:
-        query = Query()
-        query.parse_arguments(args, resource_str)
-        return query
+    # def build_query_parsed(self, args, resource_str: str) -> Query:
+    #     query = Query()
+    #     query.parse_arguments(args, resource_str)
+    #     return query
 
-    def search_with_query(self, query: Query):
-        raise NotImplementedError()
+    # def search_with_query(self, query: Query):
+    #     raise NotImplementedError()
 
     @abc.abstractmethod
     def search_ids(self, resource_id: str, entry_ids: str):
