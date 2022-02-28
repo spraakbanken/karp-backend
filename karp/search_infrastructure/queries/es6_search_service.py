@@ -229,7 +229,7 @@ class Es6SearchService(SearchService):
 
     def _format_result(self, resource_ids, response):
         logger.debug(
-            "es6_search_service_format_result called with resource_ids=%s", resource_ids
+            "es6_search_service_format_result called with resource_ids=%s", resource_ids=resource_ids
         )
 
         def format_entry(entry):
@@ -335,7 +335,7 @@ class Es6SearchService(SearchService):
                     sort_fields.extend(
                         self.translate_sort_fields([resource], sort))
                 s = s.sort(*sort_fields)
-            logger.debug("s = %s", s.to_dict())
+            logger.debug("s = %s", s=s.to_dict())
             response = s.execute()
 
             # TODO format response in a better way, because the whole response takes up too much space in the logs
@@ -405,9 +405,9 @@ class Es6SearchService(SearchService):
         logger.info("  entry_ids = {}".format(entry_ids))
         entries = entry_ids.split(",")
         query = es_dsl.Q("terms", _id=entries)
-        logger.debug("query = {}".format(query))
+        logger.debug("query", query=query)
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
-        logger.debug("s = {}".format(s.to_dict()))
+        logger.debug("s", s=s.to_dict())
         response = s.execute()
 
         return self._format_result([resource_id], response)

@@ -30,7 +30,7 @@ class GenericSearchService(SearchService):
         self.parser = query_dsl.KarpQueryV6Parser(
             semantics=query_dsl.KarpQueryV6ModelBuilderSemantics())
 
-    def statistics(self, resource_id: str, field: str) -> typing.List[StatisticsDto]:
+    def statistics(self, resource_id: str, field: str) -> typing.Iterable[StatisticsDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(entry_repo_id) as uw:
             all_entries = uw.repo.all_entries()

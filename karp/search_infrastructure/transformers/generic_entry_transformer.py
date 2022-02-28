@@ -237,7 +237,7 @@ class GenericEntryTransformer(EntryTransformer):
             import karp.pluginmanager as plugins
 
             res = plugins.plugins[plugin_id].apply_plugin_function(
-                src_resource.id, src_resource.version, src_entry
+                src_resource.entity_id, src_resource.version, src_entry
             )
         else:
             raise NotImplementedError()

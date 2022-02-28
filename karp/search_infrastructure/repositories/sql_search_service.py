@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Iterable
 
 from karp.search.domain import query_dsl
 from karp.search.application.repositories import Index,IndexUnitOfWork, IndexEntry
@@ -30,7 +30,7 @@ class SqlSearchService(Index):
     def statistics(self):
         pass
 
-    def add_entries(self, resource_id, entries: List[IndexEntry]):
+    def add_entries(self, resource_id, entries: Iterable[IndexEntry]):
         pass
 
     def delete_entry(
