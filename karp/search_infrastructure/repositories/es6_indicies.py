@@ -76,7 +76,7 @@ class Es6Index(Index):
 
         date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
         index_name = resource_id + "_" + date
-        logger.info('creating index', index_name=index_name)
+        logger.info('creating index', index_name=index_name, body=body)
         result = self.es.indices.create(index=index_name, body=body)
         if "error" in result:
             logger.error("failed to create index",
