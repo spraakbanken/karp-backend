@@ -53,7 +53,7 @@ class ResourceModel(db.Base):
                     discarded={},
                 ) > """.format(
             self.history_id,
-            self.id,
+            self.entity_id,
             self.resource_id,
             self.version,
             self.name,
