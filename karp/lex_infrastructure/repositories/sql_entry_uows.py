@@ -106,7 +106,7 @@ class SqlEntryUowRepositoryUnitOfWork(
         logger.debug('called _begin')
         if self._session_is_created_here:
             self._session = self.session_factory()  # type: ignore
-            logger.debug('created session=%(session)s', session=self._session)
+            logger.debug('created session=%s', self._session)
         if self._repo is None:
             self._repo = SqlEntryUowRepository(
                 entry_uow_factory=self.factory,
