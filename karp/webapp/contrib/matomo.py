@@ -1,5 +1,6 @@
 import logging
 import random
+from re import I
 import urllib.parse
 from urllib.parse import urlunparse
 
@@ -66,7 +67,8 @@ class MatomoMiddleware(BaseHTTPMiddleware):
                 'rec': 1,
                 'rand': random.getrandbits(32),
                 'apiv': 1,
-
+                'ua': headers.get('user-agent'),
+                'lang': headers.get('accept-lang')
             }
         )
         tracking_url = f'{self.matomo_url}?{tracking_params}'
