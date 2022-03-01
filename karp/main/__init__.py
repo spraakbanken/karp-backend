@@ -122,7 +122,8 @@ def configure_logging(settings: dict[str, str]) -> None:
                 },
                 'json': {
                     'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
-                    'format': '%(message)s',
+                    # 'format': '%(message)s',
+                    "format": "%(asctime)s %(levelname)s %(name)s %(process)d %(funcName)s %(lineno)d %(message)s",
                 },
                 "standard": {
                     "format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s",
