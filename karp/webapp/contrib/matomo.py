@@ -71,6 +71,7 @@ class MatomoMiddleware(BaseHTTPMiddleware):
         )
         tracking_url = f'{self.matomo_url}?{tracking_params}'
         try:
+            logger.debug('Making tracking call', extra={'url': tracking_url})
             http.request(
                 'GET',
                 tracking_url
