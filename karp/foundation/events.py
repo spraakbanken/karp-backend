@@ -55,23 +55,23 @@ class InjectorEventBus(EventBus):
         self._container = container
 
     def post(self, event: Event) -> None:
-        logger.info('handling event', karp_event=event)
+        logger.info('handling event', extra={'karp_event': event})
         try:
             evt_handlers = self._container.get(
                 List[EventHandler[type(event)]]  # type: ignore
             )
         except injector.UnsatisfiedRequirement as err:
             logger.info('No event handler for event?',
-                        karp_event=event, err_message=err)
+                        extra={'karp_event': event, 'err_message': err})
         else:
             for evt_handler in evt_handlers:
                 logger.debug(
                     'handling event with handler',
-                    karp_event=event, evt_handler=evt_handler,
+                    extra={'karp_event': event, 'evt_handler': evt_handler},
                 )
                 try:
                     evt_handler(event)
                 except Exception as err:
                     logger.exception(
-                        'Exception handling event', karp_event=event)
+                        'Exception handling event', extra={'karp_event': event})
                     raise
