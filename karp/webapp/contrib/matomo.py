@@ -11,21 +11,26 @@ logger = logging.getLogger(__name__)
 
 
 class MatomoMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: ASGIApp, idsite: str, matomo_url: str) -> None:
+    def __init__(self, app: ASGIApp, idsite: str, matomo_url: str, *, assume_https: bool = True) -> None:
         super().__init__(app)
         self.idsite = idsite
         self.matomo_url = matomo_url
+        self.assume_https = assume_https
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         headers = {}
         for k, v in request.headers.items():
             headers[k.lower()] = v
         scope = request.scope
-        host, port = scope['server']
+        if 'x-forwarded-server' in headers:
+            server = headers['x-forwarded-server']
+        else:
+            host, port = scope['server']
+            server = f'{host}:{port}'
         url = urlunparse(
             (
-                str(scope['scheme']),
-                f'{host}:{port}',
+                'https' if self.assume_https else str(scope['scheme']),
+                server,
                 str(scope['path']),
                 '',
                 str(scope['query_string']),
