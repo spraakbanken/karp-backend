@@ -27,11 +27,15 @@ class MatomoMiddleware(BaseHTTPMiddleware):
         else:
             host, port = scope['server']
             server = f'{host}:{port}'
+        root_path = scope.get('root_path')
+        path = scope['path']
+        if root_path:
+            path = f'{root_path}/{path}'
         url = urlunparse(
             (
                 'https' if self.assume_https else str(scope['scheme']),
                 server,
-                str(scope['path']),
+                path,
                 '',
                 str(scope['query_string']),
                 '',
