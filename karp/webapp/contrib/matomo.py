@@ -1,5 +1,10 @@
 import logging
+import random
+import urllib.parse
 from urllib.parse import urlunparse
+
+import urllib3
+import urllib3.exceptions
 
 from starlette.requests import Request
 from starlette.responses import Response
@@ -8,6 +13,8 @@ from starlette.types import ASGIApp
 
 
 logger = logging.getLogger(__name__)
+
+http = urllib3.PoolManager()
 
 
 class MatomoMiddleware(BaseHTTPMiddleware):
@@ -51,4 +58,23 @@ class MatomoMiddleware(BaseHTTPMiddleware):
             }
         )
         response = await call_next(request)
+
+        tracking_params = urllib.parse.urlencode(
+            {
+                'idsite': self.idsite,
+                'url': url,
+                'rec': 1,
+                'rand': random.getrandbits(32),
+                'apiv': 1,
+
+            }
+        )
+        tracking_url = f'{self.matomo_url}?{tracking_params}'
+        try:
+            http.request(
+                'GET',
+                tracking_url
+            )
+        except urllib3.exceptions.HTTPError:
+            logger.exception('Error tracking view')
         return response
