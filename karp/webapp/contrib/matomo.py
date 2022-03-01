@@ -74,16 +74,19 @@ class MatomoMiddleware(BaseHTTPMiddleware):
                 'apiv': 1,
                 'ua': headers.get('user-agent'),
                 'lang': headers.get('accept-lang'),
-                'cip': cip,
+                '_cvar': f'{{"cip": "{cip}"}}',
             }
         )
         tracking_url = f'{self.matomo_url}?{tracking_params}'
         try:
             logger.debug('Making tracking call', extra={'url': tracking_url})
-            http.request(
+            logger.warning('Not recording client ip', extra={'cip': cip})
+            r = http.request(
                 'GET',
                 tracking_url
             )
+            logger.debug('tracking call', extra={
+                         'status_code': r.status, 'data': r.data})
         except urllib3.exceptions.HTTPError:
             logger.exception('Error tracking view')
         return response
