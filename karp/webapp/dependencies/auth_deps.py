@@ -6,7 +6,7 @@ from fastapi.param_functions import Header
 from fastapi.security import (HTTPAuthorizationCredentials, HTTPBearer,
                               SecurityScopes)
 from fastapi.security import utils as security_utils
-import structlog
+import logging
 # from karp import bootstrap, services
 from karp import auth, lex
 # from karp.auth.auth import auth
@@ -23,7 +23,7 @@ from .fastapi_injector import inject_from_req
 
 auth_scheme = HTTPBearer()
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 def bearer_scheme(authorization=Header(None)):

@@ -3,10 +3,10 @@ import logging
 from typing import List, Generic, TypeVar, Any, Iterable
 
 import injector
-import structlog
+import logging
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 T = TypeVar("T")
@@ -61,7 +61,8 @@ class InjectorEventBus(EventBus):
                 List[EventHandler[type(event)]]  # type: ignore
             )
         except injector.UnsatisfiedRequirement as err:
-            logger.info('No event handler for event?', karp_event=event, err_message=err)
+            logger.info('No event handler for event?',
+                        karp_event=event, err_message=err)
         else:
             for evt_handler in evt_handlers:
                 logger.debug(

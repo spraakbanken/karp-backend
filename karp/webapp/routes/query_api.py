@@ -6,7 +6,6 @@ from typing import List, Optional
 
 from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
                      status)
-import structlog
 
 from karp import errors as karp_errors, auth, search
 from karp.search.application.queries import SearchService, QueryRequest
@@ -16,7 +15,7 @@ from karp.webapp import dependencies as deps
 from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -39,7 +38,7 @@ def get_entries_by_id(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
-    print("webapp.views.get_entries_by_id")
+    logger.debug("webapp.views.get_entries_by_id")
     if not auth_service.authorize(
         auth.PermissionLevel.read, user, [resource_id]
     ):
@@ -88,7 +87,7 @@ def query_split(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
-    logger.debug('/query/split called', resources=resources)
+    logger.debug('/query/split called', extra={'resources': resources})
     resource_list = resources.split(",")
     if not auth_service.authorize(
         auth.PermissionLevel.read, user, resource_list
@@ -109,10 +108,10 @@ def query_split(
         response = search_service.query_split(query_request)
     except karp_errors.KarpError as err:
         logger.exception(
-            "Error occured when calling '/query/split' with resources='%s' and q='%s'. msg='%s'",
-            resources=resources,
-            q=q,
-            error_message=err.message,
+            "Error occured when calling '/query/split'",
+            extra={'resources': resources,
+                   'q': q,
+                   'error_message': err.message},
         )
         raise
     except search.IncompleteQuery as err:
@@ -203,22 +202,23 @@ def query(
     Logical Operators
     The logical operators can be used both at top-level and lower-levels.
 
-    not||<expression> Find all entries that doesn't match the expression <expression>.
+    not(<expression>) Find all entries that doesn't match the expression <expression>.
 
-    and||<expression1>||<expression2> Find all entries that matches <expression1> AND <expression2>.
+    and(<expression1>||<expression2>) Find all entries that matches <expression1> AND <expression2>.
 
-    or||<expression1>||<expression2> Find all entries that matches <expression1> OR <expression2>.
+    or(<expression1>||<expression2>) Find all entries that matches <expression1> OR <expression2>.
 
     Regular expressions
     Always matches complete tokens.
-    Examples
-    not||missing|pos
-    and||freergxp|str.*ng||regexp|pos|str.*ng
-    and||missing|pos||equals|wf||or|blomma|äpple
-    and||equals|wf|sitta||not||equals|wf|satt
     """
+    # Examples
+    # not||missing|pos
+    # and||freergxp|str.*ng||regexp|pos|str.*ng
+    # and||missing|pos||equals|wf||or|blomma|äpple
+    # and||equals|wf|sitta||not||equals|wf|satt
+    # """
     logger.debug(
-        "Called 'query' called with resources=%s, from=%d, size=%d", resources=resources, from_=from_, size=size
+        "Called 'query' called with", extra={'resources': resources, 'from': from_, 'size': size}
     )
     resource_list = resources.split(",")
     if not auth_service.authorize(
@@ -246,10 +246,10 @@ def query(
 
     except karp_errors.KarpError as err:
         logger.exception(
-            "Error occured when calling 'query' with resources='%s' and q='%s'. e.msg='%s'",
-            resources=resources,
-            q=q,
-            error_message=err.message,
+            "Error occured when calling 'query' with",
+            extra={'resources': resources,
+                   'q': q,
+                   'error_message': err.message},
         )
         raise
     return response

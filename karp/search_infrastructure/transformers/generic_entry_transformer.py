@@ -2,7 +2,7 @@ import collections
 import logging
 import typing
 
-import structlog
+import logging
 
 from karp.lex.application.queries.resources import ResourceDto
 
@@ -18,7 +18,7 @@ from karp.search.application.transformers import EntryTransformer
 from karp.search.application.repositories import IndexUnitOfWork, IndexEntry
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 class GenericEntryTransformer(EntryTransformer):

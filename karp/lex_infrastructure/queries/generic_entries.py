@@ -1,7 +1,7 @@
 import typing
 
 from sb_json_tools import jsondiff
-import structlog
+import logging
 
 from karp import lex
 from karp.lex import GetHistoryDto, HistoryDto
@@ -12,7 +12,7 @@ from karp.foundation.value_objects import unique_id
 from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 class GenericEntryViews(EntryViews):

@@ -7,7 +7,7 @@ from uuid import UUID
 import injector
 import regex
 from sqlalchemy.orm import sessionmaker
-import structlog
+import logging
 
 from karp.foundation.value_objects import UniqueId
 from karp.foundation.events import EventBus
@@ -21,7 +21,7 @@ from karp.lex_infrastructure.sql import sql_models
 from karp.db_infrastructure.sql_repository import SqlRepository
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 DUPLICATE_PATTERN = r"Duplicate entry '(.+)' for key '(\w+)'"
 DUPLICATE_PROG = regex.compile(DUPLICATE_PATTERN)

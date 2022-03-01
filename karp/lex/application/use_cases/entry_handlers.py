@@ -9,7 +9,7 @@ from typing import Any, Dict, Generic, List, Optional, Tuple
 import fastjsonschema  # pyre-ignore
 import json_streams
 from sb_json_tools import jsondiff
-import structlog
+import logging
 
 from karp.foundation.commands import CommandHandler
 from karp.lex.application.repositories import EntryUnitOfWork
@@ -26,7 +26,7 @@ from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application import repositories
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 # def get_entries_by_column(resource_obj: Resource, filters):

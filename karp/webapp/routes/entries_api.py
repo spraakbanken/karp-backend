@@ -5,7 +5,7 @@ from fastapi import (APIRouter, Body, Depends, HTTPException, Response, Security
                      status, Path, Query)
 import pydantic
 from starlette import responses
-import structlog
+import logging
 
 from karp import errors as karp_errors, auth, lex, search
 from karp.lex.application.queries import EntryViews, EntryDto, GetEntryHistory
@@ -19,7 +19,7 @@ from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 router = APIRouter()
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 @router.get('/{resource_id}/{entry_id}/{version}', response_model=EntryDto, tags=["History"])

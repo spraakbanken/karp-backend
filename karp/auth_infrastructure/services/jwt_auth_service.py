@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 import jwt
 import jwt.exceptions as jwte  # pyre-ignore
 import pydantic
-import structlog
+import logging
 
 
 from karp.foundation import value_objects
@@ -16,7 +16,7 @@ from karp.auth.domain.entities.user import User
 from karp.auth import AuthService, AuthServiceConfig
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 class JWTMeta(pydantic.BaseModel):

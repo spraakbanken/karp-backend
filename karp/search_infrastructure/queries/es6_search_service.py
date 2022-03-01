@@ -7,7 +7,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 import elasticsearch
 import elasticsearch.helpers  # pyre-ignore
 import elasticsearch_dsl as es_dsl  # pyre-ignore
-import structlog
+import logging
 from tatsu import exceptions as tatsu_exc
 
 from karp import search
@@ -28,7 +28,7 @@ from .es_query import EsQuery
 # from karp.query_dsl import basic_ast as ast, op, is_a
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
@@ -212,10 +212,10 @@ class Es6SearchService(search.SearchService):
         :return: a list of tuples (alias_name, index_name)
         """
         result = self.es.cat.aliases(h="alias,index")
-        logger.debug('ES aliases and indicies', result=result)
+        logger.debug('ES aliases and indicies', extra={'result': result})
         index_names = []
         for index_name in result.split("\n")[:-1]:
-            logger.debug('existing index', index_name=index_name)
+            logger.debug('existing index', extra={'index_name': index_name})
             if index_name[0] != ".":
                 opt_match = re.search(r"([^ ]*) +(.*)", index_name)
                 if opt_match:
@@ -231,9 +231,8 @@ class Es6SearchService(search.SearchService):
         return query
 
     def _format_result(self, resource_ids, response):
-        logger.debug(
-            "es6_search_service_format_result called with resource_ids=%s", resource_ids=resource_ids
-        )
+        logger.debug('_format_result called', extra={
+                     'resource_ids': resource_ids})
 
         def format_entry(entry):
 
@@ -261,25 +260,25 @@ class Es6SearchService(search.SearchService):
         return result
 
     def query(self, request: QueryRequest):
-        logger.info('query called', request=request)
+        logger.info('query called', extra={'request': request})
         query = EsQuery.from_query_request(request)
         return self.search_with_query(query)
 
     def query_split(self, request: QueryRequest):
-        logger.info('query_split called', request=request)
+        logger.info('query_split called', extra={'request': request})
         query = EsQuery.from_query_request(request)
         query.split_results = True
         return self.search_with_query(query)
 
     def search_with_query(self, query: EsQuery):
-        logger.info('search_with_query called', query=query)
+        logger.info('search_with_query called', extra={'query': query})
         es_query = None
         if query.q:
             try:
                 model = self.parser.parse(query.q)
                 es_query = self.query_builder.walk(model)
             except tatsu_exc.FailedParse as err:
-                logger.debug('Parse error', err=err)
+                logger.debug('Parse error', extra={'err': err})
                 raise errors.IncompleteQuery(
                     failing_query=query.q,
                     error_description=str(err)
@@ -338,13 +337,13 @@ class Es6SearchService(search.SearchService):
                     sort_fields.extend(
                         self.translate_sort_fields([resource], sort))
                 s = s.sort(*sort_fields)
-            logger.debug("s = %s", s=s.to_dict())
+            logger.debug("s = %s", extra={'es_query s': s.to_dict()})
             response = s.execute()
 
             # TODO format response in a better way, because the whole response takes up too much space in the logs
             # logger.debug('response = {}'.format(response.to_dict()))
 
-            logger.debug("calling _format_result")
+            logger.debug('calling _format_result')
             result = self._format_result(query.resources, response)
             if query.lexicon_stats:
                 result["distribution"] = {}
@@ -391,7 +390,7 @@ class Es6SearchService(search.SearchService):
 
     def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
         logger.debug(
-            'sortable fields for resource', resource_id=resource_id, sortable_fields=self.sortable_fields[resource_id]
+            'sortable fields for resource', extra={'resource_id': resource_id, 'sortable_fields': self.sortable_fields[resource_id]}
         )
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value]
@@ -402,15 +401,14 @@ class Es6SearchService(search.SearchService):
 
     def search_ids(self, resource_id: str, entry_ids: str):
         logger.info(
-            "Called EsSearch.search_ids(self, args, resource_id, entry_ids) with:"
-        )
-        logger.info("  resource_id = {}".format(resource_id))
-        logger.info("  entry_ids = {}".format(entry_ids))
+            'Called EsSearch.search_ids with:', extra={
+                'resource_id': resource_id,
+                'entry_ids': entry_ids})
         entries = entry_ids.split(",")
         query = es_dsl.Q("terms", _id=entries)
-        logger.debug("query", query=query)
+        logger.debug('query', extra={'query': query})
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
-        logger.debug("s", s=s.to_dict())
+        logger.debug('s', extra={'es_query s': s.to_dict()})
         response = s.execute()
 
         return self._format_result([resource_id], response)
@@ -431,7 +429,7 @@ class Es6SearchService(search.SearchService):
         )
         s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
         response = s.execute()
-        logger.debug('Elasticsearch response', response=response)
+        logger.debug('Elasticsearch response', extra={'response': response})
         return [
             {"value": bucket["key"], "count": bucket["doc_count"]}
             for bucket in response.aggregations.field_values.buckets

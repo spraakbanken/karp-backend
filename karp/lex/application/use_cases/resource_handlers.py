@@ -4,7 +4,7 @@ import typing
 from pathlib import Path
 from typing import IO, Dict, Generic, List, Optional, Tuple
 
-import structlog
+import logging
 
 from karp import errors as karp_errors
 from karp.lex.domain import errors, events, entities
@@ -18,7 +18,7 @@ from karp.lex.domain import commands
 from karp.lex.application import repositories
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 resource_models = {}  # Dict
 history_models = {}  # Dict

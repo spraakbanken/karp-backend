@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Security, status
-import structlog
+import logging
 
 from karp.foundation.commands import CommandBus
 from karp import auth, lex
@@ -23,7 +23,7 @@ from karp.lex.application.queries import ReadOnlyResourceRepository
 
 
 router = APIRouter()
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 
 @router.get(

@@ -4,7 +4,7 @@ import re
 from typing import Dict, List, Optional, Any, Tuple, Union
 
 import elasticsearch
-import structlog
+import logging
 
 from karp.foundation.events import EventBus
 
@@ -16,7 +16,7 @@ from karp.search.application.repositories import (
 )
 
 
-logger = structlog.get_logger()
+logger = logging.getLogger(__name__)
 
 KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"

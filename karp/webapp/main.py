@@ -18,7 +18,7 @@ from fastapi.exception_handlers import http_exception_handler
 import injector
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
-import structlog
+import logging
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
 
@@ -79,7 +79,6 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    app.add_middleware(CorrelationIdMiddleware)
 
     app.include_router(api_router)
 
@@ -127,8 +126,8 @@ def create_app() -> FastAPI:
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail='Internal server error',
                 headers={
-                    'X-Correlation-ID': correlation_id.get() or '',
-                    'Access-Control-Expose-Headers': 'X-Correlation-ID'
+                    'X-Request-ID': correlation_id.get() or '',
+                    'Access-Control-Expose-Headers': 'X-Request-ID'
                 }
             )
         )
@@ -159,35 +158,37 @@ def create_app() -> FastAPI:
 
         return response
 
-    # @app.middleware("http")
-    # async def logging_middleware(request: Request, call_next) -> Response:
-    #     # clear the threadlocal context
-    #     structlog.threadlocal.clear_threadlocal()
-    #     # bind threadlocal
-    #     structlog.threadlocal.bind_threadlocal(
-    #         # logger="karp",
-    #         request_id=str(unique_id.make_unique_id()),
-    #         cookies=request.cookies,
-    #         scope=request.scope,
-    #         url=str(request.url),
-    #     )
-    #     response = JSONResponse(
-    #         status_code=500,
-    #         content={
-    #             'detail': 'Internal server error'
-    #         }
-    #     )
-    #     start_time = time.time()
-    #     try:
-    #         response: Response = await call_next(request)
-    #     finally:
-    #         process_time = time.time() - start_time
-    #         logger.info(
-    #             "processed a request",
-    #             status_code=response.status_code,
-    #             process_time=process_time,
-    #         )
-    #     return response
+    @app.middleware("http")
+    async def logging_middleware(request: Request, call_next) -> Response:
+        # # clear the threadlocal context
+        # structlog.threadlocal.clear_threadlocal()
+        # # bind threadlocal
+        # structlog.threadlocal.bind_threadlocal(
+        #     # logger="karp",
+        #     request_id=str(unique_id.make_unique_id()),
+        #     cookies=request.cookies,
+        #     scope=request.scope,
+        #     url=str(request.url),
+        # )
+        response: Response = JSONResponse(
+            status_code=500,
+            content={
+                'detail': 'Internal server error'
+            }
+        )
+        start_time = time.time()
+        try:
+            response = await call_next(request)
+        finally:
+            process_time = time.time() - start_time
+            logger.info(
+                "processed a request",
+                extra={'status_code': response.status_code,
+                       'process_time': process_time, }
+            )
+        return response
+
+    app.add_middleware(CorrelationIdMiddleware)
 
     return app
 

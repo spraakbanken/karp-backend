@@ -1,5 +1,5 @@
 import json
-import logging.config as logging_config
+from logging.config import dictConfig
 import logging
 import os
 import typing
@@ -15,7 +15,7 @@ import injector
 from json_streams import jsonlib
 from sqlalchemy import pool
 from sqlalchemy.engine import Engine, create_engine, url as sa_url
-import structlog
+import logging
 from asgi_correlation_id.log_filters import correlation_id_filter
 
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
@@ -103,13 +103,14 @@ def _setup_search_context(container: injector.Injector, search_service: str) -> 
         container.binder.install(GenericSearchIndexMod())
 
 
-def configure_logging(settings: dict[str, str]) -> typing.Dict[str, typing.Any]:
-    logging_config.dictConfig(
+def configure_logging(settings: dict[str, str]) -> None:
+    print('configuring logging ...')
+    dictConfig(
         {
             "version": 1,
             'disable_existing_loggers': False,
             'filters': {
-                'correlation_id': {'()': correlation_id_filter(8 if not settings.get('environment', '') == 'local' else 32)}
+                'correlation_id': {'()': correlation_id_filter(32)}
             },
             "formatters": {
                 'console': {
@@ -147,6 +148,7 @@ def configure_logging(settings: dict[str, str]) -> typing.Dict[str, typing.Any]:
                 },
                 # third-party package loggers
                 'sqlalchemy': {'handlers': ['console'], 'level': 'WARNING'},
+                'uvicorn.access': {'handlers': ['console'], 'level': 'INFO'}
             },
         }
     )
@@ -205,7 +207,7 @@ def setup_logging():
         cache_logger_on_first_use=True,
         logger_factory=structlog.stdlib.LoggerFactory(),
     )
-    logger = structlog.get_logger()
+    logger = logging.getLogger(__name__)
     # if app.config.get("LOG_TO_SLACK"):
     #     slack_handler = slack_logging.get_slack_logging_handler(
     #         app.config.get("SLACK_SECRET")
