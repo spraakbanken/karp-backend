@@ -45,7 +45,8 @@ def bootstrap_app(container=None) -> AppContext:
         'auth.jwt.pubkey.path': env('AUTH_JWT_PUBKEY_PATH', None),
         'auth.name': env('AUTH_NAME', ''),
         'tracking.matomo.idsite': env('TRACKING_MATOMO_IDSITE', None),
-        'tracking.matomo.url': env('TRACKING_MATOMO_URL', None)
+        'tracking.matomo.url': env('TRACKING_MATOMO_URL', None),
+        'tracking.matomo.token': env('TRACKING_MATOMO_TOKEN', None),
     }
     # if n ot container:
     # container = AppContainer()
@@ -73,6 +74,7 @@ def _create_db_engine(db_url: config.DatabaseUrl) -> Engine:
             'check_same_thread': False
         }
     engine_echo = False
+    # type: ignore
     return create_engine(db_url, echo=engine_echo, future=True, **kwargs)
 
 

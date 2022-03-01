@@ -193,7 +193,8 @@ def create_app() -> FastAPI:
         app.add_middleware(
             MatomoMiddleware,
             idsite=app_context.settings['tracking.matomo.idsite'],
-            matomo_url=app_context.settings['tracking.matomo.url']
+            matomo_url=app_context.settings['tracking.matomo.url'],
+            access_token=app_context.settings['tracking.matomo.token'],
         )
     else:
         logger.warning(

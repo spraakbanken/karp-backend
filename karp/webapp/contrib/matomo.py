@@ -1,6 +1,7 @@
 import logging
 import random
 from re import I
+from typing import Optional
 import urllib.parse
 from urllib.parse import urlunparse
 
@@ -23,11 +24,20 @@ def get_remote_address(req: Request) -> str:
 
 
 class MatomoMiddleware(BaseHTTPMiddleware):
-    def __init__(self, app: ASGIApp, idsite: str, matomo_url: str, *, assume_https: bool = True) -> None:
+    def __init__(
+        self,
+        app: ASGIApp,
+        idsite: str,
+        matomo_url: str,
+        access_token: Optional[str] = None,
+        *,
+        assume_https: bool = True
+    ) -> None:
         super().__init__(app)
         self.idsite = idsite
         self.matomo_url = matomo_url
         self.assume_https = assume_https
+        self._access_token = access_token
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         headers = {}
@@ -65,18 +75,23 @@ class MatomoMiddleware(BaseHTTPMiddleware):
         cip = get_remote_address(request)
         response = await call_next(request)
 
-        tracking_params = urllib.parse.urlencode(
-            {
-                'idsite': self.idsite,
-                'url': url,
-                'rec': 1,
-                'rand': random.getrandbits(32),
-                'apiv': 1,
-                'ua': headers.get('user-agent'),
-                'lang': headers.get('accept-lang'),
-                '_cvar': f'{{"cip": "{cip}"}}',
+        params_that_require_token = {}
+        if self._access_token:
+            params_that_require_token = {
+                'token_auth': self._access_token,
+                'cip': cip
             }
-        )
+        tracking_dict = {
+            'idsite': self.idsite,
+            'url': url,
+            'rec': 1,
+            'rand': random.getrandbits(32),
+            'apiv': 1,
+            'ua': headers.get('user-agent'),
+            'lang': headers.get('accept-lang'),
+            **params_that_require_token,
+        }
+        tracking_params = urllib.parse.urlencode(tracking_dict)
         tracking_url = f'{self.matomo_url}?{tracking_params}'
         try:
             logger.debug('Making tracking call', extra={'url': tracking_url})
