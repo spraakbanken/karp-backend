@@ -133,7 +133,8 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
         self,
         history_request: EntryHistoryRequest,
     ) -> GetHistoryDto:
-        logger.info('querying history', history_request=history_request)
+        logger.info('querying history', extra={
+                    'history_request': history_request})
         entry_repo_id = self.get_entry_repo_id(history_request.resource_id)
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(entry_repo_id) as uw:
             paged_query, total = uw.repo.get_history(
@@ -159,7 +160,7 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
             # else:
             #     previous_body = {}
             history_diff = jsondiff.compare(previous_body, history_entry.body)
-            logger.info('diff', diff=history_diff)
+            logger.info('diff', extra={'diff': history_diff})
             result.append(
                 HistoryDto(
                     timestamp=history_entry.last_modified,

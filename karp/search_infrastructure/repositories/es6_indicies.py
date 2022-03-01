@@ -76,11 +76,12 @@ class Es6Index(Index):
 
         date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
         index_name = resource_id + "_" + date
-        logger.info('creating index', index_name=index_name, body=body)
+        logger.info('creating index', extra={
+                    'index_name': index_name, 'body': body})
         result = self.es.indices.create(index=index_name, body=body)
         if "error" in result:
-            logger.error("failed to create index",
-                         index_name=index_name, body=body)
+            logger.error('failed to create index',
+                         extra={'index_name': index_name, 'body': body})
             raise RuntimeError("failed to create index")
         logger.info("index created")
         self._set_index_name_for_resource(resource_id, index_name)
@@ -113,7 +114,7 @@ class Es6Index(Index):
         index_name = self._get_index_name_for_resource(resource_id)
         self.on_publish_resource(resource_id, index_name)
         logger.info('publishing resource',
-                    resource_id=resource_id, index_name=index_name)
+                    extra={'resource_id': resource_id, 'index_name': index_name})
         self.es.indices.put_alias(name=resource_id, index=index_name)
 
     def add_entries(self, resource_id: str, entries: List[IndexEntry]):
@@ -144,8 +145,8 @@ class Es6Index(Index):
             raise ValueError("Must give either 'entry' or 'entry_id'.")
         if entry:
             entry_id = entry.entry_id
-        logger.info('deleting entry', entry_id=entry_id,
-                    resource_id=resource_id)
+        logger.info('deleting entry', extra={'entry_id': entry_id,
+                    'resource_id': resource_id})
         index_name = self._get_index_name_for_resource(resource_id)
         try:
             self.es.delete(
@@ -156,7 +157,7 @@ class Es6Index(Index):
             )
         except elasticsearch.exceptions.ElasticsearchException:
             logger.exception('Error deleting entry',
-                             entry_id=entry_id, resource_id=resource_id, index_name=index_name,)
+                             extra={'entry_id': entry_id, 'resource_id': resource_id, 'index_name': index_name, })
 
     @staticmethod
     def get_analyzed_fields_from_mapping(
@@ -228,10 +229,12 @@ class Es6Index(Index):
         for index_name in result.split("\n")[:-1]:
             print(f"index_name = {index_name}")
             if index_name[0] != ".":
-                groups = re.search(r"([^ ]*) +(.*)", index_name).groups()
-                alias = groups[0]
-                index = groups[1]
-                index_names.append((alias, index))
+                match = re.search(r"([^ ]*) +(.*)", index_name)
+                if match:
+                    groups = match.groups()
+                    alias = groups[0]
+                    index = groups[1]
+                    index_names.append((alias, index))
         return index_names
 
     def translate_sort_fields(

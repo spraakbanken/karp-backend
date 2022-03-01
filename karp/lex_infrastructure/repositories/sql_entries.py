@@ -319,7 +319,8 @@ class SqlEntryRepository(
             if filter_key in self.resource_config[
                 "referenceable"
             ] and self.resource_config["fields"][filter_key].get("collection"):
-                logger.debug('collection field', filter_key=filter_key)
+                logger.debug('collection field', extra={
+                             'filter_key': filter_key})
                 # child_cls = self.runtime_model.child_tables[filter_key]
                 # tmp[child_cls.__tablename__][filter_key] = filters[filter_key]
                 # print(f"tmp.values() = {tmp.values()}")
@@ -345,7 +346,8 @@ class SqlEntryRepository(
 
         for child_filters in joined_filters:
             child_table_name = list(child_filters.keys())[0]
-            logger.debug('child table name', table_name=child_table_name)
+            logger.debug('child table name', extra={
+                         'table_name': child_table_name})
             child_cls = self.runtime_model.child_tables[child_table_name]
             child_query = self._session.query(
                 child_cls).filter_by(**child_filters)
