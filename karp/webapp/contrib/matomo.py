@@ -81,6 +81,9 @@ class MatomoMiddleware(BaseHTTPMiddleware):
                 'token_auth': self._access_token,
                 'cip': cip
             }
+        else:
+            logger.warning('Not recording client ip', extra={'cip': cip})
+
         tracking_dict = {
             'idsite': self.idsite,
             'url': url,
@@ -95,7 +98,6 @@ class MatomoMiddleware(BaseHTTPMiddleware):
         tracking_url = f'{self.matomo_url}?{tracking_params}'
         try:
             logger.debug('Making tracking call', extra={'url': tracking_url})
-            logger.warning('Not recording client ip', extra={'cip': cip})
             r = http.request(
                 'GET',
                 tracking_url
