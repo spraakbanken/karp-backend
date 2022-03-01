@@ -3,6 +3,7 @@
 Borrowed from https://bitbucket.org/sixty-north/d5-kanban-python
 """
 import uuid
+import ulid
 import typing
 try:
     import fastuuid  # type: ignore
@@ -10,10 +11,11 @@ except ModuleNotFoundError:
     fastuuid = None
 
 
-# def make_unique_id():
-#     """Make a new UniqueId."""
-#     return uuid.uuid4()
+def _make_unique_id() -> uuid.UUID:
+    """Make a new UniqueId."""
+    return ulid.new().uuid
     # return UniqueId(uuid.uuid4())
+
 
 if fastuuid is not None:
     make_unique_id = fastuuid.uuid4
@@ -21,7 +23,7 @@ if fastuuid is not None:
     UniqueIdType = (fastuuid.UUID, uuid.UUID)
     typing_UniqueId = typing.Union[fastuuid.UUID, uuid.UUID]
 else:
-    make_unique_id = uuid.uuid4
+    make_unique_id = _make_unique_id
     UniqueId = uuid.UUID
     UniqueIdType = uuid.UUID
     typing_UniqueId = uuid.UUID

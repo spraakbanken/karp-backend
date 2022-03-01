@@ -78,6 +78,7 @@ structlog = "^21.5.0"
 asgi-correlation-id = "^1.1.2"
 gunicorn = "^20.1.0"
 python-json-logger = "^2.0.2"
+ulid-py = "^1.1.0"
 
 [tool.poetry.extras]
 mysql = ["mysqlclient", "PyMySQL", "aiomysql"]
