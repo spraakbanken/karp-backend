@@ -30,7 +30,7 @@ class MatomoMiddleware(BaseHTTPMiddleware):
         root_path = scope.get('root_path')
         path = scope['path']
         if root_path:
-            path = f'{root_path}/{path}'
+            path = f'{root_path}{path}'
         url = urlunparse(
             (
                 'https' if self.assume_https else str(scope['scheme']),
