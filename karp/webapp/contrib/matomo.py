@@ -18,6 +18,10 @@ logger = logging.getLogger(__name__)
 http = urllib3.PoolManager()
 
 
+def get_remote_address(req: Request) -> str:
+    return req.scope['client'][0]
+
+
 class MatomoMiddleware(BaseHTTPMiddleware):
     def __init__(self, app: ASGIApp, idsite: str, matomo_url: str, *, assume_https: bool = True) -> None:
         super().__init__(app)
@@ -58,6 +62,7 @@ class MatomoMiddleware(BaseHTTPMiddleware):
                 'headers': headers,
             }
         )
+        cip = get_remote_address(request)
         response = await call_next(request)
 
         tracking_params = urllib.parse.urlencode(
@@ -68,7 +73,8 @@ class MatomoMiddleware(BaseHTTPMiddleware):
                 'rand': random.getrandbits(32),
                 'apiv': 1,
                 'ua': headers.get('user-agent'),
-                'lang': headers.get('accept-lang')
+                'lang': headers.get('accept-lang'),
+                'cip': cip,
             }
         )
         tracking_url = f'{self.matomo_url}?{tracking_params}'
