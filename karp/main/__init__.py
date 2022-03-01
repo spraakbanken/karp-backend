@@ -44,6 +44,8 @@ def bootstrap_app(container=None) -> AppContext:
     settings = {
         'auth.jwt.pubkey.path': env('AUTH_JWT_PUBKEY_PATH', None),
         'auth.name': env('AUTH_NAME', ''),
+        'tracking.matomo.idsite': env('TRACKING_MATOMO_IDSITE', None),
+        'tracking.matomo.url': env('TRACKING_MATOMO_URL', None)
     }
     # if n ot container:
     # container = AppContainer()
@@ -118,6 +120,10 @@ def configure_logging(settings: dict[str, str]) -> None:
                     # 'datefmt':  '%H:%M:%S',
                     'format': '%(levelname)s:\t\b%(asctime)s %(name)s:%(lineno)d [%(correlation_id)s] %(message)s',
                 },
+                'json': {
+                    'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+                    'format': '%(message)s',
+                },
                 "standard": {
                     "format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s",
                 }
@@ -129,6 +135,11 @@ def configure_logging(settings: dict[str, str]) -> None:
                     "formatter": 'console',
                     # "level": 'DEBUG',
                     "stream": "ext://sys.stderr",
+                },
+                'json': {
+                    'class': 'logging.StreamHandler',
+                    'filters': ['correlation_id'],
+                    'formatter': 'json',
                 },
                 # "email": {
                 #     "class": "logging.handlers.SMTPHandler",
@@ -142,13 +153,13 @@ def configure_logging(settings: dict[str, str]) -> None:
             },
             "loggers": {
                 "karp": {
-                    "handlers": ['console'],  # ["console", "email"],
+                    "handlers": ['json'],  # ["console", "email"],
                     "level": 'DEBUG',  # config.CONSOLE_LOG_LEVEL,
                     'propagate': True
                 },
                 # third-party package loggers
-                'sqlalchemy': {'handlers': ['console'], 'level': 'WARNING'},
-                'uvicorn.access': {'handlers': ['console'], 'level': 'INFO'}
+                'sqlalchemy': {'handlers': ['json'], 'level': 'WARNING'},
+                'uvicorn.access': {'handlers': ['json'], 'level': 'INFO'}
             },
         }
     )

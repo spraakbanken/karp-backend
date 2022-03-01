@@ -1,0 +1,1 @@
+from .matomo import MatomoMiddleware

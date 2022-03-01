@@ -31,6 +31,7 @@ from karp.errors import ClientErrorCodes
 from karp.main import modules
 from karp.webapp.routes import router as api_router
 from karp.webapp import tasks
+from karp.webapp.contrib import MatomoMiddleware
 
 
 __version__ = "6.0.6"
@@ -188,6 +189,15 @@ def create_app() -> FastAPI:
             )
         return response
 
+    if app_context.settings['tracking.matomo.url']:
+        app.add_middleware(
+            MatomoMiddleware,
+            idsite=app_context.settings['tracking.matomo.idsite'],
+            matomo_url=app_context.settings['tracking.matomo.url']
+        )
+    else:
+        logger.warning(
+            'Tracking to Matomo is not enabled, please set TRACKING_MATOMO_URL.')
     app.add_middleware(CorrelationIdMiddleware)
 
     return app
