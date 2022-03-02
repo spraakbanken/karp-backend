@@ -40,7 +40,7 @@ async def get_all_resources() -> list[dict]:
     resources = [
         {'resource_id': 'places'},
     ]
-    return resources
+    raise NotImplementedError()
 
 
 @router.post(
@@ -57,9 +57,9 @@ def create_new_resource(
     creating_entry_repo_uc: CreatingEntryRepo = Depends(
         deps.get_lex_uc(CreatingEntryRepo)),
 ) -> ResourceDto:
-    log = logger.bind()
-    log.info('creating new resource', user=user.identifier,
-             resource=new_resource)
+    logger.info('creating new resource',
+                extra={'user': user.identifier,
+                       'resource': new_resource})
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [new_resource.resource_id]
     ):
@@ -83,11 +83,11 @@ def create_new_resource(
             **new_resource.dict(),
         )
         resource = creating_resource_uc.execute(create_resource)
-        log.info('resource created', resource=resource)
+        logger.info('resource created', extra={'resource': resource})
         return resource
     except Exception as err:
-        log.exception('error occured', user=user.identifier,
-                      resource=new_resource)
+        logger.exception('error occured', extra={'user': user.identifier,
+                                                 'resource': new_resource})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'{err=}',
@@ -107,7 +107,6 @@ def publishing_resource(
     publishing_resource_uc: lex.PublishingResource = Depends(
         deps.get_lex_uc(lex.PublishingResource)),
 ):
-    log = logger.bind()
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [resource_id]
     ):
@@ -116,8 +115,8 @@ def publishing_resource(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
-    log.info('publishing resource',
-             resource_id=resource_id, user=user.identifier)
+    logger.info('publishing resource',
+                extra={'resource_id': resource_id, 'user': user.identifier})
     try:
         resource_publish.resource_id = resource_id
         publish_resource = commands.PublishResource(
@@ -125,11 +124,12 @@ def publishing_resource(
             **resource_publish.dict(),
         )
         publishing_resource_uc.execute(publish_resource)
-        logger.info("resource published", resource_id=resource_id)
+        logger.info("resource published", extra={
+                    'resource_id': resource_id})
         return
     except Exception as err:
         log.exception('error occured when publishing',
-                      resource_id=resource_id, user=user.identifier)
+                      extra={'resource_id': resource_id, 'user': user.identifier})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'{err=}',

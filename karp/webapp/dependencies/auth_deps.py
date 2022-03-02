@@ -83,9 +83,9 @@ def get_current_user(
         # code=ClientErrorCodes.NOT_PERMITTED,
     )
     try:
-        logger.info(
+        logger.debug(
             'Calling auth_service',
-            credentials=credentials,
+            extra={'credentials': credentials},
         )
         return auth_service.authenticate(credentials.scheme, credentials.credentials)
     except KarpError:
@@ -113,8 +113,8 @@ def get_user(
     )
     try:
         logger.debug(
-            "webapp.app_config.get_current_user: Calling auth_service with credentials = %(credentials)s",
-            credentials=credentials,
+            'Calling auth_service',
+            extra={'credentials': credentials},
         )
         return auth_service.authenticate(
             credentials.scheme,

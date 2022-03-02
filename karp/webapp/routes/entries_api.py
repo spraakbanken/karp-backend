@@ -33,7 +33,6 @@ def get_history_for_entry(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),
 ):
-    log = logger.bind()
     if not auth_service.authorize(
         auth.PermissionLevel.admin, user, [resource_id]
     ):
@@ -42,8 +41,8 @@ def get_history_for_entry(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
-    log.info('getting history for entry', resource_id=resource_id,
-             entry_id=entry_id, user=user)
+    logger.info('getting history for entry', extra={'resource_id': resource_id,
+                                                    'entry_id': entry_id, 'user': user.identifier})
     historical_entry = get_entry_history.query(
         resource_id, entry_id, version=version
     )
@@ -51,8 +50,8 @@ def get_history_for_entry(
     return historical_entry
 
 
-@router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["Editing"])
-@router.put('/{resource_id}', status_code=status.HTTP_201_CREATED, tags=["Editing"])
+@ router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["Editing"])
+@ router.put('/{resource_id}', status_code=status.HTTP_201_CREATED, tags=["Editing"])
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
@@ -61,7 +60,6 @@ def add_entry(
     adding_entry_uc: lex.AddingEntry = Depends(
         deps.get_lex_uc(lex.AddingEntry)),
 ):
-    log = logger.bind()
 
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -69,7 +67,8 @@ def add_entry(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
-    log.info('adding entry', resource_id=resource_id, data=data)
+    logger.info('adding entry', extra={
+                'resource_id': resource_id, 'data': data})
     try:
         new_entry = adding_entry_uc.execute(
             commands.AddEntry(
@@ -99,7 +98,7 @@ def add_entry(
     return {"newID": new_entry.entry_id, "entityID": new_entry.entity_id}
 
 
-@router.post('/{resource_id}/preview')
+@ router.post('/{resource_id}/preview')
 # @auth.auth.authorization("READ")
 def preview_entry(
     resource_id: str,
@@ -133,8 +132,8 @@ def preview_entry(
 #     return flask_jsonify(preview)
 
 
-@router.post("/{resource_id}/{entry_id}/update", tags=["Editing"])
-@router.post('/{resource_id}/{entry_id}', tags=["Editing"])
+@ router.post("/{resource_id}/{entry_id}/update", tags=["Editing"])
+@ router.post('/{resource_id}/{entry_id}', tags=["Editing"])
 # @auth.auth.authorization("WRITE", add_user=True)
 def update_entry(
     response: Response,
@@ -146,7 +145,6 @@ def update_entry(
     updating_entry_uc: lex.UpdatingEntry = Depends(
         deps.get_lex_uc(lex.UpdatingEntry)),
 ):
-    log = logger.bind()
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -161,8 +159,8 @@ def update_entry(
     #     message = data.get("message")
     #     if not (version and entry and message):
     #         raise KarpError("Missing version, entry or message")
-    log.info('updating entry', resource_id=resource_id,
-             entry_id=entry_id, data=data, user=user.identifier)
+    logger.info('updating entry', extra={'resource_id': resource_id,
+                                         'entry_id': entry_id, 'data': data, 'user': user.identifier})
     try:
         entry = updating_entry_uc.execute(
             commands.UpdateEntry(
@@ -202,13 +200,13 @@ def update_entry(
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return err.error_obj
     except Exception as err:
-        logger.exception('error occured', resource_id=resource_id,
-                         entry_id=entry_id, data=data)
+        logger.exception('error occured', extra={'resource_id': resource_id,
+                         'entry_id': entry_id, 'data': data})
         raise
 
 
-@router.delete('/{resource_id}/{entry_id}/delete', tags=["Editing"])
-@router.delete('/{resource_id}/{entry_id}', tags=["Editing"], status_code=status.HTTP_204_NO_CONTENT)
+@ router.delete('/{resource_id}/{entry_id}/delete', tags=["Editing"])
+@ router.delete('/{resource_id}/{entry_id}', tags=["Editing"], status_code=status.HTTP_204_NO_CONTENT)
 # @auth.auth.authorization("WRITE", add_user=True)
 def delete_entry(
     resource_id: str,
