@@ -105,7 +105,7 @@ e2e-tests: install-dev clean-pyc
 
 .PHONY: run-e2e-tests-w-coverage
 e2e-tests-w-coverage: install-dev clean-pyc
-	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/e2e
+	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/e2e
 
 .PHONY: integration-tests
 integration-tests: clean-pyc
@@ -113,14 +113,14 @@ integration-tests: clean-pyc
 
 .PHONY: unit-tests-w-coverage
 unit-tests-w-coverage: clean-pyc
-	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/unit
+	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/unit
 
 .PHONY: integration-tests-w-coverage
 integration-tests-w-coverage: clean-pyc
-	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests/integration
+	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/integration
 
 test-log: install-dev clean-pyc lint-syntax-errors
-	${INVENV} pytest -vv --cov=karp --cov-report=term-missing karp/tests > pytest.log
+	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests > pytest.log
 
 prepare-release: venv setup.py requirements.txt setup.cfg
 	${INVENV} pip-compile --output-file=deploy/requirements.txt setup.py
