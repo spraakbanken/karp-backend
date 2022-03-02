@@ -130,4 +130,5 @@ def _row_to_dto(row_proxy) -> ResourceDto:
         last_modified_by=row_proxy.last_modified_by,
         message=row_proxy.message,
         name=row_proxy.name,
+        discarded=row_proxy.discarded,
     )

@@ -17,6 +17,7 @@ class ResourceDto(pydantic.BaseModel):
     last_modified: float
     config: Dict
     entry_repository_id: UniqueId
+    discarded: bool
 
 
 class GetPublishedResources(abc.ABC):
