@@ -39,7 +39,18 @@ class SqlGetResources(
     SqlQuery
 ):
     def query(self) -> Iterable[ResourceDto]:
-        stmt = sql.select(ResourceModel)
+        subq = sql.select(
+            ResourceModel.entity_id,
+            sa.func.max(ResourceModel.last_modified).label('maxdate')
+        ).group_by(ResourceModel.entity_id).subquery('t2')
+
+        stmt = sql.select(ResourceModel).join(
+            subq,
+            sa.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+            )
+        )
         return (
             _row_to_dto(row)
             for row in self._conn.execute(stmt)
@@ -55,15 +66,52 @@ class SqlReadOnlyResourceRepository(
         resource_id: str,
         version: Optional[int] = None
     ) -> Optional[ResourceDto]:
-        stmt = sql.select(ResourceModel).where(
-            ResourceModel.resource_id == resource_id)
+        filters: dict[str, str | int] = {
+            'resource_id': resource_id
+        }
+        if version:
+            filters['version'] = version
+        stmt = sql.select(
+            ResourceModel
+        ).filter_by(**filters).order_by(
+            ResourceModel.last_modified.desc()
+        )
         row = self._conn.execute(stmt).first()
 
         return _row_to_dto(row) if row else None
 
     def get_published_resources(self) -> Iterable[ResourceDto]:
-        stmt = sql.select(ResourceModel).where(
-            ResourceModel.is_published == True)
+        subq = sql.select(
+            ResourceModel.entity_id,
+            sa.func.max(ResourceModel.last_modified).label('maxdate')
+        ).group_by(ResourceModel.entity_id).subquery('t2')
+
+        stmt = sql.select(ResourceModel).join(
+            subq,
+            sa.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.is_published == True
+            )
+        )
+        return (
+            _row_to_dto(row)
+            for row in self._conn.execute(stmt)
+        )
+
+    def get_all_resources(self) -> Iterable[ResourceDto]:
+        subq = sql.select(
+            ResourceModel.entity_id,
+            sa.func.max(ResourceModel.last_modified).label('maxdate')
+        ).group_by(ResourceModel.entity_id).subquery('t2')
+
+        stmt = sql.select(ResourceModel).join(
+            subq,
+            sa.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+            )
+        )
         return (
             _row_to_dto(row)
             for row in self._conn.execute(stmt)

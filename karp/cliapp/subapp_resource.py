@@ -6,6 +6,7 @@ import typer
 from json_streams import jsonlib
 from tabulate import tabulate
 
+from karp import lex
 from karp.foundation.commands import CommandBus
 from karp.lex import commands as lex_commands
 from karp.search import commands as search_commands
@@ -204,39 +205,42 @@ def list_resources(
     )
 
 
-# @subapp.command()
-# # @cli.command("show")
-# # @click.option("--version", default=None, type=int)
-# # @click.argument("resource_id")
-# @cli_error_handler
-# @cli_timer
-# def show(resource_id: str, version: Optional[int] = None):
-#     with unit_of_work(using=ctx.resource_repo) as uw:
-#         resource = uw.by_resource_id(resource_id, version=version)
-#     #     if version:
-#     #         resource = database.get_resource_definition(resource_id, version)
-#     #     else:
-#     #         resource = database.get_active_or_latest_resource_definition(resource_id)
-#     if not resource:
-#         typer.echo(
-#             "Can't find resource '{resource_id}', version '{version}'".format(
-#                 resource_id=resource_id,
-#                 version=version if version else "active or latest",
-#             )
-#         )
-#         raise typer.Exit(3)
+@subapp.command()
+# @cli.command("show")
+# @click.option("--version", default=None, type=int)
+# @click.argument("resource_id")
+@cli_error_handler
+@cli_timer
+def show(
+    ctx: typer.Context,
+    resource_id: str,
+    version: Optional[int] = None
+):
+    repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx)
+    resource = repo.get_by_resource_id(resource_id, version=version)
+    #     if version:
+    #         resource = database.get_resource_definition(resource_id, version)
+    #     else:
+    #         resource = database.get_active_or_latest_resource_definition(resource_id)
+    if not resource:
+        typer.echo(
+            "Can't find resource '{resource_id}', version '{version}'".format(
+                resource_id=resource_id,
+                version=version if version else "latest",
+            )
+        )
+        raise typer.Exit(3)
 
-
-#     click.echo(
-#         """
-#     Resource: {resource.resource_id}
-#     Version: {resource.version}
-#     Active: {resource.active}
-#     Config: {resource.config_file}
-#     """.format(
-#             resource=resource
-#         )
-#     )
+    typer.echo(
+        """
+        Resource: {resource.resource_id}
+        Version: {resource.version}
+        Discarded: {resource.discarded}
+        Config: {resource.config}
+        """.format(
+            resource=resource
+        )
+    )
 
 
 @subapp.command()
