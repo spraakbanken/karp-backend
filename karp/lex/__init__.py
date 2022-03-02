@@ -30,9 +30,13 @@ from karp.lex.application.queries import (
     GetHistory,
     GetHistoryDto,
     GetPublishedResources,
+    GetResources,
     HistoryDto,
     ResourceDto,
     ReadOnlyResourceRepository,
+    EntryRepoDto,
+    ReadOnlyEntryRepoRepositry,
+    ListEntryRepos,
 )
 
 

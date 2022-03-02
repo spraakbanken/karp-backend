@@ -38,7 +38,9 @@ from karp.lex_infrastructure.queries import (
     GenericEntryQuery,
     GenericGetEntryHistory,
     GenericGetHistory,
-    SqlReadOnlyResourceRepository,)
+    SqlReadOnlyEntryRepoRepositry,
+    SqlReadOnlyResourceRepository,
+)
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
     SqlEntryUowCreator,
@@ -51,20 +53,24 @@ logger = logging.getLogger(__name__)
 
 class LexInfrastructure(injector.Module):
     @injector.provider
-    def get_published_resources(self, conn: Connection) -> GetPublishedResources:
+    def get_published_resources(self, conn: Connection) -> lex.GetPublishedResources:
         return SqlGetPublishedResources(conn)
 
     @injector.provider
-    def get_resources(self, conn: Connection) -> GetResources:
+    def get_resources(self, conn: Connection) -> lex.GetResources:
         return SqlGetResources(conn)
 
     @injector.provider
-    def read_only_resource_repo(self, conn: Connection) -> ReadOnlyResourceRepository:
+    def read_only_resource_repo(self, conn: Connection) -> lex.ReadOnlyResourceRepository:
         return SqlReadOnlyResourceRepository(conn)
 
     @injector.provider
-    def list_entry_repos(self, conn: Connection) -> ListEntryRepos:
+    def list_entry_repos(self, conn: Connection) -> lex.ListEntryRepos:
         return SqlListEntryRepos(conn)
+
+    @injector.provider
+    def read_only_entry_repo_repo(self, conn: Connection) -> lex.ReadOnlyEntryRepoRepositry:
+        return SqlReadOnlyEntryRepoRepositry(conn)
 
     @injector.provider
     @injector.singleton

@@ -1,14 +1,17 @@
 """Pytest entry point."""
 
 # pylint: disable=wrong-import-position,missing-function-docstring
+from karp.main import AppContext
 from karp.tests.integration.auth.adapters import create_bearer_token
 from karp import auth, config
 import os
 import json
 import typing
-from typing import Dict
+from typing import Dict, Generator
 
 from fastapi import FastAPI
+from typer import Typer
+from typer.testing import CliRunner
 
 import alembic
 import alembic.config
@@ -19,9 +22,7 @@ import elasticsearch_test  # pyre-ignore
 import pytest  # pyre-ignore
 from sqlalchemy import create_engine, pool
 from sqlalchemy.orm import session, sessionmaker
-from starlette.config import environ
 from starlette.testclient import TestClient
-from tenacity import retry, stop_after_delay
 
 from alembic.config import main as alembic_main
 
@@ -52,11 +53,6 @@ def sqlite_session_factory(in_memory_sqlite_db):
     yield sessionmaker(bind=in_memory_sqlite_db)
 
 
-@retry(stop=stop_after_delay(10))
-def wait_for_main_db_to_come_up(engine):
-    return engine.connect()
-
-
 @pytest.fixture(scope='session')
 def setup_environment() -> None:
     os.environ['TESTING'] = '1'
@@ -76,8 +72,19 @@ def apply_migrations(setup_environment: None):
     # alembic.command.downgrade(config, 'base')
 
 
+@pytest.fixture(scope='session', name='runner')
+def fixture_runner() -> CliRunner:
+    return CliRunner()
+
+
+@pytest.fixture(scope='session', name='cliapp')
+def fixture_cliapp() -> Typer:
+    from karp.cliapp.main import create_app
+    return create_app()
+
+
 @pytest.fixture(name="app", scope='session')
-def fixture_app(apply_migrations: None, init_search_service: None):
+def fixture_app(apply_migrations: None, init_search_service: None) -> Generator[FastAPI, None, None]:
     from karp.webapp.main import create_app
 
     app = create_app()
@@ -87,8 +94,13 @@ def fixture_app(apply_migrations: None, init_search_service: None):
     app = None
 
 
+@pytest.fixture(name='app_context', scope='session')
+def fixture_app_context(app: FastAPI) -> AppContext:
+    return app.state.app_context
+
+
 @pytest.fixture(name='fa_client', scope='session')
-def fixture_client(app) -> TestClient:
+def fixture_client(app: FastAPI) -> Generator[TestClient, None, None]:
     with TestClient(app) as client:
         yield client
 
