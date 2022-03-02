@@ -20,8 +20,40 @@ jobs:
           # - name: Lint w bandit
           #   run: make lint-security-issues
           #   allow_failure: false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2.0.0
+
+      - name: Install dependencies
+        run: make install-dev
+
+      - name: ${{ matrix.task.name }}
+        run: ${{ matrix.task.run }}
+        continue-on-error: ${{ matrix.task.allow_failure }}
+        env:
+          DB_DRIVER: sqlite
+
+  unit-tests:
+    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      max-parallel: 4
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10"]
+        os: [ubuntu-latest]
+        task:
           - name: Unit tests
-            run: make unit-tests
+            run: make unit-tests-w-coverage
             allow_failure: false
 
     steps:
@@ -43,6 +75,7 @@ jobs:
         continue-on-error: ${{ matrix.task.allow_failure }}
         env:
           DB_DRIVER: sqlite
+      - uses: codecov/codecov-action@v2
 
   tests:
     name: ${{ matrix.task.name }} py-${{ matrix.python-version }} es-${{ matrix.es.version }} on ${{ matrix.os }}
@@ -76,9 +109,9 @@ jobs:
         os: [ubuntu-latest]
         task:
           - name: Integration tests
-            run: make integration-tests
+            run: make integration-tests-w-coverage
           - name: End-to-end tests
-            run: make e2e-tests
+            run: make e2e-tests-w-coverage
         exclude:
           - es:
               use: false
@@ -137,3 +170,4 @@ jobs:
           DB_PASSWORD: testing
           DB_HOST: 127.0.0.1
           DB_PORT: ${{ job.services.mysql.ports['3306'] }}
+      - uses: codecov/codecov-action@v2
