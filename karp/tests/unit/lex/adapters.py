@@ -82,6 +82,7 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
             entry_repository_id=res.entry_repository_id,
             name=res.name,
             message=res.message,
+            discarded=res.discarded,
         )
 
     def get_published_resources(self) -> Iterable[ResourceDto]:

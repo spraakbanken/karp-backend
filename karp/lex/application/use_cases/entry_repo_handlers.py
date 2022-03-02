@@ -31,7 +31,7 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
             message=command.message,
         )
 
-        logger.debug('Created entry repo: %s', entry_repo)
+        logger.debug('Created entry repo', extra={'entry_repo': entry_repo})
         with self._entry_repo_uow as uow:
             logger.debug('Saving...')
             uow.repo.save(entry_repo)

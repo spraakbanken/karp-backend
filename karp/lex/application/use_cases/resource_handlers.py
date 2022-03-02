@@ -410,7 +410,8 @@ class PublishingResource(CommandHandler[commands.PublishResource], BasingResourc
         super().__init__(resource_uow=resource_uow)
 
     def execute(self, cmd: commands.PublishResource):
-        logger.info('publishing resource', resource_id=cmd.resource_id)
+        logger.info('publishing resource', extra={
+                    'resource_id': cmd.resource_id})
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(cmd.resource_id)
             if not resource:
