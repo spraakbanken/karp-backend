@@ -17,7 +17,7 @@ from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.db_infrastructure.sql_repository import SqlRepository
 
-_logger = logging.getLogger("karp")
+logger = logging.getLogger(__name__)
 
 
 class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
@@ -30,7 +30,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         try:
             self._session.execute("SELECT 1")
         except db.SQLAlchemyError as err:
-            _logger.exception(str(err))
+            logger.exception(str(err))
             raise errors.RepositoryStatusError("Database error") from err
 
     @classmethod
@@ -205,9 +205,11 @@ class SqlResourceUnitOfWork(
         self,
         event_bus: EventBus,
         *,
-        session_factory: sessionmaker = None,
-        session: Session = None,
+        session_factory: Optional[sessionmaker] = None,
+        session: Optional[Session] = None,
     ):
+        if not session and not session_factory:
+            raise ValueError('Both session and session_factory cannot be None')
         SqlUnitOfWork.__init__(self, session=session)
         repositories.ResourceUnitOfWork.__init__(self, event_bus)
         self.session_factory = session_factory
@@ -215,7 +217,8 @@ class SqlResourceUnitOfWork(
 
     def _begin(self):
         if self._session_is_created_here:
-            self._session = self.session_factory()
+            self._session = self.session_factory()  # type: ignore
+        logger.info('using session', extra={'session': self._session})
         self._resources = SqlResourceRepository(self._session)
         return self
 

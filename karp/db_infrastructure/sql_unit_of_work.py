@@ -73,10 +73,11 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
     def _commit(self):
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         # try:
-        logger.info('About to commit to session=%s', self._session)
-        logger.info('changes in session: %s', self._session.new)
+        logger.info('About to commit', extra={
+                    'session': self._session, 'session_new': self._session.new if self._session else None})
         self._session.commit()
-        logger.info('commited to session=%s', self._session)
+        logger.info('commited', extra={
+                    'session': self._session, 'session_new': self._session.new if self._session else None})
 
         # self._state = SqlUnitOfWork.State.initialized
         # except db.exc.IntegrityError as err:

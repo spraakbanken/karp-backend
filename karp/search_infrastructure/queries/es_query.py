@@ -24,8 +24,8 @@ class EsQuery(Query):
     def parse_arguments(self, args, resource_str: str):
         super().parse_arguments(args, resource_str)
         self.resource_str = resource_str
-        if not self.ast.is_empty():
-            self.query = create_es_query(self.ast.root)
+        # if not self.ast.is_empty():
+        #     self.query = create_es_query(self.ast.root)
 
     def _self_name(self) -> str:
         return "EsQuery query={} resource_str={}".format(self.query, self.resource_str)
