@@ -38,7 +38,7 @@ class EsQuery(Query):
         query.lexicon_stats = request.lexicon_stats
         query.q = request.q or ""
         query.sort = request.sort
-        query.ast = query_dsl.parse(query.q)
+        # query.ast = query_dsl.parse(query.q)
         # query._update_ast()
         # if not query.ast.is_empty():
         #     query.query = create_es_query(query.ast.root)
