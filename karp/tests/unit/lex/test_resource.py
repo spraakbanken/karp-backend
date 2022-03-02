@@ -31,7 +31,8 @@ def test_create_resource_creates_resource():
         )
 
     assert isinstance(resource, Resource)
-    assert resource.id == uuid.UUID(str(resource.id), version=4)
+    assert isinstance(resource.entity_id, unique_id.UniqueIdType)
+    assert resource.entity_id == uuid.UUID(bytes=resource.entity_id.bytes)
     assert resource.version == 1
     assert resource.resource_id == resource_id
     assert resource.name == name
