@@ -1,6 +1,8 @@
 # Karp TNG backend
 
 [![Build Status](https://github.com/spraakbanken/karp-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-backend/actions)
+[![CodeScene Code Health](https://codescene.io/projects/24151/status-badges/code-health)](https://codescene.io/projects/24151)
+[![codecov](https://codecov.io/gh/spraakbanken/karp-backend/branch/main/graph/badge.svg?token=iwTQnHKOpm)](https://codecov.io/gh/spraakbanken/karp-backend)
 
 This in the version 6 of Karp backend, [for the legacy version (v5)](https://github.com/spraakbanken/karp-backend-v5).
 
@@ -9,22 +11,22 @@ This in the version 6 of Karp backend, [for the legacy version (v5)](https://git
 This project uses [poetry](https://python-poetry.org) and
 [MariaDB](https://mariadb.org/).
 
-1. Run `make install` or `make install-dev` for a develop-install (VENV_NAME defaults to .venv)
+1. Run `make install` or `make install-dev` for a develop-install
 2. Install MariaDB and create a database
-3. Setup environment variables (can be placed in a `.env` file in the root and then **?** `pipenv run` sets those):
+3. Setup environment variables (can be placed in a `.env` file in the root and then **?** `poetry run` sets those):
    ```
-   export MARIADB_DATABASE=<name of database>
-   export MARIADB_USER=<database user>
-   export MARIADB_PASSWORD=<user's password>
-   export MARIADB_HOST=localhost
+   export DB_DATABASE=<name of database>
+   export DB_USER=<database user>
+   export DB_PASSWORD=<user's password>
+   export DB_HOST=localhost
    export AUTH_JWT_PUBKEY_PATH=/path/to/pubkey
    ```
-4. Activate the virtual environment by running: `source <VENV_NAME>/bin/activate` (VENV_NAME defaults to .venv)
+4. Activate the virtual environment by running: `poetry shell` 
 5. Run `make init-db` to initialize database
-   or `source <VENV_NAME>/bin/activate` and then `alembic upgrade head`
-6. Run `make run-dev` to start development server
+   or `poetry run alembic upgrade head`
+6. Run `make serve`  or `make serve-w-reload` to start development server
 
-   or `source <VENV_NAME>/bin/activate` and then `python wsgi.py`
+   or `poetry shell` and then `uvicorn asgi:app`
 
 7. To setup Elasticsearch, download Elasticsearch 6.x or 7.x and start it
 8. Install elasticsearch python libs for the right version
@@ -39,15 +41,17 @@ export ELASTICSEARCH_HOST=localhost:9200
 
 ## Create test resources
 
-1. `source <VENV_NAME>/bin/activate` and then:
-2. `karp-cli create --config tests/data/config/places.json`
-3. `karp-cli import --resource_id places --version 1 --data tests/data/places.jsonl`
-4. Do the same for `municipalities`
-5. `karp-cli publish --resource_id places --version 1`
-6. `karp-cli publish --resource_id municipalities --version 1`
+1. `poetry shell` and then:
+2. `karp-cli entry-repo create karp/tests/data/config/places.json`
+3. `karp-cli resource create karp/tests/data/config/places.json`
+4. `karp-cli entries import places tests/data/places.jsonl`
+5. Do the same for `municipalities`
+6. `karp-cli resource publish places`
+7. `karp-cli resource publish municipalities`
 
 ## Pre-processing data before publishing
 
+** TODO: review this **
 Can be used to have less downtime, because sometimes the preprocessing may
 be faster on another machine than the machine that talks to Elasticsearch.
 Do `create` and `import` on both machines, with the same data. Use
@@ -66,10 +70,10 @@ machine 1 to preprocess and use result on machine 2.
 
 ### Python
 
-- Pipenv
-- Flask
+- Poetry
+- FastAPI
 - SQLAlchemy
-- Click
+- Typer
 - Elasticsearch
 - Elasticsearch DSL
 
