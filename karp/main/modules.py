@@ -2,6 +2,13 @@ import logging
 from pathlib import Path
 import threading
 from typing import Dict, Type
+import sys
+
+try:
+    from importlib.metadata import entry_points
+except ImportError:
+    # used if python == 3.9
+    from importlib_metadata import entry_points  # type: ignore
 
 import elasticsearch
 import injector
@@ -135,3 +142,20 @@ def request_configuration(conn: Connection, session: Session):
         binder.bind(Session, to=injector.InstanceProvider(session))
 
     return configure_request_container
+
+
+def load_modules(group_name: str, app=None):
+    logger.debug('Loading %s', group_name)
+    if sys.version_info.minor < 10:
+        karp_modules = entry_points().get(group_name)
+    else:
+        karp_modules = entry_points(group=group_name)  # type: ignore
+    if karp_modules:
+        for ep in karp_modules:
+            logger.info("Loading '%s' from '%s'", ep.name, group_name, extra={
+                        'group_name': group_name, 'entry_point_name': ep.name})
+            mod = ep.load()
+            if app:
+                init_app = getattr(mod, "init_app", None)
+                if init_app:
+                    init_app(app)

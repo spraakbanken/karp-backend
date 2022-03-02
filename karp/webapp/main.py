@@ -28,13 +28,10 @@ from karp.foundation.value_objects import unique_id
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.errors import ClientErrorCodes
-from karp.main import modules
+from karp.main import modules, config
 from karp.webapp.routes import router as api_router
 from karp.webapp import tasks
 from karp.webapp.contrib import MatomoMiddleware
-
-
-__version__ = "6.0.6"
 
 
 tags_metadata = [
@@ -54,9 +51,9 @@ def create_app() -> FastAPI:
     app_context = main.bootstrap_app()
 
     app = FastAPI(
-        title="Karp API",
+        title=f"{config.PROJECT_NAME} API",
         redoc_url="/",
-        version=__version__,
+        version=config.VERSION,
         openapi_tags=tags_metadata
     )
 
@@ -83,7 +80,7 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router)
 
-    load_modules(app)
+    modules.load_modules('karp.webapp', app=app)
 
     from karp.errors import KarpError
 
@@ -160,17 +157,7 @@ def create_app() -> FastAPI:
         return response
 
     @app.middleware("http")
-    async def logging_middleware(request: Request, call_next) -> Response:
-        # # clear the threadlocal context
-        # structlog.threadlocal.clear_threadlocal()
-        # # bind threadlocal
-        # structlog.threadlocal.bind_threadlocal(
-        #     # logger="karp",
-        #     request_id=str(unique_id.make_unique_id()),
-        #     cookies=request.cookies,
-        #     scope=request.scope,
-        #     url=str(request.url),
-        # )
+    async def _logging_middleware(request: Request, call_next) -> Response:
         response: Response = JSONResponse(
             status_code=500,
             content={
@@ -202,24 +189,6 @@ def create_app() -> FastAPI:
     app.add_middleware(CorrelationIdMiddleware)
 
     return app
-
-
-def load_modules(app=None):
-    # logger = logging.getLogger("karp")
-
-    if sys.version_info.minor < 10:
-        karp_modules = entry_points().get('karp.modules')
-    else:
-        karp_modules = entry_points(group='karp.modules')  # type: ignore
-    if karp_modules:
-        for ep in karp_modules:
-            logger.info("Loading module: %s", ep.name)
-            print("Loading module: %s" % ep.name)
-            mod = ep.load()
-            if app:
-                init_app = getattr(mod, "init_app", None)
-                if init_app:
-                    init_app(app)
 
 
 def lex_exc2response(exc: lex_errors.LexDomainError) -> JSONResponse:

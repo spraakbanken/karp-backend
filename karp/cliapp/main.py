@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+import sys
 
 try:
     from importlib.metadata import entry_points
@@ -10,11 +11,9 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 import typer
 
-from karp.main import bootstrap_app, modules
+from karp.main import bootstrap_app, modules, config
 
 logger = logging.getLogger("karp")
-
-__version__ = "6.0.6"
 
 
 def create_app():
@@ -30,9 +29,7 @@ def create_app():
     ):
         if ctx.invoked_subcommand is None:
             ctx.obj = {}
-            typer.echo("empty")
         else:
-            typer.echo("setting app_context")
             ctx.obj = {}
             ctx.obj['connection'] = app_context.container.get(Connection)
             ctx.obj['session'] = Session(bind=ctx.obj['connection'])
@@ -51,22 +48,12 @@ def create_app():
 
 def version_callback(value: bool):
     if value:
-        typer.echo(f"Karp CLI version: {__version__}")
+        typer.echo(f'{config.PROJECT_NAME} CLI {config.VERSION}')
         raise typer.Exit()
 
 
 def load_commands(app=None):
-    if "karp.clicommands" not in entry_points():
-        return
-
-    for ep in entry_points()["karp.clicommands"]:
-        logger.info("Loading cli module: %s", ep.name)
-        print("Loading cli module: %s" % ep.name)
-        mod = ep.load()
-        if app:
-            init_app = getattr(mod, "init_app", None)
-            if init_app:
-                init_app(app)
+    modules.load_modules('karp.clicommands', app=app)
 
 
 cliapp = create_app()

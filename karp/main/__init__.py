@@ -22,7 +22,7 @@ from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import GenericSearchInfrastructure, Es6SearchIndexMod, GenericSearchIndexMod, SearchInfrastructure
-from karp.main import config
+from karp.main import config, modules
 from karp.main.modules import CommandBusMod, Db, EventBusMod, ElasticSearchMod, install_auth_service
 from karp.search import Search
 
@@ -74,7 +74,6 @@ def _create_db_engine(db_url: config.DatabaseUrl) -> Engine:
             'check_same_thread': False
         }
     engine_echo = False
-    # type: ignore
     return create_engine(db_url, echo=engine_echo, future=True, **kwargs)
 
 
@@ -108,7 +107,6 @@ def _setup_search_context(container: injector.Injector, search_service: str) -> 
 
 
 def configure_logging(settings: dict[str, str]) -> None:
-    print('configuring logging ...')
     dictConfig(
         {
             "version": 1,
@@ -208,19 +206,19 @@ def setup_logging():
                         datefmt="%Y-%m-%dT%H:%M:%S%z", level=logging.INFO)
     logger = logging.getLogger('karp')
     logger.setLevel(logging.INFO)
-    structlog.configure(
-        processors=[
-            structlog.stdlib.add_log_level,
-            structlog.threadlocal.merge_threadlocal,
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.processors.JSONRenderer(
-                serializer=json.dumps, sort_keys=True),
-        ],
-        wrapper_class=structlog.stdlib.BoundLogger,
-        context_class=dict,
-        cache_logger_on_first_use=True,
-        logger_factory=structlog.stdlib.LoggerFactory(),
-    )
+    # structlog.configure(
+    #     processors=[
+    #         structlog.stdlib.add_log_level,
+    #         structlog.threadlocal.merge_threadlocal,
+    #         structlog.processors.TimeStamper(fmt="iso"),
+    #         structlog.processors.JSONRenderer(
+    #             serializer=json.dumps, sort_keys=True),
+    #     ],
+    #     wrapper_class=structlog.stdlib.BoundLogger,
+    #     context_class=dict,
+    #     cache_logger_on_first_use=True,
+    #     logger_factory=structlog.stdlib.LoggerFactory(),
+    # )
     logger = logging.getLogger(__name__)
     # if app.config.get("LOG_TO_SLACK"):
     #     slack_handler = slack_logging.get_slack_logging_handler(
@@ -238,9 +236,4 @@ def setup_logging():
 
 
 def load_infrastructure():
-    logger = logging.getLogger("karp")
-    print("load_infrastructure")
-    for ep in entry_points()["karp.infrastructure"]:
-        logger.info("Loading infrastructure module: %s", ep.name)
-        print("Loading infrastructure module: %s" % ep.name)
-        ep.load()
+    modules.load_modules('karp.infrastructure')

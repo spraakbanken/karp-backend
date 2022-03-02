@@ -5,15 +5,14 @@ from sqlalchemy.engine import URL as DatabaseUrl, make_url
 from starlette.config import Config
 from starlette.datastructures import Secret
 
-PROJECT_NAME = "karp"
-VERSION = "6.0.0"
-API_PREFIX = "/"
+PROJECT_NAME = 'Karp'
+VERSION = '6.0.6'
+API_PREFIX = '/'
 # SECRET_KEY = config("SECRET_KEY", cast=Secret, default="CHANGEME")
 
 
 def load_env() -> environs.Env:
     config_path = os.environ.get("CONFIG_PATH", ".env")
-    print(f"loading config from '{config_path}'")
     env = environs.Env()
     env.read_env(config_path)
     return env
