@@ -1,5 +1,6 @@
 from typing import Iterable, Optional
 
+import sqlalchemy as sa
 from sqlalchemy import sql
 
 from karp.lex.application.queries import GetPublishedResources, ResourceDto, GetResources
@@ -14,8 +15,19 @@ class SqlGetPublishedResources(
     SqlQuery
 ):
     def query(self) -> Iterable[ResourceDto]:
-        stmt = sql.select(ResourceModel).where(
-            ResourceModel.is_published == True)
+        subq = sql.select(
+            ResourceModel.entity_id,
+            sa.func.max(ResourceModel.last_modified).label('maxdate')
+        ).group_by(ResourceModel.entity_id).subquery('t2')
+
+        stmt = sql.select(ResourceModel).join(
+            subq,
+            sa.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.is_published == True
+            )
+        )
         return (
             _row_to_dto(row)
             for row in self._conn.execute(stmt)
