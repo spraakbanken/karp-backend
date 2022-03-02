@@ -8,6 +8,7 @@ from tabulate import tabulate
 
 from karp import lex
 from karp.foundation.commands import CommandBus
+from karp.foundation.value_objects import unique_id
 from karp.lex import commands as lex_commands
 from karp.search import commands as search_commands
 from karp.lex.application.queries import (
@@ -41,18 +42,27 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def create(config: Path, ctx: typer.Context):
+def create(
+    ctx: typer.Context,
+    config: Path,
+    entry_repo_id: Optional[str] = typer.Option(
+        None, help='id for entry-repo'),
+):
     bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
         data = jsonlib.load_from_file(config)
-        query = inject_from_ctx(ListEntryRepos, ctx)
-        entry_repos = list(query.query())
-        entry_repo = choose_from(
-            entry_repos, lambda x: f'{x.name} {x.repository_type}')
+        if not entry_repo_id:
+            query = inject_from_ctx(ListEntryRepos, ctx)
+            entry_repos = list(query.query())
+            entry_repo = choose_from(
+                entry_repos, lambda x: f'{x.name} {x.repository_type}')
+            entry_repo_uuid = entry_repo.entity_id
+        else:
+            entry_repo_uuid = unique_id.UniqueId(entry_repo_id)
         cmd = lex_commands.CreateResource.from_dict(
             data,
             user="local admin",
-            entry_repo_id=entry_repo.id,
+            entry_repo_id=entry_repo_uuid,
         )
         bus.dispatch(cmd)
         typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.entity_id})")
