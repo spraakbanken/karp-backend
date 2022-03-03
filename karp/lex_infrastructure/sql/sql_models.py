@@ -103,7 +103,7 @@ class ResourceModel(db.Base):
 class EntryUowModel(db.Base):
     __tablename__ = "entry_repos"
     history_id = db.Column(db.Integer, primary_key=True)
-    id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.UUIDType, nullable=False)
     type = db.Column(db.String(64), nullable=False)
     connection_str = db.Column(db.String(128))
     name = db.Column(db.String(64), nullable=False)
@@ -117,7 +117,7 @@ class EntryUowModel(db.Base):
     def from_entity(entry_uow: EntryUnitOfWork) -> 'EntryUowModel':
         return EntryUowModel(
             history_id=None,
-            id=entry_uow.id,
+            entity_id=entry_uow.entity_id,
             type=entry_uow.repository_type,
             connection_str=entry_uow.connection_str,
             name=entry_uow.name,
@@ -136,13 +136,13 @@ class BaseRuntimeEntry:
         primary_key=True,
     )
     history_id = db.Column(db.Integer, nullable=False)
-    id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.UUIDType, nullable=False)
     discarded = db.Column(db.Boolean, nullable=False)
 
 
 class BaseHistoryEntry:
     history_id = db.Column(db.Integer, primary_key=True)
-    id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.UUIDType, nullable=False)
     repo_id = db.Column(db.UUIDType, nullable=False)
     entry_id = db.Column(db.String(100), nullable=False)
     version = db.Column(db.Integer, nullable=False)
@@ -157,13 +157,13 @@ class BaseHistoryEntry:
     @classmethod
     @db.declared_attr
     def __table_args__(cls):
-        return db.UniqueConstraint("id", "version", name="id_version_unique_constraint")
+        return db.UniqueConstraint("entity_id", "version", name="id_version_unique_constraint")
 
     @classmethod
     def from_entity(cls, entry: entities.Entry):
         return cls(
             history_id=None,
-            id=entry.id,
+            entity_id=entry.entity_id,
             entry_id=entry.entry_id,
             version=entry.version,
             last_modified=entry.last_modified,
@@ -233,7 +233,9 @@ def get_or_create_entry_runtime_model(
             elif field["type"] == "boolean":
                 column_type = db.Boolean()
             elif field["type"] == "string":
-                column_type = db.String(128)
+                column_type = db.Text(32000)
+            elif field['type'] == 'long_string':
+                column_type = db.Text(16000000)
             else:
                 raise NotImplementedError()
             attributes[field_name] = db.Column(column_type)

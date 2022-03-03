@@ -73,8 +73,10 @@ def create_new_resource(
             entry_repo = creating_entry_repo_uc.execute(
                 commands.CreateEntryRepository(
                     repository_type='default',
+                    name=new_resource.resource_id,
+                    config=new_resource.config,
                     user=user.identifier,
-                    **new_resource.dict(),
+                    message=new_resource.message or 'Entry repository created',
                 )
             )
             new_resource.entry_repo_id = entry_repo.entity_id

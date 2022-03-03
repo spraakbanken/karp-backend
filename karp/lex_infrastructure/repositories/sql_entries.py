@@ -1,4 +1,5 @@
 """SQL repositories for entries."""
+import inspect
 import logging
 import typing
 from typing import Dict, List, Optional, Tuple
@@ -6,6 +7,8 @@ from uuid import UUID
 
 import injector
 import regex
+import sqlalchemy as sa
+from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker
 import logging
 
@@ -71,6 +74,7 @@ class SqlEntryRepository(
         #     history_model = create_history_entry_table(table_name)
         # history_model.create(bind=db.engine, checkfirst=True)
 
+        logger.warning({'table_name': table_name})
         history_model = sql_models.get_or_create_entry_history_model(
             table_name)
 
@@ -117,7 +121,7 @@ class SqlEntryRepository(
         try:
             current_db_entry = (
                 self._session.query(self.runtime_model)
-                .filter_by(id=entry.id)
+                .filter_by(entity_id=entry.entity_id)
                 .first()
             )
 
@@ -244,7 +248,7 @@ class SqlEntryRepository(
     ) -> Optional[Entry]:
         self._check_has_session()
         query = self._session.query(self.history_model)
-        query = query.filter_by(id=id)
+        query = query.filter_by(entity_id=id)
         if version:
             query = query.filter_by(version=version)
         elif after_date is not None:
@@ -289,8 +293,22 @@ class SqlEntryRepository(
     def all_entries(self) -> typing.Iterable[Entry]:
         self._check_has_session()
 
-        query = self._session.query(
-            self.history_model).filter_by(discarded=False)
+        subq = sql.select(
+            self.history_model.entity_id,
+            sa.func.max(self.history_model.last_modified).label('maxdate')
+        ).group_by(self.history_model.entity_id).subquery('t2')
+
+        stmt = sql.select(self.history_model).join(
+            subq,
+            sa.and_(
+                self.history_model.entity_id == subq.c.entity_id,
+                self.history_model.last_modified == subq.c.maxdate,
+                self.history_model.discarded == False,
+            )
+        )
+        query = self._session.execute(stmt).scalars()
+        # query = self._session.query(
+        #     self.history_model).filter_by(discarded=False)
         return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
 
     def get_total_entries(self) -> int:
@@ -418,7 +436,7 @@ class SqlEntryRepository(
     ) -> Dict:
         return {
             "history_id": history_id,
-            "id": entry.id,
+            "entity_id": entry.entity_id,
             "entry_id": entry.entry_id,
             "version": entry.version,
             "last_modified": entry.last_modified,
@@ -433,17 +451,17 @@ class SqlEntryRepository(
 
     def _history_row_to_entry(self, row) -> Entry:
         return Entry(
-            entry_id=row.entry_id,
             body=row.body,
             message=row.message,
             status=row.status,
             op=row.op,
-            entity_id=row.id,
+            entity_id=row.entity_id,
             last_modified=row.last_modified,
             last_modified_by=row.last_modified_by,
             discarded=row.discarded,
             version=row.version,
             repository_id=row.repo_id,
+            entry_id=row.entry_id,
             # resource_id=self.resource_id,
         )
 
@@ -451,7 +469,7 @@ class SqlEntryRepository(
         _entry = {
             "entry_id": entry.entry_id,
             "history_id": history_id,
-            "id": entry.id,
+            "entity_id": entry.entity_id,
             "discarded": entry.discarded,
         }
         for field_name in self.resource_config.get("referenceable", ()):

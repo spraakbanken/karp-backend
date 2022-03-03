@@ -22,7 +22,7 @@ class CreateEntryRepository(Command):
         data: Dict,
         *,
         user: str,
-        message: str = None
+        message: Optional[str] = None
     ):
         return cls(
             entity_id=make_unique_id(),

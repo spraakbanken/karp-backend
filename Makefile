@@ -122,9 +122,6 @@ integration-tests-w-coverage: clean-pyc
 test-log: install-dev clean-pyc lint-syntax-errors
 	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests > pytest.log
 
-prepare-release: venv setup.py requirements.txt setup.cfg
-	${INVENV} pip-compile --output-file=deploy/requirements.txt setup.py
-
 tox:
 	tox
 
@@ -147,13 +144,9 @@ check-pylint-refactorings: install-dev
 	${INVENV} pylint --disable=C,W,E --enable=R karp
 
 type-check:
-	pyre check
+	${INVENV} mypy karp
 
-docs/openapi.html: doc/karp_api_spec.yaml
-	@echo "Skipping 'redoc-cli bundle --output $@ $<'"
-	touch $@
-
-bumpversion-patch: install-dev
+bumpversion: install-dev
 	${INVENV} bump2version patch
 
 bumpversion-minor: install-dev
@@ -161,10 +154,6 @@ bumpversion-minor: install-dev
 
 bumpversion-major: install-dev
 	${INVENV} bump2version major
-
-mkrelease-patch: bumpversion-patch prepare-release docs/openapi.html
-mkrelease-minor: bumpversion-minor prepare-release docs/openapi.html
-mkrelease-major: bumpversion-major prepare-release docs/openapi.html
 
 clean: clean-pyc
 clean-pyc:

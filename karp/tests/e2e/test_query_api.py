@@ -118,7 +118,7 @@ def _test_against_entries_general(
         if headers is None:
             headers = access_token.as_header()
         else:
-            headers.extend(access_token.as_header())
+            headers.update(access_token.as_header())
     kwargs = {'headers': headers} if headers else {}
 
     entries = get_json(client, path, **kwargs)
@@ -238,11 +238,11 @@ def test_and(
 
 
 @pytest.mark.parametrize(
-    "field,value,expected_result",
+    "field,value",
     [
-        ("name", "grund", ["Grund test", "Grunds"]),
-        ("name", "Grund", ["Grund test", "Grunds"]),
-        ("name.raw", "Grund", ["Grund test", "Grunds"]),
+        ("name", "grund"),
+        ("name", "Grund"),
+        ("name.raw", "Grund"),
         # pytest.param(
         #     "population",
         #     3122,
@@ -278,15 +278,22 @@ def test_contains(
     fa_data_client,
     field: str,
     value,
-    expected_result: List[str],
     app_context,
 ):
     query = f'/query/places?q=contains|{field}|{value}'
     entry_views = app_context.container.get(EntryViews)
     expected_result = []
+    real_field = field.split('.raw')[0]
+    if real_field == field:
+        analyzed_value = value
+    else:
+        analyzed_value = value.lower()
+    print(f'{value=} {analyzed_value=}')
     for entry in entry_views.all_entries('places'):
         print(f'{entry=}')
-        if value in entry.entry.get(field, ''):
+        print(f'{entry.entry=}')
+        print(f'{entry.entry.get(real_field, None)=}')
+        if analyzed_value in entry.entry.get(real_field, '').lower():
             expected_result.append(entry.entry['name'])
     print(f'{expected_result=}')
     _test_path(fa_data_client, query, expected_result)

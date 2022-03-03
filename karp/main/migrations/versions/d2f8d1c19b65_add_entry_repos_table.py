@@ -22,7 +22,7 @@ def create_entry_repos():
     op.create_table(
         "entry_repos",
         sa.Column("history_id", sa.Integer(), nullable=False),
-        sa.Column("id", UUIDType, nullable=False),
+        sa.Column("entity_id", UUIDType, nullable=False),
         sa.Column('type', sa.String(length=64), nullable=False),
         sa.Column('connection_str', sa.String(length=128)),
         sa.Column("name", sa.String(length=64), nullable=False),
@@ -37,6 +37,7 @@ def create_entry_repos():
 
 def upgrade():
     create_entry_repos()
+
 
 def downgrade():
     op.drop_table('entry_repos')

@@ -71,7 +71,7 @@ class ResourceBase(BaseModel):
     resource_id: str
     name: str
     config: typing.Dict
-    message: str
+    message: Optional[str] = None
     entry_repo_id: Optional[unique_id.UniqueId]
 
 

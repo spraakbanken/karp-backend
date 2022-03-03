@@ -19,7 +19,6 @@ from sqlalchemy.schema import (ForeignKeyConstraint, PrimaryKeyConstraint,
 from sqlalchemy.sql import delete, insert, update
 from sqlalchemy.types import VARCHAR, Boolean, Float, Time, TypeDecorator
 from sqlalchemy_json import NestedMutableJson
-# from .sqlalchemy_types import UUIDType
 from sqlalchemy_utils import UUIDType
 
 

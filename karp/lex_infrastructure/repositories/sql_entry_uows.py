@@ -47,7 +47,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
         # row = self._session.execute(stmt).first()
         stmt = self._session.query(
             EntryUowModel
-        ).filter_by(id=id_).order_by(EntryUowModel.last_modified.desc())
+        ).filter_by(entity_id=id_).order_by(EntryUowModel.last_modified.desc())
         row = stmt.first()
         if row:
             return self._row_to_entity(row)
@@ -56,7 +56,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
     def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:
         return self.entry_uow_factory.create(
             repository_type=row_proxy.type,
-            entity_id=row_proxy.id,
+            entity_id=row_proxy.entity_id,
             name=row_proxy.name,
             config=row_proxy.config,
             connection_str=row_proxy.connection_str,
