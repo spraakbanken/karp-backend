@@ -155,6 +155,7 @@ class TestQuery:
 def test_query_no_q(
     fa_data_client,
     read_token: auth.AccessToken,
+    app_context,
 ):
     resource = 'places'
     entries = get_json(
@@ -165,8 +166,7 @@ def test_query_no_q(
 
     names = extract_names(entries)
 
-    entry_views = fa_data_client.app.state.app_context.container.get(
-        EntryViews)
+    entry_views = app_context.container.get(EntryViews)
     expected_result = {}
     expected_total = entry_views.get_total(resource)
     print(f"entries = {entries}")
@@ -274,8 +274,21 @@ def test_and(
         # ),
     ],
 )
-def test_contains(fa_data_client, field: str, value, expected_result: List[str]):
-    query = f"/query/places?q=contains|{field}|{value}"
+def test_contains(
+    fa_data_client,
+    field: str,
+    value,
+    expected_result: List[str],
+    app_context,
+):
+    query = f'/query/places?q=contains|{field}|{value}'
+    entry_views = app_context.container.get(EntryViews)
+    expected_result = []
+    for entry in entry_views.all_entries('places'):
+        print(f'{entry=}')
+        if value in entry.entry.get(field, ''):
+            expected_result.append(entry.entry['name'])
+    print(f'{expected_result=}')
     _test_path(fa_data_client, query, expected_result)
 
 

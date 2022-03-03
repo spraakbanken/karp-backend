@@ -60,10 +60,23 @@ class GenericSearchService(SearchService):
                 )
                 for entry in all_entries
             ]
-        return QueryResponse(
+
+        if request.sort:
+            field, order = request.sort[0].split('|')
+            hits.sort(
+                key=lambda entry: entry.entry.get(field, 0),
+                reverse=order.lower() == 'desc'
+            )
+        response = QueryResponse(
             hits=hits,
             total=len(hits),
         )
+        if request.lexicon_stats:
+            response.distribution = {
+                resource_id: len(hits)
+            }
+
+        return response
 
     def query_split(self, request: QueryRequest):
         if request.q:

@@ -7,7 +7,7 @@ import pydantic
 
 from karp.search.domain.query import Query
 
-logger = logging.getLogger("karp")
+logger = logging.getLogger(__name__)
 
 
 class EntryDto(pydantic.BaseModel):
@@ -19,15 +19,18 @@ class EntryDto(pydantic.BaseModel):
     entry: typing.Dict
 
 
-class QueryResponse(pydantic.BaseModel):
-    hits: typing.List[EntryDto]
+class QueryResponseBase(pydantic.BaseModel):
+    hits: list[EntryDto]
     total: int
+    distribution: typing.Optional[dict[str, int]]
 
 
-class QuerySplitResponse(pydantic.BaseModel):
-    hits: typing.List[EntryDto]
-    total: int
-    distribution: typing.Dict[str, int]
+class QueryResponse(QueryResponseBase):
+    pass
+
+
+class QuerySplitResponse(QueryResponseBase):
+    distribution: dict[str, int]
 
 
 class StatisticsDto(pydantic.BaseModel):
