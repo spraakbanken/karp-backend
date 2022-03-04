@@ -21,6 +21,6 @@ class EntrySchema:
         except fastjsonschema.JsonSchemaException as e:
             logger.warning(
                 "Entry not valid",
-                extra={'entry': json_obj, 'message': str(e)}
+                extra={'entry': json_obj, 'error_message': str(e)}
             )
             raise errors.InvalidEntry() from e
