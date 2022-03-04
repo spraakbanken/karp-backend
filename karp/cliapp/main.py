@@ -13,7 +13,7 @@ import typer
 
 from karp.main import bootstrap_app, modules, config
 
-logger = logging.getLogger("karp")
+logger = logging.getLogger(__name__)
 
 
 def create_app():
@@ -33,6 +33,8 @@ def create_app():
             ctx.obj = {}
             ctx.obj['connection'] = app_context.container.get(Connection)
             ctx.obj['session'] = Session(bind=ctx.obj['connection'])
+            logger.debug('create session', extra={
+                         'session': ctx.obj['session']})
             ctx.obj['container'] = app_context.container.create_child_injector(
                 modules.request_configuration(
                     conn=ctx.obj['connection'],
