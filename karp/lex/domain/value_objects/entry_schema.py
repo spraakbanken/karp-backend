@@ -20,8 +20,7 @@ class EntrySchema:
             self._compiled_schema(json_obj)
         except fastjsonschema.JsonSchemaException as e:
             logger.warning(
-                "Entry not valid:\n{entry}\nMessage: {message}".format(
-                    entry=json.dumps(json_obj, indent=2), message=e.message
-                )
+                "Entry not valid",
+                extra={'entry': json_obj, 'message': str(e)}
             )
             raise errors.InvalidEntry() from e
