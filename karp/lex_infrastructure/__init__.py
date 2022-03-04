@@ -73,7 +73,7 @@ class LexInfrastructure(injector.Module):
         return SqlReadOnlyEntryRepoRepositry(conn)
 
     @injector.provider
-    @injector.singleton
+    # @injector.singleton
     def entry_uow_repo(
         self,
         session: Session,
@@ -81,7 +81,7 @@ class LexInfrastructure(injector.Module):
         event_bus: EventBus,
     ) -> EntryUowRepositoryUnitOfWork:
         logger.debug(
-            'creating entry_repo_uow with session=%s', session)
+            'creating entry_repo_uow', extra={'session': session})
         return SqlEntryUowRepositoryUnitOfWork(
             session=session,
             entry_uow_factory=entry_uow_factory,
