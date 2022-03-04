@@ -43,7 +43,7 @@ class GenericEntryTransformer(EntryTransformer):
         TODO the transformed entries afterward. Very tricky.
         """
         logger.debug('transforming entry',
-                     entry_id=src_entry.entry_id, resource_id=resource_id)
+                     extra={'entry_id': src_entry.entry_id, 'resource_id': resource_id})
         index_entry = self.index_uow.repo.create_empty_object()
         index_entry.id = src_entry.entry_id
         self.index_uow.repo.assign_field(
@@ -96,7 +96,7 @@ class GenericEntryTransformer(EntryTransformer):
                     ref_objs = []
                     if ref_resource:
                         for ref_id in _src_entry[field_name]:
-                            ref_entry_body = self.entry_views.get_by_entry_id_optional(
+                            ref_entry_body = self.entry_views.get_by_entry_id(
                                 ref_field['resource_id'], str(ref_id))
                             if ref_entry_body:
                                 ref_entry = {
@@ -127,7 +127,7 @@ class GenericEntryTransformer(EntryTransformer):
                         ref_id = [ref_id]
 
                     for elem in ref_id:
-                        ref = self.entry_views.get_by_entry_id_optional(
+                        ref = self.entry_views.get_by_entry_id(
                             resource.resource_id, str(elem))
                         if ref:
                             ref_entry = {field_name: ref.entry}
@@ -149,7 +149,7 @@ class GenericEntryTransformer(EntryTransformer):
                             )
 
             if field_conf["type"] == "object":
-                print("found field with type 'object'")
+                logger.debug("found field with type 'object'")
                 field_content = self.index_uow.repo.create_empty_object()
                 if field_name in _src_entry:
                     self._transform_to_index_entry(
@@ -175,15 +175,16 @@ class GenericEntryTransformer(EntryTransformer):
         src_entry: typing.Dict,
         src_resource: ResourceDto,
     ):
-        print(
-            f"indexing._evaluate_function src_resource={src_resource.resource_id}")
-        print(f"indexing._evaluate_function src_entry={src_entry}")
+        logger.debug(
+            "indexing._evaluate_function", extra={'src_resource': src_resource.resource_id})
+        logger.debug('indexing._evaluate_function',
+                     extra={'src_entry': src_entry})
         if "multi_ref" in function_conf:
             function_conf = function_conf["multi_ref"]
             target_field = function_conf["field"]
             if "resource_id" in function_conf:
-                print(
-                    f"indexing._evaluate_function: trying to find '{function_conf['resource_id']}'"
+                logger.debug(
+                    "indexing._evaluate_function: trying to find '%s'", function_conf['resource_id']
                 )
                 target_resource = self.resource_repo.get_by_resource_id(
                     function_conf["resource_id"], version=function_conf["resource_version"]
@@ -196,8 +197,8 @@ class GenericEntryTransformer(EntryTransformer):
                     return self.index_uow.repo.create_empty_list()
             else:
                 target_resource = src_resource
-            print(
-                f"indexing._evaluate_function target_resource={target_resource.resource_id}"
+            logger.debug(
+                "indexing._evaluate_function target_resource='%s'", target_resource.resource_id
             )
             if "test" in function_conf:
                 operator, args = list(function_conf["test"].items())[0]

@@ -96,7 +96,7 @@ class EntryViews(abc.ABC):
         self,
         resource_id: str,
         entity_id: unique_id.UniqueId,
-    ) -> EntryDto:
+    ) -> typing.Optional[EntryDto]:
         pass
 
     @abc.abstractmethod
@@ -104,7 +104,7 @@ class EntryViews(abc.ABC):
         self,
         resource_id: str,
         entry_id: str,
-    ) -> EntryDto:
+    ) -> typing.Optional[EntryDto]:
         pass
 
     @abc.abstractmethod
