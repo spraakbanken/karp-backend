@@ -1,6 +1,11 @@
+import logging
+
 import fastjsonschema
 
 from karp.lex.domain import errors
+
+
+logger = logging.getLogger(__name__)
 
 
 class EntrySchema:
@@ -16,7 +21,7 @@ class EntrySchema:
         except fastjsonschema.JsonSchemaException as e:
             logger.warning(
                 "Entry not valid:\n{entry}\nMessage: {message}".format(
-                entry=json.dumps(json_obj, indent=2), message=e.message
+                    entry=json.dumps(json_obj, indent=2), message=e.message
                 )
             )
             raise errors.InvalidEntry() from e
