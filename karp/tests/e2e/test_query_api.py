@@ -220,6 +220,7 @@ def test_query_split(
     # assert entries["distribution"] == {"municipalities": 3, "places": 22}
 
 
+@pytest.mark.xfail(reason='unstable')
 @pytest.mark.parametrize(
     "queries,expected_result",
     [
