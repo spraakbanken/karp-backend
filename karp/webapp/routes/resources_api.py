@@ -36,11 +36,10 @@ def list_resource_permissions(
 
 
 @router.get('/')
-async def get_all_resources() -> list[dict]:
-    resources = [
-        {'resource_id': 'places'},
-    ]
-    raise NotImplementedError()
+def get_all_resources(
+    get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),
+) -> list[dict]:
+    return get_resources.query()
 
 
 @router.post(

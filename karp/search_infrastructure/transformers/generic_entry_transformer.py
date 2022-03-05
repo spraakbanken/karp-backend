@@ -96,7 +96,7 @@ class GenericEntryTransformer(EntryTransformer):
                     ref_objs = []
                     if ref_resource:
                         for ref_id in _src_entry[field_name]:
-                            ref_entry_body = self.entry_views.get_by_entry_id(
+                            ref_entry_body = self.entry_views.get_by_entry_id_optional(
                                 ref_field['resource_id'], str(ref_id))
                             if ref_entry_body:
                                 ref_entry = {
@@ -127,7 +127,7 @@ class GenericEntryTransformer(EntryTransformer):
                         ref_id = [ref_id]
 
                     for elem in ref_id:
-                        ref = self.entry_views.get_by_entry_id(
+                        ref = self.entry_views.get_by_entry_id_optional(
                             resource.resource_id, str(elem))
                         if ref:
                             ref_entry = {field_name: ref.entry}

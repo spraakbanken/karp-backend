@@ -96,11 +96,27 @@ class EntryViews(abc.ABC):
         self,
         resource_id: str,
         entity_id: unique_id.UniqueId,
+    ) -> EntryDto:
+        pass
+
+    @abc.abstractmethod
+    def get_by_id_optional(
+        self,
+        resource_id: str,
+        entity_id: unique_id.UniqueId,
     ) -> typing.Optional[EntryDto]:
         pass
 
     @abc.abstractmethod
     def get_by_entry_id(
+        self,
+        resource_id: str,
+        entry_id: str,
+    ) -> EntryDto:
+        pass
+
+    @abc.abstractmethod
+    def get_by_entry_id_optional(
         self,
         resource_id: str,
         entry_id: str,
