@@ -62,14 +62,12 @@ def setup_environment() -> None:
 
 @pytest.fixture(scope="session")
 def apply_migrations(setup_environment: None):
-    config = alembic.config.Config("alembic.ini")
+    from karp.main.migrations import use_cases
 
     print("running alembic upgrade ...")
-    alembic.command.upgrade(config, 'head')
+    uc = use_cases.RunningMigrationsUp()
+    uc.execute(use_cases.RunMigrationsUp())
     yield
-    print("running alembic downgrade ...")
-    # session.close_all_sessions()
-    # alembic.command.downgrade(config, 'base')
 
 
 @pytest.fixture(scope='session', name='runner')

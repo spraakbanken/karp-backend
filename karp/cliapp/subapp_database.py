@@ -16,5 +16,15 @@ def migrations_up(
     )
 
 
+@subapp.command(name='down')
+def migrations_down(
+    ctx: typer.Context,
+):
+    uc = migration_usecases.RunningMigrationsDown()
+    uc.execute(
+        migration_usecases.RunMigrationsDown()
+    )
+
+
 def init_app(app: typer.Typer) -> None:
     app.add_typer(subapp, name='db')
