@@ -41,7 +41,6 @@ def create_app():
                     session=ctx.obj['session'],
                 )
             )
-            # ctx.obj['app_context'] = app_context
 
     load_commands(app)
 
@@ -59,6 +58,7 @@ def load_commands(app=None):
 
 
 cliapp = create_app()
+
 
 if __name__ == "__main__":
     # cliapp = create_app()
