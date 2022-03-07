@@ -1,4 +1,4 @@
-# Karp TNG backend
+# Karp backend
 
 [![Build Status](https://github.com/spraakbanken/karp-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-backend/actions)
 [![CodeScene Code Health](https://codescene.io/projects/24151/status-badges/code-health)](https://codescene.io/projects/24151)
@@ -21,10 +21,10 @@ This project uses [poetry](https://python-poetry.org) and
    export DB_HOST=localhost
    export AUTH_JWT_PUBKEY_PATH=/path/to/pubkey
    ```
-4. Activate the virtual environment by running: `poetry shell` 
+4. Activate the virtual environment by running: `poetry shell`
 5. Run `make init-db` to initialize database
    or `poetry run alembic upgrade head`
-6. Run `make serve`  or `make serve-w-reload` to start development server
+6. Run `make serve` or `make serve-w-reload` to start development server
 
    or `poetry shell` and then `uvicorn asgi:app`
 
