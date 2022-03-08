@@ -129,10 +129,10 @@ tox-to-log:
 	tox > tox.log
 
 lint: install-dev
-	${INVENV} pylint --rcfile=pylintrc karp karp/tests setup.py run.py wsgi.py
+	${INVENV} pylint --rcfile=pylintrc karp asgi.py
 
 lint-no-fail: install-dev
-	${INVENV} pylint --rcfile=pylintrc --exit-zero karp karp/tests setup.py run.py wsgi.py
+	${INVENV} pylint --rcfile=pylintrc --exit-zero karp asgi.py
 
 check-pylint: install-dev
 	${INVENV} pylint --rcfile=pylintrc  karp
