@@ -14,7 +14,7 @@ from karp.lex.application.queries import (
     ReadOnlyResourceRepository,
     ResourceDto,
 )
-from karp.tests.foundation.adapters import FakeUnitOfWork
+from karp.tests.foundation.adapters import InMemoryUnitOfWork
 
 
 @dataclasses.dataclass
@@ -23,7 +23,7 @@ class UnitTestContext:
     command_bus: CommandBus
 
 
-class FakeResourceRepository(lex_repositories.ResourceRepository):
+class InMemoryResourceRepository(lex_repositories.ResourceRepository):
     def __init__(self):
         super().__init__()
         self.resources = {}
@@ -93,7 +93,7 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
         )
 
 
-class FakeEntryRepository(lex_repositories.EntryRepository):
+class InMemoryEntryRepository(lex_repositories.EntryRepository):
     def __init__(self):
         super().__init__()
         self.entries = set()
@@ -144,15 +144,15 @@ class FakeEntryRepository(lex_repositories.EntryRepository):
         yield from self.entries
 
 
-class FakeEntryUnitOfWork(
-    FakeUnitOfWork, lex_repositories.EntryUnitOfWork
+class InMemoryEntryUnitOfWork(
+    InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork
 ):
     def __init__(self, entity_id, name: str, config: typing.Dict, connection_str: typing.Optional[str], message: str, user: str, event_bus: EventBus):
-        FakeUnitOfWork.__init__(self)
+        InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
             self,
             entity_id=entity_id, name=name, config=config, connection_str=connection_str, message=message, event_bus=event_bus)
-        self._entries = FakeEntryRepository()
+        self._entries = InMemoryEntryRepository()
         # self.id = entity_id
         # self.name = name
         # self.config = config
@@ -162,14 +162,14 @@ class FakeEntryUnitOfWork(
         return self._entries
 
 
-class FakeEntryUnitOfWork2(
-    FakeUnitOfWork, lex_repositories.EntryUnitOfWork
+class InMemoryEntryUnitOfWork2(
+    InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork
 ):
     def __init__(self, entity_id, name: str, config: typing.Dict):
-        FakeUnitOfWork.__init__(self)
+        InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
             self, entity_id=entity_id, name=name, config=config)
-        self._entries = FakeEntryRepository()
+        self._entries = InMemoryEntryRepository()
         # self.id = entity_id
         # self.name = name
         # self.config = config
@@ -179,25 +179,25 @@ class FakeEntryUnitOfWork2(
         return self._entries
 
 
-class FakeResourceUnitOfWork(FakeUnitOfWork, lex_repositories.ResourceUnitOfWork):
+class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUnitOfWork):
     def __init__(self, event_bus: EventBus):
-        FakeUnitOfWork.__init__(self)
+        InMemoryUnitOfWork.__init__(self)
         lex_repositories.ResourceUnitOfWork.__init__(self, event_bus=event_bus)
-        self._resources = FakeResourceRepository()
+        self._resources = InMemoryResourceRepository()
 
     @property
     def repo(self) -> lex_repositories.ResourceRepository:
         return self._resources
 
 
-# class FakeEntryUowFactory(lex_repositories.EntryUowFactory):
+# class InMemoryEntryUowFactory(lex_repositories.EntryUowFactory):
 #     def create(
 #         self,
 #         resource_id: str,
 #         resource_config: typing.Dict,
 #         entry_repository_settings,
 #     ) -> lex_repositories.EntryUnitOfWork:
-#         entry_uow = FakeEntryUnitOfWork(entry_repository_settings)
+#         entry_uow = InMemoryEntryUnitOfWork(entry_repository_settings)
 #         if "entry_repository_type" in resource_config:
 #             entry_uow.repo.type = resource_config["entry_repository_type"]
 #         if entry_repository_settings:
@@ -205,7 +205,7 @@ class FakeResourceUnitOfWork(FakeUnitOfWork, lex_repositories.ResourceUnitOfWork
 #         return entry_uow
 
 
-class FakeEntryUnitOfWorkCreator:
+class InMemoryEntryUnitOfWorkCreator:
     @injector.inject
     def __init__(self, event_bus: EventBus) -> None:
         self.event_bus = event_bus
@@ -220,7 +220,7 @@ class FakeEntryUnitOfWorkCreator:
         message: str,
         timestamp: float,
     ) -> lex_repositories.EntryUnitOfWork:
-        return FakeEntryUnitOfWork(
+        return InMemoryEntryUnitOfWork(
             entity_id=entity_id,
             name=name,
             config=config,
@@ -236,14 +236,14 @@ def create_entry_uow2(
     name: str,
     config: Dict,
 ) -> lex_repositories.EntryUnitOfWork:
-    return FakeEntryUnitOfWork2(
+    return InMemoryEntryUnitOfWork2(
         entity_id=entity_id,
         name=name,
         config=config,
     )
 
 
-class FakeEntryUowRepository(lex_repositories.EntryUowRepository):
+class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
     def __init__(self) -> None:
         super().__init__()
         self._storage = {}
@@ -258,26 +258,26 @@ class FakeEntryUowRepository(lex_repositories.EntryUowRepository):
         return len(self._storage)
 
 
-class FakeEntryUowRepositoryUnitOfWork(FakeUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):
+class InMemoryEntryUowRepositoryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):
     def __init__(
         self,
         event_bus: EventBus,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
     ) -> None:
-        FakeUnitOfWork.__init__(self)
+        InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUowRepositoryUnitOfWork.__init__(
             self,
             event_bus=event_bus,
             entry_uow_factory=entry_uow_factory,
         )
-        self._repo = FakeEntryUowRepository()
+        self._repo = InMemoryEntryUowRepository()
 
     @property
     def repo(self) -> lex_repositories.EntryUowRepository:
         return self._repo
 
 
-class FakeLexInfrastructure(injector.Module):
+class InMemoryLexInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
     def entry_uow_repo_uow(
@@ -285,24 +285,24 @@ class FakeLexInfrastructure(injector.Module):
         event_bus: EventBus,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
     ) -> lex_repositories.EntryUowRepositoryUnitOfWork:
-        return FakeEntryUowRepositoryUnitOfWork(
+        return InMemoryEntryUowRepositoryUnitOfWork(
             event_bus=event_bus,
             entry_uow_factory=entry_uow_factory,
         )
 
     # @injector.provider
     # def entry_uow_factory(self) -> lex_repositories.EntryRepositoryUnitOfWorkFactory:
-    #     return FakeEntryRepositoryUnitOfWorkFactory()
+    #     return InMemoryEntryRepositoryUnitOfWorkFactory()
     @injector.multiprovider
     def entry_uow_creator_map(
         self
     ) -> Dict[str, lex_repositories.EntryUnitOfWorkCreator]:
-        return {"fake": FakeEntryUnitOfWorkCreator}
+        return {"fake": InMemoryEntryUnitOfWorkCreator}
 
     @injector.provider
     @injector.singleton
     def resource_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:
-        return FakeResourceUnitOfWork(event_bus=event_bus)
+        return InMemoryResourceUnitOfWork(event_bus=event_bus)
 
     @injector.provider
     @injector.singleton
@@ -322,10 +322,10 @@ class FakeLexInfrastructure(injector.Module):
 #     entry_repo_repo_uow: lex_repositories.EntryRepositoryRepositoryUnitOfWork = None,
 # ):
 #     return bootstrap_message_bus(
-#         resource_uow=resource_uow or FakeResourceUnitOfWork(),
-#         entry_repo_repo_uow=entry_repo_repo_uow or FakeEntryRepositoryRepositoryUnitOfWork(),
+#         resource_uow=resource_uow or InMemoryResourceUnitOfWork(),
+#         entry_repo_repo_uow=entry_repo_repo_uow or InMemoryEntryRepositoryRepositoryUnitOfWork(),
 #         entry_uows=entry_uows or lex_repositories.EntriesUnitOfWork(),
-#         entry_uow_factory=entry_uow_factory or FakeEntryUowFactory(),
-#         search_service_uow=search_service_uow or FakeSearchServiceUnitOfWork(),
+#         entry_uow_factory=entry_uow_factory or InMemoryEntryUowFactory(),
+#         search_service_uow=search_service_uow or InMemorySearchServiceUnitOfWork(),
 #         raise_on_all_errors=True
 #     )

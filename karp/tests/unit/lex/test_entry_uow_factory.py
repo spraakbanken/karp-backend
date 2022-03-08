@@ -15,7 +15,7 @@ def test_create_fake_entry_repo_uow(
         "fake", unique_id.make_unique_id(), "name", {}, connection_str=None, user='kristoff@example.com', message='msg', timestamp=123456789)
 
     print(f"entry_repo_uow = {entry_repo_uow}")
-    assert isinstance(entry_repo_uow, adapters.FakeEntryUnitOfWork)
+    assert isinstance(entry_repo_uow, adapters.InMemoryEntryUnitOfWork)
 
 
 @pytest.mark.skip()
@@ -29,4 +29,4 @@ def test_create_fake_entry_repo_uow2(
         "fake2", unique_id.make_unique_id(), "name", {})
 
     print(f"entry_repo_uow = {entry_repo_uow}")
-    assert isinstance(entry_repo_uow, adapters.FakeEntryUnitOfWork2)
+    assert isinstance(entry_repo_uow, adapters.InMemoryEntryUnitOfWork2)

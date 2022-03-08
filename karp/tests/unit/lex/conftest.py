@@ -12,16 +12,16 @@ from karp.main.modules import CommandBusMod, EventBusMod
 from karp.lex.application import repositories
 
 from .adapters import (
-    FakeEntryUowRepositoryUnitOfWork,
-    # FakeEntryUowFactory,
-    FakeResourceUnitOfWork,
+    InMemoryEntryUowRepositoryUnitOfWork,
+    # InMemoryEntryUowFactory,
+    InMemoryResourceUnitOfWork,
 )
 from . import adapters, factories
 
 
 @pytest.fixture(name="entry_repo_repo_uow")
 def fixture_entry_repo_repo_uow() -> EntryUowRepositoryUnitOfWork:
-    return FakeEntryUowRepositoryUnitOfWork()
+    return InMemoryEntryUowRepositoryUnitOfWork()
 
 
 @pytest.fixture(name='create_entry_repository')
@@ -30,8 +30,8 @@ def fixture_create_entry_repository() -> lex_commands.CreateEntryRepository:
 
 
 @pytest.fixture(name="resource_uow")
-def fixture_resource_uow() -> FakeResourceUnitOfWork:
-    return FakeResourceUnitOfWork()
+def fixture_resource_uow() -> InMemoryResourceUnitOfWork:
+    return InMemoryResourceUnitOfWork()
 
 
 # @pytest.fixture(name="entry_uows")
@@ -40,8 +40,8 @@ def fixture_resource_uow() -> FakeResourceUnitOfWork:
 
 
 # @pytest.fixture(name="entry_uow_factory")
-# def fixture_entry_uow_factory() -> FakeEntryUowFactory:
-#     return FakeEntryUowFactory()
+# def fixture_entry_uow_factory() -> InMemoryEntryUowFactory:
+#     return InMemoryEntryUowFactory()
 
 
 @pytest.fixture()
@@ -50,7 +50,7 @@ def lex_ctx() -> adapters.UnitTestContext:
         CommandBusMod(),
         EventBusMod(),
         Lex(),
-        adapters.FakeLexInfrastructure(),
+        adapters.InMemoryLexInfrastructure(),
 
     ], auto_bind=False)
     return adapters.UnitTestContext(

@@ -8,7 +8,7 @@ from karp.lex_infrastructure import GenericLexInfrastructure
 from karp.main.modules import CommandBusMod, EventBusMod
 from karp.search import Search
 from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure
-from karp.tests.unit.lex.adapters import FakeLexInfrastructure
+from karp.tests.unit.lex.adapters import InMemoryLexInfrastructure
 
 from . import adapters
 
@@ -22,9 +22,9 @@ def search_unit_ctx() -> adapters.SearchUnitTestContext:
         SearchInfrastructure(),
         Lex(),
         GenericLexInfrastructure(),
-        FakeLexInfrastructure(),
+        InMemoryLexInfrastructure(),
         GenericSearchInfrastructure(),
-        adapters.FakeSearchInfrastructure(),
+        adapters.InMemorySearchInfrastructure(),
     ], auto_bind=False)
     return adapters.SearchUnitTestContext(
         container=container,

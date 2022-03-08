@@ -36,14 +36,13 @@ other_key = rsa.generate_private_key(
 def jwt_authenticator():
     return JWTAuthService(
         pubkey_path=Path("karp/tests/data/pubkey.pem"),
-        is_resource_protected=adapters.FakeIsResourceProtected(),
+        is_resource_protected=adapters.InMemoryIsResourceProtected(),
     )
 
 
 def test_authenticate_invalid_token(jwt_authenticator):
     with pytest.raises(AuthError):
         jwt_authenticator.authenticate("scheme", "invalid")
-
 
 
 def test_authenticate_expired_token(jwt_authenticator):
@@ -55,7 +54,6 @@ def test_authenticate_expired_token(jwt_authenticator):
 
     with pytest.raises(ExpiredToken):
         jwt_authenticator.authenticate("scheme", token)
-
 
 
 class TestAuthTokens:
@@ -86,7 +84,8 @@ class TestAuthTokens:
         (
             ('user', {}, other_key, AUTH_JWT_AUDIENCE, TokenError),
             ('user', None, None, AUTH_JWT_AUDIENCE, InvalidTokenPayload),
-            pytest.param('user', {}, None, "othersite:auth", InvalidTokenAudience, marks=pytest.mark.xfail(reason='audience not impl on auth')),
+            pytest.param('user', {}, None, "othersite:auth", InvalidTokenAudience,
+                         marks=pytest.mark.xfail(reason='audience not impl on auth')),
             (None, {}, None, AUTH_JWT_AUDIENCE, InvalidTokenPayload),
         )
     )
@@ -107,4 +106,3 @@ class TestAuthTokens:
                 audience=jwt_audience,
             )
             jwt_authenticator.authenticate('bearer', access_token)
-
