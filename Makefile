@@ -97,7 +97,7 @@ all-tests-w-coverage: unit-tests-w-coverage integration-tests-w-coverage e2e-tes
 
 .PHONY: unit-tests
 unit-tests:
-	${INVENV} pytest -vv karp/tests/unit
+	${INVENV} pytest -vv karp/tests/unit karp/tests/foundation/unit
 
 .PHONY: e2e-tests
 e2e-tests: install-dev clean-pyc
@@ -113,7 +113,7 @@ integration-tests: clean-pyc
 
 .PHONY: unit-tests-w-coverage
 unit-tests-w-coverage: clean-pyc
-	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/unit
+	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/unit karp/tests/foundation/unit
 
 .PHONY: integration-tests-w-coverage
 integration-tests-w-coverage: clean-pyc
