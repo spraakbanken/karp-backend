@@ -49,7 +49,6 @@ def test_discarded_entry_has_event(field, value):
         user="alice@example.org",
         message="bad",
         timestamp=123.45,
-        version=entry.version,
     )
     assert entry.discarded
     assert entry.domain_events[-1] == events.EntryDeleted(

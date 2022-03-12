@@ -25,6 +25,6 @@ def length_ge(attribute, value, limit: int):
 
 def no_space_in_str(s: str) -> str:
     if ' ' in s:
-        raise constraints.ConstraintsError(f'whitespace not allowed')
+        raise ConstraintsError('whitespace not allowed')
     return s
 
