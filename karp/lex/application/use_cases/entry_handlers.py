@@ -393,6 +393,7 @@ class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):
             entry = uw.repo.by_entry_id(cmd.entry_id)
 
             entry.discard(
+                version=cmd.version,
                 user=cmd.user,
                 message=cmd.message,
                 timestamp=cmd.timestamp,

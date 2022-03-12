@@ -5,7 +5,7 @@ import typing
 from typing import Any, Callable, Dict, List, Optional, Type, Union
 from uuid import UUID
 
-from karp.foundation import constraints
+from karp.lex.domain import constraints
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
 from karp.foundation.value_objects import PermissionLevel
 from .entry import Entry, create_entry
@@ -376,8 +376,7 @@ def create_resource(
     resource_id = resource_id or resource_id_in_config
     if not resource_id:
         raise ValueError("resource_id is missing")
-    if not constraints.valid_resource_id(resource_id):
-        raise ValueError(f"resource_id is not valid: value='{resource_id}")
+    resource_id = constraints.valid_resource_id(resource_id)
     name_in_config = config.pop("resource_name", None)
     resource_name = name or name_in_config or resource_id
     entity_id = entity_id or unique_id.make_unique_id()

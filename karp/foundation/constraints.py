@@ -15,5 +15,16 @@ def length_gt_zero(attribute, value):
     return value
 
 
-def valid_resource_id(name: str):
-    return length_gt_zero("resource_id", name)
+def length_ge(attribute, value, limit: int):
+    if len(value) < limit:
+        raise ConstraintsError(
+            f"'{attribute}' has to have a length of at least {limit}. Got {attribute}='{value}'"
+        )
+    return value
+
+
+def no_space_in_str(s: str) -> str:
+    if ' ' in s:
+        raise constraints.ConstraintsError(f'whitespace not allowed')
+    return s
+

@@ -28,6 +28,7 @@ class AddEntries(Command):
 class DeleteEntry(Command):
     resource_id: str
     entry_id: str
+    version: int
     user: str
     message: typing.Optional[str] = None
 
