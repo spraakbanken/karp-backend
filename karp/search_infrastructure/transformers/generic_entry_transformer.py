@@ -78,13 +78,58 @@ class GenericEntryTransformer(EntryTransformer):
     ):
         for field_name, field_conf in fields:
             if field_conf.get("virtual"):
-                print("found virtual field")
+                logger.trace("found virtual field")
                 res = self._evaluate_function(
                     field_conf["function"], _src_entry, resource)
-                print(f"res = {res}")
+                logger.trace(f"res = {res}")
                 if res:
                     self.index_uow.repo.assign_field(
                         _index_entry, "v_" + field_name, res)
+            elif field_conf.get("collection"):
+                field_content = self.index_uow.repo.create_empty_list()
+                if field_name in _src_entry:
+                    for subfield in _src_entry[field_name]:
+                        if field_conf["type"] == "object":
+                            subfield_content = self.index_uow.repo.create_empty_object()
+                            self._transform_to_index_entry(
+                                resource,
+                                subfield,
+                                subfield_content,
+                                field_conf["fields"].items(),
+                            )
+                            self.index_uow.repo.add_to_list_field(field_content, subfield_content)
+                        else:
+                            self.index_uow.repo.add_to_list_field(field_content, subfield)
+            elif field_conf["type"] == "object":
+                field_content = self.index_uow.repo.create_empty_object()
+                if field_name in _src_entry:
+                    _transform_to_index_entry(
+                        resource,
+                        _src_entry[field_name],
+                        field_content,
+                        field_conf["fields"].items(),
+                    )
+            elif field_conf["type"] in ("integer", "string", "number", "boolean"):
+                if field_name in _src_entry:
+                    field_content = _src_entry[field_name]
+
+            if field_content:
+                self.index_uow.repo.assign_field(
+                    _index_entry, field_name, field_content)
+
+            # Handle ref
+            if field_conf.get("ref") and field_name in _src_entry:
+                res = self._resolve_ref(resource, _src_entry, field_conf["ref"], field_name)
+                if res:
+                    self.index_uow.repo.assign_field(_index_entry, f"v_{field_name}", res)
+
+        def _resolve_ref(
+            self,
+            resource: ResourceDto,
+            src_entry: dict,
+            ref_conf: dict,
+            field_name: str,
+        )
             elif field_conf.get("ref"):
                 ref_field = field_conf["ref"]
                 if ref_field.get("resource_id"):
@@ -162,10 +207,6 @@ class GenericEntryTransformer(EntryTransformer):
                     )
             else:
                 field_content = _src_entry.get(field_name)
-
-            if field_content:
-                self.index_uow.repo.assign_field(
-                    _index_entry, field_name, field_content)
 
     def _evaluate_function(
         self,
