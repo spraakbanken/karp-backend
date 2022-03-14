@@ -80,6 +80,12 @@ jobs:
           cat .env
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
+        env:
+          DB_TEST_DATABASE: karp
+          DB_USER: karp
+          DB_PASSWORD: testing
+          DB_HOST: 127.0.0.1
+          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
       - name: Upload coverage to Codecov
         if: matrix.task.report_coverage
         uses: codecov/codecov-action@v2
