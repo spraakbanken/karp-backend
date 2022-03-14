@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## 6.0.8
 
+### Changed
+
 - Fix transform error when indexing. PR [#185](https://github.com/spraakbanken/karp-backend/pull/185) by [@kod-kristoff](https://github.com/kod-kristoff).
 
 ## 6.0.7
