@@ -24,23 +24,37 @@ jobs:
       - name: Lint with pylint
         run: make lint-no-fail
 
-  build:
+  test:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} (${{ matrix.os }})
+    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} es-${{ matrix.es-version }} (${{ matrix.os }})
     strategy:
       max-parallel: 4
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.9", "3.10"]
-        # json-lib: [orjson, json]
+        es-version: ["6.8.23"]
         task:
-          # - name: Typecheck
-          #   run: make check-mypy
-          #   report_coverage: false
           - name: Run tests
             run: make all-tests-w-coverage
             report_coverage: true
+
+    services:
+      mysql:
+        image: mariadb:10.3
+        ports:
+          - 3306
+        env:
+          MYSQL_ROOT_PASSWORD: testing
+          MYSQL_DATABASE: karp
+          MYSQL_PASSWORD: testing
+          MYSQL_USER: karp
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -50,10 +64,20 @@ jobs:
       - name: install poetry
         run: pip install poetry
       - name: Install dependencies
-        run: make install-dev
-      # - name: Install json library
-      #   if: matrix.json-lib != 'json'
-      #   run: make install-${{ matrix.json-lib }}
+        run: |
+          make install-dev
+          make install-dev-mysql
+          cp -v .env.ci .env
+      - name: Install Elasticsearch 6
+        if: startsWith( matrix.es.version, '6')
+        run: |
+          wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
+          tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
+          ./elasticsearch-${{ matrix.es-version }}/bin/elasticsearch-plugin install analysis-icu
+          echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
+          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
+          echo "SEARCH_CONTEXT=es6_search_service" >> .env
+          cat .env
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
       - name: Upload coverage to Codecov
@@ -72,7 +96,7 @@ jobs:
       #   with:
       #     github-token: ${{ secrets.github_token }}
   publish:
-    needs: [lint, build]
+    needs: [lint, test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
