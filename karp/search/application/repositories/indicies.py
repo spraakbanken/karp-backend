@@ -49,6 +49,8 @@ class Index(repository.Repository[IndexEntry]):
         return []
 
     def add_to_list_field(self, elems: typing.List, elem):
+        if isinstance(elem, IndexEntry):
+            elem = elem.entry
         elems.append(elem)
 
     def _save(self, _notused):
