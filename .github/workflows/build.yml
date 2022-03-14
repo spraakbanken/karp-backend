@@ -2,8 +2,6 @@ name: Build
 
 on:
   push:
-    branches-ignore:
-      - main
     tags-ignore:
       - v*
   pull_request:
@@ -24,6 +22,9 @@ jobs:
         task:
           - name: Lint code
             run: make lint
+            allow_failure: true
+          - name: Typecheck
+            run: make check-mypy
             allow_failure: true
           # - name: Lint w bandit
           #   run: make lint-security-issues

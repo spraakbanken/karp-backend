@@ -2,8 +2,6 @@ name: Build & Publish
 
 on:
   push:
-    branches:
-      - main
     tags:
       - v*
 
@@ -37,9 +35,9 @@ jobs:
         python-version: ["3.9", "3.10"]
         # json-lib: [orjson, json]
         task:
-          - name: Typecheck
-            run: make check-mypy
-            report_coverage: false
+          # - name: Typecheck
+          #   run: make check-mypy
+          #   report_coverage: false
           - name: Run tests
             run: make all-tests-w-coverage
             report_coverage: true
