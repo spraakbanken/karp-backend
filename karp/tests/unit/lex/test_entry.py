@@ -45,7 +45,11 @@ def test_new_entry_has_event():
 )
 def test_discarded_entry_has_event(field, value):
     entry = random_entry()
-    entry.discard(user="alice@example.org", message="bad", timestamp=123.45)
+    entry.discard(
+        user="alice@example.org",
+        message="bad",
+        timestamp=123.45,
+    )
     assert entry.discarded
     assert entry.domain_events[-1] == events.EntryDeleted(
         entity_id=entry.id,

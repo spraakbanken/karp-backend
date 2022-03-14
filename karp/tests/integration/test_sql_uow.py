@@ -9,7 +9,7 @@ from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
 from karp.tests.unit.lex import adapters, factories
 
 
-class FakeEventBus(EventBus):
+class InMemoryEventBus(EventBus):
     def __init__(self) -> None:
         super().__init__()
         self.events = []
@@ -21,7 +21,7 @@ class FakeEventBus(EventBus):
 class TestSqlResourceUnitOfWork:
     def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):
         uow = SqlResourceUnitOfWork(
-            session_factory=sqlite_session_factory, event_bus=FakeEventBus())
+            session_factory=sqlite_session_factory, event_bus=InMemoryEventBus())
         with uow:
             resource = factories.ResourceFactory()
             uow.resources.save(resource)
@@ -36,7 +36,7 @@ class TestSqlResourceUnitOfWork:
             print(resource.to_string())
 
         uow = SqlResourceUnitOfWork(
-            session_factory=sqlite_session_factory, event_bus=FakeEventBus())
+            session_factory=sqlite_session_factory, event_bus=InMemoryEventBus())
         with pytest.raises(AttributeError):
             with uow:
                 resource = factories.ResourceFactory()
@@ -59,7 +59,7 @@ class TestSqlEntryUnitOfWork:
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},
             sqlite_session_factory,
-            event_bus=FakeEventBus(),
+            event_bus=InMemoryEventBus(),
             name="test",
             config={},
             connection_str=":memory:",
@@ -80,7 +80,7 @@ class TestSqlEntryUnitOfWork:
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},
             sqlite_session_factory,
-            event_bus=FakeEventBus(),
+            event_bus=InMemoryEventBus(),
             name="test",
             config={},
             connection_str=":memory:",

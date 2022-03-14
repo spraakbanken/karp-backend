@@ -1,4 +1,4 @@
-class FakeUnitOfWork:
+class InMemoryUnitOfWork:
     def __init__(self, **kwargs):
         self.was_committed = False
         self.was_rolled_back = False

@@ -5,7 +5,7 @@ import factory
 from faker.providers import BaseProvider
 
 from karp.lex.domain import commands, entities, events
-from karp.foundation.value_objects import make_unique_id
+from karp.foundation.value_objects import make_unique_id, MachineName
 from karp.utility.time import utc_now
 
 
@@ -21,6 +21,14 @@ class ResourceConfigProvider(BaseProvider):
         }
 
 
+class MachineNameProvider(BaseProvider):
+    def machine_name(self) -> MachineName:
+        return MachineName(
+            name=factory.Faker('word')
+        )
+
+
+factory.Faker.add_provider(MachineNameProvider)
 factory.Faker.add_provider(ResourceConfigProvider)
 
 
@@ -117,11 +125,19 @@ class CreateEntryRepositoryFactory(factory.Factory):
     user = factory.Faker('email')
 
 
+class MachineNameFactory(factory.Factory):
+    class Meta:
+        model = MachineName
+
+    name = factory.Faker('word')
+
+
 class CreateResourceFactory(factory.Factory):
     class Meta:
         model = commands.CreateResource
 
     entity_id = factory.LazyFunction(make_unique_id)
+    # resource_id = factory.SubFactory(MachineNameFactory)
     resource_id = factory.Faker('word')
     name = factory.Faker('word')
     repository_type = 'fake'

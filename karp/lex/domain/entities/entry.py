@@ -4,6 +4,8 @@ import logging
 import typing
 from typing import Dict, List, Optional, Any
 
+from deprecated import deprecated
+
 from karp.foundation import constraints
 from karp.lex.domain import errors, events
 from karp.foundation.entity import TimestampedVersionedEntity
@@ -61,6 +63,7 @@ class Entry(TimestampedVersionedEntity):
         return self._entry_id
 
     @entry_id.setter
+    @deprecated(version='6.0.7', reason='use update')
     def entry_id(self, entry_id: str):
         self._check_not_discarded()
         self._entry_id = constraints.length_gt_zero("entry_id", entry_id)
@@ -71,6 +74,7 @@ class Entry(TimestampedVersionedEntity):
         return self._body
 
     @body.setter
+    @deprecated(version='6.0.7', reason='use update')
     def body(self, body: Dict):
         self._check_not_discarded()
         self._body = body
@@ -86,6 +90,7 @@ class Entry(TimestampedVersionedEntity):
         return self._status
 
     @status.setter
+    @deprecated(version='6.0.7', reason='use update')
     def status(self, status: EntryStatus):
         """The workflow status of this entry."""
         self._check_not_discarded()
@@ -114,13 +119,14 @@ class Entry(TimestampedVersionedEntity):
         timestamp: float,
         message: str = None,
     ):
-        self._check_not_discarded()
+        if self._discarded:
+            return
         self._op = EntryOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = True
         self._last_modified_by = user
-        self._last_modified = timestamp
-        self._version += 1
+        self._last_modified = self._ensure_timestamp(timestamp)
+        self._increment_version()
         self._record_event(
             events.EntryDeleted(
                 entity_id=self.id,

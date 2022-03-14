@@ -168,6 +168,3 @@ def test_reindex_resource_command(
         create_resource.resource_id
     ].created_at > previous_created_at
 
-
-def test_transform_to_index_entry():
-    pass

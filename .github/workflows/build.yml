@@ -1,6 +1,14 @@
 name: Build
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - main
+    tags-ignore:
+      - v*
+  pull_request:
+    branches:
+      - "*"
 
 jobs:
   checks:
@@ -14,7 +22,7 @@ jobs:
         python-version: ["3.9", "3.10"]
         os: [ubuntu-latest]
         task:
-          - name: Lint w pylint
+          - name: Lint code
             run: make lint
             allow_failure: true
           # - name: Lint w bandit

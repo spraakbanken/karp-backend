@@ -92,6 +92,13 @@ class UpdateConflict(LexDomainError):
         self.error_obj = {"diff": diff,
                           "error": str(self)}
 
+class LexValueError(ValueError, LexDomainError):
+    pass
+
+
+class InvalidResourceId(LexValueError):
+    pass
+
 
 class LogicError(LexDomainError):
     pass

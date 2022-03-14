@@ -79,13 +79,14 @@ asgi-correlation-id = "^1.1.2"
 gunicorn = "^20.1.0"
 python-json-logger = "^2.0.2"
 ulid-py = "^1.1.0"
+Deprecated = "^1.2.13"
 
 [tool.poetry.extras]
 mysql = ["mysqlclient", "PyMySQL", "aiomysql"]
 sqlite = ["aiosqlite"]
 
 [tool.poetry.dev-dependencies]
-flake8 = "<3.9.1"
+flake8 = "^4.0.1"
 autopep8 = "^1.5.7"
 pytest = "^6.2.5"
 pytest-cov = "^2.12.1"
@@ -100,6 +101,9 @@ elasticsearch-test-py = "^1.1.0"
 cryptography = "^36.0.1"
 types-tabulate = "^0.8.5"
 vulture = "^2.3"
+flake8-bandit = "^2.1.2"
+pylint = "^2.12.2"
+flake8-pylint = "^0.1.3"
 
 [tool.flakehell]
 exclude = ["README.rst", "README.md"]

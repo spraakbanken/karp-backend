@@ -51,10 +51,28 @@ class TestCreateResource:
 
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
-                factories.CreateResourceFactory(resource_id=cmd2.resource_id, entry_repo_id=cmd1.entity_id))
+                factories.CreateResourceFactory(
+                    resource_id=cmd2.resource_id,
+                    entry_repo_id=cmd1.entity_id
+                )
+            )
 
         resource_uow = lex_ctx.container.get(repositories.ResourceUnitOfWork)
         assert resource_uow.was_rolled_back
+
+    def test_bad_resource_id_raises(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        cmd = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd)
+        with pytest.raises(errors.InvalidResourceId):
+            lex_ctx.command_bus.dispatch(
+                factories.CreateResourceFactory(
+                    entry_repo_id=cmd.entity_id,
+                    resource_id='with space',
+                )
+            )
 
 
 class TestUpdateResource:

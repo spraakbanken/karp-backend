@@ -7,7 +7,7 @@ from karp.foundation.commands import CommandBus
 from karp.foundation.events import EventBus
 from karp.foundation.time import utc_now
 from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry
-from karp.tests.foundation.adapters import FakeUnitOfWork
+from karp.tests.foundation.adapters import InMemoryUnitOfWork
 
 
 @dataclasses.dataclass
@@ -17,7 +17,7 @@ class SearchUnitTestContext:
     event_bus: EventBus
 
 
-class FakeIndex(Index):
+class InMemoryIndex(Index):
     @dataclasses.dataclass
     class Index:
         config: Dict
@@ -34,7 +34,7 @@ class FakeIndex(Index):
         self.seen = []
 
     def create_index(self, resource_id: str, config: Dict):
-        self.indicies[resource_id] = FakeIndex.Index(
+        self.indicies[resource_id] = InMemoryIndex.Index(
             config=config, created_at=utc_now())
 
     def publish_index(self, alias_name: str, index_name: str = None):
@@ -66,20 +66,20 @@ class FakeIndex(Index):
 #        return {}
 
 
-class FakeIndexUnitOfWork(
-    FakeUnitOfWork, IndexUnitOfWork
+class InMemoryIndexUnitOfWork(
+    InMemoryUnitOfWork, IndexUnitOfWork
 ):
     def __init__(self):
         # super().__init__()
-        self._index = FakeIndex()
+        self._index = InMemoryIndex()
 
     @property
-    def repo(self) -> FakeIndex:
+    def repo(self) -> InMemoryIndex:
         return self._index
 
 
-class FakeSearchInfrastructure(injector.Module):
+class InMemorySearchInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
     def index_uow(self) -> IndexUnitOfWork:
-        return FakeIndexUnitOfWork()
+        return InMemoryIndexUnitOfWork()

@@ -15,7 +15,7 @@ from . import adapters, factories
 # from karp.lex.domain import commands
 # from karp.services import unit_of_work
 
-# from karp.tests.unit.adapters import (FakeEntryUowFactory, FakeResourceUnitOfWork,
+# from karp.tests.unit.adapters import (InMemoryEntryUowFactory, InMemoryResourceUnitOfWork,
 #                                       bootstrap_test_app)
 
 
