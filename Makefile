@@ -138,7 +138,7 @@ check-pylint: install-dev
 	${INVENV} pylint --rcfile=pylintrc  karp
 
 check-mypy: install-dev
-	${INVENV} mypy karp wsgi.py run.py
+	${INVENV} mypy karp asgi.py
 
 check-pylint-refactorings: install-dev
 	${INVENV} pylint --disable=C,W,E --enable=R karp

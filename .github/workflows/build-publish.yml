@@ -28,7 +28,7 @@ jobs:
 
   build:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} ${{ matrix.json-lib }} (${{ matrix.os }})
+    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} (${{ matrix.os }})
     strategy:
       max-parallel: 4
       fail-fast: false
@@ -41,7 +41,7 @@ jobs:
             run: make check-mypy
             report_coverage: false
           - name: Run tests
-            run: make run-all-tests-w-coverage
+            run: make all-tests-w-coverage
             report_coverage: true
     steps:
       - uses: actions/checkout@v2
