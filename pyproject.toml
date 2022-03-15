@@ -36,11 +36,13 @@ karp-cli = "karp.cliapp.main:cliapp"
 "sql" = "karp.infrastructure.sql"
 "testing" = "karp.infrastructure.testing"
 "jwt" = "karp.infrastructure.jwt"
-[tool.poetry.plugins."karp.clicommands"]
-"db" = "karp.cliapp.subapp_database"
-"entries" = "karp.cliapp.subapp_entries"
-"entry_repo" = "karp.cliapp.subapp_entry_repo"
-"resource" = "karp.cliapp.subapp_resource"
+
+# [tool.poetry.plugins."karp.clicommands"]
+# "db" = "karp.cliapp.subapp_database"
+# "entries" = "karp.cliapp.subapp_entries"
+# "entry_repo" = "karp.cliapp.subapp_entry_repo"
+# "resource" = "karp.cliapp.subapp_resource"
+# "query" = "karp.cliapp.subapps.query_subapp"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/spraakbanken/karp-backend/issues"

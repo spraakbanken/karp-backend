@@ -7,7 +7,7 @@ from karp import lex
 from karp.foundation.commands import CommandBus
 from karp.lex.application.queries import ListEntryRepos
 from karp.lex.domain.commands import CreateEntryRepository
-from .typer_injector import inject_from_ctx
+from karp.cliapp.typer_injector import inject_from_ctx
 
 
 subapp = typer.Typer()
