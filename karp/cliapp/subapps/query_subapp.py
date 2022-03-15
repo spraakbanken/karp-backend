@@ -4,7 +4,7 @@ import typer
 subapp = typer.Typer()
 print('query')
 
-@subapp.command
+@subapp.command()
 def query():
     typer.echo('query')
 

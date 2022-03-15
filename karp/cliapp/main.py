@@ -2,16 +2,12 @@ import logging
 from typing import Optional
 import sys
 
-try:
-    from importlib.metadata import entry_points
-except ImportError:
-    from importlib_metadata import entry_points  # type: ignore
-
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 import typer
 
 from karp.main import bootstrap_app, modules, config
+from karp.cliapp import subapps
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +38,7 @@ def create_app():
                 )
             )
 
+    subapps.add_subapps(app)
     load_commands(app)
 
     return app
@@ -53,7 +50,7 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
-def load_commands(app=None):
+def load_commands(app: typer.Typer):
     modules.load_modules('karp.clicommands', app=app)
 
 
