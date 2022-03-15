@@ -54,7 +54,7 @@ def get_entries_by_id(
 def query_split(
     resources: str = Path(
         ...,
-        regex=r"^\w+(,\w+)*$",
+        regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
         description="A comma-separated list of resource identifiers",
     ),
     q: Optional[str] = Query(
@@ -69,7 +69,7 @@ def query_split(
     sort: str = Query(
         None,
         description="The `field` to sort by. If missing, default order for each resource will be used.",
-        regex=r"^\w+\|(asc|desc)",
+        regex=r"^[a-zA-Z0-9_\-]+\|(asc|desc)",
     ),
     lexicon_stats: bool = Query(
         True, description="Show the hit count per lexicon"),
@@ -136,7 +136,7 @@ def query_split(
 def query(
     resources: str = Path(
         ...,
-        regex=r"^\w+(,\w+)*$",
+        regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
         description="A comma-separated list of resource identifiers",
     ),
     q: Optional[str] = Query(
@@ -151,7 +151,7 @@ def query(
     sort: List[str] = Query(
         [],
         description="The `field` to sort by. If missing, default order for each resource will be used.",
-        regex=r"^\w+\|(asc|desc)",
+        regex=r"^[a-zA-Z0-9_\-]+\|(asc|desc)",
     ),
     lexicon_stats: bool = Query(
         True, description="Show the hit count per lexicon"),
