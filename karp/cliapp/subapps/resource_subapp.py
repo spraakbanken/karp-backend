@@ -18,8 +18,8 @@ from karp.lex.application.queries import (
 )
 from karp.errors import ResourceAlreadyPublished
 
-from .utility import cli_error_handler, cli_timer
-from .typer_injector import inject_from_ctx
+from karp.cliapp.utility import cli_error_handler, cli_timer
+from karp.cliapp.typer_injector import inject_from_ctx
 
 
 logger = logging.getLogger("karp")
