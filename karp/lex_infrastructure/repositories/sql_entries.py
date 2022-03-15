@@ -370,7 +370,7 @@ class SqlEntryRepository(
             child_query = self._session.query(
                 child_cls).filter_by(**child_filters)
             for child_e in child_query:
-                logger.debug('child hit',  child_hit=child_e)
+                logger.debug('child hit',  extra={'child_hit': child_e})
             query = query.join(child_cls).filter_by(**child_filters)
         # result = query.filter_by(**kwargs).all()
         # # query = self._session.query(self.history_model)
