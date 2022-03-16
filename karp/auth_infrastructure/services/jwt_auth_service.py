@@ -1,5 +1,4 @@
 """Module for jwt-based authentication."""
-import time
 from pathlib import Path
 from typing import Dict, List, Optional
 
@@ -59,7 +58,7 @@ class JWTAuthService(AuthService):
         logger.debug("JWTAuthenticator created")
 
     def authenticate(self, _scheme: str, credentials: str) -> User:
-        logger.debug("authenticate called", credentials=credentials)
+        logger.debug("authenticate called", extra={'credentials': credentials})
 
         try:
             user_token = jwt.decode(
