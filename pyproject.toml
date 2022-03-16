@@ -52,7 +52,7 @@ python = "^3.9"
 json-streams = "^0.11"
 paradigmextract = "^0.1.1"
 pydantic = "^1.8.2"
-PyJWT = "^2.1.0"
+PyJWT = {extras = ["crypto"], version = "^2.3.0"}
 sb-json-tools = "^0.9.1"
 SQLAlchemy = "^1.4.25"
 sqlalchemy-json = "^0.4.0"
