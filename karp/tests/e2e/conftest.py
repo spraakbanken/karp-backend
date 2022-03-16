@@ -177,7 +177,7 @@ def auth_levels() -> typing.Dict[str, int]:
     curr_level = 10
     levels = {}
     for level in auth.PermissionLevel:
-        levels[level.name] = curr_level
+        levels[level.value] = curr_level
         curr_level += 10
 
     return levels
