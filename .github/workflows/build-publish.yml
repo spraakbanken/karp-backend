@@ -19,8 +19,33 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: install poetry
-        run: pip install poetry
+      - name: Load cached $HOME/.local
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.local
+          key: dotlocal-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('.github/workflows/build.yml') }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.3
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build-publish.yml') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make install-dev
+
+      - name: Setup up environment
+        run: cp -v .env.ci .env
+
       - name: Lint with pylint
         run: make lint-no-fail
 
@@ -61,13 +86,32 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: install poetry
-        run: pip install poetry
+      - name: Load cached $HOME/.local
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.local
+          key: dotlocal-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('.github/workflows/build.yml') }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.3
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build-publish.yml') }}
+
       - name: Install dependencies
-        run: |
-          make install-dev
-          make install-dev-mysql
-          cp -v .env.ci .env
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make install-dev
+
+      - name: Setup up environment
+        run: cp -v .env.ci .env
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es-version, '6')
         run: |

@@ -10,6 +10,9 @@ on:
     branches:
       - "*"
 
+env:
+  POETRY_VERSION: 1.1.10
+
 jobs:
   checks:
     name: ${{ matrix.task.name }} py-${{ matrix.python-version }} on ${{ matrix.os }}
@@ -40,11 +43,32 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Load cached $HOME/.local
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.local
+          key: dotlocal-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('.github/workflows/build.yml') }}
+
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.0.0
+        uses: snok/install-poetry@v1.3
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install-dev
+
+      - name: Setup up environment
+        run: cp -v .env.ci .env
 
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
@@ -75,11 +99,32 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Load cached $HOME/.local
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.local
+          key: dotlocal-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('.github/workflows/build.yml') }}
+
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.0.0
+        uses: snok/install-poetry@v1.3
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install-dev
+
+      - name: Setup up environment
+        run: cp -v .env.ci .env
 
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
@@ -89,12 +134,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
-          # directory: ./coverage/reports/
-          # env_vars: OS,PYTHON
-          fail_ci_if_error: true
-          # files: ./coverage1.xml,./coverage2.xml
-          # flags: unittests
-          # name: codecov-umbrella
+          fail_ci_if_error: false
           verbose: true
 
   tests:
@@ -146,14 +186,32 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Load cached $HOME/.local
+        uses: actions/cache@v2.1.6
+        with:
+          path: ~/.local
+          key: dotlocal-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('.github/workflows/build.yml') }}
+
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v2.0.0
+        uses: snok/install-poetry@v1.3
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install dependencies
-        run: |
-          make install-dev
-          make install-dev-mysql
-          cp -v .env.ci .env
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: make install-dev
+
+      - name: Setup up environment
+        run: cp -v .env.ci .env
 
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es.version, '6')
@@ -193,10 +251,5 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
-          # directory: ./coverage/reports/
-          # env_vars: OS,PYTHON
-          fail_ci_if_error: true
-          # files: ./coverage1.xml,./coverage2.xml
-          # flags: unittests
-          # name: codecov-umbrella
+          fail_ci_if_error: false
           verbose: true
