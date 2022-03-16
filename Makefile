@@ -38,17 +38,17 @@ help:
 	@echo "Available commands:"
 
 install:
-	poetry install --no-dev
+	poetry install --no-dev -E mysql
 
 dev: install-dev
 install-dev: karp/search/domain/query_dsl/karp_query_v6_parser.py karp/search/domain/query_dsl/karp_query_v6_model.py
-	poetry install
-
-install-mysql:
-	poetry install -E mysql --no-dev
-
-install-dev-mysql:
 	poetry install -E mysql
+
+install-wo-mysql:
+	poetry install --no-dev
+
+install-dev-wo-mysql:
+	poetry install
 
 install-elasticsearch6:
 	poetry install --no-dev -E elasticsearch6
