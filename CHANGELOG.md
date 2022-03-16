@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Fix logging error in auth_infrastructure. PR [#191](https://github.com/spraakbanken/karp-backend/pull/191) by [@kod-kristoff](https://github.com/kod-kristoff).
 * Handle 'long_string' in entry json schema. PR [#189](https://github.com/spraakbanken/karp-backend/pull/189) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## 6.0.13
 
