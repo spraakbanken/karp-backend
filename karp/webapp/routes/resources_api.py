@@ -37,7 +37,8 @@ def list_resource_permissions(
 
 @router.get('/')
 def get_all_resources(
-    get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),
+    get_resources: lex.GetResources = Depends(
+        deps.inject_from_req(lex.GetResources)),
 ) -> list[dict]:
     return get_resources.query()
 
@@ -129,8 +130,8 @@ def publishing_resource(
                     'resource_id': resource_id})
         return
     except Exception as err:
-        log.exception('error occured when publishing',
-                      extra={'resource_id': resource_id, 'user': user.identifier})
+        logger.exception('error occured when publishing',
+                         extra={'resource_id': resource_id, 'user': user.identifier})
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f'{err=}',
