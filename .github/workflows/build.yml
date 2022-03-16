@@ -61,11 +61,14 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .venv
-          key: checks-venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install-dev
+
+      - name: Setup up environment
+        run: cp -v .env.ci .env
 
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
@@ -114,11 +117,14 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .venv
-          key: unit-tests-venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: make install-dev
+
+      - name: Setup up environment
+        run: cp -v .env.ci .env
 
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
@@ -198,14 +204,14 @@ jobs:
         uses: actions/cache@v2
         with:
           path: .venv
-          key: tests-venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/poetry.lock') }}-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: |
-          make install-dev
-          make install-dev-mysql
-          cp -v .env.ci .env
+        run: make install-dev
+
+      - name: Setup up environment
+        run: cp -v .env.ci .env
 
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es.version, '6')
