@@ -114,7 +114,7 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
             if (
                 existing_entry
                 and not existing_entry.discarded
-                and existing_entry.id != cmd.entity_id
+                and existing_entry.entity_id != cmd.entity_id
             ):
                 raise errors.IntegrityError(
                     f"An entry with entry_id '{entry_id}' already exists."
