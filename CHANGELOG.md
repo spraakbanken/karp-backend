@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Use cache in github actions. PR [#192](https://github.com/spraakbanken/karp-backend/pull/192) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## 6.0.15
 
 ### Changed
