@@ -59,3 +59,9 @@ class PublishResource(Command):
     resource_id: str
     message: str
     user: str
+
+
+class DeleteResource(Command):
+    resource_id: str
+    message: str
+    user: str

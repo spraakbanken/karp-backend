@@ -132,23 +132,6 @@ def reindex(
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
 
-# @cli.command("reindex")
-# @click.option("--resource_id", default=None, help="", required=True)
-# @cli_error_handler
-# @cli_timer
-# def reindex_resource(resource_id):
-#     try:
-#         resource = resourcemgr.get_resource(resource_id)
-#         indexmgr.publish_index(resource_id)
-#         click.echo(
-#             "Successfully reindexed all data in {resource_id}, version {version}".format(
-#                 resource_id=resource_id, version=resource.version
-#             )
-#         )
-#     except ResourceNotFoundError:
-#         click.echo("No active version of {resource_id}".format(resource_id=resource_id))
-
-
 # @cli.command("pre_process")
 # @click.option("--resource_id", required=True)
 # @click.option("--version", required=True)
@@ -216,9 +199,6 @@ def list_resources(
 
 
 @subapp.command()
-# @cli.command("show")
-# @click.option("--version", default=None, type=int)
-# @click.argument("resource_id")
 @cli_error_handler
 @cli_timer
 def show(
@@ -255,9 +235,6 @@ def show(
 
 
 @subapp.command()
-# @click.option("--resource_id", required=True)
-# @click.option("--version", required=True)
-# @click.option("--level", required=True)
 @cli_error_handler
 @cli_timer
 def set_permissions(
@@ -283,8 +260,21 @@ def export():
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def delete():
-    raise NotImplementedError()
+def delete(
+    ctx: typer.Context,
+    resource_id: str,
+    user: Optional[str] = typer.Option(None),
+    message: Optional[str] = typer.Option(None),
+):
+    bus = inject_from_ctx(CommandBus, ctx)
+    cmd = lex_commands.DeleteResource(
+        resource_id=resource_id,
+        user=user or "local admin",
+        message=message or "resource deleted"
+    )
+    resource = bus.dispatch(cmd)
+    typer.echo(
+        f"Deleted resource '{resource.resource_id}' ({resource.entity_id})")
 
 
 def init_app(app):

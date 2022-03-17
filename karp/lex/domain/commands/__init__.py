@@ -7,4 +7,5 @@ from .entry_commands import (
     UpdateEntry,
 )
 from .entry_repo_commands import CreateEntryRepository
-from .resource_commands import (CreateResource, PublishResource, UpdateResource)
+from .resource_commands import (
+    CreateResource, DeleteResource, PublishResource, UpdateResource)

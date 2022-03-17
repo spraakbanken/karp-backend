@@ -445,13 +445,28 @@ class PublishingResource(CommandHandler[commands.PublishResource], BasingResourc
 #         db.session.commit()
 #     remove_from_caches(resource_id)
 
+class DeletingResource(CommandHandler[commands.DeleteResource], BasingResource):
+    def __init__(
+        self,
+        resource_uow: repositories.ResourceUnitOfWork,
+        **kwargs,
+    ) -> None:
+        super().__init__(resource_uow=resource_uow)
 
-# def delete_resource(resource_id, version):
-#     resource = database.get_resource_definition(resource_id, version)
-#     resource.deleted = True
-#     resource.active = False
-#     db.session.update(resource)
-#     db.session.commit()
+    def execute(self, cmd: commands.DeleteResource):
+        logger.info('deleting resource', extra={
+                    'resource_id': cmd.resource_id})
+        with self.resource_uow as uow:
+            resource = uow.repo.by_resource_id(cmd.resource_id)
+            if not resource:
+                raise errors.ResourceNotFound(cmd.resource_id)
+            resource.discard(user=cmd.user, message=cmd.message,
+                             timestamp=cmd.timestamp)
+            uow.repo.save(resource)
+            uow.commit()
+
+    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
+        yield from self.resource_uow.collect_new_events()
 
 
 # def set_permissions(resource_id: str, version: int, permissions: Dict[str, bool]):
