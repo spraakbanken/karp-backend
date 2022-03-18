@@ -182,11 +182,24 @@ class CreateSearchServiceHandler(foundation_events.EventHandler[lex_events.Resou
     def collect_new_events(self) -> Iterable[foundation_events.Event]:
         yield from self.index_uow.collect_new_events()
 
-    def __call__(self, evt: events.ResourceCreated):
+    def __call__(self, event: events.ResourceCreated, *args, **kwargs):
         with self.index_uow as uw:
-            uw.repo.create_index(evt.resource_id, evt.config)
+            uw.repo.create_index(event.resource_id, event.config)
             uw.commit()
 
+
+class DeletingIndex(foundation_events.EventHandler[lex_events.ResourceDiscarded]):
+    def __init__(
+        self,
+        index_uow: IndexUnitOfWork
+    ):
+        self.index_uow = index_uow
+
+    def collect_new_events(self) -> Iterable[foundation_events.Event]:
+        yield from self.index_uow.collect_new_events()
+
+    def __call__(self, event: events.ResourceDiscarded, *args, **kwargs):
+        pass
 
 # def add_entries(
 #     resource_id: str,

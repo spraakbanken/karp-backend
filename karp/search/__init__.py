@@ -9,6 +9,7 @@ from karp.search.domain import commands
 from karp.search.domain.errors import IncompleteQuery
 from karp.search.application.use_cases import (
     CreateSearchServiceHandler,
+    DeletingIndex,
     EntryAddedHandler,
     EntryDeletedHandler,
     EntryUpdatedHandler,
@@ -48,6 +49,13 @@ class Search(injector.Module):
                 index_uow
             )
         ]
+
+    @injector.multiprovider
+    def deleting_index(
+        self,
+        index_uow: IndexUnitOfWork,
+    ) -> List[EventHandler[lex_events.ResourceDiscarded]]:
+        return [DeletingIndex(index_uow=index_uow)]
 
     @injector.multiprovider
     def publish_index(

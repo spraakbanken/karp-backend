@@ -40,7 +40,7 @@ class EventHandler(Generic[T]):
     e.g EventHandler[ResourceCreated].
     """
 
-    def __call__(self, *args: Any, **kwds: Any) -> Any:
+    def __call__(self, event: T, *args: Any, **kwds: Any) -> Any:
         raise NotImplementedError()
 
 
