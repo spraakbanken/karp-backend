@@ -109,28 +109,8 @@ def test_sql_resource_repo_put_resource(resource_repo):
 #         assert test_lex.name == resource_name
 
 
-@pytest.mark.skip(reason="tested in unit tests")
-def test_sql_resource_repo_putting_already_existing_resource_id_raises(resource_repo):
-    resource = factories.ResourceFactory()
-    resource_repo.save(resource)
-
-    assert len(resource_repo.resource_ids()) == 1
-    res = resource_repo.by_resource_id(resource.resource_id)
-
-    assert res.id == resource.id
-
-    # resource = create_resource(
     #     {"resource_id": resource_id, "resource_name": resource_name, "a": "b"}
     # )
-    resource_2 = factories.ResourceFactory(
-        resource_id=resource.resource_id,
-    )
-
-    with pytest.raises(IntegrityError) as exc_info:
-        resource_repo.save(resource_2)
-
-    assert f"Resource with resource_id '{resource.resource_id}' already exists." in str(
-        exc_info)
 
 
 def test_sql_resource_repo_update_resource(resource_repo):
@@ -150,11 +130,8 @@ def test_sql_resource_repo_update_resource(resource_repo):
     assert resource_repo.by_id(resource.id).version == 2
     assert resource_repo.by_resource_id(resource.resource_id).version == 2
 
-    assert resource_repo.resource_with_id_and_version(
-        resource.resource_id, 1).version == 1
-
-    assert resource_repo.by_id(resource.entity_id, version=1).version == 1
-    assert resource_repo.by_resource_id(
+    assert resource_repo.get_by_id(resource.entity_id, version=1).version == 1
+    assert resource_repo.get_by_resource_id(
         resource.resource_id, version=1).version == 1
 
     lex = resource_repo.by_resource_id(resource.resource_id)
@@ -172,34 +149,6 @@ def test_sql_resource_repo_update_resource(resource_repo):
     resource_repo.save(lex)
 
     assert resource_repo.get_by_resource_id(resource.resource_id).version == 3
-    assert resource_repo.by_resource_id(resource.resource_id).version == 3
-
-
-@pytest.mark.skip(reason="tested in other place")
-def test_sql_resource_repo_2nd_active_raises(resource_repo):
-    resource = factories.ResourceFactory()
-    resource_id = "test_id"
-    resource_version = 2
-    with pytest.raises(Exception):
-        with unit_of_work(using=resource_repo) as uw:
-            resource = uw.resource_with_id_and_version(
-                resource_id, resource_version)
-            resource.is_published = True
-            resource.stamp(user="Admin", message="make active")
-            uw.update(resource)
-            assert resource.is_published is True
-
-
-@pytest.mark.skip(reason="tested in other place")
-def test_sql_resource_repo_version_change_to_existing_raises(resource_repo):
-    resource = factories.ResourceFactory()
-    resource_id = "test_id"
-    resource_version = 2
-    with pytest.raises(Exception):
-        with unit_of_work(using=resource_repo) as uw:
-            resource = uw.resource_with_id_and_version(
-                resource_id, resource_version)
-            resource.version = 1
 
 
 def test_sql_resource_repo_put_another_resource(resource_repo):
@@ -209,8 +158,8 @@ def test_sql_resource_repo_put_another_resource(resource_repo):
     resource2 = factories.ResourceFactory()
     resource_repo.save(resource2)
 
-    assert set(resource_repo.resource_ids()) == {
-        resource.resource_id, resource2.resource_id}
+    assert resource_repo.resource_ids() == [
+        resource.resource_id, resource2.resource_id]
 
 
 class TestSqlResourceRepo:
@@ -230,6 +179,25 @@ class TestSqlResourceRepo:
         resource_repo.save(resource2)
 
         assert resource_repo.get_by_resource_id(resource.resource_id).version == 1
+
+        assert resource_repo.resource_ids() == [resource.resource_id]
+
+    def test_change_resource_id_changes_resource_ids(
+        self,
+        resource_repo
+    ):
+        resource = factories.ResourceFactory()
+        resource_repo.save(resource)
+
+        resource._resource_id = 'changed_id'
+        resource.update(
+            user='kristoff@example.com',
+            version=1,
+            last_modified=resource.last_modified,
+        )
+        resource_repo.save(resource)
+
+        assert resource_repo.resource_ids() == ['changed_id']
 
 # def test_sql_resource_repo_deep_update_of_resource(resource_repo):
 #     with unit_of_work(using=resource_repo) as uw:

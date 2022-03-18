@@ -46,8 +46,22 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
 
     def resource_ids(self) -> List[str]:
         self._check_has_session()
-        query = self._session.query(ResourceModel)
-        return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
+        subq = sql.select(
+            ResourceModel.entity_id,
+            sa.func.max(ResourceModel.last_modified).label('maxdate')
+        ).group_by(ResourceModel.entity_id).subquery('t2')
+
+        stmt = sql.select(ResourceModel.resource_id).join(
+            subq,
+            sa.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.discarded == False,
+            )
+        )
+        return self._session.execute(stmt).scalars().all()
+        # query = self._session.query(ResourceModel)
+        # return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
 
     def _by_id(
         self, id: Union[UUID, str], *, version: Optional[int] = None
@@ -83,18 +97,6 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         stmt = stmt.order_by(ResourceModel.last_modified.desc())
         query = self._session.execute(stmt).scalars()
         resource_dto = query.first()
-        return resource_dto.to_entity() if resource_dto else None
-
-    def resources_with_id(self, resource_id: str):
-        pass
-
-    def resource_with_id_and_version(
-        self, resource_id: str, version: int
-    ) -> Optional[Resource]:
-        self._check_has_session()
-        query = self._session.query(ResourceModel)
-        resource_dto = query.filter_by(
-            resource_id=resource_id, version=version).first()
         return resource_dto.to_entity() if resource_dto else None
 
     def get_active_resource(self, resource_id: str) -> Optional[Resource]:
