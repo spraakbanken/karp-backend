@@ -26,7 +26,12 @@ class ResourceRepository(repository.Repository[entities.Resource]):
     def get_by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
     ) -> entities.Resource:
-        resource = self._by_resource_id(resource_id, version=version)
+        resource = self._by_resource_id(resource_id)
+        if not resource:
+            raise self.EntityNotFound(
+                f"Entity with resource_id='{resource_id}' can't be found.")
+        if version:
+            resource = self._by_id(resource.entity_id, version=version)
         if resource:
             self.seen.add(resource)
         else:
@@ -46,7 +51,8 @@ class ResourceRepository(repository.Repository[entities.Resource]):
 
     @abc.abstractmethod
     def _by_resource_id(
-        self, resource_id: str, *, version: Optional[int] = None
+        self,
+        resource_id: str,
     ) -> Optional[entities.Resource]:
         raise NotImplementedError()
 

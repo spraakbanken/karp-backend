@@ -41,23 +41,6 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
 
     def _save(self, resource: Resource):
         self._check_has_session()
-        # Check if resource exists
-#        existing_resource = self.by_resource_id(resource.resource_id)
-#        if (
-#            existing_resource
-#            and not existing_resource.discarded
-#            and existing_resource.id != resource.id
-#        ):
-#            raise errors.IntegrityError(
-#                f"Resource with resource_id '{resource.resource_id}' already exists."
-#            )
-        if resource.version is None:
-            resource._version = self.get_latest_version(
-                resource.resource_id) + 1
-
-        # self._session.execute(
-        #     db.insert(ResourceModel).values(**self._resource_to_dict(resource))
-        # )
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
 
@@ -79,7 +62,8 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         return resource_dto.to_entity() if resource_dto else None
 
     def _by_resource_id(
-        self, resource_id: str, *, version: Optional[int] = None
+        self,
+        resource_id: str,
     ) -> Optional[Resource]:
         self._check_has_session()
         subq = sql.select(
@@ -92,17 +76,12 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             sa.and_(
                 ResourceModel.entity_id == subq.c.entity_id,
                 ResourceModel.last_modified == subq.c.maxdate,
-                # ResourceModel.discarded == False,
                 ResourceModel.resource_id == resource_id,
             )
-        ).order_by(ResourceModel.version.desc())
+        )
+
+        stmt = stmt.order_by(ResourceModel.last_modified.desc())
         query = self._session.execute(stmt).scalars()
-        # query = self._session.query(
-        #    ResourceModel).filter_by(resource_id=resource_id)
-        # if version:
-        #    query = query.filter_by(version=version)
-        # else:
-        #    query = query.order_by(ResourceModel.version.desc())
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 

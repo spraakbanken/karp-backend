@@ -27,7 +27,7 @@ class ResourceModel(db.Base):
     discarded = db.Column(db.Boolean, default=False)
     __table_args__ = (
         db.UniqueConstraint(
-            "resource_id", "version", name="resource_version_unique_constraint"
+            "entity_id", "version", name="entity_id_version_unique_constraint"
         ),
         # mysql_character_set="utf8mb4",
         # TODO only one resource can be active, but several can be inactive

@@ -153,7 +153,7 @@ def test_sql_resource_repo_update_resource(resource_repo):
     assert resource_repo.resource_with_id_and_version(
         resource.resource_id, 1).version == 1
 
-    assert resource_repo.by_id(resource.id, version=1).version == 1
+    assert resource_repo.by_id(resource.entity_id, version=1).version == 1
     assert resource_repo.by_resource_id(
         resource.resource_id, version=1).version == 1
 
@@ -163,9 +163,15 @@ def test_sql_resource_repo_update_resource(resource_repo):
     assert resource_repo.get_latest_version(
         resource.resource_id) == resource.version
 
-    lex._version = 3
+    lex.update(
+        user='kristoff@example.com',
+        version=lex.version,
+        last_modified=lex.last_modified,
+        # message='update'
+    )
     resource_repo.save(lex)
 
+    assert resource_repo.get_by_resource_id(resource.resource_id).version == 3
     assert resource_repo.by_resource_id(resource.resource_id).version == 3
 
 
@@ -206,6 +212,24 @@ def test_sql_resource_repo_put_another_resource(resource_repo):
     assert set(resource_repo.resource_ids()) == {
         resource.resource_id, resource2.resource_id}
 
+
+class TestSqlResourceRepo:
+    def test_discard_resource_and_insert_new(self, resource_repo):
+        resource = factories.ResourceFactory()
+        resource_repo.save(resource)
+
+        resource.discard(
+            user='kristoff@example.com',
+            message='delete',
+        )
+        resource_repo.save(resource)
+
+        resource2 = factories.ResourceFactory(
+            resource_id=resource.resource_id,
+        )
+        resource_repo.save(resource2)
+
+        assert resource_repo.get_by_resource_id(resource.resource_id).version == 1
 
 # def test_sql_resource_repo_deep_update_of_resource(resource_repo):
 #     with unit_of_work(using=resource_repo) as uw:
