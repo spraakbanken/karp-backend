@@ -7,6 +7,7 @@ from .entry_handlers import (
 from .entry_repo_handlers import CreatingEntryRepo
 from .resource_handlers import (
     CreatingResource,
+    DeletingResource,
     PublishingResource,
     UpdatingResource,
 )

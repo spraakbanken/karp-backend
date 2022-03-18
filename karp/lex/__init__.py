@@ -19,6 +19,7 @@ from karp.lex.application.use_cases import (
     CreatingEntryRepo,
     CreatingResource,
     DeletingEntry,
+    DeletingResource,
     PublishingResource,
     UpdatingEntry,
     UpdatingResource,
@@ -64,6 +65,13 @@ class Lex(injector.Module):
             entry_repo_uow=entry_repo_uow,
             resource_uow=resource_uow,
         )
+
+    @injector.provider
+    def deleting_resource(
+        self,
+        resource_uow: ResourceUnitOfWork,
+    ) -> CommandHandler[commands.DeleteResource]:
+        return DeletingResource(resource_uow)
 
     @injector.provider
     def update_resource(
