@@ -4,6 +4,7 @@ import typing
 from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
+import sqlalchemy as sa
 from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker, Session
 
