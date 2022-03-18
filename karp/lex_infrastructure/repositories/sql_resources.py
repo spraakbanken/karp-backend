@@ -4,6 +4,7 @@ import typing
 from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
+from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker, Session
 
 from karp.foundation.events import EventBus
@@ -80,12 +81,27 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         self, resource_id: str, *, version: Optional[int] = None
     ) -> Optional[Resource]:
         self._check_has_session()
-        query = self._session.query(
-            ResourceModel).filter_by(resource_id=resource_id)
-        if version:
-            query = query.filter_by(version=version)
-        else:
-            query = query.order_by(ResourceModel.version.desc())
+        subq = sql.select(
+            ResourceModel.entity_id,
+            sa.func.max(ResourceModel.last_modified).label('maxdate')
+        ).group_by(ResourceModel.entity_id).subquery('t2')
+
+        stmt = sql.select(ResourceModel).join(
+            subq,
+            sa.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+                # ResourceModel.discarded == False,
+                ResourceModel.resource_id == resource_id,
+            )
+        ).order_by(ResourceModel.version.desc())
+        query = self._session.execute(stmt).scalars()
+        # query = self._session.query(
+        #    ResourceModel).filter_by(resource_id=resource_id)
+        # if version:
+        #    query = query.filter_by(version=version)
+        # else:
+        #    query = query.order_by(ResourceModel.version.desc())
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
