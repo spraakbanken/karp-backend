@@ -67,7 +67,7 @@ class EntryRepository(repository.Repository[entities.Entry]):
     def delete(self, entry: entities.Entry):
         raise NotImplementedError()
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def entry_ids(self) -> List[str]:
         raise NotImplementedError()
 
