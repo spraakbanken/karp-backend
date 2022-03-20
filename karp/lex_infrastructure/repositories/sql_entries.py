@@ -117,6 +117,14 @@ class SqlEntryRepository(
 
         history_id = self._insert_history(entry)
 
+        if entry.discarded:
+            self._session.execute(
+                sql.delete(self.runtime_model).where(
+                    self.runtime_model.entry_id == entry.entry_id
+                )
+            )
+            return
+
         runtime_entry_raw = self._entry_to_runtime_dict(history_id, entry)
         try:
             current_db_entry = (
@@ -221,19 +229,35 @@ class SqlEntryRepository(
         # return [row.entry_id for row in query.filter_by(discarded=False).all()]
 
     def _by_entry_id(
-        self, entry_id: str, *, version: Optional[int] = None
+        self,
+        entry_id: str,
     ) -> Optional[Entry]:
         self._check_has_session()
-        query = self._session.query(self.history_model)
+        subq = sql.select(
+            self.history_model.entity_id,
+            sa.func.max(self.history_model.last_modified).label('maxdate')
+        ).group_by(self.history_model.entity_id).subquery('t2')
+
+        stmt = sql.select(self.history_model).join(
+            subq,
+            sa.and_(
+                self.history_model.entity_id == subq.c.entity_id,
+                self.history_model.last_modified == subq.c.maxdate,
+                self.history_model.entry_id == entry_id,
+            )
+        )
+        stmt = stmt.order_by(self.history_model.last_modified.desc())
+        query = self._session.execute(stmt).scalars()
+        # query = self._session.query(self.history_model)
         # query = query.join(
         #     self.runtime_table,
         #     self.history_model.c.history_id == self.runtime_table.c.history_id,
         # )
-        query = query.filter_by(entry_id=entry_id)
-        if version:
-            query = query.filter_by(version=version)
-        else:
-            query = query.order_by(self.history_model.version.desc())
+        # query = query.filter_by(entry_id=entry_id)
+        # if version:
+        #     query = query.filter_by(version=version)
+        # else:
+        #     query = query.order_by(self.history_model.version.desc())
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 

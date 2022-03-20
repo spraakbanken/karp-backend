@@ -52,8 +52,33 @@ def test_update_entry_to_entry_repo(entry_repo):
 
     assert entry_repo.by_id(entry.id).entry_id == entry.entry_id
     assert entry_repo.by_id(entry.id).version == entry.version
+    assert entry_repo.by_id(entry.id, version=1).version == 1
     assert entry_repo.by_entry_id(entry.entry_id).id == entry.id
     assert entry_repo.by_entry_id(entry.entry_id).version == entry.version
+    assert entry_repo.by_entry_id(entry.entry_id, version=1).version == 1
+
+
+def test_discard_entry_and_insert_new(entry_repo):
+    entry = factories.EntryFactory()
+    entry_repo.save(entry)
+
+    entry.stamp(user='kristoff@example.com', message='hi')
+    entry_repo.save(entry)
+
+    entry.discard(
+        user='kristoff@example.com',
+        message='hi',
+    )
+    entry_repo.save(entry)
+
+    entry2 = factories.EntryFactory(entry_id=entry.entry_id)
+    entry_repo.save(entry2)
+
+    entry2.stamp(user='kristoff@example.com', message='hi')
+    entry_repo.save(entry2)
+
+    assert entry_repo.by_entry_id(entry.entry_id).entity_id == entry2.entity_id
+    assert entry_repo.by_entry_id(entry2.entry_id, version=1).entity_id == entry2.entity_id
 
 
 def test_create_entry_repository2(entry_repo2):

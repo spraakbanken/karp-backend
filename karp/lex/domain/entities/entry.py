@@ -116,7 +116,7 @@ class Entry(TimestampedVersionedEntity):
         self,
         *,
         user: str,
-        timestamp: float,
+        timestamp: float = None,
         message: str = None,
     ):
         if self._discarded:

@@ -74,14 +74,16 @@ class EntryRepository(repository.Repository[entities.Entry]):
     def by_entry_id(
         self, entry_id: str, *, version: Optional[int] = None
     ) -> entities.Entry:
-        entry = self._by_entry_id(entry_id, version=version)
-        if entry:
-            self.seen.add(entry)
-            return entry
-        raise errors.EntryNotFound(
-            f'Entry with entry_id="{entry_id}"',
-            entity_id=None,
+        entry = self.get_by_entry_id_optional(
+            entry_id,
+            version=version,
         )
+        if not entry:
+            raise errors.EntryNotFound(
+                f'Entry with entry_id="{entry_id}"',
+                entity_id=None,
+            )
+        return entry
 
     get_by_entry_id = by_entry_id
 
@@ -91,7 +93,11 @@ class EntryRepository(repository.Repository[entities.Entry]):
         *,
         version: Optional[int] = None,
     ) -> Optional[entities.Entry]:
-        entry = self._by_entry_id(entry_id, version=version)
+        entry = self._by_entry_id(entry_id)
+        if not entry:
+            return None
+        if version:
+            entry = self._by_id(entry.entity_id, version=version)
         if entry:
             self.seen.add(entry)
             return entry
@@ -99,7 +105,8 @@ class EntryRepository(repository.Repository[entities.Entry]):
 
     @abc.abstractmethod
     def _by_entry_id(
-        self, entry_id: str, *, version: Optional[int] = None
+        self,
+        entry_id: str,
     ) -> Optional[entities.Entry]:
         raise NotImplementedError()
 
