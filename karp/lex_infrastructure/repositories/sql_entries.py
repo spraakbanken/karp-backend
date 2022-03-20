@@ -226,7 +226,6 @@ class SqlEntryRepository(
         query = self._session.query(
             self.runtime_model).filter_by(discarded=False)
         return [row.entry_id for row in query.all()]
-        # return [row.entry_id for row in query.filter_by(discarded=False).all()]
 
     def _by_entry_id(
         self,
@@ -248,16 +247,6 @@ class SqlEntryRepository(
         )
         stmt = stmt.order_by(self.history_model.last_modified.desc())
         query = self._session.execute(stmt).scalars()
-        # query = self._session.query(self.history_model)
-        # query = query.join(
-        #     self.runtime_table,
-        #     self.history_model.c.history_id == self.runtime_table.c.history_id,
-        # )
-        # query = query.filter_by(entry_id=entry_id)
-        # if version:
-        #     query = query.filter_by(version=version)
-        # else:
-        #     query = query.order_by(self.history_model.version.desc())
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
