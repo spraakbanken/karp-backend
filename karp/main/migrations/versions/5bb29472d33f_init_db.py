@@ -36,7 +36,7 @@ def create_resources():
         sa.Column("discarded", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("history_id"),
         sa.UniqueConstraint(
-            "resource_id", "version", name="resource_version_unique_constraint"
+            "entity_id", "version", name="entity_id_version_unique_constraint"
         ),
     )
 

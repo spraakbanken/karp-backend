@@ -4,6 +4,8 @@ import typing
 from typing import Dict, List, Optional, Tuple, Union
 from uuid import UUID
 
+import sqlalchemy as sa
+from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker, Session
 
 from karp.foundation.events import EventBus
@@ -39,30 +41,27 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
 
     def _save(self, resource: Resource):
         self._check_has_session()
-        # Check if resource exists
-#        existing_resource = self.by_resource_id(resource.resource_id)
-#        if (
-#            existing_resource
-#            and not existing_resource.discarded
-#            and existing_resource.id != resource.id
-#        ):
-#            raise errors.IntegrityError(
-#                f"Resource with resource_id '{resource.resource_id}' already exists."
-#            )
-        if resource.version is None:
-            resource._version = self.get_latest_version(
-                resource.resource_id) + 1
-
-        # self._session.execute(
-        #     db.insert(ResourceModel).values(**self._resource_to_dict(resource))
-        # )
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
 
     def resource_ids(self) -> List[str]:
         self._check_has_session()
-        query = self._session.query(ResourceModel)
-        return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
+        subq = sql.select(
+            ResourceModel.entity_id,
+            sa.func.max(ResourceModel.last_modified).label('maxdate')
+        ).group_by(ResourceModel.entity_id).subquery('t2')
+
+        stmt = sql.select(ResourceModel.resource_id).join(
+            subq,
+            sa.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.discarded == False,
+            )
+        )
+        return self._session.execute(stmt).scalars().all()
+        # query = self._session.query(ResourceModel)
+        # return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
 
     def _by_id(
         self, id: Union[UUID, str], *, version: Optional[int] = None
@@ -77,28 +76,27 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         return resource_dto.to_entity() if resource_dto else None
 
     def _by_resource_id(
-        self, resource_id: str, *, version: Optional[int] = None
+        self,
+        resource_id: str,
     ) -> Optional[Resource]:
         self._check_has_session()
-        query = self._session.query(
-            ResourceModel).filter_by(resource_id=resource_id)
-        if version:
-            query = query.filter_by(version=version)
-        else:
-            query = query.order_by(ResourceModel.version.desc())
+        subq = sql.select(
+            ResourceModel.entity_id,
+            sa.func.max(ResourceModel.last_modified).label('maxdate')
+        ).group_by(ResourceModel.entity_id).subquery('t2')
+
+        stmt = sql.select(ResourceModel).join(
+            subq,
+            sa.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.resource_id == resource_id,
+            )
+        )
+
+        stmt = stmt.order_by(ResourceModel.last_modified.desc())
+        query = self._session.execute(stmt).scalars()
         resource_dto = query.first()
-        return resource_dto.to_entity() if resource_dto else None
-
-    def resources_with_id(self, resource_id: str):
-        pass
-
-    def resource_with_id_and_version(
-        self, resource_id: str, version: int
-    ) -> Optional[Resource]:
-        self._check_has_session()
-        query = self._session.query(ResourceModel)
-        resource_dto = query.filter_by(
-            resource_id=resource_id, version=version).first()
         return resource_dto.to_entity() if resource_dto else None
 
     def get_active_resource(self, resource_id: str) -> Optional[Resource]:

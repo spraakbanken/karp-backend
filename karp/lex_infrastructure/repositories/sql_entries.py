@@ -117,23 +117,90 @@ class SqlEntryRepository(
 
         history_id = self._insert_history(entry)
 
+        # if entry.discarded:
+        #     self._session.execute(
+        #         sql.delete(self.runtime_model).where(
+        #             self.runtime_model.entry_id == entry.entry_id
+        #         )
+        #     )
+        #     return
+
         runtime_entry_raw = self._entry_to_runtime_dict(history_id, entry)
         try:
-            current_db_entry = (
+            entry_by_entry_id = (
+                self._session.query(self.runtime_model)
+                .filter_by(entry_id=entry.entry_id)
+                .first()
+            )
+            entry_by_entity_id = (
                 self._session.query(self.runtime_model)
                 .filter_by(entity_id=entry.entity_id)
                 .first()
             )
 
-            if not current_db_entry:
-                return self._session.add(
-                    self.runtime_model(
-                        **runtime_entry_raw
+            logger.error(
+                {
+                    'entry_by_entry_id': entry_by_entry_id,
+                    'entry_by_entity_id': entry_by_entity_id,
+                    'entry': entry.dict(),
+                }
+            )
+            if not entry_by_entry_id:
+                if not entry_by_entity_id:
+                    logger.warning('adding')
+                    return self._session.add(
+                        self.runtime_model(
+                            **runtime_entry_raw
+                        )
                     )
+                else:
+                    logger.warning('entity_id but no entry_id')
+                    entry_by_entity_id.discarded = True
+                    return self._session.add(
+                        self.runtime_model(
+                            **runtime_entry_raw
+                        )
+                    )
+                    return
+            else:
+                if not entry_by_entity_id:
+                    logger.warning('entry_id but no entity_id')
+                    for key, value in runtime_entry_raw.items():
+                        setattr(entry_by_entry_id, key, value)
+                    return
+                else:
+                    logger.warning('updating')
+                    for key, value in runtime_entry_raw.items():
+                        setattr(entry_by_entry_id, key, value)
+                    return
+            if not entry_by_entity_id:
+                # if entry discarded and replaced
+                logger.error({'entry_by_entry_id': entry_by_entry_id,
+                             'entry_by_entity_id': entry_by_entity_id})
+                assert entry_by_entry_id.discarded
+                raise RuntimeError(f'entry = {entry.dict()}')
+
+            if entry_by_entry_id.entity_id != entry.entity_id:
+                logger.warn('entity_id changed', extra={'entry_by_entry_id': entry_by_entry_id,
+                                                        'entry': entry.dict()})
+                # raise RuntimeError(f'entry = {entry.dict()}')
+
+            if entry_by_entry_id.entry_id != entry.entry_id:
+                logger.error(
+                    {
+                        'entry_by_entry_id': entry_by_entry_id,
+                        'entry_by_entity_id': entry_by_entity_id,
+                         'entry': entry.dict(),
+                    }
                 )
+                raise RuntimeError(f'entry = {entry.dict()}')
+            if entry_by_entity_id.entry_id != entry.entry_id:
+                logger.error({'entry_by_entry_id': entry_by_entry_id,
+                             'entry': entry.dict()})
+                raise RuntimeError(f'entry = {entry.dict()}')
 
             for key, value in runtime_entry_raw.items():
-                setattr(current_db_entry, key, value)
+                setattr(entry_by_entry_id, key, value)
 #            update_result = self._session.query(
 #                self.runtime_model
 #            ).filter_by(
@@ -218,22 +285,27 @@ class SqlEntryRepository(
         query = self._session.query(
             self.runtime_model).filter_by(discarded=False)
         return [row.entry_id for row in query.all()]
-        # return [row.entry_id for row in query.filter_by(discarded=False).all()]
 
     def _by_entry_id(
-        self, entry_id: str, *, version: Optional[int] = None
+        self,
+        entry_id: str,
     ) -> Optional[Entry]:
         self._check_has_session()
-        query = self._session.query(self.history_model)
-        # query = query.join(
-        #     self.runtime_table,
-        #     self.history_model.c.history_id == self.runtime_table.c.history_id,
-        # )
-        query = query.filter_by(entry_id=entry_id)
-        if version:
-            query = query.filter_by(version=version)
-        else:
-            query = query.order_by(self.history_model.version.desc())
+        subq = sql.select(
+            self.history_model.entity_id,
+            sa.func.max(self.history_model.last_modified).label('maxdate')
+        ).group_by(self.history_model.entity_id).subquery('t2')
+
+        stmt = sql.select(self.history_model).join(
+            subq,
+            sa.and_(
+                self.history_model.entity_id == subq.c.entity_id,
+                self.history_model.last_modified == subq.c.maxdate,
+                self.history_model.entry_id == entry_id,
+            )
+        )
+        stmt = stmt.order_by(self.history_model.last_modified.desc())
+        query = self._session.execute(stmt).scalars()
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 

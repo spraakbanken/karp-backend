@@ -26,18 +26,24 @@ class ResourceRepository(repository.Repository[entities.Resource]):
     def get_by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
     ) -> entities.Resource:
-        resource = self._by_resource_id(resource_id, version=version)
-        if resource:
-            self.seen.add(resource)
-        else:
+        resource = self.get_by_resource_id_optional(
+            resource_id, version=version)
+
+        if not resource:
             raise self.EntityNotFound(
                 f"Entity with resource_id='{resource_id}' can't be found.")
+
         return resource
 
     def get_by_resource_id_optional(
         self, resource_id: str, *, version: Optional[int] = None
     ) -> typing.Optional[entities.Resource]:
-        resource = self._by_resource_id(resource_id, version=version)
+        resource = self._by_resource_id(resource_id)
+        if not resource:
+            return None
+
+        if version:
+            resource = self._by_id(resource.entity_id, version=version)
         if resource:
             self.seen.add(resource)
         return resource
@@ -46,7 +52,8 @@ class ResourceRepository(repository.Repository[entities.Resource]):
 
     @abc.abstractmethod
     def _by_resource_id(
-        self, resource_id: str, *, version: Optional[int] = None
+        self,
+        resource_id: str,
     ) -> Optional[entities.Resource]:
         raise NotImplementedError()
 
@@ -94,5 +101,3 @@ class ResourceUnitOfWork(
     @property
     def resources(self) -> ResourceRepository:
         return self.repo
-
-
