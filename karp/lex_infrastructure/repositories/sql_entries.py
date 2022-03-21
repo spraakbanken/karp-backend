@@ -117,31 +117,55 @@ class SqlEntryRepository(
 
         history_id = self._insert_history(entry)
 
-        if entry.discarded:
-            self._session.execute(
-                sql.delete(self.runtime_model).where(
-                    self.runtime_model.entry_id == entry.entry_id
-                )
-            )
-            return
+        # if entry.discarded:
+        #     self._session.execute(
+        #         sql.delete(self.runtime_model).where(
+        #             self.runtime_model.entry_id == entry.entry_id
+        #         )
+        #     )
+        #     return
 
         runtime_entry_raw = self._entry_to_runtime_dict(history_id, entry)
         try:
-            current_db_entry = (
+            entry_by_entry_id = (
+                self._session.query(self.runtime_model)
+                .filter_by(entry_id=entry.entry_id)
+                .first()
+            )
+            entry_by_entity_id = (
                 self._session.query(self.runtime_model)
                 .filter_by(entity_id=entry.entity_id)
                 .first()
             )
 
-            if not current_db_entry:
+            if not entry_by_entry_id:
                 return self._session.add(
                     self.runtime_model(
                         **runtime_entry_raw
                     )
                 )
+            if not entry_by_entity_id:
+                # if entry discarded and replaced
+                logger.error({'entry_by_entry_id': entry_by_entry_id,
+                             'entry_by_entity_id': entry_by_entity_id})
+                raise RuntimeError(f'entry = {entry.dict()}')
+
+            if entry_by_entry_id.entity_id != entry.entity_id:
+                logger.warn('entity_id changed', extra={'entry_by_entry_id': entry_by_entry_id,
+                                                        'entry': entry.dict()})
+                # raise RuntimeError(f'entry = {entry.dict()}')
+
+            if entry_by_entry_id.entry_id != entry.entry_id:
+                logger.error({'entry_by_entry_id': entry_by_entry_id,
+                             'entry': entry.dict()})
+                raise RuntimeError(f'entry = {entry.dict()}')
+            if entry_by_entity_id.entry_id != entry.entry_id:
+                logger.error({'entry_by_entry_id': entry_by_entry_id,
+                             'entry': entry.dict()})
+                raise RuntimeError(f'entry = {entry.dict()}')
 
             for key, value in runtime_entry_raw.items():
-                setattr(current_db_entry, key, value)
+                setattr(entry_by_entry_id, key, value)
 #            update_result = self._session.query(
 #                self.runtime_model
 #            ).filter_by(
