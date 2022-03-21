@@ -138,16 +138,46 @@ class SqlEntryRepository(
                 .first()
             )
 
+            logger.error(
+                {
+                    'entry_by_entry_id': entry_by_entry_id,
+                    'entry_by_entity_id': entry_by_entity_id,
+                    'entry': entry.dict(),
+                }
+            )
             if not entry_by_entry_id:
-                return self._session.add(
-                    self.runtime_model(
-                        **runtime_entry_raw
+                if not entry_by_entity_id:
+                    logger.warning('adding')
+                    return self._session.add(
+                        self.runtime_model(
+                            **runtime_entry_raw
+                        )
                     )
-                )
+                else:
+                    logger.warning('entity_id but no entry_id')
+                    entry_by_entity_id.discarded = True
+                    return self._session.add(
+                        self.runtime_model(
+                            **runtime_entry_raw
+                        )
+                    )
+                    return
+            else:
+                if not entry_by_entity_id:
+                    logger.warning('entry_id but no entity_id')
+                    for key, value in runtime_entry_raw.items():
+                        setattr(entry_by_entry_id, key, value)
+                    return
+                else:
+                    logger.warning('updating')
+                    for key, value in runtime_entry_raw.items():
+                        setattr(entry_by_entry_id, key, value)
+                    return
             if not entry_by_entity_id:
                 # if entry discarded and replaced
                 logger.error({'entry_by_entry_id': entry_by_entry_id,
                              'entry_by_entity_id': entry_by_entity_id})
+                assert entry_by_entry_id.discarded
                 raise RuntimeError(f'entry = {entry.dict()}')
 
             if entry_by_entry_id.entity_id != entry.entity_id:
@@ -156,8 +186,13 @@ class SqlEntryRepository(
                 # raise RuntimeError(f'entry = {entry.dict()}')
 
             if entry_by_entry_id.entry_id != entry.entry_id:
-                logger.error({'entry_by_entry_id': entry_by_entry_id,
-                             'entry': entry.dict()})
+                logger.error(
+                    {
+                        'entry_by_entry_id': entry_by_entry_id,
+                        'entry_by_entity_id': entry_by_entity_id,
+                         'entry': entry.dict(),
+                    }
+                )
                 raise RuntimeError(f'entry = {entry.dict()}')
             if entry_by_entity_id.entry_id != entry.entry_id:
                 logger.error({'entry_by_entry_id': entry_by_entry_id,

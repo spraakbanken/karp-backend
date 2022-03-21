@@ -110,6 +110,8 @@ class Entry(TimestampedVersionedEntity):
             "entry": self._body,
             "last_modified": self._last_modified,
             "last_modified_by": self._last_modified_by,
+            "discarded": self._discarded,
+            "message": self._message,
         }
 
     def discard(
