@@ -22,6 +22,10 @@ def new_resource() -> ResourceCreate:
 
 
 class TestResourcesRoutes:
+    def test_get_resource_exist(self, fa_data_client):
+        response = fa_data_client.get('/resources/places')
+        assert response.status_code != status.HTTP_404_NOT_FOUND
+
     def test_get_resources_exist(self, fa_data_client):
         response = fa_data_client.get('/resources')
         assert response.status_code != status.HTTP_404_NOT_FOUND
@@ -34,6 +38,8 @@ class TestResourcesRoutes:
         response = fa_data_client.get('/resources/permissions')
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
+
+class TestGetResourcePermissions:
     def test_get_resources(self, fa_data_client):
         response = fa_data_client.get('/resources/permissions')
 
@@ -99,3 +105,14 @@ class TestGetResource:
         resource = ResourcePublic(**response.json())
         assert resource.resource_id == 'test_resource'
 
+
+class TestGetResources:
+    def test_get_resources(self, fa_data_client):
+        response = fa_data_client.get('/resources/')
+        response_data = response.json()
+        print(f'{response_data=}')
+        assert response.status_code == status.HTTP_200_OK
+
+        assert len(response_data) >= 3
+        for resource_dict in response_data:
+            ResourcePublic(**resource_dict)

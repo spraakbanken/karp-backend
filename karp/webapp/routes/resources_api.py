@@ -39,7 +39,7 @@ def list_resource_permissions(
 def get_all_resources(
     get_resources: lex.GetResources = Depends(
         deps.inject_from_req(lex.GetResources)),
-) -> list[dict]:
+) -> list[lex.ResourceDto]:
     return get_resources.query()
 
 
