@@ -35,7 +35,7 @@ class TestSqlEntryUowV1:
         self,
         sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
     ):
-        assert sql_entry_uow_v1_creator.repository_type == 'sql_entries_v1'
+        assert sql_entry_uow_v1_creator.repository_type == "sql_entries_v1"
 
     def test_uow_repository_type(
         self,
@@ -43,9 +43,9 @@ class TestSqlEntryUowV1:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow = sql_entry_uow_v1_creator(
-            **example_uow.dict(exclude={'repository_type'})
+            **example_uow.dict(exclude={"repository_type"})
         )
-        assert entry_uow.repository_type == 'sql_entries_v1'
+        assert entry_uow.repository_type == "sql_entries_v1"
 
     def test_repo_table_name(
         self,
@@ -53,7 +53,7 @@ class TestSqlEntryUowV1:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow = sql_entry_uow_v1_creator(
-            **example_uow.dict(exclude={'repository_type'})
+            **example_uow.dict(exclude={"repository_type"})
         )
         with entry_uow as uw:
             assert uw.repo.history_model.__tablename__ == example_uow.name
@@ -64,7 +64,7 @@ class TestSqlEntryUowV2:
         self,
         sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
     ):
-        assert sql_entry_uow_v2_creator.repository_type == 'sql_entries_v2'
+        assert sql_entry_uow_v2_creator.repository_type == "sql_entries_v2"
 
     def test_uow_repository_type(
         self,
@@ -72,9 +72,9 @@ class TestSqlEntryUowV2:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow = sql_entry_uow_v2_creator(
-            **example_uow.dict(exclude={'repository_type'})
+            **example_uow.dict(exclude={"repository_type"})
         )
-        assert entry_uow.repository_type == 'sql_entries_v2'
+        assert entry_uow.repository_type == "sql_entries_v2"
 
     def test_repo_table_name(
         self,
@@ -82,8 +82,11 @@ class TestSqlEntryUowV2:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow = sql_entry_uow_v2_creator(
-            **example_uow.dict(exclude={'repository_type'})
+            **example_uow.dict(exclude={"repository_type"})
         )
         random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str
         with entry_uow as uw:
-            assert uw.repo.history_model.__tablename__ == f'{example_uow.name}_{random_part}'
+            assert (
+                uw.repo.history_model.__tablename__
+                == f"{example_uow.name}_{random_part}"
+            )
