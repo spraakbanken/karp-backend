@@ -49,3 +49,31 @@ class TestSqlEntryUowV1:
         with entry_uow as uw:
             assert uw.repo.history_model.__tablename__ == example_uow.name
 
+
+class TestSqlEntryUowV2:
+    def test_creator_repository_type(
+        self,
+        sql_entry_uow_v2_creator: SqlEntryUowCreator,
+    ):
+        assert sql_entry_uow_v2_creator.repository_type == 'sql_entries_v2'
+
+    def test_uow_repository_type(
+        self,
+        sql_entry_uow_v2_creator: SqlEntryUowCreator,
+        example_uow: lex.CreateEntryRepository,
+    ):
+        entry_uow = sql_entry_uow_v2_creator(
+            **example_uow.dict(exclude={'repository_type'})
+        )
+        assert entry_uow.repository_type == 'sql_entries_v2'
+
+    def test_repo_table_name(
+        self,
+        sql_entry_uow_v2_creator: SqlEntryUowCreator,
+        example_uow: lex.CreateEntryRepository,
+    ):
+        entry_uow = sql_entry_uow_v2_creator(
+            **example_uow.dict(exclude={'repository_type'})
+        )
+        with entry_uow as uw:
+            assert uw.repo.history_model.__tablename__ == f'{example_uow.name}_{str(example_uow.entity_id)}
