@@ -38,3 +38,14 @@ class TestSqlEntryUowV1:
         )
         assert entry_uow.repository_type == 'sql_entries_v1'
 
+    def test_repo_table_name(
+        self,
+        sql_entry_uow_v1_creator: SqlEntryUowCreator,
+        example_uow: lex.CreateEntryRepository,
+    ):
+        entry_uow = sql_entry_uow_v1_creator(
+            **example_uow.dict(exclude={'repository_type'})
+        )
+        with entry_uow as uw:
+            assert uw.repo.history_model.__tablename__ == example_uow.name
+
