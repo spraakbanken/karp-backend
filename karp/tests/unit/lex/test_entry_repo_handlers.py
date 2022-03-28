@@ -18,3 +18,16 @@ class TestCreateEntryRepository:
             EntryUowRepositoryUnitOfWork)
         assert entry_uow_repo_uow.was_committed
         assert len(entry_uow_repo_uow.repo) == 1
+
+
+class TestDeleteEntryRepository:
+    def test_delete_entry_repository_succeeds(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        cmd = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd)
+
+        entry_uow_repo_uow = lex_ctx.container.get(
+            EntryUowRepositoryUnitOfWork)
+        assert entry_uow_repo_uow.was_committed
