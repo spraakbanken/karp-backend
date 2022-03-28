@@ -1,6 +1,7 @@
 from unittest import mock
 
 import pytest
+import ulid
 
 from karp.foundation.events import EventBus
 from karp import lex
@@ -83,5 +84,6 @@ class TestSqlEntryUowV2:
         entry_uow = sql_entry_uow_v2_creator(
             **example_uow.dict(exclude={'repository_type'})
         )
+        random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str
         with entry_uow as uw:
-            assert uw.repo.history_model.__tablename__ == f'{example_uow.name}_{example_uow.entity_id.hex}'
+            assert uw.repo.history_model.__tablename__ == f'{example_uow.name}_{random_part}'
