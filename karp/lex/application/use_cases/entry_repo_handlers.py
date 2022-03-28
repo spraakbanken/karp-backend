@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from karp.foundation.commands import CommandHandler
 from karp.lex.domain import commands
@@ -37,3 +38,20 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
             uow.repo.save(entry_repo)
             uow.commit()
         return entry_repo
+
+
+class DeletingEntryRepository(CommandHandler[commands.DeleteEntryRepository]):
+    def __init__(
+        self,
+        entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
+        **kwargs,
+    ):
+        self._entry_repo_uow = entry_repo_uow
+
+    def execute(self, command: commands.DeleteEntryRepository) -> None:
+        with self._entry_repo_uow as uow:
+            entry_repo = uow.repo.get_by_id(command.entity_id)
+            entry_repo.discard(
+                user=command.user, timestamp=command.timestamp)
+            uow.repo.save(entry_repo)
+            uow.commit()

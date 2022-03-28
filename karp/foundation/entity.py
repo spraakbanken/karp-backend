@@ -131,10 +131,10 @@ class TimestampedEntity(Entity):
         self._last_modified_by = user
         self._last_modified = monotonic_utc_now() if timestamp is None else timestamp
 
-    def discard(self, *, user, last_modified: float, timestamp: float = None):
+    def discard(self, *, user, timestamp: float = None):
         self._check_not_discarded()
-        self._validate_last_modified(last_modified)
-        super.discard()
+        # self._validate_last_modified(last_modified)
+        super().discard()
         self._last_modified_by = user
         self._last_modified = self._ensure_timestamp(timestamp)
 
@@ -236,4 +236,3 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
         self._last_modified_by = user
         self._last_modified = self._ensure_timestamp(timestamp)
         self._increment_version()
-

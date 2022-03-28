@@ -9,18 +9,12 @@ from karp.foundation.entity import (
 
 
 class TestVersionedEntity:
-    def test_discard_w_wrong_version_raises_consistency_error(self):
-        entity = VersionedEntity("id_v1", 1)
-
-        with pytest.raises(ConsistencyError):
-            entity.discard(version=2)
 
     def test_updated_w_wrong_version_raises_consistency_error(self):
         entity = VersionedEntity("id_v1", 1)
 
         with pytest.raises(ConsistencyError):
             entity.update(version=2)
-
 
     def test_update_increments_version(self):
         entity = VersionedEntity("id_v1", 1)
@@ -31,13 +25,6 @@ class TestVersionedEntity:
 
 
 class TestTimestampedEntity:
-    def test_discard_w_wrong_last_modified_raises_consistency_error(self):
-        entity = TimestampedEntity("id_v1", 1)
-        with pytest.raises(ConsistencyError):
-            entity.discard(
-                last_modified=2,
-                user="Test",
-            )
 
     def test_update_w_wrong_last_modified_raises_consistency_error(self):
         entity = TimestampedEntity("id_v1", 1)
@@ -88,7 +75,6 @@ class TestTimestampedVersionedEntity:
         assert entity.last_modified_by != previous_last_modified_by
         assert entity.version == (previous_version + 1)
 
-
     def test_discard_w_wrong_version_raises_consistency_error(self):
         entity = TimestampedVersionedEntity("id_v1", version=1)
 
@@ -127,7 +113,7 @@ class TestTimestampedVersionedEntity:
                 version=1,
                 last_modified=2,
                 user="Test"
-        )
+            )
 
     def test_update_updates(self):
         entity = TimestampedVersionedEntity("id_v1", version=1)
@@ -146,4 +132,3 @@ class TestTimestampedVersionedEntity:
         assert entity.last_modified_by != previous_last_modified_by
         assert entity.last_modified_by == "Test"
         assert entity.version == (previous_version + 1)
-

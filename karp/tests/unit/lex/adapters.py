@@ -56,6 +56,9 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
     def resource_ids(self) -> typing.Iterable[str]:
         return (res.resource_id for res in self.resources)
 
+    def num_entities(self) -> int:
+        return len(self.resources)
+
 
 class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
     def __init__(self, resources: Dict):
@@ -142,6 +145,9 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
 
     def all_entries(self) -> typing.Iterable[lex_entities.Entry]:
         yield from self.entries
+
+    def num_entities(self) -> int:
+        return len(self.entries)
 
 
 class InMemoryEntryUnitOfWork(
@@ -246,7 +252,7 @@ def create_entry_uow2(
 class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
     def __init__(self) -> None:
         super().__init__()
-        self._storage = {}
+        self._storage: dict[UniqueId, dict] = {}
 
     def _save(self, entry_repo):
         self._storage[entry_repo.id] = entry_repo
@@ -255,6 +261,9 @@ class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
         return self._storage.get(id_)
 
     def __len__(self):
+        return len(self._storage)
+
+    def num_entities(self) -> int:
         return len(self._storage)
 
 

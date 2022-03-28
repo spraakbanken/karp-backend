@@ -387,6 +387,12 @@ class SqlEntryRepository(
             self.runtime_model.discarded).filter_by(discarded=False)
         return query.count()
 
+    def num_entities(self) -> int:
+        self._check_has_session()
+        query = self._session.query(
+            self.runtime_model.discarded).filter_by(discarded=False)
+        return query.count()
+
     def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
         # query = self._session.query(self.runtime_model)

@@ -178,6 +178,27 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             if resource_dto is not None
         ]
 
+    def num_entities(self) -> int:
+        self._check_has_session()
+        subq = (
+            self._session.query(
+                ResourceModel.entity_id,
+                sa.func.max(ResourceModel.last_modified).label("maxdate"),
+            )
+            .group_by(ResourceModel.entity_id)
+            .subquery("t2")
+        )
+        query = self._session.query(ResourceModel).join(
+            subq,
+            db.and_(
+                ResourceModel.entity_id == subq.c.entity_id,
+                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.discarded == False,
+            ),
+        )
+
+        return query.count()
+
     def _resource_to_dict(self, resource: Resource) -> typing.Dict:
         return {
             "history_id": None,

@@ -125,6 +125,15 @@ class CreateEntryRepositoryFactory(factory.Factory):
     user = factory.Faker('email')
 
 
+class DeleteEntryRepositoryFactory(factory.Factory):
+    class Meta:
+        model = commands.DeleteEntryRepository
+
+    entity_id = factory.LazyFunction(make_unique_id)
+    message = 'entry repository deleted'
+    user = factory.Faker('email')
+
+
 class MachineNameFactory(factory.Factory):
     class Meta:
         model = MachineName

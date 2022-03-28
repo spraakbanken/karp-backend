@@ -17,7 +17,7 @@ class TestCreateEntryRepository:
         entry_uow_repo_uow = lex_ctx.container.get(
             EntryUowRepositoryUnitOfWork)
         assert entry_uow_repo_uow.was_committed
-        assert len(entry_uow_repo_uow.repo) == 1
+        assert entry_uow_repo_uow.repo.num_entities() == 1
 
 
 class TestDeleteEntryRepository:
@@ -30,4 +30,8 @@ class TestDeleteEntryRepository:
 
         entry_uow_repo_uow = lex_ctx.container.get(
             EntryUowRepositoryUnitOfWork)
-        assert entry_uow_repo_uow.was_committed
+        assert entry_uow_repo_uow.repo.num_entities() == 1
+
+        cmd = factories.DeleteEntryRepositoryFactory(entity_id=cmd.entity_id)
+        lex_ctx.command_bus.dispatch(cmd)
+        assert entry_uow_repo_uow.repo.num_entities() == 0
