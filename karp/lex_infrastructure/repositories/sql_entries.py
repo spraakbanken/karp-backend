@@ -1,16 +1,14 @@
 """SQL repositories for entries."""
-import inspect
 import logging
 import typing
-from typing import Dict, List, Optional, Tuple
-from uuid import UUID
+from typing import Dict, List, Optional, Generic, TypeVar
 
 import injector
 import regex
 import sqlalchemy as sa
 from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker
-import logging
+import ulid
 
 from karp.foundation.value_objects import UniqueId
 from karp.foundation.events import EventBus
@@ -190,7 +188,7 @@ class SqlEntryRepository(
                     {
                         'entry_by_entry_id': entry_by_entry_id,
                         'entry_by_entity_id': entry_by_entity_id,
-                         'entry': entry.dict(),
+                        'entry': entry.dict(),
                     }
                 )
                 raise RuntimeError(f'entry = {entry.dict()}')
@@ -564,7 +562,7 @@ class SqlEntryUnitOfWork(
     SqlUnitOfWork,
     repositories.EntryUnitOfWork,
 ):
-    repository_type: str = 'sql_entries_v1'
+    repository_type: str = 'sql_entries_base'
 
     def __init__(
         self,
@@ -585,11 +583,14 @@ class SqlEntryUnitOfWork(
             self._session = self.session_factory()
         if self._entries is None:
             self._entries = SqlEntryRepository.from_dict(
-                name=self.name,
+                name=self.table_name(),
                 resource_config=self.config,
                 session=self._session
             )
         return self
+
+    def table_name(self) -> str:
+        return self.name
 
     @property
     def repo(self) -> SqlEntryRepository:
@@ -606,6 +607,20 @@ class SqlEntryUnitOfWork(
             return super().collect_new_events()
         else:
             return []
+
+
+class SqlEntryUnitOfWorkV1(SqlEntryUnitOfWork):
+    repository_type: str = 'sql_entries_v1'
+
+
+class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):
+    repository_type: str = 'sql_entries_v2'
+
+    def table_name(self) -> str:
+        u = ulid.from_uuid(self.entity_id)
+        random_part = u.randomness().str
+        return f"{self.name}_{random_part}"
+
 # ===== Value objects =====
 # class SqlEntryRepositorySettings(EntryRepositorySettings):
 #     def __init__(self, *, table_name: str, config: Dict):
@@ -623,9 +638,11 @@ class SqlEntryUnitOfWork(
 #         runtime_table_name, history_model, settings.config
 #     )
 #     return SqlEntryRepository(history_model, runtime_model, settings.config)
+SqlEntryUowType = TypeVar('SqlEntryUowType', bound=SqlEntryUnitOfWork)
 
-class SqlEntryUowCreator:
-    repository_type: str = SqlEntryUnitOfWork.repository_type
+
+class SqlEntryUowCreator(Generic[SqlEntryUowType]):
+    repository_type: str = "repository_type"
 
     @injector.inject
     def __init__(
@@ -646,9 +663,9 @@ class SqlEntryUowCreator:
         user: str,
         message: str,
         timestamp: float,
-    ) -> SqlEntryUnitOfWork:
+    ) -> SqlEntryUowType:
         if entity_id not in self.cache:
-            self.cache[entity_id] = SqlEntryUnitOfWork(
+            self.cache[entity_id] = self._create_uow(
                 entity_id=entity_id,
                 name=name,
                 config=config,
@@ -660,3 +677,21 @@ class SqlEntryUowCreator:
                 event_bus=self.event_bus,
             )
         return self.cache[entity_id]
+
+
+class SqlEntryUowV1Creator(
+    SqlEntryUowCreator[SqlEntryUnitOfWorkV1]
+):
+    repository_type: str = "sql_entries_v1"
+
+    def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV1:
+        return SqlEntryUnitOfWorkV1(**kwargs)
+
+
+class SqlEntryUowV2Creator(
+    SqlEntryUowCreator[SqlEntryUnitOfWorkV2]
+):
+    repository_type: str = "sql_entries_v2"
+
+    def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV2:
+        return SqlEntryUnitOfWorkV2(**kwargs)
