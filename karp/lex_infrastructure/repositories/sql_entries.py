@@ -1,16 +1,14 @@
 """SQL repositories for entries."""
-import inspect
 import logging
 import typing
-from typing import Dict, List, Optional, Tuple, Generic, TypeVar
-from uuid import UUID
+from typing import Dict, List, Optional, Generic, TypeVar
 
 import injector
 import regex
 import sqlalchemy as sa
 from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker
-import logging
+import ulid
 
 from karp.foundation.value_objects import UniqueId
 from karp.foundation.events import EventBus
@@ -190,7 +188,7 @@ class SqlEntryRepository(
                     {
                         'entry_by_entry_id': entry_by_entry_id,
                         'entry_by_entity_id': entry_by_entity_id,
-                         'entry': entry.dict(),
+                        'entry': entry.dict(),
                     }
                 )
                 raise RuntimeError(f'entry = {entry.dict()}')
@@ -619,7 +617,9 @@ class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):
     repository_type: str = 'sql_entries_v2'
 
     def table_name(self) -> str:
-        return f"{self.name}_{self.entity_id.hex}"
+        u = ulid.from_uuid(self.entity_id)
+        random_part = u.randomness().str
+        return f"{self.name}_{random_part}"
 
 # ===== Value objects =====
 # class SqlEntryRepositorySettings(EntryRepositorySettings):
