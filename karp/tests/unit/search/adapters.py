@@ -6,6 +6,7 @@ import injector
 from karp.foundation.commands import CommandBus
 from karp.foundation.events import EventBus
 from karp.foundation.time import utc_now
+from karp.lex.application.repositories import entries
 from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry
 from karp.tests.foundation.adapters import InMemoryUnitOfWork
 
@@ -64,6 +65,8 @@ class InMemoryIndex(Index):
 #
 #    def statistics(self, resource_id: str, field: str):
 #        return {}
+    def num_entities(self) -> int:
+        return sum(len(entries) for entries in self.indicies.values())
 
 
 class InMemoryIndexUnitOfWork(

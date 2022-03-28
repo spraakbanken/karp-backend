@@ -1,9 +1,11 @@
 import json
+from typing import Optional
 
 from tabulate import tabulate
 import typer
 
 from karp import lex
+from karp.foundation.value_objects import UniqueId
 from karp.foundation.commands import CommandBus
 from karp.lex.application.queries import ListEntryRepos
 from karp.lex.domain.commands import CreateEntryRepository

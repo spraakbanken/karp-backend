@@ -6,6 +6,6 @@ from .entry_commands import (
     DeleteEntry,
     UpdateEntry,
 )
-from .entry_repo_commands import CreateEntryRepository
+from .entry_repo_commands import CreateEntryRepository, DeleteEntryRepository
 from .resource_commands import (
     CreateResource, DeleteResource, PublishResource, UpdateResource)

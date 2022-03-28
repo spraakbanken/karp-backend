@@ -10,6 +10,7 @@ from karp.lex.application.repositories import (
 from karp.lex.domain.commands import (
     CreateEntryRepository,
     CreateResource,
+    DeleteEntryRepository,
 )
 from karp.lex.domain import commands
 from karp.lex.domain.value_objects import EntrySchema
@@ -19,6 +20,7 @@ from karp.lex.application.use_cases import (
     CreatingEntryRepo,
     CreatingResource,
     DeletingEntry,
+    DeletingEntryRepository,
     DeletingResource,
     PublishingResource,
     UpdatingEntry,
@@ -52,6 +54,15 @@ class Lex(injector.Module):
         uow: EntryUowRepositoryUnitOfWork,
     ) -> CommandHandler[CreateEntryRepository]:
         return CreatingEntryRepo(
+            entry_repo_uow=uow,
+        )
+
+    @injector.provider
+    def deleting_entry_repository(
+        self,
+        uow: EntryUowRepositoryUnitOfWork,
+    ) -> CommandHandler[DeleteEntryRepository]:
+        return DeletingEntryRepository(
             entry_repo_uow=uow,
         )
 
