@@ -28,14 +28,14 @@ logger = logging.getLogger("karp")
 subapp = typer.Typer()
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
     for i, choice in enumerate(choices):
-        typer.echo(f'{i}) {choice_fmt(choice)}')
+        typer.echo(f"{i}) {choice_fmt(choice)}")
     while True:
-        number = typer.prompt(f'Choose from above with (0-{len(choices)-1}):')
+        number = typer.prompt(f"Choose from above with (0-{len(choices)-1}):")
         return choices[int(number)]
 
 
@@ -45,8 +45,7 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
 def create(
     ctx: typer.Context,
     config: Path,
-    entry_repo_id: Optional[str] = typer.Option(
-        None, help='id for entry-repo'),
+    entry_repo_id: Optional[str] = typer.Option(None, help="id for entry-repo"),
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
@@ -55,7 +54,8 @@ def create(
             query = inject_from_ctx(ListEntryRepos, ctx)
             entry_repos = list(query.query())
             entry_repo = choose_from(
-                entry_repos, lambda x: f'{x.name} {x.repository_type}')
+                entry_repos, lambda x: f"{x.name} {x.repository_type}"
+            )
             entry_repo_uuid = entry_repo.entity_id
         else:
             entry_repo_uuid = unique_id.UniqueId(entry_repo_id)
@@ -68,7 +68,7 @@ def create(
         typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.entity_id})")
 
     elif config.is_dir():
-        typer.Abort('not supported yetls')
+        typer.Abort("not supported yetls")
         # new_resources = resources.create_new_resource_from_dir(config)
 
         # for resource_id in new_resources:
@@ -78,9 +78,26 @@ def create(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def update(
-        ctx: typer.Context,
-        config: Path):
+def set_entry_repo(
+    ctx: typer.Context,
+    resource_id: str,
+    entry_repo_id: str = typer.Argument(..., help="id for entry-repo"),
+    user: Optional[str] = typer.Option(None),
+):
+    bus = inject_from_ctx(CommandBus, ctx)
+    entry_repo_uuid = unique_id.UniqueId(entry_repo_id)
+    cmd = lex_commands.SetEntryRepoId(
+        resource_id=resource_id,
+        entry_repo_id=entry_repo_uuid,
+        user=user or "local admin",
+    )
+    bus.dispatch(cmd)
+
+
+@subapp.command()
+@cli_error_handler
+@cli_timer
+def update(ctx: typer.Context, config: Path):
     bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
         with open(config) as fp:
@@ -95,16 +112,13 @@ def update(
         if version is None:
             typer.echo(f"Nothing to do for resource '{resource_id}'")
         else:
-            typer.echo(
-                f"Updated version {version} of resource '{resource_id}'")
+            typer.echo(f"Updated version {version} of resource '{resource_id}'")
 
 
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def publish(
-    ctx: typer.Context,
-        resource_id: str):
+def publish(ctx: typer.Context, resource_id: str):
     bus = inject_from_ctx(CommandBus, ctx)
     try:
         cmd = lex_commands.PublishResource(
@@ -122,9 +136,7 @@ def publish(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex(
-        ctx: typer.Context,
-        resource_id: str):
+def reindex(ctx: typer.Context, resource_id: str):
     bus = inject_from_ctx(CommandBus, ctx)
     cmd = search_commands.ReindexResource(resource_id=resource_id)
     bus.dispatch(cmd)
@@ -180,8 +192,7 @@ def reindex(
 @cli_timer
 def list_resources(
     ctx: typer.Context,
-    show_published: Optional[bool] = typer.Option(
-        True, "--show-published/--show-all")
+    show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),
 ):
     if show_published:
         query = inject_from_ctx(GetPublishedResources, ctx)
@@ -201,11 +212,7 @@ def list_resources(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def show(
-    ctx: typer.Context,
-    resource_id: str,
-    version: Optional[int] = None
-):
+def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
     repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx)
     resource = repo.get_by_resource_id(resource_id, version=version)
     #     if version:
@@ -221,14 +228,7 @@ def show(
         )
         raise typer.Exit(3)
 
-    typer.echo(
-        tabulate(
-            (
-                (key, value)
-                for key, value in resource.dict().items()
-            )
-        )
-    )
+    typer.echo(tabulate(((key, value) for key, value in resource.dict().items())))
 
 
 @subapp.command()
@@ -241,6 +241,8 @@ def set_permissions(
     level: str,
 ):
     bus = inject_from_ctx(CommandBus, ctx)
+
+
 #     # TODO use level
 #     permissions = {"write": True, "read": True}
 #     resourcemgr.set_permissions(resource_id, version, permissions)
@@ -267,11 +269,10 @@ def delete(
     cmd = lex_commands.DeleteResource(
         resource_id=resource_id,
         user=user or "local admin",
-        message=message or "resource deleted"
+        message=message or "resource deleted",
     )
     resource = bus.dispatch(cmd)
-    typer.echo(
-        f"Deleted resource '{resource.resource_id}' ({resource.entity_id})")
+    typer.echo(f"Deleted resource '{resource.resource_id}' ({resource.entity_id})")
 
 
 def init_app(app):

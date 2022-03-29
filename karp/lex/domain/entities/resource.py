@@ -226,6 +226,32 @@ class Resource(TimestampedVersionedEntity):
             )
         )
 
+    def set_entry_repo_id(
+        self,
+        *,
+        entry_repo_id: unique_id.UniqueId,
+        user: str,
+        timestamp: Optional[float] = None,
+    ):
+        self._extracted_from_publish_9(
+            timestamp, user, "entry repo id updated", "entry repo id updated"
+        )
+        self._increment_version()
+        self._entry_repo_id = entry_repo_id
+        self.queue_event(
+            events.ResourceUpdated(
+                entity_id=self.entity_id,
+                resource_id=self.resource_id,
+                entry_repo_id=self.entry_repository_id,
+                timestamp=self.last_modified,
+                user=self.last_modified_by,
+                version=self.version,
+                name=self.name,
+                config=self.config,
+                message=self.message,
+            )
+        )
+
     def _extracted_from_publish_9(self, timestamp, user, message, arg3):
         self._check_not_discarded()
         self._last_modified = timestamp or utc_now()
@@ -287,22 +313,21 @@ class Resource(TimestampedVersionedEntity):
     def id_getter(self) -> Callable[[Dict], str]:
         return create_field_getter(self.config["id"], str)
 
-
     def dict(self) -> Dict:
         return {
-            'entity_id': self.entity_id,
-            'resource_id': self.resource_id,
-            'name': self.name,
-            'version': self.version,
-            'last_modified': self.last_modified,
-            'last_modified_by': self.last_modified_by,
-            'op': self.op,
-            'message': self.message,
-            'entry_repository_id': self.entry_repository_id,
-            'is_published': self.is_published,
-            'discarded': self.discarded,
-            'resource_type': self.resource_type,
-            'config': self.config,
+            "entity_id": self.entity_id,
+            "resource_id": self.resource_id,
+            "name": self.name,
+            "version": self.version,
+            "last_modified": self.last_modified,
+            "last_modified_by": self.last_modified_by,
+            "op": self.op,
+            "message": self.message,
+            "entry_repository_id": self.entry_repository_id,
+            "is_published": self.is_published,
+            "discarded": self.discarded,
+            "resource_type": self.resource_type,
+            "config": self.config,
         }
 
     def create_entry_from_dict(
@@ -396,7 +421,7 @@ def create_resource(
         op=ResourceOp.ADDED,
         version=1,
         last_modified=created_at or time.utc_now(),
-        last_modified_by=user or created_by or 'unknown',
+        last_modified_by=user or created_by or "unknown",
     )
     resource.queue_event(
         events.ResourceCreated(
