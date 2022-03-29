@@ -1,9 +1,11 @@
 import json
+from typing import Optional
 
 from tabulate import tabulate
 import typer
 
 from karp import lex
+from karp.foundation.value_objects import UniqueId
 from karp.foundation.commands import CommandBus
 from karp.lex.application.queries import ListEntryRepos
 from karp.lex.domain.commands import CreateEntryRepository
@@ -15,13 +17,11 @@ subapp = typer.Typer()
 
 @subapp.command()
 def create(infile: typer.FileBinaryRead, ctx: typer.Context):
-    typer.echo(infile.name)
     try:
         data = json.load(infile)
     except Exception as err:
         typer.echo(f"Error reading file '{infile.name}': {str(err)}")
         raise typer.Exit(123)
-    typer.echo('after json.load')
     create_entry_repo = CreateEntryRepository.from_dict(
         data,
         user='local admin',
@@ -37,6 +37,22 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):
             id=create_entry_repo.entity_id,
         )
     )
+
+
+@subapp.command()
+def delete(
+    entity_id: UniqueId,
+    ctx: typer.Context,
+    user: Optional[str] = typer.Option(None),
+):
+
+    bus = inject_from_ctx(CommandBus, ctx)
+
+    delete_entry_repo = DeleteEntryRepo(
+        entity_id=entity_id,
+        user=user or "local admin"
+    )
+    typer.echo(f"Entry repository with id '{entity_id}' deleted.")
 
 
 @subapp.command()

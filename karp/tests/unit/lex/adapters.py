@@ -41,7 +41,7 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
     def _by_id(self, id_, *, version=None):
         return self.resources.get(id_)
 
-    def _by_resource_id(self, resource_id, *, version=None):
+    def _by_resource_id(self, resource_id):
         return next((res for res in self.resources.values() if res.resource_id == resource_id), None)
 
     def __len__(self):
@@ -55,6 +55,9 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
 
     def resource_ids(self) -> typing.Iterable[str]:
         return (res.resource_id for res in self.resources)
+
+    def num_entities(self) -> int:
+        return sum( not res.discarded for res in self.resources.values() )
 
 
 class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
@@ -142,6 +145,9 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
 
     def all_entries(self) -> typing.Iterable[lex_entities.Entry]:
         yield from self.entries
+
+    def num_entities(self) -> int:
+        return sum( not e.discarded for e in self.entries.values() )
 
 
 class InMemoryEntryUnitOfWork(
@@ -246,7 +252,7 @@ def create_entry_uow2(
 class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
     def __init__(self) -> None:
         super().__init__()
-        self._storage = {}
+        self._storage: dict[UniqueId, dict] = {}
 
     def _save(self, entry_repo):
         self._storage[entry_repo.id] = entry_repo
@@ -256,6 +262,9 @@ class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
 
     def __len__(self):
         return len(self._storage)
+
+    def num_entities(self) -> int:
+        return sum(not er.discarded for er in self._storage.values())
 
 
 class InMemoryEntryUowRepositoryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):

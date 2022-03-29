@@ -185,3 +185,6 @@ class EntryUnitOfWork(
     @property
     def message(self) -> str:
         return self._message
+
+    def discard(self, *, user, timestamp: Optional[float] = None):
+        return entity.TimestampedEntity.discard(self, user=user, timestamp=timestamp)

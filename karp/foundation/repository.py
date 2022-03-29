@@ -58,3 +58,7 @@ class Repository(Generic[EntityType], abc.ABC):
         self, id_: Union[uuid.UUID, str], *, version: Optional[int] = None
     ) -> Optional[EntityType]:
         raise NotImplementedError()
+
+    @abc.abstractmethod
+    def num_entities(self) -> int:
+        ...

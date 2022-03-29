@@ -59,6 +59,9 @@ class Index(repository.Repository[IndexEntry]):
     def _by_id(self, id) -> None:
         return None
 
+    def num_entities(self) -> int:
+        raise NotImplementedError("num_entities is not used for indicies")
+
 
 class IndexUnitOfWork(
     unit_of_work.UnitOfWork[Index]

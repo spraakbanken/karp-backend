@@ -1,6 +1,7 @@
 import logging
 from typing import Optional
 
+import sqlalchemy as sa
 from sqlalchemy import sql
 from sqlalchemy import orm as sa_orm
 
@@ -52,6 +53,27 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
         if row:
             return self._row_to_entity(row)
         return None
+
+    def num_entities(self) -> int:
+        self._check_has_session()
+        subq = (
+            self._session.query(
+                EntryUowModel.entity_id,
+                sa.func.max(EntryUowModel.last_modified).label("maxdate"),
+            )
+            .group_by(EntryUowModel.entity_id)
+            .subquery("t2")
+        )
+        query = self._session.query(EntryUowModel).join(
+            subq,
+            db.and_(
+                EntryUowModel.entity_id == subq.c.entity_id,
+                EntryUowModel.last_modified == subq.c.maxdate,
+                EntryUowModel.discarded == False,
+            ),
+        )
+
+        return query.count()
 
     def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:
         return self.entry_uow_factory.create(

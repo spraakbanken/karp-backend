@@ -222,14 +222,11 @@ def show(
         raise typer.Exit(3)
 
     typer.echo(
-        """
-        Resource: {resource.resource_id}
-        EntityId: {resource.entity_id}
-        Version: {resource.version}
-        Discarded: {resource.discarded}
-        Config: {resource.config}
-        """.format(
-            resource=resource
+        tabulate(
+            (
+                (key, value)
+                for key, value in resource.dict().items()
+            )
         )
     )
 

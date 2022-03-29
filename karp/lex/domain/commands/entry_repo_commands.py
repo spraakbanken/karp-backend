@@ -33,3 +33,9 @@ class CreateEntryRepository(Command):
             user=user,
             message=message or 'Entry repository created'
         )
+
+
+class DeleteEntryRepository(Command):
+    entity_id: UniqueId
+    message: str
+    user: str
