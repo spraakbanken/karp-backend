@@ -41,7 +41,7 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
     def _by_id(self, id_, *, version=None):
         return self.resources.get(id_)
 
-    def _by_resource_id(self, resource_id, *, version=None):
+    def _by_resource_id(self, resource_id):
         return next((res for res in self.resources.values() if res.resource_id == resource_id), None)
 
     def __len__(self):
@@ -57,7 +57,7 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
         return (res.resource_id for res in self.resources)
 
     def num_entities(self) -> int:
-        return len(self.resources)
+        return sum( not res.discarded for res in self.resources.values() )
 
 
 class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
@@ -147,7 +147,7 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
         yield from self.entries
 
     def num_entities(self) -> int:
-        return len(self.entries)
+        return sum( not e.discarded for e in self.entries.values() )
 
 
 class InMemoryEntryUnitOfWork(
@@ -264,7 +264,7 @@ class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
         return len(self._storage)
 
     def num_entities(self) -> int:
-        return len(self._storage)
+        return sum(not er.discarded for er in self._storage.values())
 
 
 class InMemoryEntryUowRepositoryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):
