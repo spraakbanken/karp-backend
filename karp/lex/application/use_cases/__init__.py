@@ -9,5 +9,6 @@ from .resource_handlers import (
     CreatingResource,
     DeletingResource,
     PublishingResource,
+    SettingEntryRepoId,
     UpdatingResource,
 )
