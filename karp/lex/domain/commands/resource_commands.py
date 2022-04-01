@@ -11,7 +11,8 @@ from .base import Command
 
 class CreateResource(Command):
     entity_id: unique_id.UniqueId = pydantic.Field(
-        default_factory=unique_id.make_unique_id)
+        default_factory=unique_id.make_unique_id
+    )
     resource_id: str
     name: str
     config: typing.Dict
@@ -64,4 +65,10 @@ class PublishResource(Command):
 class DeleteResource(Command):
     resource_id: str
     message: str
+    user: str
+
+
+class SetEntryRepoId(Command):
+    resource_id: str
+    entry_repo_id: unique_id.UniqueId
     user: str

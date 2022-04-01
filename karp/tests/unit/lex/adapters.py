@@ -33,6 +33,7 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
 
     def _save(self, resource):
         self.resources[resource.id] = resource
+
     # def _update(self, resource):
     #     r = self._by_id(resource.id)
     #     self.resources.discard(r)
@@ -42,7 +43,10 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
         return self.resources.get(id_)
 
     def _by_resource_id(self, resource_id):
-        return next((res for res in self.resources.values() if res.resource_id == resource_id), None)
+        return next(
+            (res for res in self.resources.values() if res.resource_id == resource_id),
+            None,
+        )
 
     def __len__(self):
         return len(self.resources)
@@ -57,21 +61,24 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
         return (res.resource_id for res in self.resources)
 
     def num_entities(self) -> int:
-        return sum( not res.discarded for res in self.resources.values() )
+        return sum(not res.discarded for res in self.resources.values())
 
 
 class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
     def __init__(self, resources: Dict):
         self.resources = resources
 
-    def get_by_resource_id(self, resource_id: str, version=None) -> Optional[ResourceDto]:
+    def get_by_resource_id(
+        self, resource_id: str, version=None
+    ) -> Optional[ResourceDto]:
         return next(
             (
                 self._row_to_dto(res)
                 for res in self.resources.values()
                 if res.resource_id == resource_id
             ),
-            None)
+            None,
+        )
 
     def _row_to_dto(self, res) -> ResourceDto:
         return ResourceDto(
@@ -90,9 +97,7 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
 
     def get_published_resources(self) -> Iterable[ResourceDto]:
         return (
-            self._row_to_dto(res)
-            for res in self.resources.values()
-            if res.is_published
+            self._row_to_dto(res) for res in self.resources.values() if res.is_published
         )
 
 
@@ -147,17 +152,35 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
         yield from self.entries
 
     def num_entities(self) -> int:
-        return sum( not e.discarded for e in self.entries.values() )
+        return sum(not e.discarded for e in self.entries)
+
+    def by_referenceable(
+        self, filters: Optional[Dict] = None, **kwargs
+    ) -> list[lex_entities.Entry]:
+        return []
 
 
-class InMemoryEntryUnitOfWork(
-    InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork
-):
-    def __init__(self, entity_id, name: str, config: typing.Dict, connection_str: typing.Optional[str], message: str, user: str, event_bus: EventBus):
+class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork):
+    def __init__(
+        self,
+        entity_id,
+        name: str,
+        config: typing.Dict,
+        connection_str: typing.Optional[str],
+        message: str,
+        user: str,
+        event_bus: EventBus,
+    ):
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
             self,
-            entity_id=entity_id, name=name, config=config, connection_str=connection_str, message=message, event_bus=event_bus)
+            entity_id=entity_id,
+            name=name,
+            config=config,
+            connection_str=connection_str,
+            message=message,
+            event_bus=event_bus,
+        )
         self._entries = InMemoryEntryRepository()
         # self.id = entity_id
         # self.name = name
@@ -168,13 +191,12 @@ class InMemoryEntryUnitOfWork(
         return self._entries
 
 
-class InMemoryEntryUnitOfWork2(
-    InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork
-):
+class InMemoryEntryUnitOfWork2(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork):
     def __init__(self, entity_id, name: str, config: typing.Dict):
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
-            self, entity_id=entity_id, name=name, config=config)
+            self, entity_id=entity_id, name=name, config=config
+        )
         self._entries = InMemoryEntryRepository()
         # self.id = entity_id
         # self.name = name
@@ -185,7 +207,9 @@ class InMemoryEntryUnitOfWork2(
         return self._entries
 
 
-class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUnitOfWork):
+class InMemoryResourceUnitOfWork(
+    InMemoryUnitOfWork, lex_repositories.ResourceUnitOfWork
+):
     def __init__(self, event_bus: EventBus):
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.ResourceUnitOfWork.__init__(self, event_bus=event_bus)
@@ -267,7 +291,9 @@ class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
         return sum(not er.discarded for er in self._storage.values())
 
 
-class InMemoryEntryUowRepositoryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork):
+class InMemoryEntryUowRepositoryUnitOfWork(
+    InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork
+):
     def __init__(
         self,
         event_bus: EventBus,
@@ -304,7 +330,7 @@ class InMemoryLexInfrastructure(injector.Module):
     #     return InMemoryEntryRepositoryUnitOfWorkFactory()
     @injector.multiprovider
     def entry_uow_creator_map(
-        self
+        self,
     ) -> Dict[str, lex_repositories.EntryUnitOfWorkCreator]:
         return {"fake": InMemoryEntryUnitOfWorkCreator}
 
@@ -322,6 +348,7 @@ class InMemoryLexInfrastructure(injector.Module):
         return InMemoryReadResourceRepository(
             resources=resource_uow.repo.resources,
         )
+
 
 # def bootstrap_test_app(
 #     resource_uow: lex_repositories.ResourceUnitOfWork = None,

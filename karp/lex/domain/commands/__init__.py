@@ -8,4 +8,9 @@ from .entry_commands import (
 )
 from .entry_repo_commands import CreateEntryRepository, DeleteEntryRepository
 from .resource_commands import (
-    CreateResource, DeleteResource, PublishResource, UpdateResource)
+    CreateResource,
+    DeleteResource,
+    PublishResource,
+    SetEntryRepoId,
+    UpdateResource,
+)

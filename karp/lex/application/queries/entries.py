@@ -6,7 +6,10 @@ from sb_json_tools import jsondiff
 
 from karp import errors as karp_errors
 from karp.foundation.value_objects import unique_id
-from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
+from karp.lex.application.repositories import (
+    ResourceUnitOfWork,
+    EntryUowRepositoryUnitOfWork,
+)
 from karp.lex.domain.entities.entry import EntryOp
 
 
@@ -61,7 +64,7 @@ class HistoryDto(pydantic.BaseModel):
 
 class GetEntryDiff(abc.ABC):
     @abc.abstractmethod
-    def query(self, req: EntryDiffRequest) -> EntryDiffDto:
+    def query(self, request: EntryDiffRequest) -> EntryDiffDto:
         pass
 
 
@@ -83,10 +86,7 @@ class GetHistoryDto(pydantic.BaseModel):
 
 class GetHistory(abc.ABC):
     @abc.abstractmethod
-    def query(
-        self,
-        req: EntryHistoryRequest
-    ) -> GetHistoryDto:
+    def query(self, request: EntryHistoryRequest) -> GetHistoryDto:
         pass
 
 
@@ -128,7 +128,9 @@ class EntryViews(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_by_referenceable(self, resource_id: str, filters) -> typing.Iterable[EntryDto]:
+    def get_by_referenceable(
+        self, resource_id: str, filters
+    ) -> typing.Iterable[EntryDto]:
         pass
 
     @abc.abstractmethod

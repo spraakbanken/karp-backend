@@ -56,7 +56,6 @@ class Entity(events.EventMixin):
 
 
 class VersionedEntity(Entity):
-
     def __init__(self, entity_id, version: int, discarded: bool = False):
         super().__init__(entity_id, discarded=discarded)
         self._version = version
@@ -89,7 +88,6 @@ class VersionedEntity(Entity):
 
 
 class TimestampedEntity(Entity):
-
     def __init__(
         self,
         entity_id,
@@ -108,30 +106,18 @@ class TimestampedEntity(Entity):
         """The time this entity was last modified."""
         return self._last_modified
 
-    @last_modified.setter
-    @deprecated(version='6.0.7', reason='use update')
-    def last_modified(self, timestamp: float):
-        self._check_not_discarded()
-        self._last_modified = timestamp
-
     @property
     def last_modified_by(self):
         """The time this entity was last modified."""
         return self._last_modified_by
 
-    @last_modified_by.setter
-    @deprecated(version='6.0.7', reason='use update')
-    def last_modified_by(self, user):
-        self._check_not_discarded()
-        self._last_modified_by = user
-
-    @deprecated(version='6.0.7', reason='use update')
+    @deprecated(version="6.0.7", reason="use update")
     def stamp(self, user, *, timestamp: float = None):
         self._check_not_discarded()
         self._last_modified_by = user
         self._last_modified = monotonic_utc_now() if timestamp is None else timestamp
 
-    def discard(self, *, user, timestamp: float = None):
+    def discard(self, *, user, timestamp: Optional[float] = None):
         self._check_not_discarded()
         # self._validate_last_modified(last_modified)
         super().discard()
@@ -156,7 +142,6 @@ class TimestampedEntity(Entity):
 
 
 class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
-
     def __init__(
         self,
         entity_id,
@@ -175,27 +160,27 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
             last_modified_by=last_modified_by,
         )
 
-#     @property
-#     def last_modified(self):
-#         """The time this entity was last modified."""
-#         return self._last_modified
-#
-#     @last_modified.setter
-#     def last_modified(self, timestamp: float):
-#         self._check_not_discarded()
-#         self._last_modified = timestamp
-#
-#     @property
-#     def last_modified_by(self):
-#         """The time this entity was last modified."""
-#         return self._last_modified_by
-#
-#     @last_modified_by.setter
-#     def last_modified_by(self, user: str):
-#         self._check_not_discarded()
-#         self._last_modified_by = user
+    #     @property
+    #     def last_modified(self):
+    #         """The time this entity was last modified."""
+    #         return self._last_modified
+    #
+    #     @last_modified.setter
+    #     def last_modified(self, timestamp: float):
+    #         self._check_not_discarded()
+    #         self._last_modified = timestamp
+    #
+    #     @property
+    #     def last_modified_by(self):
+    #         """The time this entity was last modified."""
+    #         return self._last_modified_by
+    #
+    #     @last_modified_by.setter
+    #     def last_modified_by(self, user: str):
+    #         self._check_not_discarded()
+    #         self._last_modified_by = user
 
-    @deprecated(version='6.0.7', reason='use update')
+    @deprecated(version="6.0.7", reason="use update")
     def stamp(self, user, *, timestamp: float = None, increment_version: bool = True):
         self._check_not_discarded()
 
