@@ -1,3 +1,7 @@
+from pathlib import Path
+from typing import Optional
+
+import json_streams
 import typer
 
 from karp import search
@@ -9,14 +13,20 @@ subapp = typer.Typer()
 
 @subapp.command()
 def resource(
-    resource_id: str,
     ctx: typer.Context,
+    resource_id: str,
+    output: Optional[Path] = typer.Option(
+        None, help="Path to write to. Defaults to stdout."
+    ),
 ):
-    typer.echo('query')
     search_service = inject_from_ctx(search.SearchService, ctx)
     query_request = search.QueryRequest(resource_ids=[resource_id])
-    typer.echo(search_service.query(query_request))
+    json_streams.dump_to_file(
+        search_service.query(query_request),
+        output,
+        use_stdout_as_default=True,
+    )
 
 
 def init_app(app: typer.Typer) -> None:
-    app.add_typer(subapp, name='query')
+    app.add_typer(subapp, name="query")
