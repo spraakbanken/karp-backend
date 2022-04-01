@@ -9,6 +9,6 @@ class EntryTransformer(abc.ABC):
     def transform(
         self,
         resource_id: str,
-        entry: lex.EntryDto,
+        src_entry: lex.EntryDto,
     ) -> IndexEntry:
         pass

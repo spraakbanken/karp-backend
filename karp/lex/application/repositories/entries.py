@@ -34,6 +34,7 @@ class EntryRepository(repository.Repository[entities.Entry]):
         after_date: Optional[float] = None,
         before_date: Optional[float] = None,
         oldest_first: bool = False,
+        **kwargs,
     ) -> entities.Entry:
         entry = self._by_id(
             id_,
@@ -59,13 +60,13 @@ class EntryRepository(repository.Repository[entities.Entry]):
     ) -> typing.Optional[entities.Entry]:
         raise NotImplementedError()
 
-    # @abc.abstractmethod
-    def move(self, entry: entities.Entry, *, old_entry_id: str):
-        raise NotImplementedError()
+    # # @abc.abstractmethod
+    # def move(self, entry: entities.Entry, *, old_entry_id: str):
+    #     raise NotImplementedError()
 
-    # @abc.abstractmethod
-    def delete(self, entry: entities.Entry):
-        raise NotImplementedError()
+    # # @abc.abstractmethod
+    # def delete(self, entry: entities.Entry):
+    #     raise NotImplementedError()
 
     # @abc.abstractmethod
     def entry_ids(self) -> List[str]:
@@ -115,9 +116,11 @@ class EntryRepository(repository.Repository[entities.Entry]):
         """Use for testing purpose."""
         return
 
-    # @abc.abstractmethod
-    # def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
-    #     raise NotImplementedError()
+    @abc.abstractmethod
+    def by_referenceable(
+        self, filters: Optional[Dict] = None, **kwargs
+    ) -> list[entities.Entry]:
+        raise NotImplementedError()
 
     # @abc.abstractmethod
     def get_history(
@@ -159,8 +162,7 @@ class EntryUnitOfWork(
         **kwargs,
     ):
         unit_of_work.UnitOfWork.__init__(self, event_bus)
-        entity.TimestampedEntity.__init__(
-            self, *args, **kwargs)
+        entity.TimestampedEntity.__init__(self, *args, **kwargs)
         self._name = name
         self._connection_str = connection_str
         self._config = config

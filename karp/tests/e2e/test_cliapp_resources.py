@@ -46,6 +46,7 @@ class TestCliResourceLifetime:
 
         assert resource_repo.get_by_resource_id("lexlex") is not None
 
+    @pytest.mark.xfail(reason="not ready")
     def test_update_entry_repo(
         self,
         runner: CliRunner,
@@ -67,9 +68,8 @@ class TestCliResourceLifetime:
             cliapp,
             [
                 "resource",
-                "create",
-                "karp/tests/data/config/lexlex.json",
-                "--entry-repo-id",
+                "set-entry-repo",
+                "lexlex",
                 str(entry_repo.entity_id),
             ],
         )
@@ -79,4 +79,4 @@ class TestCliResourceLifetime:
         resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)
 
         resource_lexlex = resource_repo.get_by_resource_id("lexlex")
-        assert resource_lexlex is not None
+        assert resource_lexlex.entry_repository_id == entry_repo.entity_id
