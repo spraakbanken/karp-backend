@@ -6,10 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
-* Return result from commandbus. PR [#196](https://github.com/spraakbanken/karp-backend/pull/196) by [@kod-kristoff](https://github.com/kod-kristoff).
-* Add support for discarding entry-repositories. PR [#195](https://github.com/spraakbanken/karp-backend/pull/195) by [@kod-kristoff](https://github.com/kod-kristoff).
-* Avoid name clashes in SqlEntryRepository. PR [#194](https://github.com/spraakbanken/karp-backend/pull/194) by [@kod-kristoff](https://github.com/kod-kristoff).
-* Fix correct fetching from repos. PR [#193](https://github.com/spraakbanken/karp-backend/pull/193) by [@kod-kristoff](https://github.com/kod-kristoff).
+## 6.0.20
+
+### Changed
+
+- Return result from commandbus. PR [#196](https://github.com/spraakbanken/karp-backend/pull/196) by [@kod-kristoff](https://github.com/kod-kristoff).
+- Add support for discarding entry-repositories. PR [#195](https://github.com/spraakbanken/karp-backend/pull/195) by [@kod-kristoff](https://github.com/kod-kristoff).
+- Avoid name clashes in SqlEntryRepository. PR [#194](https://github.com/spraakbanken/karp-backend/pull/194) by [@kod-kristoff](https://github.com/kod-kristoff).
+- Fix correct fetching from repos. PR [#193](https://github.com/spraakbanken/karp-backend/pull/193) by [@kod-kristoff](https://github.com/kod-kristoff).
+
 ## 6.0.17
 
 ### Changed
