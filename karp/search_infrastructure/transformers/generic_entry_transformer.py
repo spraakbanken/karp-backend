@@ -13,7 +13,10 @@ from karp.lex.application.queries import (
     EntryViews,
     EntryDto,
 )
-from karp.lex.application.repositories import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
+from karp.lex.application.repositories import (
+    ResourceUnitOfWork,
+    EntryUowRepositoryUnitOfWork,
+)
 from karp.search.application.transformers import EntryTransformer
 from karp.search.application.repositories import IndexUnitOfWork, IndexEntry
 
@@ -42,12 +45,15 @@ class GenericEntryTransformer(EntryTransformer):
         TODO somehow get the needed entries in bulk after transforming some entries and insert them into
         TODO the transformed entries afterward. Very tricky.
         """
-        logger.debug('transforming entry',
-                     extra={'entry_id': src_entry.entry_id, 'resource_id': resource_id})
+        logger.debug(
+            "transforming entry",
+            extra={"entry_id": src_entry.entry_id, "resource_id": resource_id},
+        )
         index_entry = self.index_uow.repo.create_empty_object()
         index_entry.id = src_entry.entry_id
         self.index_uow.repo.assign_field(
-            index_entry, "_entry_version", src_entry.version)
+            index_entry, "_entry_version", src_entry.version
+        )
         self.index_uow.repo.assign_field(
             index_entry, "_last_modified", src_entry.last_modified
         )
@@ -81,11 +87,12 @@ class GenericEntryTransformer(EntryTransformer):
             if field_conf.get("virtual"):
                 logger.debug("found virtual field")
                 res = self._evaluate_function(
-                    field_conf["function"], _src_entry, resource)
-                logger.debug(f"res = {res}")
+                    field_conf["function"], _src_entry, resource
+                )
                 if res:
                     self.index_uow.repo.assign_field(
-                        _index_entry, "v_" + field_name, res)
+                        _index_entry, "v_" + field_name, res
+                    )
             elif field_conf.get("collection"):
                 field_content = self.index_uow.repo.create_empty_list()
                 if field_name in _src_entry:
@@ -99,10 +106,12 @@ class GenericEntryTransformer(EntryTransformer):
                                 field_conf["fields"].items(),
                             )
                             self.index_uow.repo.add_to_list_field(
-                                field_content, subfield_content.entry)
+                                field_content, subfield_content.entry
+                            )
                         else:
                             self.index_uow.repo.add_to_list_field(
-                                field_content, subfield)
+                                field_content, subfield
+                            )
             elif field_conf["type"] == "object":
                 field_content = self.index_uow.repo.create_empty_object()
                 if field_name in _src_entry:
@@ -118,15 +127,18 @@ class GenericEntryTransformer(EntryTransformer):
 
             if field_content:
                 self.index_uow.repo.assign_field(
-                    _index_entry, field_name, field_content)
+                    _index_entry, field_name, field_content
+                )
 
             # Handle ref
             if field_conf.get("ref") and field_name in _src_entry:
                 res = self._resolve_ref(
-                    resource, _src_entry, field_conf["ref"], field_name)
+                    resource, _src_entry, field_conf["ref"], field_name
+                )
                 if res:
                     self.index_uow.repo.assign_field(
-                        _index_entry, f"v_{field_name}", res)
+                        _index_entry, f"v_{field_name}", res
+                    )
 
     def _resolve_ref(
         self,
@@ -136,10 +148,9 @@ class GenericEntryTransformer(EntryTransformer):
         field_name: str,
     ):
         res = None
-        if 'resource_id' in ref_conf:
+        if "resource_id" in ref_conf:
             ref_resource = self.resource_repo.get_by_resource_id(
-                ref_conf["resource_id"],
-                version=ref_conf.get("resource_version")
+                ref_conf["resource_id"], version=ref_conf.get("resource_version")
             )
         else:
             ref_resource = resource
@@ -147,26 +158,28 @@ class GenericEntryTransformer(EntryTransformer):
         if not ref_resource:
             return res
 
-        if ref_conf['field'].get('collection'):
+        if ref_conf["field"].get("collection"):
             res = self.index_uow.repo.create_empty_list()
             for ref_id in src_entry[field_name]:
                 ref_entry_body = self.entry_views.get_by_entry_id_optional(
-                    ref_resource.resource_id, str(ref_id))
+                    ref_resource.resource_id, str(ref_id)
+                )
                 if ref_entry_body:
                     # ref_entry = {
                     #     field_name: ref_entry_body.entry
                     # }
                     ref_entry = ref_entry_body.entry
-                    if ref_conf['field']['type'] == 'object':
+                    if ref_conf["field"]["type"] == "object":
                         ref_index_entry = self.index_uow.repo.create_empty_object()
-                        for ref_field_name, _ref_field_conf in ref_conf['field']['fields'].items():
+                        for ref_field_name, _ref_field_conf in ref_conf["field"][
+                            "fields"
+                        ].items():
                             self.index_uow.repo.assign_field(
                                 ref_index_entry,
                                 ref_field_name,
                                 ref_entry[ref_field_name],
                             )
-                            self.index_uow.repo.add_to_list_field(
-                                res, ref_index_entry)
+                            self.index_uow.repo.add_to_list_field(res, ref_index_entry)
             # ref_objs = []
             # if ref_resource:
             #     for ref_id in _src_entry[field_name]:
@@ -202,12 +215,12 @@ class GenericEntryTransformer(EntryTransformer):
 
             # for elem in ref_id:
             ref = self.entry_views.get_by_entry_id_optional(
-                ref_resource.resource_id, str(src_entry[field_name]))
+                ref_resource.resource_id, str(src_entry[field_name])
+            )
             if ref:
                 ref_entry = {field_name: ref.entry}
                 ref_index_entry = self.index_uow.repo.create_empty_object()
-                list_of_sub_fields = (
-                    (field_name, ref_conf['field']),)
+                list_of_sub_fields = ((field_name, ref_conf["field"]),)
                 self._transform_to_index_entry(
                     ref_resource,
                     ref_entry,
@@ -246,18 +259,21 @@ class GenericEntryTransformer(EntryTransformer):
         src_resource: ResourceDto,
     ):
         logger.debug(
-            "indexing._evaluate_function", extra={'src_resource': src_resource.resource_id})
-        logger.debug('indexing._evaluate_function',
-                     extra={'src_entry': src_entry})
+            "indexing._evaluate_function",
+            extra={"src_resource": src_resource.resource_id},
+        )
+        logger.debug("indexing._evaluate_function", extra={"src_entry": src_entry})
         if "multi_ref" in function_conf:
             function_conf = function_conf["multi_ref"]
             target_field = function_conf["field"]
             if "resource_id" in function_conf:
                 logger.debug(
-                    "indexing._evaluate_function: trying to find '%s'", function_conf['resource_id']
+                    "indexing._evaluate_function: trying to find '%s'",
+                    function_conf["resource_id"],
                 )
                 target_resource = self.resource_repo.get_by_resource_id(
-                    function_conf["resource_id"], version=function_conf["resource_version"]
+                    function_conf["resource_id"],
+                    version=function_conf["resource_version"],
                 )
                 if target_resource is None:
                     logger.warning(
@@ -268,7 +284,8 @@ class GenericEntryTransformer(EntryTransformer):
             else:
                 target_resource = src_resource
             logger.debug(
-                "indexing._evaluate_function target_resource='%s'", target_resource.resource_id
+                "indexing._evaluate_function target_resource='%s'",
+                target_resource.resource_id,
             )
             if "test" in function_conf:
                 operator, args = list(function_conf["test"].items())[0]
@@ -283,7 +300,8 @@ class GenericEntryTransformer(EntryTransformer):
                     #     target_resource, filters
                     # )
                     target_entries = self.entry_views.get_by_referenceable(
-                        target_resource.resource_id, filters)
+                        target_resource.resource_id, filters
+                    )
                 else:
                     raise NotImplementedError()
             else:
@@ -301,8 +319,7 @@ class GenericEntryTransformer(EntryTransformer):
                     index_entry,
                     list_of_sub_fields,
                 )
-                self.index_uow.repo.add_to_list_field(
-                    res, index_entry.entry["tmp"])
+                self.index_uow.repo.add_to_list_field(res, index_entry.entry["tmp"])
         elif "plugin" in function_conf:
             plugin_id = function_conf["plugin"]
             import karp.pluginmanager as plugins
@@ -324,13 +341,10 @@ class GenericEntryTransformer(EntryTransformer):
     ) -> None:
         add = collections.defaultdict(list)
         for src_entry_id in entry_ids:
-            refs = self.get_referenced_entries.query(
-                resource_id, src_entry_id
-            )
+            refs = self.get_referenced_entries.query(resource_id, src_entry_id)
             for field_ref in refs:
                 ref_resource = self.resource_repo.get_by_resource_id(
-                    field_ref.resource_id,
-                    version=(field_ref.resource_version)
+                    field_ref.resource_id, version=(field_ref.resource_version)
                 )
                 if ref_resource:
                     ref_index_entry = self.transform(

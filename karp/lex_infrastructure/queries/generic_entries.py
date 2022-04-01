@@ -7,7 +7,17 @@ from karp import lex
 from karp.lex import GetHistoryDto, HistoryDto
 
 from karp.lex.domain.entities import Entry
-from karp.lex.application.queries import EntryViews, EntryDto, EntryDiffDto, GetEntryDiff, GetEntryHistory, GetHistory, EntryHistoryRequest, EntryDiffRequest, GetEntryRepositoryId
+from karp.lex.application.queries import (
+    EntryViews,
+    EntryDto,
+    EntryDiffDto,
+    GetEntryDiff,
+    GetEntryHistory,
+    GetHistory,
+    EntryHistoryRequest,
+    EntryDiffRequest,
+    GetEntryRepositoryId,
+)
 from karp.foundation.value_objects import unique_id
 from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 
@@ -30,15 +40,10 @@ class GenericEntryViews(EntryViews):
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            return self._entry_to_entry_dto(
-                uw.repo.by_id(entity_id),
-                resource_id
-            )
+            return self._entry_to_entry_dto(uw.repo.by_id(entity_id), resource_id)
 
     def get_by_id_optional(
-        self,
-        resource_id: str,
-        entity_id: unique_id.UniqueId
+        self, resource_id: str, entity_id: unique_id.UniqueId
     ) -> typing.Optional[EntryDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
@@ -54,15 +59,10 @@ class GenericEntryViews(EntryViews):
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            return self._entry_to_entry_dto(
-                uw.repo.by_entry_id(entry_id),
-                resource_id
-            )
+            return self._entry_to_entry_dto(uw.repo.by_entry_id(entry_id), resource_id)
 
     def get_by_entry_id_optional(
-        self,
-        resource_id: str,
-        entry_id: str
+        self, resource_id: str, entry_id: str
     ) -> typing.Optional[EntryDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
@@ -134,7 +134,9 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
         version: typing.Optional[int],
     ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id(resource_id)
-        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
+            entry_repo_id
+        ) as uw:
             result = uw.repo.by_entry_id(entry_id, version=version)
 
         return EntryDto(
@@ -151,21 +153,22 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
 class GenericGetHistory(GenericEntryQuery, GetHistory):
     def query(
         self,
-        history_request: EntryHistoryRequest,
+        request: EntryHistoryRequest,
     ) -> GetHistoryDto:
-        logger.info('querying history', extra={
-                    'history_request': history_request})
-        entry_repo_id = self.get_entry_repo_id(history_request.resource_id)
-        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(entry_repo_id) as uw:
+        logger.info("querying history", extra={"request": request})
+        entry_repo_id = self.get_entry_repo_id(request.resource_id)
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
+            entry_repo_id
+        ) as uw:
             paged_query, total = uw.repo.get_history(
-                entry_id=history_request.entry_id,
-                user_id=history_request.user_id,
-                from_date=history_request.from_date,
-                to_date=history_request.to_date,
-                from_version=history_request.from_version,
-                to_version=history_request.to_version,
-                offset=history_request.current_page * history_request.page_size,
-                limit=history_request.page_size,
+                entry_id=request.entry_id,
+                user_id=request.user_id,
+                from_date=request.from_date,
+                to_date=request.to_date,
+                from_version=request.from_version,
+                to_version=request.to_version,
+                offset=request.current_page * request.page_size,
+                limit=request.page_size,
             )
         result = []
         previous_body = {}
@@ -180,7 +183,7 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
             # else:
             #     previous_body = {}
             history_diff = jsondiff.compare(previous_body, history_entry.body)
-            logger.info('diff', extra={'diff': history_diff})
+            logger.info("diff", extra={"diff": history_diff})
             result.append(
                 HistoryDto(
                     timestamp=history_entry.last_modified,
@@ -200,40 +203,38 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
 class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
     def query(
         self,
-        diff_request: EntryDiffRequest,
+        request: EntryDiffRequest,
     ) -> EntryDiffDto:
 
-        entry_repo_id = self.get_entry_repo_id(diff_request.resource_id)
-        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(entry_repo_id) as uw:
-            db_entry = uw.repo.by_entry_id(diff_request.entry_id)
+        entry_repo_id = self.get_entry_repo_id(request.resource_id)
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
+            entry_repo_id
+        ) as uw:
+            db_entry = uw.repo.by_entry_id(request.entry_id)
 
             #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
             #
             #     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
             #     timestamp_field = resource_obj.history_model.timestamp
             #
-            if diff_request.from_version:
-                obj1 = uw.repo.by_id(
-                    db_entry.id, version=diff_request.from_version)
-            elif diff_request.from_date is not None:
-                obj1 = uw.repo.by_id(
-                    db_entry.id, after_date=diff_request.from_date)
+            if request.from_version:
+                obj1 = uw.repo.by_id(db_entry.id, version=request.from_version)
+            elif request.from_date is not None:
+                obj1 = uw.repo.by_id(db_entry.id, after_date=request.from_date)
             else:
                 obj1 = uw.repo.by_id(db_entry.id, oldest_first=True)
 
             obj1_body = obj1.body if obj1 else None
 
-            if diff_request.to_version:
-                obj2 = uw.repo.by_id(
-                    db_entry.id, version=diff_request.to_version)
+            if request.to_version:
+                obj2 = uw.repo.by_id(db_entry.id, version=request.to_version)
                 obj2_body = obj2.body
-            elif diff_request.to_date is not None:
-                obj2 = uw.repo.by_id(
-                    db_entry.id, before_date=diff_request.to_date)
+            elif request.to_date is not None:
+                obj2 = uw.repo.by_id(db_entry.id, before_date=request.to_date)
                 obj2_body = obj2.body
-            elif diff_request.entry is not None:
+            elif request.entry is not None:
                 obj2 = None
-                obj2_body = diff_request.entry
+                obj2_body = request.entry
             else:
                 obj2 = db_entry
                 obj2_body = db_entry.body
