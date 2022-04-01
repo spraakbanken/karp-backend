@@ -125,7 +125,13 @@ class GenericEntryTransformer(EntryTransformer):
                         field_content,
                         field_conf["fields"].items(),
                     )
-            elif field_conf["type"] in ("integer", "string", "number", "boolean"):
+            elif field_conf["type"] in (
+                "integer",
+                "string",
+                "number",
+                "boolean",
+                "long_string",
+            ):
                 if field_name in _src_entry:
                     field_content = _src_entry[field_name]
 
