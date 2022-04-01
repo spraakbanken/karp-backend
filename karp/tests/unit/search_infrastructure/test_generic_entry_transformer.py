@@ -59,6 +59,10 @@ class TestGenericEntryTransformer:
         "field_name, field_config, field_value",
         [
             ("single", {"type": "boolean"}, True),
+            ("single", {"type": "string"}, "plain string"),
+            ("single", {"type": "number"}, 3.14),
+            ("single", {"type": "integer"}, 3),
+            ("single", {"type": "long_string"}, "very long string"),
             (
                 "single",
                 {
@@ -118,7 +122,15 @@ class TestGenericEntryTransformer:
         "field_name, field_config, field_value",
         [
             ("single", {"type": "boolean"}, True),
+            ("single", {"type": "string"}, "plain string"),
+            ("single", {"type": "number"}, 3.14),
+            ("single", {"type": "integer"}, 3),
             ("single", {"type": "long_string"}, "very long string"),
+            (
+                "single",
+                {"type": "object", "fields": {"sub": {"type": "string"}}},
+                {"sub": "test"},
+            ),
         ],
     )
     def test_transform_to_index_entry_object(
