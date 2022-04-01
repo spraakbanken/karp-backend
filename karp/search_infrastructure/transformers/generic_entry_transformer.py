@@ -85,7 +85,7 @@ class GenericEntryTransformer(EntryTransformer):
         _index_entry: IndexEntry,
         fields,
     ):
-        logger.debug("transforming [part of] entry", extra={"_src_entry": _src_entry})
+        logger.debug("transforming [part of] entry", extra={"src_entry": _src_entry})
         for field_name, field_conf in fields:
             field_content = None
             if field_conf.get("virtual"):
