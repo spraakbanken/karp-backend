@@ -31,6 +31,7 @@ from karp.lex.application.use_cases import (
 )
 from karp.lex.application.queries import (
     EntryDto,
+    EntryViews,
     GetEntryDiff,
     GetEntryHistory,
     GetHistory,
