@@ -8,6 +8,7 @@ from tabulate import tabulate
 from tqdm import tqdm
 
 from karp.foundation.commands import CommandBus
+from karp import lex
 from karp.lex.domain import commands
 # from karp.lex.domain.errors import ResourceAlreadyPublished
 
@@ -53,6 +54,24 @@ def update_entries(resource_id: str, data: Path):
         resource_id, json_streams.load_from_file(data)
     )
 
+@subapp.command("export")
+@cli_error_handler
+@cli_timer
+def export_entries(
+    ctx: typer.Context,
+    resource_id: str,
+    output: Optional[Path] = typer.Option(None, "--output", "-o"),
+):
+    entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)
+    json_streams.dump_to_file(
+        tqdm(
+            entry_views.all_entries(resource_id),
+            desc="Exporting",
+            unit=" entries",
+        ),
+        output,
+        use_stdout_as_default=None,
+    )
 
 def init_app(app):
     app.add_typer(subapp, name="entries")
