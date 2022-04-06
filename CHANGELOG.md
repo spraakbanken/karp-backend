@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Fix cli export and add chunked cli import. PR [#198](https://github.com/spraakbanken/karp-backend/pull/198) by [@kod-kristoff](https://github.com/kod-kristoff).
 * fix: handle long_string in transforming. PR [#197](https://github.com/spraakbanken/karp-backend/pull/197) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## 6.0.20
 
