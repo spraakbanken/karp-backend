@@ -9,7 +9,6 @@ from tqdm import tqdm
 
 from karp.foundation.commands import CommandBus
 from karp import lex
-from karp.lex.domain import commands
 
 # from karp.lex.domain.errors import ResourceAlreadyPublished
 
