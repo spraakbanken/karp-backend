@@ -11,7 +11,8 @@ from karp.lex.domain import errors
 
 class AddEntry(Command):
     entity_id: unique_id.UniqueId = pydantic.Field(
-        default_factory=unique_id.make_unique_id)
+        default_factory=unique_id.make_unique_id
+    )
     resource_id: str
     entry: typing.Dict
     user: str
@@ -23,6 +24,10 @@ class AddEntries(Command):
     entries: typing.Iterable[typing.Dict]
     user: str
     message: str
+
+
+class AddEntriesInChunks(AddEntries):
+    chunk_size: int
 
 
 class DeleteEntry(Command):
