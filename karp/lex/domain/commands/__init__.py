@@ -2,6 +2,7 @@
 
 from .entry_commands import (
     AddEntries,
+    AddEntriesInChunks,
     AddEntry,
     DeleteEntry,
     UpdateEntry,
@@ -14,3 +15,7 @@ from .resource_commands import (
     SetEntryRepoId,
     UpdateResource,
 )
+
+__all__ = [
+    "AddEntriesInChunks",
+]
