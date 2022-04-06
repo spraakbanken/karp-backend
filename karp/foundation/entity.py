@@ -46,7 +46,9 @@ class Entity(events.EventMixin):
 
     def _check_not_discarded(self):
         if self._discarded:
-            raise self.DiscardedEntityError(f"Attempt to use {self!r}")
+            raise self.DiscardedEntityError(
+                f"Attempt to use {self!r}, entity_id = {self.entity_id}"
+            )
 
     def _validate_event_applicability(self, event):
         if event.entity_id != self.id:
