@@ -272,7 +272,7 @@ def delete(
         message=message or "resource deleted",
     )
     resource = bus.dispatch(cmd)
-    typer.echo(f"Deleted resource '{resource.resource_id}' ({resource.entity_id})")
+    typer.echo(f"Deleted resource '{resource_id}' ({resource})")
 
 
 def init_app(app):
