@@ -1,12 +1,8 @@
-import collections
-import json
 import logging
 import typing
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Generic, List, Optional, Tuple
 
-import fastjsonschema  # pyre-ignore
 import json_streams
 from sb_json_tools import jsondiff
 import logging
@@ -17,8 +13,13 @@ from karp.lex.domain import errors, entities
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
 from karp.foundation.value_objects import unique_id
-from karp.errors import (ClientErrorCodes, EntryIdMismatch, EntryNotFoundError,
-                         KarpError, UpdateConflict)
+from karp.errors import (
+    ClientErrorCodes,
+    EntryIdMismatch,
+    EntryNotFoundError,
+    KarpError,
+    UpdateConflict,
+)
 from karp.foundation import events as foundation_events
 from karp.foundation import messagebus
 from karp.lex.domain import commands
@@ -78,7 +79,7 @@ class BasingEntry:
     def __init__(
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
-        resource_uow: repositories.ResourceUnitOfWork
+        resource_uow: repositories.ResourceUnitOfWork,
     ) -> None:
         super().__init__()
         self.entry_repo_uow = entry_repo_uow
@@ -94,18 +95,15 @@ class BasingEntry:
 
 
 class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
-
-    def execute(self, cmd: commands.AddEntry):
+    def execute(self, command: commands.AddEntry):
         with self.resource_uow:
-            resource = self.resource_uow.repo.by_resource_id(
-                cmd.resource_id)
+            resource = self.resource_uow.repo.by_resource_id(command.resource_id)
 
         try:
-            entry_id = resource.id_getter()(cmd.entry)
+            entry_id = resource.id_getter()(command.entry)
         except KeyError as err:
             raise errors.MissingIdField(
-                resource_id=cmd.resource_id,
-                entry=cmd.entry
+                resource_id=command.resource_id, entry=command.entry
             ) from err
         entry_schema = EntrySchema(resource.entry_json_schema)
 
@@ -114,19 +112,19 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
             if (
                 existing_entry
                 and not existing_entry.discarded
-                and existing_entry.entity_id != cmd.entity_id
+                and existing_entry.entity_id != command.entity_id
             ):
                 raise errors.IntegrityError(
                     f"An entry with entry_id '{entry_id}' already exists."
                 )
 
-            entry_schema.validate_entry(cmd.entry)
+            entry_schema.validate_entry(command.entry)
 
             entry = resource.create_entry_from_dict(
-                cmd.entry,
-                user=cmd.user,
-                message=cmd.message,
-                entity_id=cmd.entity_id
+                command.entry,
+                user=command.user,
+                message=command.message,
+                entity_id=command.entity_id,
             )
             uw.entries.save(entry)
             uw.commit()
@@ -141,28 +139,24 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
 
 
 class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
-    def execute(self, cmd: commands.UpdateEntry):
+    def execute(self, command: commands.UpdateEntry):
         with self.resource_uow:
-            resource = self.resource_uow.repo.by_resource_id(
-                cmd.resource_id
-            )
+            resource = self.resource_uow.repo.by_resource_id(command.resource_id)
 
         entry_schema = EntrySchema(resource.entry_json_schema)
-        entry_schema.validate_entry(cmd.entry)
+        entry_schema.validate_entry(command.entry)
 
         with self.get_entry_uow(resource.entry_repository_id) as uw:
             try:
-                current_db_entry = uw.repo.by_entry_id(
-                    cmd.entry_id
-                )
+                current_db_entry = uw.repo.by_entry_id(command.entry_id)
             except errors.EntryNotFound as err:
                 raise errors.EntryNotFound(
-                    cmd.resource_id,
-                    cmd.entry_id,
+                    command.resource_id,
+                    command.entry_id,
                     entity_id=None,
                 ) from err
 
-            diff = jsondiff.compare(current_db_entry.body, cmd.entry)
+            diff = jsondiff.compare(current_db_entry.body, command.entry)
             if not diff:
                 return current_db_entry
 
@@ -173,22 +167,29 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
             #         .order_by(resource.history_model.version.desc())
             #         .first()
             #     )
-            if not cmd.force and current_db_entry.version != cmd.version:
+            if not command.force and current_db_entry.version != command.version:
                 logger.info(
-                    'version conflict', current_version=current_db_entry.version, version=cmd.version)
+                    "version conflict",
+                    current_version=current_db_entry.version,
+                    version=command.version,
+                )
                 raise errors.UpdateConflict(diff)
 
             id_getter = resource.id_getter()
-            new_entry_id = id_getter(cmd.entry)
+            new_entry_id = id_getter(command.entry)
 
-            current_db_entry.body = cmd.entry
+            current_db_entry.body = command.entry
             current_db_entry.stamp(
-                cmd.user, message=cmd.message, timestamp=cmd.timestamp)
-            if new_entry_id != cmd.entry_id:
-                logger.info('updating entry_id',
-                            entry_id=cmd.entry_id, new_entry_id=new_entry_id)
+                command.user, message=command.message, timestamp=command.timestamp
+            )
+            if new_entry_id != command.entry_id:
+                logger.info(
+                    "updating entry_id",
+                    entry_id=command.entry_id,
+                    new_entry_id=new_entry_id,
+                )
                 current_db_entry.entry_id = new_entry_id
-                # uw.repo.move(current_db_entry, old_entry_id=cmd.entry_id)
+                # uw.repo.move(current_db_entry, old_entry_id=command.entry_id)
                 uw.repo.save(current_db_entry)
             else:
                 uw.repo.save(current_db_entry)
@@ -212,11 +213,8 @@ def add_entries_from_file(
     )
 
 
-class AddingEntries(
-    BasingEntry,
-    CommandHandler[commands.AddEntries]
-):
-    def execute(self, cmd: commands.AddEntries):
+class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
+    def execute(self, command: commands.AddEntries):
         """
         Add entries to DB and INDEX (if present and resource is active).
 
@@ -234,33 +232,87 @@ class AddingEntries(
             List of the id's of the created entries.
         """
 
-        if not isinstance(cmd.resource_id, str):
+        if not isinstance(command.resource_id, str):
             raise ValueError(
-                f"'resource_id' must be of type 'str', were '{type(cmd.resource_id)}'"
+                f"'resource_id' must be of type 'str', were '{type(command.resource_id)}'"
             )
         with self.resource_uow:
-            resource = self.resource_uow.resources.by_resource_id(
-                cmd.resource_id)
+            resource = self.resource_uow.resources.by_resource_id(command.resource_id)
 
         if not resource:
-            raise errors.ResourceNotFound(cmd.resource_id)
+            raise errors.ResourceNotFound(command.resource_id)
 
         entry_schema = EntrySchema(resource.entry_json_schema)
 
         created_db_entries = []
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
-                resource.entry_repository_id) as uw:
-            for entry_raw in cmd.entries:
+            resource.entry_repository_id
+        ) as uw:
+            for entry_raw in command.entries:
                 entry_schema.validate_entry(entry_raw)
 
                 entry = resource.create_entry_from_dict(
                     entry_raw,
-                    user=cmd.user,
-                    message=cmd.message,
+                    user=command.user,
+                    message=command.message,
                     entity_id=unique_id.make_unique_id(),
                 )
                 uw.entries.save(entry)
                 created_db_entries.append(entry)
+            uw.commit()
+
+        return created_db_entries
+
+
+class AddingEntriesInChunks(BasingEntry, CommandHandler[commands.AddEntriesInChunks]):
+    def execute(self, command: commands.AddEntriesInChunks):
+        """
+        Add entries to DB and INDEX (if present and resource is active).
+
+        Raises
+        ------
+        RuntimeError
+            If the resource.entry_json_schema fails to compile.
+        KarpError
+            - If an entry fails to be validated against the json schema.
+            - If the DB interaction fails.
+
+        Returns
+        -------
+        List
+            List of the id's of the created entries.
+        """
+
+        if not isinstance(command.resource_id, str):
+            raise ValueError(
+                f"'resource_id' must be of type 'str', were '{type(command.resource_id)}'"
+            )
+        with self.resource_uow:
+            resource = self.resource_uow.resources.by_resource_id(command.resource_id)
+
+        if not resource:
+            raise errors.ResourceNotFound(command.resource_id)
+
+        entry_schema = EntrySchema(resource.entry_json_schema)
+
+        created_db_entries = []
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
+            resource.entry_repository_id
+        ) as uw:
+            for i, entry_raw in enumerate(command.entries):
+                entry_schema.validate_entry(entry_raw)
+
+                entry = resource.create_entry_from_dict(
+                    entry_raw,
+                    user=command.user,
+                    message=command.message,
+                    entity_id=unique_id.make_unique_id(),
+                )
+                uw.entries.save(entry)
+                created_db_entries.append(entry)
+
+                if i % command.chunk_size == 0:
+                    uw.commit()
             uw.commit()
 
         return created_db_entries
@@ -382,20 +434,19 @@ class AddingEntries(
 
 
 class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):
-
-    def execute(self, cmd: commands.DeleteEntry):
+    def execute(self, command: commands.DeleteEntry):
         with self.resource_uow:
-            resource = self.resource_uow.repo.by_resource_id(cmd.resource_id)
+            resource = self.resource_uow.repo.by_resource_id(command.resource_id)
 
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             resource.entry_repository_id
         ) as uw:
-            entry = uw.repo.by_entry_id(cmd.entry_id)
+            entry = uw.repo.by_entry_id(command.entry_id)
 
             entry.discard(
-                user=cmd.user,
-                message=cmd.message,
-                timestamp=cmd.timestamp,
+                user=command.user,
+                message=command.message,
+                timestamp=command.timestamp,
             )
             uw.repo.save(entry)
             uw.commit()

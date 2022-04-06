@@ -1,6 +1,7 @@
 from .entry_handlers import (
     AddingEntry,
     AddingEntries,
+    AddingEntriesInChunks,
     DeletingEntry,
     UpdatingEntry,
 )
@@ -12,3 +13,8 @@ from .resource_handlers import (
     SettingEntryRepoId,
     UpdatingResource,
 )
+
+
+__all__ = [
+    "AddingEntriesInChunks",
+]
