@@ -35,7 +35,7 @@ def list_resource_permissions(
 
 @router.get(
     "/",
-    response_model=list[ResourceProtected],
+    # response_model=list[ResourceProtected],
 )
 def get_all_resources(
     get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),

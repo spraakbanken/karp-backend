@@ -72,9 +72,9 @@ class ResourceBase(BaseModel):
     name: str
     config: typing.Dict
     message: Optional[str] = None
-    entry_repository_id: Optional[unique_id.UniqueId]
-    is_published: Optional[bool]
-    version: Optional[int]
+    entry_repo_id: Optional[unique_id.UniqueId]
+    # is_published: Optional[bool]
+    # version: Optional[int]
 
 
 class ResourceCreate(ResourceBase):
