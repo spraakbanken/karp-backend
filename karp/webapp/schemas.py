@@ -72,7 +72,9 @@ class ResourceBase(BaseModel):
     name: str
     config: typing.Dict
     message: Optional[str] = None
-    entry_repo_id: Optional[unique_id.UniqueId]
+    entry_repository_id: Optional[unique_id.UniqueId]
+    is_published: bool
+    version: int
 
 
 class ResourceCreate(ResourceBase):
@@ -81,6 +83,9 @@ class ResourceCreate(ResourceBase):
 
 class ResourcePublic(EntityIdMixin, ResourceBase):
     last_modified: float
+
+
+class ResourceProtected(ResourcePublic):
     last_modified_by: str
 
 
