@@ -210,7 +210,7 @@ class Resource(TimestampedVersionedEntity):
         timestamp: float = None,
     ):
         self._extracted_from_publish_9(timestamp, user, message, "Published")
-        self._version += 1
+        self._increment_version()
         self.is_published = True
         self.queue_event(
             events.ResourcePublished(
