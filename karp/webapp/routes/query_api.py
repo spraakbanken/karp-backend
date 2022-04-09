@@ -69,7 +69,7 @@ def query_split(
     sort: str = Query(
         None,
         description="The `field` to sort by. If missing, default order for each resource will be used.",
-        regex=r"^[a-zA-Z0-9_\-]+\|(asc|desc)",
+        regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
     lexicon_stats: bool = Query(
         True, description="Show the hit count per lexicon"),
@@ -151,7 +151,7 @@ def query(
     sort: List[str] = Query(
         [],
         description="The `field` to sort by. If missing, default order for each resource will be used.",
-        regex=r"^[a-zA-Z0-9_\-]+\|(asc|desc)",
+        regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
     lexicon_stats: bool = Query(
         True, description="Show the hit count per lexicon"),
