@@ -5,13 +5,13 @@ from fastapi import status
 
 class TestQueryApiInput:
     @pytest.mark.parametrize("query_string", [
-        "sort=field",
-        "sort=field|asc",
-        "sort=field|desc",
+        "sort=name",
+        "sort=name|asc",
+        "sort=name|desc",
         "from=10",
         "size=10",
         "q=",
-        "q=&sort=field&from=0&size=25",
+        "q=&sort=name&from=0&size=25",
     ])
     @pytest.mark.parametrize("path", ["query", "query/split"])
     def test_valid_query_strings(
