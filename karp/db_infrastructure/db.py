@@ -8,7 +8,7 @@ import sqlalchemy
 from sqlalchemy import (JSON, Column, Enum, ForeignKey, Integer, MetaData,
                         String, Table, Text, Unicode, and_, event, exc, func,
                         or_)
-from sqlalchemy.dialects.mysql import Double
+from sqlalchemy.dialects.mysql import DOUBLE
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.declarative import declarative_base, declared_attr

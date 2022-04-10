@@ -30,7 +30,7 @@ def create_resources():
         sa.Column("name", sa.String(length=64), nullable=False),
         sa.Column("config", NestedMutableJson, nullable=False),
         sa.Column("is_published", sa.Boolean, index=True, nullable=True, default=None),
-        sa.Column("last_modified", mysql.Double(), nullable=False),
+        sa.Column("last_modified", mysql.DOUBLE(), nullable=False),
         sa.Column("last_modified_by", sa.String(100), nullable=False),
         sa.Column("message", sa.String(100), nullable=False),
         sa.Column("op", sa.Enum("ADDED", "UPDATED", "DELETED"), nullable=False),
