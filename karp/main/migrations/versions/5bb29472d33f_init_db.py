@@ -7,7 +7,6 @@ Create Date: 2018-12-12 13:48:19.255822
 """
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects import mysql
 from sqlalchemy_utils import UUIDType
 from sqlalchemy_json import NestedMutableJson
 
@@ -30,7 +29,7 @@ def create_resources():
         sa.Column("name", sa.String(length=64), nullable=False),
         sa.Column("config", NestedMutableJson, nullable=False),
         sa.Column("is_published", sa.Boolean, index=True, nullable=True, default=None),
-        sa.Column("last_modified", mysql.DOUBLE(), nullable=False),
+        sa.Column("last_modified", sa.Float(precision=53), nullable=False),
         sa.Column("last_modified_by", sa.String(100), nullable=False),
         sa.Column("message", sa.String(100), nullable=False),
         sa.Column("op", sa.Enum("ADDED", "UPDATED", "DELETED"), nullable=False),
