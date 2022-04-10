@@ -1,5 +1,7 @@
 from typing import Dict
 
+
+
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
@@ -19,7 +21,7 @@ class ResourceModel(db.Base):
     config = db.Column(db.NestedMutableJson, nullable=False)
     is_published = db.Column(db.Boolean, index=True,
                              nullable=True, default=None)
-    last_modified = db.Column(db.Float, nullable=False)
+    last_modified = db.Column(db.Double(), nullable=False)
     last_modified_by = db.Column(db.String(100), nullable=False)
     message = db.Column(db.String(100), nullable=False)
     op = db.Column(db.Enum(ResourceOp), nullable=False)
@@ -108,7 +110,7 @@ class EntryUowModel(db.Base):
     connection_str = db.Column(db.String(128))
     name = db.Column(db.String(64), nullable=False)
     config = db.Column(db.NestedMutableJson, nullable=False)
-    last_modified = db.Column(db.Float, nullable=False)
+    last_modified = db.Column(db.Double(), nullable=False)
     last_modified_by = db.Column(db.String(100), nullable=False)
     message = db.Column(db.String(100), nullable=False)
     discarded = db.Column(db.Boolean, default=False)
