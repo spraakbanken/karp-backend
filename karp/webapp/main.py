@@ -35,7 +35,6 @@ from karp.webapp.contrib import MatomoMiddleware
 
 
 querying_description = """
-Query
 ## Query DSL
 ### Query operators
 - `contains|<field>|<string>` Find all entries where the field <field> contains <string>. More premissive than equals.
