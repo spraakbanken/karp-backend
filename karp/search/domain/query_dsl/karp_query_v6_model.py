@@ -118,7 +118,7 @@ class Missing(ModelBase):
 
 @dataclass
 class Not(ModelBase):
-    expr: Any = None
+    exps: Any = None
     op: Any = None
 
 
