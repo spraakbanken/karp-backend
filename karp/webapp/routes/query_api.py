@@ -1,11 +1,12 @@
 """
 Query API.
+
+## Query DSL
 """
 import logging
 from typing import List, Optional
 
-from fastapi import (APIRouter, Depends, HTTPException, Path, Query, Security,
-                     status)
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
 
 from karp import errors as karp_errors, auth, search
 from karp.search.application.queries import SearchService, QueryRequest
@@ -27,8 +28,7 @@ router = APIRouter()
     name="Get lexical entries by id",
 )
 def get_entries_by_id(
-    resource_id: str = Path(...,
-                            description="The resource to perform operation on"),
+    resource_id: str = Path(..., description="The resource to perform operation on"),
     entry_ids: str = Path(
         ...,
         description="Comma-separated. The ids to perform operation on.",
@@ -39,9 +39,7 @@ def get_entries_by_id(
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     logger.debug("webapp.views.get_entries_by_id")
-    if not auth_service.authorize(
-        auth.PermissionLevel.read, user, [resource_id]
-    ):
+    if not auth_service.authorize(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -69,10 +67,9 @@ def query_split(
     sort: str = Query(
         None,
         description="The `field` to sort by. If missing, default order for each resource will be used.",
-        # regex=r"^[a-zA-Z0-9_\-]+\|(asc|desc)",
+        regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
-    lexicon_stats: bool = Query(
-        True, description="Show the hit count per lexicon"),
+    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
@@ -87,11 +84,9 @@ def query_split(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
-    logger.debug('/query/split called', extra={'resources': resources})
+    logger.debug("/query/split called", extra={"resources": resources})
     resource_list = resources.split(",")
-    if not auth_service.authorize(
-        auth.PermissionLevel.read, user, resource_list
-    ):
+    if not auth_service.authorize(auth.PermissionLevel.read, user, resource_list):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -109,20 +104,18 @@ def query_split(
     except karp_errors.KarpError as err:
         logger.exception(
             "Error occured when calling '/query/split'",
-            extra={'resources': resources,
-                   'q': q,
-                   'error_message': err.message},
+            extra={"resources": resources, "q": q, "error_message": err.message},
         )
         raise
     except search.IncompleteQuery as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
-                'errorCode': karp_errors.ClientErrorCodes.SEARCH_INCOMPLETE_QUERY,
-                'message': 'Error in query',
-                'failing_query': err.failing_query,
-                'error_description': err.error_description,
-            }
+                "errorCode": karp_errors.ClientErrorCodes.SEARCH_INCOMPLETE_QUERY,
+                "message": "Error in query",
+                "failing_query": err.failing_query,
+                "error_description": err.error_description,
+            },
         )
     return response
 
@@ -151,10 +144,9 @@ def query(
     sort: List[str] = Query(
         [],
         description="The `field` to sort by. If missing, default order for each resource will be used.",
-        # regex=r"^[a-zA-Z0-9_\-]+\|(asc|desc)",
+        regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
-    lexicon_stats: bool = Query(
-        True, description="Show the hit count per lexicon"),
+    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
@@ -204,7 +196,7 @@ def query(
     ### Logical Operators
     The logical operators can be used both at top-level and lower-levels.
 
-    - `not(<expression1>||<experssion2>||...)` Find all entries that doesn't match the expression <expression>.
+    - `not(<expression1>||<expression2>||...)` Find all entries that doesn't match the expression <expression>.
 
     - `and(<expression1>||<expression2>||...)` Find all entries that matches <expression1> AND <expression2>.
 
@@ -220,12 +212,11 @@ def query(
     # and||equals|wf|sitta||not||equals|wf|satt
     # """
     logger.debug(
-        "Called 'query' called with", extra={'resources': resources, 'from': from_, 'size': size}
+        "Called 'query' called with",
+        extra={"resources": resources, "from": from_, "size": size},
     )
     resource_list = resources.split(",")
-    if not auth_service.authorize(
-        auth.PermissionLevel.read, user, resource_list
-    ):
+    if not auth_service.authorize(auth.PermissionLevel.read, user, resource_list):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -243,15 +234,13 @@ def query(
         lexicon_stats=lexicon_stats,
     )
     try:
-        print(f'{search_service=}')
+        print(f"{search_service=}")
         response = search_service.query(query_request)
 
     except karp_errors.KarpError as err:
         logger.exception(
             "Error occured when calling 'query' with",
-            extra={'resources': resources,
-                   'q': q,
-                   'error_message': err.message},
+            extra={"resources": resources, "q": q, "error_message": err.message},
         )
         raise
     return response

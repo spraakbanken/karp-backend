@@ -30,14 +30,6 @@ def sql_entry_uow_v2_creator(sqlite_session_factory) -> SqlEntryUowV2Creator:
     )
 
 
-@pytest.fixture
-def sql_entry_uow_v2_creator(sqlite_session_factory) -> SqlEntryUowV2Creator:
-    return SqlEntryUowV2Creator(
-        event_bus=mock.Mock(spec=EventBus),
-        session_factory=sqlite_session_factory,
-    )
-
-
 class TestSqlEntryUowV1:
     def test_creator_repository_type(
         self,

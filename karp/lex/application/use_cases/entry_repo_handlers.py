@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 
 from karp.foundation.commands import CommandHandler
 from karp.lex.application.repositories.entries import EntryUnitOfWork

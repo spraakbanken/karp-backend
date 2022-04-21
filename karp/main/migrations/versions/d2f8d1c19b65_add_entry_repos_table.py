@@ -27,7 +27,7 @@ def create_entry_repos():
         sa.Column('connection_str', sa.String(length=128)),
         sa.Column("name", sa.String(length=64), nullable=False),
         sa.Column("config", NestedMutableJson, nullable=False),
-        sa.Column("last_modified", sa.Float, nullable=False),
+        sa.Column("last_modified", sa.Float(precision=53), nullable=False),
         sa.Column("last_modified_by", sa.String(100), nullable=False),
         sa.Column("message", sa.String(100), nullable=False),
         sa.Column("discarded", sa.Boolean(), nullable=True),
