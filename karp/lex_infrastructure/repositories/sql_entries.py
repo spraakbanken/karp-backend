@@ -14,9 +14,13 @@ from karp.foundation.value_objects import UniqueId
 from karp.foundation.events import EventBus
 from karp.lex.domain import errors
 from karp.lex.application import repositories
+
 # from karp.domain.errors import NonExistingField, RepositoryError
 from karp.lex.domain.entities.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
-    Entry, EntryOp, EntryStatus)
+    Entry,
+    EntryOp,
+    EntryStatus,
+)
 from karp.db_infrastructure import db
 from karp.lex_infrastructure.sql import sql_models
 from karp.db_infrastructure.sql_repository import SqlRepository
@@ -29,9 +33,7 @@ DUPLICATE_PROG = regex.compile(DUPLICATE_PATTERN)
 NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 
 
-class SqlEntryRepository(
-    repositories.EntryRepository, SqlRepository
-):
+class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
     def __init__(
         self,
         history_model,
@@ -72,9 +74,8 @@ class SqlEntryRepository(
         #     history_model = create_history_entry_table(table_name)
         # history_model.create(bind=db.engine, checkfirst=True)
 
-        logger.warning({'table_name': table_name})
-        history_model = sql_models.get_or_create_entry_history_model(
-            table_name)
+        logger.warning({"table_name": table_name})
+        history_model = sql_models.get_or_create_entry_history_model(table_name)
 
         # runtime_table = db.get_table(runtime_table_name)
         # if runtime_table is None:
@@ -91,8 +92,7 @@ class SqlEntryRepository(
         if session:
             runtime_model.__table__.create(bind=session.bind, checkfirst=True)
             for child_model in runtime_model.child_tables.values():
-                child_model.__table__.create(
-                    bind=session.bind, checkfirst=True)
+                child_model.__table__.create(bind=session.bind, checkfirst=True)
         return cls(
             history_model=history_model,
             runtime_model=runtime_model,
@@ -138,84 +138,86 @@ class SqlEntryRepository(
 
             logger.error(
                 {
-                    'entry_by_entry_id': entry_by_entry_id,
-                    'entry_by_entity_id': entry_by_entity_id,
-                    'entry': entry.dict(),
+                    "entry_by_entry_id": entry_by_entry_id,
+                    "entry_by_entity_id": entry_by_entity_id,
+                    "entry": entry.dict(),
                 }
             )
             if not entry_by_entry_id:
                 if not entry_by_entity_id:
-                    logger.warning('adding')
-                    return self._session.add(
-                        self.runtime_model(
-                            **runtime_entry_raw
-                        )
-                    )
+                    logger.warning("adding")
+                    return self._session.add(self.runtime_model(**runtime_entry_raw))
                 else:
-                    logger.warning('entity_id but no entry_id')
+                    logger.warning("entity_id but no entry_id")
                     entry_by_entity_id.discarded = True
-                    return self._session.add(
-                        self.runtime_model(
-                            **runtime_entry_raw
-                        )
-                    )
+                    return self._session.add(self.runtime_model(**runtime_entry_raw))
                     return
             else:
                 if not entry_by_entity_id:
-                    logger.warning('entry_id but no entity_id')
+                    logger.warning("entry_id but no entity_id")
                     for key, value in runtime_entry_raw.items():
                         setattr(entry_by_entry_id, key, value)
                     return
                 else:
-                    logger.warning('updating')
+                    logger.warning("updating")
                     for key, value in runtime_entry_raw.items():
                         setattr(entry_by_entry_id, key, value)
                     return
             if not entry_by_entity_id:
                 # if entry discarded and replaced
-                logger.error({'entry_by_entry_id': entry_by_entry_id,
-                             'entry_by_entity_id': entry_by_entity_id})
+                logger.error(
+                    {
+                        "entry_by_entry_id": entry_by_entry_id,
+                        "entry_by_entity_id": entry_by_entity_id,
+                    }
+                )
                 assert entry_by_entry_id.discarded
-                raise RuntimeError(f'entry = {entry.dict()}')
+                raise RuntimeError(f"entry = {entry.dict()}")
 
             if entry_by_entry_id.entity_id != entry.entity_id:
-                logger.warn('entity_id changed', extra={'entry_by_entry_id': entry_by_entry_id,
-                                                        'entry': entry.dict()})
+                logger.warn(
+                    "entity_id changed",
+                    extra={
+                        "entry_by_entry_id": entry_by_entry_id,
+                        "entry": entry.dict(),
+                    },
+                )
                 # raise RuntimeError(f'entry = {entry.dict()}')
 
             if entry_by_entry_id.entry_id != entry.entry_id:
                 logger.error(
                     {
-                        'entry_by_entry_id': entry_by_entry_id,
-                        'entry_by_entity_id': entry_by_entity_id,
-                        'entry': entry.dict(),
+                        "entry_by_entry_id": entry_by_entry_id,
+                        "entry_by_entity_id": entry_by_entity_id,
+                        "entry": entry.dict(),
                     }
                 )
-                raise RuntimeError(f'entry = {entry.dict()}')
+                raise RuntimeError(f"entry = {entry.dict()}")
             if entry_by_entity_id.entry_id != entry.entry_id:
-                logger.error({'entry_by_entry_id': entry_by_entry_id,
-                             'entry': entry.dict()})
-                raise RuntimeError(f'entry = {entry.dict()}')
+                logger.error(
+                    {"entry_by_entry_id": entry_by_entry_id, "entry": entry.dict()}
+                )
+                raise RuntimeError(f"entry = {entry.dict()}")
 
             for key, value in runtime_entry_raw.items():
                 setattr(entry_by_entry_id, key, value)
-#            update_result = self._session.query(
-#                self.runtime_model
-#            ).filter_by(
-#                id=entry.id
-#            ).update(
-#                runtime_entry_raw,
-#            )
-#
-#            if update_result != 1:
-#                self._session.add(
-#                    self.runtime_model(
-#                        **runtime_entry_raw
-#                    )
-#                )
-            # return self._session.add(runtime_entry)
+        #            update_result = self._session.query(
+        #                self.runtime_model
+        #            ).filter_by(
+        #                id=entry.id
+        #            ).update(
+        #                runtime_entry_raw,
+        #            )
+        #
+        #            if update_result != 1:
+        #                self._session.add(
+        #                    self.runtime_model(
+        #                        **runtime_entry_raw
+        #                    )
+        #                )
+        # return self._session.add(runtime_entry)
         except db.exc.DBAPIError as exc:
-            logger.exception('db error')
+            logger.exception("db error")
             raise errors.RepositoryError("db failure") from exc
 
     def _update(self, entry: Entry):
@@ -280,8 +282,7 @@ class SqlEntryRepository(
 
     def entry_ids(self) -> List[str]:
         self._check_has_session()
-        query = self._session.query(
-            self.runtime_model).filter_by(discarded=False)
+        query = self._session.query(self.runtime_model).filter_by(discarded=False)
         return [row.entry_id for row in query.all()]
 
     def _by_entry_id(
@@ -289,10 +290,14 @@ class SqlEntryRepository(
         entry_id: str,
     ) -> Optional[Entry]:
         self._check_has_session()
-        subq = sql.select(
-            self.history_model.entity_id,
-            sa.func.max(self.history_model.last_modified).label('maxdate')
-        ).group_by(self.history_model.entity_id).subquery('t2')
+        subq = (
+            sql.select(
+                self.history_model.entity_id,
+                sa.func.max(self.history_model.last_modified).label("maxdate"),
+            )
+            .group_by(self.history_model.entity_id)
+            .subquery("t2")
+        )
 
         stmt = sql.select(self.history_model).join(
             subq,
@@ -300,7 +305,7 @@ class SqlEntryRepository(
                 self.history_model.entity_id == subq.c.entity_id,
                 self.history_model.last_modified == subq.c.maxdate,
                 self.history_model.entry_id == entry_id,
-            )
+            ),
         )
         stmt = stmt.order_by(self.history_model.last_modified.desc())
         query = self._session.execute(stmt).scalars()
@@ -363,10 +368,14 @@ class SqlEntryRepository(
     def all_entries(self) -> typing.Iterable[Entry]:
         self._check_has_session()
 
-        subq = sql.select(
-            self.history_model.entity_id,
-            sa.func.max(self.history_model.last_modified).label('maxdate')
-        ).group_by(self.history_model.entity_id).subquery('t2')
+        subq = (
+            sql.select(
+                self.history_model.entity_id,
+                sa.func.max(self.history_model.last_modified).label("maxdate"),
+            )
+            .group_by(self.history_model.entity_id)
+            .subquery("t2")
+        )
 
         stmt = sql.select(self.history_model).join(
             subq,
@@ -374,7 +383,7 @@ class SqlEntryRepository(
                 self.history_model.entity_id == subq.c.entity_id,
                 self.history_model.last_modified == subq.c.maxdate,
                 self.history_model.discarded == False,
-            )
+            ),
         )
         query = self._session.execute(stmt).scalars()
         # query = self._session.query(
@@ -383,14 +392,23 @@ class SqlEntryRepository(
 
     def get_total_entries(self) -> int:
         self._check_has_session()
-        query = self._session.query(
-            self.runtime_model.discarded).filter_by(discarded=False)
+        query = self._session.query(self.runtime_model.discarded).filter_by(
+            discarded=False
+        )
         return query.count()
 
     def num_entities(self) -> int:
         self._check_has_session()
-        query = self._session.query(
-            self.runtime_model.discarded).filter_by(discarded=False)
+        query = self._session.query(self.runtime_model.discarded).filter_by(
+            discarded=False
+        )
+        return query.count()
+
+    def num_entities(self) -> int:
+        self._check_has_session()
+        query = self._session.query(self.runtime_model.discarded).filter_by(
+            discarded=False
+        )
         return query.count()
 
     def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
@@ -413,8 +431,7 @@ class SqlEntryRepository(
             if filter_key in self.resource_config[
                 "referenceable"
             ] and self.resource_config["fields"][filter_key].get("collection"):
-                logger.debug('collection field', extra={
-                             'filter_key': filter_key})
+                logger.debug("collection field", extra={"filter_key": filter_key})
                 # child_cls = self.runtime_model.child_tables[filter_key]
                 # tmp[child_cls.__tablename__][filter_key] = filters[filter_key]
                 # print(f"tmp.values() = {tmp.values()}")
@@ -435,18 +452,15 @@ class SqlEntryRepository(
             if match:
                 raise errors.NonExistingField(match.group(1)) from exc
             else:
-                raise errors.RepositoryError(
-                    "Unknown invalid request") from exc
+                raise errors.RepositoryError("Unknown invalid request") from exc
 
         for child_filters in joined_filters:
             child_table_name = list(child_filters.keys())[0]
-            logger.debug('child table name', extra={
-                         'table_name': child_table_name})
+            logger.debug("child table name", extra={"table_name": child_table_name})
             child_cls = self.runtime_model.child_tables[child_table_name]
-            child_query = self._session.query(
-                child_cls).filter_by(**child_filters)
+            child_query = self._session.query(child_cls).filter_by(**child_filters)
             for child_e in child_query:
-                logger.debug('child hit',  extra={'child_hit': child_e})
+                logger.debug("child hit", extra={"child_hit": child_e})
             query = query.join(child_cls).filter_by(**child_filters)
         # result = query.filter_by(**kwargs).all()
         # # query = self._session.query(self.history_model)
@@ -522,7 +536,7 @@ class SqlEntryRepository(
             "message": entry.message,
             "op": entry.op,
             "discarded": entry.discarded,
-            'repo_id': entry.repo_id,
+            "repo_id": entry.repo_id,
         }
 
     def _history_row_to_entry(self, row) -> Entry:
@@ -557,8 +571,7 @@ class SqlEntryRepository(
                 for elem in field_val:
                     if field_name not in _entry:
                         _entry[field_name] = []
-                    _entry[field_name].append(
-                        child_table(**{field_name: elem}))
+                    _entry[field_name].append(child_table(**{field_name: elem}))
             else:
                 _entry[field_name] = field_val
         return _entry
@@ -568,18 +581,16 @@ class SqlEntryUnitOfWork(
     SqlUnitOfWork,
     repositories.EntryUnitOfWork,
 ):
-    repository_type: str = 'sql_entries_base'
+    repository_type: str = "sql_entries_base"
 
     def __init__(
         self,
         session_factory: sessionmaker,
         event_bus: EventBus,
         **kwargs,
-
     ):
         SqlUnitOfWork.__init__(self)
-        repositories.EntryUnitOfWork.__init__(
-            self, event_bus=event_bus, **kwargs)
+        repositories.EntryUnitOfWork.__init__(self, event_bus=event_bus, **kwargs)
         self.session_factory = session_factory
         self._entries = None
         self._session = None
@@ -591,7 +602,7 @@ class SqlEntryUnitOfWork(
             self._entries = SqlEntryRepository.from_dict(
                 name=self.table_name(),
                 resource_config=self.config,
-                session=self._session
+                session=self._session,
             )
         return self
 
@@ -616,16 +627,17 @@ class SqlEntryUnitOfWork(
 
 
 class SqlEntryUnitOfWorkV1(SqlEntryUnitOfWork):
-    repository_type: str = 'sql_entries_v1'
+    repository_type: str = "sql_entries_v1"
 
 
 class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):
-    repository_type: str = 'sql_entries_v2'
+    repository_type: str = "sql_entries_v2"
 
     def table_name(self) -> str:
         u = ulid.from_uuid(self.entity_id)
         random_part = u.randomness().str
         return f"{self.name}_{random_part}"
+
 
 # ===== Value objects =====
 # class SqlEntryRepositorySettings(EntryRepositorySettings):
@@ -644,7 +656,7 @@ class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):
 #         runtime_table_name, history_model, settings.config
 #     )
 #     return SqlEntryRepository(history_model, runtime_model, settings.config)
-SqlEntryUowType = TypeVar('SqlEntryUowType', bound=SqlEntryUnitOfWork)
+SqlEntryUowType = TypeVar("SqlEntryUowType", bound=SqlEntryUnitOfWork)
 
 
 class SqlEntryUowCreator(Generic[SqlEntryUowType]):
@@ -685,18 +697,14 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):
         return self.cache[entity_id]
 
 
-class SqlEntryUowV1Creator(
-    SqlEntryUowCreator[SqlEntryUnitOfWorkV1]
-):
+class SqlEntryUowV1Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV1]):
     repository_type: str = "sql_entries_v1"
 
     def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV1:
         return SqlEntryUnitOfWorkV1(**kwargs)
 
 
-class SqlEntryUowV2Creator(
-    SqlEntryUowCreator[SqlEntryUnitOfWorkV2]
-):
+class SqlEntryUowV2Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV2]):
     repository_type: str = "sql_entries_v2"
 
     def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV2:
