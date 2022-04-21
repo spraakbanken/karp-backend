@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Make docs clearer. PR [#202](https://github.com/spraakbanken/karp-backend/pull/202) by [@kod-kristoff](https://github.com/kod-kristoff).
 - Fix query-dsl not handling not queries according spec. PR [#201](https://github.com/spraakbanken/karp-backend/pull/201) by [@kod-kristoff](https://github.com/kod-kristoff).
 - Handle sort parameters to query correct. PR [#199](https://github.com/spraakbanken/karp-backend/pull/199) by [@kod-kristoff](https://github.com/kod-kristoff).
 - Fix cli export and add chunked cli import. PR [#198](https://github.com/spraakbanken/karp-backend/pull/198) by [@kod-kristoff](https://github.com/kod-kristoff).
