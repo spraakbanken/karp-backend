@@ -1,21 +1,19 @@
 import logging
-from typing import Dict, List
+import typing
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Security, status
 import logging
 
-from karp.foundation.commands import CommandBus
 from karp import auth, lex
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto
+from karp.foundation.commands import CommandBus
 
 from karp.webapp.schemas import ResourceCreate, ResourcePublic, ResourceProtected
 from karp.webapp import dependencies as deps, schemas
-from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 from karp.lex import (
     CreatingEntryRepo,
     CreatingResource,
-    ResourceUnitOfWork,
     ResourceDto,
 )
 from karp.lex.domain import commands
@@ -39,7 +37,7 @@ def list_resource_permissions(
 )
 def get_all_resources(
     get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),
-) -> list[lex.ResourceDto]:
+) -> typing.Iterable[lex.ResourceDto]:
     return get_resources.query()
 
 
