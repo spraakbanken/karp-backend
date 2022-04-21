@@ -11,14 +11,16 @@ import logging
 from tatsu import exceptions as tatsu_exc
 
 from karp import search
+
 # from karp import query_dsl
 from karp.search.application.queries import (
     QueryRequest,
     SearchService,
 )
 from karp.search.domain import errors
-from karp.search.domain.errors import \
-    UnsupportedField  # IncompleteQuery,; UnsupportedQuery,
+from karp.search.domain.errors import (
+    UnsupportedField,
+)  # IncompleteQuery,; UnsupportedQuery,
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
 from karp.search.domain import query_dsl
@@ -64,7 +66,9 @@ class EsQueryBuilder(query_dsl.NodeWalker):
     def walk__equals(self, node):
         return es_dsl.Q(
             "match",
-            **{self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}}
+            **{
+                self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}
+            },
         )
 
     def walk__exists(self, node):
@@ -98,7 +102,8 @@ class EsQueryBuilder(query_dsl.NodeWalker):
         )
 
     def walk__not(self, node):
-        return ~self.walk(node.expr)
+        must_nots = [self.walk(expr) for expr in node.exps]
+        return es_dsl.Q("bool", must_not=must_nots)
 
     def walk__or(self, node):
         result = self.walk(node.exps[0])
@@ -119,7 +124,8 @@ class Es6SearchService(search.SearchService):
         self.es: elasticsearch.Elasticsearch = es
         self.query_builder = EsQueryBuilder()
         self.parser = query_dsl.KarpQueryV6Parser(
-            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics())
+            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
+        )
         if not self.es.indices.exists(index=KARP_CONFIGINDEX):
             self.es.indices.create(
                 index=KARP_CONFIGINDEX,
@@ -158,8 +164,7 @@ class Es6SearchService(search.SearchService):
                 res = Es6SearchService.get_analyzed_fields_from_mapping(
                     prop_values["properties"]
                 )
-                analyzed_fields.extend(
-                    [prop_name + "." + prop for prop in res])
+                analyzed_fields.extend([prop_name + "." + prop for prop in res])
             else:
                 if prop_values["type"] == "text":
                     analyzed_fields.append(prop_name)
@@ -193,10 +198,14 @@ class Es6SearchService(search.SearchService):
                 and "entry" in mapping[index]["mappings"]
                 and "properties" in mapping[index]["mappings"]["entry"]
             ):
-                field_mapping[alias] = Es6SearchService.get_analyzed_fields_from_mapping(
+                field_mapping[
+                    alias
+                ] = Es6SearchService.get_analyzed_fields_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
-                sortable_fields[alias] = Es6SearchService.create_sortable_map_from_mapping(
+                sortable_fields[
+                    alias
+                ] = Es6SearchService.create_sortable_map_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
         return field_mapping, sortable_fields
@@ -212,10 +221,10 @@ class Es6SearchService(search.SearchService):
         :return: a list of tuples (alias_name, index_name)
         """
         result = self.es.cat.aliases(h="alias,index")
-        logger.debug('ES aliases and indicies', extra={'result': result})
+        logger.debug("ES aliases and indicies", extra={"result": result})
         index_names = []
         for index_name in result.split("\n")[:-1]:
-            logger.debug('existing index', extra={'index_name': index_name})
+            logger.debug("existing index", extra={"index_name": index_name})
             if index_name[0] != ".":
                 opt_match = re.search(r"([^ ]*) +(.*)", index_name)
                 if opt_match:
@@ -231,8 +240,7 @@ class Es6SearchService(search.SearchService):
         return query
 
     def _format_result(self, resource_ids, response):
-        logger.debug('_format_result called', extra={
-                     'resource_ids': resource_ids})
+        logger.debug("_format_result called", extra={"resource_ids": resource_ids})
 
         def format_entry(entry):
 
@@ -260,28 +268,27 @@ class Es6SearchService(search.SearchService):
         return result
 
     def query(self, request: QueryRequest):
-        logger.info('query called', extra={'request': request})
+        logger.info("query called", extra={"request": request})
         query = EsQuery.from_query_request(request)
         return self.search_with_query(query)
 
     def query_split(self, request: QueryRequest):
-        logger.info('query_split called', extra={'request': request})
+        logger.info("query_split called", extra={"request": request})
         query = EsQuery.from_query_request(request)
         query.split_results = True
         return self.search_with_query(query)
 
     def search_with_query(self, query: EsQuery):
-        logger.info('search_with_query called', extra={'query': query})
+        logger.info("search_with_query called", extra={"query": query})
         es_query = None
         if query.q:
             try:
                 model = self.parser.parse(query.q)
                 es_query = self.query_builder.walk(model)
             except tatsu_exc.FailedParse as err:
-                logger.debug('Parse error', extra={'err': err})
+                logger.debug("Parse error", extra={"err": err})
                 raise errors.IncompleteQuery(
-                    failing_query=query.q,
-                    error_description=str(err)
+                    failing_query=query.q, error_description=str(err)
                 ) from err
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
@@ -291,10 +298,9 @@ class Es6SearchService(search.SearchService):
 
                 if es_query is not None:
                     s = s.query(es_query)
-                s = s[query.from_: query.from_ + query.size]
+                s = s[query.from_ : query.from_ + query.size]
                 if query.sort:
-                    s = s.sort(
-                        *self.translate_sort_fields([resource], query.sort))
+                    s = s.sort(*self.translate_sort_fields([resource], query.sort))
                 elif query.sort_dict and resource in query.sort_dict:
                     s = s.sort(
                         *self.translate_sort_fields(
@@ -313,37 +319,33 @@ class Es6SearchService(search.SearchService):
                 if query.lexicon_stats:
                     if "distribution" not in result:
                         result["distribution"] = {}
-                    result["distribution"][query.resources[i]
-                                           ] = response.hits.total
+                    result["distribution"][query.resources[i]] = response.hits.total
             return result
         else:
-            s = es_dsl.Search(
-                using=self.es, index=query.resources, doc_type="entry")
+            s = es_dsl.Search(using=self.es, index=query.resources, doc_type="entry")
             if es_query is not None:
                 s = s.query(es_query)
 
-            s = s[query.from_: query.from_ + query.size]
+            s = s[query.from_ : query.from_ + query.size]
 
             if query.lexicon_stats:
                 s.aggs.bucket(
                     "distribution", "terms", field="_index", size=len(query.resources)
                 )
             if query.sort:
-                s = s.sort(
-                    *self.translate_sort_fields(query.resources, query.sort))
+                s = s.sort(*self.translate_sort_fields(query.resources, query.sort))
             elif query.sort_dict:
                 sort_fields = []
                 for resource, sort in query.sort_dict.items():
-                    sort_fields.extend(
-                        self.translate_sort_fields([resource], sort))
+                    sort_fields.extend(self.translate_sort_fields([resource], sort))
                 s = s.sort(*sort_fields)
-            logger.debug("s = %s", extra={'es_query s': s.to_dict()})
+            logger.debug("s = %s", extra={"es_query s": s.to_dict()})
             response = s.execute()
 
             # TODO format response in a better way, because the whole response takes up too much space in the logs
             # logger.debug('response = {}'.format(response.to_dict()))
 
-            logger.debug('calling _format_result')
+            logger.debug("calling _format_result")
             result = self._format_result(query.resources, response)
             if query.lexicon_stats:
                 result["distribution"] = {}
@@ -366,8 +368,7 @@ class Es6SearchService(search.SearchService):
         Returns:
             List[str] -- values that ES can sort by.
         """
-        translated_sort_fields: List[Union[str,
-                                           Dict[str, Dict[str, str]]]] = []
+        translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None
             if "|" in sort_value:
@@ -390,7 +391,11 @@ class Es6SearchService(search.SearchService):
 
     def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
         logger.debug(
-            'sortable fields for resource', extra={'resource_id': resource_id, 'sortable_fields': self.sortable_fields[resource_id]}
+            "sortable fields for resource",
+            extra={
+                "resource_id": resource_id,
+                "sortable_fields": self.sortable_fields[resource_id],
+            },
         )
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value]
@@ -401,14 +406,14 @@ class Es6SearchService(search.SearchService):
 
     def search_ids(self, resource_id: str, entry_ids: str):
         logger.info(
-            'Called EsSearch.search_ids with:', extra={
-                'resource_id': resource_id,
-                'entry_ids': entry_ids})
+            "Called EsSearch.search_ids with:",
+            extra={"resource_id": resource_id, "entry_ids": entry_ids},
+        )
         entries = entry_ids.split(",")
         query = es_dsl.Q("terms", _id=entries)
-        logger.debug('query', extra={'query': query})
+        logger.debug("query", extra={"query": query})
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
-        logger.debug('s', extra={'es_query s': s.to_dict()})
+        logger.debug("s", extra={"es_query s": s.to_dict()})
         response = s.execute()
 
         return self._format_result([resource_id], response)
@@ -429,7 +434,7 @@ class Es6SearchService(search.SearchService):
         )
         s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
         response = s.execute()
-        logger.debug('Elasticsearch response', extra={'response': response})
+        logger.debug("Elasticsearch response", extra={"response": response})
         return [
             {"value": bucket["key"], "count": bucket["doc_count"]}
             for bucket in response.aggregations.field_values.buckets
@@ -461,8 +466,7 @@ class Es6SearchService(search.SearchService):
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():
                     ext_base_name = f"{base_name}.{ext_name}"
-                    parse_prop_value(sort_map, ext_base_name,
-                                     ext_base_name, ext_value)
+                    parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
                 return
             if prop_value["type"] in [
                 "boolean",

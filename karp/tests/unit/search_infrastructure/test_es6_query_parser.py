@@ -108,7 +108,24 @@ def test_es_query(parser, q, expected):
                 ],
             ),
         ),
-])
+        (
+            "not(equals|ordklass|substantiv||equals|ordklass|verb)",
+            es_dsl.Q(
+                "bool",
+                must_not=[
+                    es_dsl.Q(
+                        "match", ordklass={"query": "substantiv", "operator": "and"}
+                    ),
+                    es_dsl.Q("match", ordklass={"query": "verb", "operator": "and"}),
+                ],
+            ),
+        ),
+        #     (
+        #         "exists|or(pos||vb)",
+        #         es_dsl
+        #         )
+    ],
+)
 def test_combined_es_query(parser, q, expected):
     query = EsQueryBuilder().walk(parser.parse(q))
 
