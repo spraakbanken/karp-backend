@@ -165,52 +165,7 @@ def query(
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.
 
-    ## Query DSL
-    ### Query operators
-    - `contains|<field>|<string>` Find all entries where the field <field> contains <string>. More premissive than equals.
-
-    - `endswith|<field>|<string>` Find all entries where the field <field> ends with <string>
-
-    - `equals|<field>|<string>` Find all entries where <field> equals <string>. Stricter than contains
-
-    - `exists|<field>` Find all entries that has the field <field>.
-
-    - `freetext|<string>` Search in all fields for <string> and similar values.
-
-    - `freergxp|<regex.*>` Search in all fields for the regex <regex.*>.
-
-    - `gt|<field>|<value>` Find all entries where <field> is greater than <value>.
-
-    - `gte|<field>|<value>` Find all entries where <field> is greater than or equals <value>.
-
-    - `lt|<field>|<value>` Find all entries where <field> is less than <value>.
-
-    - `lte|<field>|<value>` Find all entries where <field> is less than or equals <value>.
-
-    - `missing|<field>` Search for all entries that doesn't have the field <field>.
-
-    - `regexp|<field>|<regex.*>` Find all entries where the field <field> matches the regex <regex.*>.
-
-    - `startswith|<field>|<string>` Find all entries where <field>starts with <string>.
-
-    ### Logical Operators
-    The logical operators can be used both at top-level and lower-levels.
-
-    - `not(<expression1>||<expression2>||...)` Find all entries that doesn't match the expression <expression>.
-
-    - `and(<expression1>||<expression2>||...)` Find all entries that matches <expression1> AND <expression2>.
-
-    - `or(<expression1>||<expression2>||...)` Find all entries that matches <expression1> OR <expression2>.
-
-    ### Regular expressions
-    Always matches complete tokens.
     """
-    # Examples
-    # not||missing|pos
-    # and||freergxp|str.*ng||regexp|pos|str.*ng
-    # and||missing|pos||equals|wf||or|blomma|äpple
-    # and||equals|wf|sitta||not||equals|wf|satt
-    # """
     logger.debug(
         "Called 'query' called with",
         extra={"resources": resources, "from": from_, "size": size},
