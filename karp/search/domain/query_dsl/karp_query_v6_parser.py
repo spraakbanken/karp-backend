@@ -334,11 +334,17 @@ class KarpQueryV6Parser(Parser):
         self.name_last_node('op')
         self._token('(')
         self._expression_()
-        self.name_last_node('expr')
+        self.add_last_node_to_name('exps')
+
+        def block2():
+            self._token('||')
+            self._expression_()
+            self.add_last_node_to_name('exps')
+        self._closure(block2)
         self._token(')')
         self._define(
-            ['expr', 'op'],
-            []
+            ['op'],
+            ['exps']
         )
 
     @tatsumasu('Or')
