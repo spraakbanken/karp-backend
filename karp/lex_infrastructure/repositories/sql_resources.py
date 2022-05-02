@@ -46,10 +46,14 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
 
     def resource_ids(self) -> List[str]:
         self._check_has_session()
-        subq = sql.select(
-            ResourceModel.entity_id,
-            sa.func.max(ResourceModel.last_modified).label('maxdate')
-        ).group_by(ResourceModel.entity_id).subquery('t2')
+        subq = (
+            sql.select(
+                ResourceModel.entity_id,
+                sa.func.max(ResourceModel.last_modified).label("maxdate"),
+            )
+            .group_by(ResourceModel.entity_id)
+            .subquery("t2")
+        )
 
         stmt = sql.select(ResourceModel.resource_id).join(
             subq,
@@ -57,7 +61,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
                 ResourceModel.entity_id == subq.c.entity_id,
                 ResourceModel.last_modified == subq.c.maxdate,
                 ResourceModel.discarded == False,
-            )
+            ),
         )
         return self._session.execute(stmt).scalars().all()
         # query = self._session.query(ResourceModel)
@@ -80,10 +84,14 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         resource_id: str,
     ) -> Optional[Resource]:
         self._check_has_session()
-        subq = sql.select(
-            ResourceModel.entity_id,
-            sa.func.max(ResourceModel.last_modified).label('maxdate')
-        ).group_by(ResourceModel.entity_id).subquery('t2')
+        subq = (
+            sql.select(
+                ResourceModel.entity_id,
+                sa.func.max(ResourceModel.last_modified).label("maxdate"),
+            )
+            .group_by(ResourceModel.entity_id)
+            .subquery("t2")
+        )
 
         stmt = sql.select(ResourceModel).join(
             subq,
@@ -91,10 +99,10 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
                 ResourceModel.entity_id == subq.c.entity_id,
                 ResourceModel.last_modified == subq.c.maxdate,
                 ResourceModel.resource_id == resource_id,
-            )
+            ),
         )
-
         stmt = stmt.order_by(ResourceModel.last_modified.desc())
+
         query = self._session.execute(stmt).scalars()
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
@@ -119,7 +127,9 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             return 0
         return row.version
 
-    def history_by_resource_id(self, resource_id: str) -> typing.List[entities.Resource]:
+    def history_by_resource_id(
+        self, resource_id: str
+    ) -> typing.List[entities.Resource]:
         self._check_has_session()
         query = self._session.query(ResourceModel)
         return [
@@ -216,10 +226,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         }
 
 
-class SqlResourceUnitOfWork(
-    SqlUnitOfWork,
-    repositories.ResourceUnitOfWork
-):
+class SqlResourceUnitOfWork(SqlUnitOfWork, repositories.ResourceUnitOfWork):
     def __init__(
         self,
         event_bus: EventBus,
@@ -228,7 +235,7 @@ class SqlResourceUnitOfWork(
         session: Optional[Session] = None,
     ):
         if not session and not session_factory:
-            raise ValueError('Both session and session_factory cannot be None')
+            raise ValueError("Both session and session_factory cannot be None")
         SqlUnitOfWork.__init__(self, session=session)
         repositories.ResourceUnitOfWork.__init__(self, event_bus)
         self.session_factory = session_factory
@@ -237,7 +244,7 @@ class SqlResourceUnitOfWork(
     def _begin(self):
         if self._session_is_created_here:
             self._session = self.session_factory()  # type: ignore
-        logger.info('using session', extra={'session': self._session})
+        logger.info("using session", extra={"session": self._session})
         self._resources = SqlResourceRepository(self._session)
         return self
 
@@ -246,6 +253,7 @@ class SqlResourceUnitOfWork(
         if self._resources is None:
             raise RuntimeError("No resources")
         return self._resources
+
     # def _resource_to_row(
     #     self, resource: Resource
     # ) -> Tuple[
