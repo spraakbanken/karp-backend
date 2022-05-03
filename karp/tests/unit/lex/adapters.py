@@ -68,8 +68,14 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
     def __init__(self, resources: Dict):
         self.resources = resources
 
-    def get_by_resource_id(
-        self, resource_id: str, version=None
+    def get_by_id(self, entity_id: UniqueId, version: Optional[int] = None) -> Optional[ResourceDto]:
+        resource = self.resources.get(entity_id)
+        if resource:
+            return self._row_to_dto(resource)
+        return None
+
+    def _get_by_resource_id(
+        self, resource_id: str
     ) -> Optional[ResourceDto]:
         return next(
             (

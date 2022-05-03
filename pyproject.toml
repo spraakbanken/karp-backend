@@ -12,7 +12,7 @@ homepage = "https://spraakbanken.gu.se"
 documentation = "https://github.com/spraakbanken/karp-backend"
 repository = "https://github.com/spraakbanken/karp-backend"
 classifiers = [
-	"Development Status :: 2 - Pre-Alpha",
+	"Development Status :: 4 - Beta",
 	"Intended Audience :: Developers",
 	"License :: OSI Approved :: MIT License",
 	"Operating System :: Unix",

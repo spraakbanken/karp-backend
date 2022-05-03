@@ -39,8 +39,25 @@ class GetEntryRepositoryId(abc.ABC):
 
 
 class ReadOnlyResourceRepository(abc.ABC):
+    def get_by_resource_id(
+        self, resource_id: str, version: Optional[int] = None
+    ) -> Optional[ResourceDto]:
+        resource = self._get_by_resource_id(resource_id)
+        if not resource:
+            return None
+
+        if version is not None:
+            resource = self.get_by_id(resource.entity_id, version=version)
+        return resource
+
     @abc.abstractmethod
-    def get_by_resource_id(self, resource_id: str, version: Optional[int] = None) -> Optional[ResourceDto]:
+    def get_by_id(
+        self, entity_id: UniqueId, version: Optional[int] = None
+    ) -> Optional[ResourceDto]:
+        pass
+
+    @abc.abstractmethod
+    def _get_by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
         pass
 
     @abc.abstractmethod
