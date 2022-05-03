@@ -5,7 +5,7 @@ from karp.lex.domain.entities.resource import Resource
 from .factories import random_resource
 
 
-def test_morphology():
+def test_smdb_morphology():
     resource = random_resource()
     entry = {"baseform": "gata", "paradigm": "11a", "pos": "?"}
 
