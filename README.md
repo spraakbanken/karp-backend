@@ -22,8 +22,7 @@ This project uses [poetry](https://python-poetry.org) and
    export AUTH_JWT_PUBKEY_PATH=/path/to/pubkey
    ```
 4. Activate the virtual environment by running: `poetry shell`
-5. Run `make init-db` to initialize database
-   or `poetry run alembic upgrade head`
+5. Run `karp-cli db up` to initialize database
 6. Run `make serve` or `make serve-w-reload` to start development server
 
    or `poetry shell` and then `uvicorn asgi:app`
