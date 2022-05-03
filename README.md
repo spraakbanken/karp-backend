@@ -36,6 +36,7 @@ This project uses [poetry](https://python-poetry.org) and
 ```
 export ES_ENABLED=true
 export ELASTICSEARCH_HOST=localhost:9200
+export SEARCH_CONTEXT=es6_search_service
 ```
 
 ## Create test resources
