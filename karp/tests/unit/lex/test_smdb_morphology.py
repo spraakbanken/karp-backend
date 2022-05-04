@@ -1,15 +1,22 @@
+import pytest
+
 from karp.foundation import value_objects
-from karp.lex.domain.entities import SmdbMorphology
-from karp.lex.domain.entities.resource import Resource
+from karp.lex.domain.entities import Morphology, SmdbMorphology, Resource
 
-from .factories import random_resource
+from .factories import random_resource, SmdbMorphologyFactory
 
 
-def test_smdb_morphology():
+@pytest.fixture
+def smdb_morphology() -> SmdbMorphology:
+    return SmdbMorphologyFactory()
+
+
+def test_smdb_morphology(smdb_morphology: SmdbMorphology):
     resource = random_resource()
     entry = {"baseform": "gata", "paradigm": "11a", "pos": "?"}
 
-    morphology = SmdbMorphology()
+    assert isinstance(smdb_morphology, Morphology)
+    assert isinstance(smdb_morphology, Resource)
     # morphology = Morphology.create_resource(
     #     resource_type='SaldoMorphology',
     #     resource_config={},
@@ -23,7 +30,7 @@ def test_smdb_morphology():
     #     needed_field_name: resource.get_field(needed_field_name, entry)
     #     for needed_field_name in needed_field_names
     # }
-    inflection_table = morphology.get_inflection_table(
+    inflection_table = smdb_morphology.get_inflection_table(
         identifer=entry["paradigm"], lemma=entry["baseform"]
     )
     # TODO what form shall the inflection_table have: maybe list[dict[str, Any]]?
