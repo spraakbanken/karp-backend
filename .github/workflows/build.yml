@@ -22,8 +22,8 @@ jobs:
       max-parallel: 4
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10"]
-        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11-dev"]
+        os: [ubuntu-latest, macos-latest]
         task:
           - name: Lint code
             run: make lint
