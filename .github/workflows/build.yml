@@ -50,7 +50,7 @@ jobs:
       #     key: dotlocal-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('.github/workflows/build.yml') }}
 
       - name: Install MariaDB client on macos
-        if: matrix.os == "macos-latest"
+        if: matrix.os == 'macos-latest'
         run: |
           brew update
           brew install mariadb
