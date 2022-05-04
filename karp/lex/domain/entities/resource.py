@@ -232,7 +232,7 @@ class Resource(TimestampedVersionedEntity):
         entry_repo_id: unique_id.UniqueId,
         user: str,
         timestamp: Optional[float] = None,
-    ):
+    ) -> None:
         self._extracted_from_publish_9(
             timestamp, user, "entry repo id updated", "entry repo id updated"
         )
