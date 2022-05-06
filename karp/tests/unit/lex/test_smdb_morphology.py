@@ -5,6 +5,8 @@ from karp.lex.domain.entities import Morphology, SmdbMorphology, Resource
 
 from .factories import random_resource, SmdbMorphologyFactory
 
+import csv
+
 
 @pytest.fixture
 def smdb_morphology() -> SmdbMorphology:
@@ -13,7 +15,7 @@ def smdb_morphology() -> SmdbMorphology:
 
 def test_smdb_morphology(smdb_morphology: SmdbMorphology):
     resource = random_resource()
-    entry = {"baseform": "gata", "paradigm": "11a", "pos": "?"}
+  #  entry = {"baseform": "gata", "paradigm": "11", "pos": "?"}
 
     assert isinstance(smdb_morphology, Morphology)
     assert isinstance(smdb_morphology, Resource)
@@ -30,14 +32,15 @@ def test_smdb_morphology(smdb_morphology: SmdbMorphology):
     #     needed_field_name: resource.get_field(needed_field_name, entry)
     #     for needed_field_name in needed_field_names
     # }
-    inflection_table = smdb_morphology.get_inflection_table(
-        identifer=entry["paradigm"], lemma=entry["baseform"]
-    )
+  #  inflection_table = smdb_morphology.get_inflection_table(
+  #      identifier=entry["paradigm"], lemma=entry["baseform"]
+  #  )
     # TODO what form shall the inflection_table have: maybe list[dict[str, Any]]?
-    assert inflection_table == [
-        {"form": "gata", "tagg": "NCUSNI"},
-        {"form": "gatas", "tagg": "NCUSGI"},
-    ]
+    # assert inflection_table == 
+    # [
+    #    {"form": "gata", "tagg": "NCUSNI"},
+    #    {"form": "gatas", "tagg": "NCUSGI"},
+    #]
     # assert inflection_table == {
     #     "NCUSNI": {
     #         "form": "gata",
@@ -46,7 +49,19 @@ def test_smdb_morphology(smdb_morphology: SmdbMorphology):
     #         "form": "gatas",
     #     },
     # }
-    # assert inflection_table == {
-    #     "NCUSNI": "gata",
-    #     "NCUSGI": "gatas",
-    # }
+  #  assert inflection_table == {
+  ##      "NCUSNI": "gata",
+  #      "NCUSGI": "gatas"
+  
+    
+    with open('./fullform_utf8_202204271524.csv', newline='') as csvfile:
+            fieldnames = ["f_nr","sortform","avstform","grundform","l_nr","bklass","tagg","typ","s_nr","src","nummer","ordklass"]
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                inflection_table = smdb_morphology.get_inflection_table(
+                    identifier=row["bklass"], lemma=row["grundform"])
+                print(row["grundform"] + ", " + row["tagg"] + ",  " + row["bklass"])
+                assert(inflection_table[row["tagg"]] == row["sortform"])
+  
+  
+    
