@@ -7,27 +7,26 @@ from typing import Any
 
 from karp.lex.domain.entities import Morphology
 
-
 umlauts    = {'a':'ä','o':'ö','u':'ö','å':'ä'}    
 delimiters = "%+="   
 vowels     = "aouåeiyäö"
 alphabet   = "abcdefghijklmnopqrstuvwxyzåäö"
     
 consonants = ''.join([c for c in alphabet if c not in "aouåeiyäö"])
-    
-        
+            
 class SmdbMorphology(Morphology) :
+        
+    def load_db(self,db_name) :
     
-
-    def get_inflection_table(self,identifier : str,lemma : str, **kwargs) -> list[dict[str, Any]]:
-        
-        # fetch rows with identifier in inflection database
-        # apply rules to lemma and return dict with word forms
-        
-        engine      = db.create_engine('mysql://root@localhost/morphology')
+        engine      = db.create_engine(db_name)
         connection  = engine.connect()
         metadata    = db.MetaData()
         table       = db.Table('inflection_table', metadata, autoload=True, autoload_with=engine)
+        return table,connection
+
+    def get_inflection_table(self,table,connection,identifier : str,lemma : str, **kwargs) -> list[dict[str, Any]]:
+        
+        metadata    = db.MetaData()
         query = db.select([table]).where(table.columns.bklass == identifier)
         
         ResultProxy = connection.execute(query)
@@ -37,11 +36,8 @@ class SmdbMorphology(Morphology) :
         
         for (n,ident,form,rule) in ResultSet :
             inflections[form] = apply_rules(rule,lemma)
-            
-  #      print(inflections)
         return inflections
         
-
 def apply_rule(rule,s) :
         if rule == '=' :
             return s
@@ -62,8 +58,7 @@ def apply_rules(rules,s) :
             return apply_rules(remainder,new_s)
         else :
             return s
-            
-           
+          
     # precondition: 
     # rules != "" and rules always contain at least one delimiter symbol
 def get_first_step(rules) : 
@@ -169,7 +164,7 @@ def replace_last_vowel(s,c) :
 rules = {"%sp"  : lambda s : remove_last(always,s),
              "%sk"  : lambda s : remove_last(is_consonant,s) ,
              "%sv"  : lambda s : remove_last(is_vowel,s),
-             "%ts"  : lambda s : remove_last(always,remove_last(always(s))),
+             "%ts"  : lambda s : remove_last(always,remove_last(always,s)),
              "%fv"  : fv, # remove last vowel if in [aeiou], make preceding double m single
                           # (rymmas -> ryms, skrämmas -> skräms)
              "%dk"  : dk, # double consonant
@@ -179,5 +174,3 @@ rules = {"%sp"  : lambda s : remove_last(always,s),
              "%ej"  : ej  # remove j from last occurrence of "skju", "gju" and "stjä"
         }
     
-
-

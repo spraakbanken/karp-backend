@@ -12,8 +12,11 @@ import csv
 def smdb_morphology() -> SmdbMorphology:
     return SmdbMorphologyFactory()
 
+def pad(s,n) :
+    return s + ''.join([' ' for i in range(n-len(s))])
 
 def test_smdb_morphology(smdb_morphology: SmdbMorphology):
+    
     resource = random_resource()
   #  entry = {"baseform": "gata", "paradigm": "11", "pos": "?"}
 
@@ -55,13 +58,25 @@ def test_smdb_morphology(smdb_morphology: SmdbMorphology):
   
     
     with open('./fullform_utf8_202204271524.csv', newline='') as csvfile:
+           
+            db_table,connection = smdb_morphology.load_db('mysql://root@localhost/morphology')
             fieldnames = ["f_nr","sortform","avstform","grundform","l_nr","bklass","tagg","typ","s_nr","src","nummer","ordklass"]
             reader = csv.DictReader(csvfile)
             for row in reader:
+            #    print(row)
                 inflection_table = smdb_morphology.get_inflection_table(
+                    db_table,
+                    connection,
                     identifier=row["bklass"], lemma=row["grundform"])
-                print(row["grundform"] + ", " + row["tagg"] + ",  " + row["bklass"])
-                assert(inflection_table[row["tagg"]] == row["sortform"])
+                if row["tagg"] not in inflection_table :
+                    print(pad("Tag " + str(row["tagg"]), 10) +  pad(" is not present in inflection table: " + str(inflection_table),60) + " for inflection class " + str(row["bklass"]) + " " + str(row["grundform"]))
+                else : 
+                    try:  assert(inflection_table[row["tagg"]] == row["sortform"])
+                    except AssertionError: print(pad("inflected form: " + str(inflection_table[row["tagg"]]),30), 
+                                                 pad("correct form: " + str(row["sortform"]),30),
+                                                 "inflection class: " + str(row["bklass"]), 
+                                                 "tag: " + str(row["tagg"]),
+                                                 "lemma: " + str(row["grundform"]))
   
-  
-    
+if __name__ == '__main__':
+    test_smdb_morphology(SmdbMorphologyFactory())  
