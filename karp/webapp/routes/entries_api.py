@@ -1,29 +1,38 @@
 import logging
 from typing import Optional
 
-from fastapi import (APIRouter, Body, Depends, HTTPException, Response, Security,
-                     status, Path, Query)
+from fastapi import (
+    APIRouter,
+    Body,
+    Depends,
+    HTTPException,
+    Response,
+    Security,
+    status,
+    Path,
+    Query,
+)
 import pydantic
 from starlette import responses
-import logging
 
 from karp import errors as karp_errors, auth, lex, search
-from karp.lex.application.queries import EntryViews, EntryDto, GetEntryHistory
+from karp.lex.application.queries import EntryDto, GetEntryHistory
 from karp.lex.domain import commands, errors
 from karp.auth import User
-from karp.foundation.value_objects import PermissionLevel, unique_id
+from karp.foundation.value_objects import PermissionLevel
 from karp.auth import AuthService
 from karp.webapp import schemas, dependencies as deps
 
-from karp.webapp.dependencies.fastapi_injector import inject_from_req
 
 router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
 
-@router.get('/{resource_id}/{entry_id}/{version}', response_model=EntryDto, tags=["History"])
-@router.get('/{resource_id}/{entry_id}', response_model=EntryDto, tags=["History"])
+@router.get(
+    "/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"]
+)
+@router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
 # @auth.auth.authorization("ADMIN")
 def get_history_for_entry(
     resource_id: str,
@@ -33,32 +42,35 @@ def get_history_for_entry(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),
 ):
-    if not auth_service.authorize(
-        auth.PermissionLevel.admin, user, [resource_id]
-    ):
+    if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
-    logger.info('getting history for entry', extra={'resource_id': resource_id,
-                                                    'entry_id': entry_id, 'user': user.identifier})
-    historical_entry = get_entry_history.query(
-        resource_id, entry_id, version=version
+    logger.info(
+        "getting history for entry",
+        extra={
+            "resource_id": resource_id,
+            "entry_id": entry_id,
+            "user": user.identifier,
+        },
     )
+    historical_entry = get_entry_history.query(resource_id, entry_id, version=version)
 
     return historical_entry
 
 
-@ router.post("/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["Editing"])
-@ router.put('/{resource_id}', status_code=status.HTTP_201_CREATED, tags=["Editing"])
+@router.post(
+    "/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["Editing"]
+)
+@router.put("/{resource_id}", status_code=status.HTTP_201_CREATED, tags=["Editing"])
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    adding_entry_uc: lex.AddingEntry = Depends(
-        deps.get_lex_uc(lex.AddingEntry)),
+    adding_entry_uc: lex.AddingEntry = Depends(deps.get_lex_uc(lex.AddingEntry)),
 ):
 
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -67,8 +79,7 @@ def add_entry(
             detail="Not enough permissions",
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
-    logger.info('adding entry', extra={
-                'resource_id': resource_id, 'data': data})
+    logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
         new_entry = adding_entry_uc.execute(
             commands.AddEntry(
@@ -82,59 +93,53 @@ def add_entry(
         return responses.JSONResponse(
             status_code=400,
             content={
-                'error': str(exc),
-                'errorCode': karp_errors.ClientErrorCodes.DB_INTEGRITY_ERROR
-            }
+                "error": str(exc),
+                "errorCode": karp_errors.ClientErrorCodes.DB_INTEGRITY_ERROR,
+            },
         )
     except errors.InvalidEntry as exc:
         return responses.JSONResponse(
             status_code=400,
             content={
-                'error': str(exc),
-                'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_VALID
-            }
+                "error": str(exc),
+                "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_VALID,
+            },
         )
 
     return {"newID": new_entry.entry_id, "entityID": new_entry.entity_id}
 
 
-@ router.post('/{resource_id}/preview')
-# @auth.auth.authorization("READ")
+@router.post("/{resource_id}/preview")
 def preview_entry(
     resource_id: str,
     data: schemas.EntryAdd,
-    user: auth.User = Security(deps.get_user_optional, scopes=['read']),
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     preview_entry: search.PreviewEntry = Depends(
-        deps.inject_from_req(search.PreviewEntry)),
+        deps.inject_from_req(search.PreviewEntry)
+    ),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
-            headers={'WWW-Authenticate': 'Bearer scope="lexica:read"'}
+            headers={"WWW-Authenticate": 'Bearer scope="lexica:read"'},
         )
     try:
         input_dto = search.PreviewEntryInputDto(
-            resource_id=resource_id,
-            entry=data.entry,
-            user=user.identifier
+            resource_id=resource_id, entry=data.entry, user=user.identifier
         )
     except pydantic.ValidationError as err:
-        logger.exception('data is not valid')
+        logger.exception("data is not valid")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={'error': str(err)})
+            status_code=status.HTTP_400_BAD_REQUEST, detail={"error": str(err)}
+        )
     else:
         return preview_entry.query(input_dto)
-#     data = request.get_json()
-#     preview = entrywrite.preview_entry(resource_id, data)
-#     return flask_jsonify(preview)
 
 
-@ router.post("/{resource_id}/{entry_id}/update", tags=["Editing"])
-@ router.post('/{resource_id}/{entry_id}', tags=["Editing"])
-# @auth.auth.authorization("WRITE", add_user=True)
+@router.post("/{resource_id}/{entry_id}/update", tags=["Editing"])
+@router.post("/{resource_id}/{entry_id}", tags=["Editing"])
 def update_entry(
     response: Response,
     resource_id: str,
@@ -142,8 +147,7 @@ def update_entry(
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    updating_entry_uc: lex.UpdatingEntry = Depends(
-        deps.get_lex_uc(lex.UpdatingEntry)),
+    updating_entry_uc: lex.UpdatingEntry = Depends(deps.get_lex_uc(lex.UpdatingEntry)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -159,8 +163,15 @@ def update_entry(
     #     message = data.get("message")
     #     if not (version and entry and message):
     #         raise KarpError("Missing version, entry or message")
-    logger.info('updating entry', extra={'resource_id': resource_id,
-                                         'entry_id': entry_id, 'data': data, 'user': user.identifier})
+    logger.info(
+        "updating entry",
+        extra={
+            "resource_id": resource_id,
+            "entry_id": entry_id,
+            "data": data,
+            "user": user.identifier,
+        },
+    )
     try:
         entry = updating_entry_uc.execute(
             commands.UpdateEntry(
@@ -189,10 +200,10 @@ def update_entry(
         return responses.JSONResponse(
             status_code=404,
             content={
-                'error': f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
-                'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
-                'resource': resource_id,
-                'entry_id': entry_id,
+                "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
+                "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
+                "resource": resource_id,
+                "entry_id": entry_id,
             },
         )
     except errors.UpdateConflict as err:
@@ -200,32 +211,31 @@ def update_entry(
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return err.error_obj
     except Exception as err:
-        logger.exception('error occured', extra={'resource_id': resource_id,
-                         'entry_id': entry_id, 'data': data})
+        logger.exception(
+            "error occured",
+            extra={"resource_id": resource_id, "entry_id": entry_id, "data": data},
+        )
         raise
 
 
-@ router.delete('/{resource_id}/{entry_id}/delete', tags=["Editing"])
-@ router.delete('/{resource_id}/{entry_id}', tags=["Editing"], status_code=status.HTTP_204_NO_CONTENT)
-# @auth.auth.authorization("WRITE", add_user=True)
+@router.delete(
+    "/{resource_id}/{entry_id}/delete",
+    tags=["Editing"],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+@router.delete(
+    "/{resource_id}/{entry_id}",
+    tags=["Editing"],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 def delete_entry(
     resource_id: str,
     entry_id: str,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    deleting_entry_uc: lex.DeletingEntry = Depends(
-        deps.get_lex_uc(lex.DeletingEntry))
+    deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry)),
 ):
-    """Delete a entry from a resource.
-
-    Arguments:
-        user {karp.auth.user.User} -- [description]
-        resource_id {str} -- [description]
-        entry_id {str} -- [description]
-
-    Returns:
-        [type] -- [description]
-    """
+    """Delete a entry from a resource."""
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -244,13 +254,12 @@ def delete_entry(
         return responses.JSONResponse(
             status_code=404,
             content={
-                'error': f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
-                'errorCode': karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
-                'resource': resource_id,
-                'entry_id': entry_id,
-            }
+                "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
+                "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
+                "resource": resource_id,
+                "entry_id": entry_id,
+            },
         )
-    # entries.delete_entry(resource_id, entry_id, user.identifier)
     return
 
 
