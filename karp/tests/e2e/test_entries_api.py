@@ -216,7 +216,7 @@ class TestDeleteEntry:
             f"/entries/places/{entry_id}/delete", headers=write_token.as_header()
         )
 
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
@@ -251,7 +251,7 @@ class TestDeleteEntry:
             f"/entries/places/{entry_id}", headers=write_token.as_header()
         )
 
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
