@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Both delete entries routes should return 204. PR [#206](https://github.com/spraakbanken/karp-backend/pull/206) by [@kod-kristoff](https://github.com/kod-kristoff).
 * add cli command `entries validate`. PR [#203](https://github.com/spraakbanken/karp-backend/pull/203) by [@kod-kristoff](https://github.com/kod-kristoff).
 * Make docs clearer. PR [#202](https://github.com/spraakbanken/karp-backend/pull/202) by [@kod-kristoff](https://github.com/kod-kristoff).
 - Fix query-dsl not handling not queries according spec. PR [#201](https://github.com/spraakbanken/karp-backend/pull/201) by [@kod-kristoff](https://github.com/kod-kristoff).
