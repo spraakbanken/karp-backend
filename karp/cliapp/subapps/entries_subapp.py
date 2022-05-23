@@ -79,13 +79,12 @@ def update_entries(resource_id: str, data: Path):
 def export_entries(
     ctx: typer.Context,
     resource_id: str,
-    output: Optional[Path] = typer.Option(None, "--output", "-o"),
+    output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
 ):
     entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)
-    json_streams.dump_to_file(
+    json_streams.dump(
         entry_views.all_entries(resource_id),
         output,
-        use_stdout_as_default=True,
     )
 
 
