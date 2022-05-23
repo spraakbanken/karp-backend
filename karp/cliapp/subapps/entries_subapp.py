@@ -22,7 +22,7 @@ from karp.utility import json_schema
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
 
-logger = logging.getLogger("karp")
+logger = logging.getLogger(__name__)
 
 
 subapp = typer.Typer()
@@ -82,8 +82,13 @@ def export_entries(
     output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
 ):
     entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)
+    all_entries = entry_views.all_entries(resource_id=resource_id)
+    logger.debug(
+        "exporting entries",
+        extra={"resource_id": resource_id, "type(all_entries)": type(all_entries)},
+    )
     json_streams.dump(
-        entry_views.all_entries(resource_id),
+        all_entries,
         output,
     )
 

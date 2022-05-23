@@ -90,7 +90,7 @@ class GenericEntryViews(EntryViews):
                 for entry in uw.repo.by_referenceable(filters)
             )
 
-    def all_entries(self, resource_id: str):
+    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
