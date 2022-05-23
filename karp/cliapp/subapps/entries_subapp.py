@@ -88,7 +88,7 @@ def export_entries(
         extra={"resource_id": resource_id, "type(all_entries)": type(all_entries)},
     )
     json_streams.dump(
-        all_entries,
+        (entry.dict() for entry in all_entries),
         output,
     )
 
