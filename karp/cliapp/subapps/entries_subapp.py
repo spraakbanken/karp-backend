@@ -83,11 +83,7 @@ def export_entries(
 ):
     entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)
     json_streams.dump_to_file(
-        tqdm(
-            entry_views.all_entries(resource_id),
-            desc="Exporting",
-            unit=" entries",
-        ),
+        entry_views.all_entries(resource_id),
         output,
         use_stdout_as_default=True,
     )
