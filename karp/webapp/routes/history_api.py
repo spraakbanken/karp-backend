@@ -25,9 +25,7 @@ from karp.webapp.dependencies.fastapi_injector import inject_from_req
 router = APIRouter()
 
 
-@router.get(
-    "/diff/{resource_id}/{entry_id}", response_model=EntryDiffDto
-)
+@router.get("/diff/{resource_id}/{entry_id}", response_model=EntryDiffDto)
 def get_diff(
     resource_id: str,
     entry_id: str,
@@ -40,9 +38,7 @@ def get_diff(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     get_entry_diff: GetEntryDiff = Depends(deps.get_entry_diff),
 ):
-    if not auth_service.authorize(
-        auth.PermissionLevel.admin, user, [resource_id]
-    ):
+    if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
@@ -62,11 +58,7 @@ def get_diff(
 
 
 @router.get(
-    '/{resource_id}',
-    response_model=lex.GetHistoryDto,
-)
-@router.get(
-    '/of-resource/{resource_id}',
+    "/{resource_id}",
     response_model=lex.GetHistoryDto,
 )
 def get_history(
@@ -83,9 +75,7 @@ def get_history(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     get_history: GetHistory = Depends(deps.get_history),
 ):
-    if not auth_service.authorize(
-        auth.PermissionLevel.admin, user, [resource_id]
-    ):
+    if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not enough permissions",
