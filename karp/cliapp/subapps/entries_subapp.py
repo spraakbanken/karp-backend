@@ -28,10 +28,10 @@ logger = logging.getLogger(__name__)
 subapp = typer.Typer()
 
 
-@subapp.command("import")
+@subapp.command("add")
 @cli_error_handler
 @cli_timer
-def import_resource(
+def add_entries_to_resource(
     ctx: typer.Context,
     resource_id: str,
     # version: Optional[int],
@@ -44,7 +44,7 @@ def import_resource(
     bus = inject_from_ctx(CommandBus, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
-    entries = tqdm(json_streams.load_from_file(data), desc="Importing", unit=" entries")
+    entries = tqdm(json_streams.load_from_file(data), desc="Adding", unit=" entries")
     if chunked:
         cmd = lex.AddEntriesInChunks(
             resource_id=resource_id,
@@ -61,7 +61,7 @@ def import_resource(
             message=message,
         )
     bus.dispatch(cmd)
-    typer.echo(f"Successfully imported entries to {resource_id}")
+    typer.echo(f"Successfully added entries to {resource_id}")
 
 
 @subapp.command("update")

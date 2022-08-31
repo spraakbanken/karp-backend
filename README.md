@@ -43,7 +43,7 @@ export SEARCH_CONTEXT=es6_search_service
 1. `poetry shell` and then:
 2. `karp-cli entry-repo create karp/tests/data/config/places.json`
 3. `karp-cli resource create karp/tests/data/config/places.json`
-4. `karp-cli entries import places tests/data/places.jsonl`
+4. `karp-cli entries add places tests/data/places.jsonl`
 5. Do the same for `municipalities`
 6. `karp-cli resource publish places`
 7. `karp-cli resource publish municipalities`
