@@ -3,6 +3,8 @@ from .entry_handlers import (
     AddingEntries,
     AddingEntriesInChunks,
     DeletingEntry,
+    ImportingEntries,
+    ImportingEntriesInChunks,
     UpdatingEntry,
 )
 from .entry_repo_handlers import CreatingEntryRepo, DeletingEntryRepository
@@ -16,5 +18,9 @@ from .resource_handlers import (
 
 
 __all__ = [
+    "AddingEntries",
     "AddingEntriesInChunks",
+    "AddingEntry",
+    "ImportingEntries",
+    "ImportingEntriesInChunks",
 ]

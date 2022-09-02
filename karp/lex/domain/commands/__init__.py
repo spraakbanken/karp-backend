@@ -5,6 +5,8 @@ from .entry_commands import (
     AddEntriesInChunks,
     AddEntry,
     DeleteEntry,
+    ImportEntries,
+    ImportEntriesInChunks,
     UpdateEntry,
 )
 from .entry_repo_commands import CreateEntryRepository, DeleteEntryRepository
@@ -18,4 +20,6 @@ from .resource_commands import (
 
 __all__ = [
     "AddEntriesInChunks",
+    "ImportEntries",
+    "ImportEntriesInChunks",
 ]

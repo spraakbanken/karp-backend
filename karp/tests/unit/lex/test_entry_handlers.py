@@ -317,3 +317,219 @@ class TestDeleteEntry:
         #     entry.entry_id not in bus.ctx.index_uow.repo.indicies[resource_id].entries
         # )
         # assert bus.ctx.index_uow.was_committed
+
+
+class TestAddEntries:
+    def test_cannot_add_entries_to_nonexistent_resource(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        with pytest.raises(errors.ResourceNotFound):
+            lex_ctx.command_bus.dispatch(
+                factories.AddEntriesFactory(
+                    resource_id="non_existent",
+                )
+            )
+
+    def test_add_entry(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    }
+                },
+                "id": "baseform",
+            },
+        )
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        entry_id = "beta"
+        cmd3 = factories.AddEntriesFactory(
+            resource_id=cmd2.resource_id,
+            entries=[{"baseform": entry_id}],
+        )
+
+        lex_ctx.command_bus.dispatch(cmd3)
+
+        entry_uow_repo_uow = lex_ctx.container.get(
+            EntryUowRepositoryUnitOfWork
+        )
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
+        entry = uow.repo.by_id(cmd3.entity_id)
+        assert entry is not None
+        assert entry.id == cmd3.entity_id
+        assert entry.entry_id == entry_id
+        # assert entry.repo_id == cmd3.resource_id
+
+        assert entry.body == {"baseform": entry_id}
+        assert entry.last_modified_by == cmd3.user
+
+        assert uow.was_committed
+
+        # assert (
+        #     bus.ctx.index_uow.repo.indicies[resource_id].entries[entry_id].id
+        #     == entry_id
+        # )
+        # assert bus.ctx.index_uow.was_committed
+
+    def test_add_entry_with_same_entry_id_raises(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    }
+                },
+                "id": "baseform",
+            },
+        )
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        entry_id = "beta"
+        cmd3 = factories.AddEntriesFactory(
+            resource_id=cmd2.resource_id,
+            entries=[{"baseform": entry_id}],
+        )
+
+        lex_ctx.command_bus.dispatch(cmd3)
+
+        with pytest.raises(errors.IntegrityError):
+            lex_ctx.command_bus.dispatch(
+                factories.AddEntriesFactory(
+                    resource_id=cmd3.resource_id,
+                    entries=[{"baseform": entry_id}],
+                ),
+            )
+
+
+class TestImportEntries:
+    def test_cannot_import_entries_to_nonexistent_resource(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        with pytest.raises(errors.ResourceNotFound):
+            lex_ctx.command_bus.dispatch(
+                factories.ImportEntriesFactory(
+                    resource_id="non_existent",
+                )
+            )
+
+    def test_mport_entries(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    }
+                },
+                "id": "baseform",
+            },
+        )
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        entry_id = "beta"
+        cmd3 = factories.ImportEntriesFactory(
+            resource_id=cmd2.resource_id,
+            entries=[
+                {
+                    "entry": {"baseform": entry_id},
+                    "user": "user1",
+                }],
+        )
+
+        lex_ctx.command_bus.dispatch(cmd3)
+
+        entry_uow_repo_uow = lex_ctx.container.get(
+            EntryUowRepositoryUnitOfWork
+        )
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
+        entry = uow.repo.by_id(cmd3.entity_id)
+        assert entry is not None
+        assert entry.id == cmd3.entity_id
+        assert entry.entry_id == entry_id
+        # assert entry.repo_id == cmd3.resource_id
+
+        assert entry.body == {"baseform": entry_id}
+        assert entry.last_modified_by == "user1"
+
+        assert uow.was_committed
+
+        # assert (
+        #     bus.ctx.index_uow.repo.indicies[resource_id].entries[entry_id].id
+        #     == entry_id
+        # )
+        # assert bus.ctx.index_uow.was_committed
+
+    def test_import_entries_with_same_entry_id_raises(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ):
+        cmd1 = factories.CreateEntryRepositoryFactory()
+        lex_ctx.command_bus.dispatch(cmd1)
+
+        cmd2 = factories.CreateResourceFactory(
+            entry_repo_id=cmd1.entity_id,
+            config={
+                "sort": ["baseform"],
+                "fields": {
+                    "baseform": {
+                        "type": "string",
+                        "required": True
+                    }
+                },
+                "id": "baseform",
+            },
+        )
+        lex_ctx.command_bus.dispatch(cmd2)
+
+        entry_id = "beta"
+        cmd3 = factories.ImportEntriesFactory(
+            resource_id=cmd2.resource_id,
+            entries=[
+                {
+                    "entry": {"baseform": entry_id},
+                }
+            ],
+        )
+
+        lex_ctx.command_bus.dispatch(cmd3)
+
+        with pytest.raises(errors.IntegrityError):
+            lex_ctx.command_bus.dispatch(
+                factories.ImportEntriesFactory(
+                    resource_id=cmd3.resource_id,
+                    entries=[
+                        {
+                            "entry": {"baseform": entry_id}
+                            
+                        }],
+                ),
+            )

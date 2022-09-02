@@ -14,6 +14,8 @@ from karp.lex.domain.commands import (
     CreateEntryRepository,
     CreateResource,
     DeleteEntryRepository,
+    ImportEntries,
+    ImportEntriesInChunks,
     SetEntryRepoId,
 )
 from karp.lex.domain import commands
@@ -28,6 +30,8 @@ from karp.lex.application.use_cases import (
     DeletingEntry,
     DeletingEntryRepository,
     DeletingResource,
+    ImportingEntries,
+    ImportingEntriesInChunks,
     PublishingResource,
     SettingEntryRepoId,
     UpdatingEntry,
@@ -53,9 +57,14 @@ from karp.lex.application.queries import (
 
 __all__ = [
     # commands
+    "AddEntries",
     "AddEntriesInChunks",
+    "ImportEntries",
+    "ImportEntriesInChunks",
     # use cases
     "AddingEntriesInChunks",
+    "ImportingEntries",
+    "ImportingEntriesInChunks",
 ]
 
 
@@ -150,6 +159,26 @@ class Lex(injector.Module):
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> CommandHandler[AddEntriesInChunks]:
         return AddingEntriesInChunks(
+            resource_uow=resource_uow, entry_repo_uow=entry_repo_uow
+        )
+
+    @injector.provider
+    def import_entries(
+        self,
+        resource_uow: ResourceUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
+    ) -> CommandHandler[commands.ImportEntries]:
+        return ImportingEntries(
+            resource_uow=resource_uow, entry_repo_uow=entry_repo_uow
+        )
+
+    @injector.provider
+    def importing_entries_in_chunks(
+        self,
+        resource_uow: ResourceUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
+    ) -> CommandHandler[ImportEntriesInChunks]:
+        return ImportingEntriesInChunks(
             resource_uow=resource_uow, entry_repo_uow=entry_repo_uow
         )
 

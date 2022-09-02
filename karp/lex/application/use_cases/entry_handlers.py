@@ -318,6 +318,123 @@ class AddingEntriesInChunks(BasingEntry, CommandHandler[commands.AddEntriesInChu
         return created_db_entries
 
 
+class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):
+    def execute(self, command: commands.ImportEntries):
+        """
+        Import entries to DB and INDEX (if present and resource is active).
+
+        Raises
+        ------
+        RuntimeError
+            If the resource.entry_json_schema fails to compile.
+        KarpError
+            - If an entry fails to be validated against the json schema.
+            - If the DB interaction fails.
+
+        Returns
+        -------
+        List
+            List of the id's of the created entries.
+        """
+
+        if not isinstance(command.resource_id, str):
+            raise ValueError(
+                f"'resource_id' must be of type 'str', were '{type(command.resource_id)}'"
+            )
+        with self.resource_uow:
+            resource = self.resource_uow.resources.by_resource_id(command.resource_id)
+
+        if not resource:
+            raise errors.ResourceNotFound(command.resource_id)
+
+        entry_schema = EntrySchema(resource.entry_json_schema)
+
+        created_db_entries = []
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
+            resource.entry_repository_id
+        ) as uw:
+            for entry_raw in command.entries:
+                entry_schema.validate_entry(entry_raw["entry"])
+
+                entry = resource.create_entry_from_dict(
+                    entry_raw["entry"],
+                    user=entry_raw.get("user") or command.user,
+                    message=entry_raw.get("message") or command.message,
+                    entity_id=entry_raw.get("entity_id") or unique_id.make_unique_id(),
+                    timestamp=entry_raw.get("last_modified"),
+                )
+                uw.entries.save(entry)
+                created_db_entries.append(entry)
+            uw.commit()
+
+        return created_db_entries
+
+
+class ImportingEntriesInChunks(BasingEntry, CommandHandler[commands.ImportEntriesInChunks]):
+    def execute(self, command: commands.ImportEntriesInChunks):
+        """
+        Import entries to DB and INDEX (if present and resource is active).
+
+        Raises
+        ------
+        RuntimeError
+            If the resource.entry_json_schema fails to compile.
+        KarpError
+            - If an entry fails to be validated against the json schema.
+            - If the DB interaction fails.
+
+        Returns
+        -------
+        List
+            List of the id's of the created entries.
+        """
+
+        if not isinstance(command.resource_id, str):
+            raise ValueError(
+                f"'resource_id' must be of type 'str', were '{type(command.resource_id)}'"
+            )
+        with self.resource_uow:
+            resource = self.resource_uow.resources.by_resource_id(command.resource_id)
+
+        if not resource:
+            raise errors.ResourceNotFound(command.resource_id)
+
+        entry_schema = EntrySchema(resource.entry_json_schema)
+
+        created_db_entries = []
+        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
+            resource.entry_repository_id
+        ) as uw:
+            for i, entry_raw in enumerate(command.entries):
+                entry_schema.validate_entry(entry_raw["entry"])
+
+                entry = resource.create_entry_from_dict(
+                    entry_raw["entry"],
+                    user=entry_raw.get("user") or command.user,
+                    message=entry_raw.get("message") or command.message,
+                    entity_id=entry_raw.get("entity_id") or unique_id.make_unique_id(),
+                    timestamp=entry_raw.get("last_modified"),
+                )
+                uw.entries.save(entry)
+                created_db_entries.append(entry)
+
+                if i % command.chunk_size == 0:
+                    uw.commit()
+            uw.commit()
+
+        return created_db_entries
+
+
+# def add_entries(
+#     resource_id: str,
+#     entries: List[Dict],
+#     user_id: str,
+#     message: str = None,
+#     resource_version: int = None,
+# ):
+#     """
+#     Add entries to DB and INDEX (if present and resource is active).
+
 # def add_entries(
 #     resource_id: str,
 #     entries: List[Dict],

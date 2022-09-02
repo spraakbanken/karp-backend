@@ -37,6 +37,14 @@ class DeleteEntry(Command):
     message: typing.Optional[str] = None
 
 
+class ImportEntries(AddEntries):
+    pass
+
+
+class ImportEntriesInChunks(AddEntriesInChunks):
+    pass
+
+
 class UpdateEntry(Command):
     resource_id: str
     entry_id: str

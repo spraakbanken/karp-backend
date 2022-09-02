@@ -337,6 +337,7 @@ class Resource(TimestampedVersionedEntity):
         user: str,
         entity_id: unique_id.UniqueId,
         message: Optional[str] = None,
+        timestamp: Optional[float] = None,
     ) -> Entry:
         self._check_not_discarded()
         id_getter = self.id_getter()
@@ -348,6 +349,7 @@ class Resource(TimestampedVersionedEntity):
             last_modified_by=user,
             message=message,
             entity_id=entity_id,
+            last_modified=timestamp,
         )
 
     def is_protected(self, level: PermissionLevel):
