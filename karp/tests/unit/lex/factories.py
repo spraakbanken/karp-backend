@@ -182,6 +182,30 @@ class AddEntryFactory(factory.Factory):
     message = 'added'
 
 
+class AddEntriesFactory(factory.Factory):
+    class Meta:
+        model = commands.AddEntries
+
+    resource_id = factory.Faker('word')
+    entries = [{"entry": {
+        'baseform': 'bra',
+    }}]
+    user = factory.Faker('email')
+    message = 'added'
+    
+
+class ImportEntriesFactory(factory.Factory):
+    class Meta:
+        model = commands.ImportEntries
+
+    resource_id = factory.Faker('word')
+    entries = [{"entry": {
+        'baseform': 'bra',
+    }}]
+    user = factory.Faker('email')
+    message = 'added'
+    
+
 class UpdateEntryFactory(factory.Factory):
     class Meta:
         model = commands.UpdateEntry
