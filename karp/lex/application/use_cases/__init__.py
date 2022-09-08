@@ -1,7 +1,6 @@
 from .entry_handlers import (
     AddingEntry,
     AddingEntries,
-    AddingEntriesInChunks,
     DeletingEntry,
     ImportingEntries,
     ImportingEntriesInChunks,
@@ -19,7 +18,6 @@ from .resource_handlers import (
 
 __all__ = [
     "AddingEntries",
-    "AddingEntriesInChunks",
     "AddingEntry",
     "ImportingEntries",
     "ImportingEntriesInChunks",

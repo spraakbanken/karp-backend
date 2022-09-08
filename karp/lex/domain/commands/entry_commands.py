@@ -24,6 +24,7 @@ class AddEntries(Command):
     entries: typing.Iterable[typing.Dict]
     user: str
     message: str
+    chunk_size: int = 0
 
 
 class AddEntriesInChunks(AddEntries):

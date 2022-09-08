@@ -23,7 +23,6 @@ from karp.lex.domain.commands.resource_commands import SetEntryRepoId
 from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application.use_cases import (
     AddingEntries,
-    AddingEntriesInChunks,
     AddingEntry,
     CreatingEntryRepo,
     CreatingResource,
@@ -158,9 +157,7 @@ class Lex(injector.Module):
         resource_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> CommandHandler[AddEntriesInChunks]:
-        return AddingEntriesInChunks(
-            resource_uow=resource_uow, entry_repo_uow=entry_repo_uow
-        )
+        return AddingEntries(resource_uow=resource_uow, entry_repo_uow=entry_repo_uow)
 
     @injector.provider
     def import_entries(
