@@ -2,6 +2,7 @@
 import typing
 
 import factory
+import factory.fuzzy
 from faker.providers import BaseProvider
 
 from karp.lex.domain import commands, entities, events
@@ -23,7 +24,7 @@ class ResourceConfigProvider(BaseProvider):
 
 class MachineNameProvider(BaseProvider):
     def machine_name(self) -> MachineName:
-        return MachineName(name=factory.Faker("word"))
+        return MachineName(name=factory.fuzzy.FuzzyText(length=6, prefix="resource_"))
 
 
 factory.Faker.add_provider(MachineNameProvider)
@@ -145,7 +146,7 @@ class CreateResourceFactory(factory.Factory):
 
     entity_id = factory.LazyFunction(make_unique_id)
     # resource_id = factory.SubFactory(MachineNameFactory)
-    resource_id = factory.Faker("word")
+    resource_id = factory.fuzzy.FuzzyText(length=6, prefix="resource_")
     name = factory.Faker("word")
     repository_type = "fake"
     config = factory.Faker("resource_config")
@@ -207,10 +208,14 @@ class ImportEntriesFactory(AddEntriesFactory):
     class Meta:
         model = commands.ImportEntries
 
+    message = "imported"
+
 
 class ImportEntriesInChunksFactory(AddEntriesInChunksFactory):
     class Meta:
         model = commands.ImportEntriesInChunks
+
+    message = "imported"
 
 
 class UpdateEntryFactory(factory.Factory):
