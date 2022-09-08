@@ -48,38 +48,36 @@ karp-cli = "karp.cliapp.main:cliapp"
 "Bug Tracker" = "https://github.com/spraakbanken/karp-backend/issues"
 
 [tool.poetry.dependencies]
-python = "^3.9"
-json-streams = "^0.11"
+python = "^3.10"
+json-streams = "^0.12.0"
 paradigmextract = "^0.1.1"
-pydantic = "^1.8.2"
-PyJWT = {extras = ["crypto"], version = "^2.3.0"}
+pydantic = "^1.10.2"
+PyJWT = { extras = ["crypto"], version = "^2.3.0" }
 sb-json-tools = "^0.9.1"
 SQLAlchemy = "^1.4.25"
-sqlalchemy-json = "^0.4.0"
-SQLAlchemy-Utils = "^0.38.2"
-tabulate = "^0.8.9"
+sqlalchemy-json = "^0.5.0"
+SQLAlchemy-Utils = "^0.38.3"
+tabulate = "^0.8.10"
 tenacity = "^8.0.1"
 tqdm = "^4.62.3"
-typer = "^0.4.0"
+typer = "^0.6.1"
 urllib3 = "^1.26.7"
-uvicorn = "^0.17"
-fastapi = "^0.75.0"
-injector = "^0.19"
-alembic = "^1.7.4"
-regex = "^2021.9.30"
+fastapi = "^0.82.0"
+injector = "^0.20.1"
+alembic = "^1.8.1"
+regex = "^2022.8.17"
 python-dotenv = "^0.19.0"
 environs = "^9.3.4"
 elasticsearch = "^6"
 elasticsearch-dsl = "^6"
 mysqlclient = { version = "^2.1.0", optional = true }
-TatSu = "^5.6"
+TatSu = "^5.8.3"
 PyMySQL = { version = "^0.9", optional = true }
 aiosqlite = { version = "^0.17.0", optional = true }
 aiomysql = { version = "^0.0.22", optional = true }
 structlog = "^21.5.0"
-asgi-correlation-id = "^1.1.2"
-gunicorn = "^20.1.0"
-python-json-logger = "^2.0.2"
+asgi-correlation-id = "^3.0.1"
+python-json-logger = "^2.0.4"
 ulid-py = "^1.1.0"
 Deprecated = "^1.2.13"
 
@@ -88,8 +86,6 @@ mysql = ["mysqlclient", "PyMySQL", "aiomysql"]
 sqlite = ["aiosqlite"]
 
 [tool.poetry.dev-dependencies]
-flake8 = "^4.0.1"
-autopep8 = "^1.5.7"
 pytest = "^6.2.5"
 pytest-cov = "^2.12.1"
 mypy = "^0.910"
@@ -97,16 +93,15 @@ bump2version = "^1.0.1"
 factory-boy = "^3.2.0"
 requests = "^2.26.0"
 isort = "^5.9.3"
-flakehell = "^0.9.0"
-wemake-python-styleguide = "^0.16"
 elasticsearch-test-py = "^1.1.0"
 cryptography = "^36.0.1"
 types-tabulate = "^0.8.5"
 vulture = "^2.3"
-flake8-bandit = "^2.1.2"
 pylint = "^2.12.2"
-flake8-pylint = "^0.1.3"
 black = "^22.3.0"
+
+[tool.poetry.group.dev.dependencies]
+uvicorn = "^0.18.3"
 
 [tool.flakehell]
 exclude = ["README.rst", "README.md"]
