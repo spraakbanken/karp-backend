@@ -30,7 +30,6 @@ from karp.lex.application.use_cases import (
     DeletingEntryRepository,
     DeletingResource,
     ImportingEntries,
-    ImportingEntriesInChunks,
     PublishingResource,
     SettingEntryRepoId,
     UpdatingEntry,
@@ -61,9 +60,7 @@ __all__ = [
     "ImportEntries",
     "ImportEntriesInChunks",
     # use cases
-    "AddingEntriesInChunks",
     "ImportingEntries",
-    "ImportingEntriesInChunks",
 ]
 
 
@@ -175,7 +172,7 @@ class Lex(injector.Module):
         resource_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> CommandHandler[ImportEntriesInChunks]:
-        return ImportingEntriesInChunks(
+        return ImportingEntries(
             resource_uow=resource_uow, entry_repo_uow=entry_repo_uow
         )
 
