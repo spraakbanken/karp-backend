@@ -196,54 +196,21 @@ class AddEntriesFactory(factory.Factory):
     message = "added"
 
 
-class AddEntriesInChunksFactory(factory.Factory):
+class AddEntriesInChunksFactory(AddEntriesFactory):
     class Meta:
         model = commands.AddEntriesInChunks
 
-    resource_id = factory.Faker("word")
-    entries = [
-        {
-            "entry": {
-                "baseform": "bra",
-            }
-        }
-    ]
-    user = factory.Faker("email")
-    message = "added"
     chunk_size = 50
 
 
-class ImportEntriesFactory(factory.Factory):
+class ImportEntriesFactory(AddEntriesFactory):
     class Meta:
         model = commands.ImportEntries
 
-    resource_id = factory.Faker("word")
-    entries = [
-        {
-            "entry": {
-                "baseform": "bra",
-            }
-        }
-    ]
-    user = factory.Faker("email")
-    message = "added"
 
-
-class ImportEntriesInChunksFactory(factory.Factory):
+class ImportEntriesInChunksFactory(AddEntriesInChunksFactory):
     class Meta:
         model = commands.ImportEntriesInChunks
-
-    resource_id = factory.Faker("word")
-    entries = [
-        {
-            "entry": {
-                "baseform": "bra",
-            }
-        }
-    ]
-    user = factory.Faker("email")
-    message = "added"
-    chunk_size = 50
 
 
 class UpdateEntryFactory(factory.Factory):
