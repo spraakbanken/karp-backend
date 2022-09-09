@@ -64,6 +64,42 @@ def add_entries_to_resource(
     typer.echo(f"Successfully added entries to {resource_id}")
 
 
+@subapp.command("import")
+@cli_error_handler
+@cli_timer
+def import_entries_to_resource(
+    ctx: typer.Context,
+    resource_id: str,
+    # version: Optional[int],
+    data: Path,
+    chunked: bool = False,
+    chunk_size: int = 1000,
+    user: Optional[str] = typer.Option(None),
+    message: Optional[str] = typer.Option(None),
+):
+    bus = inject_from_ctx(CommandBus, ctx)
+    user = user or "local admin"
+    message = message or "imported through cli"
+    entries = tqdm(json_streams.load_from_file(data), desc="Adding", unit=" entries")
+    if chunked:
+        cmd = lex.ImportEntriesInChunks(
+            resource_id=resource_id,
+            chunk_size=chunk_size,
+            entries=entries,
+            user=user,
+            message=message,
+        )
+    else:
+        cmd = lex.ImportEntries(
+            resource_id=resource_id,
+            entries=entries,
+            user=user,
+            message=message,
+        )
+    bus.dispatch(cmd)
+    typer.echo(f"Successfully imported entries to {resource_id}")
+
+
 @subapp.command("update")
 @cli_error_handler
 @cli_timer

@@ -93,7 +93,8 @@ test: unit-tests
 .PHONY: all-tests
 all-tests: unit-tests integration-tests e2e-tests
 .PHONY: all-tests-w-coverage
-all-tests-w-coverage: unit-tests-w-coverage integration-tests-w-coverage e2e-tests-w-coverage
+all-tests-w-coverage:
+	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests
 
 .PHONY: unit-tests
 unit-tests:
@@ -128,7 +129,7 @@ tox:
 tox-to-log:
 	tox > tox.log
 
-lint: install-dev
+lint:
 	${INVENV} pylint --rcfile=pylintrc karp asgi.py
 
 lint-no-fail: install-dev
@@ -137,14 +138,16 @@ lint-no-fail: install-dev
 check-pylint: install-dev
 	${INVENV} pylint --rcfile=pylintrc  karp
 
-check-mypy: install-dev
-	${INVENV} mypy karp asgi.py
+check-mypy: type-check
 
+.PHONY: lint-refactorings
+lint-refactorings: check-pylint-refactorings
 check-pylint-refactorings: install-dev
 	${INVENV} pylint --disable=C,W,E --enable=R karp
 
+.PHONY: type-check
 type-check:
-	${INVENV} mypy karp
+	${INVENV} mypy karp asgi.py
 
 bumpversion: install-dev
 	${INVENV} bump2version patch

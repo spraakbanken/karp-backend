@@ -117,6 +117,9 @@ venv.bak/
 # VS Code settings
 .vscode/
 
+# Poetry lock
+poetry.lock
+
 jwtRS256.key
 jwtRS256.key.pub
 pubkey.pem

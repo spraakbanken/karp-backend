@@ -16,14 +16,25 @@ from json_streams import jsonlib
 from sqlalchemy import pool
 from sqlalchemy.engine import Engine, create_engine, url as sa_url
 import logging
-from asgi_correlation_id.log_filters import correlation_id_filter
+import asgi_correlation_id
 
 from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
-from karp.search_infrastructure import GenericSearchInfrastructure, Es6SearchIndexMod, GenericSearchIndexMod, SearchInfrastructure
+from karp.search_infrastructure import (
+    GenericSearchInfrastructure,
+    Es6SearchIndexMod,
+    GenericSearchIndexMod,
+    SearchInfrastructure,
+)
 from karp.main import config, modules
-from karp.main.modules import CommandBusMod, Db, EventBusMod, ElasticSearchMod, install_auth_service
+from karp.main.modules import (
+    CommandBusMod,
+    Db,
+    EventBusMod,
+    ElasticSearchMod,
+    install_auth_service,
+)
 from karp.search import Search
 
 
@@ -36,17 +47,17 @@ class AppContext:
 def bootstrap_app(container=None) -> AppContext:
     env = config.load_env()
     db_url = config.parse_database_url(env)
-    es_enabled = env.bool('ELASTICSEARCH_ENABLED', False)
+    es_enabled = env.bool("ELASTICSEARCH_ENABLED", False)
     if es_enabled:
-        es_url = env('ELASTICSEARCH_HOST')
+        es_url = env("ELASTICSEARCH_HOST")
     else:
-        es_url = env('ELASTICSEARCH_HOST', '')
+        es_url = env("ELASTICSEARCH_HOST", "")
     settings = {
-        'auth.jwt.pubkey.path': env('AUTH_JWT_PUBKEY_PATH', None),
-        'auth.name': env('AUTH_NAME', ''),
-        'tracking.matomo.idsite': env('TRACKING_MATOMO_IDSITE', None),
-        'tracking.matomo.url': env('TRACKING_MATOMO_URL', None),
-        'tracking.matomo.token': env('TRACKING_MATOMO_TOKEN', None),
+        "auth.jwt.pubkey.path": env("AUTH_JWT_PUBKEY_PATH", None),
+        "auth.name": env("AUTH_NAME", ""),
+        "tracking.matomo.idsite": env("TRACKING_MATOMO_IDSITE", None),
+        "tracking.matomo.url": env("TRACKING_MATOMO_URL", None),
+        "tracking.matomo.token": env("TRACKING_MATOMO_TOKEN", None),
     }
     # if n ot container:
     # container = AppContainer()
@@ -59,7 +70,7 @@ def bootstrap_app(container=None) -> AppContext:
     # bus.handle(events.AppStarted())  # needed? ?
     configure_logging(settings=settings)
     # logging.config.dictConfig(_logging_config())  # type: ignore
-    search_service = env('SEARCH_CONTEXT', 'sql_search_service')
+    search_service = env("SEARCH_CONTEXT", "sql_search_service")
     engine = _create_db_engine(db_url)
     dependency_injector = _setup_dependency_injection(engine, es_url=es_url)
     _setup_search_context(dependency_injector, search_service)
@@ -70,9 +81,7 @@ def _create_db_engine(db_url: config.DatabaseUrl) -> Engine:
     kwargs = {}
     if str(db_url).startswith("sqlite"):
         kwargs["poolclass"] = pool.SingletonThreadPool
-        kwargs['connect_args'] = {
-            'check_same_thread': False
-        }
+        kwargs["connect_args"] = {"check_same_thread": False}
     engine_echo = False
     return create_engine(db_url, echo=engine_echo, future=True, **kwargs)
 
@@ -100,7 +109,7 @@ def _setup_dependency_injection(
 
 
 def _setup_search_context(container: injector.Injector, search_service: str) -> None:
-    if search_service.lower() == 'es6_search_service':
+    if search_service.lower() == "es6_search_service":
         container.binder.install(Es6SearchIndexMod())
     else:
         container.binder.install(GenericSearchIndexMod())
@@ -110,37 +119,40 @@ def configure_logging(settings: dict[str, str]) -> None:
     dictConfig(
         {
             "version": 1,
-            'disable_existing_loggers': False,
-            'filters': {
-                'correlation_id': {'()': correlation_id_filter(32)}
+            "disable_existing_loggers": False,
+            "filters": {
+                "correlation_id": {
+                    "()": asgi_correlation_id.CorrelationIdFilter,
+                    "uuid_length": 32,
+                }
             },
             "formatters": {
-                'console': {
-                    'class': 'logging.Formatter',
+                "console": {
+                    "class": "logging.Formatter",
                     # 'datefmt':  '%H:%M:%S',
-                    'format': '%(levelname)s:\t\b%(asctime)s %(name)s:%(lineno)d [%(correlation_id)s] %(message)s',
+                    "format": "%(levelname)s:\t\b%(asctime)s %(name)s:%(lineno)d [%(correlation_id)s] %(message)s",
                 },
-                'json': {
-                    'class': 'pythonjsonlogger.jsonlogger.JsonFormatter',
+                "json": {
+                    "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
                     # 'format': '%(message)s',
                     "format": "%(asctime)s %(levelname)s %(name)s %(process)d %(funcName)s %(lineno)d %(message)s",
                 },
                 "standard": {
                     "format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s",
-                }
+                },
             },
             "handlers": {
                 "console": {
                     "class": "logging.StreamHandler",
-                    'filters': ['correlation_id'],
-                    "formatter": 'console',
+                    "filters": ["correlation_id"],
+                    "formatter": "console",
                     # "level": 'DEBUG',
                     "stream": "ext://sys.stderr",
                 },
-                'json': {
-                    'class': 'logging.StreamHandler',
-                    'filters': ['correlation_id'],
-                    'formatter': 'json',
+                "json": {
+                    "class": "logging.StreamHandler",
+                    "filters": ["correlation_id"],
+                    "formatter": "json",
                 },
                 # "email": {
                 #     "class": "logging.handlers.SMTPHandler",
@@ -154,13 +166,13 @@ def configure_logging(settings: dict[str, str]) -> None:
             },
             "loggers": {
                 "karp": {
-                    "handlers": ['json'],  # ["console", "email"],
-                    "level": 'DEBUG',  # config.CONSOLE_LOG_LEVEL,
-                    'propagate': True
+                    "handlers": ["json"],  # ["console", "email"],
+                    "level": "DEBUG",  # config.CONSOLE_LOG_LEVEL,
+                    "propagate": True,
                 },
                 # third-party package loggers
-                'sqlalchemy': {'handlers': ['json'], 'level': 'WARNING'},
-                'uvicorn.access': {'handlers': ['json'], 'level': 'INFO'}
+                "sqlalchemy": {"handlers": ["json"], "level": "WARNING"},
+                "uvicorn.access": {"handlers": ["json"], "level": "INFO"},
             },
         }
     )
@@ -202,9 +214,12 @@ def setup_logging():
 
     # Clear Gunicorn access log to remove duplicate requests logging
     # logging.getLogger("gunicorn.access").handlers.clear()
-    logging.basicConfig(format="%(asctime)s %(message)s",
-                        datefmt="%Y-%m-%dT%H:%M:%S%z", level=logging.INFO)
-    logger = logging.getLogger('karp')
+    logging.basicConfig(
+        format="%(asctime)s %(message)s",
+        datefmt="%Y-%m-%dT%H:%M:%S%z",
+        level=logging.INFO,
+    )
+    logger = logging.getLogger("karp")
     logger.setLevel(logging.INFO)
     # structlog.configure(
     #     processors=[
@@ -236,4 +251,4 @@ def setup_logging():
 
 
 def load_infrastructure():
-    modules.load_modules('karp.infrastructure')
+    modules.load_modules("karp.infrastructure")

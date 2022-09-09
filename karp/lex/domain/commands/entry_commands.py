@@ -24,6 +24,7 @@ class AddEntries(Command):
     entries: typing.Iterable[typing.Dict]
     user: str
     message: str
+    chunk_size: int = 0
 
 
 class AddEntriesInChunks(AddEntries):
@@ -35,6 +36,14 @@ class DeleteEntry(Command):
     entry_id: str
     user: str
     message: typing.Optional[str] = None
+
+
+class ImportEntries(AddEntries):
+    pass
+
+
+class ImportEntriesInChunks(AddEntriesInChunks):
+    pass
 
 
 class UpdateEntry(Command):
