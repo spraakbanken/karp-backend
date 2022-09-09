@@ -93,7 +93,8 @@ test: unit-tests
 .PHONY: all-tests
 all-tests: unit-tests integration-tests e2e-tests
 .PHONY: all-tests-w-coverage
-all-tests-w-coverage: unit-tests-w-coverage integration-tests-w-coverage e2e-tests-w-coverage
+all-tests-w-coverage:
+	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests
 
 .PHONY: unit-tests
 unit-tests:
@@ -143,8 +144,9 @@ check-mypy: install-dev
 check-pylint-refactorings: install-dev
 	${INVENV} pylint --disable=C,W,E --enable=R karp
 
+.PHONY: type-check
 type-check:
-	${INVENV} mypy karp
+	${INVENV} mypy karp asgi.py
 
 bumpversion: install-dev
 	${INVENV} bump2version patch
