@@ -69,7 +69,7 @@ machine 1 to preprocess and use result on machine 2.
 
 ### Python
 
-- Poetry
+- Poetry >= 3.10
 - FastAPI
 - SQLAlchemy
 - Typer
@@ -85,13 +85,13 @@ machine 1 to preprocess and use result on machine 2.
 
 ### Version handling
 
-Version can be bumped with [`bumpversion`](https://pypi.org/project/bumpversion/).
+Version can be bumped with [`bump2version`](https://pypi.org/project/bump2version/).
 
 Usage:
 
-- Increase patch number `a.b.X => a.b.(X+1)`: `bumpversion patch`
-- Increase minor number `a.X.c => a.(X+1).c`: `bumpversion minor`
-- Increase major number `X.b.c => (X+1).b.c`: `bumpversion major`
+- Increase patch number `a.b.X => a.b.(X+1)`: `make bumpversion` or `bumpversion patch`
+- Increase minor number `a.X.c => a.(X+1).0`: `make bumpversion-minor` or `bumpversion minor`
+- Increase major number `X.b.c => (X+1).0.0`: `make bumpversion-major` or `bumpversion major`
 - To custom version `a.b.c => X.Y.Z`: `bumpversion --new-version X.Y.Z`
 
 `bumpversion` is configured in [`.bumpversion.cfg`](.bumpversion.cfg).
