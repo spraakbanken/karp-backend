@@ -5,6 +5,9 @@ on:
     tags:
       - v*
 
+env:
+  POETRY_VERSION: "1.2.0"
+  PYTHON_VERSION: "3.10"
 jobs:
   lint:
     runs-on: ${{ matrix.os }}
@@ -111,10 +114,10 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up Python 3.10
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python-version: "3.10"
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: install poetry
         run: pip install poetry
       - name: Build distribution
