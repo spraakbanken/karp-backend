@@ -6,7 +6,7 @@ from starlette.config import Config
 from starlette.datastructures import Secret
 
 PROJECT_NAME = 'Karp'
-VERSION = '6.0.21'
+VERSION = '6.0.22'
 API_PREFIX = '/'
 # SECRET_KEY = config("SECRET_KEY", cast=Secret, default="CHANGEME")
 
