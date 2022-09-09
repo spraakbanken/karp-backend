@@ -129,7 +129,7 @@ tox:
 tox-to-log:
 	tox > tox.log
 
-lint: install-dev
+lint:
 	${INVENV} pylint --rcfile=pylintrc karp asgi.py
 
 lint-no-fail: install-dev
@@ -138,9 +138,10 @@ lint-no-fail: install-dev
 check-pylint: install-dev
 	${INVENV} pylint --rcfile=pylintrc  karp
 
-check-mypy: install-dev
-	${INVENV} mypy karp asgi.py
+check-mypy: type-check
 
+.PHONY: lint-refactorings
+lint-refactorings: check-pylint-refactorings
 check-pylint-refactorings: install-dev
 	${INVENV} pylint --disable=C,W,E --enable=R karp
 
