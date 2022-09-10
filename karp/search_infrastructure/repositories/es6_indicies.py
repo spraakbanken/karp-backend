@@ -4,7 +4,7 @@ import re
 from typing import Dict, List, Optional, Any, Tuple, Union
 
 import elasticsearch
-import logging
+from elasticsearch import exceptions as es_exceptions
 
 from karp.foundation.events import EventBus
 
@@ -14,6 +14,7 @@ from karp.search.application.repositories import (
     IndexEntry,
     IndexUnitOfWork,
 )
+from karp.search.domain.errors import UnsupportedField
 
 
 logger = logging.getLogger(__name__)
