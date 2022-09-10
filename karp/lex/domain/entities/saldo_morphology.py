@@ -1,4 +1,4 @@
-from karp.domain.models.morphology import Morphology
+from karp.lex.domain.entities.morphology import Morphology
 
 
 class SaldoMorphology(Morphology):
