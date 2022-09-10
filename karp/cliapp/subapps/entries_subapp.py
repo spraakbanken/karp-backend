@@ -104,9 +104,7 @@ def import_entries_to_resource(
 @cli_error_handler
 @cli_timer
 def update_entries(resource_id: str, data: Path):
-    updated_entries = entries.update_entries(
-        resource_id, json_streams.load_from_file(data)
-    )
+    raise NotImplementedError("")
 
 
 @subapp.command("export")
