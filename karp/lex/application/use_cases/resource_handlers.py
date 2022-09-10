@@ -33,14 +33,6 @@ class BasingResource:
         yield from self.resource_uow.collect_new_events()
 
 
-def create_new_resource_from_file(config_file: IO) -> Resource:
-    return create_new_resource(config_file)
-
-
-def create_resource_from_path(config: Path) -> List[Resource]:
-    return []
-
-
 class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
     def __init__(
         self,

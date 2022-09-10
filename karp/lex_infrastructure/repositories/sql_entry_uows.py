@@ -66,7 +66,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
         )
         query = self._session.query(EntryUowModel).join(
             subq,
-            db.and_(
+            sql.and_(
                 EntryUowModel.entity_id == subq.c.entity_id,
                 EntryUowModel.last_modified == subq.c.maxdate,
                 EntryUowModel.discarded == False,

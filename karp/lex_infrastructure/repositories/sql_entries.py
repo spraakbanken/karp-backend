@@ -404,13 +404,6 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         )
         return query.count()
 
-    def num_entities(self) -> int:
-        self._check_has_session()
-        query = self._session.query(self.runtime_model.discarded).filter_by(
-            discarded=False
-        )
-        return query.count()
-
     def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
         # query = self._session.query(self.runtime_model)
@@ -671,6 +664,9 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):
         self._session_factory = session_factory
         self.event_bus = event_bus
         self.cache = {}
+
+    def _create_uow(self, **kwargs) -> SqlEntryUowType:
+        raise NotImplementedError(f"please implement this for {self}")
 
     def __call__(
         self,
