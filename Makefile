@@ -130,7 +130,8 @@ tox-to-log:
 	tox > tox.log
 
 lint:
-	${INVENV} pylint --rcfile=pylintrc karp asgi.py
+	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex asgi.py
+	# ${INVENV} pylint --rcfile=pylintrc karp asgi.py
 
 lint-no-fail: install-dev
 	${INVENV} pylint --rcfile=pylintrc --exit-zero karp asgi.py
