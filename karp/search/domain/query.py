@@ -39,12 +39,14 @@ class Query(pydantic.BaseModel):
     @pydantic.validator(
         "resources", "include_fields", "exclude_fields", "sort", pre=True
     )
+    @classmethod
     def split_str(cls, v):
         if isinstance(v, str):
             return v.split(",")
         return v
 
     @pydantic.validator("fields", "sort", pre=True, always=True)
+    @classmethod
     def set_ts_now(cls, v):
         return v or []
 

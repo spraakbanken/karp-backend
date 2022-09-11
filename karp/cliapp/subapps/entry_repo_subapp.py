@@ -46,13 +46,14 @@ def delete(
     user: Optional[str] = typer.Option(None),
 ):
 
-    bus = inject_from_ctx(CommandBus, ctx)
+    # bus = inject_from_ctx(CommandBus, ctx)
 
-    delete_entry_repo = DeleteEntryRepo(
-        entity_id=entity_id,
-        user=user or "local admin"
-    )
-    typer.echo(f"Entry repository with id '{entity_id}' deleted.")
+    # delete_entry_repo = DeleteEntryRepo(
+    #     entity_id=entity_id,
+    #     user=user or "local admin"
+    # )
+    # typer.echo(f"Entry repository with id '{entity_id}' deleted.")
+    typer.echo("not yet supported")
 
 
 @subapp.command()

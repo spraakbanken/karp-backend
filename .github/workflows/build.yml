@@ -28,7 +28,7 @@ jobs:
         task:
           - name: Lint code
             run: make lint
-            allow_failure: true
+            allow_failure: false
           - name: Typecheck
             run: make type-check
             allow_failure: true
