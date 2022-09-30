@@ -15,6 +15,7 @@ from fastapi import (
 import pydantic
 from starlette import responses
 
+from karp.lex.domain.value_objects import UniqueId
 from karp import errors as karp_errors, auth, lex, search
 from karp.lex.application.queries import EntryDto, GetEntryHistory
 from karp.lex.domain import commands, errors
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 # @auth.auth.authorization("ADMIN")
 def get_history_for_entry(
     resource_id: str,
-    entry_id: str,
+    entry_id: UniqueId,
     version: Optional[int] = Query(None),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
