@@ -10,6 +10,7 @@ from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
 from karp.foundation.time import utc_now
+from karp.foundation.unique_id import UniqueId
 from karp.foundation.value_objects.unique_id import make_unique_id
 from karp.lex.application.queries import EntryDto
 
@@ -114,7 +115,7 @@ class TestAddEntry:
         assert response.status_code == 201
         response_data = response.json()
         assert "newID" in response_data
-        assert response_data["newID"] == "203"
+        _new_id = UniqueId(response_data["newID"])
 
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
