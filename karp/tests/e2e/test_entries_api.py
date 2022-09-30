@@ -9,7 +9,8 @@ from karp.lex.application.queries.resources import GetEntryRepositoryId
 from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
-from karp.utility.time import utc_now
+from karp.foundation.time import utc_now
+from karp.foundation.value_objects.unique_id import make_unique_id
 from karp.lex.application.queries import EntryDto
 
 # from karp.application import ctx, config
@@ -114,6 +115,39 @@ class TestAddEntry:
         response_data = response.json()
         assert "newID" in response_data
         assert response_data["newID"] == "203"
+
+        entry_uow = get_entry_uow(
+            fa_data_client.app.state.app_context.container, resource_id="places"
+        )
+        with entry_uow as uw:
+            assert "203" in uw.repo.entry_ids()
+
+    def test_add_with_valid_data_and_entity_id_returns_201(
+        self,
+        fa_data_client,
+        write_token: auth.AccessToken,
+    ):
+        entity_id = make_unique_id()
+        response = fa_data_client.put(
+            "/entries/places",
+            json={
+                "entry": {
+                    "code": 2078,
+                    "name": "add203",
+                    "population": 4,
+                    "area": 50000,
+                    "density": 5,
+                    "municipality": [2, 3],
+                },
+                "id": str(entity_id)
+            },
+            headers=write_token.as_header(),
+        )
+        print(f"response. = {response.json()}")
+        assert response.status_code == 201
+        response_data = response.json()
+        assert "newID" in response_data
+        assert response_data["newID"] == entity_id
 
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
