@@ -11,6 +11,7 @@ repo_url: https://github.com/spraakbanken/karp-backend
 
 plugins:
   - search
+  - mkdocstrings
 
 markdown_extensions:
   - pymdownx.snippets
