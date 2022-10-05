@@ -21,4 +21,4 @@ jobs:
           CONFIG_FILE: docs/karp-backend-v6/mkdocs.yml
           EXTRA_PACKAGES: build-base
           # GITHUB_DOMAIN: github.myenterprise.com
-          REQUIREMENTS: docs/karp-backens-v6/requirements.txt
+          REQUIREMENTS: docs/karp-backend-v6/requirements.txt
