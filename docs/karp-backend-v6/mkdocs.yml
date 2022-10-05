@@ -1,0 +1,16 @@
+site_name: Karp Backend
+theme: material
+nav:
+  - Home: index.md
+  - Reference: reference.md
+  - About:
+      - "Release Notes": release-notes.md
+
+repo_name: spraakbanken/karp-backend
+repo_url: https://github.com/spraakbanken/karp-backend
+
+plugins:
+  - search
+
+markdown_extensions:
+  - pymdownx.snippets
