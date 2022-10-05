@@ -1,4 +1,5 @@
 from typing import Dict, List
+import uuid
 
 import pytest  # pyre-ignore
 from fastapi import status
@@ -113,7 +114,8 @@ class TestAddEntry:
         assert response.status_code == 201
         response_data = response.json()
         assert "newID" in response_data
-        assert response_data["newID"] == "203"
+        # assert response_data["newID"] == "203"
+        new_id = uuid.UUID(response_data["newID"])
 
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
