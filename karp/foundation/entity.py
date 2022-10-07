@@ -1,5 +1,6 @@
 """Entity"""
-from typing import Optional
+import datetime
+from typing import Optional, Union
 
 from deprecated import deprecated
 
@@ -133,7 +134,11 @@ class TimestampedEntity(Entity):
         self._last_modified_by = user
         self._last_modified = self._ensure_timestamp(timestamp)
 
-    def _ensure_timestamp(self, timestamp: Optional[float]) -> float:
+    def _ensure_timestamp(
+        self, timestamp: Optional[Union[float, datetime.datetime]]
+    ) -> float:
+        if isinstance(timestamp, datetime.datetime):
+            return timestamp.timestamp()
         return monotonic_utc_now() if timestamp is None else timestamp
 
     def _validate_last_modified(self, last_modified: float):
