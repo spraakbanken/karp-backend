@@ -135,10 +135,12 @@ class TimestampedEntity(Entity):
         self._last_modified = self._ensure_timestamp(timestamp)
 
     def _ensure_timestamp(
-        self, timestamp: Optional[Union[float, datetime.datetime]]
+        self, timestamp: Optional[Union[float, datetime.datetime, str]]
     ) -> float:
         if isinstance(timestamp, datetime.datetime):
             return timestamp.timestamp()
+        elif isinstance(timestamp, str):
+            return datetime.datetime.fromisoformat(timestamp).timestamp()
         return monotonic_utc_now() if timestamp is None else timestamp
 
     def _validate_last_modified(self, last_modified: float):
