@@ -7,6 +7,7 @@ from .base import Command
 from karp.utility import time
 
 from karp.lex.domain import errors
+from karp.lex.domain.value_objects import UniqueId
 
 
 class AddEntry(Command):
@@ -33,7 +34,7 @@ class AddEntriesInChunks(AddEntries):
 
 class DeleteEntry(Command):
     resource_id: str
-    entry_id: str
+    entity_id: UniqueId
     user: str
     message: typing.Optional[str] = None
 

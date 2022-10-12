@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+import uuid
 
 from fastapi import (
     APIRouter,
@@ -106,7 +107,7 @@ def add_entry(
             },
         )
 
-    return {"newID": new_entry.entry_id, "entityID": new_entry.entity_id}
+    return {"newID": new_entry.entity_id}
 
 
 @router.post("/{resource_id}/preview")
@@ -195,7 +196,7 @@ def update_entry(
         #     message=data.message,
         #     # force=force_update,
         # )
-        return {"newID": entry.entry_id, "entityID": entry.entity_id}
+        return {"newID": entry.entity_id}
     except errors.EntryNotFound:
         return responses.JSONResponse(
             status_code=404,
@@ -230,7 +231,7 @@ def update_entry(
 )
 def delete_entry(
     resource_id: str,
-    entry_id: str,
+    entry_id: uuid.UUID,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
     deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry)),
@@ -246,7 +247,7 @@ def delete_entry(
         deleting_entry_uc.execute(
             commands.DeleteEntry(
                 resource_id=resource_id,
-                entry_id=entry_id,
+                entity_id=entry_id,
                 user=user.identifier,
             )
         )
@@ -257,7 +258,7 @@ def delete_entry(
                 "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
                 "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
                 "resource": resource_id,
-                "entry_id": entry_id,
+                "entity_id": id,
             },
         )
     return

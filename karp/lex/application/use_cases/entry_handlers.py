@@ -289,11 +289,11 @@ class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             resource.entry_repository_id
         ) as uw:
-            entry = uw.repo.by_entry_id(command.entry_id)
+            entry = uw.repo.by_id(command.entity_id)
 
             entry.discard(
                 user=command.user,
-                message=command.message,
+                message=command.message or "discarded",
                 timestamp=command.timestamp,
             )
             uw.repo.save(entry)

@@ -214,8 +214,9 @@ class TestDeleteEntry:
             headers=write_token.as_header(),
         )
 
+        entity_id = uuid.UUID(response.json()["newID"])
         response = fa_data_client.delete(
-            f"/entries/places/{entry_id}/delete", headers=write_token.as_header()
+            f"/entries/places/{entity_id}/delete", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -249,8 +250,9 @@ class TestDeleteEntry:
             headers=write_token.as_header(),
         )
 
+        entity_id = uuid.UUID(response.json()["newID"])
         response = fa_data_client.delete(
-            f"/entries/places/{entry_id}", headers=write_token.as_header()
+            f"/entries/places/{entity_id}", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -268,7 +270,7 @@ class TestDeleteEntry:
         write_token: auth.AccessToken,
     ):
 
-        entry_id = "non_existing_id"
+        entry_id = uuid.uuid4()
 
         response = fa_data_client.delete(
             f"/entries/places/{entry_id}/delete", headers=write_token.as_header()
