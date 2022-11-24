@@ -11,8 +11,7 @@ from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
 from karp.foundation.time import utc_now
-from karp.foundation.unique_id import UniqueId
-from karp.foundation.value_objects.unique_id import make_unique_id
+from karp.foundation.value_objects import make_unique_id, UniqueId
 from karp.lex.application.queries import EntryDto
 
 # from karp.application import ctx, config
