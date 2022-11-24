@@ -27,13 +27,12 @@ class TestCreateResource:
         cmd = factories.CreateEntryRepositoryFactory()
         lex_ctx.command_bus.dispatch(cmd)
 
-        cmd = factories.CreateResourceFactory(
-            entry_repo_id=cmd.entity_id)
+        cmd = factories.CreateResourceFactory(entry_repo_id=cmd.entity_id)
         lex_ctx.command_bus.dispatch(cmd)
 
-        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)
-        assert resource_uow.was_committed
-        assert len(resource_uow.resources) == 1
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [misc]
+        assert resource_uow.was_committed  # type: ignore [attr-defined]
+        assert resource_uow.resources.num_entities() == 1
 
         resource = resource_uow.resources.by_id(cmd.entity_id)
         assert resource.entity_id == cmd.entity_id
@@ -52,13 +51,13 @@ class TestCreateResource:
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
                 factories.CreateResourceFactory(
-                    resource_id=cmd2.resource_id,
-                    entry_repo_id=cmd1.entity_id
+                    resource_id=cmd2.resource_id, entry_repo_id=cmd1.entity_id
                 )
             )
 
-        resource_uow = lex_ctx.container.get(repositories.ResourceUnitOfWork)
-        assert resource_uow.was_rolled_back
+        resource_uow = lex_ctx.container.get(repositories.ResourceUnitOfWork)  # type: ignore [misc]
+
+        assert resource_uow.was_rolled_back  # type: ignore [attr-defined]
 
     def test_bad_resource_id_raises(
         self,
@@ -70,7 +69,7 @@ class TestCreateResource:
             lex_ctx.command_bus.dispatch(
                 factories.CreateResourceFactory(
                     entry_repo_id=cmd.entity_id,
-                    resource_id='with space',
+                    resource_id="with space",
                 )
             )
 
@@ -86,7 +85,7 @@ class TestUpdateResource:
         lex_ctx.command_bus.dispatch(cmd2)
 
         changed_config = copy.deepcopy(cmd2.config)
-        changed_config['fields']['b'] = {'type': 'integer'}
+        changed_config["fields"]["b"] = {"type": "integer"}
         lex_ctx.command_bus.dispatch(
             factories.UpdateResourceFactory(
                 resource_id=cmd2.resource_id,
@@ -98,8 +97,7 @@ class TestUpdateResource:
             ),
         )
 
-        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)
-
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [misc]
         assert resource_uow.was_committed  # type: ignore
 
         resource = resource_uow.resources.by_resource_id(cmd2.resource_id)
@@ -126,17 +124,16 @@ class TestPublishResource:
         lex_ctx.command_bus.dispatch(
             commands.PublishResource(
                 resource_id=cmd2.resource_id,
-                message='publish',
+                message="publish",
                 user="kristoff@example.com",
             )
         )
 
-        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)
-
-        assert resource_uow.was_committed  # type: ignore
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [misc]
+        assert resource_uow.was_committed  # type: ignore [attr-defined]
 
         resource = resource_uow.resources.by_id(cmd2.entity_id)
         assert resource.is_published
         assert resource.version == 2
         # assert index_uow.repo.indicies[resource_id].published
-        # assert index_uow.was_committed
+        # assert index_uow.was_committed #type: ignore [attr-defined]

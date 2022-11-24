@@ -59,7 +59,7 @@ class TestAddEntry:
 
         lex_ctx.command_bus.dispatch(cmd3)
 
-        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
         entry = uow.repo.by_id(cmd3.entity_id)
         assert entry is not None
@@ -70,13 +70,13 @@ class TestAddEntry:
         assert entry.body == {"baseform": entry_id}
         assert entry.last_modified_by == cmd3.user
 
-        assert uow.was_committed
+        assert uow.was_committed  # type: ignore [attr-defined]
 
         # assert (
         #     bus.ctx.index_uow.repo.indicies[resource_id].entries[entry_id].id
         #     == entry_id
         # )
-        # assert bus.ctx.index_uow.was_committed
+        # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     def test_create_entry_with_same_entry_id_raises(
         self,
@@ -152,9 +152,9 @@ class TestUpdateEntry:
             ),
         )
 
-        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
-        assert uow.was_committed
+        assert uow.was_committed  # type: ignore [attr-defined]
 
         entry = uow.repo.by_id(cmd3.entity_id)
         assert entry is not None
@@ -167,7 +167,7 @@ class TestUpdateEntry:
         #     .entry["_entry_version"]
         #     == entry.version
         # )
-        # assert bus.ctx.index_uow.was_committed
+        # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     def test_cannot_update_entry_in_nonexistent_resource(
         self,
@@ -222,9 +222,9 @@ class TestUpdateEntry:
             ),
         )
 
-        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
-        assert uow.was_committed
+        assert uow.was_committed  # type: ignore [attr-defined]
 
         entry = uow.repo.by_id(cmd3.entity_id)
         assert entry.entry_id == new_entry_id
@@ -270,17 +270,18 @@ class TestDeleteEntry:
 
         lex_ctx.command_bus.dispatch(
             commands.DeleteEntry(
-                entry_id=entry_id,
-                version=1,
+                entity_id=cmd3.entity_id,
+                # TODO: should we give version to delete entry for sync
+                # version=1,
                 resource_id=cmd3.resource_id,
                 message="deleted",
                 user="bob",
             ),
         )
 
-        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
-        assert uow.was_committed
+        assert uow.was_committed  # type: ignore [attr-defined]
 
         entry = uow.repo.by_id(cmd3.entity_id)
         assert entry.version == 2
@@ -292,7 +293,7 @@ class TestDeleteEntry:
         # assert (
         #     entry.entry_id not in bus.ctx.index_uow.repo.indicies[resource_id].entries
         # )
-        # assert bus.ctx.index_uow.was_committed
+        # assert bus.ctx.index_uow.was_committed # type: ignore [attr-defined]
 
 
 class TestAddEntries:
@@ -332,7 +333,7 @@ class TestAddEntries:
 
         lex_ctx.command_bus.dispatch(cmd3)
 
-        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
         entry = uow.repo.by_entry_id(entry_id)
         assert entry is not None
@@ -342,13 +343,13 @@ class TestAddEntries:
         assert entry.body == {"baseform": entry_id}
         assert entry.last_modified_by == cmd3.user
 
-        assert uow.was_committed
+        assert uow.was_committed  # type: ignore [attr-defined]
 
         # assert (
         #     bus.ctx.index_uow.repo.indicies[resource_id].entries[entry_id].id
         #     == entry_id
         # )
-        # assert bus.ctx.index_uow.was_committed
+        # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     def test_add_entry_with_same_entry_id_raises(
         self,
@@ -421,7 +422,7 @@ class TestAddEntriesInChunks:
 
         lex_ctx.command_bus.dispatch(cmd3)
 
-        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
         entry = uow.repo.by_entry_id(entry_id)
         assert entry is not None
@@ -431,13 +432,13 @@ class TestAddEntriesInChunks:
         assert entry.body == {"baseform": entry_id}
         assert entry.last_modified_by == cmd3.user
 
-        assert uow.was_committed
+        assert uow.was_committed  # type: ignore [attr-defined]
 
         # assert (
         #     bus.ctx.index_uow.repo.indicies[resource_id].entries[entry_id].id
         #     == entry_id
         # )
-        # assert bus.ctx.index_uow.was_committed
+        # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     def test_add_entry_with_same_entry_id_raises(
         self,
@@ -515,7 +516,7 @@ class TestImportEntries:
 
         lex_ctx.command_bus.dispatch(cmd3)
 
-        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
         entry = uow.repo.by_entry_id(entry_id)
         assert entry is not None
@@ -525,13 +526,13 @@ class TestImportEntries:
         assert entry.body == {"baseform": entry_id}
         assert entry.last_modified_by == "user1"
 
-        assert uow.was_committed
+        assert uow.was_committed  # type: ignore [attr-defined]
 
         # assert (
         #     bus.ctx.index_uow.repo.indicies[resource_id].entries[entry_id].id
         #     == entry_id
         # )
-        # assert bus.ctx.index_uow.was_committed
+        # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     def test_import_entries_with_same_entry_id_raises(
         self,
@@ -613,7 +614,7 @@ class TestImportEntriesInChunks:
 
         lex_ctx.command_bus.dispatch(cmd3)
 
-        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
         entry = uow.repo.by_entry_id(entry_id)
         assert entry is not None
@@ -623,13 +624,13 @@ class TestImportEntriesInChunks:
         assert entry.body == {"baseform": entry_id}
         assert entry.last_modified_by == "user1"
 
-        assert uow.was_committed
+        assert uow.was_committed  # type: ignore [attr-defined]
 
         # assert (
         #     bus.ctx.index_uow.repo.indicies[resource_id].entries[entry_id].id
         #     == entry_id
         # )
-        # assert bus.ctx.index_uow.was_committed
+        # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     def test_import_entries_with_same_entry_id_raises(
         self,

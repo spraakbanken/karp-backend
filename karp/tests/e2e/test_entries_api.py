@@ -27,9 +27,9 @@ from karp.lex.application.queries import EntryDto
 
 
 def get_entry_uow(container, resource_id: str):
-    get_entry_repository_id = container.get(GetEntryRepositoryId)
+    get_entry_repository_id = container.get(GetEntryRepositoryId)  # type: ignore [misc]
     entry_repo_id = get_entry_repository_id.query("places")
-    entry_uow_repo_uow = container.get(EntryUowRepositoryUnitOfWork)
+    entry_uow_repo_uow = container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
     with entry_uow_repo_uow as uw:
         return uw.repo.get_by_id(entry_repo_id)
 

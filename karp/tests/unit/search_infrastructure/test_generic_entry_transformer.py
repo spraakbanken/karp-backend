@@ -38,8 +38,7 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)
-
+        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
             entry_id=entry_id,
@@ -98,8 +97,7 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)
-
+        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
             entry_id=entry_id,
@@ -160,8 +158,7 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)
-
+        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
             entry_id=entry_id,
