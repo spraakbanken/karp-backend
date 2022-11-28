@@ -82,7 +82,8 @@ def test_index_reacts_on_entry_updated_event(
 
     update_entry = lex_factories.UpdateEntryFactory(
         resource_id=create_resource.resource_id,
-        entry_id="bra",
+        entity_id=create_entry.entity_id,
+        # entry_id="bra",
         entry={"baseform": "bra", "wordclass": "adjektiv"},
         version=1,
     )

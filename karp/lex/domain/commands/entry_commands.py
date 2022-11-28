@@ -49,7 +49,8 @@ class ImportEntriesInChunks(AddEntriesInChunks):
 
 class UpdateEntry(Command):
     resource_id: str
-    entry_id: str
+    entity_id: UniqueId
+    # entry_id: str
     version: int
     entry: typing.Dict
     user: str

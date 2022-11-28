@@ -87,12 +87,11 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
 
         with self.get_entry_uow(resource.entry_repository_id) as uw:
             try:
-                current_db_entry = uw.repo.by_entry_id(command.entry_id)
+                current_db_entry = uw.repo.by_id(command.entity_id)
             except errors.EntryNotFound as err:
                 raise errors.EntryNotFound(
                     command.resource_id,
-                    command.entry_id,
-                    entity_id=None,
+                    entity_id=command.entity_id,
                 ) from err
 
             diff = jsondiff.compare(current_db_entry.body, command.entry)

@@ -1,6 +1,7 @@
 from typing import Dict, Optional
 
 import pytest
+from karp.foundation.value_objects.unique_id import make_unique_id
 
 from karp.lex.domain import errors
 
@@ -145,7 +146,8 @@ class TestUpdateEntry:
 
         lex_ctx.command_bus.dispatch(
             factories.UpdateEntryFactory(
-                entry_id=entry_id,
+                entity_id=cmd3.entity_id,
+                # entry_id=entry_id,
                 version=1,
                 resource_id=cmd3.resource_id,
                 entry={"baseform": entry_id, "a": "changed", "b": "added"},
@@ -176,8 +178,9 @@ class TestUpdateEntry:
         with pytest.raises(errors.ResourceNotFound):
             lex_ctx.command_bus.dispatch(
                 commands.UpdateEntry(
+                    entity_id=make_unique_id(),
                     resource_id="non_existent",
-                    entry_id="a",
+                    # entry_id="a",
                     version=3,
                     entry={},
                     user="kristoff@example.com",
@@ -215,7 +218,8 @@ class TestUpdateEntry:
         new_entry_id = "gamma"
         lex_ctx.command_bus.dispatch(
             factories.UpdateEntryFactory(
-                entry_id=entry_id,
+                entity_id=cmd3.entity_id,
+                # entry_id=entry_id,
                 version=1,
                 resource_id=cmd3.resource_id,
                 entry={"baseform": new_entry_id},
