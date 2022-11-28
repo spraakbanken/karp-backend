@@ -15,8 +15,9 @@ from karp.lex.domain.entities.entry import EntryOp
 
 # pylint: disable=unsubscriptable-object
 class EntryDto(pydantic.BaseModel):
-    entry_id: str
-    entity_id: typing.Optional[unique_id.UniqueId] = None
+    # entry_id: str
+    # entity_id: typing.Optional[unique_id.UniqueId] = None
+    entity_id: unique_id.UniqueId
     resource: str
     version: int
     entry: typing.Dict

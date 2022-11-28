@@ -79,8 +79,8 @@ class TimestampedEntity(Entity):
     def __init__(
         self,
         entity_id,
-        last_modified: float = None,
-        last_modified_by: str = None,
+        last_modified: Optional[float] = None,
+        last_modified_by: Optional[str] = None,
         discarded: bool = False,
     ) -> None:
         super().__init__(entity_id, discarded=discarded)
@@ -119,8 +119,8 @@ class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
     def __init__(
         self,
         entity_id,
-        last_modified: float = None,
-        last_modified_by: str = None,
+        last_modified: Optional[float] = None,
+        last_modified_by: Optional[str] = None,
         discarded: bool = False,
         *,
         version: int,

@@ -62,7 +62,7 @@ def test_index_reacts_on_entry_added_event(
     resource_index = index_uow.repo.indicies[create_resource.resource_id]  # type: ignore [attr-defined]
     assert resource_index.created
     assert len(resource_index.entries) == 1
-    assert "bra" in resource_index.entries
+    assert str(create_entry.entity_id) in resource_index.entries
 
 
 def test_index_reacts_on_entry_updated_event(
@@ -94,7 +94,7 @@ def test_index_reacts_on_entry_updated_event(
     resource_index = index_uow.repo.indicies[create_resource.resource_id]  # type: ignore [attr-defined]
     assert resource_index.created
     assert len(resource_index.entries) == 1
-    entry = resource_index.entries["bra"]
+    entry = resource_index.entries[str(update_entry.entity_id)]
     assert entry.entry["wordclass"] == "adjektiv"
 
 

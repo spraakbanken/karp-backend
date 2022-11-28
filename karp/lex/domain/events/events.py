@@ -71,7 +71,7 @@ class ResourceUpdated(Event):
 class EntryAdded(Event):
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
-    entry_id: str
+    # entry_id: str
     body: Dict
     message: str
     user: str
@@ -80,7 +80,7 @@ class EntryAdded(Event):
 class EntryUpdated(Event):
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
-    entry_id: str
+    # entry_id: str
     body: Dict
     message: str
     user: str
@@ -90,7 +90,7 @@ class EntryUpdated(Event):
 class EntryDeleted(Event):
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
-    entry_id: str
+    # entry_id: str
     version: int
     message: str
     user: str

@@ -117,24 +117,28 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
 
             id_getter = resource.id_getter()
             new_entry_id = id_getter(command.entry)
-
-            current_db_entry.body = command.entry
-            current_db_entry.stamp(
-                command.user, message=command.message, timestamp=command.timestamp
+            current_db_entry.update_body(
+                command.entry,
+                user=command.user,
+                message=command.message,
+                timestamp=command.timestamp,
             )
-            if new_entry_id != command.entry_id:
-                logger.info(
-                    "updating entry_id",
-                    extra={
-                        "entry_id": command.entry_id,
-                        "new_entry_id": new_entry_id,
-                    },
-                )
-                current_db_entry.entry_id = new_entry_id
-                # uw.repo.move(current_db_entry, old_entry_id=command.entry_id)
-                uw.repo.save(current_db_entry)
-            else:
-                uw.repo.save(current_db_entry)
+            # current_db_entry.stamp(
+            #     command.user, message=command.message, timestamp=command.timestamp
+            # )
+            # if new_entry_id != command.entry_id:
+            #     logger.info(
+            #         "updating entry_id",
+            #         extra={
+            #             "entry_id": command.entry_id,
+            #             "new_entry_id": new_entry_id,
+            #         },
+            #     )
+            #     current_db_entry.entry_id = new_entry_id
+            #     # uw.repo.move(current_db_entry, old_entry_id=command.entry_id)
+            #     uw.repo.save(current_db_entry)
+            # else:
+            uw.repo.save(current_db_entry)
             uw.commit()
 
         return current_db_entry

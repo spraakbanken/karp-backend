@@ -73,11 +73,31 @@ class Entry(TimestampedVersionedEntity):
         """The body of the entry."""
         return self._body
 
-    @body.setter
-    @deprecated(version="6.0.7", reason="use update")
-    def body(self, body: Dict):
+    # @body.setter
+    # @deprecated(version="6.0.7", reason="use update")
+    def update_body(
+        self,
+        body: Dict,
+        *,
+        user: str,
+        message: Optional[str] = None,
+        timestamp: Optional[float] = None,
+    ):
         self._check_not_discarded()
-        self._body = body
+        self._body = self._update_field(body, user, timestamp)
+        self._message = message or "Entry updated"
+        self._op = EntryOp.UPDATED
+        self._record_event(
+            events.EntryUpdated(
+                entity_id=self.id,
+                timestamp=self.last_modified,
+                user=self.last_modified_by,
+                version=self.version,
+                body=self.body,
+                repo_id=self.repo_id,
+                message=self.message,
+            )
+        )
 
     @property
     def op(self):
@@ -89,12 +109,12 @@ class Entry(TimestampedVersionedEntity):
         """The workflow status of this entry."""
         return self._status
 
-    @status.setter
-    @deprecated(version="6.0.7", reason="use update")
-    def status(self, status: EntryStatus):
-        """The workflow status of this entry."""
-        self._check_not_discarded()
-        self._status = status
+    # @status.setter
+    # @deprecated(version="6.0.7", reason="use update")
+    # def status(self, status: EntryStatus):
+    #     """The workflow status of this entry."""
+    #     self._check_not_discarded()
+    #     self._status = status
 
     @property
     def message(self):
@@ -118,21 +138,18 @@ class Entry(TimestampedVersionedEntity):
         self,
         *,
         user: str,
-        timestamp: float = None,
-        message: str = None,
+        timestamp: Optional[float] = None,
+        message: Optional[str] = None,
     ):
         if self._discarded:
             return
         self._op = EntryOp.DELETED
         self._message = message or "Entry deleted."
-        self._discarded = True
-        self._last_modified_by = user
-        self._last_modified = self._ensure_timestamp(timestamp)
-        self._increment_version()
+        self._discarded = self._update_field(True, user, timestamp)
         self._record_event(
             events.EntryDeleted(
                 entity_id=self.id,
-                entry_id=self.entry_id,
+                # entry_id=self.entry_id,
                 timestamp=self.last_modified,
                 user=user,
                 message=self._message,
@@ -140,8 +157,13 @@ class Entry(TimestampedVersionedEntity):
                 repo_id=self.repo_id,
             )
         )
-        # event.mutate(self)
-        # event_handler.publish(event)
+
+    def _update_field(self, arg0, user: str, timestamp: Optional[float]):
+        result = arg0
+        self._last_modified_by = user
+        self._last_modified = self._ensure_timestamp(timestamp)
+        self._increment_version()
+        return result
 
     def __repr__(self) -> str:
         return f"Entry(id={self._id}, entry_id={self._entry_id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"

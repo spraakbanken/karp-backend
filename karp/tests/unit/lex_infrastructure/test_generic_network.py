@@ -18,5 +18,5 @@ def test__create_ref():
     assert ref.resource_id == resource_id
     assert ref.resource_version == resource_version
     # assert ref["entry"]["id"] == _id
-    assert ref.entry.entry_id == entry_id
+    assert ref.entry.entity_id == entry.id
     assert ref.entry.entry == entry_body

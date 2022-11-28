@@ -47,10 +47,10 @@ class GenericEntryTransformer(EntryTransformer):
         """
         logger.debug(
             "transforming entry",
-            extra={"entry_id": src_entry.entry_id, "resource_id": resource_id},
+            extra={"entity_id": src_entry.entity_id, "resource_id": resource_id},
         )
         index_entry = self.index_uow.repo.create_empty_object()
-        index_entry.id = src_entry.entry_id
+        index_entry.id = str(src_entry.entity_id)
         self.index_uow.repo.assign_field(
             index_entry, "_entry_version", src_entry.version
         )

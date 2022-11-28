@@ -189,4 +189,7 @@ class EntryUnitOfWork(
         return self._message
 
     def discard(self, *, user, timestamp: Optional[float] = None):
-        return entity.TimestampedEntity.discard(self, user=user, timestamp=timestamp)
+        self._discarded = True
+        self._last_modified = self._ensure_timestamp(timestamp)
+        self._last_modified_by = user
+        # return entity.TimestampedEntity.discard(self, user=user, timestamp=timestamp)
