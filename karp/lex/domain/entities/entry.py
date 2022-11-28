@@ -63,7 +63,7 @@ class Entry(TimestampedVersionedEntity):
         return self._entry_id
 
     @entry_id.setter
-    @deprecated(version='6.0.7', reason='use update')
+    @deprecated(version="6.0.7", reason="use update")
     def entry_id(self, entry_id: str):
         self._check_not_discarded()
         self._entry_id = constraints.length_gt_zero("entry_id", entry_id)
@@ -74,7 +74,7 @@ class Entry(TimestampedVersionedEntity):
         return self._body
 
     @body.setter
-    @deprecated(version='6.0.7', reason='use update')
+    @deprecated(version="6.0.7", reason="use update")
     def body(self, body: Dict):
         self._check_not_discarded()
         self._body = body
@@ -90,7 +90,7 @@ class Entry(TimestampedVersionedEntity):
         return self._status
 
     @status.setter
-    @deprecated(version='6.0.7', reason='use update')
+    @deprecated(version="6.0.7", reason="use update")
     def status(self, status: EntryStatus):
         """The workflow status of this entry."""
         self._check_not_discarded()
@@ -142,30 +142,6 @@ class Entry(TimestampedVersionedEntity):
         )
         # event.mutate(self)
         # event_handler.publish(event)
-
-    def stamp(
-        self,
-        user: str,
-        *,
-        message: str = None,
-        timestamp: float = None,
-        increment_version: bool = True,
-    ):
-        super().stamp(user, timestamp=timestamp, increment_version=increment_version)
-        self._message = message
-        self._op = EntryOp.UPDATED
-        self._record_event(
-            events.EntryUpdated(
-                timestamp=self.last_modified,
-                entity_id=self.id,
-                repo_id=self.repo_id,
-                entry_id=self.entry_id,
-                body=self.body,
-                message=self.message or "",
-                user=self.last_modified_by,
-                version=self.version,
-            )
-        )
 
     def __repr__(self) -> str:
         return f"Entry(id={self._id}, entry_id={self._entry_id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"
