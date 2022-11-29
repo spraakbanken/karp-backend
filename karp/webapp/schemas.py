@@ -91,4 +91,5 @@ class ResourceProtected(ResourcePublic):
 
 class ResourcePublish(BaseModel):
     message: str
+    version: int
     resource_id: Optional[str]

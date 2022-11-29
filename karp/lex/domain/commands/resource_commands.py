@@ -60,6 +60,7 @@ class PublishResource(Command):
     resource_id: str
     message: str
     user: str
+    version: int
 
 
 class DeleteResource(Command):
