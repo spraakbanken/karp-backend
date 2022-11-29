@@ -3,5 +3,5 @@
         "karp"
     ],
     "reportMissingImports": "information",
-    "reportGeneralTypeIssues": "information"
+    "reportGeneralTypeIssues": "none"
 }
