@@ -68,15 +68,15 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
     def __init__(self, resources: Dict):
         self.resources = resources
 
-    def get_by_id(self, entity_id: UniqueId, version: Optional[int] = None) -> Optional[ResourceDto]:
+    def get_by_id(
+        self, entity_id: UniqueId, version: Optional[int] = None
+    ) -> Optional[ResourceDto]:
         resource = self.resources.get(entity_id)
         if resource:
             return self._row_to_dto(resource)
         return None
 
-    def _get_by_resource_id(
-        self, resource_id: str
-    ) -> Optional[ResourceDto]:
+    def _get_by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
         return next(
             (
                 self._row_to_dto(res)
@@ -134,15 +134,15 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
     ):
         return next((r for r in self.entries if r.id == id), None)
 
-    def _by_entry_id(
-        self,
-        entry_id,
-        *,
-        version=None,
-        after_date=None,
-        before_date=None,
-    ):
-        return next((r for r in self.entries if r.entry_id == entry_id), None)
+    # def _by_entry_id(
+    #     self,
+    #     entry_id,
+    #     *,
+    #     version=None,
+    #     after_date=None,
+    #     before_date=None,
+    # ):
+    #     return next((r for r in self.entries if r.entry_id == entry_id), None)
 
     def __len__(self):
         return len(self.entries)

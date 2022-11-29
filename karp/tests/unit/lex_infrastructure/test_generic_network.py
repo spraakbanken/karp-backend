@@ -11,7 +11,7 @@ def test__create_ref():
     _id = 5
     entry_id = "entry_id"
     entry_body = {"body": {"of": "entry"}}
-    entry = factories.EntryFactory(entry_id=entry_id, body=entry_body)
+    entry = factories.EntryFactory(body=entry_body)
 
     ref = generic_network._create_ref(resource_id, resource_version, entry)
 

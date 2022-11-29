@@ -5,6 +5,7 @@ import logging
 
 from karp import lex
 from karp.lex import GetHistoryDto, HistoryDto
+from karp.lex.domain import errors
 
 from karp.lex.domain.entities import Entry
 from karp.lex.application.queries import (
@@ -49,29 +50,28 @@ class GenericEntryViews(EntryViews):
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            entry = uw.repo.get_by_id_optional(entity_id)
-            if entry:
+            if entry := uw.repo.get_by_id_optional(entity_id):
                 return self._entry_to_entry_dto(entry, resource_id)
         return None
 
-    def get_by_entry_id(self, resource_id: str, entry_id: str) -> EntryDto:
-        entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_repo_uow as uw:
-            entry_uow = uw.repo.get_by_id(entry_repo_id)
-        with entry_uow as uw:
-            return self._entry_to_entry_dto(uw.repo.by_entry_id(entry_id), resource_id)
+    # def get_by_entry_id(self, resource_id: str, entry_id: str) -> EntryDto:
+    #     entry_repo_id = self.get_entry_repo_id.query(resource_id)
+    #     with self.entry_repo_uow as uw:
+    #         entry_uow = uw.repo.get_by_id(entry_repo_id)
+    #     with entry_uow as uw:
+    #         return self._entry_to_entry_dto(uw.repo.by_entry_id(entry_id), resource_id)
 
-    def get_by_entry_id_optional(
-        self, resource_id: str, entry_id: str
-    ) -> typing.Optional[EntryDto]:
-        entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_repo_uow as uw:
-            entry_uow = uw.repo.get_by_id(entry_repo_id)
-        with entry_uow as uw:
-            entry = uw.repo.get_by_entry_id_optional(entry_id)
-            if entry:
-                return self._entry_to_entry_dto(entry, resource_id)
-        return None
+    # def get_by_entry_id_optional(
+    #     self, resource_id: str, entry_id: str
+    # ) -> typing.Optional[EntryDto]:
+    #     entry_repo_id = self.get_entry_repo_id.query(resource_id)
+    #     with self.entry_repo_uow as uw:
+    #         entry_uow = uw.repo.get_by_id(entry_repo_id)
+    #     with entry_uow as uw:
+    #         entry = uw.repo.get_by_entry_id_optional(entry_id)
+    #         if entry:
+    #             return self._entry_to_entry_dto(entry, resource_id)
+    #     return None
 
     def get_total(self, resource_id: str) -> int:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
@@ -102,7 +102,7 @@ class GenericEntryViews(EntryViews):
 
     def _entry_to_entry_dto(self, entry: Entry, resource_id: str) -> EntryDto:
         return EntryDto(
-            entry_id=entry.entry_id,
+            # entry_id=entry.entry_id,
             entity_id=entry.entity_id,
             resource=resource_id,
             version=entry.version,
@@ -130,17 +130,18 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
     def query(
         self,
         resource_id: str,
-        entry_id: str,
+        entity_id: unique_id.UniqueId,
+        # entry_id: str,
         version: typing.Optional[int],
     ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id(resource_id)
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             entry_repo_id
         ) as uw:
-            result = uw.repo.by_entry_id(entry_id, version=version)
+            result = uw.repo.by_id(entity_id, version=version)
 
         return EntryDto(
-            entry_id=entry_id,
+            # entry_id=entry_id,
             entity_id=result.id,
             resource=resource_id,
             version=result.version,
@@ -171,7 +172,7 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
                 limit=request.page_size,
             )
         result = []
-        previous_body = {}
+        previous_body: dict[str, typing.Any] = {}
         for history_entry in paged_query:
             # TODO fix this, we should get the diff in another way, probably store the diffs directly in the database
             # entry_version = history_entry.version
@@ -188,7 +189,8 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
                 HistoryDto(
                     timestamp=history_entry.last_modified,
                     message=history_entry.message or "",
-                    entry_id=history_entry.entry_id,
+                    entity_id=history_entry.entity_id,
+                    # entry_id=history_entry.entry_id,
                     version=history_entry.version,
                     op=history_entry.op,
                     user_id=history_entry.last_modified_by,
@@ -210,7 +212,7 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             entry_repo_id
         ) as uw:
-            db_entry = uw.repo.by_entry_id(request.entry_id)
+            db_entry = uw.repo.by_id(request.entity_id)
 
             #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
             #
@@ -268,7 +270,7 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
         #         obj2_body = json.loads(obj2.body) if obj2 else None
         #
         if not obj1_body or not obj2_body:
-            raise karp_errors.KarpError("diff impossible!")
+            raise errors.DiffImposible("diff impossible!")
         #
         return EntryDiffDto(
             diff=jsondiff.compare(obj1_body, obj2_body),

@@ -32,7 +32,7 @@ class Entry(TimestampedVersionedEntity):
     def __init__(
         self,
         *,
-        entry_id: str,
+        # entry_id: str,
         body: Dict,
         message: str,
         # resource_id: str,
@@ -45,7 +45,7 @@ class Entry(TimestampedVersionedEntity):
         # version: int = 0
     ):
         super().__init__(version=version, **kwargs)
-        self._entry_id = entry_id
+        # self._entry_id = entry_id
         self._body = body
         self._op = op
         self._message = "Entry added." if message is None else message
@@ -57,16 +57,16 @@ class Entry(TimestampedVersionedEntity):
     def repo_id(self) -> unique_id.UniqueId:
         return self._repo_id
 
-    @property
-    def entry_id(self):
-        """The entry_id of this entry."""
-        return self._entry_id
+    # @property
+    # def entry_id(self):
+    #     """The entry_id of this entry."""
+    #     return self._entry_id
 
-    @entry_id.setter
-    @deprecated(version="6.0.7", reason="use update")
-    def entry_id(self, entry_id: str):
-        self._check_not_discarded()
-        self._entry_id = constraints.length_gt_zero("entry_id", entry_id)
+    # @entry_id.setter
+    # @deprecated(version="6.0.7", reason="use update")
+    # def entry_id(self, entry_id: str):
+    #     self._check_not_discarded()
+    #     self._entry_id = constraints.length_gt_zero("entry_id", entry_id)
 
     @property
     def body(self):
@@ -123,7 +123,7 @@ class Entry(TimestampedVersionedEntity):
 
     def dict(self) -> Dict[str, Any]:
         return {
-            "entry_id": self._entry_id,
+            # "entry_id": self._entry_id,
             "entity_id": self.entity_id,
             "resource": "",
             "version": self._version,
@@ -166,12 +166,12 @@ class Entry(TimestampedVersionedEntity):
         return result
 
     def __repr__(self) -> str:
-        return f"Entry(id={self._id}, entry_id={self._entry_id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"
+        return f"Entry(id={self._id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"
 
 
 # === Factories ===
 def create_entry(
-    entry_id: str,
+    # entry_id: str,
     body: Dict,
     *,
     entity_id: unique_id.UniqueId,
@@ -180,10 +180,10 @@ def create_entry(
     message: Optional[str] = None,
     last_modified: typing.Optional[float] = None,
 ) -> Entry:
-    if not isinstance(entry_id, str):
-        entry_id = str(entry_id)
+    # if not isinstance(entry_id, str):
+    #     entry_id = str(entry_id)
     entry = Entry(
-        entry_id=entry_id,
+        # entry_id=entry_id,
         body=body,
         message="Entry added." if not message else message,
         status=EntryStatus.IN_PROGRESS,
@@ -199,7 +199,7 @@ def create_entry(
         events.EntryAdded(
             repo_id=repo_id,
             entity_id=entry.id,
-            entry_id=entry.entry_id,
+            # entry_id=entry.entry_id,
             body=entry.body,
             message=entry.message or "",
             user=entry.last_modified_by,

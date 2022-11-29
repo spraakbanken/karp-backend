@@ -57,6 +57,7 @@ class EntryRepository(repository.Repository[entities.Entry]):
         after_date: Optional[float] = None,
         before_date: Optional[float] = None,
         oldest_first: bool = False,
+        **kwargs,
     ) -> typing.Optional[entities.Entry]:
         raise NotImplementedError()
 
@@ -72,44 +73,44 @@ class EntryRepository(repository.Repository[entities.Entry]):
     def entry_ids(self) -> List[str]:
         raise NotImplementedError()
 
-    def by_entry_id(
-        self, entry_id: str, *, version: Optional[int] = None
-    ) -> entities.Entry:
-        entry = self.get_by_entry_id_optional(
-            entry_id,
-            version=version,
-        )
-        if not entry:
-            raise errors.EntryNotFound(
-                f'Entry with entry_id="{entry_id}"',
-                entity_id=None,
-            )
-        return entry
+    # def by_entry_id(
+    #     self, entry_id: str, *, version: Optional[int] = None
+    # ) -> entities.Entry:
+    #     entry = self.get_by_entry_id_optional(
+    #         entry_id,
+    #         version=version,
+    #     )
+    #     if not entry:
+    #         raise errors.EntryNotFound(
+    #             f'Entry with entry_id="{entry_id}"',
+    #             entity_id=None,
+    #         )
+    #     return entry
 
-    get_by_entry_id = by_entry_id
+    # get_by_entry_id = by_entry_id
 
-    def get_by_entry_id_optional(
-        self,
-        entry_id: str,
-        *,
-        version: Optional[int] = None,
-    ) -> Optional[entities.Entry]:
-        entry = self._by_entry_id(entry_id)
-        if not entry:
-            return None
-        if version:
-            entry = self._by_id(entry.entity_id, version=version)
-        if entry:
-            self.seen.add(entry)
-            return entry
-        return None
+    # def get_by_entry_id_optional(
+    #     self,
+    #     entry_id: str,
+    #     *,
+    #     version: Optional[int] = None,
+    # ) -> Optional[entities.Entry]:
+    #     entry = self._by_entry_id(entry_id)
+    #     if not entry:
+    #         return None
+    #     if version:
+    #         entry = self._by_id(entry.entity_id, version=version)
+    #     if entry:
+    #         self.seen.add(entry)
+    #         return entry
+    #     return None
 
-    @abc.abstractmethod
-    def _by_entry_id(
-        self,
-        entry_id: str,
-    ) -> Optional[entities.Entry]:
-        raise NotImplementedError()
+    # @abc.abstractmethod
+    # def _by_entry_id(
+    #     self,
+    #     entry_id: str,
+    # ) -> Optional[entities.Entry]:
+    #     raise NotImplementedError()
 
     # @abc.abstractmethod
     def teardown(self):

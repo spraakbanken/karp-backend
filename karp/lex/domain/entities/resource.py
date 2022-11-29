@@ -310,8 +310,8 @@ class Resource(TimestampedVersionedEntity):
         return self._entry_json_schema
 
     # @property
-    def id_getter(self) -> Callable[[Dict], str]:
-        return create_field_getter(self.config["id"], str)
+    # def id_getter(self) -> Callable[[Dict], str]:
+    #     return create_field_getter(self.config["id"], str)
 
     def dict(self) -> Dict:
         return {
@@ -340,9 +340,9 @@ class Resource(TimestampedVersionedEntity):
         timestamp: Optional[float] = None,
     ) -> Entry:
         self._check_not_discarded()
-        id_getter = self.id_getter()
+        # id_getter = self.id_getter()
         return create_entry(
-            id_getter(entry_raw),
+            # id_getter(entry_raw),
             entry_raw,
             repo_id=self.entry_repository_id,
             # resource_id=self.resource_id,

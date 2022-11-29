@@ -27,7 +27,8 @@ class EntryDto(pydantic.BaseModel):
 
 class EntryDiffRequest(pydantic.BaseModel):
     resource_id: str
-    entry_id: str
+    # entry_id: str
+    entity_id: unique_id.UniqueId
     from_version: typing.Optional[int] = None
     to_version: typing.Optional[int] = None
     from_date: typing.Optional[float] = None
@@ -56,7 +57,8 @@ class EntryDiffDto(pydantic.BaseModel):
 class HistoryDto(pydantic.BaseModel):
     timestamp: float
     message: str
-    entry_id: str
+    # entry_id: str
+    entity_id: unique_id.UniqueId
     version: int
     op: EntryOp
     user_id: str
@@ -74,7 +76,8 @@ class GetEntryHistory(abc.ABC):
     def query(
         self,
         resource_id: str,
-        entry_id: str,
+        entity_id: unique_id.UniqueId,
+        # entry_id: str,
         version: typing.Optional[int],
     ) -> EntryDto:
         pass
@@ -108,21 +111,21 @@ class EntryViews(abc.ABC):
     ) -> typing.Optional[EntryDto]:
         pass
 
-    @abc.abstractmethod
-    def get_by_entry_id(
-        self,
-        resource_id: str,
-        entry_id: str,
-    ) -> EntryDto:
-        pass
+    # @abc.abstractmethod
+    # def get_by_entry_id(
+    #     self,
+    #     resource_id: str,
+    #     entry_id: str,
+    # ) -> EntryDto:
+    #     pass
 
-    @abc.abstractmethod
-    def get_by_entry_id_optional(
-        self,
-        resource_id: str,
-        entry_id: str,
-    ) -> typing.Optional[EntryDto]:
-        pass
+    # @abc.abstractmethod
+    # def get_by_entry_id_optional(
+    #     self,
+    #     resource_id: str,
+    #     entry_id: str,
+    # ) -> typing.Optional[EntryDto]:
+    #     pass
 
     @abc.abstractmethod
     def get_total(self, resource_id: str) -> int:

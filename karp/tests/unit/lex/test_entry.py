@@ -10,11 +10,11 @@ from karp.tests import common_data
 from karp.tests.unit.lex import factories
 
 
-def random_entry(entry_id: str = None, body: Dict = None):
+def random_entry(entry_id: str = None, body: Dict = None) -> entities.Entry:
     return entities.create_entry(
         entity_id=unique_id.make_unique_id(),
         repo_id=unique_id.make_unique_id(),
-        entry_id=entry_id or "a",
+        # entry_id=entry_id or "a",
         body=body or {},
         message="add",
         last_modified_by="kristoff@example.com",
@@ -26,7 +26,6 @@ def test_new_entry_has_event():
     entry = random_entry()
     assert entry.domain_events[-1] == events.EntryAdded(
         entity_id=entry.id,
-        entry_id=entry.entry_id,
         repo_id=entry.repo_id,
         body=entry.body,
         user=entry.last_modified_by,
@@ -35,15 +34,7 @@ def test_new_entry_has_event():
     )
 
 
-@pytest.mark.parametrize(
-    "field,value",
-    [
-        ("entry_id", "new..1"),
-        # ("body", {"b": "r"}),
-        # ("status", entities.EntryStatus.IN_REVIEW),
-    ],
-)
-def test_discarded_entry_has_event(field, value):
+def test_discarded_entry_has_event():
     entry = random_entry()
     entry.discard(
         user="alice@example.org",
@@ -60,8 +51,6 @@ def test_discarded_entry_has_event(field, value):
         message=entry.message,
         version=2,
     )
-    with pytest.raises(errors.DiscardedEntityError):
-        setattr(entry, field, value)
 
 
 # @pytest.mark.parametrize(

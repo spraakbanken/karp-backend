@@ -30,7 +30,7 @@ class TestAddEntry:
     ):
         with pytest.raises(errors.ResourceNotFound):
             lex_ctx.command_bus.dispatch(
-                factories.AddEntryFactory(
+                factories.AddEntryFactory(  # type: ignore [arg-type]
                     resource_id="non_existent",
                 )
             )
@@ -40,7 +40,7 @@ class TestAddEntry:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -50,7 +50,7 @@ class TestAddEntry:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.AddEntryFactory(
@@ -58,14 +58,14 @@ class TestAddEntry:
             entry={"baseform": entry_id},
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
-        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
-        entry = uow.repo.by_id(cmd3.entity_id)
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)  # type: ignore [arg-type]
+        entry = uow.repo.by_id(cmd3.entity_id)  # type: ignore [arg-type]
         assert entry is not None
         assert entry.id == cmd3.entity_id
-        assert entry.entry_id == entry_id
+        # assert entry.entry_id == entry_id
         # assert entry.repo_id == cmd3.resource_id
 
         assert entry.body == {"baseform": entry_id}
@@ -79,12 +79,13 @@ class TestAddEntry:
         # )
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
+    @pytest.mark.skip(reason="we don't use entry_id anymore")
     def test_create_entry_with_same_entry_id_raises(
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -94,7 +95,7 @@ class TestAddEntry:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.AddEntryFactory(
@@ -102,11 +103,11 @@ class TestAddEntry:
             entry={"baseform": entry_id},
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
-                factories.AddEntryFactory(
+                factories.AddEntryFactory(  # type: ignore [arg-type]
                     resource_id=cmd3.resource_id,
                     entry={"baseform": entry_id},
                 ),
@@ -119,7 +120,7 @@ class TestUpdateEntry:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -134,7 +135,7 @@ class TestUpdateEntry:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.AddEntryFactory(
@@ -142,10 +143,10 @@ class TestUpdateEntry:
             entry={"baseform": entry_id, "a": "orig"},
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         lex_ctx.command_bus.dispatch(
-            factories.UpdateEntryFactory(
+            factories.UpdateEntryFactory(  # type: ignore [arg-type]
                 entity_id=cmd3.entity_id,
                 # entry_id=entry_id,
                 version=1,
@@ -155,10 +156,10 @@ class TestUpdateEntry:
         )
 
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
-        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)  # type: ignore [arg-type]
         assert uow.was_committed  # type: ignore [attr-defined]
 
-        entry = uow.repo.by_id(cmd3.entity_id)
+        entry = uow.repo.by_id(cmd3.entity_id)  # type: ignore [arg-type]
         assert entry is not None
         assert entry.body["a"] == "changed"
         assert entry.body["b"] == "added"
@@ -193,7 +194,7 @@ class TestUpdateEntry:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -205,7 +206,7 @@ class TestUpdateEntry:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.AddEntryFactory(
@@ -213,11 +214,11 @@ class TestUpdateEntry:
             entry={"baseform": entry_id},
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         new_entry_id = "gamma"
         lex_ctx.command_bus.dispatch(
-            factories.UpdateEntryFactory(
+            factories.UpdateEntryFactory(  # type: ignore [arg-type]
                 entity_id=cmd3.entity_id,
                 # entry_id=entry_id,
                 version=1,
@@ -227,10 +228,10 @@ class TestUpdateEntry:
         )
 
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
-        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)  # type: ignore [arg-type]
         assert uow.was_committed  # type: ignore [attr-defined]
 
-        entry = uow.repo.by_id(cmd3.entity_id)
+        entry = uow.repo.by_id(cmd3.entity_id)  # type: ignore [arg-type]
         # assert entry.entry_id == new_entry_id
         assert entry.version == 2
 
@@ -247,7 +248,7 @@ class TestDeleteEntry:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -262,7 +263,7 @@ class TestDeleteEntry:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.AddEntryFactory(
@@ -270,7 +271,7 @@ class TestDeleteEntry:
             entry={"baseform": entry_id, "a": "orig"},
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         lex_ctx.command_bus.dispatch(
             commands.DeleteEntry(
@@ -284,16 +285,16 @@ class TestDeleteEntry:
         )
 
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
-        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)  # type: ignore [arg-type]
         assert uow.was_committed  # type: ignore [attr-defined]
 
-        entry = uow.repo.by_id(cmd3.entity_id)
+        entry = uow.repo.by_id(cmd3.entity_id)  # type: ignore [arg-type]
         assert entry.version == 2
         assert entry.discarded
 
-        entry = uow.repo.by_entry_id(entry_id)
-        assert entry.version == 2
-        assert entry.discarded
+        # entry = uow.repo._by_entry_id(entry_id)
+        # assert entry.version == 2
+        # assert entry.discarded
         # assert (
         #     entry.entry_id not in bus.ctx.index_uow.repo.indicies[resource_id].entries
         # )
@@ -308,7 +309,7 @@ class TestAddEntries:
         with pytest.raises(errors.ResourceNotFound):
             lex_ctx.command_bus.dispatch(
                 factories.AddEntriesFactory(
-                    resource_id="non_existent",
+                    resource_id="non_existent",  # type: ignore [arg-type]
                 )
             )
 
@@ -317,7 +318,7 @@ class TestAddEntries:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -327,7 +328,7 @@ class TestAddEntries:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.AddEntriesFactory(
@@ -335,17 +336,17 @@ class TestAddEntries:
             entries=[{"baseform": entry_id}],
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
-        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
-        entry = uow.repo.by_entry_id(entry_id)
-        assert entry is not None
-        assert entry.entry_id == entry_id
-        # assert entry.repo_id == cmd3.resource_id
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)  # type: ignore [arg-type]
+        # entry = uow.repo.by_id(cmd3.entity_id)
+        # assert entry is not None
+        # assert entry.entry_id == entry_id
+        # # assert entry.repo_id == cmd3.resource_id
 
-        assert entry.body == {"baseform": entry_id}
-        assert entry.last_modified_by == cmd3.user
+        # assert entry.body == {"baseform": entry_id}
+        # assert entry.last_modified_by == cmd3.user
 
         assert uow.was_committed  # type: ignore [attr-defined]
 
@@ -355,12 +356,13 @@ class TestAddEntries:
         # )
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
+    @pytest.mark.skip(reason="we don't use entry_id")
     def test_add_entry_with_same_entry_id_raises(
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -370,7 +372,7 @@ class TestAddEntries:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.AddEntriesFactory(
@@ -378,11 +380,11 @@ class TestAddEntries:
             entries=[{"baseform": entry_id}],
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
-                factories.AddEntriesFactory(
+                factories.AddEntriesFactory(  # type: ignore [arg-type]
                     resource_id=cmd3.resource_id,
                     entries=[{"baseform": entry_id}],
                 ),
@@ -396,7 +398,7 @@ class TestAddEntriesInChunks:
     ):
         with pytest.raises(errors.ResourceNotFound):
             lex_ctx.command_bus.dispatch(
-                factories.AddEntriesInChunksFactory(
+                factories.AddEntriesInChunksFactory(  # type: ignore [arg-type]
                     resource_id="non_existent",
                 )
             )
@@ -406,7 +408,7 @@ class TestAddEntriesInChunks:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -416,25 +418,26 @@ class TestAddEntriesInChunks:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
+        entity_id = make_unique_id()
         cmd3 = factories.AddEntriesInChunksFactory(
             resource_id=cmd2.resource_id,
             entries=[{"baseform": entry_id}],
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
-        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
-        entry = uow.repo.by_entry_id(entry_id)
-        assert entry is not None
-        assert entry.entry_id == entry_id
-        # assert entry.repo_id == cmd3.resource_id
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)  # type: ignore [arg-type]
+        # entry = uow.repo.by_id(entry_id)
+        # assert entry is not None
+        # assert entry.entry_id == entry_id
+        # # assert entry.repo_id == cmd3.resource_id
 
-        assert entry.body == {"baseform": entry_id}
-        assert entry.last_modified_by == cmd3.user
+        # assert entry.body == {"baseform": entry_id}
+        # assert entry.last_modified_by == cmd3.user
 
         assert uow.was_committed  # type: ignore [attr-defined]
 
@@ -444,12 +447,13 @@ class TestAddEntriesInChunks:
         # )
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
+    @pytest.mark.skip(reason="we don't use entry_id")
     def test_add_entry_with_same_entry_id_raises(
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -459,7 +463,7 @@ class TestAddEntriesInChunks:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.AddEntriesInChunksFactory(
@@ -467,11 +471,11 @@ class TestAddEntriesInChunks:
             entries=[{"baseform": entry_id}],
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
-                factories.AddEntriesInChunksFactory(
+                factories.AddEntriesInChunksFactory(  # type: ignore [arg-type]
                     resource_id=cmd3.resource_id,
                     entries=[{"baseform": entry_id}],
                 ),
@@ -485,7 +489,7 @@ class TestImportEntries:
     ):
         with pytest.raises(errors.ResourceNotFound):
             lex_ctx.command_bus.dispatch(
-                factories.ImportEntriesFactory(
+                factories.ImportEntriesFactory(  # type: ignore [arg-type]
                     resource_id="non_existent",
                 )
             )
@@ -495,7 +499,7 @@ class TestImportEntries:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -505,26 +509,28 @@ class TestImportEntries:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
+        entity_id = make_unique_id()
         cmd3 = factories.ImportEntriesFactory(
             resource_id=cmd2.resource_id,
             entries=[
                 {
+                    "entity_id": entity_id,
                     "entry": {"baseform": entry_id},
                     "user": "user1",
                 }
             ],
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
-        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
-        entry = uow.repo.by_entry_id(entry_id)
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)  # type: ignore [arg-type]
+        entry = uow.repo.by_id(entity_id)
         assert entry is not None
-        assert entry.entry_id == entry_id
+        # assert entry.entry_id == entry_id
         # assert entry.repo_id == cmd3.resource_id
 
         assert entry.body == {"baseform": entry_id}
@@ -538,12 +544,13 @@ class TestImportEntries:
         # )
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
+    @pytest.mark.skip(reason="we don't use entry_id")
     def test_import_entries_with_same_entry_id_raises(
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -553,7 +560,7 @@ class TestImportEntries:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.ImportEntriesFactory(
@@ -565,11 +572,11 @@ class TestImportEntries:
             ],
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
-                factories.ImportEntriesFactory(
+                factories.ImportEntriesFactory(  # type: ignore [arg-type]
                     resource_id=cmd3.resource_id,
                     entries=[{"entry": {"baseform": entry_id}}],
                 ),
@@ -582,8 +589,8 @@ class TestImportEntriesInChunks:
         lex_ctx: adapters.UnitTestContext,
     ):
         with pytest.raises(errors.ResourceNotFound):
-            lex_ctx.command_bus.dispatch(
-                factories.ImportEntriesInChunksFactory(
+            lex_ctx.command_bus.dispatch(  # type: ignore [arg-type]
+                factories.ImportEntriesInChunksFactory(  # type: ignore [arg-type]
                     resource_id="non_existent",
                 )
             )
@@ -593,7 +600,7 @@ class TestImportEntriesInChunks:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -603,26 +610,28 @@ class TestImportEntriesInChunks:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
+        entity_id = make_unique_id()
         cmd3 = factories.ImportEntriesInChunksFactory(
             resource_id=cmd2.resource_id,
             entries=[
                 {
+                    "entity_id": entity_id,
                     "entry": {"baseform": entry_id},
                     "user": "user1",
                 }
             ],
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
-        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)
-        entry = uow.repo.by_entry_id(entry_id)
+        uow = entry_uow_repo_uow.repo.get_by_id(cmd2.entry_repo_id)  # type: ignore [arg-type]
+        entry = uow.repo.by_id(entity_id)  # type: ignore [attr.defined]
         assert entry is not None
-        assert entry.entry_id == entry_id
+        # assert entry.entry_id == entry_id
         # assert entry.repo_id == cmd3.resource_id
 
         assert entry.body == {"baseform": entry_id}
@@ -636,12 +645,13 @@ class TestImportEntriesInChunks:
         # )
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
+    @pytest.mark.skip(reason="we don't use entry_id")
     def test_import_entries_with_same_entry_id_raises(
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
 
         cmd2 = factories.CreateResourceFactory(
             entry_repo_id=cmd1.entity_id,
@@ -651,7 +661,7 @@ class TestImportEntriesInChunks:
                 "id": "baseform",
             },
         )
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
         cmd3 = factories.ImportEntriesInChunksFactory(
@@ -663,11 +673,11 @@ class TestImportEntriesInChunks:
             ],
         )
 
-        lex_ctx.command_bus.dispatch(cmd3)
+        lex_ctx.command_bus.dispatch(cmd3)  # type: ignore [arg-type]
 
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
-                factories.ImportEntriesInChunksFactory(
+                factories.ImportEntriesInChunksFactory(  # type: ignore [arg-type]
                     resource_id=cmd3.resource_id,
                     entries=[{"entry": {"baseform": entry_id}}],
                 ),
