@@ -4,8 +4,7 @@ import pytest
 
 from karp.lex.domain.errors import IntegrityError
 from karp.lex.domain.entities.resource import Resource, ResourceOp
-from karp.lex_infrastructure.repositories.sql_resources import \
-    SqlResourceRepository
+from karp.lex_infrastructure.repositories.sql_resources import SqlResourceRepository
 from karp.tests.unit.lex import factories
 
 
@@ -33,8 +32,7 @@ def test_sql_resource_repo_put_resource(resource_repo):
     assert resource_copy_1.message == resource.message
     assert resource_copy_1.op == ResourceOp.ADDED
 
-    resource_id_history = resource_repo.history_by_resource_id(
-        resource.resource_id)
+    resource_id_history = resource_repo.history_by_resource_id(resource.resource_id)
     assert len(resource_id_history) == 1
 
     test_lex = resource_repo.by_resource_id(resource.resource_id)
@@ -109,8 +107,8 @@ def test_sql_resource_repo_put_resource(resource_repo):
 #         assert test_lex.name == resource_name
 
 
-    #     {"resource_id": resource_id, "resource_name": resource_name, "a": "b"}
-    # )
+#     {"resource_id": resource_id, "resource_name": resource_name, "a": "b"}
+# )
 
 
 def test_sql_resource_repo_update_resource(resource_repo):
@@ -119,10 +117,11 @@ def test_sql_resource_repo_update_resource(resource_repo):
     )
     resource_repo.save(resource)
 
-    resource.config = {"a": "changed", "c": "added"}
-    resource.stamp(
+    resource.set_config(
+        config={"a": "changed", "c": "added"},
         message="change config",
         user="Test user",
+        version=1,
         # timestamp=time.utc_now(),
     )
     resource_repo.save(resource)
@@ -131,19 +130,19 @@ def test_sql_resource_repo_update_resource(resource_repo):
     assert resource_repo.by_resource_id(resource.resource_id).version == 2
 
     assert resource_repo.get_by_id(resource.entity_id, version=1).version == 1
-    assert resource_repo.get_by_resource_id(
-        resource.resource_id, version=1).version == 1
+    assert (
+        resource_repo.get_by_resource_id(resource.resource_id, version=1).version == 1
+    )
 
     lex = resource_repo.by_resource_id(resource.resource_id)
     assert lex is not None
     assert lex.resource_id == resource.resource_id
-    assert resource_repo.get_latest_version(
-        resource.resource_id) == resource.version
+    assert resource_repo.get_latest_version(resource.resource_id) == resource.version
 
-    lex.update(
-        user='kristoff@example.com',
+    lex.set_config(
+        config={"a": "changed", "c": "added"},
+        user="kristoff@example.com",
         version=lex.version,
-        last_modified=lex.last_modified,
         # message='update'
     )
     resource_repo.save(lex)
@@ -158,8 +157,7 @@ def test_sql_resource_repo_put_another_resource(resource_repo):
     resource2 = factories.ResourceFactory()
     resource_repo.save(resource2)
 
-    assert resource_repo.resource_ids() == [
-        resource.resource_id, resource2.resource_id]
+    assert resource_repo.resource_ids() == [resource.resource_id, resource2.resource_id]
 
 
 class TestSqlResourceRepo:
@@ -168,8 +166,8 @@ class TestSqlResourceRepo:
         resource_repo.save(resource)
 
         resource.discard(
-            user='kristoff@example.com',
-            message='delete',
+            user="kristoff@example.com",
+            message="delete",
         )
         resource_repo.save(resource)
 
@@ -182,22 +180,19 @@ class TestSqlResourceRepo:
 
         assert resource_repo.resource_ids() == [resource.resource_id]
 
-    def test_change_resource_id_changes_resource_ids(
-        self,
-        resource_repo
-    ):
+    def test_change_resource_id_changes_resource_ids(self, resource_repo):
         resource = factories.ResourceFactory()
         resource_repo.save(resource)
 
-        resource._resource_id = 'changed_id'
-        resource.update(
-            user='kristoff@example.com',
+        resource.set_resource_id(
+            resource_id="changed_id",
+            user="kristoff@example.com",
             version=1,
-            last_modified=resource.last_modified,
         )
         resource_repo.save(resource)
 
-        assert resource_repo.resource_ids() == ['changed_id']
+        assert resource_repo.resource_ids() == ["changed_id"]
+
 
 # def test_sql_resource_repo_deep_update_of_resource(resource_repo):
 #     with unit_of_work(using=resource_repo) as uw:

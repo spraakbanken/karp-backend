@@ -70,7 +70,10 @@ class EntryRepository(repository.Repository[entities.Entry]):
     #     raise NotImplementedError()
 
     # @abc.abstractmethod
-    def entry_ids(self) -> List[str]:
+    # def entry_ids(self) -> List[str]:
+    # raise NotImplementedError()
+
+    def entity_ids(self) -> List[str]:
         raise NotImplementedError()
 
     # def by_entry_id(

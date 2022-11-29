@@ -58,11 +58,11 @@ class JWTAuthService(AuthService):
         logger.debug("JWTAuthenticator created")
 
     def authenticate(self, _scheme: str, credentials: str) -> User:
-        logger.debug("authenticate called", extra={'credentials': credentials})
+        logger.debug("authenticate called", extra={"credentials": credentials})
 
         try:
             user_token = jwt.decode(
-                credentials, key=self._jwt_key, algorithms=["RS256"]
+                credentials, key=self._jwt_key, algorithms=["RS256"], leeway=5
             )
         except jwte.ExpiredSignatureError as exc:
             raise ExpiredToken() from exc
@@ -76,12 +76,8 @@ class JWTAuthService(AuthService):
 
         lexicon_permissions = {}
         if payload.scope and "lexica" in payload.scope:
-            lexicon_permissions = payload.scope['lexica']
-        return User(
-            payload.sub,
-            lexicon_permissions,
-            payload.levels
-        )
+            lexicon_permissions = payload.scope["lexica"]
+        return User(payload.sub, lexicon_permissions, payload.levels)
 
     def authorize(
         self,
@@ -91,8 +87,6 @@ class JWTAuthService(AuthService):
     ):
         return not any(
             self.is_resource_protected.query(resource_id, level)
-            and (
-                not user
-                or not user.has_enough_permissions(resource_id, level)
-            ) for resource_id in resource_ids
+            and (not user or not user.has_enough_permissions(resource_id, level))
+            for resource_id in resource_ids
         )
