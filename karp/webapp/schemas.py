@@ -64,7 +64,11 @@ class EntryUpdate(EntryBase):
 
 
 class EntityIdMixin(BaseModel):
-    entity_id: unique_id.UniqueId
+    entity_id: unique_id.UniqueIdStr
+
+
+class EntryAddResponse(BaseModel):
+    newID: unique_id.UniqueIdStr
 
 
 class ResourceBase(BaseModel):
@@ -72,7 +76,7 @@ class ResourceBase(BaseModel):
     name: str
     config: typing.Dict
     message: Optional[str] = None
-    entry_repo_id: Optional[unique_id.UniqueId] = None
+    entry_repo_id: Optional[unique_id.UniqueIdStr] = None
     is_published: Optional[bool] = None
     version: Optional[int] = None
 

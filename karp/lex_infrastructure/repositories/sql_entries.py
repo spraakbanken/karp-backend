@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Generic, TypeVar
 import injector
 import regex
 import sqlalchemy as sa
+from sqlalchemy import func as sa_func
 from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker
 import ulid
@@ -424,13 +425,32 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         #     discarded=False
         # )
         # return query.count()
+        return self.num_entities()
 
     def num_entities(self) -> int:
         self._check_has_session()
         # query = self._session.query(self.runtime_model.discarded).filter_by(
         #     discarded=False
         # )
-        # return query.count()
+        subq = (
+            sql.select(
+                self.history_model.entity_id,
+                sa.func.max(self.history_model.last_modified).label("maxdate"),
+            )
+            .group_by(self.history_model.entity_id)
+            .subquery("t2")
+        )
+
+        stmt = sql.select(sa_func.count(self.history_model.entity_id)).join(
+            subq,
+            sa.and_(
+                self.history_model.entity_id == subq.c.entity_id,
+                self.history_model.last_modified == subq.c.maxdate,
+                self.history_model.discarded == False,
+            ),
+        )
+        query = self._session.execute(stmt).scalar()
+        return query
 
     def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
@@ -494,6 +514,7 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         # # return result
         # # return query.all()
         # return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
+        return []
 
     def get_history(
         self,

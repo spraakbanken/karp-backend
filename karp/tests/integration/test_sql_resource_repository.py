@@ -140,11 +140,12 @@ def test_sql_resource_repo_update_resource(resource_repo):
     assert resource_repo.get_latest_version(resource.resource_id) == resource.version
 
     lex.set_config(
-        config={"a": "changed", "c": "added"},
+        config={"a": "changed", "c": "added", "d": "added"},
         user="kristoff@example.com",
         version=lex.version,
         # message='update'
     )
+    assert lex.version == 3
     resource_repo.save(lex)
 
     assert resource_repo.get_by_resource_id(resource.resource_id).version == 3

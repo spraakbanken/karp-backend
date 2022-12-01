@@ -15,6 +15,7 @@ from fastapi import (
 )
 import pydantic
 from starlette import responses
+from karp.foundation.value_objects.unique_id import UniqueIdStr
 
 from karp.lex.domain.value_objects import UniqueId
 from karp import errors as karp_errors, auth, lex, search
@@ -38,7 +39,7 @@ logger = logging.getLogger(__name__)
 # @auth.auth.authorization("ADMIN")
 def get_history_for_entry(
     resource_id: str,
-    entry_id: UniqueId,
+    entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
@@ -64,9 +65,17 @@ def get_history_for_entry(
 
 
 @router.post(
-    "/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["Editing"]
+    "/{resource_id}/add",
+    status_code=status.HTTP_201_CREATED,
+    tags=["Editing"],
+    response_model=schemas.EntryAddResponse,
 )
-@router.put("/{resource_id}", status_code=status.HTTP_201_CREATED, tags=["Editing"])
+@router.put(
+    "/{resource_id}",
+    status_code=status.HTTP_201_CREATED,
+    tags=["Editing"],
+    response_model=schemas.EntryAddResponse,
+)
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
@@ -140,12 +149,20 @@ def preview_entry(
         return preview_entry.query(input_dto)
 
 
-@router.post("/{resource_id}/{entry_id}/update", tags=["Editing"])
-@router.post("/{resource_id}/{entry_id}", tags=["Editing"])
+@router.post(
+    "/{resource_id}/{entry_id}/update",
+    tags=["Editing"],
+    response_model=schemas.EntryAddResponse,
+)
+@router.post(
+    "/{resource_id}/{entry_id}",
+    tags=["Editing"],
+    response_model=schemas.EntryAddResponse,
+)
 def update_entry(
     response: Response,
     resource_id: str,
-    entry_id: str,
+    entry_id: UniqueIdStr,
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
@@ -232,7 +249,7 @@ def update_entry(
 )
 def delete_entry(
     resource_id: str,
-    entry_id: uuid.UUID,
+    entry_id: UniqueIdStr,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
     deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry)),

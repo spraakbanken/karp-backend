@@ -58,7 +58,7 @@ def create(
             )
             entry_repo_uuid = entry_repo.entity_id
         else:
-            entry_repo_uuid = unique_id.UniqueId(entry_repo_id)
+            entry_repo_uuid = entry_repo_id
         cmd = lex_commands.CreateResource.from_dict(
             data,
             user="local admin",
@@ -85,7 +85,7 @@ def set_entry_repo(
     user: Optional[str] = typer.Option(None),
 ):
     bus = inject_from_ctx(CommandBus, ctx)
-    entry_repo_uuid = unique_id.UniqueId(entry_repo_id)
+    entry_repo_uuid = unique_id.parse(entry_repo_id)
     cmd = lex_commands.SetEntryRepoId(
         resource_id=resource_id,
         entry_repo_id=entry_repo_uuid,

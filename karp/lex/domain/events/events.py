@@ -10,6 +10,9 @@ from karp.foundation.value_objects import unique_id
 class Event(events.Event, BaseModel):
     timestamp: float
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class AppStarted(Event):
     def __init__(self):

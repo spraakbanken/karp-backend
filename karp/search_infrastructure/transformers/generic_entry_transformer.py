@@ -154,7 +154,7 @@ class GenericEntryTransformer(EntryTransformer):
         src_entry: dict,
         ref_conf: dict,
         field_name: str,
-    ):
+    ) -> typing.Optional[typing.Any]:
         res = None
         if "resource_id" in ref_conf:
             ref_resource = self.resource_repo.get_by_resource_id(
@@ -165,68 +165,76 @@ class GenericEntryTransformer(EntryTransformer):
 
         if not ref_resource:
             return res
-
-        if ref_conf["field"].get("collection"):
-            res = self.index_uow.repo.create_empty_list()
-            for ref_id in src_entry[field_name]:
-                if ref_entry_body := self.entry_views.get_by_id_optional(
-                    ref_resource.resource_id, str(ref_id)
-                ):
-                    # ref_entry = {
-                    #     field_name: ref_entry_body.entry
-                    # }
-                    ref_entry = ref_entry_body.entry
-                    if ref_conf["field"]["type"] == "object":
-                        ref_index_entry = self.index_uow.repo.create_empty_object()
-                        for ref_field_name, _ref_field_conf in ref_conf["field"][
-                            "fields"
-                        ].items():
-                            self.index_uow.repo.assign_field(
-                                ref_index_entry,
-                                ref_field_name,
-                                ref_entry[ref_field_name],
-                            )
-                            self.index_uow.repo.add_to_list_field(res, ref_index_entry)
-                # ref_objs = []
-                # if ref_resource:
-                #     for ref_id in _src_entry[field_name]:
-                #         ref_entry_body = self.entry_views.get_by_entry_id_optional(
-                #             ref_field['resource_id'], str(ref_id))
-                #         if ref_entry_body:
-                #             ref_entry = {
-                #                 field_name: ref_entry_body.entry}
-                #             ref_index_entry = (
-                #                 self.index_uow.repo.create_empty_object()
-                #             )
-                #             list_of_sub_fields = (
-                #                 (field_name, ref_field["field"]),)
-                #             self._transform_to_index_entry(
-                #                 resource,
-                #                 # resource_repo,
-                #                 # indexer,
-                #                 ref_entry,
-                #                 ref_index_entry,
-                #                 list_of_sub_fields,
-                #             )
-                #             ref_objs.append(
-                #                 ref_index_entry.entry[field_name])
-                # self.index_uow.repo.assign_field(
-                #     _index_entry, "v_" + field_name, ref_objs
-                # )
-        elif ref := self.entry_views.get_by_id_optional(
-            ref_resource.resource_id, str(src_entry[field_name])
-        ):
-            ref_entry = {field_name: ref.entry}
-            ref_index_entry = self.index_uow.repo.create_empty_object()
-            list_of_sub_fields = ((field_name, ref_conf["field"]),)
-            self._transform_to_index_entry(
-                ref_resource,
-                ref_entry,
-                ref_index_entry,
-                list_of_sub_fields,
+        try:
+            if ref_conf["field"].get("collection"):
+                res = self.index_uow.repo.create_empty_list()
+                for ref_id in src_entry[field_name]:
+                    if ref_entry_body := self.entry_views.get_by_id_optional(
+                        ref_resource.resource_id, str(ref_id)
+                    ):
+                        # ref_entry = {
+                        #     field_name: ref_entry_body.entry
+                        # }
+                        ref_entry = ref_entry_body.entry
+                        if ref_conf["field"]["type"] == "object":
+                            ref_index_entry = self.index_uow.repo.create_empty_object()
+                            for ref_field_name, _ref_field_conf in ref_conf["field"][
+                                "fields"
+                            ].items():
+                                self.index_uow.repo.assign_field(
+                                    ref_index_entry,
+                                    ref_field_name,
+                                    ref_entry[ref_field_name],
+                                )
+                                self.index_uow.repo.add_to_list_field(
+                                    res, ref_index_entry
+                                )
+                    # ref_objs = []
+                    # if ref_resource:
+                    #     for ref_id in _src_entry[field_name]:
+                    #         ref_entry_body = self.entry_views.get_by_entry_id_optional(
+                    #             ref_field['resource_id'], str(ref_id))
+                    #         if ref_entry_body:
+                    #             ref_entry = {
+                    #                 field_name: ref_entry_body.entry}
+                    #             ref_index_entry = (
+                    #                 self.index_uow.repo.create_empty_object()
+                    #             )
+                    #             list_of_sub_fields = (
+                    #                 (field_name, ref_field["field"]),)
+                    #             self._transform_to_index_entry(
+                    #                 resource,
+                    #                 # resource_repo,
+                    #                 # indexer,
+                    #                 ref_entry,
+                    #                 ref_index_entry,
+                    #                 list_of_sub_fields,
+                    #             )
+                    #             ref_objs.append(
+                    #                 ref_index_entry.entry[field_name])
+                    # self.index_uow.repo.assign_field(
+                    #     _index_entry, "v_" + field_name, ref_objs
+                    # )
+            elif ref := self.entry_views.get_by_id_optional(
+                ref_resource.resource_id, str(src_entry[field_name])
+            ):
+                ref_entry = {field_name: ref.entry}
+                ref_index_entry = self.index_uow.repo.create_empty_object()
+                list_of_sub_fields = ((field_name, ref_conf["field"]),)
+                self._transform_to_index_entry(
+                    ref_resource,
+                    ref_entry,
+                    ref_index_entry,
+                    list_of_sub_fields,
+                )
+                res = ref_index_entry.entry[field_name]
+            return res
+        except ValueError as exc:
+            logger.warn(
+                "Got ValueError (%s)",
+                str(exc),
+                extra={"exc": exc, "resource": resource},
             )
-            res = ref_index_entry.entry[field_name]
-        return res
 
         # if field_conf["type"] == "object":
         #     logger.debug("found field with type 'object'")

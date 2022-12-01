@@ -11,12 +11,12 @@ from karp.db_infrastructure import db
 class ResourceModel(db.Base):
     __tablename__ = "resources"
     history_id = db.Column(db.Integer, primary_key=True)
-    entity_id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.ULIDType, nullable=False)
     resource_id = db.Column(db.String(32), nullable=False)
     resource_type = db.Column(db.String(32), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(64), nullable=False)
-    entry_repo_id = db.Column(db.UUIDType, nullable=False)
+    entry_repo_id = db.Column(db.ULIDType, nullable=False)
     config = db.Column(db.NestedMutableJson, nullable=False)
     is_published = db.Column(db.Boolean, index=True, nullable=True, default=None)
     last_modified = db.Column(db.Float(precision=53), nullable=False)
@@ -103,7 +103,7 @@ class ResourceModel(db.Base):
 class EntryUowModel(db.Base):
     __tablename__ = "entry_repos"
     history_id = db.Column(db.Integer, primary_key=True)
-    entity_id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.ULIDType, nullable=False)
     type = db.Column(db.String(64), nullable=False)
     connection_str = db.Column(db.String(128))
     name = db.Column(db.String(64), nullable=False)
@@ -136,14 +136,14 @@ class BaseRuntimeEntry:
         primary_key=True,
     )
     history_id = db.Column(db.Integer, nullable=False)
-    entity_id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.ULIDType, nullable=False)
     discarded = db.Column(db.Boolean, nullable=False)
 
 
 class BaseHistoryEntry:
     history_id = db.Column(db.Integer, primary_key=True)
-    entity_id = db.Column(db.UUIDType, nullable=False)
-    repo_id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.ULIDType, nullable=False)
+    repo_id = db.Column(db.ULIDType, nullable=False)
     # entry_id = db.Column(db.String(100), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     last_modified = db.Column(db.Float(53), nullable=False)

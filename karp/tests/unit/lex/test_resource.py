@@ -1,13 +1,21 @@
+import copy
 import uuid
 from unittest import mock
 
 import pytest
 
 from karp.lex.domain import errors, events
-from karp.lex.domain.errors import (ConsistencyError, ConstraintsError,
-                                    DiscardedEntityError)
-from karp.lex.domain.entities.resource import (Release, Resource, ResourceOp,
-                                               create_resource)
+from karp.lex.domain.errors import (
+    ConsistencyError,
+    ConstraintsError,
+    DiscardedEntityError,
+)
+from karp.lex.domain.entities.resource import (
+    Release,
+    Resource,
+    ResourceOp,
+    create_resource,
+)
 from karp.foundation.value_objects import unique_id
 
 from . import factories
@@ -32,7 +40,7 @@ def test_create_resource_creates_resource():
 
     assert isinstance(resource, Resource)
     assert isinstance(resource.entity_id, unique_id.UniqueIdType)
-    assert resource.entity_id == uuid.UUID(bytes=resource.entity_id.bytes)
+    assert resource.entity_id == unique_id.parse(str(resource.entity_id))
     assert resource.version == 1
     assert resource.resource_id == resource_id
     assert resource.name == name
@@ -59,7 +67,7 @@ def test_create_resource_creates_resource():
     )
 
 
-def test_resource_stamp_changes_last_modified_and_version():
+def test_resource_update_changes_last_modified_and_version():
     resource_id = "test_resource"
     name = "Test resource"
     conf = {
@@ -71,11 +79,14 @@ def test_resource_stamp_changes_last_modified_and_version():
         "entry_repository_settings": {},
     }
 
-    resource = factories.ResourceFactory()
+    resource = factories.ResourceFactory(
+        name=copy.deepcopy(name), config=copy.deepcopy(conf)
+    )
     previous_last_modified = resource.last_modified
     previous_version = resource.version
 
-    resource.stamp(user="Test")
+    conf["fields"]["new"] = {"type": "string"}
+    resource.update(name="new name", config=conf, user="Test", version=1)
 
     assert resource.last_modified > previous_last_modified
     assert resource.last_modified_by == "Test"
@@ -230,7 +241,9 @@ def test_discarded_resource_has_event(field, value):
 def test_published_resource_has_event():
     resource = random_resource()
     previous_version = resource.version
-    resource.publish(user="kristoff@example.com", message="publish")
+    resource.publish(
+        user="kristoff@example.com", message="publish", version=resource.version
+    )
     assert resource.is_published
     assert resource.version == (previous_version + 1)
     assert resource.domain_events[-1] == events.ResourcePublished(

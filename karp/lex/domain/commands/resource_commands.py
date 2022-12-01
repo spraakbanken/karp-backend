@@ -24,18 +24,20 @@ class CreateResource(Command):
     def from_dict(
         cls,
         data: typing.Dict,
-        entry_repo_id: unique_id.UniqueId,
+        entry_repo_id: unique_id.UniqueIdPrimitive,
         user: typing.Optional[str] = None,
         message: typing.Optional[str] = None,
     ):
         try:
             resource_id = data.pop("resource_id")
-        except KeyError:
-            raise errors.ConstraintsError("'resource_id' is missing")
+        except KeyError as exc:
+            raise errors.ConstraintsError("'resource_id' is missing") from exc
         try:
             name = data.pop("resource_name")
-        except KeyError:
-            raise errors.ConstraintsError("'resource_name' is missing")
+        except KeyError as exc:
+            raise errors.ConstraintsError("'resource_name' is missing") from exc
+
+        entry_repo_id = unique_id.parse(entry_repo_id)
 
         return cls(
             resource_id=resource_id,

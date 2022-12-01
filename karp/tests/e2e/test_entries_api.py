@@ -11,7 +11,7 @@ from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
 from karp.foundation.time import utc_now
-from karp.foundation.value_objects import make_unique_id, UniqueId
+from karp.foundation.value_objects import make_unique_id, UniqueId, unique_id
 from karp.lex.application.queries import EntryDto
 
 # from karp.application import ctx, config
@@ -38,8 +38,9 @@ def init(
     client,
     entries: List[Dict],
     access_token: auth.AccessToken,
-):
+) -> list[str]:
 
+    result = []
     for entry in entries:
         response = client.post(
             "/entries/places/add",
@@ -47,7 +48,8 @@ def init(
             headers=access_token.as_header(),
         )
         assert response.status_code < 300, response.status_code
-    return client
+        result.append(response.json()["newID"])
+    return result
 
 
 class TestEntriesRoutes:
@@ -115,7 +117,7 @@ class TestAddEntry:
         assert response.status_code == 201
         response_data = response.json()
         assert "newID" in response_data
-        _new_id = UniqueId(response_data["newID"])
+        _new_id = unique_id.parse(response_data["newID"])
 
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
@@ -156,6 +158,7 @@ class TestAddEntry:
         with entry_uow as uw:
             assert "203" in uw.repo.entry_ids()
 
+    @pytest.mark.skip(reason="we don't use entry_id")
     def test_adding_existing_fails_with_400(
         self,
         fa_data_client,
@@ -217,11 +220,11 @@ class TestAddEntry:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         response_data = response.json()
+        assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
 
         assert (
             response_data["error"] == "Missing ID field for resource 'places' in '{}'"
         )
-        assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
 
 
 class TestDeleteEntry:
@@ -247,7 +250,7 @@ class TestDeleteEntry:
             headers=write_token.as_header(),
         )
 
-        entity_id = uuid.UUID(response.json()["newID"])
+        entity_id = response.json()["newID"]
         response = fa_data_client.delete(
             f"/entries/places/{entity_id}/delete", headers=write_token.as_header()
         )
@@ -283,7 +286,7 @@ class TestDeleteEntry:
             headers=write_token.as_header(),
         )
 
-        entity_id = uuid.UUID(response.json()["newID"])
+        entity_id = response.json()["newID"]
         response = fa_data_client.delete(
             f"/entries/places/{entity_id}", headers=write_token.as_header()
         )
@@ -303,7 +306,7 @@ class TestDeleteEntry:
         write_token: auth.AccessToken,
     ):
 
-        entry_id = uuid.uuid4()
+        entry_id = make_unique_id()
 
         response = fa_data_client.delete(
             f"/entries/places/{entry_id}/delete", headers=write_token.as_header()
@@ -326,7 +329,7 @@ class TestDeleteEntry:
         write_token: auth.AccessToken,
     ):
 
-        entry_id = "non_existing_id"
+        entry_id = "00000000000000000000000000"
 
         response = fa_data_client.delete(
             f"/entries/places/{entry_id}", headers=write_token.as_header()
@@ -607,7 +610,7 @@ class TestUpdateEntry:
         entry_id = 212
         before_add = utc_now()
 
-        init(
+        ids = init(
             fa_data_client,
             [
                 {"code": entry_id, "name": "last_modified1", "municipality": [1]},
@@ -626,7 +629,7 @@ class TestUpdateEntry:
             assert entry.last_modified < after_add
 
         fa_data_client.post(
-            f"/entries/places/{entry_id}/update",
+            f"/entries/places/{ids[0]}/update",
             json={
                 "entry": {
                     "code": entry_id,
@@ -723,7 +726,7 @@ class TestPreviewEntry:
         )
         print(f"{response.json()=}")
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["entry"]["id"] == "3"
+        assert unique_id.parse(response.json()["entry"]["id"])
 
 
 @pytest.mark.skip()

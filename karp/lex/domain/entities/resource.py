@@ -277,6 +277,36 @@ class Resource(TimestampedVersionedEntity):
             )
         )
 
+    def update(
+        self,
+        *,
+        name: str,
+        config: dict[str, Any],
+        user: str,
+        version: int,
+        timestamp: Optional[float] = None,
+        message: Optional[str] = None,
+    ) -> bool:
+        if self.name == name and self.config == config:
+            return False
+        self._update_metadata(timestamp, user, message or "updating", version)
+        self._name = name
+        self.config = config
+        self.queue_event(
+            events.ResourceUpdated(
+                entity_id=self.entity_id,
+                resource_id=self.resource_id,
+                entry_repo_id=self.entry_repository_id,
+                timestamp=self.last_modified,
+                user=self.last_modified_by,
+                version=self.version,
+                name=self.name,
+                config=self.config,
+                message=self.message,
+            )
+        )
+        return True
+
     def set_config(
         self,
         *,
@@ -285,7 +315,9 @@ class Resource(TimestampedVersionedEntity):
         version: int,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ) -> None:
+    ) -> bool:
+        if self.config == config:
+            return False
         self._update_metadata(timestamp, user, message or "setting config", version)
         self.config = config
         self.queue_event(
@@ -301,6 +333,7 @@ class Resource(TimestampedVersionedEntity):
                 message=self.message,
             )
         )
+        return True
 
     def _update_metadata(
         self, timestamp: Optional[float], user: str, message: str, version: int

@@ -10,6 +10,8 @@ from karp.lex.domain import commands
 
 from . import adapters, factories
 
+# type: ignore [arg-type]
+
 
 class TestCreateResource:
     def test_create_resource_w_no_entry_repo_raises(
@@ -117,22 +119,23 @@ class TestPublishResource:
         lex_ctx: adapters.UnitTestContext,
     ):
         cmd1 = factories.CreateEntryRepositoryFactory()
-        lex_ctx.command_bus.dispatch(cmd1)
+        lex_ctx.command_bus.dispatch(cmd1)  # type: ignore [arg-type]
         cmd2 = factories.CreateResourceFactory(entry_repo_id=cmd1.entity_id)
-        lex_ctx.command_bus.dispatch(cmd2)
+        lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         lex_ctx.command_bus.dispatch(
             commands.PublishResource(
                 resource_id=cmd2.resource_id,
                 message="publish",
                 user="kristoff@example.com",
+                version=1,
             )
         )
 
         resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [misc]
         assert resource_uow.was_committed  # type: ignore [attr-defined]
 
-        resource = resource_uow.resources.by_id(cmd2.entity_id)
+        resource = resource_uow.resources.by_id(cmd2.entity_id)  # type: ignore [arg-type]
         assert resource.is_published
         assert resource.version == 2
         # assert index_uow.repo.indicies[resource_id].published
