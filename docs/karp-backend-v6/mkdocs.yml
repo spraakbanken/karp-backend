@@ -3,6 +3,10 @@ theme: material
 nav:
   - Home: index.md
   - Reference: reference.md
+  - Tutorials: 
+      - "Tutorials": tutorials.md
+      - "Add Resource": tutorials/add-resource.md
+      - "Create Resource Config": tutorials/create-resource-config.md
   - About:
       - "Release Notes": release-notes.md
 
