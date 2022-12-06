@@ -532,7 +532,7 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         if user_id:
             query = query.filter_by(last_modified_by=user_id)
         if entry_id:
-            query = query.filter_by(entry_id=entry_id)
+            query = query.filter_by(entity_id=entry_id)
         if entry_id and from_version:
             query = query.filter(self.history_model.version >= from_version)
         elif from_date is not None:

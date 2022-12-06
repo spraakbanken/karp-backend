@@ -15,6 +15,7 @@ from fastapi import (
 )
 import pydantic
 from starlette import responses
+from karp.foundation.value_objects import unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
 
 from karp.lex.domain.value_objects import UniqueId
@@ -36,7 +37,6 @@ logger = logging.getLogger(__name__)
     "/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"]
 )
 @router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
-# @auth.auth.authorization("ADMIN")
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
@@ -59,9 +59,7 @@ def get_history_for_entry(
             "user": user.identifier,
         },
     )
-    historical_entry = get_entry_history.query(resource_id, entry_id, version=version)
-
-    return historical_entry
+    return get_entry_history.query(resource_id, entry_id, version=version)
 
 
 @router.post(
@@ -195,7 +193,7 @@ def update_entry(
         entry = updating_entry_uc.execute(
             commands.UpdateEntry(
                 resource_id=resource_id,
-                entry_id=entry_id,
+                entity_id=unique_id.parse(entry_id),
                 version=data.version,
                 user=user.identifier,
                 message=data.message,
@@ -226,9 +224,10 @@ def update_entry(
             },
         )
     except errors.UpdateConflict as err:
-        response.status_code = status.HTTP_400_BAD_REQUEST
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
-        return err.error_obj
+        return responses.JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj
+        )
     except Exception as err:
         logger.exception(
             "error occured",
@@ -265,7 +264,7 @@ def delete_entry(
         deleting_entry_uc.execute(
             commands.DeleteEntry(
                 resource_id=resource_id,
-                entity_id=entry_id,
+                entity_id=unique_id.parse(entry_id),
                 user=user.identifier,
             )
         )
@@ -276,7 +275,7 @@ def delete_entry(
                 "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
                 "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
                 "resource": resource_id,
-                "entity_id": id,
+                "entity_id": entry_id,
             },
         )
     return

@@ -84,18 +84,18 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         # src_body = json.loads(src_entry.body)
         for (ref_resource_id, ref_resource_version, field_name, field) in resource_refs:
             ids = src_entry.body.get(field_name)
+            if ids is None:
+                continue
             if not field.get("collection", False):
                 ids = [ids]
-            ref_resource = self.resource_repo.get_by_resource_id(ref_resource_id)
-            if ref_resource:
+            if ref_resource := self.resource_repo.get_by_resource_id(ref_resource_id):
                 with self.entry_repo_uow.repo.get_by_id(
                     ref_resource.entry_repository_id
                 ) as entries_uw:
                     for ref_entry_id in ids:
-                        entry = entries_uw.repo.get_by_entry_id_optional(
+                        if entry := entries_uw.repo.get_by_id_optional(
                             ref_entry_id, version=ref_resource_version
-                        )
-                        if entry:
+                        ):
                             yield _create_ref(
                                 ref_resource_id, ref_resource_version, entry
                             )

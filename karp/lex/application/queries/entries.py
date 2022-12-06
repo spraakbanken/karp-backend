@@ -58,7 +58,7 @@ class HistoryDto(pydantic.BaseModel):
     timestamp: float
     message: str
     # entry_id: str
-    entity_id: str
+    entity_id: unique_id.UniqueIdStr
     version: int
     op: EntryOp
     user_id: str
@@ -99,7 +99,7 @@ class EntryViews(abc.ABC):
     def get_by_id(
         self,
         resource_id: str,
-        entity_id: unique_id.UniqueId,
+        entity_id: unique_id.UniqueIdStr,
     ) -> EntryDto:
         pass
 
@@ -107,7 +107,7 @@ class EntryViews(abc.ABC):
     def get_by_id_optional(
         self,
         resource_id: str,
-        entity_id: unique_id.UniqueId,
+        entity_id: unique_id.UniqueIdStr,
     ) -> typing.Optional[EntryDto]:
         pass
 
