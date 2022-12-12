@@ -80,3 +80,36 @@ def test_create_entry_repository2(entry_repo2):
 class TestSqlEntryRepoGetHistory:
     def test_discard_entry_and_insert_new(self, entry_repo):
         pass
+
+
+class TestSqlEntryRepoByReferencable:
+    def test_by_referenceable_wo_filter_raises_value_error(self, entry_repo):
+        with pytest.raises(ValueError):
+            entry_repo.by_referenceable()
+
+    def test_by_referenceable_w_kwargs_returns_entry(self, entry_repo):
+        entry = factories.EntryFactory(body={"a": "b"})
+        entry_repo.save(entry)
+
+        entry_copies = entry_repo.by_referenceable(a="b")
+
+        print(f"{entry_copies=}")
+        assert entry_copies[0].id == entry.id
+
+    def test_by_referenceable_w_filters_returns_entry(self, entry_repo):
+        entry = factories.EntryFactory(body={"a": "b"})
+        entry_repo.save(entry)
+
+        entry_repo._session.commit()
+        entry_copies = entry_repo.by_referenceable(filters={"a": "b"})
+
+        print(f"{entry_copies=}")
+        assert entry_copies[0].id == entry.id
+
+        entry.update_body({"a": "b", "c": "d"}, user="user")
+        entry_repo.save(entry)
+
+        entry_copies = entry_repo.by_referenceable(filters={"a": "b"})
+
+        assert len(entry_copies) == 1
+        assert entry_copies[0].version == 2

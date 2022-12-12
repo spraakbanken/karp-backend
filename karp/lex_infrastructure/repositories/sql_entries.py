@@ -459,11 +459,42 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         #     self.runtime_model.history_id == self.history_model.history_id
         # )
         if filters is None:
-            if kwargs is None:
+            if not kwargs:
                 raise ValueError("Must give 'filters' or kwargs")
             else:
                 filters = kwargs
 
+        subq = (
+            sql.select(
+                self.history_model.entity_id,
+                sa.func.max(self.history_model.last_modified).label("maxdate"),
+            )
+            .group_by(self.history_model.entity_id)
+            .subquery("t2")
+        )
+        query_and = sa.and_(
+            self.history_model.entity_id == subq.c.entity_id,
+            self.history_model.last_modified == subq.c.maxdate,
+            self.history_model.discarded == False,
+        )
+
+        for filter_key, filter_value in filters.items():
+            # query = query.filter(
+            #     self.history_model.body.op("->")(filter_key) == filter_value
+            # )
+            query_and = query_and & (
+                sa_func.json_extract(self.history_model.body, f"$.{filter_key}")
+                == filter_value
+            )
+        stmt = sql.select(self.history_model).join(
+            subq,
+            query_and,
+        )
+        print(stmt)
+        result = [
+            self._history_row_to_entry(row)
+            for row in self._session.execute(stmt).scalars().all()
+        ]
         # joined_filters = []
         # simple_filters = {}
 
@@ -514,7 +545,8 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         # # return result
         # # return query.all()
         # return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
-        return []
+
+        return result
 
     def get_history(
         self,
@@ -582,6 +614,7 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         }
 
     def _history_row_to_entry(self, row) -> Entry:
+        print(f"{row.message=}")
         return Entry(
             body=row.body,
             message=row.message,
