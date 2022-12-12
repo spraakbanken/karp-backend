@@ -230,7 +230,7 @@ class GenericEntryTransformer(EntryTransformer):
                 res = ref_index_entry.entry[field_name]
             return res
         except ValueError as exc:
-            logger.warn(
+            logger.warning(
                 "Got ValueError (%s)",
                 str(exc),
                 extra={"exc": exc, "resource": resource},

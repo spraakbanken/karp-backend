@@ -458,11 +458,11 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         # query = self._session.query(self.runtime_model, self.history_model).filter(
         #     self.runtime_model.history_id == self.history_model.history_id
         # )
-        # if filters is None:
-        #     if kwargs is None:
-        #         raise RuntimeError("")
-        #     else:
-        #         filters = kwargs
+        if filters is None:
+            if kwargs is None:
+                raise ValueError("Must give 'filters' or kwargs")
+            else:
+                filters = kwargs
 
         # joined_filters = []
         # simple_filters = {}
