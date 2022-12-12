@@ -113,3 +113,17 @@ class TestSqlEntryRepoByReferencable:
 
         assert len(entry_copies) == 1
         assert entry_copies[0].version == 2
+
+    def test_by_referenceable_w_many_filters_returns_one_entry(self, entry_repo):
+        entry = factories.EntryFactory(body={"a": "b"})
+        entry_repo.save(entry)
+        entry2 = factories.EntryFactory(body={"a": "b", "c": "d"})
+        entry_repo.save(entry2)
+
+        entry_repo._session.commit()
+        entry_copies = entry_repo.by_referenceable(filters={"a": "b", "c": "d"})
+
+        print(f"{entry_copies=}")
+        assert entry_copies[0].id == entry2.id
+
+        assert len(entry_copies) == 1
