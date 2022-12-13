@@ -11,7 +11,7 @@ on:
       - "*"
 
 env:
-  POETRY_VERSION: 1.2.0
+  POETRY_VERSION: 1.1.13
 
 jobs:
   checks:
@@ -28,7 +28,7 @@ jobs:
         task:
           - name: Lint code
             run: make lint
-            allow_failure: true
+            allow_failure: false
           - name: Typecheck
             run: make type-check
             allow_failure: true

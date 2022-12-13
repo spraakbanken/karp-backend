@@ -37,10 +37,10 @@ class ResourceFactory(factory.Factory):
 
     entity_id = factory.LazyFunction(make_unique_id)
     entry_repo_id = factory.LazyFunction(make_unique_id)
-    resource_id = factory.Faker("word")
-    name = factory.Faker("word")
-    config = factory.Faker("resource_config")
-    last_modified_by = factory.Faker("email")
+    resource_id: str = factory.Faker("word")
+    name: str = factory.Faker("word")
+    config: str = factory.Faker("resource_config")
+    last_modified_by: str = factory.Faker("email")
     last_modified = factory.LazyFunction(utc_now)
     message = "resource created"
 
@@ -50,7 +50,7 @@ class EntryFactory(factory.Factory):
         model = entities.Entry
 
     entity_id = factory.LazyFunction(make_unique_id)
-    entry_id = factory.Faker("word")
+    # entry_id = factory.Faker("word")
     last_modified_by = factory.Faker("email")
     last_modified = factory.LazyFunction(utc_now)
     message = "entry created"

@@ -26,29 +26,28 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
     def __init__(
         self,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
-        session: sa_orm.Session
+        session: sa_orm.Session,
     ) -> None:
-        logger.debug('create repo with session=%s', session)
-        EntryUowRepository.__init__(self)
+        logger.debug("create repo with session=%s", session)
+        EntryUowRepository.__init__(self)  # type: ignore [arg-type]
         SqlRepository.__init__(self, session)
         self.entry_uow_factory = entry_uow_factory
 
     def _save(self, entry_uow: EntryUnitOfWork):
-        logger.debug('saving entry_uow=%s', entry_uow)
-        logger.debug('using session=%s', self._session)
+        logger.debug("saving entry_uow=%s", entry_uow)
+        logger.debug("using session=%s", self._session)
         self._check_has_session()
-        self._session.add(
-            EntryUowModel.from_entity(entry_uow)
-        )
-        logger.debug('session=%s, session.new=%s',
-                     self._session, self._session.new)
+        self._session.add(EntryUowModel.from_entity(entry_uow))
+        logger.debug("session=%s, session.new=%s", self._session, self._session.new)
 
     def _by_id(self, id_: UniqueId, **kwargs) -> Optional[EntryUnitOfWork]:
         # stmt = sql.select(EntryUowModel).where(EntryUowModel.id == id_)
         # row = self._session.execute(stmt).first()
-        stmt = self._session.query(
-            EntryUowModel
-        ).filter_by(entity_id=id_).order_by(EntryUowModel.last_modified.desc())
+        stmt = (
+            self._session.query(EntryUowModel)
+            .filter_by(entity_id=id_)
+            .order_by(EntryUowModel.last_modified.desc())
+        )
         row = stmt.first()
         if row:
             return self._row_to_entity(row)
@@ -66,7 +65,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
         )
         query = self._session.query(EntryUowModel).join(
             subq,
-            db.and_(
+            sql.and_(
                 EntryUowModel.entity_id == subq.c.entity_id,
                 EntryUowModel.last_modified == subq.c.maxdate,
                 EntryUowModel.discarded == False,
@@ -88,10 +87,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
         )
 
 
-class SqlEntryUowRepositoryUnitOfWork(
-    SqlUnitOfWork,
-    EntryUowRepositoryUnitOfWork
-):
+class SqlEntryUowRepositoryUnitOfWork(SqlUnitOfWork, EntryUowRepositoryUnitOfWork):
     def __init__(
         self,
         *,
@@ -108,7 +104,7 @@ class SqlEntryUowRepositoryUnitOfWork(
         )
         self.session_factory = session_factory
         if self._session_is_created_here and self.session_factory is None:
-            raise ValueError('Must provide one of session and session_factory')
+            raise ValueError("Must provide one of session and session_factory")
         self._repo = None
 
     # def __enter__(self):
@@ -125,10 +121,10 @@ class SqlEntryUowRepositoryUnitOfWork(
     #     return super().__enter__()
 
     def _begin(self):
-        logger.debug('called _begin')
+        logger.debug("called _begin")
         if self._session_is_created_here:
             self._session = self.session_factory()  # type: ignore
-            logger.debug('created session=%s', self._session)
+            logger.debug("created session=%s", self._session)
         if self._repo is None:
             self._repo = SqlEntryUowRepository(
                 entry_uow_factory=self.factory,

@@ -1,7 +1,7 @@
 """add entry_repos table
 
 Revision ID: d2f8d1c19b65
-Revises: fcafe9c1edbd
+Revises: 5bb29472d33f
 Create Date: 2021-10-27 22:08:06.924305
 
 """
@@ -12,8 +12,8 @@ from sqlalchemy_json import NestedMutableJson
 
 
 # revision identifiers, used by Alembic.
-revision = 'd2f8d1c19b65'
-down_revision = '5bb29472d33f'
+revision = "d2f8d1c19b65"
+down_revision = "5bb29472d33f"
 branch_labels = None
 depends_on = None
 
@@ -23,8 +23,8 @@ def create_entry_repos():
         "entry_repos",
         sa.Column("history_id", sa.Integer(), nullable=False),
         sa.Column("entity_id", UUIDType, nullable=False),
-        sa.Column('type', sa.String(length=64), nullable=False),
-        sa.Column('connection_str', sa.String(length=128)),
+        sa.Column("type", sa.String(length=64), nullable=False),
+        sa.Column("connection_str", sa.String(length=128)),
         sa.Column("name", sa.String(length=64), nullable=False),
         sa.Column("config", NestedMutableJson, nullable=False),
         sa.Column("last_modified", sa.Float(precision=53), nullable=False),
@@ -40,4 +40,4 @@ def upgrade():
 
 
 def downgrade():
-    op.drop_table('entry_repos')
+    op.drop_table("entry_repos")

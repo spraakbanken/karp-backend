@@ -1,10 +1,12 @@
-from typing import Dict, List, Optional, Iterable
+import logging
+from typing import Dict, Optional, Iterable
 
 from karp.search.domain import query_dsl
-from karp.search.application.repositories import Index,IndexUnitOfWork, IndexEntry
+from karp.search.application.repositories import Index, IndexUnitOfWork, IndexEntry
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
 
+logger = logging.getLogger(__name__)
 
 class SqlSearchService(Index):
     def __init__(self):
@@ -46,8 +48,8 @@ class SqlSearchService(Index):
 class SqlIndexUnitOfWork(IndexUnitOfWork):
     @classmethod
     def from_dict(cls, **kwargs):
-        print(f"SqlIndexUnitOfWork.from_dict: kwargs = {kwargs}")
-        return cls()
+        logger.debug(f"SqlIndexUnitOfWork.from_dict: kwargs = {kwargs}")
+        return cls(**kwargs)
 
     def __init__(
         self,

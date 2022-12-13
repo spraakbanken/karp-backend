@@ -24,8 +24,7 @@ class TestCliResourceLifetime:
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepositry)
-
+        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepositry)  # type: ignore [misc]
         entry_repo = entry_repo_repo.get_by_name("lexlex")
         assert entry_repo is not None
 
@@ -42,8 +41,7 @@ class TestCliResourceLifetime:
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)
-
+        resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)  # type: ignore [misc]
         assert resource_repo.get_by_resource_id("lexlex") is not None
 
     @pytest.mark.xfail(reason="not ready")
@@ -59,8 +57,7 @@ class TestCliResourceLifetime:
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepositry)
-
+        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepositry)  # type: ignore [misc]
         entry_repo = entry_repo_repo.get_by_name("lexlex")
         assert entry_repo is not None
 
@@ -76,7 +73,6 @@ class TestCliResourceLifetime:
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)
-
+        resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)  # type: ignore [misc]
         resource_lexlex = resource_repo.get_by_resource_id("lexlex")
         assert resource_lexlex.entry_repository_id == entry_repo.entity_id

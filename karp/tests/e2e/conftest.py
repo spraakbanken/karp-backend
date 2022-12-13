@@ -7,7 +7,7 @@ from karp import auth, config
 import os
 import json
 import typing
-from typing import Dict, Generator
+from typing import Any, Dict, Generator, Optional, Tuple
 
 from fastapi import FastAPI
 from typer import Typer
@@ -53,11 +53,11 @@ def sqlite_session_factory(in_memory_sqlite_db):
     yield sessionmaker(bind=in_memory_sqlite_db)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def setup_environment() -> None:
-    os.environ['TESTING'] = '1'
-    os.environ['AUTH_JWT_PUBKEY_PATH'] = 'karp/tests/data/pubkey.pem'
-    os.environ['ELASTICSEARCH_HOST'] = 'localhost:9202'
+    os.environ["TESTING"] = "1"
+    os.environ["AUTH_JWT_PUBKEY_PATH"] = "karp/tests/data/pubkey.pem"
+    os.environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 
 
 @pytest.fixture(scope="session")
@@ -70,19 +70,22 @@ def apply_migrations(setup_environment: None):
     yield
 
 
-@pytest.fixture(scope='session', name='runner')
+@pytest.fixture(scope="session", name="runner")
 def fixture_runner() -> CliRunner:
     return CliRunner()
 
 
-@pytest.fixture(scope='session', name='cliapp')
+@pytest.fixture(scope="session", name="cliapp")
 def fixture_cliapp() -> Typer:
     from karp.cliapp.main import create_app
+
     return create_app()
 
 
-@pytest.fixture(name="app", scope='session')
-def fixture_app(apply_migrations: None, init_search_service: None) -> Generator[FastAPI, None, None]:
+@pytest.fixture(name="app", scope="session")
+def fixture_app(
+    apply_migrations: None, init_search_service: None
+) -> Generator[FastAPI, None, None]:
     from karp.webapp.main import create_app
 
     app = create_app()
@@ -92,15 +95,16 @@ def fixture_app(apply_migrations: None, init_search_service: None) -> Generator[
     app = None
 
 
-@pytest.fixture(name='app_context', scope='session')
+@pytest.fixture(name="app_context", scope="session")
 def fixture_app_context(app: FastAPI) -> AppContext:
     return app.state.app_context
 
 
-@pytest.fixture(name='fa_client', scope='session')
+@pytest.fixture(name="fa_client", scope="session")
 def fixture_client(app: FastAPI) -> Generator[TestClient, None, None]:
     with TestClient(app) as client:
         yield client
+
 
 #     async with LifespanManager(app):
 #         async with AsyncClient(
@@ -116,36 +120,45 @@ def create_and_publish_resource(
     *,
     path_to_config: str,
     access_token: auth.AccessToken,
-):
+) -> Tuple[bool, Optional[dict[str, Any]]]:
     from karp.webapp.schemas import ResourceCreate
 
     with open(path_to_config) as fp:
         resource_config = json.load(fp)
 
-    resource_id = resource_config.pop('resource_id')
+    resource_id = resource_config.pop("resource_id")
     resource = ResourceCreate(
         resource_id=resource_id,
-        name=resource_config.pop('resource_name'),
+        name=resource_config.pop("resource_name"),
         config=resource_config,
-        message=f'{resource_id} added',
+        message=f"{resource_id} added",
     )
     response = client.post(
-        '/resources/',
+        "/resources/",
         json=resource.dict(),
         headers=access_token.as_header(),
     )
-    print(f'{response.json()=}')
-    assert response.status_code == 201
+    if response.status_code != 201:
+        return False, {
+            "error": f"Failed create resource: unexpected status_code: {response.status_code} != 201 ",
+            "response.json": response.json(),
+        }
 
     response = client.post(
-        f'/resources/{resource_id}/publish',
+        f"/resources/{resource_id}/publish",
         json={
-            'message': f'{resource_id} published',
+            "message": f"{resource_id} published",
+            "version": 1,
         },
         headers=access_token.as_header(),
     )
-    print(f'{response.json()=}')
-    assert response.status_code == 200
+    if response.status_code != 200:
+        return False, {
+            "error": f"Failed publish resource: unexpected status_code: {response.status_code} != 200 ",
+            "response.json": response.json(),
+        }
+
+    return True, None
 
 
 @pytest.fixture(scope="session", name="fa_data_client")
@@ -153,16 +166,18 @@ def fixture_fa_data_client(
     fa_client,
     admin_token: auth.AccessToken,
 ):
-    create_and_publish_resource(
+    ok, msg = create_and_publish_resource(
         fa_client,
-        path_to_config='karp/tests/data/config/places.json',
+        path_to_config="karp/tests/data/config/places.json",
         access_token=admin_token,
     )
-    create_and_publish_resource(
+    assert ok, msg
+    ok, msg = create_and_publish_resource(
         fa_client,
-        path_to_config='karp/tests/data/config/municipalities.json',
+        path_to_config="karp/tests/data/config/municipalities.json",
         access_token=admin_token,
     )
+    assert ok, msg
     utils.add_entries(
         fa_client,
         {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
@@ -172,7 +187,7 @@ def fixture_fa_data_client(
     return fa_client
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def auth_levels() -> typing.Dict[str, int]:
     curr_level = 10
     levels = {}
@@ -183,87 +198,87 @@ def auth_levels() -> typing.Dict[str, int]:
     return levels
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def user1_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
     return create_bearer_token(
-        user='user1',
+        user="user1",
         levels=auth_levels,
         scope={
-            'lexica': {
-                'places': auth_levels[auth.PermissionLevel.write],
+            "lexica": {
+                "places": auth_levels[auth.PermissionLevel.write],
             }
-        }
+        },
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def user2_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
     return create_bearer_token(
-        user='user2',
+        user="user2",
         levels=auth_levels,
         scope={
-            'lexica': {
-                'places': auth_levels[auth.PermissionLevel.write],
+            "lexica": {
+                "places": auth_levels[auth.PermissionLevel.write],
             }
-        }
+        },
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def user4_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
     return create_bearer_token(
-        user='user4',
+        user="user4",
         levels=auth_levels,
         scope={
-            'lexica': {
-                'places': auth_levels[auth.PermissionLevel.admin],
+            "lexica": {
+                "places": auth_levels[auth.PermissionLevel.admin],
             }
-        }
+        },
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def admin_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
     return create_bearer_token(
-        user='alice@example.com',
+        user="alice@example.com",
         levels=auth_levels,
         scope={
-            'lexica': {
-                'places': auth_levels[auth.PermissionLevel.admin],
-                'test_resource': auth_levels[auth.PermissionLevel.admin],
-                'municipalities': auth_levels[auth.PermissionLevel.admin],
+            "lexica": {
+                "places": auth_levels[auth.PermissionLevel.admin],
+                "test_resource": auth_levels[auth.PermissionLevel.admin],
+                "municipalities": auth_levels[auth.PermissionLevel.admin],
             }
-        }
+        },
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def read_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
     return create_bearer_token(
-        user='bob@example.com',
+        user="bob@example.com",
         levels=auth_levels,
         scope={
-            'lexica': {
-                'places': auth_levels[auth.PermissionLevel.read],
-                'test_resource': auth_levels[auth.PermissionLevel.read],
-                'municipalities': auth_levels[auth.PermissionLevel.read],
+            "lexica": {
+                "places": auth_levels[auth.PermissionLevel.read],
+                "test_resource": auth_levels[auth.PermissionLevel.read],
+                "municipalities": auth_levels[auth.PermissionLevel.read],
             }
-        }
+        },
     )
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def write_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
     return create_bearer_token(
-        user='charlie@example.com',
+        user="charlie@example.com",
         levels=auth_levels,
         scope={
-            'lexica': {
-                'places': auth_levels[auth.PermissionLevel.write],
-                'test_resource': auth_levels[auth.PermissionLevel.write],
-                'municipalities': auth_levels[auth.PermissionLevel.write],
+            "lexica": {
+                "places": auth_levels[auth.PermissionLevel.write],
+                "test_resource": auth_levels[auth.PermissionLevel.write],
+                "municipalities": auth_levels[auth.PermissionLevel.write],
             }
-        }
+        },
     )
 
 
@@ -276,9 +291,8 @@ def fixture_init_search_service():
         yield
     else:
         if not config.TEST_ES_HOME:
-            raise RuntimeError(
-                "must set ES_HOME to run tests that use elasticsearch")
-        es_port = int(os.environ.get('TEST_ELASTICSEARCH_PORT', '9202'))
+            raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
+        es_port = int(os.environ.get("TEST_ELASTICSEARCH_PORT", "9202"))
         with elasticsearch_test.ElasticsearchTest(
             port=es_port, es_path=config.TEST_ES_HOME
         ):

@@ -3,12 +3,12 @@ from typing import Iterable, Optional
 
 import pydantic
 
-from karp.foundation.value_objects import UniqueId
+from karp.foundation.value_objects import UniqueIdStr
 
 
 class EntryRepoDto(pydantic.BaseModel):
     name: str
-    entity_id: UniqueId
+    entity_id: UniqueIdStr
     repository_type: str
 
 

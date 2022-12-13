@@ -1,5 +1,6 @@
 import logging
 from typing import Optional
+import uuid
 
 from fastapi import (
     APIRouter,
@@ -14,7 +15,10 @@ from fastapi import (
 )
 import pydantic
 from starlette import responses
+from karp.foundation.value_objects import unique_id
+from karp.foundation.value_objects.unique_id import UniqueIdStr
 
+from karp.lex.domain.value_objects import UniqueId
 from karp import errors as karp_errors, auth, lex, search
 from karp.lex.application.queries import EntryDto, GetEntryHistory
 from karp.lex.domain import commands, errors
@@ -33,10 +37,9 @@ logger = logging.getLogger(__name__)
     "/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"]
 )
 @router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
-# @auth.auth.authorization("ADMIN")
 def get_history_for_entry(
     resource_id: str,
-    entry_id: str,
+    entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
@@ -56,15 +59,21 @@ def get_history_for_entry(
             "user": user.identifier,
         },
     )
-    historical_entry = get_entry_history.query(resource_id, entry_id, version=version)
-
-    return historical_entry
+    return get_entry_history.query(resource_id, entry_id, version=version)
 
 
 @router.post(
-    "/{resource_id}/add", status_code=status.HTTP_201_CREATED, tags=["Editing"]
+    "/{resource_id}/add",
+    status_code=status.HTTP_201_CREATED,
+    tags=["Editing"],
+    response_model=schemas.EntryAddResponse,
 )
-@router.put("/{resource_id}", status_code=status.HTTP_201_CREATED, tags=["Editing"])
+@router.put(
+    "/{resource_id}",
+    status_code=status.HTTP_201_CREATED,
+    tags=["Editing"],
+    response_model=schemas.EntryAddResponse,
+)
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
@@ -106,7 +115,7 @@ def add_entry(
             },
         )
 
-    return {"newID": new_entry.entry_id, "entityID": new_entry.entity_id}
+    return {"newID": new_entry.entity_id}
 
 
 @router.post("/{resource_id}/preview")
@@ -138,12 +147,20 @@ def preview_entry(
         return preview_entry.query(input_dto)
 
 
-@router.post("/{resource_id}/{entry_id}/update", tags=["Editing"])
-@router.post("/{resource_id}/{entry_id}", tags=["Editing"])
+@router.post(
+    "/{resource_id}/{entry_id}/update",
+    tags=["Editing"],
+    response_model=schemas.EntryAddResponse,
+)
+@router.post(
+    "/{resource_id}/{entry_id}",
+    tags=["Editing"],
+    response_model=schemas.EntryAddResponse,
+)
 def update_entry(
     response: Response,
     resource_id: str,
-    entry_id: str,
+    entry_id: UniqueIdStr,
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
@@ -176,7 +193,7 @@ def update_entry(
         entry = updating_entry_uc.execute(
             commands.UpdateEntry(
                 resource_id=resource_id,
-                entry_id=entry_id,
+                entity_id=unique_id.parse(entry_id),
                 version=data.version,
                 user=user.identifier,
                 message=data.message,
@@ -195,7 +212,7 @@ def update_entry(
         #     message=data.message,
         #     # force=force_update,
         # )
-        return {"newID": entry.entry_id, "entityID": entry.entity_id}
+        return {"newID": entry.entity_id}
     except errors.EntryNotFound:
         return responses.JSONResponse(
             status_code=404,
@@ -207,9 +224,10 @@ def update_entry(
             },
         )
     except errors.UpdateConflict as err:
-        response.status_code = status.HTTP_400_BAD_REQUEST
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
-        return err.error_obj
+        return responses.JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj
+        )
     except Exception as err:
         logger.exception(
             "error occured",
@@ -230,7 +248,7 @@ def update_entry(
 )
 def delete_entry(
     resource_id: str,
-    entry_id: str,
+    entry_id: UniqueIdStr,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
     deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry)),
@@ -246,7 +264,7 @@ def delete_entry(
         deleting_entry_uc.execute(
             commands.DeleteEntry(
                 resource_id=resource_id,
-                entry_id=entry_id,
+                entity_id=unique_id.parse(entry_id),
                 user=user.identifier,
             )
         )
@@ -257,7 +275,7 @@ def delete_entry(
                 "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
                 "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
                 "resource": resource_id,
-                "entry_id": entry_id,
+                "entity_id": entry_id,
             },
         )
     return

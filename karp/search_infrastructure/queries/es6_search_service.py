@@ -7,7 +7,6 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 import elasticsearch
 import elasticsearch.helpers  # pyre-ignore
 import elasticsearch_dsl as es_dsl  # pyre-ignore
-import logging
 from tatsu import exceptions as tatsu_exc
 
 from karp import search
@@ -15,7 +14,6 @@ from karp import search
 # from karp import query_dsl
 from karp.search.application.queries import (
     QueryRequest,
-    SearchService,
 )
 from karp.search.domain import errors
 from karp.search.domain.errors import (

@@ -47,6 +47,7 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
     sort: List[str] = pydantic.Field(default_factory=list)
 
     @pydantic.validator("resource_ids", pre=True)
+    @classmethod
     def split_str(cls, v):
         if isinstance(v, str):
             return v.split(",")

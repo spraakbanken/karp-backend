@@ -1,0 +1,1 @@
+* [Add resource](tutorials/add-resource.md)

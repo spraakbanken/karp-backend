@@ -1,9 +1,5 @@
-import collections
-import json
 import logging
 
-# from karp.infrastructure.unit_of_work import unit_of_work
-import sys
 import typing
 from typing import Dict, List, Optional, Tuple, Iterable
 
@@ -18,31 +14,12 @@ from karp.search.application.queries import ResourceViews
 from karp.search.application.repositories import IndexUnitOfWork
 from karp.search.application.transformers import EntryTransformer, PreProcessor
 
-# from .search_service import SearchServiceModule
-# import karp.resourcemgr as resourcemgr
-# import karp.resourcemgr.entryread as entryread
-# from karp.resourcemgr.resource import Resource
-from karp import errors as karp_errors
 from karp.lex.domain import events, entities
 
 # , errors, events, search_service, model
 from karp.search.domain import commands
 
-# from karp.search.domain.search_service import SearchService, IndexEntry
-from karp.lex.domain.entities.entry import Entry, create_entry
-
-# from karp.domain.models.resource import Resource
-# from karp.domain.repository import ResourceRepository
-# from karp.services import context, network_handlers
-
-# from karp.domain.services import network
-
-
-# from karp.resourcemgr.entrymetadata import EntryMetadata
-
-# search_serviceer = SearchServiceModule()
-
-logger = logging.getLogger("karp")
+logger = logging.getLogger(__name__)
 
 
 # def pre_process_resource(
@@ -125,32 +102,6 @@ class ReindexingResource(foundation_commands.CommandHandler[commands.ReindexReso
             uw.commit()
 
 
-def research_service(
-    evt: events.ResourcePublished,
-):
-    print("creating search_service ...")
-    search_service_name = search_serviceer.create_search_service(
-        resource.resource_id, resource.config
-    )
-
-    if not search_entries:
-        print("preprocessing entries ...")
-        search_entries = pre_process_resource(resource, resource_repo, search_serviceer)
-    print(f"adding entries to '{search_service_name}' ...")
-    # add_entries(
-    #     resource_repo,
-    #     search_serviceer,
-    #     resource,
-    #     search_entries,
-    #     search_service_name=search_service_name,
-    #     update_refs=False,
-    # )
-    search_serviceer.add_entries(search_service_name, search_entries)
-    print("publishing ...")
-    search_serviceer.publish_search_service(resource.resource_id, search_service_name)
-
-
-# def publish_search_service(resource_id: str, version: Optional[int] = None) -> None:
 class ResourcePublishedHandler(
     foundation_events.EventHandler[lex_events.ResourcePublished]
 ):
@@ -159,13 +110,13 @@ class ResourcePublishedHandler(
 
     def __call__(
         self,
-        evt: events.ResourcePublished,
+        event: events.ResourcePublished,
         *args,
         **kwargs,
     ) -> None:
-        # research_service(evt, ctx)
+        # research_service(event, ctx)
         with self.index_uow as uw:
-            uw.repo.publish_index(evt.resource_id)
+            uw.repo.publish_index(event.resource_id)
             uw.commit()
         # if version:
         #     resourcemgr.publish_resource(resource_id, version)
@@ -220,28 +171,28 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
 
     def __call__(
         self,
-        evt: events.EntryAdded,
+        event: events.EntryAdded,
         *args,
         **kwargs,
     ):
         with self.index_uow as uw:
 
-            for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
+            for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 entry = EntryDto(
-                    entity_id=evt.entity_id,
-                    entry_id=evt.entry_id,
-                    repository_id=evt.repo_id,
+                    entity_id=event.entity_id,
+                    # entry_id=event.entry_id,
+                    repository_id=event.repo_id,
                     resource=resource_id,
-                    entry=evt.body,
-                    message=evt.message,
-                    last_modified=evt.timestamp,
-                    last_modified_by=evt.user,
+                    entry=event.body,
+                    message=event.message,
+                    last_modified=event.timestamp,
+                    last_modified_by=event.user,
                     version=1,
                 )
                 uw.repo.add_entries(
                     resource_id, [self.entry_transformer.transform(resource_id, entry)]
                 )
-                self.entry_transformer.update_references(resource_id, [evt.entry_id])
+                # self.entry_transformer.update_references(resource_id, [event.entry_id])
             uw.commit()
 
 
@@ -258,68 +209,31 @@ class EntryUpdatedHandler(foundation_events.EventHandler[lex_events.EntryUpdated
 
     def __call__(
         self,
-        evt: events.EntryUpdated,
+        event: events.EntryUpdated,
         *args,
         **kwargs,
     ):
         with self.index_uow as uw:
 
-            for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
+            for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 entry = EntryDto(
-                    entity_id=evt.entity_id,
-                    entry_id=evt.entry_id,
-                    repository_id=evt.repo_id,
+                    entity_id=event.entity_id,
+                    # entry_id=event.entry_id,
+                    repository_id=event.repo_id,
                     resource=resource_id,
-                    entry=evt.body,
-                    message=evt.message,
-                    last_modified=evt.timestamp,
-                    last_modified_by=evt.user,
-                    version=evt.version,
+                    entry=event.body,
+                    message=event.message,
+                    last_modified=event.timestamp,
+                    last_modified_by=event.user,
+                    version=event.version,
                 )
                 uw.repo.add_entries(
                     resource_id, [self.entry_transformer.transform(resource_id, entry)]
                 )
-                self.entry_transformer.update_references(resource_id, [evt.entry_id])
+                self.entry_transformer.update_references(resource_id, [event.entity_id])
             uw.commit()
-            # add_entries(evt.resource_id, [entry], ctx)
+            # add_entries(event.resource_id, [entry], ctx)
             # ctx.index_uow.commit()
-
-    # def add_entries(
-    #     resource_repo: ResourceRepository,
-    #     search_serviceer: SearchService,
-    #     resource: Resource,
-    #     entries: List[Entry],
-    #     *,
-    #     update_refs: bool = True,
-    #     search_service_name: Optional[str] = None,
-    # ) -> None:
-
-
-def add_entries(
-    resource_id: str,
-    entries: typing.List[entities.Entry],
-    *,
-    update_refs: bool = True,
-    search_service_name: typing.Optional[str] = None,
-):
-    if not search_service_name:
-        search_service_name = resource_id
-    with ctx.index_uow:
-        with ctx.resource_uow:
-            resource = ctx.resource_uow.repo.by_resource_id(resource_id)
-            if not resource:
-                raise errors.ResourceNotFound(resource_id)
-            ctx.index_uow.repo.add_entries(
-                search_service_name,
-                [
-                    transform_to_search_service_entry(resource, entry, ctx)
-                    for entry in entries
-                ],
-            )
-            if update_refs:
-                _update_references(resource, entries, ctx)
-            ctx.resource_uow.commit()
-        ctx.index_uow.commit()
 
 
 class EntryDeletedHandler(foundation_events.EventHandler[lex_events.EntryDeleted]):
@@ -333,9 +247,10 @@ class EntryDeletedHandler(foundation_events.EventHandler[lex_events.EntryDeleted
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
 
-    def __call__(self, evt: events.EntryDeleted):
+    def __call__(self, event: events.EntryDeleted):
         with self.index_uow as uw:
-            for resource_id in self.resource_views.get_resource_ids(evt.repo_id):
-                uw.repo.delete_entry(resource_id, entry_id=evt.entry_id)
-                self.entry_transformer.update_references(resource_id, [evt.entry_id])
+            for resource_id in self.resource_views.get_resource_ids(event.repo_id):
+                # uw.repo.delete_entry(resource_id, entry_id=event.entry_id)
+                uw.repo.delete_entry(resource_id, entry_id=event.entity_id)
+                self.entry_transformer.update_references(resource_id, [event.entity_id])
             uw.commit()

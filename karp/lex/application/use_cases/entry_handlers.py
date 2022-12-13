@@ -45,23 +45,23 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(command.resource_id)
 
-        try:
-            entry_id = resource.id_getter()(command.entry)
-        except KeyError as err:
-            raise errors.MissingIdField(
-                resource_id=command.resource_id, entry=command.entry
-            ) from err
+        # try:
+        #     entry_id = resource.id_getter()(command.entry)
+        # except KeyError as err:
+        #     raise errors.MissingIdField(
+        #         resource_id=command.resource_id, entry=command.entry
+        #     ) from err
         entry_schema = EntrySchema(resource.entry_json_schema)
 
         with self.get_entry_uow(resource.entry_repository_id) as uw:
-            existing_entry = uw.repo.get_by_entry_id_optional(entry_id)
+            existing_entry = uw.repo.get_by_id_optional(command.entity_id)
             if (
                 existing_entry
                 and not existing_entry.discarded
                 and existing_entry.entity_id != command.entity_id
             ):
                 raise errors.IntegrityError(
-                    f"An entry with entry_id '{entry_id}' already exists."
+                    f"An entry with entry_id '{command.entity_id}' already exists."
                 )
 
             entry_schema.validate_entry(command.entry)
@@ -71,6 +71,7 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
                 user=command.user,
                 message=command.message,
                 entity_id=command.entity_id,
+                timestamp=command.timestamp,
             )
             uw.entries.save(entry)
             uw.commit()
@@ -87,12 +88,11 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
 
         with self.get_entry_uow(resource.entry_repository_id) as uw:
             try:
-                current_db_entry = uw.repo.by_entry_id(command.entry_id)
+                current_db_entry = uw.repo.by_id(command.entity_id)
             except errors.EntryNotFound as err:
                 raise errors.EntryNotFound(
                     command.resource_id,
-                    command.entry_id,
-                    entity_id=None,
+                    entity_id=command.entity_id,
                 ) from err
 
             diff = jsondiff.compare(current_db_entry.body, command.entry)
@@ -116,26 +116,30 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
                 )
                 raise errors.UpdateConflict(diff)
 
-            id_getter = resource.id_getter()
-            new_entry_id = id_getter(command.entry)
-
-            current_db_entry.body = command.entry
-            current_db_entry.stamp(
-                command.user, message=command.message, timestamp=command.timestamp
+            # id_getter = resource.id_getter()
+            # new_entry_id = id_getter(command.entry)
+            current_db_entry.update_body(
+                command.entry,
+                user=command.user,
+                message=command.message,
+                timestamp=command.timestamp,
             )
-            if new_entry_id != command.entry_id:
-                logger.info(
-                    "updating entry_id",
-                    extra={
-                        "entry_id": command.entry_id,
-                        "new_entry_id": new_entry_id,
-                    },
-                )
-                current_db_entry.entry_id = new_entry_id
-                # uw.repo.move(current_db_entry, old_entry_id=command.entry_id)
-                uw.repo.save(current_db_entry)
-            else:
-                uw.repo.save(current_db_entry)
+            # current_db_entry.stamp(
+            #     command.user, message=command.message, timestamp=command.timestamp
+            # )
+            # if new_entry_id != command.entry_id:
+            #     logger.info(
+            #         "updating entry_id",
+            #         extra={
+            #             "entry_id": command.entry_id,
+            #             "new_entry_id": new_entry_id,
+            #         },
+            #     )
+            #     current_db_entry.entry_id = new_entry_id
+            #     # uw.repo.move(current_db_entry, old_entry_id=command.entry_id)
+            #     uw.repo.save(current_db_entry)
+            # else:
+            uw.repo.save(current_db_entry)
             uw.commit()
 
         return current_db_entry
@@ -201,10 +205,10 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
                     message=command.message,
                     entity_id=unique_id.make_unique_id(),
                 )
-                existing_entry = uw.repo.get_by_entry_id_optional(entry.entry_id)
+                existing_entry = uw.repo.get_by_id_optional(entry.entity_id)
                 if existing_entry and not existing_entry.discarded:
                     raise errors.IntegrityError(
-                        f"An entry with entry_id '{entry.entry_id}' already exists."
+                        f"An entry with entry_id '{entry.entity_id}' already exists."
                     )
                 uw.entries.save(entry)
                 created_db_entries.append(entry)
@@ -261,16 +265,17 @@ class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):
                     entity_id=entry_raw.get("entity_id") or unique_id.make_unique_id(),
                     timestamp=entry_raw.get("last_modified"),
                 )
-                existing_entry = uw.repo.get_by_entry_id_optional(entry.entry_id)
-                if existing_entry and not existing_entry.discarded:
-                    integrity_error = errors.IntegrityError(
-                        f"An entry with entry_id '{entry.entry_id}' already exists."
-                    )
-                    if entity_id := entry_raw.get("entity_id"):
-                        if entity_id != existing_entry.entity_id:
-                            raise integrity_error
-                    else:
-                        raise integrity_error
+                # if entity_id := entry_raw.get("entity_id"):
+                #     existing_entry = uw.repo.get_by_id_optional(entity_id)
+                #     if existing_entry and not existing_entry.discarded:
+                #         raise errors.IntegrityError(
+                #             f"An entry with entry_id '{entry.entity_id}' already exists."
+                #         )
+
+                #             if entity_id != existing_entry.entity_id:
+                #                 raise integrity_error
+                #         else:
+                #             raise integrity_error
                 uw.entries.save(entry)
                 created_db_entries.append(entry)
 
@@ -289,7 +294,7 @@ class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             resource.entry_repository_id
         ) as uw:
-            entry = uw.repo.by_entry_id(command.entry_id)
+            entry = uw.repo.by_id(command.entity_id)
 
             entry.discard(
                 user=command.user,

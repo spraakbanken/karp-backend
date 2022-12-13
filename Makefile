@@ -82,9 +82,6 @@ serve: install-dev
 serve-w-reload: install-dev
 	${INVENV} uvicorn --reload asgi:app
 
-lint-syntax-errors: install-dev
-	${INVENV} flake8 karp karp/tests setup.py run.py --count --select=E9,F63,F7,F82 --show-source --statistics ${FLAKE8_FLAGS}
-
 check-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
 
@@ -101,11 +98,11 @@ unit-tests:
 	${INVENV} pytest -vv karp/tests/unit karp/tests/foundation/unit
 
 .PHONY: e2e-tests
-e2e-tests: install-dev clean-pyc
+e2e-tests: clean-pyc
 	${INVENV} pytest -vv karp/tests/e2e
 
 .PHONY: run-e2e-tests-w-coverage
-e2e-tests-w-coverage: install-dev clean-pyc
+e2e-tests-w-coverage: clean-pyc
 	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/e2e
 
 .PHONY: integration-tests
@@ -130,7 +127,8 @@ tox-to-log:
 	tox > tox.log
 
 lint:
-	${INVENV} pylint --rcfile=pylintrc karp asgi.py
+	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex asgi.py karp/cliapp karp/webapp
+	# ${INVENV} pylint --rcfile=pylintrc karp asgi.py
 
 lint-no-fail: install-dev
 	${INVENV} pylint --rcfile=pylintrc --exit-zero karp asgi.py

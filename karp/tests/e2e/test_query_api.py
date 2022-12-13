@@ -19,7 +19,8 @@ def extract_names_set(entries):
 
 
 def _test_path(
-    client, path: str,
+    client,
+    path: str,
     expected_result: List[str],
     *,
     access_token: Optional[auth.AccessToken] = None,
@@ -30,7 +31,7 @@ def _test_path(
             headers = access_token.as_header()
         else:
             headers.extend(access_token.as_header())
-    kwargs = {'headers': headers} if headers else {}
+    kwargs = {"headers": headers} if headers else {}
 
     entries = get_json(client, path, **kwargs)
 
@@ -59,7 +60,7 @@ def _test_path_has_expected_length(
             headers = access_token.as_header()
         else:
             headers.extend(access_token.as_header())
-    kwargs = {'headers': headers} if headers else {}
+    kwargs = {"headers": headers} if headers else {}
 
     entries = get_json(client, path, **kwargs)
 
@@ -81,7 +82,7 @@ def _test_against_entries(
             headers = access_token.as_header()
         else:
             headers.extend(access_token.as_header())
-    kwargs = {'headers': headers} if headers else {}
+    kwargs = {"headers": headers} if headers else {}
 
     entries = get_json(client, path, **kwargs)
     names = extract_names(entries)
@@ -119,7 +120,7 @@ def _test_against_entries_general(
             headers = access_token.as_header()
         else:
             headers.update(access_token.as_header())
-    kwargs = {'headers': headers} if headers else {}
+    kwargs = {"headers": headers} if headers else {}
 
     entries = get_json(client, path, **kwargs)
     names = extract_names(entries)
@@ -147,8 +148,8 @@ def _test_against_entries_general(
 
 class TestQuery:
     def test_route_exist(self, fa_data_client):
-        response = fa_data_client.get('/query/places')
-        print(f'{response.json()=}')
+        response = fa_data_client.get("/query/places")
+        print(f"{response.json()=}")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
@@ -157,16 +158,16 @@ def test_query_no_q(
     read_token: auth.AccessToken,
     app_context,
 ):
-    resource = 'places'
+    resource = "places"
     entries = get_json(
         fa_data_client,
-        f'/query/{resource}',
+        f"/query/{resource}",
         headers=read_token.as_header(),
     )
 
     names = extract_names(entries)
 
-    entry_views = app_context.container.get(EntryViews)
+    entry_views = app_context.container.get(EntryViews)  # type: ignore [misc]
     expected_result = {}
     expected_total = entry_views.get_total(resource)
     print(f"entries = {entries}")
@@ -204,15 +205,14 @@ def test_query_split(
     fa_data_client,
     read_token: auth.AccessToken,
 ):
-    resources = ['places', 'municipalities']
+    resources = ["places", "municipalities"]
     entries = get_json(
         fa_data_client,
-        "/query/split/{}".format(','.join(resources)),
+        "/query/split/{}".format(",".join(resources)),
         headers=read_token.as_header(),
     )
 
-    entry_views = fa_data_client.app.state.app_context.container.get(
-        EntryViews)
+    entry_views = fa_data_client.app.state.app_context.container.get(EntryViews)
     expected_result = {}
     for resource in resources:
         expected_result[resource] = entry_views.get_total(resource)
@@ -220,7 +220,7 @@ def test_query_split(
     # assert entries["distribution"] == {"municipalities": 3, "places": 22}
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "queries,expected_result",
     [
@@ -281,26 +281,26 @@ def test_contains(
     value,
     app_context,
 ):
-    query = f'/query/places?q=contains|{field}|{value}'
-    entry_views = app_context.container.get(EntryViews)
+    query = f"/query/places?q=contains|{field}|{value}"
+    entry_views = app_context.container.get(EntryViews)  # type: ignore [misc]
     expected_result = []
-    real_field = field.split('.raw')[0]
+    real_field = field.split(".raw")[0]
     if real_field == field:
         analyzed_value = value
     else:
         analyzed_value = value.lower()
-    print(f'{value=} {analyzed_value=}')
-    for entry in entry_views.all_entries('places'):
-        print(f'{entry=}')
-        print(f'{entry.entry=}')
-        print(f'{entry.entry.get(real_field, None)=}')
-        if analyzed_value in entry.entry.get(real_field, '').lower():
-            expected_result.append(entry.entry['name'])
-    print(f'{expected_result=}')
+    print(f"{value=} {analyzed_value=}")
+    for entry in entry_views.all_entries("places"):
+        print(f"{entry=}")
+        print(f"{entry.entry=}")
+        print(f"{entry.entry.get(real_field, None)=}")
+        if analyzed_value in entry.entry.get(real_field, "").lower():
+            expected_result.append(entry.entry["name"])
+    print(f"{expected_result=}")
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "fields,values,expected_result",
     [(("name", "v_larger_place.name"), ("vi", "vi"), ["Bjurvik"])],
@@ -315,7 +315,8 @@ def test_contains_and_separate_calls(
     for field, value in zip(fields, values):
         query = f"/query/places?q=contains|{field}|{value}"
         entries = get_json(
-            fa_data_client, query,
+            fa_data_client,
+            query,
         )
         if not names:
             print("names is empty")
@@ -330,7 +331,7 @@ def test_contains_and_separate_calls(
         assert expected in names
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,value,expected_result",
     [
@@ -368,7 +369,7 @@ def test_endswith(fa_data_client, field: str, value, expected_result: List[str])
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,value,expected_result",
     [
@@ -406,7 +407,7 @@ def test_equals(fa_data_client, field: str, value, expected_result: List[str]):
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,expected_result",
     [
@@ -414,7 +415,7 @@ def test_equals(fa_data_client, field: str, value, expected_result: List[str]):
         #     "|and|v_larger_place|v_smaller_places",
         #     ["Bjurvik", "Hambo", "Botten test", "Alhamn", "Grund test"],
         # ),
-        ('name', [])
+        ("name", [])
     ],
 )
 def test_exists(fa_data_client, field: str, expected_result: List[str]):
@@ -422,7 +423,7 @@ def test_exists(fa_data_client, field: str, expected_result: List[str]):
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,expected_result",
     [
@@ -461,7 +462,7 @@ def test_freergxp(fa_data_client, field: str, expected_result: List[str]):
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,expected_result",
     [
@@ -504,7 +505,7 @@ def test_freetext(fa_data_client, field: str, expected_result: List[str]):
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,value,expected_n_hits",
     [
@@ -555,7 +556,7 @@ def test_gt(fa_data_client, field, value, expected_n_hits):
     # _test_against_entries(fa_data_client, query, field, lambda x: value[-1] < x)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,value,expected_n_hits",
     [
@@ -588,7 +589,7 @@ def test_gte(fa_data_client, field, value, expected_n_hits):
     # _test_against_entries(fa_data_client, query, field, lambda x: value[-1] <= x)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,value,expected_n_hits",
     [
@@ -621,7 +622,7 @@ def test_lt(fa_data_client, field, value, expected_n_hits: int):
     # _test_against_entries(fa_data_client, query, field, lambda x: x < value[-1])
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,value,expected_n_hits",
     [
@@ -773,58 +774,55 @@ def test_binary_range_1st_arg_and(
 #     query = f"/query/places?q={op}||or|{fields[0]}|{fields[1]}||{value[0]}"
 #     _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
 
-    # elif op == "gt":
-    #     _test_against_entries_general(
-    #         fa_data_client,
-    #         query,
-    #         fields,
-    #         lambda entry, fields: any(
-    #             f not in entry or value[-1] < entry[f] for f in fields
-    #         ),
-    #     )
-    # elif op == "gte":
-    #     _test_against_entries_general(
-    #         fa_data_client,
-    #         query,
-    #         fields,
-    #         lambda entry, fields: any(
-    #             f not in entry or value[-1] <= entry[f] for f in fields
-    #         ),
-    #     )
-    # elif op == "lt":
-    #     _test_against_entries_general(
-    #         fa_data_client,
-    #         query,
-    #         fields,
-    #         lambda entry, fields: any(
-    #             f in entry and entry[f] < value[-1] for f in fields
-    #         ),
-    #     )
-    # elif op == "lte":
-    #     _test_against_entries_general(
-    #         fa_data_client,
-    #         query,
-    #         fields,
-    #         lambda entry, fields: any(
-    #             f in entry and entry[f] <= value[-1] for f in fields
-    #         ),
-    #     )
-    # else:
-    #     pytest.fail(msg=f"Unknown range operator '{op}'")
+# elif op == "gt":
+#     _test_against_entries_general(
+#         fa_data_client,
+#         query,
+#         fields,
+#         lambda entry, fields: any(
+#             f not in entry or value[-1] < entry[f] for f in fields
+#         ),
+#     )
+# elif op == "gte":
+#     _test_against_entries_general(
+#         fa_data_client,
+#         query,
+#         fields,
+#         lambda entry, fields: any(
+#             f not in entry or value[-1] <= entry[f] for f in fields
+#         ),
+#     )
+# elif op == "lt":
+#     _test_against_entries_general(
+#         fa_data_client,
+#         query,
+#         fields,
+#         lambda entry, fields: any(
+#             f in entry and entry[f] < value[-1] for f in fields
+#         ),
+#     )
+# elif op == "lte":
+#     _test_against_entries_general(
+#         fa_data_client,
+#         query,
+#         fields,
+#         lambda entry, fields: any(
+#             f in entry and entry[f] <= value[-1] for f in fields
+#         ),
+#     )
+# else:
+#     pytest.fail(msg=f"Unknown range operator '{op}'")
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,lower,upper,expected_n_hits",
     [
         ("population", (3812,), (4133,), 1),
-        pytest.param("area", (6312,), (50000,), 1,
-                     marks=pytest.mark.xfail(reason="?")),
+        pytest.param("area", (6312,), (50000,), 1, marks=pytest.mark.xfail(reason="?")),
         # ("name", ("alhamn", "Alhamn"), ("bjurvik", "Bjurvik"), 2),
-        pytest.param("name", ("b", "B"), ("h", "H"),
-                     1, marks=pytest.mark.xfail),
-        pytest.param("name", ("Alhamn",), ("Bjurvik",),
-                     1, marks=pytest.mark.xfail),
+        pytest.param("name", ("b", "B"), ("h", "H"), 1, marks=pytest.mark.xfail),
+        pytest.param("name", ("Alhamn",), ("Bjurvik",), 1, marks=pytest.mark.xfail),
         pytest.param("name", ("B",), ("H",), 1, marks=pytest.mark.xfail),
         ("name.raw", ("Alhamn",), ("Bjurvik",), 1),
         pytest.param(
@@ -844,7 +842,7 @@ def test_and_gt_lt(fa_data_client, field, lower, upper, expected_n_hits):
     )
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "query,expected_n_hits", [("and(gt|name|alhamn||lt|name|bjurvik)", 2)]
 )
@@ -853,7 +851,7 @@ def test_and_gt_lt_expected_length(fa_data_client, query: str, expected_n_hits: 
     _test_path_has_expected_length(fa_data_client, path, expected_n_hits)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,expected_length",
     [
@@ -875,7 +873,7 @@ def test_missing(fa_data_client, field: str, expected_length: int):
     _test_path_has_expected_length(fa_data_client, query, expected_length)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "queries,expected_length",
     [
@@ -892,7 +890,7 @@ def test_not(fa_data_client, queries: str, expected_length: int):
     _test_path_has_expected_length(fa_data_client, query, expected_length)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "queries,expected_result",
     [
@@ -908,7 +906,7 @@ def test_or(fa_data_client, queries: List[str], expected_result: List[str]):
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,value,expected_result",
     [
@@ -929,7 +927,7 @@ def test_regexp(fa_data_client, field: str, value, expected_result: List[str]):
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "field,value,expected_result",
     [
@@ -949,65 +947,72 @@ def test_startswith(fa_data_client, field: str, value, expected_result: List[str
     _test_path(fa_data_client, query, expected_result)
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize(
     "query_str,expected_length",
     [
         ("contains|name|2", 6),
         pytest.param(
-            "contains|name||not|test", 20,
-            marks=pytest.mark.skip(reason='currently not supported')
+            "contains|name||not|test",
+            20,
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
-            "contains|name||not|test|bo", 19,
-            marks=pytest.mark.skip(reason='currently not supported')
+            "contains|name||not|test|bo",
+            19,
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         ("endswith|name|2", 1),
         pytest.param(
-            "endswith|name||not|vik", 19,
-            marks=pytest.mark.skip(reason='currently not supported')
+            "endswith|name||not|vik",
+            19,
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
-            "equals|area||not|6312", 18,
-            marks=pytest.mark.skip(reason='currently not supported')
+            "equals|area||not|6312",
+            18,
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         ("exists|density", 14),
         pytest.param(
             "exists||and|density|population",
             14,
-            marks=pytest.mark.skip(reason='currently not supported')
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
             "exists||or|density|population",
             15,
-            marks=pytest.mark.skip(reason='currently not supported')
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
-            "exists||not|density", 8,
-            marks=pytest.mark.skip(reason='currently not supported')
+            "exists||not|density",
+            8,
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
-            "freergxp||not|Gr.*", 19,
-            marks=pytest.mark.skip(reason='currently not supported')
+            "freergxp||not|Gr.*",
+            19,
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
             "freetext||not|botten",
             19,
-            marks=pytest.mark.skip(reason='currently not supported')
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
-            "freetext||not|botten|test", 17,
-            marks=pytest.mark.skip(reason='currently not supported')
+            "freetext||not|botten|test",
+            17,
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
             "regexp|name||not|.*est",
             20,
-            marks=pytest.mark.skip(reason='currently not supported')
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
         pytest.param(
             "startswith|name||not|te",
             20,
-            marks=pytest.mark.skip(reason='currently not supported')
+            marks=pytest.mark.skip(reason="currently not supported"),
         ),
     ],
 )
@@ -1026,7 +1031,7 @@ def test_response_has_correct_length(
 #     assert "403 FORBIDDEN" in names
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 def test_pagination_explicit_0_5(fa_data_client):
     # client = init_data(client_with_data_f, es, 30)
     resource = "places"
@@ -1076,7 +1081,7 @@ def test_pagination_explicit_0_5(fa_data_client):
 # #     assert len(json_data['hits']) == 45
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 def test_pagination_fewer(fa_data_client):
     # client = init_data(client_with_data_f, es, 5)
     resource = "places"
@@ -1113,7 +1118,7 @@ def test_pagination_fewer(fa_data_client):
 #     return client_with_data
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize("endpoint", ["query", "query/split"])
 @pytest.mark.parametrize(
     "query",
@@ -1131,7 +1136,7 @@ def test_distribution_in_result(fa_data_client, query: str, endpoint: str):
     assert "distribution" in result
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize("endpoint", ["query"])
 def test_sorting(fa_data_client, endpoint: str):
     result = get_json(
@@ -1145,7 +1150,7 @@ def test_sorting(fa_data_client, endpoint: str):
     )
 
 
-@pytest.mark.xfail(reason='unstable')
+@pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize("fields", [(["population"])])
 def test_query_include_fields(fa_data_client, fields: List[str]) -> None:
     result = get_json(
