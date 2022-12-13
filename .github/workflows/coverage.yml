@@ -75,12 +75,12 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: poetry install --no-root
+        run: make install-dev
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
-      - name: Install library
-        run: poetry install --no-interaction
+      # - name: Install library
+      #   run: poetry install --no-interaction
 
       - name: Setup up environment
         run: cp -v .env.ci .env
@@ -114,7 +114,7 @@ jobs:
           DB_USER: karp
           DB_PASSWORD: testing
           DB_HOST: 127.0.0.1
-          DB_PORT: ${{ job.services.mariadb.ports[3306] }}
+          DB_PORT: ${{ job.services.mariadb.ports['3306'] }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
