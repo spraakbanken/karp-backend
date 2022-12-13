@@ -298,7 +298,7 @@ class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):
 
             entry.discard(
                 user=command.user,
-                message=command.message or "discarded",
+                message=command.message or "Entry deleted.",
                 timestamp=command.timestamp,
             )
             uw.repo.save(entry)
