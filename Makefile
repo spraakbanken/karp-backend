@@ -117,7 +117,7 @@ unit-tests-w-coverage: clean-pyc
 integration-tests-w-coverage: clean-pyc
 	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/integration
 
-test-log: install-dev clean-pyc lint-syntax-errors
+test-log: clean-pyc lint-syntax-errors
 	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests > pytest.log
 
 tox:
@@ -130,30 +130,30 @@ lint:
 	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex asgi.py karp/cliapp karp/webapp
 	# ${INVENV} pylint --rcfile=pylintrc karp asgi.py
 
-lint-no-fail: install-dev
+lint-no-fail:
 	${INVENV} pylint --rcfile=pylintrc --exit-zero karp asgi.py
 
-check-pylint: install-dev
+check-pylint:
 	${INVENV} pylint --rcfile=pylintrc  karp
 
 check-mypy: type-check
 
 .PHONY: lint-refactorings
 lint-refactorings: check-pylint-refactorings
-check-pylint-refactorings: install-dev
+check-pylint-refactorings:
 	${INVENV} pylint --disable=C,W,E --enable=R karp
 
 .PHONY: type-check
 type-check:
 	${INVENV} mypy karp asgi.py
 
-bumpversion: install-dev
+bumpversion:
 	${INVENV} bump2version patch
 
-bumpversion-minor: install-dev
+bumpversion-minor:
 	${INVENV} bump2version minor
 
-bumpversion-major: install-dev
+bumpversion-major:
 	${INVENV} bump2version major
 
 clean: clean-pyc
