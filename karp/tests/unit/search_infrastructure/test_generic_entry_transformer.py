@@ -1,6 +1,7 @@
 from typing import Any
 
 import pytest
+from karp.foundation.value_objects.unique_id import make_unique_id
 
 from karp.lex import EntryDto
 from karp.search import EntryTransformer
@@ -38,11 +39,10 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)
-
+        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
-            entry_id=entry_id,
+            entity_id=make_unique_id(),
             resource=resource_id,
             version=1,
             entry={"id": entry_id, field_name: field_value},
@@ -50,7 +50,7 @@ class TestGenericEntryTransformer:
             last_modified_by="alice@example.com",
         )
         index_entry = transformer.transform(resource_id, src_entry)
-        assert index_entry.id == entry_id
+        assert index_entry.id == str(src_entry.entity_id)
         assert index_entry.entry["_entry_version"] == 1
         assert index_entry.entry["id"] == entry_id
         assert index_entry.entry[field_name] == field_value
@@ -98,11 +98,10 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)
-
+        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
-            entry_id=entry_id,
+            entity_id=make_unique_id(),
             resource=resource_id,
             version=1,
             entry={
@@ -113,7 +112,7 @@ class TestGenericEntryTransformer:
             last_modified_by="alice@example.com",
         )
         index_entry = transformer.transform(resource_id, src_entry)
-        assert index_entry.id == entry_id
+        assert index_entry.id == str(src_entry.entity_id)
         assert index_entry.entry["_entry_version"] == 1
         assert index_entry.entry["id"] == entry_id
         assert index_entry.entry[field_name][0] == field_value
@@ -160,11 +159,10 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)
-
+        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
-            entry_id=entry_id,
+            entity_id=make_unique_id(),
             resource=resource_id,
             version=1,
             entry={
@@ -177,7 +175,7 @@ class TestGenericEntryTransformer:
             last_modified_by="alice@example.com",
         )
         index_entry = transformer.transform(resource_id, src_entry)
-        assert index_entry.id == entry_id
+        assert index_entry.id == str(src_entry.entity_id)
         assert index_entry.entry["_entry_version"] == 1
         assert index_entry.entry["id"] == entry_id
         assert index_entry.entry["obj"][field_name] == field_value

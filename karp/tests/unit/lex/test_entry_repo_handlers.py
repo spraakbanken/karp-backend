@@ -1,4 +1,3 @@
-
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
 )
@@ -14,9 +13,8 @@ class TestCreateEntryRepository:
         cmd = factories.CreateEntryRepositoryFactory()
         lex_ctx.command_bus.dispatch(cmd)
 
-        entry_uow_repo_uow = lex_ctx.container.get(
-            EntryUowRepositoryUnitOfWork)
-        assert entry_uow_repo_uow.was_committed
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
+        assert entry_uow_repo_uow.was_committed  # type: ignore [attr-defined]
         assert entry_uow_repo_uow.repo.num_entities() == 1
 
 
@@ -28,8 +26,7 @@ class TestDeleteEntryRepository:
         cmd = factories.CreateEntryRepositoryFactory()
         lex_ctx.command_bus.dispatch(cmd)
 
-        entry_uow_repo_uow = lex_ctx.container.get(
-            EntryUowRepositoryUnitOfWork)
+        entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         assert entry_uow_repo_uow.repo.num_entities() == 1
 
         cmd = factories.DeleteEntryRepositoryFactory(entity_id=cmd.entity_id)

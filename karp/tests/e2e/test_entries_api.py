@@ -1,4 +1,5 @@
 from typing import Dict, List
+import uuid
 
 import pytest  # pyre-ignore
 from fastapi import status
@@ -9,7 +10,8 @@ from karp.lex.application.queries.resources import GetEntryRepositoryId
 from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
-from karp.utility.time import utc_now
+from karp.foundation.time import utc_now
+from karp.foundation.value_objects import make_unique_id, UniqueId, unique_id
 from karp.lex.application.queries import EntryDto
 
 # from karp.application import ctx, config
@@ -25,9 +27,9 @@ from karp.lex.application.queries import EntryDto
 
 
 def get_entry_uow(container, resource_id: str):
-    get_entry_repository_id = container.get(GetEntryRepositoryId)
+    get_entry_repository_id = container.get(GetEntryRepositoryId)  # type: ignore [misc]
     entry_repo_id = get_entry_repository_id.query("places")
-    entry_uow_repo_uow = container.get(EntryUowRepositoryUnitOfWork)
+    entry_uow_repo_uow = container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
     with entry_uow_repo_uow as uw:
         return uw.repo.get_by_id(entry_repo_id)
 
@@ -36,8 +38,9 @@ def init(
     client,
     entries: List[Dict],
     access_token: auth.AccessToken,
-):
+) -> list[str]:
 
+    result = []
     for entry in entries:
         response = client.post(
             "/entries/places/add",
@@ -45,7 +48,40 @@ def init(
             headers=access_token.as_header(),
         )
         assert response.status_code < 300, response.status_code
-    return client
+        result.append(response.json()["newID"])
+    return result
+
+
+@pytest.fixture(name="entry_places_214_id", scope="session")
+def fixture_entry_places_214_id(
+    fa_data_client,
+    write_token: auth.AccessToken,
+):
+
+    ids = init(
+        fa_data_client,
+        [
+            {"code": 214, "name": "last_modified1", "municipality": [1]},
+        ],
+        write_token,
+    )
+    return ids[0]
+
+
+@pytest.fixture(name="entry_places_209_id", scope="session")
+def fixture_entry_places_209_id(
+    fa_data_client,
+    write_token: auth.AccessToken,
+):
+
+    ids = init(
+        fa_data_client,
+        [
+            {"code": 209, "name": "a", "municipality": [1]},
+        ],
+        write_token,
+    )
+    return ids[0]
 
 
 class TestEntriesRoutes:
@@ -113,14 +149,48 @@ class TestAddEntry:
         assert response.status_code == 201
         response_data = response.json()
         assert "newID" in response_data
-        assert response_data["newID"] == "203"
+        new_id = unique_id.parse(response_data["newID"])
 
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
         with entry_uow as uw:
-            assert "203" in uw.repo.entry_ids()
+            assert new_id in uw.repo.entity_ids()
 
+    def test_add_with_valid_data_and_entity_id_returns_201(
+        self,
+        fa_data_client,
+        write_token: auth.AccessToken,
+    ):
+        entity_id = make_unique_id()
+        response = fa_data_client.put(
+            "/entries/places",
+            json={
+                "entry": {
+                    "code": 2078,
+                    "name": "add203",
+                    "population": 4,
+                    "area": 50000,
+                    "density": 5,
+                    "municipality": [2, 3],
+                },
+                "id": str(entity_id),
+            },
+            headers=write_token.as_header(),
+        )
+        print(f"response. = {response.json()}")
+        assert response.status_code == 201
+        response_data = response.json()
+        assert "newID" in response_data
+        new_id = response_data["newID"]
+
+        entry_uow = get_entry_uow(
+            fa_data_client.app.state.app_context.container, resource_id="places"
+        )
+        with entry_uow as uw:
+            assert new_id in uw.repo.entity_ids()
+
+    @pytest.mark.skip(reason="we don't use entry_id")
     def test_adding_existing_fails_with_400(
         self,
         fa_data_client,
@@ -182,11 +252,11 @@ class TestAddEntry:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         response_data = response.json()
-
-        assert (
-            response_data["error"] == "Missing ID field for resource 'places' in '{}'"
-        )
         assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
+
+        # assert (
+        #     response_data["error"] == "Missing ID field for resource 'places' in '{}'"
+        # )
 
 
 class TestDeleteEntry:
@@ -212,8 +282,9 @@ class TestDeleteEntry:
             headers=write_token.as_header(),
         )
 
+        entity_id = response.json()["newID"]
         response = fa_data_client.delete(
-            f"/entries/places/{entry_id}/delete", headers=write_token.as_header()
+            f"/entries/places/{entity_id}/delete", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -222,8 +293,8 @@ class TestDeleteEntry:
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
         with entry_uow as uw:
-            assert uw.repo.by_entry_id(str(entry_id)).discarded
-            assert str(entry_id) not in uw.repo.entry_ids()
+            assert uw.repo.by_id(entity_id).discarded
+            assert entity_id not in uw.repo.entity_ids()
 
     def test_delete_rest(
         self,
@@ -247,8 +318,9 @@ class TestDeleteEntry:
             headers=write_token.as_header(),
         )
 
+        entity_id = response.json()["newID"]
         response = fa_data_client.delete(
-            f"/entries/places/{entry_id}", headers=write_token.as_header()
+            f"/entries/places/{entity_id}", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -257,8 +329,8 @@ class TestDeleteEntry:
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
         with entry_uow as uw:
-            assert uw.repo.by_entry_id(str(entry_id)).discarded
-            assert str(entry_id) not in uw.repo.entry_ids()
+            assert uw.repo.by_id(entity_id).discarded
+            assert entity_id not in uw.repo.entity_ids()
 
     def test_delete_non_existing_fails(
         self,
@@ -266,7 +338,7 @@ class TestDeleteEntry:
         write_token: auth.AccessToken,
     ):
 
-        entry_id = "non_existing_id"
+        entry_id = make_unique_id()
 
         response = fa_data_client.delete(
             f"/entries/places/{entry_id}/delete", headers=write_token.as_header()
@@ -289,7 +361,7 @@ class TestDeleteEntry:
         write_token: auth.AccessToken,
     ):
 
-        entry_id = "non_existing_id"
+        entry_id = "00000000000000000000000000"
 
         response = fa_data_client.delete(
             f"/entries/places/{entry_id}", headers=write_token.as_header()
@@ -313,7 +385,7 @@ class TestUpdateEntry:
         fa_data_client,
         write_token: auth.AccessToken,
     ):
-        entry_id = "non-existent"
+        entry_id = make_unique_id()
         response = fa_data_client.post(
             f"/entries/places/{entry_id}/update",
             json={
@@ -361,11 +433,11 @@ class TestUpdateEntry:
             headers=write_token.as_header(),
         )
         print(f"response = {response.json()}")
-
+        entity_id = response.json()["newID"]
         assert response.status_code == status.HTTP_201_CREATED
 
         response = fa_data_client.post(
-            f"/entries/places/{entry_id}/update",
+            f"/entries/places/{entity_id}/update",
             json={
                 "entry": {
                     "code": entry_id,
@@ -403,11 +475,12 @@ class TestUpdateEntry:
             headers=write_token.as_header(),
         )
         print(f"response = {response.json()}")
+        entity_id = response.json()["newID"]
 
         assert response.status_code == 201
 
         response = fa_data_client.post(
-            f"/entries/places/{entry_id}/update",
+            f"/entries/places/{entity_id}/update",
             json={
                 "entry": {
                     "code": entry_id,
@@ -424,7 +497,7 @@ class TestUpdateEntry:
             #         ),
             #         content_type='application/json',
         )
-        assert response.status_code == 400
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
         response_data = response.json()
         assert response_data["errorCode"] == ClientErrorCodes.VERSION_CONFLICT
 
@@ -455,11 +528,12 @@ class TestUpdateEntry:
             headers=write_token.as_header(),
         )
         print(f"response = {response.json()}")
+        entity_id = response.json()["newID"]
 
-        assert response.status_code == 201
+        assert response.status_code == status.HTTP_201_CREATED
 
         response = fa_data_client.post(
-            f"/entries/places/{entry_id}/update",
+            f"/entries/places/{entity_id}/update",
             json={
                 "entry": {
                     "code": entry_id,
@@ -474,33 +548,30 @@ class TestUpdateEntry:
             },
             headers=write_token.as_header(),
         )
-        assert response.status_code == 200
+        assert response.status_code == status.HTTP_200_OK
         response_data = response.json()
-        assert response_data["newID"] == str(entry_id)
+        assert response_data["newID"] == entity_id
 
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
         with entry_uow as uw:
-            assert uw.repo.by_entry_id(str(entry_id)).body["population"] == 5
-            assert str(entry_id) in uw.repo.entry_ids()
+            assert uw.repo.by_id(entity_id).body["population"] == 5
+            assert entity_id in uw.repo.entity_ids()
 
     def test_update_several_times(
         self,
         fa_data_client,
         write_token: auth.AccessToken,
+        entry_places_209_id: str,
     ):
         entry_id = 209
-        response = fa_data_client.post(
-            "/entries/places/add",
-            json={"entry": {"code": entry_id, "name": "a", "municipality": [1]}},
-            headers=write_token.as_header(),
-        )
-        assert response.status_code == status.HTTP_201_CREATED
+
+        entity_id = entry_places_209_id
 
         for i in range(2, 10):
             response = fa_data_client.post(
-                f"/entries/places/{entry_id}/update",
+                f"/entries/places/{entity_id}/update",
                 json={
                     "entry": {"code": entry_id, "name": "a" * i, "municipality": [1]},
                     "message": "changes",
@@ -570,7 +641,7 @@ class TestUpdateEntry:
         entry_id = 212
         before_add = utc_now()
 
-        init(
+        ids = init(
             fa_data_client,
             [
                 {"code": entry_id, "name": "last_modified1", "municipality": [1]},
@@ -583,13 +654,14 @@ class TestUpdateEntry:
         entry_uow = get_entry_uow(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
+        entity_id = ids[0]
         with entry_uow as uw:
-            entry = uw.repo.by_entry_id(str(entry_id))
+            entry = uw.repo.by_id(entity_id)
             assert entry.last_modified > before_add
             assert entry.last_modified < after_add
 
         fa_data_client.post(
-            f"/entries/places/{entry_id}/update",
+            f"/entries/places/{entity_id}/update",
             json={
                 "entry": {
                     "code": entry_id,
@@ -605,23 +677,26 @@ class TestUpdateEntry:
         after_update = utc_now()
 
         with entry_uow as uw:
-            entry = uw.repo.by_entry_id(str(entry_id))
+            entry = uw.repo.by_id(entity_id)
             assert entry.last_modified > after_add
             assert entry.last_modified < after_update
 
 
 class TestGetEntry:
-    def test_get_entry_wo_auth_returns_403(self, fa_data_client):
-        response = fa_data_client.get("/entries/places/204")
+    def test_get_entry_wo_auth_returns_403(
+        self, fa_data_client, entry_places_214_id: str
+    ):
+        response = fa_data_client.get(f"/entries/places/{entry_places_214_id}")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_entry_w_lower_auth_returns_401(
         self,
         fa_data_client,
         write_token: auth.AccessToken,
+        entry_places_214_id: str,
     ):
         response = fa_data_client.get(
-            "/entries/places/204",
+            f"/entries/places/{entry_places_214_id}",
             headers=write_token.as_header(),
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -630,30 +705,32 @@ class TestGetEntry:
         self,
         fa_data_client,
         admin_token: auth.AccessToken,
+        entry_places_214_id: str,
     ):
         response = fa_data_client.get(
-            "/entries/places/204",
+            f"/entries/places/{entry_places_214_id}",
             headers=admin_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
 
         entry = EntryDto(**response.json())
-        assert entry.entry_id == "204"
+        assert entry.entity_id == entry_places_214_id
         assert entry.version == 1
 
     def test_route_w_version_exist(
         self,
         fa_data_client,
         admin_token: auth.AccessToken,
+        entry_places_209_id: str,
     ):
         response = fa_data_client.get(
-            "/entries/places/209/5",
+            f"/entries/places/{entry_places_209_id}/5",
             headers=admin_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
 
         entry = EntryDto(**response.json())
-        assert entry.entry_id == "209"
+        assert entry.entity_id == entry_places_209_id
         assert entry.version == 5
 
 
@@ -686,7 +763,7 @@ class TestPreviewEntry:
         )
         print(f"{response.json()=}")
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["entry"]["id"] == "3"
+        assert unique_id.parse(response.json()["entry"]["id"])
 
 
 @pytest.mark.skip()

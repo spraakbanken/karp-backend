@@ -148,6 +148,7 @@ def create_and_publish_resource(
         f"/resources/{resource_id}/publish",
         json={
             "message": f"{resource_id} published",
+            "version": 1,
         },
         headers=access_token.as_header(),
     )

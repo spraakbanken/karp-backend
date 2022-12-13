@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Generic, TypeVar
 import injector
 import regex
 import sqlalchemy as sa
+from sqlalchemy import func as sa_func
 from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker
 import ulid
@@ -37,7 +38,7 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
     def __init__(
         self,
         history_model,
-        runtime_model,
+        # runtime_model,
         resource_config: Dict,
         # resource_id: str,
         # mapped_class: Any
@@ -49,7 +50,7 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         repositories.EntryRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
         self.history_model = history_model
-        self.runtime_model = runtime_model
+        # self.runtime_model = runtime_model
         self.resource_config = resource_config
         # self.mapped_class = mapped_class
         # self.resource_id = resource_id
@@ -64,17 +65,17 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
     ):
         if not session:
             raise TypeError("session can't be None")
-        try:
-            table_name = name
-        except KeyError:
-            raise ValueError("Missing 'table_name' in settings.")
+        # try:
+        table_name = name
+        # except KeyError:
+        #     raise ValueError("Missing 'table_name' in settings.")
 
         # history_model = db.get_table(table_name)
         # if history_model is None:
         #     history_model = create_history_entry_table(table_name)
         # history_model.create(bind=db.engine, checkfirst=True)
 
-        logger.warning({"table_name": table_name})
+        logger.info({"table_name": table_name})
         history_model = sql_models.get_or_create_entry_history_model(table_name)
 
         # runtime_table = db.get_table(runtime_table_name)
@@ -84,18 +85,22 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         #     )
 
         if session:
-            history_model.__table__.create(bind=session.bind, checkfirst=True)
+            history_model.__table__.create(  # type:ignore [attr-defined]
+                bind=session.bind, checkfirst=True
+            )
         # runtime_table.create(bind=db.engine, checkfirst=True)
-        runtime_model = sql_models.get_or_create_entry_runtime_model(
-            table_name, history_model, resource_config
-        )
-        if session:
-            runtime_model.__table__.create(bind=session.bind, checkfirst=True)
-            for child_model in runtime_model.child_tables.values():
-                child_model.__table__.create(bind=session.bind, checkfirst=True)
+        # runtime_model = sql_models.get_or_create_entry_runtime_model(
+        #     table_name, history_model, resource_config
+        # )
+        # if session:
+        #     runtime_model.__table__.create(  # type:ignore [attr-defined]
+        #         bind=session.bind, checkfirst=True
+        #     )  # type:ignore [attr-defined]
+        #     for child_model in runtime_model.child_tables.values():
+        #         child_model.__table__.create(bind=session.bind, checkfirst=True)
         return cls(
             history_model=history_model,
-            runtime_model=runtime_model,
+            # runtime_model=runtime_model,
             resource_config=resource_config,
             # resource_id=settings["resource_id"],
             session=session,
@@ -123,84 +128,84 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         #     )
         #     return
 
-        runtime_entry_raw = self._entry_to_runtime_dict(history_id, entry)
-        try:
-            entry_by_entry_id = (
-                self._session.query(self.runtime_model)
-                .filter_by(entry_id=entry.entry_id)
-                .first()
-            )
-            entry_by_entity_id = (
-                self._session.query(self.runtime_model)
-                .filter_by(entity_id=entry.entity_id)
-                .first()
-            )
+        # runtime_entry_raw = self._entry_to_runtime_dict(history_id, entry)
+        # try:
+        #     entry_by_entry_id = (
+        #         self._session.query(self.runtime_model)
+        #         .filter_by(entry_id=entry.entry_id)
+        #         .first()
+        #     )
+        #     entry_by_entity_id = (
+        #         self._session.query(self.runtime_model)
+        #         .filter_by(entity_id=entry.entity_id)
+        #         .first()
+        #     )
 
-            logger.error(
-                {
-                    "entry_by_entry_id": entry_by_entry_id,
-                    "entry_by_entity_id": entry_by_entity_id,
-                    "entry": entry.dict(),
-                }
-            )
-            if not entry_by_entry_id:
-                if not entry_by_entity_id:
-                    logger.warning("adding")
-                    return self._session.add(self.runtime_model(**runtime_entry_raw))
-                else:
-                    logger.warning("entity_id but no entry_id")
-                    entry_by_entity_id.discarded = True
-                    return self._session.add(self.runtime_model(**runtime_entry_raw))
-                    return
-            else:
-                if not entry_by_entity_id:
-                    logger.warning("entry_id but no entity_id")
-                    for key, value in runtime_entry_raw.items():
-                        setattr(entry_by_entry_id, key, value)
-                    return
-                else:
-                    logger.warning("updating")
-                    for key, value in runtime_entry_raw.items():
-                        setattr(entry_by_entry_id, key, value)
-                    return
-            if not entry_by_entity_id:
-                # if entry discarded and replaced
-                logger.error(
-                    {
-                        "entry_by_entry_id": entry_by_entry_id,
-                        "entry_by_entity_id": entry_by_entity_id,
-                    }
-                )
-                assert entry_by_entry_id.discarded
-                raise RuntimeError(f"entry = {entry.dict()}")
+        #     logger.error(
+        #         {
+        #             "entry_by_entry_id": entry_by_entry_id,
+        #             "entry_by_entity_id": entry_by_entity_id,
+        #             "entry": entry.dict(),
+        #         }
+        #     )
+        #     if not entry_by_entry_id:
+        #         if not entry_by_entity_id:
+        #             logger.warning("adding")
+        #             return self._session.add(self.runtime_model(**runtime_entry_raw))
+        #         else:
+        #             logger.warning("entity_id but no entry_id")
+        #             entry_by_entity_id.discarded = True
+        #             return self._session.add(self.runtime_model(**runtime_entry_raw))
+        #             return
+        #     else:
+        #         if not entry_by_entity_id:
+        #             logger.warning("entry_id but no entity_id")
+        #             for key, value in runtime_entry_raw.items():
+        #                 setattr(entry_by_entry_id, key, value)
+        #             return
+        #         else:
+        #             logger.warning("updating")
+        #             for key, value in runtime_entry_raw.items():
+        #                 setattr(entry_by_entry_id, key, value)
+        #             return
+        # if not entry_by_entity_id:
+        #     # if entry discarded and replaced
+        #     logger.error(
+        #         {
+        #             "entry_by_entry_id": entry_by_entry_id,
+        #             "entry_by_entity_id": entry_by_entity_id,
+        #         }
+        #     )
+        #     assert entry_by_entry_id.discarded
+        #     raise RuntimeError(f"entry = {entry.dict()}")
 
-            if entry_by_entry_id.entity_id != entry.entity_id:
-                logger.warn(
-                    "entity_id changed",
-                    extra={
-                        "entry_by_entry_id": entry_by_entry_id,
-                        "entry": entry.dict(),
-                    },
-                )
-                # raise RuntimeError(f'entry = {entry.dict()}')
+        # if entry_by_entry_id.entity_id != entry.entity_id:
+        #     logger.warn(
+        #         "entity_id changed",
+        #         extra={
+        #             "entry_by_entry_id": entry_by_entry_id,
+        #             "entry": entry.dict(),
+        #         },
+        #     )
+        #     # raise RuntimeError(f'entry = {entry.dict()}')
 
-            if entry_by_entry_id.entry_id != entry.entry_id:
-                logger.error(
-                    {
-                        "entry_by_entry_id": entry_by_entry_id,
-                        "entry_by_entity_id": entry_by_entity_id,
-                        "entry": entry.dict(),
-                    }
-                )
-                raise RuntimeError(f"entry = {entry.dict()}")
-            if entry_by_entity_id.entry_id != entry.entry_id:
-                logger.error(
-                    {"entry_by_entry_id": entry_by_entry_id, "entry": entry.dict()}
-                )
-                raise RuntimeError(f"entry = {entry.dict()}")
+        # if entry_by_entry_id.entry_id != entry.entry_id:
+        #     logger.error(
+        #         {
+        #             "entry_by_entry_id": entry_by_entry_id,
+        #             "entry_by_entity_id": entry_by_entity_id,
+        #             "entry": entry.dict(),
+        #         }
+        #     )
+        #     raise RuntimeError(f"entry = {entry.dict()}")
+        # if entry_by_entity_id.entry_id != entry.entry_id:
+        #     logger.error(
+        #         {"entry_by_entry_id": entry_by_entry_id, "entry": entry.dict()}
+        #     )
+        #     raise RuntimeError(f"entry = {entry.dict()}")
 
-            for key, value in runtime_entry_raw.items():
-                setattr(entry_by_entry_id, key, value)
+        # for key, value in runtime_entry_raw.items():
+        #     setattr(entry_by_entry_id, key, value)
         #            update_result = self._session.query(
         #                self.runtime_model
         #            ).filter_by(
@@ -216,58 +221,58 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         #                    )
         #                )
         # return self._session.add(runtime_entry)
-        except db.exc.DBAPIError as exc:
-            logger.exception("db error")
-            raise errors.RepositoryError("db failure") from exc
+        # except db.exc.DBAPIError as exc:
+        #     logger.exception("db error")
+        #     raise errors.RepositoryError("db failure") from exc
 
     def _update(self, entry: Entry):
         self._check_has_session()
         history_id = self._insert_history(entry)
 
-        current_db_entry = (
-            self._session.query(self.runtime_model)
-            .filter_by(entry_id=entry.entry_id)
-            .first()
-        )
+        # current_db_entry = (
+        #     self._session.query(self.runtime_model)
+        #     .filter_by(entry_id=entry.entry_id)
+        #     .first()
+        # )
 
-        if not current_db_entry:
-            raise errors.RepositoryError(f"Could not find {entry.entry_id}")
+        # if not current_db_entry:
+        #     raise errors.RepositoryError(f"Could not find {entry.entry_id}")
 
-        runtime_dict = self._entry_to_runtime_dict(history_id, entry)
-        for key, value in runtime_dict.items():
-            setattr(current_db_entry, key, value)
+        # runtime_dict = self._entry_to_runtime_dict(history_id, entry)
+        # for key, value in runtime_dict.items():
+        #     setattr(current_db_entry, key, value)
 
-    @classmethod
-    def primary_key(cls):
-        return "entry_id"
+        # @classmethod
+        # def primary_key(cls):
+        #     return "entry_id"
 
-    def move(self, entry: Entry, *, old_entry_id: str):
-        self._check_has_session()
+        # def move(self, entry: Entry, *, old_entry_id: str):
+        #     self._check_has_session()
 
-        db_entry = (
-            self._session.query(self.runtime_model)
-            .filter_by(entry_id=old_entry_id)
-            .first()
-        )
-        if not db_entry:
-            raise errors.RepositoryError(f"Could not find {entry.entry_id}")
-        db_entry.discarded = True
+        #     db_entry = (
+        #         self._session.query(self.runtime_model)
+        #         .filter_by(entry_id=old_entry_id)
+        #         .first()
+        #     )
+        #     if not db_entry:
+        #         raise errors.RepositoryError(f"Could not find {entry.entry_id}")
+        #     db_entry.discarded = True
 
         return self.save(entry)
 
-    def delete(self, entry: Entry):
-        self._check_has_session()
+    # def delete(self, entry: Entry):
+    #     self._check_has_session()
 
-        self._insert_history(entry)
+    #     self._insert_history(entry)
 
-        db_entry = (
-            self._session.query(self.runtime_model)
-            .filter_by(entry_id=entry.entry_id)
-            .first()
-        )
-        if not db_entry:
-            raise errors.RepositoryError(f"Could not find {entry.entry_id}")
-        db_entry.discarded = True
+    #     db_entry = (
+    #         self._session.query(self.runtime_model)
+    #         .filter_by(entry_id=entry.entry_id)
+    #         .first()
+    #     )
+    #     if not db_entry:
+    #         raise errors.RepositoryError(f"Could not find {entry.entry_id}")
+    #     db_entry.discarded = True
 
     def _insert_history(self, entry: Entry):
         self._check_has_session()
@@ -280,15 +285,12 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         except db.exc.DBAPIError as exc:
             raise errors.RepositoryError("db failure") from exc
 
-    def entry_ids(self) -> List[str]:
-        self._check_has_session()
-        query = self._session.query(self.runtime_model).filter_by(discarded=False)
-        return [row.entry_id for row in query.all()]
+    # def entry_ids(self) -> List[str]:
+    #     self._check_has_session()
+    #     query = self._session.query(self.runtime_model).filter_by(discarded=False)
+    #     return [row.entry_id for row in query.all()]
 
-    def _by_entry_id(
-        self,
-        entry_id: str,
-    ) -> Optional[Entry]:
+    def entity_ids(self) -> List[str]:
         self._check_has_session()
         subq = (
             sql.select(
@@ -298,19 +300,46 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
             .group_by(self.history_model.entity_id)
             .subquery("t2")
         )
-
+        print(subq)
         stmt = sql.select(self.history_model).join(
             subq,
             sa.and_(
                 self.history_model.entity_id == subq.c.entity_id,
                 self.history_model.last_modified == subq.c.maxdate,
-                self.history_model.entry_id == entry_id,
+                self.history_model.discarded == False,
             ),
         )
         stmt = stmt.order_by(self.history_model.last_modified.desc())
         query = self._session.execute(stmt).scalars()
-        row = query.first()
-        return self._history_row_to_entry(row) if row else None
+        # query = self._session.query(self.history_model).filter_by(discarded=False)
+        return [row.entity_id for row in query.all()]
+
+    # def _by_entry_id(
+    #     self,
+    #     entry_id: str,
+    # ) -> Optional[Entry]:
+    #     self._check_has_session()
+    #     subq = (
+    #         sql.select(
+    #             self.history_model.entity_id,
+    #             sa.func.max(self.history_model.last_modified).label("maxdate"),
+    #         )
+    #         .group_by(self.history_model.entity_id)
+    #         .subquery("t2")
+    #     )
+
+    #     stmt = sql.select(self.history_model).join(
+    #         subq,
+    #         sa.and_(
+    #             self.history_model.entity_id == subq.c.entity_id,
+    #             self.history_model.last_modified == subq.c.maxdate,
+    #             self.history_model.entry_id == entry_id,
+    #         ),
+    #     )
+    #     stmt = stmt.order_by(self.history_model.last_modified.desc())
+    #     query = self._session.execute(stmt).scalars()
+    #     row = query.first()
+    #     return self._history_row_to_entry(row) if row else None
 
     def _by_id(
         self,
@@ -341,13 +370,13 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
-    def history_by_entry_id(self, entry_id: str) -> List[Entry]:
-        self._check_has_session()
-        query = self._session.query(self.history_model)
-        # query = query.join(
-        #     self.runtime_table, self.history_model.c.id == self.runtime_table.c.id
-        # )
-        return query.filter_by(entry_id=entry_id).all()
+    # def history_by_entry_id(self, entry_id: str) -> List[Entry]:
+    #     self._check_has_session()
+    #     query = self._session.query(self.history_model)
+    #     # query = query.join(
+    #     #     self.runtime_table, self.history_model.c.id == self.runtime_table.c.id
+    #     # )
+    #     return query.filter_by(entry_id=entry_id).all()
 
     def teardown(self):
         """Use for testing purpose."""
@@ -392,80 +421,132 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
 
     def get_total_entries(self) -> int:
         self._check_has_session()
-        query = self._session.query(self.runtime_model.discarded).filter_by(
-            discarded=False
-        )
-        return query.count()
+        # query = self._session.query(self.runtime_model.discarded).filter_by(
+        #     discarded=False
+        # )
+        # return query.count()
+        return self.num_entities()
 
     def num_entities(self) -> int:
         self._check_has_session()
-        query = self._session.query(self.runtime_model.discarded).filter_by(
-            discarded=False
+        # query = self._session.query(self.runtime_model.discarded).filter_by(
+        #     discarded=False
+        # )
+        subq = (
+            sql.select(
+                self.history_model.entity_id,
+                sa.func.max(self.history_model.last_modified).label("maxdate"),
+            )
+            .group_by(self.history_model.entity_id)
+            .subquery("t2")
         )
-        return query.count()
+
+        stmt = sql.select(sa_func.count(self.history_model.entity_id)).join(
+            subq,
+            sa.and_(
+                self.history_model.entity_id == subq.c.entity_id,
+                self.history_model.last_modified == subq.c.maxdate,
+                self.history_model.discarded == False,
+            ),
+        )
+        query = self._session.execute(stmt).scalar()
+        return query
 
     def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
         self._check_has_session()
         # query = self._session.query(self.runtime_model)
-        query = self._session.query(self.runtime_model, self.history_model).filter(
-            self.runtime_model.history_id == self.history_model.history_id
-        )
+        # query = self._session.query(self.runtime_model, self.history_model).filter(
+        #     self.runtime_model.history_id == self.history_model.history_id
+        # )
         if filters is None:
-            if kwargs is None:
-                raise RuntimeError("")
+            if not kwargs:
+                raise ValueError("Must give 'filters' or kwargs")
             else:
                 filters = kwargs
 
-        joined_filters = []
-        simple_filters = {}
+        subq = (
+            sql.select(
+                self.history_model.entity_id,
+                sa.func.max(self.history_model.last_modified).label("maxdate"),
+            )
+            .group_by(self.history_model.entity_id)
+            .subquery("t2")
+        )
+        query_and = sa.and_(
+            self.history_model.entity_id == subq.c.entity_id,
+            self.history_model.last_modified == subq.c.maxdate,
+            self.history_model.discarded == False,
+        )
 
-        for filter_key in filters.keys():
-            # tmp = collections.defaultdict(dict)
-            if filter_key in self.resource_config[
-                "referenceable"
-            ] and self.resource_config["fields"][filter_key].get("collection"):
-                logger.debug("collection field", extra={"filter_key": filter_key})
-                # child_cls = self.runtime_model.child_tables[filter_key]
-                # tmp[child_cls.__tablename__][filter_key] = filters[filter_key]
-                # print(f"tmp.values() = {tmp.values()}")
-                joined_filters.append({filter_key: filters[filter_key]})
-                # query = query.filter(
-                #     getattr(self.runtime_model, filter_key).any(filters[filter_key])
-                # )
-                # query = self._session.query(self.runtime_model.child_tables[filter_key])
-                # return query.all()
-            else:
-                simple_filters[filter_key] = filters[filter_key]
-            # joined_filters.extend(tmp.values())
+        for filter_key, filter_value in filters.items():
+            # query = query.filter(
+            #     self.history_model.body.op("->")(filter_key) == filter_value
+            # )
+            query_and = query_and & (
+                sa_func.json_extract(self.history_model.body, f"$.{filter_key}")
+                == filter_value
+            )
+        stmt = sql.select(self.history_model).join(
+            subq,
+            query_and,
+        )
+        print(stmt)
+        result = [
+            self._history_row_to_entry(row)
+            for row in self._session.execute(stmt).scalars().all()
+        ]
+        # joined_filters = []
+        # simple_filters = {}
 
-        try:
-            query = query.filter_by(**simple_filters)
-        except db.exc.InvalidRequestError as exc:
-            match = NO_PROPERTY_PATTERN.search(str(exc))
-            if match:
-                raise errors.NonExistingField(match.group(1)) from exc
-            else:
-                raise errors.RepositoryError("Unknown invalid request") from exc
+        # for filter_key in filters.keys():
+        #     # tmp = collections.defaultdict(dict)
+        #     if filter_key in self.resource_config[
+        #         "referenceable"
+        #     ] and self.resource_config["fields"][filter_key].get("collection"):
+        #         logger.debug("collection field", extra={"filter_key": filter_key})
+        #         # child_cls = self.runtime_model.child_tables[filter_key]
+        #         # tmp[child_cls.__tablename__][filter_key] = filters[filter_key]
+        #         # print(f"tmp.values() = {tmp.values()}")
+        #         joined_filters.append({filter_key: filters[filter_key]})
+        #         # query = query.filter(
+        #         #     getattr(self.runtime_model, filter_key).any(filters[filter_key])
+        #         # )
+        #         # query = self._session.query(self.runtime_model.child_tables[filter_key])
+        #         # return query.all()
+        #     else:
+        #         simple_filters[filter_key] = filters[filter_key]
+        #     # joined_filters.extend(tmp.values())
 
-        for child_filters in joined_filters:
-            child_table_name = list(child_filters.keys())[0]
-            logger.debug("child table name", extra={"table_name": child_table_name})
-            child_cls = self.runtime_model.child_tables[child_table_name]
-            child_query = self._session.query(child_cls).filter_by(**child_filters)
-            for child_e in child_query:
-                logger.debug("child hit", extra={"child_hit": child_e})
-            query = query.join(child_cls).filter_by(**child_filters)
-        # result = query.filter_by(**kwargs).all()
-        # # query = self._session.query(self.history_model)
-        # # query = query.join(
-        # #     self.runtime_table,
-        # #     self.history_model.c.history_id == self.runtime_table.c.history_id,
-        # # )
-        # # result = query.filter_by(larger_place=7).all()
-        # print(f"result = {result}")
-        # return result
-        # return query.all()
-        return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
+        # try:
+        #     query = query.filter_by(**simple_filters)
+        # except db.exc.InvalidRequestError as exc:
+        #     match = NO_PROPERTY_PATTERN.search(str(exc))
+        #     if match:
+        #         raise errors.NonExistingField(match.group(1)) from exc
+        #     else:
+        #         raise errors.RepositoryError("Unknown invalid request") from exc
+
+        # for child_filters in joined_filters:
+        #     child_table_name = list(child_filters.keys())[0]
+        #     logger.debug("child table name", extra={"table_name": child_table_name})
+        #     child_cls = self.runtime_model.child_tables[child_table_name]
+        #     child_query = self._session.query(child_cls).filter_by(**child_filters)
+        #     for child_e in child_query:
+        #         logger.debug("child hit", extra={"child_hit": child_e})
+        #     query = query.join(child_cls).filter_by(**child_filters)
+        # # result = query.filter_by(**kwargs).all()
+        # # # query = self._session.query(self.history_model)
+        # # # query = query.join(
+        # # #     self.runtime_table,
+        # # #     self.history_model.c.history_id == self.runtime_table.c.history_id,
+        # # # )
+        # # # result = query.filter_by(larger_place=7).all()
+        # # print(f"result = {result}")
+        # # return result
+        # # return query.all()
+        # return [self._history_row_to_entry(db_entry) for _, db_entry in query.all()]
+
+        return result
 
     def get_history(
         self,
@@ -483,7 +564,7 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         if user_id:
             query = query.filter_by(last_modified_by=user_id)
         if entry_id:
-            query = query.filter_by(entry_id=entry_id)
+            query = query.filter_by(entity_id=entry_id)
         if entry_id and from_version:
             query = query.filter(self.history_model.version >= from_version)
         elif from_date is not None:
@@ -520,7 +601,7 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         return {
             "history_id": history_id,
             "entity_id": entry.entity_id,
-            "entry_id": entry.entry_id,
+            # "entry_id": str(entry.entity_id),
             "version": entry.version,
             "last_modified": entry.last_modified,
             "last_modified_by": entry.last_modified_by,
@@ -533,6 +614,7 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
         }
 
     def _history_row_to_entry(self, row) -> Entry:
+        print(f"{row.message=}")
         return Entry(
             body=row.body,
             message=row.message,
@@ -544,13 +626,13 @@ class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
             discarded=row.discarded,
             version=row.version,
             repository_id=row.repo_id,
-            entry_id=row.entry_id,
+            # entry_id=row.entry_id,
             # resource_id=self.resource_id,
         )
 
     def _entry_to_runtime_dict(self, history_id: int, entry: Entry) -> Dict:
         _entry = {
-            "entry_id": entry.entry_id,
+            "entry_id": str(entry.entity_id),
             "history_id": history_id,
             "entity_id": entry.entity_id,
             "discarded": entry.discarded,

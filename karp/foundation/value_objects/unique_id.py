@@ -3,85 +3,60 @@
 Borrowed from https://bitbucket.org/sixty-north/d5-kanban-python
 """
 import uuid
-import ulid
 import typing
-try:
-    import fastuuid  # type: ignore
-except ModuleNotFoundError:
-    fastuuid = None
+
+import pydantic
+import ulid
+
+# UniqueId = uuid.UUID
+# UniqueIdType = uuid.UUID
+# typing_UniqueId = uuid.UUID
+UniqueId = ulid.ULID
+UniqueIdType = ulid.ULID
+typing_UniqueId = ulid.ULID
 
 
-def _make_unique_id() -> uuid.UUID:
+def make_unique_id(timestamp: typing.Optional[float] = None) -> UniqueId:
     """Make a new UniqueId."""
-    return ulid.new().uuid
-    # return UniqueId(uuid.uuid4())
+    return ulid.new() if timestamp is None else ulid.from_timestamp(timestamp)
 
 
-if fastuuid is not None:
-    make_unique_id = fastuuid.uuid4
-    UniqueId = fastuuid.UUID
-    UniqueIdType = (fastuuid.UUID, uuid.UUID)
-    typing_UniqueId = typing.Union[fastuuid.UUID, uuid.UUID]
-else:
-    make_unique_id = _make_unique_id
-    UniqueId = uuid.UUID
-    UniqueIdType = uuid.UUID
-    typing_UniqueId = uuid.UUID
-# class UniqueId:
-#     """A UUID-based unique id with global formatting control.
+def to_unique_id(phrase: typing.Any) -> UniqueId:
+    if isinstance(phrase, str):
+        return ulid.from_str(phrase)
+    raise ValueError()
 
-#     When used in format specifiers the number of leading characters
-#     of the UUID can be specified:
 
-#         message = "The id={:6}".format(my_unique_id)
+parse = ulid.parse
 
-#     If not specified the globally configured format length will be
-#     used. The global format length can be set by adjusting the
-#     abbreviated_length class attribute. Setting this value to None
-#     (the default) disables global format abbreviation.
-#     """
 
-#     abbreviated_length = None
+class UniqueIdStr(str):
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(examples=["01BJQMF54D093DXEAWZ6JYRPAQ"])
 
-#     @classmethod
-#     def from_hex(cls, hex_str):
-#         """Construct a UniqueId from a hex string representation of a UUID."""
-#         return cls(uuid.UUID(hex=hex_str))
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
 
-#     def __init__(self, the_uuid):
-#         """Instantiate a UniqueId using a existing UUID object.
+    @classmethod
+    def validate(cls, v):
+        if isinstance(v, UniqueId):
+            return str(v)
+        elif not isinstance(v, str):
+            raise TypeError("string or UniqueId required")
 
-#         To create UniqueIds with fresh UUIDs call the make_unique_id()
-#         factory function instead.
+        if len(v) != 26:
+            raise ValueError("invalid uniqueid format")
 
-#         Args:
-#             the_uuid: A UUID object.
-#         """
-#         self._uuid = the_uuid
+        return cls(v)
 
-#     def __eq__(self, rhs):
-#         if not isinstance(rhs, UniqueId):
-#             return NotImplemented
-#         return self._uuid == rhs._uuid
+    def __repr__(self) -> str:
+        return f"UniqueIdStr({super().__repr__()})"
 
-#     def __ne__(self, rhs):
-#         if not isinstance(rhs, UniqueId):
-#             return NotImplemented
-#         return self._uuid != rhs._uuid
 
-#     def __hash__(self):
-#         return hash(self._uuid)
+UniqueIdPrimitive = typing.Union[ulid.api.api.ULIDPrimitive, UniqueIdStr]
 
-#     def __repr__(self):
-#         return self._uuid.hex
 
-#     def __format__(self, format_spec):
-#         if not format_spec:
-#             return repr(self)[: UniqueId.abbreviated_length]
-#         try:
-#             format_abbrev_length = int(format_spec)
-#         except ValueError:
-#             raise TypeError(
-#                 "UniqueId format spec {!r} is not an integer length".format(format_spec)
-#             )
-#         return repr(self)[:format_abbrev_length]
+# def parse(value: UniqueIdPrimitive) -> UniqueId:
+#     if isinstance(value, Uni)

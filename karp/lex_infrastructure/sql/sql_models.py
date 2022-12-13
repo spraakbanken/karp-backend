@@ -1,7 +1,6 @@
 from typing import Dict
 
 
-
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
@@ -12,15 +11,14 @@ from karp.db_infrastructure import db
 class ResourceModel(db.Base):
     __tablename__ = "resources"
     history_id = db.Column(db.Integer, primary_key=True)
-    entity_id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.ULIDType, nullable=False)
     resource_id = db.Column(db.String(32), nullable=False)
     resource_type = db.Column(db.String(32), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(64), nullable=False)
-    entry_repo_id = db.Column(db.UUIDType, nullable=False)
+    entry_repo_id = db.Column(db.ULIDType, nullable=False)
     config = db.Column(db.NestedMutableJson, nullable=False)
-    is_published = db.Column(db.Boolean, index=True,
-                             nullable=True, default=None)
+    is_published = db.Column(db.Boolean, index=True, nullable=True, default=None)
     last_modified = db.Column(db.Float(precision=53), nullable=False)
     last_modified_by = db.Column(db.String(100), nullable=False)
     message = db.Column(db.String(100), nullable=False)
@@ -105,7 +103,7 @@ class ResourceModel(db.Base):
 class EntryUowModel(db.Base):
     __tablename__ = "entry_repos"
     history_id = db.Column(db.Integer, primary_key=True)
-    entity_id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.ULIDType, nullable=False)
     type = db.Column(db.String(64), nullable=False)
     connection_str = db.Column(db.String(128))
     name = db.Column(db.String(64), nullable=False)
@@ -116,7 +114,7 @@ class EntryUowModel(db.Base):
     discarded = db.Column(db.Boolean, default=False)
 
     @staticmethod
-    def from_entity(entry_uow: EntryUnitOfWork) -> 'EntryUowModel':
+    def from_entity(entry_uow: EntryUnitOfWork) -> "EntryUowModel":
         return EntryUowModel(
             history_id=None,
             entity_id=entry_uow.entity_id,
@@ -138,15 +136,15 @@ class BaseRuntimeEntry:
         primary_key=True,
     )
     history_id = db.Column(db.Integer, nullable=False)
-    entity_id = db.Column(db.UUIDType, nullable=False)
+    entity_id = db.Column(db.ULIDType, nullable=False)
     discarded = db.Column(db.Boolean, nullable=False)
 
 
 class BaseHistoryEntry:
     history_id = db.Column(db.Integer, primary_key=True)
-    entity_id = db.Column(db.UUIDType, nullable=False)
-    repo_id = db.Column(db.UUIDType, nullable=False)
-    entry_id = db.Column(db.String(100), nullable=False)
+    entity_id = db.Column(db.ULIDType, nullable=False)
+    repo_id = db.Column(db.ULIDType, nullable=False)
+    # entry_id = db.Column(db.String(100), nullable=False)
     version = db.Column(db.Integer, nullable=False)
     last_modified = db.Column(db.Float(53), nullable=False)
     last_modified_by = db.Column(db.String(100), nullable=False)
@@ -159,14 +157,16 @@ class BaseHistoryEntry:
     @classmethod
     @db.declared_attr
     def __table_args__(cls):
-        return db.UniqueConstraint("entity_id", "version", name="id_version_unique_constraint")
+        return db.UniqueConstraint(
+            "entity_id", "version", name="id_version_unique_constraint"
+        )
 
     @classmethod
     def from_entity(cls, entry: entities.Entry):
         return cls(
             history_id=None,
             entity_id=entry.entity_id,
-            entry_id=entry.entry_id,
+            # entry_id=entry.entry_id,
             version=entry.version,
             last_modified=entry.last_modified,
             last_modified_by=entry.last_modified_by,
@@ -195,8 +195,7 @@ def get_or_create_entry_history_model(resource_id: str) -> BaseHistoryEntry:
         # "mysql_character_set": "utf8mb4",
     }
 
-    sqlalchemy_class = type(
-        history_table_name, (db.Base, BaseHistoryEntry), attributes)
+    sqlalchemy_class = type(history_table_name, (db.Base, BaseHistoryEntry), attributes)
     # sqlalchemy_class.__table__.create(bind=db.engine, checkfirst=True)
     class_cache[history_table_name] = sqlalchemy_class
     return sqlalchemy_class
@@ -236,7 +235,7 @@ def get_or_create_entry_runtime_model(
                 column_type = db.Boolean()
             elif field["type"] == "string":
                 column_type = db.Text(32000)
-            elif field['type'] == 'long_string':
+            elif field["type"] == "long_string":
                 column_type = db.Text(16000000)
             else:
                 raise NotImplementedError()

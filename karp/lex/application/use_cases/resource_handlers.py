@@ -18,11 +18,11 @@ from karp.lex.application import repositories
 
 logger = logging.getLogger(__name__)
 
-resource_models = {}  # Dict
-history_models = {}  # Dict
-resource_configs = {}  # Dict
-resource_versions = {}  # Dict[str, int]
-field_translations = {}  # Dict[str, Dict[str, List[str]]]
+# resource_models = {}  # Dict
+# history_models = {}  # Dict
+# resource_configs = {}  # Dict
+# resource_versions = {}  # Dict[str, int]
+# field_translations = {}  # Dict[str, Dict[str, List[str]]]
 
 
 class BasingResource:
@@ -119,19 +119,15 @@ class UpdatingResource(CommandHandler[commands.UpdateResource], BasingResource):
     def execute(self, command: commands.UpdateResource):
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(command.resource_id)
-            found_changes = False
-            if resource.name != command.name:
-                resource.name = command.name
-                found_changes = True
-            if resource.config != command.config:
-                resource.config = command.config
-                found_changes = True
-            if found_changes:
-                resource.stamp(
-                    user=command.user,
-                    message=command.message,
-                    timestamp=command.timestamp,
-                )
+            if resource.update(
+                name=command.name,
+                config=command.config,
+                user=command.user,
+                message=command.message,
+                timestamp=command.timestamp,
+                version=command.version,
+            ):
+
                 uow.repo.save(resource)
             uow.commit()
 
@@ -154,7 +150,10 @@ class PublishingResource(CommandHandler[commands.PublishResource], BasingResourc
             if not resource:
                 raise errors.ResourceNotFound(command.resource_id)
             resource.publish(
-                user=command.user, message=command.message, timestamp=command.timestamp
+                user=command.user,
+                message=command.message,
+                timestamp=command.timestamp,
+                version=command.version,
             )
             uow.repo.save(resource)
             uow.commit()
@@ -185,4 +184,3 @@ class DeletingResource(CommandHandler[commands.DeleteResource], BasingResource):
 
     def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
-

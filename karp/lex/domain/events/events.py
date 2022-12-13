@@ -10,6 +10,9 @@ from karp.foundation.value_objects import unique_id
 class Event(events.Event, BaseModel):
     timestamp: float
 
+    class Config:
+        arbitrary_types_allowed = True
+
 
 class AppStarted(Event):
     def __init__(self):
@@ -71,7 +74,7 @@ class ResourceUpdated(Event):
 class EntryAdded(Event):
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
-    entry_id: str
+    # entry_id: str
     body: Dict
     message: str
     user: str
@@ -80,7 +83,7 @@ class EntryAdded(Event):
 class EntryUpdated(Event):
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
-    entry_id: str
+    # entry_id: str
     body: Dict
     message: str
     user: str
@@ -90,7 +93,7 @@ class EntryUpdated(Event):
 class EntryDeleted(Event):
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
-    entry_id: str
+    # entry_id: str
     version: int
     message: str
     user: str

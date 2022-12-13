@@ -12,7 +12,7 @@ from karp.tests.unit.lex import adapters, factories
 class InMemoryEventBus(EventBus):
     def __init__(self) -> None:
         super().__init__()
-        self.events = []
+        self.events: list[Event] = []
 
     def post(self, event: Event) -> None:
         self.events.append(event)
@@ -21,7 +21,8 @@ class InMemoryEventBus(EventBus):
 class TestSqlResourceUnitOfWork:
     def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):
         uow = SqlResourceUnitOfWork(
-            session_factory=sqlite_session_factory, event_bus=InMemoryEventBus())
+            session_factory=sqlite_session_factory, event_bus=InMemoryEventBus()
+        )
         with uow:
             resource = factories.ResourceFactory()
             uow.resources.save(resource)
@@ -31,12 +32,12 @@ class TestSqlResourceUnitOfWork:
         assert rows == []
 
     def test_rolls_back_on_error(self, sqlite_session_factory):
-
         def do_something_that_fails(resource):
             print(resource.to_string())
 
         uow = SqlResourceUnitOfWork(
-            session_factory=sqlite_session_factory, event_bus=InMemoryEventBus())
+            session_factory=sqlite_session_factory, event_bus=InMemoryEventBus()
+        )
         with pytest.raises(AttributeError):
             with uow:
                 resource = factories.ResourceFactory()
@@ -53,7 +54,6 @@ class MyException(Exception):
 
 
 class TestSqlEntryUnitOfWork:
-
     def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},

@@ -98,11 +98,11 @@ unit-tests:
 	${INVENV} pytest -vv karp/tests/unit karp/tests/foundation/unit
 
 .PHONY: e2e-tests
-e2e-tests: install-dev clean-pyc
+e2e-tests: clean-pyc
 	${INVENV} pytest -vv karp/tests/e2e
 
 .PHONY: run-e2e-tests-w-coverage
-e2e-tests-w-coverage: install-dev clean-pyc
+e2e-tests-w-coverage: clean-pyc
 	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/e2e
 
 .PHONY: integration-tests

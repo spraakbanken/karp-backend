@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 
 from karp.auth import AuthService
 from karp import auth, lex
+from karp.foundation.value_objects import unique_id
+from karp.foundation.value_objects.unique_id import UniqueIdStr
 
 from karp.lex.application.queries import (
     EntryDiffDto,
@@ -25,10 +27,10 @@ from karp.webapp.dependencies.fastapi_injector import inject_from_req
 router = APIRouter()
 
 
-@router.get("/diff/{resource_id}/{entry_id}", response_model=EntryDiffDto)
+@router.post("/diff/{resource_id}/{entry_id}", response_model=EntryDiffDto)
 def get_diff(
     resource_id: str,
-    entry_id: str,
+    entry_id: UniqueIdStr,
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     from_version: Optional[int] = None,
     to_version: Optional[int] = None,
@@ -47,7 +49,7 @@ def get_diff(
 
     diff_request = EntryDiffRequest(
         resource_id=resource_id,
-        entry_id=entry_id,
+        entity_id=unique_id.parse(entry_id),
         from_version=from_version,
         to_version=to_version,
         from_date=from_date,
@@ -65,7 +67,7 @@ def get_history(
     resource_id: str,
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     user_id: Optional[str] = Query(None),
-    entry_id: Optional[str] = Query(None),
+    entry_id: Optional[UniqueIdStr] = Query(None),
     from_date: Optional[float] = Query(None),
     to_date: Optional[float] = Query(None),
     to_version: Optional[int] = Query(None),

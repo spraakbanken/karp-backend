@@ -177,40 +177,40 @@ class Resource(TimestampedVersionedEntity):
     #         )
     #     return self._entry_repository
 
-    def stamp(
-        self,
-        *,
-        user: str,
-        timestamp: float = None,
-        message: str = None,
-        increment_version: bool = True,
-    ):
-        self._extracted_from_publish_9(timestamp, user, message, "Updated")
-        if increment_version:
-            self._version += 1
-        self.queue_event(
-            events.ResourceUpdated(
-                entity_id=self.id,
-                resource_id=self.resource_id,
-                name=self.name,
-                config=self.config,
-                version=self.version,
-                timestamp=self.last_modified,
-                user=self.last_modified_by,
-                message=self.message,
-                entry_repo_id=self.entry_repository_id,
-            )
-        )
+    # def stamp(
+    #     self,
+    #     *,
+    #     user: str,
+    #     timestamp: float = None,
+    #     message: str = None,
+    #     increment_version: bool = True,
+    # ):
+    #     self._update_metadata(timestamp, user, message, "Updated")
+    #     if increment_version:
+    #         self._version += 1
+    #     self.queue_event(
+    #         events.ResourceUpdated(
+    #             entity_id=self.id,
+    #             resource_id=self.resource_id,
+    #             name=self.name,
+    #             config=self.config,
+    #             version=self.version,
+    #             timestamp=self.last_modified,
+    #             user=self.last_modified_by,
+    #             message=self.message,
+    #             entry_repo_id=self.entry_repository_id,
+    #         )
+    #     )
 
     def publish(
         self,
         *,
         user: str,
         message: str,
+        version: int,
         timestamp: float = None,
     ):
-        self._extracted_from_publish_9(timestamp, user, message, "Published")
-        self._increment_version()
+        self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
         self.queue_event(
             events.ResourcePublished(
@@ -231,12 +231,10 @@ class Resource(TimestampedVersionedEntity):
         *,
         entry_repo_id: unique_id.UniqueId,
         user: str,
+        version: int,
         timestamp: Optional[float] = None,
     ):
-        self._extracted_from_publish_9(
-            timestamp, user, "entry repo id updated", "entry repo id updated"
-        )
-        self._increment_version()
+        self._update_metadata(timestamp, user, "entry repo id updated", version=version)
         self._entry_repo_id = entry_repo_id
         self.queue_event(
             events.ResourceUpdated(
@@ -252,12 +250,101 @@ class Resource(TimestampedVersionedEntity):
             )
         )
 
-    def _extracted_from_publish_9(self, timestamp, user, message, arg3):
+    def set_resource_id(
+        self,
+        *,
+        resource_id: str,
+        user: str,
+        version: int,
+        timestamp: Optional[float] = None,
+        message: Optional[str] = None,
+    ) -> None:
+        self._update_metadata(
+            timestamp, user, message or "setting resource_id", version
+        )
+        self._resource_id = resource_id
+        self.queue_event(
+            events.ResourceUpdated(
+                entity_id=self.entity_id,
+                resource_id=self.resource_id,
+                entry_repo_id=self.entry_repository_id,
+                timestamp=self.last_modified,
+                user=self.last_modified_by,
+                version=self.version,
+                name=self.name,
+                config=self.config,
+                message=self.message,
+            )
+        )
+
+    def update(
+        self,
+        *,
+        name: str,
+        config: dict[str, Any],
+        user: str,
+        version: int,
+        timestamp: Optional[float] = None,
+        message: Optional[str] = None,
+    ) -> bool:
+        if self.name == name and self.config == config:
+            return False
+        self._update_metadata(timestamp, user, message or "updating", version)
+        self._name = name
+        self.config = config
+        self.queue_event(
+            events.ResourceUpdated(
+                entity_id=self.entity_id,
+                resource_id=self.resource_id,
+                entry_repo_id=self.entry_repository_id,
+                timestamp=self.last_modified,
+                user=self.last_modified_by,
+                version=self.version,
+                name=self.name,
+                config=self.config,
+                message=self.message,
+            )
+        )
+        return True
+
+    def set_config(
+        self,
+        *,
+        config: dict[str, Any],
+        user: str,
+        version: int,
+        timestamp: Optional[float] = None,
+        message: Optional[str] = None,
+    ) -> bool:
+        if self.config == config:
+            return False
+        self._update_metadata(timestamp, user, message or "setting config", version)
+        self.config = config
+        self.queue_event(
+            events.ResourceUpdated(
+                entity_id=self.entity_id,
+                resource_id=self.resource_id,
+                entry_repo_id=self.entry_repository_id,
+                timestamp=self.last_modified,
+                user=self.last_modified_by,
+                version=self.version,
+                name=self.name,
+                config=self.config,
+                message=self.message,
+            )
+        )
+        return True
+
+    def _update_metadata(
+        self, timestamp: Optional[float], user: str, message: str, version: int
+    ):
         self._check_not_discarded()
-        self._last_modified = timestamp or utc_now()
+        self._validate_version(version)
+        self._last_modified = self._ensure_timestamp(timestamp)
         self._last_modified_by = user
-        self._message = message or arg3
+        self._message = message
         self._op = ResourceOp.UPDATED
+        self._increment_version()
 
     def add_new_release(self, *, name: str, user: str, description: str):
         self._check_not_discarded()
@@ -310,8 +397,8 @@ class Resource(TimestampedVersionedEntity):
         return self._entry_json_schema
 
     # @property
-    def id_getter(self) -> Callable[[Dict], str]:
-        return create_field_getter(self.config["id"], str)
+    # def id_getter(self) -> Callable[[Dict], str]:
+    #     return create_field_getter(self.config["id"], str)
 
     def dict(self) -> Dict:
         return {
@@ -340,9 +427,9 @@ class Resource(TimestampedVersionedEntity):
         timestamp: Optional[float] = None,
     ) -> Entry:
         self._check_not_discarded()
-        id_getter = self.id_getter()
+        # id_getter = self.id_getter()
         return create_entry(
-            id_getter(entry_raw),
+            # id_getter(entry_raw),
             entry_raw,
             repo_id=self.entry_repository_id,
             # resource_id=self.resource_id,

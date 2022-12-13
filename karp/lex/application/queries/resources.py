@@ -3,12 +3,13 @@ from typing import Iterable, Optional, Dict
 
 import pydantic
 
-from karp.foundation.value_objects import UniqueId
+from karp.foundation.value_objects import UniqueIdStr, UniqueId
+from karp.foundation.value_objects.unique_id import UniqueIdPrimitive
 
 
 class ResourceDto(pydantic.BaseModel):
     resource_id: str
-    entity_id: UniqueId
+    entity_id: UniqueIdStr
     is_published: bool
     version: int
     name: str
@@ -16,7 +17,7 @@ class ResourceDto(pydantic.BaseModel):
     message: str
     last_modified: float
     config: Dict
-    entry_repository_id: UniqueId
+    entry_repository_id: UniqueIdStr
     discarded: bool
 
 
@@ -52,7 +53,7 @@ class ReadOnlyResourceRepository(abc.ABC):
 
     @abc.abstractmethod
     def get_by_id(
-        self, entity_id: UniqueId, version: Optional[int] = None
+        self, entity_id: UniqueIdPrimitive, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         pass
 
