@@ -1,3 +1,3 @@
-* [Add resource](tutorials/add-resource.md)
+- [Add resource](tutorials/add-resource.md)
 
-* Readd a resource
+- [Readd a resource](tutorials/readd-resource.md)

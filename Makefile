@@ -138,6 +138,10 @@ check-pylint:
 
 check-mypy: type-check
 
+.PHONY: serve-docs
+serve-docs:
+	cd docs/karp-backend-v6 && ${INVENV} mkdocs serve && cd -
+
 .PHONY: lint-refactorings
 lint-refactorings: check-pylint-refactorings
 check-pylint-refactorings:
