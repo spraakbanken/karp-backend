@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Use sqlalchemy mypy plugin. PR [#211](https://github.com/spraakbanken/karp-backend/pull/211) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## 6.1.0
 
 - Use entity id instead. PR [#216](https://github.com/spraakbanken/karp-backend/pull/216) by [@kod-kristoff](https://github.com/kod-kristoff).
