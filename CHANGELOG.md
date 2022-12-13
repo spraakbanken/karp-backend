@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Use entity id instead. PR [#216](https://github.com/spraakbanken/karp-backend/pull/216) by [@kod-kristoff](https://github.com/kod-kristoff).
 * Add mkdocs. PR [#215](https://github.com/spraakbanken/karp-backend/pull/215) by [@kod-kristoff](https://github.com/kod-kristoff).
 * Enable lint checks for some modules. PR [#214](https://github.com/spraakbanken/karp-backend/pull/214) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## 6.0.21
