@@ -161,7 +161,7 @@ def validate_entries(
         None, "--output", "-o", help="file to write to"
     ),
 ):
-    typer.echo(f"reading from {path if path else 'stdin'} ...", err=True)
+    typer.echo(f"reading from {path or 'stdin'} ...", err=True)
     err_output = None
 
     if not output and path:
