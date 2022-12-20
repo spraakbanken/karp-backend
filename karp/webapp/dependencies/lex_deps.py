@@ -30,7 +30,9 @@ from karp.lex_infrastructure import (
 from karp.lex_infrastructure.repositories import SqlResourceRepository
 
 
-def get_resource_repository(db_session: Session = Depends(get_session)) -> SqlResourceRepository:
+def get_resource_repository(
+    db_session: Session = Depends(get_session),
+) -> SqlResourceRepository:
     return SqlResourceRepository(db_session)
 
 
@@ -43,9 +45,12 @@ def get_resource_unit_of_work(
         session=db_session,
     )
 
+
 def get_entry_repo_uow(
     db_session: Session = Depends(get_session),
-    entry_uow_factory: EntryRepositoryUnitOfWorkFactory = Depends(inject_from_req(EntryRepositoryUnitOfWorkFactory)),
+    entry_uow_factory: EntryRepositoryUnitOfWorkFactory = Depends(
+        inject_from_req(EntryRepositoryUnitOfWorkFactory)
+    ),
     event_bus: EventBus = Depends(event_deps.get_eventbus),
 ) -> EntryUowRepositoryUnitOfWork:
     return SqlEntryUowRepositoryUnitOfWork(
@@ -64,17 +69,18 @@ def get_lex_uc(Use_case_type: Type) -> Callable:
             resource_uow=resource_uow,
             entry_repo_uow=entry_repo_uow,
         )
+
     return factory
 
 
 def get_resources_read_repo(
-    conn: Connection = Depends(db_deps.get_connection)
+    conn: Connection = Depends(db_deps.get_connection),
 ) -> lex.ReadOnlyResourceRepository:
     return SqlReadOnlyResourceRepository(conn)
 
 
 def get_published_resources(
-    conn: Connection = Depends(db_deps.get_connection)
+    conn: Connection = Depends(db_deps.get_connection),
 ) -> lex.GetPublishedResources:
     return SqlGetPublishedResources(conn)
 

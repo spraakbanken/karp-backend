@@ -15,7 +15,6 @@ class IndexEntry(pydantic.BaseModel):
 
 
 class Index(repository.Repository[IndexEntry]):
-
     @abc.abstractmethod
     def create_index(self, resource_id: str, config: typing.Dict):
         pass
@@ -38,7 +37,7 @@ class Index(repository.Repository[IndexEntry]):
         pass
 
     def create_empty_object(self) -> IndexEntry:
-        return IndexEntry(id='', entry={})
+        return IndexEntry(id="", entry={})
 
     def assign_field(self, _index_entry: IndexEntry, field_name: str, part):
         if isinstance(part, IndexEntry):
@@ -63,7 +62,5 @@ class Index(repository.Repository[IndexEntry]):
         raise NotImplementedError("num_entities is not used for indicies")
 
 
-class IndexUnitOfWork(
-    unit_of_work.UnitOfWork[Index]
-):
+class IndexUnitOfWork(unit_of_work.UnitOfWork[Index]):
     pass

@@ -1,7 +1,5 @@
-
-
 class AuthError(Exception):
-    '''Auth base exception.'''
+    """Auth base exception."""
 
 
 class ResourceNotFound(AuthError):

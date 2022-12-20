@@ -110,8 +110,7 @@ def create_es_query(node: ast.Node):
                         elif is_a(n, op.ARG_OR):
                             queries.append(es_dsl.Q("bool", should=l_queries))
                         else:
-                            queries.append(
-                                es_dsl.Q("bool", must_not=l_queries))
+                            queries.append(es_dsl.Q("bool", must_not=l_queries))
                 if is_a(arg, op.ARG_AND):
                     q = es_dsl.Q("bool", must=queries)
                 elif is_a(arg, op.ARG_OR):
@@ -130,15 +129,13 @@ def create_es_query(node: ast.Node):
                     for logical in field_logicals:
                         l_queries = []
                         for field in logical.children:
-                            l_queries.append(
-                                construct_equals_query(field.value, arg))
+                            l_queries.append(construct_equals_query(field.value, arg))
                         if is_a(logical, op.ARG_OR):
                             queries.append(es_dsl.Q("bool", should=l_queries))
                         elif is_a(logical, op.ARG_AND):
                             queries.append(es_dsl.Q("bool", must=l_queries))
                         else:
-                            queries.append(
-                                es_dsl.Q("bool", must_not=l_queries))
+                            queries.append(es_dsl.Q("bool", must_not=l_queries))
                     print(
                         "|create_es_query::EQUALS| queries = {queries}".format(
                             queries=queries
@@ -152,8 +149,7 @@ def create_es_query(node: ast.Node):
                         q = es_dsl.Q(
                             "bool",
                             must_not=queries,
-                            must=es_dsl.Q(
-                                "multi_match", query=get_value(arg2)),
+                            must=es_dsl.Q("multi_match", query=get_value(arg2)),
                         )
         else:
             if is_a(arg, op.ARG_LOGICAL):
@@ -170,8 +166,7 @@ def create_es_query(node: ast.Node):
                         elif is_a(n, op.ARG_OR):
                             queries.append(es_dsl.Q("bool", should=l_queries))
                         else:
-                            queries.append(
-                                es_dsl.Q("bool", must_not=l_queries))
+                            queries.append(es_dsl.Q("bool", must_not=l_queries))
                 if is_a(arg, op.ARG_AND):
                     q = es_dsl.Q("bool", must=queries)
                 elif is_a(arg, op.ARG_OR):
@@ -183,8 +178,7 @@ def create_es_query(node: ast.Node):
         return q
 
     def construct_equals_query(field: ast.Node, query: ast.Node):
-        kwargs = {get_value(field): {
-            "query": get_value(query), "operator": "and"}}
+        kwargs = {get_value(field): {"query": get_value(query), "operator": "and"}}
         return es_dsl.Q("match", **kwargs)
 
     q = None
@@ -237,8 +231,7 @@ def create_es_query(node: ast.Node):
                         elif is_a(n, op.ARG_OR):
                             queries.append(es_dsl.Q("bool", should=l_queries))
                         else:
-                            queries.append(
-                                es_dsl.Q("bool", must_not=l_queries))
+                            queries.append(es_dsl.Q("bool", must_not=l_queries))
                 if is_a(arg, op.ARG_AND):
                     q = es_dsl.Q("bool", must=queries)
                 elif is_a(arg, op.ARG_OR):
@@ -279,8 +272,7 @@ def create_es_query(node: ast.Node):
                     operator = " OR "
                 else:  # if is_a(arg, op.ARG_AND):
                     operator = " AND "
-                kwargs["query"] = operator.join(
-                    "(/{}/)".format(v) for v in arg_values)
+                kwargs["query"] = operator.join("(/{}/)".format(v) for v in arg_values)
             print("kwargs = {}".format(kwargs))
             q = es_dsl.Q("query_string", **kwargs)
             if is_a(arg, op.ARG_NOT):
@@ -290,11 +282,9 @@ def create_es_query(node: ast.Node):
 
         elif is_a(node, op.MISSING):
             if not arg_values:
-                q = es_dsl.Q("bool", must_not=es_dsl.Q(
-                    "exists", field=arg.value))
+                q = es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=arg.value))
             else:
-                queries = [es_dsl.Q("exists", field=value)
-                           for value in arg_values]
+                queries = [es_dsl.Q("exists", field=value) for value in arg_values]
                 for logical in arg_logicals:
                     l_queries = []
                     for field in logical.children:
@@ -326,10 +316,8 @@ def create_es_query(node: ast.Node):
         field_values, field_logicals = extract_values_and_logicals(arg1)
         arg_values = extract_values(arg2)
 
-        print("field_values = {field_values}".format(
-            field_values=field_values))
-        print("field_logicals = {field_logicals}".format(
-            field_logicals=field_logicals))
+        print("field_values = {field_values}".format(field_values=field_values))
+        print("field_logicals = {field_logicals}".format(field_logicals=field_logicals))
 
         print("arg_values = {}".format(arg_values))
         # TODO this check breaks and and or since they always (?) have ast.ArgNode as parameters
@@ -378,15 +366,13 @@ def create_es_query(node: ast.Node):
                     for logical in field_logicals:
                         l_queries = []
                         for field in logical.children:
-                            l_queries.append(
-                                construct_equals_query(field.value, arg))
+                            l_queries.append(construct_equals_query(field.value, arg))
                         if is_a(logical, op.ARG_OR):
                             queries.append(es_dsl.Q("bool", should=l_queries))
                         elif is_a(logical, op.ARG_AND):
                             queries.append(es_dsl.Q("bool", must=l_queries))
                         else:
-                            queries.append(
-                                es_dsl.Q("bool", must_not=l_queries))
+                            queries.append(es_dsl.Q("bool", must_not=l_queries))
                     print(
                         "|create_es_query::EQUALS| queries = {queries}".format(
                             queries=queries
@@ -400,8 +386,7 @@ def create_es_query(node: ast.Node):
                         q = es_dsl.Q(
                             "bool",
                             must_not=queries,
-                            must=es_dsl.Q(
-                                "multi_match", query=get_value(arg2)),
+                            must=es_dsl.Q("multi_match", query=get_value(arg2)),
                         )
                 else:  # if arg_values:
                     raise UnsupportedQuery("Don't know how to handle ")
@@ -472,15 +457,13 @@ def create_es_query(node: ast.Node):
                     for logical in field_logicals:
                         l_queries = []
                         for field in logical.children:
-                            l_queries.append(
-                                construct_regexp_query(field.value, regex))
+                            l_queries.append(construct_regexp_query(field.value, regex))
                         if is_a(logical, op.ARG_OR):
                             queries.append(es_dsl.Q("bool", should=l_queries))
                         elif is_a(logical, op.ARG_AND):
                             queries.append(es_dsl.Q("bool", must=l_queries))
                         else:
-                            queries.append(
-                                es_dsl.Q("bool", must_not=l_queries))
+                            queries.append(es_dsl.Q("bool", must_not=l_queries))
 
                     print(
                         "|create_es_query::REGEX| queries = {queries}".format(
@@ -532,13 +515,11 @@ def create_es_query(node: ast.Node):
             if not field_values:
                 q = construct_range_query(get_value(arg1), range_args)
             else:
-                queries = [construct_range_query(
-                    f, range_args) for f in field_values]
+                queries = [construct_range_query(f, range_args) for f in field_values]
                 for logical in field_logicals:
                     l_queries = []
                     for field in logical.children:
-                        l_queries.append(construct_range_query(
-                            field.value, range_args))
+                        l_queries.append(construct_range_query(field.value, range_args))
                     if is_a(logical, op.ARG_OR):
                         queries.append(es_dsl.Q("bool", should=l_queries))
                     elif is_a(logical, op.ARG_AND):

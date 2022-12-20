@@ -62,7 +62,9 @@ class LexInfrastructure(injector.Module):
         return SqlGetResources(conn)
 
     @injector.provider
-    def read_only_resource_repo(self, conn: Connection) -> lex.ReadOnlyResourceRepository:
+    def read_only_resource_repo(
+        self, conn: Connection
+    ) -> lex.ReadOnlyResourceRepository:
         return SqlReadOnlyResourceRepository(conn)
 
     @injector.provider
@@ -70,7 +72,9 @@ class LexInfrastructure(injector.Module):
         return SqlListEntryRepos(conn)
 
     @injector.provider
-    def read_only_entry_repo_repo(self, conn: Connection) -> lex.ReadOnlyEntryRepoRepositry:
+    def read_only_entry_repo_repo(
+        self, conn: Connection
+    ) -> lex.ReadOnlyEntryRepoRepositry:
         return SqlReadOnlyEntryRepoRepositry(conn)
 
     @injector.provider
@@ -81,8 +85,7 @@ class LexInfrastructure(injector.Module):
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
         event_bus: EventBus,
     ) -> EntryUowRepositoryUnitOfWork:
-        logger.debug(
-            'creating entry_repo_uow', extra={'session': session})
+        logger.debug("creating entry_repo_uow", extra={"session": session})
         return SqlEntryUowRepositoryUnitOfWork(
             session=session,
             entry_uow_factory=entry_uow_factory,
@@ -103,7 +106,7 @@ class LexInfrastructure(injector.Module):
     @injector.multiprovider
     def entry_uow_creator_map(self) -> Dict[str, EntryUnitOfWorkCreator]:
         return {
-            'default': SqlEntryUowV2Creator,
+            "default": SqlEntryUowV2Creator,
             SqlEntryUowV1Creator.repository_type: SqlEntryUowV1Creator,
             SqlEntryUowV2Creator.repository_type: SqlEntryUowV2Creator,
         }

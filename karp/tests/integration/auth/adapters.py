@@ -12,7 +12,8 @@ from karp.main.config import AUTH_JWT_AUDIENCE
 
 
 PRIVATE_KEY_PATH = os.environ.get(
-    'TEST_AUTH_JWT_PRIVATE_KEY_PATH', 'karp/tests/data/private_key.pem')
+    "TEST_AUTH_JWT_PRIVATE_KEY_PATH", "karp/tests/data/private_key.pem"
+)
 
 with open(PRIVATE_KEY_PATH) as fp:
     jwt_private_key = fp.read()
@@ -37,24 +38,20 @@ def create_access_token(
     else:
         exp = iat + time_delta
     token_payload = {
-        'iss': 'spraakbanken.gu.se',
-        'iat': iat,
-        'exp': exp,
+        "iss": "spraakbanken.gu.se",
+        "iat": iat,
+        "exp": exp,
     }
     if audience:
-        token_payload['audience'] = audience
+        token_payload["audience"] = audience
     if user:
-        token_payload['sub'] = user
+        token_payload["sub"] = user
     if levels is not None:
-        token_payload['levels'] = levels
+        token_payload["levels"] = levels
     if scope:
-        token_payload['scope'] = scope
+        token_payload["scope"] = scope
 
-    access_token = jwt.encode(
-        token_payload,
-        priv_key,
-        algorithm='RS256'
-    )
+    access_token = jwt.encode(token_payload, priv_key, algorithm="RS256")
     return access_token
 
 
@@ -65,5 +62,5 @@ def create_bearer_token(
 ) -> AccessToken:
     return AccessToken(
         access_token=create_access_token(user, levels, scope),
-        token_type='bearer',
+        token_type="bearer",
     )

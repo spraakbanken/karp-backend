@@ -8,4 +8,13 @@ from karp.auth.application.queries import (
     IsResourceProtected,
 )
 
-__all__ = ["errors", "User", "AuthService", "AuthServiceConfig", "AccessToken", "PermissionLevel", "GetResourcePermissions", "IsResourceProtected"]
+__all__ = [
+    "errors",
+    "User",
+    "AuthService",
+    "AuthServiceConfig",
+    "AccessToken",
+    "PermissionLevel",
+    "GetResourcePermissions",
+    "IsResourceProtected",
+]

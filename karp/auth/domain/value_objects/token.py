@@ -9,5 +9,5 @@ class AccessToken(pydantic.BaseModel):
 
     def as_header(self) -> typing.Dict[str, str]:
         return {
-            'Authorization': f'{self.token_type} {self.access_token}',
+            "Authorization": f"{self.token_type} {self.access_token}",
         }

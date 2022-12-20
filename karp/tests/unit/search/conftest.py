@@ -15,17 +15,20 @@ from . import adapters
 
 @pytest.fixture()
 def search_unit_ctx() -> adapters.SearchUnitTestContext:
-    container = injector.Injector([
-        CommandBusMod(),
-        EventBusMod(),
-        Search(),
-        SearchInfrastructure(),
-        Lex(),
-        GenericLexInfrastructure(),
-        InMemoryLexInfrastructure(),
-        GenericSearchInfrastructure(),
-        adapters.InMemorySearchInfrastructure(),
-    ], auto_bind=False)
+    container = injector.Injector(
+        [
+            CommandBusMod(),
+            EventBusMod(),
+            Search(),
+            SearchInfrastructure(),
+            Lex(),
+            GenericLexInfrastructure(),
+            InMemoryLexInfrastructure(),
+            GenericSearchInfrastructure(),
+            adapters.InMemorySearchInfrastructure(),
+        ],
+        auto_bind=False,
+    )
     return adapters.SearchUnitTestContext(
         container=container,
         command_bus=container.get(CommandBus),  # type: ignore

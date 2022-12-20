@@ -8,6 +8,7 @@ from karp.auth.domain import auth_service
 
 logger = logging.getLogger(__name__)
 
+
 class DummyAuthService(auth_service.AuthService):
     def __init__(self):
         logger.warning("Using DummyAuthService: Don't use this in production!")

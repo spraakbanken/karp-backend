@@ -26,12 +26,12 @@ class ResourceRepository(repository.Repository[entities.Resource]):
     def get_by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
     ) -> entities.Resource:
-        resource = self.get_by_resource_id_optional(
-            resource_id, version=version)
+        resource = self.get_by_resource_id_optional(resource_id, version=version)
 
         if not resource:
             raise self.EntityNotFound(
-                f"Entity with resource_id='{resource_id}' can't be found.")
+                f"Entity with resource_id='{resource_id}' can't be found."
+            )
 
         return resource
 
@@ -92,9 +92,7 @@ class ResourceRepository(repository.Repository[entities.Resource]):
         raise NotImplementedError()
 
 
-class ResourceUnitOfWork(
-    unit_of_work.UnitOfWork[ResourceRepository]
-):
+class ResourceUnitOfWork(unit_of_work.UnitOfWork[ResourceRepository]):
     def __init__(self, event_bus: events.EventBus):
         unit_of_work.UnitOfWork.__init__(self, event_bus=event_bus)
 

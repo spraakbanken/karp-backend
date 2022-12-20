@@ -10,10 +10,7 @@ from karp.lex_infrastructure.sql.sql_models import EntryUowModel
 class SqlListEntryRepos(ListEntryRepos, SqlQuery):
     def query(self) -> Iterable[EntryRepoDto]:
         stmt = select(EntryUowModel)
-        return (
-            _row_to_dto(row)
-            for row in self._conn.execute(stmt)
-        )
+        return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
 
 def _row_to_dto(row_proxy) -> EntryRepoDto:

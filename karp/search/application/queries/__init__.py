@@ -8,4 +8,7 @@ from .search_service import (
 )
 from .resources import ResourceViews
 from karp.search.application.queries.entries import (
-    PreviewEntry, PreviewEntryInputDto, EntryPreviewDto)
+    PreviewEntry,
+    PreviewEntryInputDto,
+    EntryPreviewDto,
+)

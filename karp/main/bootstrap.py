@@ -1,5 +1,8 @@
 from karp.foundation import messagebus
-from karp.lex.application import handlers as lex_handlers, repositories as lex_repositories
+from karp.lex.application import (
+    handlers as lex_handlers,
+    repositories as lex_repositories,
+)
 from karp.lex.domain import commands as lex_commands, events as lex_events
 from karp.search.application import handlers as search_handlers
 from karp.search.application.unit_of_work import SearchServiceUnitOfWork
@@ -39,7 +42,7 @@ def bootstrap_message_bus(
             lex_commands.UpdateEntry: lex_handlers.UpdateEntryHandler(
                 resource_uow=resource_uow,
                 entry_uows=entry_uows,
-            )
+            ),
         },
         event_handlers={
             lex_events.ResourceCreated: [
@@ -53,5 +56,5 @@ def bootstrap_message_bus(
             lex_events.EntryDeleted: [],
             lex_events.EntryUpdated: [],
         },
-        raise_on_all_errors=raise_on_all_errors
+        raise_on_all_errors=raise_on_all_errors,
     )

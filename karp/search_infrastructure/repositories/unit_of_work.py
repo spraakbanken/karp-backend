@@ -3,7 +3,6 @@ from .sql_search_service import SqlSearchService
 
 
 class SqlSearchServiceUnitOfWork(search.IndexUnitOfWork):
-
     def __init__(self, session_factory):
         # session_factory=DEFAULT_SESSION_FACTORY):
         self.session_factory = session_factory

@@ -21,20 +21,19 @@ def create_app():
         ctx: typer.Context,
         version: Optional[bool] = typer.Option(
             None, "--version", callback=version_callback, is_eager=True
-        )
+        ),
     ):
         if ctx.invoked_subcommand is None:
             ctx.obj = {}
         else:
             ctx.obj = {}
-            ctx.obj['connection'] = app_context.container.get(Connection)
-            ctx.obj['session'] = Session(bind=ctx.obj['connection'])
-            logger.debug('create session', extra={
-                         'session': ctx.obj['session']})
-            ctx.obj['container'] = app_context.container.create_child_injector(
+            ctx.obj["connection"] = app_context.container.get(Connection)
+            ctx.obj["session"] = Session(bind=ctx.obj["connection"])
+            logger.debug("create session", extra={"session": ctx.obj["session"]})
+            ctx.obj["container"] = app_context.container.create_child_injector(
                 modules.request_configuration(
-                    conn=ctx.obj['connection'],
-                    session=ctx.obj['session'],
+                    conn=ctx.obj["connection"],
+                    session=ctx.obj["session"],
                 )
             )
 
@@ -46,12 +45,12 @@ def create_app():
 
 def version_callback(value: bool):
     if value:
-        typer.echo(f'{config.PROJECT_NAME} CLI {config.VERSION}')
+        typer.echo(f"{config.PROJECT_NAME} CLI {config.VERSION}")
         raise typer.Exit()
 
 
 def load_commands(app: typer.Typer):
-    modules.load_modules('karp.clicommands', app=app)
+    modules.load_modules("karp.clicommands", app=app)
 
 
 cliapp = create_app()

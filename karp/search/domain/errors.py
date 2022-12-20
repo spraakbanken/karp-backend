@@ -11,7 +11,9 @@ class UnsupportedQuery(DomainError):
 
 
 class IncompleteQuery(DomainError):
-    def __init__(self, failing_query: str, error_description: str, *args: object) -> None:
+    def __init__(
+        self, failing_query: str, error_description: str, *args: object
+    ) -> None:
         super().__init__(*args)
         self.failing_query = failing_query
         self.error_description = error_description

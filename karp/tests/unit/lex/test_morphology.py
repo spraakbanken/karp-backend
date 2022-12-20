@@ -7,8 +7,7 @@ from .factories import random_resource
 
 def test_morphology():
     resource = random_resource()
-    entry = {"baseform": "Appalacherna",
-             "paradigm": "pm_plg_alperna", "pos": "pm"}
+    entry = {"baseform": "Appalacherna", "paradigm": "pm_plg_alperna", "pos": "pm"}
 
     # morphology = Morphology.create_resource(
     #     resource_type='SaldoMorphology',

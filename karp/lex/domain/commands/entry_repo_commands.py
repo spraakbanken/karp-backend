@@ -17,21 +17,15 @@ class CreateEntryRepository(Command):
     user: str
 
     @classmethod
-    def from_dict(
-        cls,
-        data: Dict,
-        *,
-        user: str,
-        message: Optional[str] = None
-    ):
+    def from_dict(cls, data: Dict, *, user: str, message: Optional[str] = None):
         return cls(
             entity_id=make_unique_id(),
-            repository_type=data.pop('repository_type', 'default'),
-            name=data.pop('resource_id'),
-            connection_str=data.pop('connection_str', None),
+            repository_type=data.pop("repository_type", "default"),
+            name=data.pop("resource_id"),
+            connection_str=data.pop("connection_str", None),
             config=data,
             user=user,
-            message=message or 'Entry repository created'
+            message=message or "Entry repository created",
         )
 
 

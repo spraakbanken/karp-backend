@@ -1,1 +1,5 @@
-from .resources import GetResourcePermissions, ResourcePermissionDto, IsResourceProtected
+from .resources import (
+    GetResourcePermissions,
+    ResourcePermissionDto,
+    IsResourceProtected,
+)

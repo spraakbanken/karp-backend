@@ -3,8 +3,8 @@ from typing import Any, Dict
 
 
 def json_schema_type(in_type: str) -> str:
-    if in_type == 'long_string':
-        return 'string'
+    if in_type == "long_string":
+        return "string"
     return in_type
 
 
@@ -29,8 +29,8 @@ def create_entry_json_schema(fields: Dict[str, Any]):
 
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
-            schema_type = json_schema_type(parent_field_def['type'])
-            result = {'type': schema_type}
+            schema_type = json_schema_type(parent_field_def["type"])
+            result = {"type": schema_type}
         else:
             result = {"type": "object", "properties": {}}
 

@@ -1,6 +1,7 @@
-
-
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index, Es6IndexUnitOfWork
+from karp.search_infrastructure.repositories.es6_indicies import (
+    Es6Index,
+    Es6IndexUnitOfWork,
+)
 
 
 class TestEs6Index:

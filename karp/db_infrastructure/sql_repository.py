@@ -19,4 +19,3 @@ class SqlRepository:
     def _check_has_session(self):
         if self._session is None:
             raise RuntimeError("No session, use with unit_of_work.")
-
