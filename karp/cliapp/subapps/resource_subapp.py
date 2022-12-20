@@ -118,13 +118,14 @@ def update(ctx: typer.Context, config: Path):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def publish(ctx: typer.Context, resource_id: str):
+def publish(ctx: typer.Context, resource_id: str, version: int):
     bus = inject_from_ctx(CommandBus, ctx)
     try:
         cmd = lex_commands.PublishResource(
             resource_id=resource_id,
             message=f"Publish '{resource_id}",
             user="local admin",
+            version=version,
         )
         bus.dispatch(cmd)
     except ResourceAlreadyPublished:
