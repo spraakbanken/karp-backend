@@ -1,9 +1,16 @@
 import typing
 
 from karp.auth.domain import errors
-from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto, IsResourceProtected
+from karp.auth.application.queries import (
+    GetResourcePermissions,
+    ResourcePermissionDto,
+    IsResourceProtected,
+)
 from karp.foundation.value_objects.permission_level import PermissionLevel
-from karp.lex.application.queries import GetPublishedResources, ReadOnlyResourceRepository
+from karp.lex.application.queries import (
+    GetPublishedResources,
+    ReadOnlyResourceRepository,
+)
 
 
 class LexGetResourcePermissions(GetResourcePermissions):
@@ -36,19 +43,14 @@ class LexGetResourcePermissions(GetResourcePermissions):
 
 
 class LexIsResourceProtected(IsResourceProtected):
-    def __init__(
-        self,
-        resource_repo: ReadOnlyResourceRepository
-    ) -> None:
+    def __init__(self, resource_repo: ReadOnlyResourceRepository) -> None:
         super().__init__()
         self.resource_repo = resource_repo
 
     def query(self, resource_id: str, level: PermissionLevel) -> bool:
         if level in [PermissionLevel.write, PermissionLevel.admin]:
             return True
-        resource = self.resource_repo.get_by_resource_id(
-            resource_id=resource_id)
+        resource = self.resource_repo.get_by_resource_id(resource_id=resource_id)
         if not resource:
-            raise errors.ResourceNotFound(
-                f"Can't find resource '{resource_id}'")
-        return resource.config.get('protected', {}).get('read', False)
+            raise errors.ResourceNotFound(f"Can't find resource '{resource_id}'")
+        return resource.config.get("protected", {}).get("read", False)

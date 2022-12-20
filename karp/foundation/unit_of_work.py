@@ -23,10 +23,10 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):
         self.close()
 
     def commit(self):
-        logger.debug('called commit')
+        logger.debug("called commit")
         self._commit()
         for event in self.collect_new_events():
-            logger.debug('collecting events')
+            logger.debug("collecting events")
             self.event_bus.post(event)
 
     def collect_new_events(self) -> typing.Iterable:

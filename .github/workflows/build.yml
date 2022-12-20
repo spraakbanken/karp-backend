@@ -11,7 +11,7 @@ on:
       - "*"
 
 env:
-  POETRY_VERSION: 1.1.13
+  POETRY_VERSION: 1.3.1
 
 jobs:
   checks:
@@ -22,8 +22,7 @@ jobs:
       max-parallel: 4
       fail-fast: false
       matrix:
-        python-version: ["3.10"]
-        # python-version: ["3.10", "3.11-dev"]  TODO: enable when greenlet works
+        python-version: ["3.10", "3.11"]
         os: [ubuntu-latest]
         task:
           - name: Lint code
@@ -107,8 +106,7 @@ jobs:
       max-parallel: 4
       fail-fast: false
       matrix:
-        python-version: ["3.10"]
-        # python-version: ["3.10", "3.11-dev"]  TODO: enable when greenlet works
+        python-version: ["3.10", "3.11"]
         es:
           - use: false
             version: NO

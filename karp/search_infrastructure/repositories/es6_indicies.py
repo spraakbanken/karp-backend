@@ -24,8 +24,9 @@ KARP_CONFIGINDEX_TYPE = "configs"
 
 
 class Es6Index(Index):
-    def __init__(self, es: elasticsearch.Elasticsearch):
+    def __init__(self, es: elasticsearch.Elasticsearch, *, index_prefix: str = ""):
         self.es: elasticsearch.Elasticsearch = es
+        self.index_prefix = index_prefix
         if not self.es.indices.exists(index=KARP_CONFIGINDEX):
             self.es.indices.create(
                 index=KARP_CONFIGINDEX,
@@ -60,9 +61,9 @@ class Es6Index(Index):
             "number_of_replicas": 1,
             "refresh_interval": -1,
         }
-        if 'settings' in mapping:
-            settings.update(mapping['settings'])
-            del mapping['settings']
+        if "settings" in mapping:
+            settings |= mapping["settings"]
+            del mapping["settings"]
         properties = mapping["properties"]
         properties["freetext"] = {"type": "text"}
         disabled_property = {"enabled": False}
@@ -75,18 +76,21 @@ class Es6Index(Index):
             "mappings": {"entry": mapping},
         }
 
-        date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
-        index_name = resource_id + "_" + date
-        logger.info('creating index', extra={
-                    'index_name': index_name, 'body': body})
+        index_name = self._create_index_name(resource_id)
+        logger.info("creating index", extra={"index_name": index_name, "body": body})
         result = self.es.indices.create(index=index_name, body=body)
         if "error" in result:
-            logger.error('failed to create index',
-                         extra={'index_name': index_name, 'body': body})
+            logger.error(
+                "failed to create index", extra={"index_name": index_name, "body": body}
+            )
             raise RuntimeError("failed to create index")
         logger.info("index created")
         self._set_index_name_for_resource(resource_id, index_name)
         return index_name
+
+    def _create_index_name(self, resource_id: str) -> str:
+        date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
+        return f"{self.index_prefix}{resource_id}_{date}"
 
     def _set_index_name_for_resource(self, resource_id: str, index_name: str) -> str:
         self.es.index(
@@ -103,9 +107,12 @@ class Es6Index(Index):
                 index=KARP_CONFIGINDEX, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
             )
         except es_exceptions.NotFoundError as err:
-            logger.debug(
-                "didn't find index_name for resource '%s' details: %s", resource_id, err)
-            return self._set_index_name_for_resource(resource_id, resource_id)
+            logger.error(
+                "didn't find index_name for resource '%s' details: %s", resource_id, err
+            )
+            return self._set_index_name_for_resource(
+                resource_id, self._create_index_name(resource_id)
+            )
         return res["_source"]["index_name"]
 
     def publish_index(self, resource_id: str):
@@ -114,8 +121,10 @@ class Es6Index(Index):
 
         index_name = self._get_index_name_for_resource(resource_id)
         self.on_publish_resource(resource_id, index_name)
-        logger.info('publishing resource',
-                    extra={'resource_id': resource_id, 'index_name': index_name})
+        logger.info(
+            "publishing resource",
+            extra={"resource_id": resource_id, "index_name": index_name},
+        )
         self.es.indices.put_alias(name=resource_id, index=index_name)
 
     def add_entries(self, resource_id: str, entries: List[IndexEntry]):
@@ -146,8 +155,9 @@ class Es6Index(Index):
             raise ValueError("Must give either 'entry' or 'entry_id'.")
         if entry:
             entry_id = entry.entry_id
-        logger.info('deleting entry', extra={'entry_id': entry_id,
-                    'resource_id': resource_id})
+        logger.info(
+            "deleting entry", extra={"entry_id": entry_id, "resource_id": resource_id}
+        )
         index_name = self._get_index_name_for_resource(resource_id)
         try:
             self.es.delete(
@@ -157,8 +167,14 @@ class Es6Index(Index):
                 refresh=True,
             )
         except elasticsearch.exceptions.ElasticsearchException:
-            logger.exception('Error deleting entry',
-                             extra={'entry_id': entry_id, 'resource_id': resource_id, 'index_name': index_name, })
+            logger.exception(
+                "Error deleting entry",
+                extra={
+                    "entry_id": entry_id,
+                    "resource_id": resource_id,
+                    "index_name": index_name,
+                },
+            )
 
     @staticmethod
     def get_analyzed_fields_from_mapping(
@@ -171,8 +187,7 @@ class Es6Index(Index):
                 res = Es6Index.get_analyzed_fields_from_mapping(
                     prop_values["properties"]
                 )
-                analyzed_fields.extend(
-                    [prop_name + "." + prop for prop in res])
+                analyzed_fields.extend([prop_name + "." + prop for prop in res])
             else:
                 if prop_values["type"] == "text":
                     analyzed_fields.append(prop_name)
@@ -249,8 +264,7 @@ class Es6Index(Index):
         Returns:
             List[str] -- values that ES can sort by.
         """
-        translated_sort_fields: List[Union[str,
-                                           Dict[str, Dict[str, str]]]] = []
+        translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None
             if "|" in sort_value:
@@ -308,8 +322,7 @@ class Es6Index(Index):
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():
                     ext_base_name = f"{base_name}.{ext_name}"
-                    parse_prop_value(sort_map, ext_base_name,
-                                     ext_base_name, ext_value)
+                    parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
                 return
             if prop_value["type"] in [
                 "boolean",
@@ -356,12 +369,10 @@ def _create_es_mapping(config):
             fun = parent_field_def["function"]
             if list(fun.keys())[0] == "multi_ref":
                 res_object = fun["multi_ref"]["result"]
-                recursive_field(parent_schema, "v_" +
-                                parent_field_name, res_object)
+                recursive_field(parent_schema, "v_" + parent_field_name, res_object)
             if "result" in fun:
                 res_object = fun["result"]
-                recursive_field(parent_schema, "v_" +
-                                parent_field_name, res_object)
+                recursive_field(parent_schema, "v_" + parent_field_name, res_object)
             return
         if parent_field_def.get("ref"):
             if "field" in parent_field_def["ref"]:
@@ -370,8 +381,7 @@ def _create_es_mapping(config):
                 res_object = {}
                 res_object.update(parent_field_def)
                 del res_object["ref"]
-            recursive_field(parent_schema, "v_" +
-                            parent_field_name, res_object)
+            recursive_field(parent_schema, "v_" + parent_field_name, res_object)
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
@@ -383,12 +393,12 @@ def _create_es_mapping(config):
                 mapped_type = "boolean"
             elif parent_field_def["type"] == "string":
                 mapped_type = "text"
-            elif parent_field_def['type'] == 'long_string':
-                mapped_type = 'text'
+            elif parent_field_def["type"] == "long_string":
+                mapped_type = "text"
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
-            if parent_field_def['type'] == 'string':
+            if parent_field_def["type"] == "string":
                 result["fields"] = {"raw": {"type": "keyword"}}
         else:
             result = {"properties": {}}
@@ -407,77 +417,70 @@ def _create_es_mapping(config):
 
 def create_es6_mapping(config: Dict) -> Dict:
     mapping = _create_es_mapping(config)
-    mapping['settings'] = {
-        'analysis': {
-            'analyzer': {
-                'default': {
-                    'char_filter': [
-                        'compound',
-                        'swedish_aa',
-                        'swedish_ae',
-                        'swedish_oe'
+    mapping["settings"] = {
+        "analysis": {
+            "analyzer": {
+                "default": {
+                    "char_filter": [
+                        "compound",
+                        "swedish_aa",
+                        "swedish_ae",
+                        "swedish_oe",
                     ],
-                    'filter': [
-                        'swedish_folding',
-                        'lowercase'
-                    ],
-                    'tokenizer': 'standard'
+                    "filter": ["swedish_folding", "lowercase"],
+                    "tokenizer": "standard",
                 }
             },
-            'char_filter': {
-                'compound': {
-                    'pattern': '-',
-                    'replacement': '',
-                    'type': 'pattern_replace'
+            "char_filter": {
+                "compound": {
+                    "pattern": "-",
+                    "replacement": "",
+                    "type": "pattern_replace",
                 },
-                'swedish_aa': {
-                    'pattern': '[Ǻǻ]',
-                    'replacement': 'å',
-                    'type': 'pattern_replace'
+                "swedish_aa": {
+                    "pattern": "[Ǻǻ]",
+                    "replacement": "å",
+                    "type": "pattern_replace",
                 },
-                'swedish_ae': {
-                    'pattern': '[æÆǞǟ]',
-                    'replacement': 'ä',
-                    'type': 'pattern_replace'
+                "swedish_ae": {
+                    "pattern": "[æÆǞǟ]",
+                    "replacement": "ä",
+                    "type": "pattern_replace",
                 },
-                'swedish_oe': {
-                    'pattern': '[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]',
-                    'replacement': 'ö',
-                    'type': 'pattern_replace'
+                "swedish_oe": {
+                    "pattern": "[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]",
+                    "replacement": "ö",
+                    "type": "pattern_replace",
                 },
             },
-            'filter': {
-                'swedish_folding': {
-                    'type': 'icu_folding',
-                    'unicodeSetFilter': '[^åäöÅÄÖ]'
+            "filter": {
+                "swedish_folding": {
+                    "type": "icu_folding",
+                    "unicodeSetFilter": "[^åäöÅÄÖ]",
                 },
-                'swedish_sort': {
-                    'language': 'sv',
-                    'type': 'icu_collation'
-                }
-            }
+                "swedish_sort": {"language": "sv", "type": "icu_collation"},
+            },
         }
     }
     return mapping
 
 
-class Es6IndexUnitOfWork(
-    IndexUnitOfWork
-):
+class Es6IndexUnitOfWork(IndexUnitOfWork):
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,
         event_bus: EventBus,
+        index_prefix: str,
     ) -> None:
         super().__init__(event_bus=event_bus)
-        self._index = Es6Index(es=es)
+        self._index = Es6Index(es=es, index_prefix=index_prefix)
 
     # @classmethod
     # def from_dict(cls, **kwargs):
     #     return cls()
 
     def _commit(self):
-        logger.debug('Calling _commit in Es6IndexUnitOfWork')
+        logger.debug("Calling _commit in Es6IndexUnitOfWork")
 
     def rollback(self):
         return super().rollback()

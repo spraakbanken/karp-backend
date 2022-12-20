@@ -11,7 +11,7 @@ class User:
         self,
         identifier: str,
         permissions: typing.Dict[str, int],
-        levels: typing.Dict[str, int]
+        levels: typing.Dict[str, int],
     ):
         self._identifier = identifier
         self._permissions = permissions
@@ -23,16 +23,18 @@ class User:
 
     def has_enough_permissions(self, resource_id: str, level: PermissionLevel) -> bool:
         try:
-            return (self._permissions.get(resource_id) is not None) and (self._permissions[resource_id] >= self._levels[level])
+            return (self._permissions.get(resource_id) is not None) and (
+                self._permissions[resource_id] >= self._levels[level]
+            )
         except KeyError:
             logger.exception(
-                'error checking permissions',
+                "error checking permissions",
                 extra={
-                    'resource_id': resource_id,
-                    'level': level,
-                    'identifier': self._identifier,
-                    'levels': self._levels,
-                    'permissions': self._permissions
-                }
+                    "resource_id": resource_id,
+                    "level": level,
+                    "identifier": self._identifier,
+                    "levels": self._levels,
+                    "permissions": self._permissions,
+                },
             )
             raise

@@ -53,6 +53,7 @@ class Es6ConfigRepository(Index):
                     },
                 },
             )
+
     @property
     def seen(self):
         return []
@@ -104,7 +105,8 @@ class Es6ConfigRepository(Index):
             )
         except es_exceptions.NotFoundError as err:
             logger.debug(
-                "didn't find index_name for resource '%s' details: %s", resource_id, err)
+                "didn't find index_name for resource '%s' details: %s", resource_id, err
+            )
             return self._set_index_name_for_resource(resource_id, resource_id)
         return res["_source"]["index_name"]
 
@@ -163,8 +165,7 @@ class Es6ConfigRepository(Index):
                 res = Es6Index.get_analyzed_fields_from_mapping(
                     prop_values["properties"]
                 )
-                analyzed_fields.extend(
-                    [prop_name + "." + prop for prop in res])
+                analyzed_fields.extend([prop_name + "." + prop for prop in res])
             else:
                 if prop_values["type"] == "text":
                     analyzed_fields.append(prop_name)
@@ -239,8 +240,7 @@ class Es6ConfigRepository(Index):
         Returns:
             List[str] -- values that ES can sort by.
         """
-        translated_sort_fields: List[Union[str,
-                                           Dict[str, Dict[str, str]]]] = []
+        translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None
             if "|" in sort_value:
@@ -298,8 +298,7 @@ class Es6ConfigRepository(Index):
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():
                     ext_base_name = f"{base_name}.{ext_name}"
-                    parse_prop_value(sort_map, ext_base_name,
-                                     ext_base_name, ext_value)
+                    parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
                 return
             if prop_value["type"] in [
                 "boolean",
@@ -346,12 +345,10 @@ def _create_es_mapping(config):
             fun = parent_field_def["function"]
             if list(fun.keys())[0] == "multi_ref":
                 res_object = fun["multi_ref"]["result"]
-                recursive_field(parent_schema, "v_" +
-                                parent_field_name, res_object)
+                recursive_field(parent_schema, "v_" + parent_field_name, res_object)
             if "result" in fun:
                 res_object = fun["result"]
-                recursive_field(parent_schema, "v_" +
-                                parent_field_name, res_object)
+                recursive_field(parent_schema, "v_" + parent_field_name, res_object)
             return
         if parent_field_def.get("ref"):
             if "field" in parent_field_def["ref"]:
@@ -360,8 +357,7 @@ def _create_es_mapping(config):
                 res_object = {}
                 res_object.update(parent_field_def)
                 del res_object["ref"]
-            recursive_field(parent_schema, "v_" +
-                            parent_field_name, res_object)
+            recursive_field(parent_schema, "v_" + parent_field_name, res_object)
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
@@ -373,12 +369,12 @@ def _create_es_mapping(config):
                 mapped_type = "boolean"
             elif parent_field_def["type"] == "string":
                 mapped_type = "text"
-            elif parent_field_def['type'] == 'long_string':
-                mapped_type = 'text'
+            elif parent_field_def["type"] == "long_string":
+                mapped_type = "text"
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
-            if parent_field_def['type'] == 'string':
+            if parent_field_def["type"] == "string":
                 result["fields"] = {"raw": {"type": "keyword"}}
         else:
             result = {"properties": {}}
@@ -397,63 +393,55 @@ def _create_es_mapping(config):
 
 def create_es6_mapping(config: Dict) -> Dict:
     mapping = _create_es_mapping(config)
-    mapping['settings'] = {
-        'analysis': {
-            'analyzer': {
-                'default': {
-                    'char_filter': [
-                        'compound',
-                        'swedish_aa',
-                        'swedish_ae',
-                        'swedish_oe'
+    mapping["settings"] = {
+        "analysis": {
+            "analyzer": {
+                "default": {
+                    "char_filter": [
+                        "compound",
+                        "swedish_aa",
+                        "swedish_ae",
+                        "swedish_oe",
                     ],
-                    'filter': [
-                        'swedish_folding',
-                        'lowercase'
-                    ],
-                    'tokenizer': 'standard'
+                    "filter": ["swedish_folding", "lowercase"],
+                    "tokenizer": "standard",
                 }
             },
-            'char_filter': {
-                'compound': {
-                    'pattern': '-',
-                    'replacement': '',
-                    'type': 'pattern_replace'
+            "char_filter": {
+                "compound": {
+                    "pattern": "-",
+                    "replacement": "",
+                    "type": "pattern_replace",
                 },
-                'swedish_aa': {
-                    'pattern': '[Ǻǻ]',
-                    'replacement': 'å',
-                    'type': 'pattern_replace'
+                "swedish_aa": {
+                    "pattern": "[Ǻǻ]",
+                    "replacement": "å",
+                    "type": "pattern_replace",
                 },
-                'swedish_ae': {
-                    'pattern': '[æÆǞǟ]',
-                    'replacement': 'ä',
-                    'type': 'pattern_replace'
+                "swedish_ae": {
+                    "pattern": "[æÆǞǟ]",
+                    "replacement": "ä",
+                    "type": "pattern_replace",
                 },
-                'swedish_oe': {
-                    'pattern': '[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]',
-                    'replacement': 'ö',
-                    'type': 'pattern_replace'
+                "swedish_oe": {
+                    "pattern": "[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]",
+                    "replacement": "ö",
+                    "type": "pattern_replace",
                 },
             },
-            'filter': {
-                'swedish_folding': {
-                    'type': 'icu_folding',
-                    'unicodeSetFilter': '[^åäöÅÄÖ]'
+            "filter": {
+                "swedish_folding": {
+                    "type": "icu_folding",
+                    "unicodeSetFilter": "[^åäöÅÄÖ]",
                 },
-                'swedish_sort': {
-                    'language': 'sv',
-                    'type': 'icu_collation'
-                }
-            }
+                "swedish_sort": {"language": "sv", "type": "icu_collation"},
+            },
         }
     }
     return mapping
 
 
-class Es6IndexUnitOfWork(
-    IndexUnitOfWork
-):
+class Es6IndexUnitOfWork(IndexUnitOfWork):
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,
@@ -467,7 +455,7 @@ class Es6IndexUnitOfWork(
     #     return cls()
 
     def _commit(self):
-        logger.debug('Calling _commit in Es6IndexUnitOfWork')
+        logger.debug("Calling _commit in Es6IndexUnitOfWork")
 
     def rollback(self):
         return super().rollback()
@@ -478,6 +466,8 @@ class Es6IndexUnitOfWork(
 
     def _close(self):
         pass
+
+
 import json
 import logging
 import re
@@ -493,8 +483,9 @@ from karp.search.application.queries import (
     QueryRequest,
     SearchService,
 )
-from karp.search.domain.errors import \
-    UnsupportedField  # IncompleteQuery,; UnsupportedQuery,
+from karp.search.domain.errors import (
+    UnsupportedField,
+)  # IncompleteQuery,; UnsupportedQuery,
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
 from karp.search.domain import query_dsl
@@ -540,7 +531,9 @@ class EsQueryBuilder(query_dsl.NodeWalker):
     def walk__equals(self, node):
         return es_dsl.Q(
             "match",
-            **{self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}}
+            **{
+                self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}
+            },
         )
 
     def walk__exists(self, node):
@@ -595,7 +588,8 @@ class Es6SearchService(SearchService):
         self.es: elasticsearch.Elasticsearch = es
         self.query_builder = EsQueryBuilder()
         self.parser = query_dsl.KarpQueryV6Parser(
-            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics())
+            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
+        )
         if not self.es.indices.exists(index=KARP_CONFIGINDEX):
             self.es.indices.create(
                 index=KARP_CONFIGINDEX,
@@ -634,8 +628,7 @@ class Es6SearchService(SearchService):
                 res = Es6SearchService.get_analyzed_fields_from_mapping(
                     prop_values["properties"]
                 )
-                analyzed_fields.extend(
-                    [prop_name + "." + prop for prop in res])
+                analyzed_fields.extend([prop_name + "." + prop for prop in res])
             else:
                 if prop_values["type"] == "text":
                     analyzed_fields.append(prop_name)
@@ -669,10 +662,14 @@ class Es6SearchService(SearchService):
                 and "entry" in mapping[index]["mappings"]
                 and "properties" in mapping[index]["mappings"]["entry"]
             ):
-                field_mapping[alias] = Es6SearchService.get_analyzed_fields_from_mapping(
+                field_mapping[
+                    alias
+                ] = Es6SearchService.get_analyzed_fields_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
-                sortable_fields[alias] = Es6SearchService.create_sortable_map_from_mapping(
+                sortable_fields[
+                    alias
+                ] = Es6SearchService.create_sortable_map_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
         return field_mapping, sortable_fields
@@ -760,10 +757,9 @@ class Es6SearchService(SearchService):
 
                 if es_query is not None:
                     s = s.query(es_query)
-                s = s[query.from_: query.from_ + query.size]
+                s = s[query.from_ : query.from_ + query.size]
                 if query.sort:
-                    s = s.sort(
-                        *self.translate_sort_fields([resource], query.sort))
+                    s = s.sort(*self.translate_sort_fields([resource], query.sort))
                 elif resource in query.sort_dict:
                     s = s.sort(
                         *self.translate_sort_fields(
@@ -782,29 +778,25 @@ class Es6SearchService(SearchService):
                 if query.lexicon_stats:
                     if "distribution" not in result:
                         result["distribution"] = {}
-                    result["distribution"][query.resources[i]
-                                           ] = response.hits.total
+                    result["distribution"][query.resources[i]] = response.hits.total
             return result
         else:
-            s = es_dsl.Search(
-                using=self.es, index=query.resources, doc_type="entry")
+            s = es_dsl.Search(using=self.es, index=query.resources, doc_type="entry")
             if es_query is not None:
                 s = s.query(es_query)
 
-            s = s[query.from_: query.from_ + query.size]
+            s = s[query.from_ : query.from_ + query.size]
 
             if query.lexicon_stats:
                 s.aggs.bucket(
                     "distribution", "terms", field="_index", size=len(query.resources)
                 )
             if query.sort:
-                s = s.sort(
-                    *self.translate_sort_fields(query.resources, query.sort))
+                s = s.sort(*self.translate_sort_fields(query.resources, query.sort))
             elif query.sort_dict:
                 sort_fields = []
                 for resource, sort in query.sort_dict.items():
-                    sort_fields.extend(
-                        self.translate_sort_fields([resource], sort))
+                    sort_fields.extend(self.translate_sort_fields([resource], sort))
                 s = s.sort(*sort_fields)
             logger.debug("s = %s", s.to_dict())
             response = s.execute()
@@ -835,8 +827,7 @@ class Es6SearchService(SearchService):
         Returns:
             List[str] -- values that ES can sort by.
         """
-        translated_sort_fields: List[Union[str,
-                                           Dict[str, Dict[str, str]]]] = []
+        translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None
             if "|" in sort_value:
@@ -899,7 +890,7 @@ class Es6SearchService(SearchService):
         )
         s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
         response = s.execute()
-        print(f'{response=}')
+        print(f"{response=}")
         return [
             {"value": bucket["key"], "count": bucket["doc_count"]}
             for bucket in response.aggregations.field_values.buckets
@@ -931,8 +922,7 @@ class Es6SearchService(SearchService):
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():
                     ext_base_name = f"{base_name}.{ext_name}"
-                    parse_prop_value(sort_map, ext_base_name,
-                                     ext_base_name, ext_value)
+                    parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
                 return
             if prop_value["type"] in [
                 "boolean",
@@ -967,6 +957,3 @@ class Es6SearchService(SearchService):
 #     for prop_name, prop_value in properties.items():
 #         if prop_value["type"] in ["boolean", "date", "double", "keyword", "long", "ip"]:
 #             return [prop_name]
-
-
-

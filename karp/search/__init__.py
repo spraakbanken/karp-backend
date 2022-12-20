@@ -17,7 +17,14 @@ from karp.search.application.use_cases import (
     ResourcePublishedHandler,
 )
 from karp.search.application.queries import (
-    ResourceViews, PreviewEntry, PreviewEntryInputDto, EntryPreviewDto, SearchService, QueryRequest, StatisticsDto)
+    ResourceViews,
+    PreviewEntry,
+    PreviewEntryInputDto,
+    EntryPreviewDto,
+    SearchService,
+    QueryRequest,
+    StatisticsDto,
+)
 from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry
 from karp.search.application.transformers import (
     EntryTransformer,
@@ -41,14 +48,9 @@ class Search(injector.Module):
 
     @injector.multiprovider
     def create_index(
-        self,
-        index_uow: IndexUnitOfWork
+        self, index_uow: IndexUnitOfWork
     ) -> List[EventHandler[lex_events.ResourceCreated]]:
-        return [
-            CreateSearchServiceHandler(
-                index_uow
-            )
-        ]
+        return [CreateSearchServiceHandler(index_uow)]
 
     @injector.multiprovider
     def deleting_index(
@@ -59,14 +61,9 @@ class Search(injector.Module):
 
     @injector.multiprovider
     def publish_index(
-        self,
-        index_uow: IndexUnitOfWork
+        self, index_uow: IndexUnitOfWork
     ) -> List[EventHandler[lex_events.ResourcePublished]]:
-        return [
-            ResourcePublishedHandler(
-                index_uow
-            )
-        ]
+        return [ResourcePublishedHandler(index_uow)]
 
     @injector.multiprovider
     def add_entry(

@@ -9,12 +9,12 @@ from karp.auth.domain.entities.user import User
 
 logger = logging.getLogger("karp")
 
+
 class AuthServiceConfig:
     pass
 
 
 class AuthService(abc.ABC):
-
     @abc.abstractmethod
     def authenticate(self, scheme: str, credentials: str) -> User:
         return User("dummy", {}, {})

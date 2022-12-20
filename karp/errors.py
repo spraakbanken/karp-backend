@@ -117,8 +117,7 @@ class UpdateConflict(KarpError):
             "Version conflict. Please update entry.",
             code=ClientErrorCodes.VERSION_CONFLICT,
         )
-        self.error_obj = {"diff": diff,
-                          "errorCode": self.code, "error": self.message}
+        self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}
 
 
 class EntryIdMismatch(UserError):

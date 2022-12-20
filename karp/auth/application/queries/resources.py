@@ -8,9 +8,9 @@ from karp.foundation.value_objects.permission_level import PermissionLevel
 
 
 class Scope(str, enum.Enum):
-    admin = 'ADMIN'
-    write = 'WRITE'
-    read = 'READ'
+    admin = "ADMIN"
+    write = "WRITE"
+    read = "READ"
 
 
 class ResourcePermissionDto(pydantic.BaseModel):

@@ -39,9 +39,7 @@ class EntryUnitOfWorkCreator(Protocol):
         ...
 
 
-class InjectorEntryUnitOfWorkRepoFactory(
-    EntryRepositoryUnitOfWorkFactory
-):
+class InjectorEntryUnitOfWorkRepoFactory(EntryRepositoryUnitOfWorkFactory):
     def __init__(self, container: injector.Injector) -> None:
         self._container = container
 
@@ -56,12 +54,13 @@ class InjectorEntryUnitOfWorkRepoFactory(
         message: str,
         timestamp: float,
     ) -> EntryUnitOfWork:
-        uow_factory_cls = self._container.get(
-            Dict[str, EntryUnitOfWorkCreator]
-        )[repository_type]
+        uow_factory_cls = self._container.get(Dict[str, EntryUnitOfWorkCreator])[
+            repository_type
+        ]
 
         uow_factory: EntryUnitOfWorkCreator = self._container.create_object(
-            uow_factory_cls)
+            uow_factory_cls
+        )
         return uow_factory(
             entity_id=entity_id,
             name=name,

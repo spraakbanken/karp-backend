@@ -1,3 +1,4 @@
+from typing import Optional
 import elasticsearch
 import injector
 from sqlalchemy.orm import sessionmaker
@@ -86,14 +87,13 @@ class SearchInfrastructure(injector.Module):
 
 class GenericSearchInfrastructure(injector.Module):
     @injector.provider
-    def get_resource_config(self, resource_uow: lex.ResourceUnitOfWork) -> ResourceViews:
-        return GenericResourceViews(
-            resource_uow=resource_uow
-        )
+    def get_resource_config(
+        self, resource_uow: lex.ResourceUnitOfWork
+    ) -> ResourceViews:
+        return GenericResourceViews(resource_uow=resource_uow)
 
 
 class GenericSearchIndexMod(injector.Module):
-
     @injector.provider
     def generic_search_service(
         self,
@@ -113,6 +113,8 @@ class GenericSearchIndexMod(injector.Module):
 
 
 class Es6SearchIndexMod(injector.Module):
+    def __init__(self, index_prefix: Optional[str] = None) -> None:
+        self._index_prefix = index_prefix or ""
 
     @injector.provider
     def es6_search_service(
@@ -129,5 +131,6 @@ class Es6SearchIndexMod(injector.Module):
     ) -> IndexUnitOfWork:
         return Es6IndexUnitOfWork(
             es=es,
-            event_bus=event_bus
+            event_bus=event_bus,
+            index_prefix=self._index_prefix,
         )

@@ -12,14 +12,8 @@ from karp.webapp import schemas
 router = APIRouter(tags=["Health"])
 
 
-
-@router.get(
-    "/",
-    response_model=schemas.SystemMonitorResponse,
-    include_in_schema=False
-)
-def perform_health_check(
-):
+@router.get("/", response_model=schemas.SystemMonitorResponse, include_in_schema=False)
+def perform_health_check():
     return {"database": "ok"}
 
 

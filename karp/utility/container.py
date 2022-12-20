@@ -18,8 +18,7 @@ def arg_get(
 
 
 def create_field_getter(
-    field: str,
-    convert: Optional[Callable[[Any], Any]] = None
+    field: str, convert: Optional[Callable[[Any], Any]] = None
 ) -> Callable[[Dict], Any]:
     def getter(d: Dict):
         result = d[field]

@@ -19,7 +19,7 @@ config = alembic.context.config
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)  # type: ignore
-logger = logging.getLogger('alembic.env')
+logger = logging.getLogger("alembic.env")
 
 
 # def include_object(object, name, type_, reflected, compare_to):
@@ -41,31 +41,30 @@ def run_migrations_online():
         else:
             # connect to primary db
             default_engine = create_engine(
-                karp_config.DATABASE_URL_WO_DB,
-                isolation_level="AUTOCOMMIT"
+                karp_config.DATABASE_URL_WO_DB, isolation_level="AUTOCOMMIT"
             )
             # drop testing db if it exists and create a fresh one
             with default_engine.connect() as default_conn:
-                logger.warning('dropping database: %s',
-                               karp_config.DATABASE_NAME)
+                logger.warning("dropping database: %s", karp_config.DATABASE_NAME)
                 default_conn.execute(
-                    f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}")
-                logger.warning('creating database: %s',
-                               karp_config.DATABASE_NAME)
+                    f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}"
+                )
+                logger.warning("creating database: %s", karp_config.DATABASE_NAME)
 
                 result = default_conn.execute(
-                    f"CREATE DATABASE {karp_config.DATABASE_NAME}")
-                logger.warning('db response: %s', result)
+                    f"CREATE DATABASE {karp_config.DATABASE_NAME}"
+                )
+                logger.warning("db response: %s", result)
 
-    logger.info('migrating url: %s', karp_config.DATABASE_URL)
-    connectable = config.attributes.get('connection', None)
+    logger.info("migrating url: %s", karp_config.DATABASE_URL)
+    connectable = config.attributes.get("connection", None)
     config.set_main_option("sqlalchemy.url", str(karp_config.DATABASE_URL))
 
     if connectable is None:
         connectable = engine_from_config(
             config.get_section(config.config_ini_section),  # type: ignore
             prefix="sqlalchemy.",
-            poolclass=pool.NullPool
+            poolclass=pool.NullPool,
         )
 
     with connectable.connect() as connection:
@@ -86,7 +85,8 @@ def run_migrations_offline() -> None:
 
     if os.environ.get("TESTING"):
         raise RuntimeError(
-            "Running testing migrations offline currently not permitted.")
+            "Running testing migrations offline currently not permitted."
+        )
 
     alembic.context.configure(url=str(karp_config.DATABASE_URL))
     with alembic.context.begin_transaction():

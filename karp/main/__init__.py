@@ -58,6 +58,7 @@ def bootstrap_app(container=None) -> AppContext:
         "tracking.matomo.idsite": env("TRACKING_MATOMO_IDSITE", None),
         "tracking.matomo.url": env("TRACKING_MATOMO_URL", None),
         "tracking.matomo.token": env("TRACKING_MATOMO_TOKEN", None),
+        "es.index_prefix": env("ES_INDEX_PREFIX", None),
     }
     # if n ot container:
     # container = AppContainer()
@@ -73,7 +74,7 @@ def bootstrap_app(container=None) -> AppContext:
     search_service = env("SEARCH_CONTEXT", "sql_search_service")
     engine = _create_db_engine(db_url)
     dependency_injector = _setup_dependency_injection(engine, es_url=es_url)
-    _setup_search_context(dependency_injector, search_service)
+    _setup_search_context(dependency_injector, search_service, settings=settings)
     return AppContext(dependency_injector, settings)
 
 
@@ -108,9 +109,13 @@ def _setup_dependency_injection(
     )
 
 
-def _setup_search_context(container: injector.Injector, search_service: str) -> None:
+def _setup_search_context(
+    container: injector.Injector, search_service: str, settings: dict
+) -> None:
     if search_service.lower() == "es6_search_service":
-        container.binder.install(Es6SearchIndexMod())
+        container.binder.install(
+            Es6SearchIndexMod(index_prefix=settings.get("es.index_prefix"))
+        )
     else:
         container.binder.install(GenericSearchIndexMod())
 

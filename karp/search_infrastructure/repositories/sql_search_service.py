@@ -8,11 +8,13 @@ from karp.lex.domain.entities.resource import Resource
 
 logger = logging.getLogger(__name__)
 
+
 class SqlSearchService(Index):
     def __init__(self):
         self.seen = []
         self.parser = query_dsl.KarpQueryV6Parser(
-            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics())
+            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
+        )
 
     def create_index(self, resource_id: str, resource_config: Dict):
         pass
@@ -40,7 +42,7 @@ class SqlSearchService(Index):
         resource: Resource,
         *,
         entry: Optional[Entry] = None,
-        entry_id: Optional[str] = None
+        entry_id: Optional[str] = None,
     ):
         pass
 

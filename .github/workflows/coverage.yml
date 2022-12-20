@@ -9,7 +9,7 @@ on:
       - "*"
 
 env:
-  POETRY_VERSION: 1.1.13
+  POETRY_VERSION: 1.3.1
 
 jobs:
   coverage:
@@ -35,7 +35,7 @@ jobs:
       max-parallel: 4
       fail-fast: false
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.10", "3.11"]
         es-version: ["6.8.23"]
         os: [ubuntu-latest]
 

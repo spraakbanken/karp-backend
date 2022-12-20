@@ -82,5 +82,7 @@ class SearchService(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def statistics(self, resource_id: str, field: str) -> typing.Iterable[StatisticsDto]:
+    def statistics(
+        self, resource_id: str, field: str
+    ) -> typing.Iterable[StatisticsDto]:
         raise NotImplementedError()

@@ -1,7 +1,6 @@
 import typing
 
-from fastapi import (APIRouter, Depends, HTTPException, Response, Security,
-                     status)
+from fastapi import APIRouter, Depends, HTTPException, Response, Security, status
 
 from karp import auth
 from karp.foundation.value_objects import PermissionLevel

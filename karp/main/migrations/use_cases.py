@@ -8,22 +8,17 @@ from karp.foundation import commands
 
 
 class RunMigrationsUp(pydantic.BaseModel):
-    to_revision: str = 'head'
+    to_revision: str = "head"
 
 
 class RunMigrationsDown(pydantic.BaseModel):
-    to_revision: str = 'base'
+    to_revision: str = "base"
 
 
 class RunningMigrationsBase:
     def __init__(self):
-        self.alembic_cfg = AlembicConfig(
-            Path(__file__).parent / 'alembic.ini'
-        )
-        self.alembic_cfg.set_main_option(
-            'script_location',
-            str(Path(__file__).parent)
-        )
+        self.alembic_cfg = AlembicConfig(Path(__file__).parent / "alembic.ini")
+        self.alembic_cfg.set_main_option("script_location", str(Path(__file__).parent))
 
 
 class RunningMigrationsUp(
@@ -38,8 +33,7 @@ class RunningMigrationsUp(
 
 
 class RunningMigrationsDown(
-    RunningMigrationsBase,
-    commands.CommandHandler[RunMigrationsDown]
+    RunningMigrationsBase, commands.CommandHandler[RunMigrationsDown]
 ):
     def execute(self, command: RunMigrationsDown):
         alembic.command.downgrade(

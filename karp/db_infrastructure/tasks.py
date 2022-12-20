@@ -9,6 +9,7 @@ from karp.main.config import DATABASE_URL, DatabaseUrl
 
 logger = logging.getLogger(__name__)
 
+
 def connect_to_db(db_url: Union[str, DatabaseUrl]) -> Database:
     try:
         return Database(db_url)
@@ -25,4 +26,3 @@ def close_db_connection(database: Database) -> None:
         logger.warn("--- DB DISCONNECT ERROR ---")
         logger.warn(e)
         logger.warn("--- DB DISCONNECT ERROR ---")
-

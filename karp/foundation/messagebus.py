@@ -21,8 +21,8 @@ class Handler(Generic[T]):
         raise NotImplementedError
 
 
-CommandType = TypeVar('CommandType', bound=Command)
-EventType = TypeVar('EventType', bound=Event)
+CommandType = TypeVar("CommandType", bound=Command)
+EventType = TypeVar("EventType", bound=Event)
 
 
 class CommandHandler(Generic[CommandType], Handler[CommandType]):
@@ -57,9 +57,7 @@ class MessageBus:
 
     def _handle_event(self, event: Event):
         for evt_handler in self._event_handlers[type(event)]:
-            logger.debug("handling event %s with handler %s",
-                         event, evt_handler
-                         )
+            logger.debug("handling event %s with handler %s", event, evt_handler)
             try:
                 evt_handler.execute(event)
             except Exception:
