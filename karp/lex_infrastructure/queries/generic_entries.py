@@ -78,7 +78,7 @@ class GenericEntryViews(EntryViews):
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            return uw.repo.get_total_entries()
+            return uw.repo.num_entities()
 
     def get_by_referenceable(self, resource_id: str, filters):
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
