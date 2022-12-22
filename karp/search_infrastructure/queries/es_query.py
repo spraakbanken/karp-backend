@@ -43,18 +43,4 @@ class EsQuery(Query):
         arbitrary_types_allowed = True
 
 
-def get_value(value_node: Union[ast.Node, ast.AnyValue]) -> ast.AnyValue:
-    if not isinstance(value_node, ast.Node):
-        return value_node
-    elif is_a(value_node, op.STRING):
-        return value_node.value
-    elif is_a(value_node, op.INT):
-        return value_node.value
-    elif is_a(value_node, op.FLOAT):
-        return value_node.value
-    else:
-        raise IncompleteQuery(
-            "Unknown of value (type: {value_node.type}, value: {value_node.value})".format(
-                value_node=value_node
-            )
-        )
+
