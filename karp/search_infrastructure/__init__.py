@@ -118,6 +118,7 @@ class Es6SearchIndexMod(injector.Module):
         self._index_prefix = index_prefix or ""
 
     @injector.provider
+    @injector.singleton
     def es6_mapping_repo(
         self,
         es: elasticsearch.Elasticsearch,

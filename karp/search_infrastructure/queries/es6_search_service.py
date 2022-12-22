@@ -216,42 +216,45 @@ class Es6SearchService(search.SearchService):
                     if "distribution" not in result:
                         result["distribution"] = {}
                     result["distribution"][query.resources[i]] = response.hits.total
-            return result
         else:
-            s = es_dsl.Search(using=self.es, index=query.resources, doc_type="entry")
-            if es_query is not None:
-                s = s.query(es_query)
+            result = self._extracted_from_search_with_query_47(query, es_query)
 
-            s = s[query.from_ : query.from_ + query.size]
+        return result
 
-            if query.lexicon_stats:
-                s.aggs.bucket(
-                    "distribution", "terms", field="_index", size=len(query.resources)
-                )
-            if query.sort:
-                s = s.sort(*self.translate_sort_fields(query.resources, query.sort))
-            elif query.sort_dict:
-                sort_fields = []
-                for resource, sort in query.sort_dict.items():
-                    sort_fields.extend(self.translate_sort_fields([resource], sort))
-                s = s.sort(*sort_fields)
-            logger.debug("s = %s", extra={"es_query s": s.to_dict()})
-            response = s.execute()
+    # TODO Rename this here and in `search_with_query`
+    def _extracted_from_search_with_query_47(self, query, es_query):
+        s = es_dsl.Search(using=self.es, index=query.resources, doc_type="entry")
+        if es_query is not None:
+            s = s.query(es_query)
 
-            # TODO format response in a better way, because the whole response takes up too much space in the logs
-            # logger.debug('response = {}'.format(response.to_dict()))
+        s = s[query.from_ : query.from_ + query.size]
 
-            logger.debug("calling _format_result")
-            result = self._format_result(query.resources, response)
-            if query.lexicon_stats:
-                result["distribution"] = {}
-                for bucket in response.aggregations.distribution.buckets:
-                    key = bucket["key"]
-                    value = bucket["doc_count"]
-                    result["distribution"][key.rsplit("_", 1)[0]] = value
+        if query.lexicon_stats:
+            s.aggs.bucket(
+                "distribution", "terms", field="_index", size=len(query.resources)
+            )
+        if query.sort:
+            s = s.sort(*self.mapping_repo.translate_sort_fields(query.resources, query.sort))
+        elif query.sort_dict:
+            sort_fields = []
+            for resource, sort in query.sort_dict.items():
+                sort_fields.extend(self.mapping_repo.translate_sort_fields([resource], sort))
+            s = s.sort(*sort_fields)
+        logger.debug("s = %s", extra={"es_query s": s.to_dict()})
+        response = s.execute()
 
-            # logger.debug("return result = %s", result)
-            return result
+        # TODO format response in a better way, because the whole response takes up too much space in the logs
+        # logger.debug('response = {}'.format(response.to_dict()))
+
+        logger.debug("calling _format_result")
+        result = self._format_result(query.resources, response)
+        if query.lexicon_stats:
+            result["distribution"] = {}
+            for bucket in response.aggregations.distribution.buckets:
+                key = bucket["key"]
+                result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
+
+        return result
 
     def search_ids(self, resource_id: str, entry_ids: str):
         logger.info(
@@ -271,11 +274,11 @@ class Es6SearchService(search.SearchService):
         s = es_dsl.Search(using=self.es, index=resource_id)
         s = s[:0]
 
-        if field in self.analyzed_fields[resource_id]:
+        if field in self.mapping_repo.analyzed_fields[resource_id]:
             field += ".raw"
 
         logger.debug("Statistics: analyzed fields are:")
-        logger.debug(json.dumps(self.analyzed_fields, indent=4))
+        logger.debug(json.dumps(self.mapping_repo.analyzed_fields, indent=4))
         logger.debug(
             "Doing aggregations on resource_id: {resource_id}, on field {field}".format(
                 resource_id=resource_id, field=field
