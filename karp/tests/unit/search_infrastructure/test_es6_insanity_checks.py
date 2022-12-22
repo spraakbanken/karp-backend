@@ -13,5 +13,5 @@ class TestEs6Index:
     def test_can_instantiate_es6_index_uow(self):
         with contextlib.suppress(AttributeError):
             Es6IndexUnitOfWork(
-                es=None, event_bus=None, index_prefix="", mapping_repo=None
+                es=None, event_bus=None, mapping_repo=None
             )
