@@ -71,16 +71,13 @@ karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
 karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
 	${INVENV} tatsu --object-model $< > $@
 
-run: install
-	${INVENV} python run.py 8081
-
 .PHONY: serve
 serve: install-dev
-	${INVENV} uvicorn asgi:app
+	${INVENV} uvicorn --factory karp.webapp.main:create_app
 
 .PHONY: serve-w-reload
 serve-w-reload: install-dev
-	${INVENV} uvicorn --reload asgi:app
+	${INVENV} uvicorn --reload --factory karp.webapp.main:create_app
 
 check-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
@@ -127,11 +124,10 @@ tox-to-log:
 	tox > tox.log
 
 lint:
-	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex asgi.py karp/cliapp karp/webapp
-	# ${INVENV} pylint --rcfile=pylintrc karp asgi.py
+	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex karp/cliapp karp/webapp
 
 lint-no-fail:
-	${INVENV} pylint --rcfile=pylintrc --exit-zero karp asgi.py
+	${INVENV} pylint --rcfile=pylintrc --exit-zero karp
 
 check-pylint:
 	${INVENV} pylint --rcfile=pylintrc  karp
@@ -149,7 +145,7 @@ check-pylint-refactorings:
 
 .PHONY: type-check
 type-check:
-	${INVENV} mypy karp asgi.py
+	${INVENV} mypy karp
 
 bumpversion:
 	${INVENV} bump2version patch
