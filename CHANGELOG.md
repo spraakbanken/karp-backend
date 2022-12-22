@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* refactor: remove and factor out code. PR [#219](https://github.com/spraakbanken/karp-backend/pull/219) by [@kod-kristoff](https://github.com/kod-kristoff).
 * Use Prefix for ES everywhere. PR [#218](https://github.com/spraakbanken/karp-backend/pull/218) by [@kod-kristoff](https://github.com/kod-kristoff).
 * Add elasticsearch prefix. PR [#217](https://github.com/spraakbanken/karp-backend/pull/217) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## 6.1.1
