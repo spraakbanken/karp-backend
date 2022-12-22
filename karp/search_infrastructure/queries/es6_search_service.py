@@ -23,6 +23,7 @@ from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
 from karp.search.domain import query_dsl
 from karp.search_infrastructure.elasticsearch6 import es_config
+from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 from .es_query import EsQuery
 
 # from karp.query_dsl import basic_ast as ast, op, is_a
@@ -118,8 +119,13 @@ class EsQueryBuilder(query_dsl.NodeWalker):
 
 
 class Es6SearchService(search.SearchService):
-    def __init__(self, es: elasticsearch.Elasticsearch):
+    def __init__(
+        self,
+        es: elasticsearch.Elasticsearch,
+        mapping_repo: Es6MappingRepository,
+    ):
         self.es: elasticsearch.Elasticsearch = es
+        self.mapping_repo = mapping_repo
         self.query_builder = EsQueryBuilder()
         self.parser = query_dsl.KarpQueryV6Parser(
             semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()

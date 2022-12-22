@@ -41,6 +41,7 @@ from karp.search_infrastructure.repositories import (
     NoOpIndexUnitOfWork,
     Es6IndexUnitOfWork,
 )
+from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 
 
 logger = logging.getLogger(__name__)
@@ -117,20 +118,33 @@ class Es6SearchIndexMod(injector.Module):
         self._index_prefix = index_prefix or ""
 
     @injector.provider
+    def es6_mapping_repo(
+        self,
+        es: elasticsearch.Elasticsearch,
+    ) -> Es6MappingRepository:
+        return Es6MappingRepository(es=es)
+
+    @injector.provider
     def es6_search_service(
         self,
         es: elasticsearch.Elasticsearch,
+        mapping_repo: Es6MappingRepository,
     ) -> SearchService:
-        return Es6SearchService(es=es)
+        return Es6SearchService(
+            es=es,
+            mapping_repo=mapping_repo,
+        )
 
     @injector.provider
     def es6_index_uow(
         self,
         es: elasticsearch.Elasticsearch,
         event_bus: EventBus,
+        mapping_repo: Es6MappingRepository,
     ) -> IndexUnitOfWork:
         return Es6IndexUnitOfWork(
             es=es,
             event_bus=event_bus,
             index_prefix=self._index_prefix,
+            mapping_repo=mapping_repo,
         )

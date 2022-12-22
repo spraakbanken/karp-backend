@@ -15,6 +15,7 @@ from karp.search.application.repositories import (
     IndexUnitOfWork,
 )
 from karp.search.domain.errors import UnsupportedField
+from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +25,13 @@ KARP_CONFIGINDEX_TYPE = "configs"
 
 
 class Es6Index(Index):
-    def __init__(self, es: elasticsearch.Elasticsearch, *, index_prefix: str = ""):
+    def __init__(
+        self,
+        es: elasticsearch.Elasticsearch,
+        mapping_repo: Es6MappingRepository,
+        *,
+        index_prefix: str = ""
+    ):
         self.es: elasticsearch.Elasticsearch = es
         self.index_prefix = index_prefix
         if not self.es.indices.exists(index=KARP_CONFIGINDEX):
@@ -471,9 +478,15 @@ class Es6IndexUnitOfWork(IndexUnitOfWork):
         es: elasticsearch.Elasticsearch,
         event_bus: EventBus,
         index_prefix: str,
+        mapping_repo: Es6MappingRepository,
+
     ) -> None:
         super().__init__(event_bus=event_bus)
-        self._index = Es6Index(es=es, index_prefix=index_prefix)
+        self._index = Es6Index(
+            es=es,
+            mapping_repo=mapping_repo,
+            index_prefix=index_prefix,
+        )
 
     # @classmethod
     # def from_dict(cls, **kwargs):

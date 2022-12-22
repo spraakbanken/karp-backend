@@ -23,22 +23,28 @@ KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
 
-class ConfigRepository(abc.ABC):
+class MappingRepository(abc.ABC):
     pass
 
 
-class Es6ConfigRepository(Index):
-    def __init__(self, es: elasticsearch.Elasticsearch):
-        self.es: elasticsearch.Elasticsearch = es
+class Es6MappingRepository(MappingRepository):
+    def __init__(
+        self,
+        es: elasticsearch.Elasticsearch,
+        prefix: str = "",
+    ):
+        self.es = es
+        self._prefix = prefix
+        self._config_index = f"{prefix}_config" if prefix else KARP_CONFIGINDEX
         self.ensure_config_index_exist()
         analyzed_fields, sortable_fields = self._init_field_mapping()
         self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
         self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
 
     def ensure_config_index_exist(self) -> None:
-        if not self.es.indices.exists(index=KARP_CONFIGINDEX):
+        if not self.es.indices.exists(index=self._config_index):
             self.es.indices.create(
-                index=KARP_CONFIGINDEX,
+                index=self._config_index,
                 body={
                     "settings": {
                         "number_of_shards": 1,
@@ -48,17 +54,16 @@ class Es6ConfigRepository(Index):
                     "mappings": {
                         KARP_CONFIGINDEX_TYPE: {
                             "dynamic": False,
-                            "properties": {"index_name": {"type": "text"}},
+                            "properties": {
+                                "index_name": {"type": "text"},
+                                "alias_name": {"type": "text"}    
+                            },
                         }
                     },
                 },
             )
 
-    @property
-    def seen(self):
-        return []
-
-    def create_index(self, resource_id, config):
+    def create_index(self, resource_id: str, config):
         print("creating es mapping ...")
         mapping = create_es6_mapping(config)
 
@@ -78,9 +83,7 @@ class Es6ConfigRepository(Index):
             "mappings": {"entry": mapping},
         }
 
-        date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
-        index_name = resource_id + "_" + date
-        print(f"creating index '{index_name}' ...")
+        logger.debug(f"creating index '{index_name}' ...")
         result = self.es.indices.create(index=index_name, body=body)
         if "error" in result:
             print("failed to create index")
@@ -89,25 +92,32 @@ class Es6ConfigRepository(Index):
         self._set_index_name_for_resource(resource_id, index_name)
         return index_name
 
-    def _set_index_name_for_resource(self, resource_id: str, index_name: str) -> str:
+    def create_index_name(self, resource_id: str) -> str:
+        date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
+        return f"{self._prefix}{resource_id}_{date}"
+        
+    def create_alias_name(self, resource_id: str) -> str:
+        return f"{self._prefix}{resource_id}"
+        
+    def set_index_name_for_resource(self, resource_id: str, index_name: str) -> str:
         self.es.index(
-            index=KARP_CONFIGINDEX,
+            index=self._config_index,
             id=resource_id,
             doc_type=KARP_CONFIGINDEX_TYPE,
             body={"index_name": index_name},
         )
         return index_name
 
-    def _get_index_name_for_resource(self, resource_id: str) -> str:
+    def get_index_name_for_resource(self, resource_id: str) -> str:
         try:
             res = self.es.get(
-                index=KARP_CONFIGINDEX, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
+                index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
             )
         except es_exceptions.NotFoundError as err:
-            logger.debug(
+            logger.error(
                 "didn't find index_name for resource '%s' details: %s", resource_id, err
             )
-            return self._set_index_name_for_resource(resource_id, resource_id)
+            return self.set_index_name_for_resource(resource_id, self.create_index_name(resource_id))
         return res["_source"]["index_name"]
 
     def publish_index(self, resource_id: str):
