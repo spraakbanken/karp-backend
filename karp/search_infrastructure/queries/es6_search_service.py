@@ -234,11 +234,15 @@ class Es6SearchService(search.SearchService):
                 "distribution", "terms", field="_index", size=len(query.resources)
             )
         if query.sort:
-            s = s.sort(*self.mapping_repo.translate_sort_fields(query.resources, query.sort))
+            s = s.sort(
+                *self.mapping_repo.translate_sort_fields(query.resources, query.sort)
+            )
         elif query.sort_dict:
             sort_fields = []
             for resource, sort in query.sort_dict.items():
-                sort_fields.extend(self.mapping_repo.translate_sort_fields([resource], sort))
+                sort_fields.extend(
+                    self.mapping_repo.translate_sort_fields([resource], sort)
+                )
             s = s.sort(*sort_fields)
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         response = s.execute()

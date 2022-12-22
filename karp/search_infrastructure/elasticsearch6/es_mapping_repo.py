@@ -290,6 +290,3 @@ class Es6MappingRepository(MappingRepository):
             #     if "fields" in prop_value:
 
         return sortable_map
-
-
-
