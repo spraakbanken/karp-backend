@@ -162,13 +162,11 @@ def validate_entries(
     ),
 ):
     typer.echo(f"reading from {path or 'stdin'} ...", err=True)
-    err_output = None
 
     if not output and path:
         output = Path(f"{path}.v6.jsonl")
 
-    if not err_output and output:
-        err_output = Path(f"{output}.errors.jsonl")
+    err_output = Path(f"{output}.errors.jsonl")
 
     if config_path and resource_id_raw:
         typer.echo("You can't provide both '--resource_id' and '--config/-c'", err=True)
@@ -210,9 +208,9 @@ def validate_entries(
         )
         if error_counter.counter > 0:
             error_code = 130
-            print(
+            typer.echo(
                 f'{error_counter.counter} entries failed validation, see "{err_output}"',
-                file=sys.stderr,
+                err=True,
             )
 
     if error_code:
