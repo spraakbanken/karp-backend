@@ -41,6 +41,3 @@ class EsQuery(Query):
 
     class Config:
         arbitrary_types_allowed = True
-
-
-

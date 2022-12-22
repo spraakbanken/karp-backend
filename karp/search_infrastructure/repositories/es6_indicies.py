@@ -26,12 +26,9 @@ class Es6Index(Index):
         self,
         es: elasticsearch.Elasticsearch,
         mapping_repo: Es6MappingRepository,
-        *,
-        index_prefix: str = "",
     ):
         self.es = es
         self.mapping_repo = mapping_repo
-        self.index_prefix = index_prefix
 
     @property
     def seen(self):
@@ -250,14 +247,12 @@ class Es6IndexUnitOfWork(IndexUnitOfWork):
         self,
         es: elasticsearch.Elasticsearch,
         event_bus: EventBus,
-        index_prefix: str,
         mapping_repo: Es6MappingRepository,
     ) -> None:
         super().__init__(event_bus=event_bus)
         self._index = Es6Index(
             es=es,
             mapping_repo=mapping_repo,
-            index_prefix=index_prefix,
         )
 
     # @classmethod

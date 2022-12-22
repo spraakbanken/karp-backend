@@ -123,7 +123,7 @@ class Es6SearchIndexMod(injector.Module):
         self,
         es: elasticsearch.Elasticsearch,
     ) -> Es6MappingRepository:
-        return Es6MappingRepository(es=es)
+        return Es6MappingRepository(es=es, prefix=self._index_prefix)
 
     @injector.provider
     def es6_search_service(
@@ -146,6 +146,5 @@ class Es6SearchIndexMod(injector.Module):
         return Es6IndexUnitOfWork(
             es=es,
             event_bus=event_bus,
-            index_prefix=self._index_prefix,
             mapping_repo=mapping_repo,
         )
