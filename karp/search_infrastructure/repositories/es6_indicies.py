@@ -58,7 +58,7 @@ class Es6Index(Index):
             "mappings": {"entry": mapping},
         }
 
-        index_name = self.mapping_repo.get_index_name(resource_id)
+        index_name = self.mapping_repo.create_index_and_alias_name(resource_id)
         logger.info("creating index", extra={"index_name": index_name, "body": body})
         result = self.es.indices.create(index=index_name, body=body)
         if "error" in result:
