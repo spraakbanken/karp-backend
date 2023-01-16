@@ -188,7 +188,8 @@ class Es6SearchService(search.SearchService):
             ms = es_dsl.MultiSearch(using=self.es)
 
             for resource in query.resources:
-                s = es_dsl.Search(index=resource)
+                alias_name = self.mapping_repo.get_alias_name(resource)
+                s = es_dsl.Search(index=alias_name)
 
                 if es_query is not None:
                     s = s.query(es_query)
@@ -223,7 +224,8 @@ class Es6SearchService(search.SearchService):
 
     # TODO Rename this here and in `search_with_query`
     def _extracted_from_search_with_query_47(self, query, es_query):
-        s = es_dsl.Search(using=self.es, index=query.resources, doc_type="entry")
+        alias_names = [self.mapping_repo.get_alias_name(resource) for resource in query.resources]
+        s = es_dsl.Search(using=self.es, index=alias_names, doc_type="entry")
         if es_query is not None:
             s = s.query(es_query)
 
@@ -268,14 +270,16 @@ class Es6SearchService(search.SearchService):
         entries = entry_ids.split(",")
         query = es_dsl.Q("terms", _id=entries)
         logger.debug("query", extra={"query": query})
-        s = es_dsl.Search(using=self.es, index=resource_id).query(query)
+        alias_name = self.mapping_repo.get_alias_name(resource_id)
+        s = es_dsl.Search(using=self.es, index=alias_name).query(query)
         logger.debug("s", extra={"es_query s": s.to_dict()})
         response = s.execute()
 
         return self._format_result([resource_id], response)
 
     def statistics(self, resource_id: str, field: str) -> Iterable:
-        s = es_dsl.Search(using=self.es, index=resource_id)
+        alias_name = self.mapping_repo.get_alias_name(resource_id)
+        s = es_dsl.Search(using=self.es, index=alias_name)
         s = s[:0]
 
         if field in self.mapping_repo.analyzed_fields[resource_id]:
