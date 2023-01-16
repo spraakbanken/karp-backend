@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "karp-backend"
-version = "6.1.9"
+version = "6.1.10"
 license = "MIT"
 description = "Karp backend"
 readme = "README.md"
