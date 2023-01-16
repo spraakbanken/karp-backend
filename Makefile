@@ -35,7 +35,31 @@ else
 endif
 
 help:
-	@echo "Available commands:"
+	@echo "usage:"
+	@echo ""
+	@echo "install"
+	@echo "   setup production environment"
+	@echo ""
+	@echo "dev | install-dev"
+	@echo "   setup development environment"
+	@echo ""
+	@echo "test | run-all-tests"
+	@echo "   run all tests"
+	@echo ""
+	@echo "run-doc-tests"
+	@echo "   run all tests"
+	@echo ""
+	@echo "run-all-tests-w-coverage"
+	@echo "   run all tests with coverage collection"
+	@echo ""
+	@echo "lint"
+	@echo "   lint the code"
+	@echo ""
+	@echo "type-check"
+	@echo "   check types"
+	@echo ""
+	@echo "fmt"
+	@echo "   run formatter on all code"
 
 install:
 	poetry install --no-dev -E mysql
@@ -156,9 +180,17 @@ bumpversion-minor:
 bumpversion-major:
 	${INVENV} bump2version major
 
+.PHONY: publish
+publish:
+	git push origin main --tags
+
 clean: clean-pyc
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
+
+.PHONY: fmt
+fmt:
+	${INVENV} black .
