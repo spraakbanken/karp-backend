@@ -135,7 +135,10 @@ class Es6SearchService(search.SearchService):
 
     def _format_result(self, resource_ids, response):
         logger.debug("_format_result called", extra={"resource_ids": resource_ids})
-
+        resource_id_map = {
+            resource_id: self.mapping_repo.get_name_base(resource_id)
+            for resource_id in resource_ids
+        }
         def format_entry(entry):
 
             dict_entry = entry.to_dict()
@@ -149,8 +152,8 @@ class Es6SearchService(search.SearchService):
                 "last_modified_by": last_modified_by,
                 "resource": next(
                     resource
-                    for resource in resource_ids
-                    if entry.meta.index.startswith(resource)
+                    for resource, index_base in resource_id_map.items()
+                    if entry.meta.index.startswith(index_base)
                 ),
                 "entry": dict_entry,
             }

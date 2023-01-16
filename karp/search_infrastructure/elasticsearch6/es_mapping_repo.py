@@ -80,6 +80,9 @@ class Es6MappingRepository(MappingRepository):
     def create_index_and_alias_name(self, resource_id: str) -> dict[str, str]:
         return self._update_config(resource_id)
 
+    def get_name_base(self, resource_id: str) -> str:
+        return f"{self._prefix}{resource_id}"
+
     def _update_config(self, resource_id: str) -> dict[str, str]:
         index_name = self.create_index_name(resource_id)
         alias_name = self.create_alias_name(resource_id)
