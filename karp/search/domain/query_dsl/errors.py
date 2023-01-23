@@ -1,7 +1,6 @@
-from karp import errors
 
 
-class QueryDSLError(errors.KarpError):
+class QueryDSLError(Exception):
     def __init__(self, message):
         super().__init__(message)
 
