@@ -8,7 +8,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
 
-from karp import errors as karp_errors, auth, search
+from karp import auth, search
+from karp.main import errors as karp_errors
 from karp.search.application.queries import SearchService, QueryRequest
 from karp.webapp import schemas
 

@@ -2,14 +2,9 @@ import abc
 import typing
 
 import pydantic
-from sb_json_tools import jsondiff
 
-from karp import errors as karp_errors
 from karp.foundation.value_objects import unique_id
-from karp.lex.application.repositories import (
-    ResourceUnitOfWork,
-    EntryUowRepositoryUnitOfWork,
-)
+
 from karp.lex.domain.entities.entry import EntryOp
 
 

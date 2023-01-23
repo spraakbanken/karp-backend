@@ -5,7 +5,7 @@ import pytest  # pyre-ignore
 from fastapi import status
 
 from karp import auth
-from karp.errors import ClientErrorCodes
+from karp.main.errors import ClientErrorCodes
 from karp.lex.application.queries.resources import GetEntryRepositoryId
 from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,

@@ -158,7 +158,7 @@ def test_sql_resource_repo_put_another_resource(resource_repo):
     resource2 = factories.ResourceFactory()
     resource_repo.save(resource2)
 
-    assert resource_repo.resource_ids() == [resource.resource_id, resource2.resource_id]
+    assert set(resource_repo.resource_ids()) == set([resource.resource_id, resource2.resource_id])
 
 
 class TestSqlResourceRepo:

@@ -11,7 +11,7 @@ import logging
 from karp import auth, lex
 
 # from karp.auth.auth import auth
-from karp.errors import ClientErrorCodes, KarpError
+from karp.main.errors import ClientErrorCodes, KarpError
 from karp.auth.domain.auth_service import AuthService
 from karp.auth_infrastructure import (
     JWTAuthService,

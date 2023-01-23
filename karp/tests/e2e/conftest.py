@@ -3,7 +3,7 @@
 # pylint: disable=wrong-import-position,missing-function-docstring
 from karp.main import AppContext
 from karp.tests.integration.auth.adapters import create_bearer_token
-from karp import auth, config
+from karp import auth
 import os
 import json
 import typing
@@ -36,7 +36,7 @@ from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
 import karp.lex_infrastructure.sql.sql_models  # nopep8
 from karp.db_infrastructure.db import metadata  # nopep8
 from karp.lex.domain import commands, errors, entities  # nopep8
-from karp import errors as karp_errors  # nopep8
+from karp.main.config import config
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
@@ -285,16 +285,16 @@ def write_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 @pytest.fixture(name="init_search_service", scope="session")
 def fixture_init_search_service():
     print("fixture: use_main_index")
-    if not config.TEST_ELASTICSEARCH_ENABLED:
+    if not config("TEST_ELASTICSEARCH_ENABLED"):
         print("don't use elasticsearch")
         # pytest.skip()
         yield
     else:
-        if not config.TEST_ES_HOME:
+        if not config("TEST_ES_HOME"):
             raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
         es_port = int(os.environ.get("TEST_ELASTICSEARCH_PORT", "9202"))
         with elasticsearch_test.ElasticsearchTest(
-            port=es_port, es_path=config.TEST_ES_HOME
+            port=es_port, es_path=config("TEST_ES_HOME")
         ):
             yield
 

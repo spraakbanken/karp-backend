@@ -16,7 +16,6 @@ from karp.auth.domain.errors import (
     InvalidTokenPayload,
     TokenError,
 )
-from karp.errors import ClientErrorCodes
 from karp.auth_infrastructure.services.jwt_auth_service import (
     JWTAuthService,
     JWTCreds,

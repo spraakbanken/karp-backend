@@ -18,8 +18,8 @@ from starlette import responses
 from karp.foundation.value_objects import unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
 
-from karp.lex.domain.value_objects import UniqueId
-from karp import errors as karp_errors, auth, lex, search
+from karp.main import errors as karp_errors
+from karp import auth, lex, search
 from karp.lex.application.queries import EntryDto, GetEntryHistory
 from karp.lex.domain import commands, errors
 from karp.auth import User

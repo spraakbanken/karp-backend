@@ -4,7 +4,7 @@ import time
 
 import typer
 
-from karp.errors import KarpError, ResourceNotFoundError
+from karp.main.errors import KarpError
 
 logger = logging.getLogger("karp")
 

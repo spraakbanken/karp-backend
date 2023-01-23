@@ -28,7 +28,7 @@ from karp.foundation import errors as foundation_errors
 from karp.foundation.value_objects import unique_id
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
-from karp.errors import ClientErrorCodes
+from karp.main.errors import ClientErrorCodes
 from karp.main import modules, config
 from karp.webapp.routes import router as api_router
 from karp.webapp import tasks
@@ -130,7 +130,7 @@ def create_app() -> FastAPI:
 
     modules.load_modules("karp.webapp", app=app)
 
-    from karp.errors import KarpError
+    from karp.main.errors import KarpError
 
     @app.exception_handler(KarpError)
     async def _karp_error_handler(request: Request, exc: KarpError):

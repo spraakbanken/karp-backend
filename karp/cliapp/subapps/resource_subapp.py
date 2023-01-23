@@ -16,7 +16,7 @@ from karp.lex.application.queries import (
     ListEntryRepos,
     GetResources,
 )
-from karp.errors import ResourceAlreadyPublished
+from karp.main.errors import ResourceAlreadyPublished
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
