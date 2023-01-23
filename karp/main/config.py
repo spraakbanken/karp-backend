@@ -28,8 +28,7 @@ def parse_database_name(env: environs.Env) -> str:
 def parse_database_url(env: environs.Env) -> DatabaseUrl:
     database_url = env("DATABASE_URL", None)
     if env.bool("TESTING", False):
-        database_test_url = env("DATABASE_TEST_URL", None)
-        if database_test_url:
+        if database_test_url := env("DATABASE_TEST_URL", None):
             return make_url(database_test_url)
         elif database_url:
             return make_url(f"{database_url}_test")
