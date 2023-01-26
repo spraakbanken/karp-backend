@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Security, statu
 from karp import auth
 from karp.foundation.value_objects import PermissionLevel
 from karp.search.application.queries import SearchService, StatisticsDto
-from karp.webapp import schemas
+from karp.karp_v6_api import schemas
 
-from karp.webapp import dependencies as deps
-from karp.webapp.dependencies.fastapi_injector import inject_from_req
+from karp.karp_v6_api import dependencies as deps
+from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 
 
 router = APIRouter()

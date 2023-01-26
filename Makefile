@@ -97,11 +97,11 @@ karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
 
 .PHONY: serve
 serve: install-dev
-	${INVENV} uvicorn --factory karp.webapp.main:create_app
+	${INVENV} uvicorn --factory karp.karp_v6_api.main:create_app
 
 .PHONY: serve-w-reload
 serve-w-reload: install-dev
-	${INVENV} uvicorn --reload --factory karp.webapp.main:create_app
+	${INVENV} uvicorn --reload --factory karp.karp_v6_api.main:create_app
 
 check-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
@@ -148,7 +148,7 @@ tox-to-log:
 	tox > tox.log
 
 lint:
-	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex karp/cliapp karp/webapp
+	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex karp/cliapp karp/karp_v6_api
 
 lint-no-fail:
 	${INVENV} pylint --rcfile=pylintrc --exit-zero karp

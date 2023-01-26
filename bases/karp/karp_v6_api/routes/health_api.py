@@ -6,7 +6,7 @@ Used to perform readiness and liveness probes on the server.
 
 from fastapi import APIRouter, Depends, Response, status
 
-from karp.webapp import schemas
+from karp.karp_v6_api import schemas
 
 
 router = APIRouter(tags=["Health"])

@@ -11,10 +11,10 @@ from karp.lex import (
     EntryUowRepositoryUnitOfWork,
     ResourceUnitOfWork,
 )
-from karp.webapp.dependencies import db_deps
-from karp.webapp.dependencies.db_deps import get_database, get_session
-from karp.webapp.dependencies import event_deps
-from karp.webapp.dependencies.fastapi_injector import inject_from_req
+from karp.karp_v6_api.dependencies import db_deps
+from karp.karp_v6_api.dependencies.db_deps import get_database, get_session
+from karp.karp_v6_api.dependencies import event_deps
+from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 
 from karp.db_infrastructure import Database
 

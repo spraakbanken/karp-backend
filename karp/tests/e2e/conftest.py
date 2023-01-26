@@ -86,7 +86,7 @@ def fixture_cliapp() -> Typer:
 def fixture_app(
     apply_migrations: None, init_search_service: None
 ) -> Generator[FastAPI, None, None]:
-    from karp.webapp.main import create_app
+    from karp.karp_v6_api.main import create_app
 
     app = create_app()
     # app.state.app_context.container.binder.install(TestAuthInfrastructure())
@@ -121,7 +121,7 @@ def create_and_publish_resource(
     path_to_config: str,
     access_token: auth.AccessToken,
 ) -> Tuple[bool, Optional[dict[str, Any]]]:
-    from karp.webapp.schemas import ResourceCreate
+    from karp.karp_v6_api.schemas import ResourceCreate
 
     with open(path_to_config) as fp:
         resource_config = json.load(fp)

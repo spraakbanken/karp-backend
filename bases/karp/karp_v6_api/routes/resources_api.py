@@ -8,8 +8,8 @@ from karp import auth, lex
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto
 from karp.foundation.commands import CommandBus
 
-from karp.webapp.schemas import ResourceCreate, ResourcePublic, ResourceProtected
-from karp.webapp import dependencies as deps, schemas
+from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic, ResourceProtected
+from karp.karp_v6_api import dependencies as deps, schemas
 
 from karp.lex import (
     CreatingEntryRepo,

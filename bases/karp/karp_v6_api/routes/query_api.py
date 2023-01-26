@@ -11,10 +11,10 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, st
 from karp import auth, search
 from karp.main import errors as karp_errors
 from karp.search.application.queries import SearchService, QueryRequest
-from karp.webapp import schemas
+from karp.karp_v6_api import schemas
 
-from karp.webapp import dependencies as deps
-from karp.webapp.dependencies.fastapi_injector import inject_from_req
+from karp.karp_v6_api import dependencies as deps
+from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ def get_entries_by_id(
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
-    logger.debug("webapp.views.get_entries_by_id")
+    logger.debug("karp_v6_api.views.get_entries_by_id")
     if not auth_service.authorize(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

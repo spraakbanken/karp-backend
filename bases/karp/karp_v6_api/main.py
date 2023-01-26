@@ -30,9 +30,9 @@ from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
 from karp.main import modules, config
-from karp.webapp.routes import router as api_router
-from karp.webapp import tasks
-from karp.webapp.contrib import MatomoMiddleware
+from karp.karp_v6_api.routes import router as api_router
+from karp.karp_v6_api import tasks
+from karp.karp_v6_api.contrib import MatomoMiddleware
 
 
 querying_description = """
@@ -128,7 +128,7 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router)
 
-    modules.load_modules("karp.webapp", app=app)
+    modules.load_modules("karp.karp_v6_api", app=app)
 
     from karp.main.errors import KarpError
 

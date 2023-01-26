@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from karp.webapp.routes import (
+from karp.karp_v6_api.routes import (
     entries_api,
     health_api,
     history_api,

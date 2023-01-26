@@ -25,7 +25,7 @@ from karp.lex.domain import commands, errors
 from karp.auth import User
 from karp.foundation.value_objects import PermissionLevel
 from karp.auth import AuthService
-from karp.webapp import schemas, dependencies as deps
+from karp.karp_v6_api import schemas, dependencies as deps
 
 
 router = APIRouter()

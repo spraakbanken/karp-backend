@@ -25,12 +25,12 @@ packages = [{ include = "karp" }]
 [tool.poetry.scripts]
 karp-cli = "karp.cliapp.main:cliapp"
 # ; karp.modules =
-# ;     health = "karp.webapp.health"_api
-# ;     entries = "karp.webapp.views.entries"
-# ;     resources = "karp.webapp.resources"_api
-# ; 	history = "karp.webapp.views.history"
-# ; 	stats = "karp.webapp.stats"_api
-# ; 	query = "karp.webapp.query"_api
+# ;     health = "karp.karp_v6_api.health"_api
+# ;     entries = "karp.karp_v6_api.views.entries"
+# ;     resources = "karp.karp_v6_api.resources"_api
+# ; 	history = "karp.karp_v6_api.views.history"
+# ; 	stats = "karp.karp_v6_api.stats"_api
+# ; 	query = "karp.karp_v6_api.query"_api
 [tool.poetry.plugins."karp.infrastructure"]
 "es6" = "karp.infrastructure.elasticsearch6"
 "sql" = "karp.infrastructure.sql"
