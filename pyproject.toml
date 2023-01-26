@@ -20,7 +20,10 @@ classifiers = [
 	"Operating System :: Microsoft :: Windows",
 	"Topic :: Utilities",
 ]
-packages = [{ include = "karp" }]
+packages = [
+	{ include = "karp" },
+	{ include = "karp/karp_v6_api", from = "bases" },
+]
 
 [tool.poetry.scripts]
 karp-cli = "karp.cliapp.main:cliapp"
