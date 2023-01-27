@@ -21,7 +21,17 @@ classifiers = [
 	"Topic :: Utilities",
 ]
 packages = [
-	{ include = "karp" },
+	{ include = "development" },
+	{ include = "karp/auth", from = "components" },
+	{ include = "karp/auth_infrastructure", from = "components" },
+	{ include = "karp/foundation", from = "components" },
+	{ include = "karp/lex", from = "components" },
+	{ include = "karp/lex_infrastructure", from = "components" },
+	{ include = "karp/main", from = "components" },
+	{ include = "karp/search", from = "components" },
+	{ include = "karp/search_infrastructure", from = "components" },
+	{ include = "karp/utility", from = "components" },
+	{ include = "karp/cliapp", from = "bases" },
 	{ include = "karp/karp_v6_api", from = "bases" },
 ]
 
@@ -62,7 +72,7 @@ asgi-correlation-id = "^3.0.1"
 elasticsearch = "^6"
 elasticsearch-dsl = "^6"
 environs = "^9.3.4"
-fastapi = "^0.88.0"
+fastapi = "^0.89.0"
 injector = "^0.20.1"
 json-streams = "^0.12.0"
 mysqlclient = { version = "^2.1.1", optional = true }
