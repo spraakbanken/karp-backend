@@ -1,5 +1,4 @@
 """Handle calls and json convertions."""
-import json
 from typing import Dict
 from fastapi import status
 from karp import auth
