@@ -33,6 +33,7 @@ packages = [
 	{ include = "karp/utility", from = "components" },
 	{ include = "karp/cliapp", from = "bases" },
 	{ include = "karp/karp_v6_api", from = "bases" },
+	{ include = "karp/lex_core", from = "bases" },
 ]
 
 [tool.poetry.scripts]
