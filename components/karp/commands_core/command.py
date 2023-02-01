@@ -16,13 +16,9 @@ class CommandHandler(Generic[CommandType]):
         raise NotImplementedError()
 
 
-class Command:
-    pass
-
-
 class CommandBus(abc.ABC):
     @abc.abstractmethod
-    def dispatch(self, command: Command) -> Any:
+    def dispatch(self, command: Any) -> Any:
         raise NotImplementedError
 
 
@@ -30,7 +26,7 @@ class InjectorCommandBus(CommandBus):
     def __init__(self, container: injector.Injector) -> None:
         self._container = container
 
-    def dispatch(self, command: Command) -> Any:
+    def dispatch(self, command: Any) -> Any:
         logger.info("Handling command: %s", command)
         cmd_cls = type(command)
         cmd_handler = self._container.get(CommandHandler[cmd_cls])  # type: ignore
