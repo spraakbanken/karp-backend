@@ -1,15 +1,13 @@
 import injector
 import pytest
 
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 from karp.lex import Lex
-from karp.lex.domain import commands as lex_commands
+from karp.lex_core import commands as lex_commands
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
-    EntryRepositoryUnitOfWorkFactory,
 )
 from karp.main.modules import CommandBusMod, EventBusMod
-from karp.lex.application import repositories
 
 from .adapters import (
     InMemoryEntryUowRepositoryUnitOfWork,
@@ -19,19 +17,19 @@ from .adapters import (
 from . import adapters, factories
 
 
-@pytest.fixture(name="entry_repo_repo_uow")
-def fixture_entry_repo_repo_uow() -> EntryUowRepositoryUnitOfWork:
-    return InMemoryEntryUowRepositoryUnitOfWork()
+# @pytest.fixture(name="entry_repo_repo_uow")
+# def fixture_entry_repo_repo_uow() -> EntryUowRepositoryUnitOfWork:
+#     return InMemoryEntryUowRepositoryUnitOfWork()
 
 
-@pytest.fixture(name="create_entry_repository")
-def fixture_create_entry_repository() -> lex_commands.CreateEntryRepository:
-    return factories.CreateEntryRepositoryFactory()
+# @pytest.fixture(name="create_entry_repository")
+# def fixture_create_entry_repository() -> lex_commands.CreateEntryRepository:
+#     return factories.CreateEntryRepositoryFactory()
 
 
-@pytest.fixture(name="resource_uow")
-def fixture_resource_uow() -> InMemoryResourceUnitOfWork:
-    return InMemoryResourceUnitOfWork()
+# @pytest.fixture(name="resource_uow")
+# def fixture_resource_uow() -> InMemoryResourceUnitOfWork:
+#     return InMemoryResourceUnitOfWork()
 
 
 # @pytest.fixture(name="entry_uows")

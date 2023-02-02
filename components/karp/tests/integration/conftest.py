@@ -16,7 +16,7 @@ from karp.main.modules import CommandBusMod, EventBusMod
 from karp.lex_infrastructure import GenericLexInfrastructure
 from karp.lex import Lex
 from karp.foundation.events import EventBus
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 
 # environ["TESTING"] = "True"
 # environ["ELASTICSEARCH_HOST"] = "localhost:9202"

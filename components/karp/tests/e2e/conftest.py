@@ -16,7 +16,7 @@ from typer.testing import CliRunner
 import alembic
 import alembic.config
 from karp.foundation.value_objects import make_unique_id
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 import elasticsearch_test  # pyre-ignore
 
 import pytest  # pyre-ignore

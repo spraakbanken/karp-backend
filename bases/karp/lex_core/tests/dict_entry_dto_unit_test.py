@@ -26,7 +26,7 @@ def test_example_snake_case():
             "baseform": "1- on -1",
             "id": "1-_on_-1..1",
             "wordforms": ["one to one", "one 2 one"],
-            "text": "<p>även <em>one to one, one 2 one</em> (sl) flitigt använda i herrtidningarnas sexannonser och vid telefonsex. Enl Olle Waller (Fråga Olle) är det troligen tal om ”traditionella önskningar om ett parsamlag”.</p>",
+            "text": "<p>även <em>one to one, one 2 one</em> (sl) flitigt använda i ...</p>",
         },
         "last_modified": 1671443451.340828,
         "last_modified_by": "local admin",
@@ -36,7 +36,7 @@ def test_example_snake_case():
     assert entry_dto.entity_id == data["entity_id"]
     assert entry_dto.resource == data["resource"]
     assert entry_dto.version == data["version"]
-    assert entry_dto.last_modified.timestamp() == data["last_modified"]
+    assert entry_dto.last_modified.timestamp() == data["last_modified"]  # type: ignore
     assert entry_dto.last_modified_by == data["last_modified_by"]
 
     serialized_entry = entry_dto.serialize()

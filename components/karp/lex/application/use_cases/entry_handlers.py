@@ -6,14 +6,14 @@ import json_streams
 from sb_json_tools import jsondiff
 import logging
 
-from karp.foundation.commands import CommandHandler
+from karp.command_bus import CommandHandler
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain import errors
 from karp.lex.domain.entities.entry import Entry
 from karp.foundation.value_objects import unique_id
 
 from karp.foundation import events as foundation_events
-from karp.lex.domain import commands
+from karp.lex_core import commands
 from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application import repositories
 

@@ -9,7 +9,7 @@ import logging
 from karp.lex.domain import errors, entities
 from karp.lex.domain.entities import Resource
 from karp.foundation import events as foundation_events
-from karp.foundation.commands import CommandHandler
+from karp.command_bus import CommandHandler
 from karp.lex.application.queries import ResourceDto
 from karp.lex.application import repositories as lex_repositories
 from karp.lex.domain import commands

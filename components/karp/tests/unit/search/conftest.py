@@ -1,7 +1,7 @@
 import injector
 import pytest
 
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure

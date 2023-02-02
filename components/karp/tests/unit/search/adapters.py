@@ -3,7 +3,7 @@ from typing import Dict, Iterable, List, Optional
 
 import injector
 
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
 from karp.foundation.time import utc_now
 from karp.lex.application.repositories import entries

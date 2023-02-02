@@ -6,7 +6,7 @@ import logging
 
 from karp import auth, lex
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 
 from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic, ResourceProtected
 from karp.karp_v6_api import dependencies as deps, schemas

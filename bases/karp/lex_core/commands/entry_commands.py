@@ -2,12 +2,8 @@ import typing
 
 import pydantic
 
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import unique_id, UniqueId
 from .base import Command
-from karp.utility import time
-
-from karp.lex.domain import errors
-from karp.lex.domain.value_objects import UniqueId
 
 
 class AddEntry(Command):

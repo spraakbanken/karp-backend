@@ -65,7 +65,7 @@ install:
 	poetry install --no-dev -E mysql
 
 dev: install-dev
-install-dev: karp/search/domain/query_dsl/karp_query_v6_parser.py karp/search/domain/query_dsl/karp_query_v6_model.py
+install-dev: components/karp/search/domain/query_dsl/karp_query_v6_parser.py components/karp/search/domain/query_dsl/karp_query_v6_model.py
 	poetry install -E mysql
 
 install-wo-mysql:
@@ -89,10 +89,10 @@ install-dev-elasticsearch7:
 init-db:
 	${INVENV} alembic upgrade head
 
-karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
+components/karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
 	${INVENV} tatsu $< > $@
 
-karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
+components/karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
 	${INVENV} tatsu --object-model $< > $@
 
 .PHONY: serve
@@ -112,11 +112,11 @@ test: unit-tests
 all-tests: unit-tests integration-tests e2e-tests
 .PHONY: all-tests-w-coverage
 all-tests-w-coverage:
-	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests
+	${INVENV} pytest -vv --cov=karp --cov-report=xml components/karp/tests
 
 .PHONY: unit-tests
 unit-tests:
-	${INVENV} pytest -vv karp/tests/unit karp/tests/foundation/unit
+	${INVENV} pytest -vv components/karp/tests/unit bases/karp/lex_core/tests
 
 .PHONY: e2e-tests
 e2e-tests: clean-pyc

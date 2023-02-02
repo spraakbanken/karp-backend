@@ -16,7 +16,7 @@ from injector import Provider, T
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from karp.foundation.commands import CommandBus, InjectorCommandBus
+from karp.command_bus import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
 from karp.auth_infrastructure import (
     AuthInfrastructure,

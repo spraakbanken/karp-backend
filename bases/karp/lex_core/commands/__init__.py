@@ -19,7 +19,21 @@ from .resource_commands import (
 )
 
 __all__ = [
+    # Entry commands
+    "AddEntries",
     "AddEntriesInChunks",
+    "AddEntry",
+    "DeleteEntry",
     "ImportEntries",
     "ImportEntriesInChunks",
+    "UpdateEntry",
+    # EntryRepo commands
+    "CreateEntryRepository",
+    "DeleteEntryRepository",
+    # Resource commands
+    "CreateResource",
+    "DeleteResource",
+    "PublishResource",
+    "SetEntryRepoId",
+    "UpdateResource",
 ]

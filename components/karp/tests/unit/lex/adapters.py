@@ -6,7 +6,7 @@ import injector
 from karp.foundation.events import EventBus
 
 from karp.foundation.value_objects import UniqueId
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 from karp.lex import EntryRepositoryUnitOfWorkFactory
 from karp.lex.domain import entities as lex_entities
 from karp.lex.application import repositories as lex_repositories

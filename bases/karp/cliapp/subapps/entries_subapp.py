@@ -13,7 +13,7 @@ import typer
 # from tabulate import tabulate
 from tqdm import tqdm
 
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 from karp import lex
 from karp.utility import json_schema
 

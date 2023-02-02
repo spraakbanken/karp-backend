@@ -31,6 +31,7 @@ packages = [
 	{ include = "karp/search", from = "components" },
 	{ include = "karp/search_infrastructure", from = "components" },
 	{ include = "karp/utility", from = "components" },
+	{ include = "karp/tests", from = "components" },
 	{ include = "karp/cliapp", from = "bases" },
 	{ include = "karp/karp_v6_api", from = "bases" },
 	{ include = "karp/lex_core", from = "bases" },
@@ -132,3 +133,6 @@ ignore_decorators = ["@abc.abstractmethod"]
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 97

@@ -2,7 +2,7 @@ import dataclasses
 
 import injector
 
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
 
 

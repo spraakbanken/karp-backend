@@ -6,10 +6,10 @@ import typer
 
 from karp import lex
 from karp.foundation.value_objects import UniqueId
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex.application.queries import ListEntryRepos
-from karp.lex.domain.commands import CreateEntryRepository
+from karp.lex_core.commands import CreateEntryRepository
 from karp.cliapp.typer_injector import inject_from_ctx
 
 

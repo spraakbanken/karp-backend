@@ -7,7 +7,7 @@ from json_streams import jsonlib
 from tabulate import tabulate
 
 from karp import lex
-from karp.foundation.commands import CommandBus
+from karp.command_bus import CommandBus
 from karp.foundation.value_objects import unique_id
 from karp.lex import commands as lex_commands
 from karp.search import commands as search_commands

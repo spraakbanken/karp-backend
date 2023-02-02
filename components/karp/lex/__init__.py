@@ -1,13 +1,13 @@
 import injector
 
-from karp.foundation.commands import CommandHandler
+from karp.command_bus import CommandHandler
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
     InjectorEntryUnitOfWorkRepoFactory,
     ResourceUnitOfWork,
 )
-from karp.lex.domain.commands import (
+from karp.lex_core.commands import (
     AddEntries,
     AddEntriesInChunks,
     AddEntry,
@@ -19,7 +19,7 @@ from karp.lex.domain.commands import (
     SetEntryRepoId,
 )
 from karp.lex.domain import commands
-from karp.lex.domain.commands.resource_commands import SetEntryRepoId
+from karp.lex_core.commands.resource_commands import SetEntryRepoId
 from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application.use_cases import (
     AddingEntries,

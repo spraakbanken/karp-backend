@@ -2,10 +2,8 @@ import typing
 
 import pydantic
 
-from karp.foundation.value_objects import unique_id
-from karp.utility import time
+from karp.lex_core.value_objects import unique_id
 
-from karp.lex.domain import errors
 from .base import Command
 
 
@@ -31,11 +29,11 @@ class CreateResource(Command):
         try:
             resource_id = data.pop("resource_id")
         except KeyError as exc:
-            raise errors.ConstraintsError("'resource_id' is missing") from exc
+            raise ValueError("'resource_id' is missing") from exc
         try:
             name = data.pop("resource_name")
         except KeyError as exc:
-            raise errors.ConstraintsError("'resource_name' is missing") from exc
+            raise ValueError("'resource_name' is missing") from exc
 
         entry_repo_id = unique_id.parse(entry_repo_id)
 

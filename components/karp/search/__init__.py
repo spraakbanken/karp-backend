@@ -2,7 +2,7 @@ from typing import List
 
 import injector
 
-from karp.foundation.commands import CommandHandler
+from karp.command_bus import CommandHandler
 from karp.foundation.events import EventHandler
 from karp.lex.domain import events as lex_events
 from karp.search.domain import commands

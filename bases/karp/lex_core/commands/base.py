@@ -1,11 +1,18 @@
 import pydantic
 
-from karp.foundation import commands
-from karp.utility import time
+from datetime import datetime, timezone
 
 
-class Command(pydantic.BaseModel, commands.Command):
-    timestamp: float = pydantic.Field(default_factory=time.utc_now)
+def utc_now() -> float:
+    """A UTC timestamp in seconds.
+
+    This function may return the same timestamp twice.
+    """
+    return datetime.now(timezone.utc).timestamp()
+
+
+class Command(pydantic.BaseModel):
+    timestamp: float = pydantic.Field(default_factory=utc_now)
 
     class Config:
         arbitrary_types_allowed = True
