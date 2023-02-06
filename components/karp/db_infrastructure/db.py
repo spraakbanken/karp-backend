@@ -25,7 +25,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql import DOUBLE
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.mutable import Mutable
 from sqlalchemy.orm import aliased, mapper, relationship
 from sqlalchemy.orm.session import Session, sessionmaker
