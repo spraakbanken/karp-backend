@@ -8,7 +8,7 @@ class ParseError(QueryDSLError):
         super().__init__(message)
 
     def __repr__(self) -> str:
-        return "ParseError message='{}'".format(self.message)
+        return f"ParseError message='{self}'"
 
 
 class SyntaxError(ParseError):
@@ -16,4 +16,4 @@ class SyntaxError(ParseError):
         super().__init__(message)
 
     def __repr__(self) -> str:
-        return "SyntaxError message='{}'".format(self.message)
+        return f"SyntaxError message='{str(self)}'"
