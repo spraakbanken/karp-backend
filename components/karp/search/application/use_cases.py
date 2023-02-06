@@ -1,20 +1,17 @@
 import logging
 
-import typing
-from typing import Dict, List, Optional, Tuple, Iterable
+from typing import Iterable
 
-from karp.foundation import (
-    events as foundation_events,
-    commands as foundation_commands,
-)
+from karp.foundation import events as foundation_events
+
+from karp import command_bus
 from karp.lex.domain import events as lex_events
-from karp.lex.domain.entities import resource
 from karp.lex.application.queries import EntryDto
 from karp.search.application.queries import ResourceViews
 from karp.search.application.repositories import IndexUnitOfWork
 from karp.search.application.transformers import EntryTransformer, PreProcessor
 
-from karp.lex.domain import events, entities
+from karp.lex.domain import events
 
 # , errors, events, search_service, model
 from karp.search.domain import commands
@@ -77,7 +74,7 @@ logger = logging.getLogger(__name__)
 # ):
 
 
-class ReindexingResource(foundation_commands.CommandHandler[commands.ReindexResource]):
+class ReindexingResource(command_bus.CommandHandler[commands.ReindexResource]):
     def __init__(
         self,
         index_uow: IndexUnitOfWork,

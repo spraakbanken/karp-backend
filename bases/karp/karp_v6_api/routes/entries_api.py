@@ -21,7 +21,8 @@ from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.main import errors as karp_errors
 from karp import auth, lex, search
 from karp.lex.application.queries import EntryDto, GetEntryHistory
-from karp.lex.domain import commands, errors
+from karp.lex import commands
+from karp.lex.domain import errors
 from karp.auth import User
 from karp.foundation.value_objects import PermissionLevel
 from karp.auth import AuthService

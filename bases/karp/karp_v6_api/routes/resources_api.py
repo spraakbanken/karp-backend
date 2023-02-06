@@ -16,7 +16,7 @@ from karp.lex import (
     CreatingResource,
     ResourceDto,
 )
-from karp.lex.domain import commands
+from karp.lex import commands
 from karp.lex.application.queries import ReadOnlyResourceRepository
 
 

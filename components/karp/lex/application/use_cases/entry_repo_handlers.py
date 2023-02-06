@@ -3,7 +3,7 @@ from typing import Any
 
 from karp.command_bus import CommandHandler
 from karp.lex.application.repositories.entries import EntryUnitOfWork
-from karp.lex.domain import commands
+from karp.lex import commands
 from karp.lex.application import repositories
 
 

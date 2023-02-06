@@ -12,7 +12,7 @@ from karp.foundation import events as foundation_events
 from karp.command_bus import CommandHandler
 from karp.lex.application.queries import ResourceDto
 from karp.lex.application import repositories as lex_repositories
-from karp.lex.domain import commands
+from karp.lex import commands
 from karp.lex.application import repositories
 
 

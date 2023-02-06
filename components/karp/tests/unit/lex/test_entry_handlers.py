@@ -10,13 +10,13 @@ from karp.lex.application.repositories import (
     ResourceUnitOfWork,
     EntryUowRepositoryUnitOfWork,
 )
-from karp.lex.domain import commands
+from karp.lex import commands
 
 from . import adapters, factories
 
 # from karp.domain import errors, events
 # from karp.domain.value_objects.unique_id import make_unique_id
-# from karp.lex.domain import commands
+# from karp.lex import commands
 # from karp.services import unit_of_work
 
 # from karp.tests.unit.adapters import (InMemoryEntryUowFactory, InMemoryResourceUnitOfWork,

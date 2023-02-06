@@ -5,7 +5,8 @@ import factory
 import factory.fuzzy
 from faker.providers import BaseProvider
 
-from karp.lex.domain import commands, entities, events
+from karp.lex import commands
+from karp.lex.domain import entities, events
 from karp.foundation.value_objects import make_unique_id, MachineName
 from karp.utility.time import utc_now
 

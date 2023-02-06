@@ -6,7 +6,7 @@ from karp.lex.domain import errors
 
 from karp.lex.application import repositories
 from karp.lex.application.repositories import ResourceUnitOfWork
-from karp.lex.domain import commands
+from karp.lex import commands
 
 from . import adapters, factories
 

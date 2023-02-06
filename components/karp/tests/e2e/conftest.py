@@ -33,9 +33,7 @@ from alembic.config import main as alembic_main
 # print("importing karp stuf ...")
 from karp.tests import common_data, utils  # nopep8
 from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
-import karp.lex_infrastructure.sql.sql_models  # nopep8
 from karp.db_infrastructure.db import metadata  # nopep8
-from karp.lex.domain import commands, errors, entities  # nopep8
 from karp.main.config import config
 
 

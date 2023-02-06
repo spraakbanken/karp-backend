@@ -3,7 +3,8 @@ from karp.lex.application import (
     handlers as lex_handlers,
     repositories as lex_repositories,
 )
-from karp.lex.domain import commands as lex_commands, events as lex_events
+from karp.lex import commands as lex_commands
+from karp.lex.domain import events as lex_events
 from karp.search.application import handlers as search_handlers
 from karp.search.application.unit_of_work import SearchServiceUnitOfWork
 from karp.lex.application import repositories
