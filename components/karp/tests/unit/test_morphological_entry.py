@@ -6,6 +6,8 @@ from karp.lex.domain.entities.entry import Entry
 # from karp.lex.domain.entities.morphological_entry import (MorphologicalEntry,
 #                                                     create_morphological_entry)
 
+
+
 pytestmark = pytest.mark.skip()
 
 
@@ -24,7 +26,7 @@ def test_morph_entry_has_function_get_inflection_table():
         "pn_test", pos="pn", form_msds=[], var_insts=[], resource_id="m"
     )
 
-    assert getattr(morph_entry, "get_inflection_table")
+    assert hasattr(morph_entry, "get_inflection_table")
 
 
 def test_morph_entry_inflect_av_1_blå():

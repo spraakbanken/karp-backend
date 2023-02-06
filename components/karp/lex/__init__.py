@@ -56,8 +56,10 @@ __all__ = [
     # modules
     "commands",
     # commands
+    "commands",
     "AddEntries",
     "AddEntriesInChunks",
+    "AddEntry",
     "ImportEntries",
     "ImportEntriesInChunks",
     # use cases
