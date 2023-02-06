@@ -18,5 +18,6 @@ from .resource_handlers import (
 __all__ = [
     "AddingEntries",
     "AddingEntry",
+    "DeletingEntry",
     "ImportingEntries",
 ]

@@ -1,4 +1,5 @@
 from .events import (
+    Event,
     ResourceCreated,
     ResourceDiscarded,
     ResourcePublished,
@@ -7,3 +8,15 @@ from .events import (
     EntryDeleted,
     EntryUpdated,
 )
+
+
+__all__ = [    
+    "Event",
+    "ResourceCreated",
+    "ResourceDiscarded",
+    "ResourcePublished",
+    "ResourceUpdated",
+    "EntryAdded",
+    "EntryDeleted",
+    "EntryUpdated",
+]

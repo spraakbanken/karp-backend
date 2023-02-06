@@ -2,11 +2,9 @@
 import enum
 import logging
 import typing
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 
-from deprecated import deprecated
 
-from karp.foundation import constraints
 from karp.lex.domain import errors, events
 from karp.foundation.entity import TimestampedVersionedEntity
 from karp.foundation.value_objects import unique_id
@@ -87,7 +85,7 @@ class Entry(TimestampedVersionedEntity):
         self._body = self._update_field(body, user, timestamp)
         self._message = message or "Entry updated"
         self._op = EntryOp.UPDATED
-        self._record_event(
+        return [
             events.EntryUpdated(
                 entity_id=self.id,
                 timestamp=self.last_modified,
@@ -96,8 +94,8 @@ class Entry(TimestampedVersionedEntity):
                 body=self.body,
                 repo_id=self.repo_id,
                 message=self.message,
-            )
-        )
+            )]
+        
 
     @property
     def op(self):
@@ -142,12 +140,11 @@ class Entry(TimestampedVersionedEntity):
         message: Optional[str] = None,
     ):
         if self._discarded:
-            return
+            return []
         self._op = EntryOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = self._update_field(True, user, timestamp)
-        self._record_event(
-            events.EntryDeleted(
+        return [events.EntryDeleted(
                 entity_id=self.id,
                 # entry_id=self.entry_id,
                 timestamp=self.last_modified,
@@ -155,8 +152,8 @@ class Entry(TimestampedVersionedEntity):
                 message=self._message,
                 version=self.version,
                 repo_id=self.repo_id,
-            )
-        )
+            )]
+        
 
     def _update_field(self, arg0, user: str, timestamp: Optional[float]):
         result = arg0
@@ -195,8 +192,7 @@ def create_entry(
         entity_id=entity_id,
         last_modified=last_modified,
     )
-    entry.queue_event(
-        events.EntryAdded(
+    event =    events.EntryAdded(
             repo_id=repo_id,
             entity_id=entry.id,
             # entry_id=entry.entry_id,
@@ -205,8 +201,8 @@ def create_entry(
             user=entry.last_modified_by,
             timestamp=entry.last_modified,
         )
-    )
-    return entry
+    
+    return entry, [event]
 
 
 # === Repository ===

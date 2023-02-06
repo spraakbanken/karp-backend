@@ -1,6 +1,6 @@
 import dataclasses
 import typing
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, Optional
 
 import injector
 from karp.foundation.events import EventBus
@@ -264,7 +264,7 @@ class InMemoryEntryUnitOfWorkCreator:
             message=message,
             user=user,
             event_bus=self.event_bus,
-        )
+        ), []
 
 
 def create_entry_uow2(

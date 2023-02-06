@@ -10,7 +10,7 @@ def test_create_fake_entry_repo_uow(
 ):
     uow_factory = lex_ctx.container.get(repositories.EntryRepositoryUnitOfWorkFactory)
 
-    entry_repo_uow = uow_factory.create(
+    entry_repo_uow, _ = uow_factory.create(
         "fake",
         unique_id.make_unique_id(),
         "name",

@@ -1,13 +1,10 @@
 from typing import Dict
 
-import pytest
 
-from karp.lex.domain import errors, events
+from karp.lex.domain import events
 from karp.lex.domain import entities
 from karp.foundation.value_objects import unique_id
-from karp.tests import common_data
 
-from karp.tests.unit.lex import factories
 
 
 def random_entry(entry_id: str = None, body: Dict = None) -> entities.Entry:
@@ -23,8 +20,8 @@ def random_entry(entry_id: str = None, body: Dict = None) -> entities.Entry:
 
 
 def test_new_entry_has_event():
-    entry = random_entry()
-    assert entry.domain_events[-1] == events.EntryAdded(
+    entry, domain_events = random_entry()
+    assert domain_events[-1] == events.EntryAdded(
         entity_id=entry.id,
         repo_id=entry.repo_id,
         body=entry.body,
@@ -35,14 +32,14 @@ def test_new_entry_has_event():
 
 
 def test_discarded_entry_has_event():
-    entry = random_entry()
-    entry.discard(
+    entry, _ = random_entry()
+    domain_events = entry.discard(
         user="alice@example.org",
         message="bad",
         timestamp=123.45,
     )
     assert entry.discarded
-    assert entry.domain_events[-1] == events.EntryDeleted(
+    assert domain_events[-1] == events.EntryDeleted(
         entity_id=entry.id,
         # entry_id=entry.entry_id,
         repo_id=entry.repo_id,

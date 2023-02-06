@@ -1,15 +1,11 @@
 import logging
 import typing
-from pathlib import Path
 
-import json_streams
 from sb_json_tools import jsondiff
-import logging
 
 from karp.command_bus import CommandHandler
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain import errors
-from karp.lex.domain.entities.entry import Entry
 from karp.foundation.value_objects import unique_id
 
 from karp.foundation import events as foundation_events
@@ -66,7 +62,7 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
 
             entry_schema.validate_entry(command.entry)
 
-            entry = resource.create_entry_from_dict(
+            entry, events = resource.create_entry_from_dict(
                 command.entry,
                 user=command.user,
                 message=command.message,
@@ -74,6 +70,7 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
                 timestamp=command.timestamp,
             )
             uw.entries.save(entry)
+            uw.post_on_commit(events)
             uw.commit()
         return entry
 
@@ -118,7 +115,7 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
 
             # id_getter = resource.id_getter()
             # new_entry_id = id_getter(command.entry)
-            current_db_entry.update_body(
+            events = current_db_entry.update_body(
                 command.entry,
                 user=command.user,
                 message=command.message,
@@ -140,6 +137,7 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
             #     uw.repo.save(current_db_entry)
             # else:
             uw.repo.save(current_db_entry)
+            uw.post_on_commit(events)
             uw.commit()
 
         return current_db_entry
@@ -199,7 +197,7 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
 
                 entry_schema.validate_entry(entry_raw)
 
-                entry = resource.create_entry_from_dict(
+                entry, events = resource.create_entry_from_dict(
                     entry_raw,
                     user=command.user,
                     message=command.message,
@@ -213,6 +211,7 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
                 uw.entries.save(entry)
                 created_db_entries.append(entry)
 
+                uw.post_on_commit(events)
                 if command.chunk_size > 0 and i % command.chunk_size == 0:
                     uw.commit()
             uw.commit()
@@ -258,7 +257,7 @@ class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):
             for i, entry_raw in enumerate(command.entries):
                 entry_schema.validate_entry(entry_raw["entry"])
 
-                entry = resource.create_entry_from_dict(
+                entry, events = resource.create_entry_from_dict(
                     entry_raw["entry"],
                     user=entry_raw.get("user") or command.user,
                     message=entry_raw.get("message") or command.message,
@@ -277,6 +276,7 @@ class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):
                 #         else:
                 #             raise integrity_error
                 uw.entries.save(entry)
+                uw.post_on_commit(events)
                 created_db_entries.append(entry)
 
                 if command.chunk_size > 0 and i % command.chunk_size == 0:
@@ -296,10 +296,11 @@ class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):
         ) as uw:
             entry = uw.repo.by_id(command.entity_id)
 
-            entry.discard(
+            events = entry.discard(
                 user=command.user,
                 message=command.message or "Entry deleted.",
                 timestamp=command.timestamp,
             )
             uw.repo.save(entry)
+            uw.post_on_commit(events)
             uw.commit()

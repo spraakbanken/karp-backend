@@ -194,3 +194,4 @@ class EntryUnitOfWork(
         self._last_modified = self._ensure_timestamp(timestamp)
         self._last_modified_by = user
         # return entity.TimestampedEntity.discard(self, user=user, timestamp=timestamp)
+        return []

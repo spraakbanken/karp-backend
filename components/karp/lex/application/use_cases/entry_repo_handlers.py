@@ -18,7 +18,7 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
         self._entry_repo_uow = entry_repo_uow
 
     def execute(self, command: commands.CreateEntryRepository) -> EntryUnitOfWork:
-        entry_repo = self._entry_repo_uow.factory.create(
+        entry_repo, events = self._entry_repo_uow.factory.create(
             repository_type=command.repository_type,
             entity_id=command.entity_id,
             name=command.name,
@@ -33,6 +33,7 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
         with self._entry_repo_uow as uow:
             logger.debug("Saving...")
             uow.repo.save(entry_repo)
+            uow.post_on_commit(events)
             uow.commit()
         return entry_repo
 
@@ -48,6 +49,7 @@ class DeletingEntryRepository(CommandHandler[commands.DeleteEntryRepository]):
     def execute(self, command: commands.DeleteEntryRepository) -> None:
         with self._entry_repo_uow as uow:
             entry_repo = uow.repo.get_by_id(command.entity_id)
-            entry_repo.discard(user=command.user, timestamp=command.timestamp)
+            events = entry_repo.discard(user=command.user, timestamp=command.timestamp)
             uow.repo.save(entry_repo)
+            uow.post_on_commit(events)
             uow.commit()
