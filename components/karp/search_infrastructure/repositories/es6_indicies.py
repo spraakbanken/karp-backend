@@ -59,11 +59,14 @@ class Es6Index(Index):
         }
 
         index_alias_name = self.mapping_repo.create_index_and_alias_name(resource_id)
-        logger.info("creating index", extra={"index_alias_name": index_alias_name, "body": body})
+        logger.info(
+            "creating index", extra={"index_alias_name": index_alias_name, "body": body}
+        )
         result = self.es.indices.create(index=index_alias_name["index_name"], body=body)
         if "error" in result:
             logger.error(
-                "failed to create index", extra={"index_name": index_alias_name["index_name"], "body": body}
+                "failed to create index",
+                extra={"index_name": index_alias_name["index_name"], "body": body},
             )
             raise RuntimeError("failed to create index")
         logger.info("index created")

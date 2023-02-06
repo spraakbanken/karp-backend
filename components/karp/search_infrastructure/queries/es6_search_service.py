@@ -139,6 +139,7 @@ class Es6SearchService(search.SearchService):
             resource_id: self.mapping_repo.get_name_base(resource_id)
             for resource_id in resource_ids
         }
+
         def format_entry(entry):
 
             dict_entry = entry.to_dict()
@@ -227,7 +228,9 @@ class Es6SearchService(search.SearchService):
 
     # TODO Rename this here and in `search_with_query`
     def _extracted_from_search_with_query_47(self, query, es_query):
-        alias_names = [self.mapping_repo.get_alias_name(resource) for resource in query.resources]
+        alias_names = [
+            self.mapping_repo.get_alias_name(resource) for resource in query.resources
+        ]
         s = es_dsl.Search(using=self.es, index=alias_names, doc_type="entry")
         if es_query is not None:
             s = s.query(es_query)
