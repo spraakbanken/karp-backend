@@ -11,7 +11,7 @@ from karp.tests.unit.lex import factories
 
 @pytest.fixture
 def example_uow() -> lex.CreateEntryRepository:
-    return factories.CreateEntryRepositoryFactory() # type: arg-type
+    return factories.CreateEntryRepositoryFactory()  # type: ignore [arg-type]
 
 
 @pytest.fixture

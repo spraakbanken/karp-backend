@@ -61,11 +61,20 @@ check-security-issues: install-dev
 	{{INVENV}} bandit -r -ll karp
 
 
-
+# run all tests
 all-tests: clean-pyc unit-tests integration-tests e2e-tests
 
+# run all tests with code coverage
 all-tests-w-coverage:
 	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests bases/karp/lex_core/tests
+
+# run all tests for karp-lex-core
+test-lex-core:
+	{{INVENV}} pytest -vv bases/karp/lex_core/tests
+
+# run all tests for karp-lex-core with code coverage
+test-lex-core-w-coverage:
+	{{INVENV}} pytest -vv --cov=karp --cov-report=xml bases/karp/lex_core/tests
 
 # run unit tests
 unit-tests:
@@ -75,6 +84,9 @@ unit-tests:
 unit-tests-w-coverage: clean-pyc
 	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests/unit components/karp/tests/foundation/unit
 
+# run given test
+run-test TEST:
+	{{INVENV}} pytest -vv {{TEST}}
 
 # run end-to-end tests
 e2e-tests: clean-pyc
@@ -96,6 +108,11 @@ integration-tests-w-coverage: clean-pyc
 lint:
 	{{INVENV}} ruff bases/karp components/karp
 
+# lint specific project
+lint-project project:
+	@echo "Linting {{project}}"
+	cd projects/{{project}} && just lint
+
 serve-docs:
 	cd docs/karp-backend-v6 && {{INVENV}} mkdocs serve && cd -
 
@@ -106,7 +123,12 @@ check-pylint-refactorings:
 
 # type-check code
 type-check:
-	{{INVENV}} mypy
+	{{INVENV}} mypy -p karp
+
+# type-check code for project
+type-check-project project:
+	@echo "Type-checking {{project}} ..."
+	cd projects/{{project}} && just type-check
 
 # bump patch part of version
 bumpversion:
@@ -138,3 +160,8 @@ fmt:
 # test if code is formatted
 check-fmt:
 	{{INVENV}} black . --check
+
+# build given project
+build-project project:
+	@echo "Building {{project}} ..."
+	cd projects/{{project}} && just build
