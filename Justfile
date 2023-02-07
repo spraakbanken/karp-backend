@@ -1,5 +1,5 @@
 default: unit-tests
-alias test := unit-tests
+
 
 PLATFORM := `uname -o`
 PROJECT := "sparv_kb_ner"
@@ -11,6 +11,8 @@ info:
 	@echo "Platform: {{PLATFORM}}"
 	@echo "Venv: {{VENV_NAME}}"
 	@echo "INVENV: '{{INVENV}}'"
+
+cov-report := "xml"
 
 alias dev := install-dev
 
@@ -69,40 +71,43 @@ all-tests-w-coverage:
 	{{INVENV}} pytest -vv --cov=bases/karp --cov=components/karp --cov-report=xml components/karp/tests bases/karp/lex_core/tests
 
 # run all tests for karp-lex-core
-test-lex-core:
-	{{INVENV}} pytest -vv bases/karp/lex_core/tests
+test-lex-core: (test 'bases/karp/lex_core/tests')
 
 # run all tests for karp-lex-core with code coverage
-test-lex-core-w-coverage:
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml bases/karp/lex_core/tests
+test-lex-core-w-coverage: (test-w-coverage "--cov=bases/karp/lex_core" "bases/karp/lex_core/tests")
 
 # run unit tests
-unit-tests:
-    {{INVENV}} pytest -vv components/karp/tests/unit bases/karp/lex_core/tests
+unit-tests: test
 
 # run unit tests with code coverage
 unit-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests/unit components/karp/tests/foundation/unit
+	{{INVENV}} pytest -vv --cov=bases --cov=components --cov-report={{cov-report}} components/karp/tests/unit components/karp/tests/foundation/unit
 
-# run given test
-run-test TEST:
-	{{INVENV}} pytest -vv {{TEST}}
+all-test-dirs := "components/karp/tests bases/karp/lex_core/tests"
+default-cov := "--cov=bases --cov=components"
+
+# run tests with code coverage
+test-w-coverage cov=default-cov +tests=all-test-dirs: clean-pyc
+	{{INVENV}} pytest -vv {{cov}}  --cov-report={{cov-report}} {{tests}}
+
+unit-test-dirs := "components/karp/tests/unit bases/karp/lex_core/tests"
+
+# run given test(s)
+test *tests=unit-test-dirs:
+	{{INVENV}} pytest -vv {{tests}}
 
 # run end-to-end tests
-e2e-tests: clean-pyc
-	{{INVENV}} pytest -vv components/karp/tests/e2e
+e2e-tests: clean-pyc (test "components/karp/tests/e2e")
 
 # run end-to-end tests with code coverage
 e2e-tests-w-coverage: clean-pyc
 	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests/e2e
 
 # run integration tests
-integration-tests: clean-pyc
-	{{INVENV}} pytest -vv components/karp/tests/integration
+integration-tests: clean-pyc (test "components/karp/tests/integration")
 
 # run integration tests with code coverage
-integration-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests/integration
+integration-tests-w-coverage: clean-pyc (test-w-coverage default-cov "components/karp/tests/integration")
 
 # lint code
 lint:
@@ -130,17 +135,15 @@ type-check-project project:
 	@echo "Type-checking {{project}} ..."
 	cd projects/{{project}} && just type-check
 
-# bump patch part of version
-bumpversion:
-	{{INVENV}} bump2version patch
+# bump given part of version
+bumpversion project part="patch":
+	cd {{project}} && just bumpversion {{part}}
 
 # bump minor part of version
-bumpversion-minor:
-	{{INVENV}} bump2version minor
+bumpversion-minor project: (bumpversion project "minor")
 
 # bump major part of version
-bumpversion-major:
-	{{INVENV}} bump2version major
+bumpversion-major project: (bumpversion project "major")
 
 # push tags to github, where a workflow upload distrivbutionto PyPi
 publish:

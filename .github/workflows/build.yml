@@ -28,10 +28,16 @@ jobs:
         task:
           - name: Lint code
             run: just lint
+            allow_failure: true
+          - name: Lint code 'karp-lex-core'
+            run: just lint-project karp-lex-core
             allow_failure: false
           - name: Typecheck
             run: just type-check
             allow_failure: true
+          - name: Typecheck 'karp-lex-core'
+            run: just type-check-project karp-lex-core
+            allow_failure: false
           - name: Unit tests
             run: just unit-tests
             allow_failure: false
@@ -51,6 +57,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - uses: extractions/setup-just@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Load cached $HOME/.local
       #   uses: actions/cache@v3.1.6
@@ -139,6 +147,8 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - uses: extractions/setup-just@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Load cached $HOME/.local
       #   uses: actions/cache@v3.1.6
