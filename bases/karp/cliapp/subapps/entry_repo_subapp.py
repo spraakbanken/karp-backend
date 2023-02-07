@@ -73,7 +73,7 @@ def list(ctx: typer.Context):
 
 @subapp.command()
 def show(ctx: typer.Context, name: str):
-    repo = inject_from_ctx(lex.ReadOnlyEntryRepoRepositry, ctx)
+    repo = inject_from_ctx(lex.ReadOnlyEntryRepoRepository, ctx)
     entry_repo = repo.get_by_name(name)
     if entry_repo:
         typer.echo(tabulate(((key, value) for key, value in entry_repo.dict().items())))

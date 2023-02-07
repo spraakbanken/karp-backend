@@ -62,7 +62,7 @@ check-security-issues: install-dev
 
 
 
-all-tests: unit-tests integration-tests e2e-tests
+all-tests: clean-pyc unit-tests integration-tests e2e-tests
 
 all-tests-w-coverage:
 	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests bases/karp/lex_core/tests

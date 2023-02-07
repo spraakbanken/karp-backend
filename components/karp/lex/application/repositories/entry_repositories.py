@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, Optional, Protocol
+from typing import Dict, Optional, Protocol, Tuple
 
 import injector
 
@@ -21,7 +21,7 @@ class EntryRepositoryUnitOfWorkFactory:
         user: str,
         message: str,
         timestamp: float,
-    ) -> EntryUnitOfWork:
+    ) -> Tuple[EntryUnitOfWork, list[events.Event]]:
         pass
 
 
@@ -35,7 +35,7 @@ class EntryUnitOfWorkCreator(Protocol):
         user: str,
         message: str,
         timestamp: float,
-    ) -> EntryUnitOfWork:
+    ) -> Tuple[EntryUnitOfWork, list[events.Event]]:
         ...
 
 
@@ -53,7 +53,7 @@ class InjectorEntryUnitOfWorkRepoFactory(EntryRepositoryUnitOfWorkFactory):
         user: str,
         message: str,
         timestamp: float,
-    ) -> EntryUnitOfWork:
+    ) -> Tuple[EntryUnitOfWork, list[events.Event]]:
         uow_factory_cls = self._container.get(Dict[str, EntryUnitOfWorkCreator])[
             repository_type
         ]

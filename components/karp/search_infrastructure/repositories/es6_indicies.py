@@ -30,10 +30,6 @@ class Es6Index(Index):
         self.es = es
         self.mapping_repo = mapping_repo
 
-    @property
-    def seen(self):
-        return []
-
     def create_index(self, resource_id: str, config):
         logger.info("creating es mapping")
         mapping = create_es6_mapping(config)
@@ -274,3 +270,6 @@ class Es6IndexUnitOfWork(IndexUnitOfWork):
 
     def _close(self):
         pass
+
+    def begin(self):
+        return self

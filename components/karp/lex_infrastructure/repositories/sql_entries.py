@@ -1,7 +1,8 @@
 """SQL repositories for entries."""
 import logging
 import typing
-from typing import Dict, List, Optional, Generic, TypeVar
+from typing import Dict, List, Optional, Generic, Tuple, TypeVar
+from attr import has
 
 import injector
 import regex
@@ -15,6 +16,7 @@ from karp.foundation.value_objects import UniqueId
 from karp.foundation.events import EventBus
 from karp.lex.domain import errors
 from karp.lex.application import repositories
+from karp.lex.domain.events import Event
 
 # from karp.domain.errors import NonExistingField, RepositoryError
 from karp.lex.domain.entities.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
@@ -34,7 +36,7 @@ DUPLICATE_PROG = regex.compile(DUPLICATE_PATTERN)
 NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 
 
-class SqlEntryRepository(repositories.EntryRepository, SqlRepository):
+class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
     def __init__(
         self,
         history_model,
@@ -295,6 +297,8 @@ class SqlEntryUnitOfWork(
         **kwargs,
     ):
         SqlUnitOfWork.__init__(self)
+        if not hasattr(self, "__enter__"):
+            raise RuntimeError(f"No __enter__ detected in {self=}")
         repositories.EntryUnitOfWork.__init__(self, event_bus=event_bus, **kwargs)
         self.session_factory = session_factory
         self._entries = None
@@ -335,6 +339,10 @@ class SqlEntryUnitOfWorkV1(SqlEntryUnitOfWork):
 class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):
     repository_type: str = "sql_entries_v2"
 
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        assert hasattr(self, "__enter__")
+
     def table_name(self) -> str:
         u = ulid.from_uuid(self.entity_id)
         random_part = u.randomness().str
@@ -369,7 +377,21 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):
         user: str,
         message: str,
         timestamp: float,
-    ) -> SqlEntryUowType:
+    ) -> Tuple[SqlEntryUowType, list[Event]]:
+        return (
+            self._create_uow(
+                entity_id=entity_id,
+                name=name,
+                config=config,
+                connection_str=connection_str,
+                last_modified_by=user,
+                message=message,
+                last_modified=timestamp,
+                session_factory=self._session_factory,
+                event_bus=self.event_bus,
+            ),
+            [],
+        )
         if entity_id not in self.cache:
             self.cache[entity_id] = self._create_uow(
                 entity_id=entity_id,
@@ -382,7 +404,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):
                 session_factory=self._session_factory,
                 event_bus=self.event_bus,
             )
-        return self.cache[entity_id]
+        return self.cache[entity_id], []
 
 
 class SqlEntryUowV1Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV1]):

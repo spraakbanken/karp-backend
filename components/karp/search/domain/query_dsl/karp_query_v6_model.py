@@ -18,6 +18,7 @@ from tatsu.objectmodel import Node
 from tatsu.semantics import ModelBuilderSemantics
 
 
+@dataclass(eq=False)
 class ModelBase(Node):
     pass
 
@@ -25,121 +26,119 @@ class ModelBase(Node):
 class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):
     def __init__(self, context=None, types=None):
         types = [
-            t
-            for t in globals().values()
+            t for t in globals().values()
             if type(t) is type and issubclass(t, ModelBase)
         ] + (types or [])
-        super(KarpQueryV6ModelBuilderSemantics, self).__init__(
-            context=context, types=types
-        )
+        super().__init__(context=context, types=types)
 
 
-@dataclass
+@dataclass(eq=False)
 class And(ModelBase):
     exps: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Contains(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Endswith(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Equals(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Exists(ModelBase):
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Freergxp(ModelBase):
     arg: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class FreetextAnyButString(ModelBase):
     arg: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class FreetextString(ModelBase):
     arg: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Gt(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Gte(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Lt(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Lte(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Missing(ModelBase):
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Not(ModelBase):
     exps: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Or(ModelBase):
     exps: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Regexp(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
-@dataclass
+@dataclass(eq=False)
 class Startswith(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
+

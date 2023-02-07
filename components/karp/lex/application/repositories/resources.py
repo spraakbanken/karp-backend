@@ -26,14 +26,12 @@ class ResourceRepository(repository.Repository[entities.Resource]):
     def get_by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
     ) -> entities.Resource:
-        resource = self.get_by_resource_id_optional(resource_id, version=version)
-
-        if not resource:
+        if resource := self.get_by_resource_id_optional(resource_id, version=version):
+            return resource
+        else:
             raise self.EntityNotFound(
                 f"Entity with resource_id='{resource_id}' can't be found."
             )
-
-        return resource
 
     def get_by_resource_id_optional(
         self, resource_id: str, *, version: Optional[int] = None
@@ -44,8 +42,6 @@ class ResourceRepository(repository.Repository[entities.Resource]):
 
         if version:
             resource = self._by_id(resource.entity_id, version=version)
-        if resource:
-            self.seen.add(resource)
         return resource
 
     by_resource_id = get_by_resource_id
@@ -70,22 +66,14 @@ class ResourceRepository(repository.Repository[entities.Resource]):
     #     raise NotImplementedError()
 
     def get_published_resources(self) -> typing.List[entities.Resource]:
-        published_resources = []
-        for resource in self._get_published_resources():
-            self.seen.add(resource)
-            published_resources.append(resource)
-        return published_resources
+        return list(self._get_published_resources())
 
     @abc.abstractmethod
     def _get_published_resources(self) -> typing.Iterable[entities.Resource]:
         raise NotImplementedError()
 
     def get_all_resources(self) -> typing.List[entities.Resource]:
-        all_resources = []
-        for resource in self._get_all_resources():
-            self.seen.add(resource)
-            all_resources.append(resource)
-        return all_resources
+        return list(self._get_all_resources())
 
     @abc.abstractmethod
     def _get_all_resources(self) -> typing.Iterable[entities.Resource]:

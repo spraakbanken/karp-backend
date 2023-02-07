@@ -19,12 +19,12 @@ class TestCliResourceLifetime:
         app_context: AppContext,
     ):
         result = runner.invoke(
-            cliapp, ["entry-repo", "create", "karp/tests/data/config/lexlex.json"]
+            cliapp, ["entry-repo", "create", "assets/testing/config/lexlex.json"]
         )
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepositry)  # type: ignore [misc]
+        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepository)  # type: ignore [misc]
         entry_repo = entry_repo_repo.get_by_name("lexlex")
         assert entry_repo is not None
 
@@ -33,7 +33,7 @@ class TestCliResourceLifetime:
             [
                 "resource",
                 "create",
-                "karp/tests/data/config/lexlex.json",
+                "assets/testing/config/lexlex.json",
                 "--entry-repo-id",
                 str(entry_repo.entity_id),
             ],
@@ -52,12 +52,12 @@ class TestCliResourceLifetime:
         app_context: AppContext,
     ):
         result = runner.invoke(
-            cliapp, ["entry-repo", "create", "karp/tests/data/config/lexlex.json"]
+            cliapp, ["entry-repo", "create", "assets/testing/config/lexlex.json"]
         )
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepositry)  # type: ignore [misc]
+        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepository)  # type: ignore [misc]
         entry_repo = entry_repo_repo.get_by_name("lexlex")
         assert entry_repo is not None
 

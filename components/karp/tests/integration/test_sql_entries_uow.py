@@ -11,7 +11,7 @@ from karp.tests.unit.lex import factories
 
 @pytest.fixture
 def example_uow() -> lex.CreateEntryRepository:
-    return factories.CreateEntryRepositoryFactory()
+    return factories.CreateEntryRepositoryFactory() # type: arg-type
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ class TestSqlEntryUowV1:
         sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
         example_uow: lex.CreateEntryRepository,
     ):
-        entry_uow = sql_entry_uow_v1_creator(
+        entry_uow, _ = sql_entry_uow_v1_creator(
             **example_uow.dict(exclude={"repository_type"})
         )
         assert entry_uow.repository_type == "sql_entries_v1"
@@ -52,7 +52,7 @@ class TestSqlEntryUowV1:
         sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
         example_uow: lex.CreateEntryRepository,
     ):
-        entry_uow = sql_entry_uow_v1_creator(
+        entry_uow, _ = sql_entry_uow_v1_creator(
             **example_uow.dict(exclude={"repository_type"})
         )
         with entry_uow as uw:
@@ -71,7 +71,7 @@ class TestSqlEntryUowV2:
         sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
         example_uow: lex.CreateEntryRepository,
     ):
-        entry_uow = sql_entry_uow_v2_creator(
+        entry_uow, _ = sql_entry_uow_v2_creator(
             **example_uow.dict(exclude={"repository_type"})
         )
         assert entry_uow.repository_type == "sql_entries_v2"
@@ -81,7 +81,7 @@ class TestSqlEntryUowV2:
         sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
         example_uow: lex.CreateEntryRepository,
     ):
-        entry_uow = sql_entry_uow_v2_creator(
+        entry_uow, _ = sql_entry_uow_v2_creator(
             **example_uow.dict(exclude={"repository_type"})
         )
         random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str

@@ -2,7 +2,7 @@ from typing import Iterable, Optional
 
 from sqlalchemy.sql import select
 
-from karp.lex import ListEntryRepos, EntryRepoDto, ReadOnlyEntryRepoRepositry
+from karp.lex import ListEntryRepos, EntryRepoDto, ReadOnlyEntryRepoRepository
 from karp.lex_infrastructure.queries.base import SqlQuery
 from karp.lex_infrastructure.sql.sql_models import EntryUowModel
 
@@ -21,7 +21,7 @@ def _row_to_dto(row_proxy) -> EntryRepoDto:
     )
 
 
-class SqlReadOnlyEntryRepoRepositry(SqlQuery, ReadOnlyEntryRepoRepositry):
+class SqlReadOnlyEntryRepoRepository(SqlQuery, ReadOnlyEntryRepoRepository):
     def get_by_name(self, name: str) -> Optional[EntryRepoDto]:
         stmt = select(EntryUowModel).filter_by(name=name)
 

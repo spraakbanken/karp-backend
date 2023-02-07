@@ -24,6 +24,7 @@ packages = [
 	{ include = "development" },
 	{ include = "karp/auth", from = "components" },
 	{ include = "karp/auth_infrastructure", from = "components" },
+	{ include = "karp/command_bus", from = "components" },
 	{ include = "karp/foundation", from = "components" },
 	{ include = "karp/lex", from = "components" },
 	{ include = "karp/lex_infrastructure", from = "components" },
@@ -150,4 +151,5 @@ unfixable = ["B"]
 [tool.ruff.per-file-ignores]
 "__init__.py" = ["E402"]
 "components/karp/tests/unit/test_morphological_entry.py" = ["F841", "F821"]
+"bases/karp/karp_v6_api/routes/resources_api.py" = ["B008"]
 

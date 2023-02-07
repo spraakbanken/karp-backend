@@ -7,24 +7,19 @@ from karp import auth
 import os
 import json
 import typing
-from typing import Any, Dict, Generator, Optional, Tuple
+from typing import Any, Generator, Optional, Tuple
 
 from fastapi import FastAPI
 from typer import Typer
 from typer.testing import CliRunner
 
-import alembic
-import alembic.config
-from karp.foundation.value_objects import make_unique_id
-from karp.command_bus import CommandBus
 import elasticsearch_test  # pyre-ignore
 
 import pytest  # pyre-ignore
-from sqlalchemy import create_engine, pool
+from sqlalchemy import create_engine
 from sqlalchemy.orm import session, sessionmaker
 from starlette.testclient import TestClient
 
-from alembic.config import main as alembic_main
 
 # environ["TESTING"] = "True"
 # environ["ELASTICSEARCH_HOST"] = "localhost:9202"
@@ -32,7 +27,6 @@ from alembic.config import main as alembic_main
 
 # print("importing karp stuf ...")
 from karp.tests import common_data, utils  # nopep8
-from karp.auth_infrastructure import TestAuthInfrastructure  # nopep8
 from karp.db_infrastructure.db import metadata  # nopep8
 from karp.main.config import config
 
@@ -86,9 +80,7 @@ def fixture_app(
 ) -> Generator[FastAPI, None, None]:
     from karp.karp_v6_api.main import create_app
 
-    app = create_app()
-    # app.state.app_context.container.binder.install(TestAuthInfrastructure())
-    yield app
+    yield create_app()
     print("dropping app")
     app = None
 
@@ -166,13 +158,13 @@ def fixture_fa_data_client(
 ):
     ok, msg = create_and_publish_resource(
         fa_client,
-        path_to_config="karp/tests/data/config/places.json",
+        path_to_config="assets/testing/config/places.json",
         access_token=admin_token,
     )
     assert ok, msg
     ok, msg = create_and_publish_resource(
         fa_client,
-        path_to_config="karp/tests/data/config/municipalities.json",
+        path_to_config="assets/testing/config/municipalities.json",
         access_token=admin_token,
     )
     assert ok, msg

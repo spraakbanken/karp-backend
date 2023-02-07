@@ -1,4 +1,4 @@
-from .entry_repos import SqlListEntryRepos, SqlReadOnlyEntryRepoRepositry
+from .entry_repos import SqlListEntryRepos, SqlReadOnlyEntryRepoRepository
 from .generic_entries import (
     GenericEntryViews,
     GenericEntryQuery,

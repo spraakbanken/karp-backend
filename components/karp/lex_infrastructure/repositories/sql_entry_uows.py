@@ -75,7 +75,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
         return query.count()
 
     def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:
-        return self.entry_uow_factory.create(
+        uow, _events = self.entry_uow_factory.create(
             repository_type=row_proxy.type,
             entity_id=row_proxy.entity_id,
             name=row_proxy.name,
@@ -85,6 +85,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
             message=row_proxy.message,
             timestamp=row_proxy.last_modified,
         )
+        return uow
 
 
 class SqlEntryUowRepositoryUnitOfWork(SqlUnitOfWork, EntryUowRepositoryUnitOfWork):

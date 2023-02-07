@@ -3,3 +3,10 @@ from .resources import (
     ResourcePermissionDto,
     IsResourceProtected,
 )
+
+
+__all__ = [
+    "GetResourcePermissions",
+    "ResourcePermissionDto",
+    "IsResourceProtected",
+]

@@ -29,7 +29,6 @@ class InMemoryIndex(Index):
     def __init__(self) -> None:
         super().__init__()
         self.indicies: dict[str, InMemoryIndex.Index] = {}
-        self.seen = []
 
     def create_index(self, resource_id: str, config: Dict):
         self.indicies[resource_id] = InMemoryIndex.Index(

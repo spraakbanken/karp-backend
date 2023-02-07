@@ -4,18 +4,16 @@ import typing
 from typing import Dict, Optional
 
 import regex
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 
 
 DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 
-_create_new = object()
 
 logger = logging.getLogger(__name__)
 
 
-class SqlUnitOfWork:  # (repositories.UnitOfWork):
+class SqlUnitOfWork:
     class State(enum.Enum):
         initialized = 0
         begun = 1
@@ -28,16 +26,14 @@ class SqlUnitOfWork:  # (repositories.UnitOfWork):
         session: Optional[Session] = None,
     ):
         logger.debug("Init sqlunitofwork session=%s", session)
+
         self._session = session
         self._session_is_created_here = self._session is None
         self._state = SqlUnitOfWork.State.initialized
 
-    # @property
-    # def repo(self):
-    #     return self._repo
-
-    def __enter__(self):
-        return self.begin()
+    # def __enter__(self):
+    #     self.begin()
+    #     return self
 
     # def __exit__(self, exc_type, exc_val, exc_tb):
     #     if exc_type is None:

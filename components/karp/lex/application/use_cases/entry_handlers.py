@@ -27,10 +27,6 @@ class BasingEntry:
         self.entry_repo_uow = entry_repo_uow
         self.resource_uow = resource_uow
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
-        yield from self.entry_repo_uow.collect_new_events()
-
     def get_entry_uow(self, entry_repo_id: unique_id.UniqueId) -> EntryUnitOfWork:
         with self.entry_repo_uow as uw:
             return uw.repo.get_by_id(entry_repo_id)
@@ -49,7 +45,8 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
         #     ) from err
         entry_schema = EntrySchema(resource.entry_json_schema)
 
-        with self.get_entry_uow(resource.entry_repository_id) as uw:
+        entry_uow = self.get_entry_uow(resource.entry_repository_id)
+        with entry_uow as uw:
             existing_entry = uw.repo.get_by_id_optional(command.entity_id)
             if (
                 existing_entry

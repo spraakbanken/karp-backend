@@ -18,7 +18,7 @@ class ListEntryRepos(abc.ABC):
         pass
 
 
-class ReadOnlyEntryRepoRepositry(abc.ABC):
+class ReadOnlyEntryRepoRepository(abc.ABC):
     @abc.abstractmethod
     def get_by_name(self, name: str) -> Optional[EntryRepoDto]:
         pass

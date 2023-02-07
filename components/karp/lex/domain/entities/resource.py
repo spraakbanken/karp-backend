@@ -209,7 +209,8 @@ class Resource(TimestampedVersionedEntity):
     ) -> list[events.Event]:
         self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
-        return [events.ResourcePublished(
+        return [
+            events.ResourcePublished(
                 entity_id=self.id,
                 resource_id=self.resource_id,
                 entry_repo_id=self.entry_repository_id,
@@ -219,7 +220,8 @@ class Resource(TimestampedVersionedEntity):
                 name=self.name,
                 config=self.config,
                 message=self.message,
-            )]        
+            )
+        ]
 
     def set_entry_repo_id(
         self,
@@ -231,7 +233,8 @@ class Resource(TimestampedVersionedEntity):
     ):
         self._update_metadata(timestamp, user, "entry repo id updated", version=version)
         self._entry_repo_id = entry_repo_id
-        return [events.ResourceUpdated(
+        return [
+            events.ResourceUpdated(
                 entity_id=self.entity_id,
                 resource_id=self.resource_id,
                 entry_repo_id=self.entry_repository_id,
@@ -241,8 +244,9 @@ class Resource(TimestampedVersionedEntity):
                 name=self.name,
                 config=self.config,
                 message=self.message,
-            )]
-            
+            )
+        ]
+
     def set_resource_id(
         self,
         *,
@@ -256,7 +260,8 @@ class Resource(TimestampedVersionedEntity):
             timestamp, user, message or "setting resource_id", version
         )
         self._resource_id = resource_id
-        return [events.ResourceUpdated(
+        return [
+            events.ResourceUpdated(
                 entity_id=self.entity_id,
                 resource_id=self.resource_id,
                 entry_repo_id=self.entry_repository_id,
@@ -266,7 +271,8 @@ class Resource(TimestampedVersionedEntity):
                 name=self.name,
                 config=self.config,
                 message=self.message,
-            )]
+            )
+        ]
 
     def update(
         self,
@@ -283,7 +289,8 @@ class Resource(TimestampedVersionedEntity):
         self._update_metadata(timestamp, user, message or "updating", version)
         self._name = name
         self.config = config
-        return [events.ResourceUpdated(
+        return [
+            events.ResourceUpdated(
                 entity_id=self.entity_id,
                 resource_id=self.resource_id,
                 entry_repo_id=self.entry_repository_id,
@@ -293,7 +300,8 @@ class Resource(TimestampedVersionedEntity):
                 name=self.name,
                 config=self.config,
                 message=self.message,
-            )]
+            )
+        ]
 
     def set_config(
         self,
@@ -308,7 +316,8 @@ class Resource(TimestampedVersionedEntity):
             return []
         self._update_metadata(timestamp, user, message or "setting config", version)
         self.config = config
-        return [events.ResourceUpdated(
+        return [
+            events.ResourceUpdated(
                 entity_id=self.entity_id,
                 resource_id=self.resource_id,
                 entry_repo_id=self.entry_repository_id,
@@ -318,7 +327,8 @@ class Resource(TimestampedVersionedEntity):
                 name=self.name,
                 config=self.config,
                 message=self.message,
-            )]
+            )
+        ]
 
     def _update_metadata(
         self, timestamp: Optional[float], user: str, message: str, version: int
@@ -359,7 +369,8 @@ class Resource(TimestampedVersionedEntity):
         self._last_modified_by = user
         self._last_modified = timestamp or utc_now()
         self._version += 1
-        return [events.ResourceDiscarded(
+        return [
+            events.ResourceDiscarded(
                 entity_id=self.id,
                 version=self.version,
                 # entry_repo_id=self.entry_repository_id,
@@ -369,7 +380,8 @@ class Resource(TimestampedVersionedEntity):
                 resource_id=self.resource_id,
                 name=self.name,
                 config=self.config,
-            )]
+            )
+        ]
 
     @property
     def entry_json_schema(self) -> Dict:
@@ -408,7 +420,7 @@ class Resource(TimestampedVersionedEntity):
         entity_id: unique_id.UniqueId,
         message: Optional[str] = None,
         timestamp: Optional[float] = None,
-    ) -> Entry:
+    ) -> Tuple[Entry, list[events.Event]]:
         self._check_not_discarded()
         # id_getter = self.id_getter()
         return create_entry(
@@ -467,11 +479,11 @@ def create_resource(
     resource_id: typing.Optional[str] = None,
     message: typing.Optional[str] = None,
     name: typing.Optional[str] = None,
-) -> Resource:
+) -> Tuple[Resource, list[events.Event]]:
 
     resource_id_in_config = config.pop("resource_id", None)
     resource_id = resource_id or resource_id_in_config
-    if not resource_id:
+    if resource_id is None:
         raise ValueError("resource_id is missing")
     resource_id = constraints.valid_resource_id(resource_id)
     name_in_config = config.pop("resource_name", None)
@@ -496,15 +508,15 @@ def create_resource(
         last_modified_by=user or created_by or "unknown",
     )
     event = events.ResourceCreated(
-            entity_id=resource.id,
-            resource_id=resource.resource_id,
-            entry_repo_id=resource.entry_repository_id,
-            name=resource.name,
-            config=resource.config,
-            timestamp=resource.last_modified,
-            user=resource.last_modified_by,
-            message=resource.message,
-        )
+        entity_id=resource.id,
+        resource_id=resource.resource_id,
+        entry_repo_id=resource.entry_repository_id,
+        name=resource.name,
+        config=resource.config,
+        timestamp=resource.last_modified,
+        user=resource.last_modified_by,
+        message=resource.message,
+    )
     return resource, [event]
 
 

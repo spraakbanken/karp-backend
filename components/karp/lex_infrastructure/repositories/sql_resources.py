@@ -1,8 +1,8 @@
 """SQL Resource Repository"""
 import logging
 import typing
-from typing import Dict, List, Optional, Tuple, Union
-from uuid import UUID
+from typing import List, Optional, Union
+from karp.lex_core.value_objects import UniqueId
 
 import sqlalchemy as sa
 from sqlalchemy import sql
@@ -11,8 +11,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from karp.foundation.events import EventBus
 from karp.lex.domain import errors, entities
 from karp.lex.application import repositories
-from karp.lex.domain.errors import IntegrityError, RepositoryStatusError
-from karp.lex.domain.entities.resource import Resource, ResourceOp
+from karp.lex.domain.entities.resource import Resource
 
 from karp.db_infrastructure import db
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
@@ -60,7 +59,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             sa.and_(
                 ResourceModel.entity_id == subq.c.entity_id,
                 ResourceModel.last_modified == subq.c.maxdate,
-                ResourceModel.discarded == False,
+                ResourceModel.discarded == False,  # noqa: E712
             ),
         )
         return self._session.execute(stmt).scalars().all()
@@ -68,7 +67,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         # return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
 
     def _by_id(
-        self, id: Union[UUID, str], *, version: Optional[int] = None
+        self, id: Union[UniqueId, str], *, version: Optional[int] = None, **kwargs
     ) -> typing.Optional[entities.Resource]:
         self._check_has_session()
         query = self._session.query(ResourceModel).filter_by(entity_id=id)
@@ -113,7 +112,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         resource_dto = query.filter_by(
             resource_id=resource_id, is_published=True
         ).one_or_none()
-        return resource_dto.to_entity()
+        return resource_dto.to_entity() if resource_dto else None
 
     def get_latest_version(self, resource_id: str) -> int:
         self._check_has_session()
@@ -123,9 +122,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             .filter_by(resource_id=resource_id)
             .first()
         )
-        if row is None:
-            return 0
-        return row.version
+        return 0 if row is None else row.version
 
     def history_by_resource_id(
         self, resource_id: str

@@ -38,7 +38,7 @@ from karp.lex_infrastructure.queries import (
     GenericEntryQuery,
     GenericGetEntryHistory,
     GenericGetHistory,
-    SqlReadOnlyEntryRepoRepositry,
+    SqlReadOnlyEntryRepoRepository,
     SqlReadOnlyResourceRepository,
 )
 from karp.lex_infrastructure.repositories import (
@@ -74,8 +74,8 @@ class LexInfrastructure(injector.Module):
     @injector.provider
     def read_only_entry_repo_repo(
         self, conn: Connection
-    ) -> lex.ReadOnlyEntryRepoRepositry:
-        return SqlReadOnlyEntryRepoRepositry(conn)
+    ) -> lex.ReadOnlyEntryRepoRepository:
+        return SqlReadOnlyEntryRepoRepository(conn)
 
     @injector.provider
     # @injector.singleton

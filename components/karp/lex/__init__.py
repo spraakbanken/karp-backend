@@ -47,7 +47,7 @@ from karp.lex.application.queries import (
     ResourceDto,
     ReadOnlyResourceRepository,
     EntryRepoDto,
-    ReadOnlyEntryRepoRepositry,
+    ReadOnlyEntryRepoRepository,
     ListEntryRepos,
 )
 
@@ -62,8 +62,15 @@ __all__ = [
     "AddEntry",
     "ImportEntries",
     "ImportEntriesInChunks",
+    "CreateEntryRepository",
     # use cases
+    "CreatingEntryRepo",
+    "CreatingResource",
     "ImportingEntries",
+    # dtos
+    "ResourceDto",
+    # queries
+    "GetResources",
 ]
 
 

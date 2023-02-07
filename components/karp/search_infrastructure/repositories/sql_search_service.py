@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 class SqlSearchService(Index):
     def __init__(self):
-        self.seen = []
         self.parser = query_dsl.KarpQueryV6Parser(
             semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
         )

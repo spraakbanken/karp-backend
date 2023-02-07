@@ -2,21 +2,17 @@ import logging
 import typing
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Security, status
-import logging
 
 from karp import auth, lex
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto
-from karp.command_bus import CommandBus
 
 from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic, ResourceProtected
 from karp.karp_v6_api import dependencies as deps, schemas
 
-from karp.lex import (
-    CreatingEntryRepo,
-    CreatingResource,
-    ResourceDto,
-)
-from karp.lex import commands
+from karp.command_bus import CommandBus
+from karp.lex import ResourceDto
+
+from karp.lex_core import commands
 from karp.lex.application.queries import ReadOnlyResourceRepository
 
 
@@ -46,10 +42,7 @@ def create_new_resource(
     new_resource: ResourceCreate = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    creating_resource_uc: CreatingResource = Depends(deps.get_lex_uc(CreatingResource)),
-    creating_entry_repo_uc: CreatingEntryRepo = Depends(
-        deps.get_lex_uc(CreatingEntryRepo)
-    ),
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
 ) -> ResourceDto:
     logger.info(
         "creating new resource",
@@ -65,7 +58,7 @@ def create_new_resource(
         )
     try:
         if new_resource.entry_repo_id is None:
-            entry_repo = creating_entry_repo_uc.execute(
+            entry_repo = command_bus.dispatch(
                 commands.CreateEntryRepository(
                     repository_type="default",
                     name=new_resource.resource_id,
@@ -79,7 +72,7 @@ def create_new_resource(
             user=user.identifier,
             **new_resource.dict(),
         )
-        resource = creating_resource_uc.execute(create_resource)
+        resource = command_bus.dispatch(create_resource)
         logger.info("resource created", extra={"resource": resource})
         return resource
     except Exception as err:
@@ -89,7 +82,7 @@ def create_new_resource(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"{err=}",
-        )
+        ) from err
 
 
 @router.post(
@@ -102,9 +95,7 @@ def publishing_resource(
     resource_publish: schemas.ResourcePublish = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    publishing_resource_uc: lex.PublishingResource = Depends(
-        deps.get_lex_uc(lex.PublishingResource)
-    ),
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
@@ -122,7 +113,7 @@ def publishing_resource(
             user=user.identifier,
             **resource_publish.dict(),
         )
-        publishing_resource_uc.execute(publish_resource)
+        command_bus.dispatch(publish_resource)
         logger.info("resource published", extra={"resource_id": resource_id})
         return
     except Exception as err:
@@ -144,13 +135,13 @@ def get_resource_by_resource_id(
     resource_id: str,
     resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
 ) -> ResourcePublic:
-    resource = resource_repo.get_by_resource_id(resource_id)
-    if not resource:
+    if resource := resource_repo.get_by_resource_id(resource_id):
+        return ResourcePublic(**resource.dict())
+    else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No resource with resource_id '{resource_id}' was found.",
         )
-    return resource
 
 
 def init_app(app):

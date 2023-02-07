@@ -36,15 +36,13 @@ class EntryRepository(repository.Repository[entities.Entry]):
         oldest_first: bool = False,
         **kwargs,
     ) -> entities.Entry:
-        entry = self._by_id(
+        if entry := self._by_id(
             id_,
             version=version,
             after_date=after_date,
             before_date=before_date,
             oldest_first=oldest_first,
-        )
-        if entry:
-            self.seen.add(entry)
+        ):
             return entry
         raise errors.EntryNotFound(id_=id_)
 
@@ -104,7 +102,6 @@ class EntryRepository(repository.Repository[entities.Entry]):
     #     if version:
     #         entry = self._by_id(entry.entity_id, version=version)
     #     if entry:
-    #         self.seen.add(entry)
     #         return entry
     #     return None
 
@@ -147,8 +144,8 @@ class EntryRepository(repository.Repository[entities.Entry]):
 
 
 class EntryUnitOfWork(
-    unit_of_work.UnitOfWork[EntryRepository],
     entity.TimestampedEntity,
+    unit_of_work.UnitOfWork[EntryRepository],
 ):
     repository_type: str
 
