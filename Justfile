@@ -66,7 +66,7 @@ all-tests: clean-pyc unit-tests integration-tests e2e-tests
 
 # run all tests with code coverage
 all-tests-w-coverage:
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests bases/karp/lex_core/tests
+	{{INVENV}} pytest -vv --cov=bases/karp --cov=components/karp --cov-report=xml components/karp/tests bases/karp/lex_core/tests
 
 # run all tests for karp-lex-core
 test-lex-core:
