@@ -4,7 +4,7 @@ from alembic.config import Config as AlembicConfig
 import alembic
 import pydantic
 
-from karp.foundation import commands
+from karp import command_bus
 
 
 class RunMigrationsUp(pydantic.BaseModel):
@@ -23,7 +23,7 @@ class RunningMigrationsBase:
 
 class RunningMigrationsUp(
     RunningMigrationsBase,
-    commands.CommandHandler[RunMigrationsUp],
+    command_bus.CommandHandler[RunMigrationsUp],
 ):
     def execute(self, command: RunMigrationsUp):
         alembic.command.upgrade(
@@ -33,7 +33,7 @@ class RunningMigrationsUp(
 
 
 class RunningMigrationsDown(
-    RunningMigrationsBase, commands.CommandHandler[RunMigrationsDown]
+    RunningMigrationsBase, command_bus.CommandHandler[RunMigrationsDown]
 ):
     def execute(self, command: RunMigrationsDown):
         alembic.command.downgrade(
