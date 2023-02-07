@@ -1,13 +1,11 @@
 import dataclasses
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, Optional
 
 import injector
 
 from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
 from karp.foundation.time import utc_now
-from karp.lex.application.repositories import entries
-from karp.lex.domain.entities import entry
 from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry
 from karp.tests.foundation.adapters import InMemoryUnitOfWork
 
@@ -74,8 +72,9 @@ class InMemoryIndex(Index):
 
 
 class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, IndexUnitOfWork):
-    def __init__(self):
+    def __init__(self, event_bus: EventBus):
         # super().__init__()
+        IndexUnitOfWork.__init__(self, event_bus=event_bus)
         self._index = InMemoryIndex()
 
     @property
@@ -86,5 +85,5 @@ class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, IndexUnitOfWork):
 class InMemorySearchInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
-    def index_uow(self) -> IndexUnitOfWork:
-        return InMemoryIndexUnitOfWork()
+    def index_uow(self, event_bus: EventBus) -> IndexUnitOfWork:
+        return InMemoryIndexUnitOfWork(event_bus=event_bus)
