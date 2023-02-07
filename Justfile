@@ -16,10 +16,6 @@ alias dev := install-dev
 
 
 
-# run unit tests
-unit-tests:
-    {{INVENV}} pytest -vv components/karp/tests/unit bases/karp/lex_core/tests
-
 # setup production environment
 install:
 	poetry install --no-dev -E mysql
@@ -71,26 +67,30 @@ all-tests: unit-tests integration-tests e2e-tests
 all-tests-w-coverage:
 	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests bases/karp/lex_core/tests
 
+# run unit tests
+unit-tests:
+    {{INVENV}} pytest -vv components/karp/tests/unit bases/karp/lex_core/tests
+
+# run unit tests with code coverage
+unit-tests-w-coverage: clean-pyc
+	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests/unit components/karp/tests/foundation/unit
+
 
 # run end-to-end tests
 e2e-tests: clean-pyc
-	{{INVENV}} pytest -vv karp/tests/e2e
+	{{INVENV}} pytest -vv components/karp/tests/e2e
 
-
+# run end-to-end tests with code coverage
 e2e-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml karp/tests/e2e
+	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests/e2e
 
 # run integration tests
 integration-tests: clean-pyc
-	{{INVENV}} pytest -vv karp/tests/integration
+	{{INVENV}} pytest -vv components/karp/tests/integration
 
-
-unit-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml karp/tests/unit karp/tests/foundation/unit
-
-
+# run integration tests with code coverage
 integration-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml karp/tests/integration
+	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests/integration
 
 # lint code
 lint:

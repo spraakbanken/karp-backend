@@ -1,10 +1,12 @@
 """Unit tests for JWTAuthenticator"""
+
 from datetime import timedelta
 from typing import Dict, Optional
 import os
 
 import jwt
 
+import pathlib
 from karp.foundation.time import utc_now
 
 from karp.auth import AccessToken
@@ -12,11 +14,10 @@ from karp.main.config import AUTH_JWT_AUDIENCE
 
 
 PRIVATE_KEY_PATH = os.environ.get(
-    "TEST_AUTH_JWT_PRIVATE_KEY_PATH", "karp/tests/data/private_key.pem"
+    "TEST_AUTH_JWT_PRIVATE_KEY_PATH", "assets/testing/private_key.pem"
 )
 
-with open(PRIVATE_KEY_PATH) as fp:
-    jwt_private_key = fp.read()
+jwt_private_key = pathlib.Path(PRIVATE_KEY_PATH).read_text()
 
 
 def create_access_token(
@@ -33,10 +34,7 @@ def create_access_token(
 
     iat = utc_now()
     time_delta = timedelta(minutes=abs(expires_in)).total_seconds()
-    if expires_in < 0:
-        exp = iat - time_delta
-    else:
-        exp = iat + time_delta
+    exp = iat - time_delta if expires_in < 0 else iat + time_delta
     token_payload = {
         "iss": "spraakbanken.gu.se",
         "iat": iat,
@@ -51,8 +49,7 @@ def create_access_token(
     if scope:
         token_payload["scope"] = scope
 
-    access_token = jwt.encode(token_payload, priv_key, algorithm="RS256")
-    return access_token
+    return jwt.encode(token_payload, priv_key, algorithm="RS256")
 
 
 def create_bearer_token(

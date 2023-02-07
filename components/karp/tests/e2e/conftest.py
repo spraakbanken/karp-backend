@@ -54,7 +54,7 @@ def sqlite_session_factory(in_memory_sqlite_db):
 @pytest.fixture(scope="session")
 def setup_environment() -> None:
     os.environ["TESTING"] = "1"
-    os.environ["AUTH_JWT_PUBKEY_PATH"] = "karp/tests/data/pubkey.pem"
+    os.environ["AUTH_JWT_PUBKEY_PATH"] = "assets/testing/pubkey.pem"
     os.environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 
 

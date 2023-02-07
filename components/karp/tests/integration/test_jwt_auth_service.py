@@ -39,7 +39,7 @@ other_key = rsa.generate_private_key(
 @pytest.fixture
 def jwt_authenticator():
     return JWTAuthService(
-        pubkey_path=Path("karp/tests/data/pubkey.pem"),
+        pubkey_path=Path("assets/testing/pubkey.pem"),
         is_resource_protected=adapters.InMemoryIsResourceProtected(),
     )
 
