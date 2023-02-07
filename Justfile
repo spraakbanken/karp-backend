@@ -21,7 +21,7 @@ install:
 	poetry install --no-dev -E mysql
 
 # setup development environment
-install-dev: build-parser
+install-dev:
 	poetry install -E mysql
 
 install-wo-mysql:
