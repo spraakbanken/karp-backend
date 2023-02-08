@@ -30,13 +30,13 @@ jobs:
             run: just lint
             allow_failure: true
           - name: Lint code 'karp-lex-core'
-            run: just lint-project karp-lex-core
+            run: poetry run just lint-project karp-lex-core
             allow_failure: false
           - name: Typecheck
             run: just type-check
             allow_failure: true
           - name: Typecheck 'karp-lex-core'
-            run: just type-check-project karp-lex-core
+            run: poetry run just type-check-project karp-lex-core
             allow_failure: false
           - name: Unit tests
             run: just unit-tests
