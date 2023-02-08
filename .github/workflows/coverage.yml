@@ -10,6 +10,7 @@ on:
 
 env:
   POETRY_VERSION: 1.3.1
+  JUST_VERSION: "1.13.0"
 
 jobs:
   coverage:
@@ -50,6 +51,11 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+      - uses: extractions/setup-just@v1
+        with:
+          just-version: ${{ env.JUST_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       #----------------------------------------------
       #  -----  install & configure poetry  -----
@@ -75,7 +81,7 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: make install-dev
+        run: just install-dev
       #----------------------------------------------
       # install your root project, if required
       #----------------------------------------------
@@ -108,7 +114,7 @@ jobs:
           cat .env
           pip install -e .[elasticsearch7]
       - name: Run all tests for coverage report
-        run: make all-tests-w-coverage
+        run: just cov-report=xml all-tests-w-coverage
         env:
           DB_TEST_DATABASE: karp
           DB_USER: karp

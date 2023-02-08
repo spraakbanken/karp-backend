@@ -65,7 +65,7 @@ install:
 	poetry install --no-dev -E mysql
 
 dev: install-dev
-install-dev: karp/search/domain/query_dsl/karp_query_v6_parser.py karp/search/domain/query_dsl/karp_query_v6_model.py
+install-dev: components/karp/search/domain/query_dsl/karp_query_v6_parser.py components/karp/search/domain/query_dsl/karp_query_v6_model.py
 	poetry install -E mysql
 
 install-wo-mysql:
@@ -89,19 +89,19 @@ install-dev-elasticsearch7:
 init-db:
 	${INVENV} alembic upgrade head
 
-karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
+components/karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
 	${INVENV} tatsu $< > $@
 
-karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
+components/karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
 	${INVENV} tatsu --object-model $< > $@
 
 .PHONY: serve
 serve: install-dev
-	${INVENV} uvicorn --factory karp.webapp.main:create_app
+	${INVENV} uvicorn --factory karp.karp_v6_api.main:create_app
 
 .PHONY: serve-w-reload
 serve-w-reload: install-dev
-	${INVENV} uvicorn --reload --factory karp.webapp.main:create_app
+	${INVENV} uvicorn --reload --factory karp.karp_v6_api.main:create_app
 
 check-security-issues: install-dev
 	${INVENV} bandit -r -ll karp
@@ -112,11 +112,11 @@ test: unit-tests
 all-tests: unit-tests integration-tests e2e-tests
 .PHONY: all-tests-w-coverage
 all-tests-w-coverage:
-	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests
+	${INVENV} pytest -vv --cov=karp --cov-report=xml components/karp/tests
 
 .PHONY: unit-tests
 unit-tests:
-	${INVENV} pytest -vv karp/tests/unit karp/tests/foundation/unit
+	${INVENV} pytest -vv components/karp/tests/unit bases/karp/lex_core/tests
 
 .PHONY: e2e-tests
 e2e-tests: clean-pyc
@@ -148,7 +148,7 @@ tox-to-log:
 	tox > tox.log
 
 lint:
-	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex karp/cliapp karp/webapp
+	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex karp/cliapp karp/karp_v6_api
 
 lint-no-fail:
 	${INVENV} pylint --rcfile=pylintrc --exit-zero karp

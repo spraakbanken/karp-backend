@@ -20,17 +20,33 @@ classifiers = [
 	"Operating System :: Microsoft :: Windows",
 	"Topic :: Utilities",
 ]
-packages = [{ include = "karp" }]
+packages = [
+	{ include = "development" },
+	{ include = "karp/auth", from = "components" },
+	{ include = "karp/auth_infrastructure", from = "components" },
+	{ include = "karp/command_bus", from = "components" },
+	{ include = "karp/foundation", from = "components" },
+	{ include = "karp/lex", from = "components" },
+	{ include = "karp/lex_infrastructure", from = "components" },
+	{ include = "karp/main", from = "components" },
+	{ include = "karp/search", from = "components" },
+	{ include = "karp/search_infrastructure", from = "components" },
+	{ include = "karp/utility", from = "components" },
+	{ include = "karp/tests", from = "components" },
+	{ include = "karp/cliapp", from = "bases" },
+	{ include = "karp/karp_v6_api", from = "bases" },
+	{ include = "karp/lex_core", from = "bases" },
+]
 
 [tool.poetry.scripts]
 karp-cli = "karp.cliapp.main:cliapp"
 # ; karp.modules =
-# ;     health = "karp.webapp.health"_api
-# ;     entries = "karp.webapp.views.entries"
-# ;     resources = "karp.webapp.resources"_api
-# ; 	history = "karp.webapp.views.history"
-# ; 	stats = "karp.webapp.stats"_api
-# ; 	query = "karp.webapp.query"_api
+# ;     health = "karp.karp_v6_api.health"_api
+# ;     entries = "karp.karp_v6_api.views.entries"
+# ;     resources = "karp.karp_v6_api.resources"_api
+# ; 	history = "karp.karp_v6_api.views.history"
+# ; 	stats = "karp.karp_v6_api.stats"_api
+# ; 	query = "karp.karp_v6_api.query"_api
 [tool.poetry.plugins."karp.infrastructure"]
 "es6" = "karp.infrastructure.elasticsearch6"
 "sql" = "karp.infrastructure.sql"
@@ -59,7 +75,7 @@ asgi-correlation-id = "^3.0.1"
 elasticsearch = "^6"
 elasticsearch-dsl = "^6"
 environs = "^9.3.4"
-fastapi = "^0.88.0"
+fastapi = "^0.89.0"
 injector = "^0.20.1"
 json-streams = "^0.12.0"
 mysqlclient = { version = "^2.1.1", optional = true }
@@ -108,6 +124,7 @@ types-factory-boy = "^0.3.1"
 types-deprecated = "^1.2.9"
 httpx = "^0.23.1"
 pre-commit = "^2.20.0"
+ruff = "^0.0.243"
 
 [tool.vulture]
 exclude = ["karp/tests/"]
@@ -118,3 +135,22 @@ ignore_decorators = ["@abc.abstractmethod"]
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+# Enable flake8-bugbear (`B`) rules.
+select = ["E", "F", "B"]
+
+# Never enforce `E501` (line length violations).
+ignore = ["E501"]
+
+line-length = 97
+
+# Avoid trying to fix flake8-bugbear (`B`) violations.
+unfixable = ["B"]
+
+# Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
+[tool.ruff.per-file-ignores]
+"__init__.py" = ["E402"]
+"components/karp/tests/unit/test_morphological_entry.py" = ["F841", "F821"]
+"bases/karp/karp_v6_api/routes/resources_api.py" = ["B008"]
+

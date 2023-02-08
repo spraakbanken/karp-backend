@@ -1,0 +1,63 @@
+[tool.poetry]
+name = "karp-backend"
+version = "6.1.12"
+description = ""
+authors = ["Kristoffer Andersson <kristoffer.andersson@gu.se>"]
+license = "MIT"
+readme = "README.md"
+packages = [
+	{ include = "karp/auth", from = "components" },
+	{ include = "karp/auth_infrastructure", from = "components" },
+	{ include = "karp/command_bus", from = "components" },
+	{ include = "karp/foundation", from = "components" },
+	{ include = "karp/lex", from = "components" },
+	{ include = "karp/lex_infrastructure", from = "components" },
+	{ include = "karp/main", from = "components" },
+	{ include = "karp/search", from = "components" },
+	{ include = "karp/search_infrastructure", from = "components" },
+	{ include = "karp/utility", from = "components" },
+	{ include = "karp/tests", from = "components" },
+	{ include = "karp/cliapp", from = "bases" },
+	{ include = "karp/karp_v6_api", from = "bases" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Deprecated = "^1.2.13"
+PyMySQL = { version = "^1.0.2", optional = true }
+TatSu = "^5.8.3"
+aiomysql = { version = "^0.1.1", optional = true }
+aiosqlite = { version = "^0.17.0", optional = true }
+alembic = "^1.8.1"
+asgi-correlation-id = "^3.0.1"
+elasticsearch = "^6"
+elasticsearch-dsl = "^6"
+environs = "^9.3.4"
+fastapi = "^0.89"
+injector = "^0.20.1"
+json-streams = "^0.12.0"
+mysqlclient = { version = "^2.1.1", optional = true }
+paradigmextract = "^0.1.1"
+pydantic = "^1.10.2"
+pyjwt = { version = "^2.6.0", extras = ["crypto"] }
+python-dotenv = "^0.19.0"
+python-json-logger = "^2.0.4"
+regex = "^2022.8.17"
+sb-json-tools = "^0.9.1"
+sqlalchemy = "^1.4.44"
+sqlalchemy-json = "^0.5.0"
+sqlalchemy-utils = "^0.38.3"
+tabulate = "^0.9.0"
+tenacity = "^8.0.1"
+tqdm = "^4.64.1"
+typer = "^0.7.0"
+ulid-py = "^1.1.0"
+urllib3 = "^1.26.13"
+
+[tool.poetry.extras]
+mysql = ["mysqlclient", "PyMySQL", "aiomysql"]
+sqlite = ["aiosqlite"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
