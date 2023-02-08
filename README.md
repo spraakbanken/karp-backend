@@ -1,20 +1,37 @@
 # Karp backend
 
-[![PyPI version](https://badge.fury.io/py/karp-backend.svg)](https://badge.fury.io/py/karp-backend)
 [![Build Status](https://github.com/spraakbanken/karp-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-backend/actions)
 [![CodeScene Code Health](https://codescene.io/projects/24151/status-badges/code-health)](https://codescene.io/projects/24151)
 [![codecov](https://codecov.io/gh/spraakbanken/karp-backend/branch/main/graph/badge.svg?token=iwTQnHKOpm)](https://codecov.io/gh/spraakbanken/karp-backend)
 
-This in the version 6 of Karp backend, [for the legacy version (v5)](https://github.com/spraakbanken/karp-backend-v5).
+This is a monorepo containing the following projects:
 
-## Setup
+- **karp-lex-core** [![PyPI version](https://badge.fury.io/py/karp-lex-core.svg)](https://badge.fury.io/py/karp-lex-core)
 
-This project uses [poetry](https://python-poetry.org) and
-[MariaDB](https://mariadb.org/).
+- **karp-backend** [![PyPI version](https://badge.fury.io/py/karp-backend.svg)](https://badge.fury.io/py/karp-backend)
 
-1. Run `make install` or `make install-dev` for a develop-install
-2. Install MariaDB and create a database
-3. Setup environment variables (can be placed in a `.env` file in the root and then **?** `poetry run` sets those):
+This is the version 6 of Karp backend, [for the legacy version (v5)](https://github.com/spraakbanken/karp-backend-v5).
+
+## Development
+
+This project uses [poetry](https://python-poetry.org) and the plugins `poetry-multiproject-plugin` and `poetry-polylith-plugin`.
+
+The metadata to each lives in `projects/<project-name>` which include code from at least 1 bases (from `bases`) and 0 or more
+components (from `components`).
+
+Provided are both a Makefile and a Justfile. They should behave the same.
+
+### Getting started
+
+1. First clone this repo: `git clone` or `gh repo clone` (if using github-cli).
+
+2. Install dependencies:
+   1. `just dev` (or `just install-dev`)
+   2. `make dev` (or `make install-dev`)
+
+3. Install MariaDB and create a database
+
+4. Setup environment variables (can be placed in a `.env` file in the root and then **?** `poetry run` sets those):
    ```
    export DB_DATABASE=<name of database>
    export DB_USER=<database user>
@@ -26,7 +43,7 @@ This project uses [poetry](https://python-poetry.org) and
 5. Run `karp-cli db up` to initialize database
 6. Run `make serve` or `make serve-w-reload` to start development server
 
-   or `poetry shell` and then `uvicorn asgi:app`
+   or `poetry shell` and then `uvicorn --factory karp.karp_v6_api.main:create_app`
 
 7. To setup Elasticsearch, download Elasticsearch 6.x and start it
 8. Install elasticsearch python libs for the right version
