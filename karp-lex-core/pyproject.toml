@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "karp-lex-core"
-version = "version = "0.3.0""
+version = "0.2.9"
 description = "The core of karp-lex"
 authors = [
     "Språkbanken at the University of Gothenburg <sb-info@svenska.gu.se>",
