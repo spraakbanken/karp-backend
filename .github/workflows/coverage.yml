@@ -114,7 +114,7 @@ jobs:
           cat .env
           pip install -e .[elasticsearch7]
       - name: Run all tests for coverage report
-        run: just cov-report=xml all-tests-w-coverage
+        run: just cov-report=xml test-w-coverage
         env:
           DB_TEST_DATABASE: karp
           DB_USER: karp

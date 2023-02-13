@@ -87,11 +87,11 @@ unit-tests-w-coverage: clean-pyc
 	{{INVENV}} pytest -vv --cov=karp --cov-report={{cov-report}} karp-backend/src/karp/tests/unit karp-backend/src/karp/tests/foundation/unit
 
 all-test-dirs := "karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests"
-default-cov := "--cov=karp"
+default-cov := "--cov=karp-backend/src/karp --cov=karp-lex-core/src/karp"
 
 # run tests with code coverage
 test-w-coverage cov=default-cov +tests=all-test-dirs: clean-pyc
-	{{INVENV}} pytest -vv {{cov}}  --cov-report={{cov-report}} {{tests}}
+	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} {{tests}}
 
 unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
 
