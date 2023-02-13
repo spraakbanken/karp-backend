@@ -32,6 +32,12 @@ bump2version = "^1.0.1"
 pylint = "^2.15.10"
 mypy = "^0.991"
 
+[tool.poetry.group.ci]
+optional = true
+
+[tool.poetry.group.ci.dependencies]
+ruff = "^0.0.243"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
