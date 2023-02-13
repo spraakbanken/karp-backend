@@ -4,20 +4,16 @@ INVENV := if env_var_or_default('VIRTUAL_ENV', "") == "" { "poetry run" } else {
 
 # lint the code
 lint:
-    {{INVENV}} ruff ../../bases/karp/lex_core
+    {{INVENV}} ruff src
 
 # type-check the code
 type-check:
-    {{INVENV}} mypy --config-file ../../mypy.ini -p karp.lex_core
+    {{INVENV}} mypy --config-file mypy.ini -p karp.lex_core
 
 # build the project
 build:
-    poetry build-project
+    poetry build
 
-# check the project
-check-project:
-    poetry check-project
-    
 # bump given part of version
 bumpversion part="patch":
 	{{INVENV}} bump2version {{part}}

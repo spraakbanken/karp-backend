@@ -35,7 +35,7 @@ packages = [
 	{ include = "karp/tests", from = "components" },
 	{ include = "karp/cliapp", from = "bases" },
 	{ include = "karp/karp_v6_api", from = "bases" },
-	{ include = "karp/lex_core", from = "bases" },
+	{ include = "karp/lex_core", from = "karp-lex-core/src" },
 ]
 
 [tool.poetry.scripts]

@@ -13,7 +13,7 @@ homepage = "https://spraakbanken.gu.se"
 documentation = "https://github.com/spraakbanken/karp-lex-core"
 repository = "https://github.com/spraakbanken/karp-lex-core"
 packages = [
-    {include = "karp/lex_core", from = "../../bases"},
+    {include = "karp/lex_core", from = "src"},
 ]
 
 [tool.poetry.urls]

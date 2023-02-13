@@ -71,10 +71,10 @@ all-tests-w-coverage:
 	{{INVENV}} pytest -vv --cov=bases/karp --cov=components/karp --cov-report=xml components/karp/tests bases/karp/lex_core/tests
 
 # run all tests for karp-lex-core
-test-lex-core: (test 'bases/karp/lex_core/tests')
+test-lex-core: (test 'karp-lex-core/src/karp/lex_core/tests')
 
 # run all tests for karp-lex-core with code coverage
-test-lex-core-w-coverage: (test-w-coverage "--cov=bases/karp/lex_core" "bases/karp/lex_core/tests")
+test-lex-core-w-coverage: (test-w-coverage "--cov=karp.lex_core" "karp-lex-core/src/karp/lex_core/tests")
 
 # run unit tests
 unit-tests: test
