@@ -1,7 +1,7 @@
 import collections.abc
 import logging
 from pathlib import Path
-import sys
+import sys  # noqa: F401
 from typing import Optional
 
 

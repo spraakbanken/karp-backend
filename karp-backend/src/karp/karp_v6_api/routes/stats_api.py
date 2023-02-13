@@ -4,7 +4,7 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
-    Response,
+    Response,  # noqa: F401
     Security,
     status,
 )  # noqa: F401

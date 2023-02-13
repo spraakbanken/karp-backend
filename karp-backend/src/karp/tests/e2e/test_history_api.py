@@ -10,8 +10,8 @@ from karp import auth
 from karp.foundation.time import utc_now
 from karp.lex.application.queries.entries import (
     EntryDto,
-    GetHistoryDto,
-    HistoryDto,
+    GetHistoryDto,  # noqa: F401
+    HistoryDto,  # noqa: F401
 )  # noqa: F401
 
 places = [

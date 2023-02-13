@@ -13,7 +13,7 @@ from karp.lex import (
 )
 from karp.karp_v6_api.dependencies import db_deps
 from karp.karp_v6_api.dependencies.db_deps import (
-    get_database,
+    get_database,  # noqa: F401
     get_session,
 )  # noqa: F401
 from karp.karp_v6_api.dependencies import event_deps

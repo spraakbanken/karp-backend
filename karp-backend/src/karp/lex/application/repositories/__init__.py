@@ -5,7 +5,7 @@ from .entry_repositories import (
     EntryRepositoryUnitOfWorkFactory,  # noqa: F401
     InjectorEntryUnitOfWorkRepoFactory,  # noqa: F401
     EntryUnitOfWorkCreator,  # noqa: F401
-    EntryUnitOfWork,  # noqa: F811, F401
+    EntryUnitOfWork,  # noqa: F811
 )
 from .resources import ResourceRepository, ResourceUnitOfWork  # noqa: F401
 

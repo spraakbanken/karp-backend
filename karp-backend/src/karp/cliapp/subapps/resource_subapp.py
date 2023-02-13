@@ -111,7 +111,7 @@ def update(
         raise ValueError("resource_id must be present")
     resource_name = config_dict.pop("resource_name") or resource_id
     cmd = lex_commands.UpdateResource(
-        version=version, name=resource_name, resource_id=resource_id, config=config_dict, messag
+        version=version, name=resource_name, resource_id=resource_id, config=config_dict, messag  # noqa: E999
     )
     print(f"cmd={cmd}")
     raise NotImplementedError("Update resource config")

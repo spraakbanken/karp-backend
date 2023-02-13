@@ -7,7 +7,7 @@ from .factories import random_resource
 
 def test_morphology():
     resource = random_resource()  # noqa: F841
-    entry = {
+    entry = {  # noqa: F841
         "baseform": "Appalacherna",
         "paradigm": "pm_plg_alperna",
         "pos": "pm",

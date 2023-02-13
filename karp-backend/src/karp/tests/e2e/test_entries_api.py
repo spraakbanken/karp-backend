@@ -13,7 +13,7 @@ from karp.lex.application.repositories.entry_repositories import (
 from karp.foundation.time import utc_now
 from karp.foundation.value_objects import (
     make_unique_id,
-    UniqueId,
+    UniqueId,  # noqa: F401
     unique_id,
 )  # noqa: F401
 from karp.lex.application.queries import EntryDto
@@ -1006,7 +1006,7 @@ def test_update_refs(fa_data_client):
 def test_update_refs2(fa_data_client):
     client = init(
         fa_data_client,
-        es,
+        es,  # noqa: F821
         [{"code": 3, "name": "test3", "municipality": [2, 3]}],  # noqa: F821
     )
 

@@ -16,9 +16,9 @@ import sys
 from tatsu.buffering import Buffer
 from tatsu.parsing import Parser
 from tatsu.parsing import tatsumasu
-from tatsu.parsing import leftrec, nomemo, isname  # noqa
+from tatsu.parsing import leftrec, nomemo, isname  # noqa: F401
 from tatsu.infos import ParserConfig
-from tatsu.util import re, generic_main  # noqa
+from tatsu.util import re, generic_main  # noqa: F401
 
 
 KEYWORDS = {}  # type: ignore

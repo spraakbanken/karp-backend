@@ -26,7 +26,7 @@ class TestQuery:
     def test_cannot_search_non_existent_resource(self):
         bus = bootstrap_test_app()  # noqa: F821
         with pytest.raises(errors.ResourceNotFound):  # noqa: F821
-            query_request = index.QueryRequest(
+            query_request = index.QueryRequest(  # noqa: F821
                 resource_ids="non_existing"
             )  # noqa: F821
             entry_query.query(query_request, bus.ctx)  # noqa: F821
@@ -43,7 +43,7 @@ class TestQuerySplit:
     def test_cannot_search_non_existent_resource(self):
         bus = bootstrap_test_app()  # noqa: F821
         with pytest.raises(errors.ResourceNotFound):  # noqa: F821
-            query_request = index.QueryRequest(
+            query_request = index.QueryRequest(  # noqa: F821
                 resource_ids="non_existing"
             )  # noqa: F821
             entry_query.query_split(query_request, bus.ctx)  # noqa: F821

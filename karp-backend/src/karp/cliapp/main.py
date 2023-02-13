@@ -1,6 +1,6 @@
 import logging
 from typing import Optional
-import sys
+import sys  # noqa: F401
 
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
