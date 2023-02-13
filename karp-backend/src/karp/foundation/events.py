@@ -3,7 +3,7 @@ import logging
 from typing import List, Generic, TypeVar, Any, Iterable
 
 import injector
-import logging
+import logging  # noqa: F811
 
 
 logger = logging.getLogger(__name__)
@@ -73,7 +73,7 @@ class InjectorEventBus(EventBus):
                 )
                 try:
                     evt_handler(event)
-                except Exception as err:
+                except Exception as err:  # noqa: F841
                     logger.exception(
                         "Exception handling event", extra={"karp_event": event}
                     )

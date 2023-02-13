@@ -1,8 +1,8 @@
 import json
 import logging
-import re
-from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+import re  # noqa: F401
+from datetime import datetime  # noqa: F401
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union  # noqa: F401
 
 import elasticsearch
 import elasticsearch.helpers  # pyre-ignore
@@ -17,12 +17,12 @@ from karp.search.application.queries import (
 )
 from karp.search.domain import errors
 from karp.search.domain.errors import (
-    UnsupportedField,
+    UnsupportedField,  # noqa: F401
 )  # IncompleteQuery,; UnsupportedQuery,
-from karp.lex.domain.entities.entry import Entry
-from karp.lex.domain.entities.resource import Resource
+from karp.lex.domain.entities.entry import Entry  # noqa: F401
+from karp.lex.domain.entities.resource import Resource  # noqa: F401
 from karp.search.domain import query_dsl
-from karp.search_infrastructure.elasticsearch6 import es_config
+from karp.search_infrastructure.elasticsearch6 import es_config  # noqa: F401
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 from .es_query import EsQuery
 

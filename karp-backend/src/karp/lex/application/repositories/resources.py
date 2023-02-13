@@ -1,8 +1,8 @@
 import abc
 import logging
 import typing
-import uuid
-from typing import Dict, List, Optional, Tuple, Union
+import uuid  # noqa: F401
+from typing import Dict, List, Optional, Tuple, Union  # noqa: F401
 
 from karp.foundation import events, repository, unit_of_work
 from karp.lex.domain import entities

@@ -1,1 +1,1 @@
-from .ulid import ULIDType
+from .ulid import ULIDType  # noqa: F401

@@ -3,11 +3,11 @@
 
 import pytest
 import injector
-import pytest  # pyre-ignore
+import pytest  # pyre-ignore  # noqa: F811
 from sqlalchemy import create_engine
 from sqlalchemy.orm import session, sessionmaker
 
-from alembic.config import main as alembic_main
+from alembic.config import main as alembic_main  # noqa: F401
 
 from karp.tests.unit.lex.adapters import InMemoryLexInfrastructure
 from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure

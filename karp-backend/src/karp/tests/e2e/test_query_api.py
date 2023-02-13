@@ -1,4 +1,4 @@
-import json
+import json  # noqa: F401
 from typing import Callable, Dict, List, Optional, Tuple
 
 import pytest  # pyre-ignore
@@ -6,8 +6,8 @@ from fastapi import status
 
 from karp import auth
 from karp.lex.application.queries import EntryViews
-from karp.tests.common_data import MUNICIPALITIES, PLACES
-from karp.tests.utils import add_entries, get_json
+from karp.tests.common_data import MUNICIPALITIES, PLACES  # noqa: F401
+from karp.tests.utils import add_entries, get_json  # noqa: F401
 
 
 def extract_names(entries):
@@ -168,7 +168,7 @@ def test_query_no_q(
     names = extract_names(entries)
 
     entry_views = app_context.container.get(EntryViews)  # type: ignore [misc]
-    expected_result = {}
+    expected_result = {}  # noqa: F841
     expected_total = entry_views.get_total(resource)
     print(f"entries = {entries}")
     assert entries["total"] == expected_total
@@ -312,7 +312,7 @@ def test_contains_and_separate_calls(
     expected_result: List[str],
 ):
     names = set()
-    for field, value in zip(fields, values):
+    for field, value in zip(fields, values):  # noqa: B905
         query = f"/query/places?q=contains|{field}|{value}"
         entries = get_json(
             fa_data_client,
@@ -1158,6 +1158,6 @@ def test_query_include_fields(fa_data_client, fields: List[str]) -> None:
         f"/query/places?{'&'.join((f'include_field={field}' for field in fields))}",
     )
 
-    for entry in (entry["entry"] for entry in result["hits"]):
+    for entry in (entry["entry"] for entry in result["hits"]):  # noqa: B007
         for field in fields:
             assert field in fields

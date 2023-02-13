@@ -3,11 +3,11 @@ import logging
 import typing
 
 # from karp.infrastructure.unit_of_work import unit_of_work
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple  # noqa: F401
 from karp.foundation.value_objects.unique_id import UniqueId
 from karp.lex.application.queries.entries import EntryDto
 
-from karp.lex.domain import entities
+from karp.lex.domain import entities  # noqa: F401
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.application.queries import (
     GetReferencedEntries,
@@ -18,7 +18,7 @@ from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 
 # from karp.resourcemgr import get_resource
 # import karp.resourcemgr.entryread as entryread
-from karp.lex.domain.errors import EntryNotFound
+from karp.lex.domain.errors import EntryNotFound  # noqa: F401
 
 # from karp.services import context
 
@@ -65,7 +65,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
             ref_resource_id,
             ref_resource_version,
             field_name,
-            field,
+            field,  # noqa: B007
         ) in resource_backrefs:
             other_resource = self.resource_repo.get_by_resource_id(
                 ref_resource_id  # , version=version

@@ -5,14 +5,14 @@ from fastapi import Depends, HTTPException, status
 from fastapi.param_functions import Header
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityScopes
 from fastapi.security import utils as security_utils
-import logging
+import logging  # noqa: F811
 
 # from karp import bootstrap, services
 from karp import auth, lex
 
 # from karp.auth.auth import auth
-from karp.main.errors import ClientErrorCodes, KarpError
-from karp.auth.domain.auth_service import AuthService
+from karp.main.errors import ClientErrorCodes, KarpError  # noqa: F401
+from karp.auth.domain.auth_service import AuthService  # noqa: F401
 from karp.auth_infrastructure import (
     JWTAuthService,
     LexGetResourcePermissions,
@@ -27,7 +27,7 @@ auth_scheme = HTTPBearer()
 logger = logging.getLogger(__name__)
 
 
-def bearer_scheme(authorization=Header(None)):
+def bearer_scheme(authorization=Header(None)):  # noqa: B008
     if not authorization:
         return None
     scheme, credentials = security_utils.get_authorization_scheme_param(authorization)
@@ -37,7 +37,7 @@ def bearer_scheme(authorization=Header(None)):
 
 
 def get_resource_permissions(
-    query: lex.GetPublishedResources = Depends(lex_deps.get_published_resources),
+    query: lex.GetPublishedResources = Depends(lex_deps.get_published_resources),  # noqa: B008
 ) -> auth.GetResourcePermissions:
     return LexGetResourcePermissions(query)
 
@@ -47,14 +47,14 @@ def get_resource_permissions(
 
 
 def get_is_resource_protected(
-    repo: lex.ReadOnlyResourceRepository = Depends(lex_deps.get_resources_read_repo),
+    repo: lex.ReadOnlyResourceRepository = Depends(lex_deps.get_resources_read_repo),  # noqa: B008
 ) -> auth.IsResourceProtected:
     return LexIsResourceProtected(repo)
 
 
 def get_auth_service(
-    config: auth.AuthServiceConfig = Depends(inject_from_req(auth.AuthServiceConfig)),
-    query: auth.IsResourceProtected = Depends(get_is_resource_protected),
+    config: auth.AuthServiceConfig = Depends(inject_from_req(auth.AuthServiceConfig)),  # noqa: B008
+    query: auth.IsResourceProtected = Depends(get_is_resource_protected),  # noqa: B008
 ) -> auth.AuthService:
     return JWTAuthService(
         pubkey_path=config.pubkey_path,
@@ -64,8 +64,8 @@ def get_auth_service(
 
 def get_current_user(
     security_scopes: SecurityScopes,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
-    auth_service: auth.AuthService = Depends(get_auth_service),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),  # noqa: B008
+    auth_service: auth.AuthService = Depends(get_auth_service),  # noqa: B008
 ) -> Optional[auth.User]:
     if not credentials:
         return None
@@ -95,8 +95,8 @@ get_user_optional = get_current_user
 
 def get_user(
     security_scopes: SecurityScopes,
-    credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
-    auth_service: auth.AuthService = Depends(get_auth_service),
+    credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),  # noqa: B008
+    auth_service: auth.AuthService = Depends(get_auth_service),  # noqa: B008
 ) -> auth.User:
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'

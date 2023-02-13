@@ -71,7 +71,7 @@ class RequestScope(injector.Scope):
             try:
                 registry = getattr(self._locals, self.REGISTRY_KEY)
             except AttributeError:
-                raise Exception(
+                raise Exception(  # noqa: B904
                     f"{key} is request scoped, but no RequestScope entered!"
                 )
             registry[key] = provider

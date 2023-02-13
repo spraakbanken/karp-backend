@@ -1,14 +1,14 @@
-import re
+import re  # noqa: F401
 import typing
-from typing import Union
+from typing import Union  # noqa: F401
 
 import elasticsearch_dsl as es_dsl
 
 from karp.search.application.queries import QueryRequest
-from karp.search.domain.errors import IncompleteQuery, UnsupportedQuery
+from karp.search.domain.errors import IncompleteQuery, UnsupportedQuery  # noqa: F401
 from karp.search.domain.query import Query
-from karp.search.domain.query_dsl import basic_ast as ast
-from karp.search.domain.query_dsl import is_a, op
+from karp.search.domain.query_dsl import basic_ast as ast  # noqa: F401
+from karp.search.domain.query_dsl import is_a, op  # noqa: F401
 
 
 class EsQuery(Query):

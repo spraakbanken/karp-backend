@@ -1,4 +1,4 @@
-from .machine_name import MachineName
+from .machine_name import MachineName  # noqa: F401
 from .permission_level import PermissionLevel
 from .unique_id import UniqueId, make_unique_id, UniqueIdStr
 

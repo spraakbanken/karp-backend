@@ -1,10 +1,10 @@
 import logging
-import os
+import os  # noqa: F401
 from typing import Union
 
 from karp.db_infrastructure import Database
 
-from karp.main.config import DATABASE_URL, DatabaseUrl
+from karp.main.config import DATABASE_URL, DatabaseUrl  # noqa: F401
 
 
 logger = logging.getLogger(__name__)

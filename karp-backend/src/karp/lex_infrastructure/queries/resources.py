@@ -10,7 +10,7 @@ from karp.lex.application.queries import (
     GetResources,
 )
 from karp.lex.application.queries.resources import ReadOnlyResourceRepository
-from karp.lex.domain.entities import resource
+from karp.lex.domain.entities import resource  # noqa: F401
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.lex_infrastructure.queries.base import SqlQuery
 
@@ -31,7 +31,7 @@ class SqlGetPublishedResources(GetPublishedResources, SqlQuery):
             sa.and_(
                 ResourceModel.entity_id == subq.c.entity_id,
                 ResourceModel.last_modified == subq.c.maxdate,
-                ResourceModel.is_published == True,
+                ResourceModel.is_published == True,  # noqa: E712
             ),
         )
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
@@ -113,7 +113,7 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
             sa.and_(
                 ResourceModel.entity_id == subq.c.entity_id,
                 ResourceModel.last_modified == subq.c.maxdate,
-                ResourceModel.is_published == True,
+                ResourceModel.is_published == True,  # noqa: E712
             ),
         )
         return (_row_to_dto(row) for row in self._conn.execute(stmt))

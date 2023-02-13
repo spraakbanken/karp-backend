@@ -1,4 +1,4 @@
-import uuid
+import uuid  # noqa: F401
 from typing import Dict
 
 from pydantic import BaseModel

@@ -1,1 +1,1 @@
-from .matomo import MatomoMiddleware
+from .matomo import MatomoMiddleware  # noqa: F401

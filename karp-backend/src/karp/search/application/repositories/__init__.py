@@ -1,1 +1,1 @@
-from .indicies import IndexUnitOfWork, Index, IndexEntry
+from .indicies import IndexUnitOfWork, Index, IndexEntry  # noqa: F401

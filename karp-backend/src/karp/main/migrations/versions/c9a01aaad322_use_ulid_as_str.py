@@ -6,7 +6,7 @@ Create Date: 2022-12-01 12:36:55.684153
 
 """
 from alembic import op
-import sqlalchemy as sa
+import sqlalchemy as sa  # noqa: F401
 from sqlalchemy_utils import UUIDType
 from karp.db_infrastructure.types import ULIDType
 

@@ -2,8 +2,8 @@ import os
 
 import environs
 from sqlalchemy.engine import URL as DatabaseUrl, make_url
-from starlette.config import Config
-from starlette.datastructures import Secret
+from starlette.config import Config  # noqa: F401
+from starlette.datastructures import Secret  # noqa: F401
 
 PROJECT_NAME = "Karp"
 VERSION = "6.1.12"

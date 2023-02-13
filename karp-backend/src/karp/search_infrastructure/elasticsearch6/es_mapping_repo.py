@@ -7,13 +7,13 @@ from typing import Dict, List, Optional, Any, Tuple, Union
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions
 
-from karp.foundation.events import EventBus
+from karp.foundation.events import EventBus  # noqa: F401
 
-from karp.lex.domain.entities import Entry
+from karp.lex.domain.entities import Entry  # noqa: F401
 from karp.search.application.repositories import (
-    Index,
-    IndexEntry,
-    IndexUnitOfWork,
+    Index,  # noqa: F401
+    IndexEntry,  # noqa: F401
+    IndexUnitOfWork,  # noqa: F401
 )
 from karp.search.domain.errors import UnsupportedField
 

@@ -82,7 +82,7 @@ def fixture_app(
 
     yield create_app()
     print("dropping app")
-    app = None
+    app = None  # noqa: F841
 
 
 @pytest.fixture(name="app_context", scope="session")

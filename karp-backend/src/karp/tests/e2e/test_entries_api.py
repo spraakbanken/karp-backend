@@ -1,5 +1,5 @@
 from typing import Dict, List
-import uuid
+import uuid  # noqa: F401
 
 import pytest  # pyre-ignore
 from fastapi import status
@@ -11,7 +11,7 @@ from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
 from karp.foundation.time import utc_now
-from karp.foundation.value_objects import make_unique_id, UniqueId, unique_id
+from karp.foundation.value_objects import make_unique_id, UniqueId, unique_id  # noqa: F401
 from karp.lex.application.queries import EntryDto
 
 # from karp.application import ctx, config
@@ -787,10 +787,10 @@ def test_update_wrong_id(fa_data_client, write_token: auth.AccessToken):
     assert response.status_code == 201
     entry_id = response.json()["newID"]
 
-    with unit_of_work(using=ctx.resource_repo) as uw:
+    with unit_of_work(using=ctx.resource_repo) as uw:  # noqa: F821
         resource = uw.get_active_resource("places")
 
-    with unit_of_work(using=resource.entry_repository) as uw:
+    with unit_of_work(using=resource.entry_repository) as uw:  # noqa: F821
         entries = uw.entry_ids()
         assert len(entries) == 1
         assert entries[0] == "3"
@@ -843,7 +843,7 @@ def test_refs(fa_data_client):
         ],
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "places/query")  # noqa: F821
     assert len(entries["hits"]) == 2
     for val in entries["hits"]:
         assert "entry" in val
@@ -896,7 +896,7 @@ def test_external_refs(fa_data_client):
 
     client.post(
         "municipalities/add",
-        data=json.dumps(
+        data=json.dumps(  # noqa: F821
             {
                 "entry": {
                     "code": 1,
@@ -911,7 +911,7 @@ def test_external_refs(fa_data_client):
 
     client.post(
         "municipalities/add",
-        data=json.dumps(
+        data=json.dumps(  # noqa: F821
             {
                 "entry": {
                     "code": 2,
@@ -924,7 +924,7 @@ def test_external_refs(fa_data_client):
         content_type="application/json",
     )
 
-    entries = get_json(client, "municipalities/query")
+    entries = get_json(client, "municipalities/query")  # noqa: F821
     for val in entries["hits"]:
         assert "entry" in val
         entry = val["entry"]
@@ -939,7 +939,7 @@ def test_external_refs(fa_data_client):
             assert 2 in place_codes
             assert 3 in place_codes
 
-    places_entries = get_json(client, "places/query")
+    places_entries = get_json(client, "places/query")  # noqa: F821
     for val in places_entries["hits"]:
         assert "entry" in val
         entry = val["entry"]
@@ -958,7 +958,7 @@ def test_external_refs(fa_data_client):
 def test_update_refs(fa_data_client):
     client = init(
         fa_data_client,
-        es,
+        es,  # noqa: F821
         [
             {
                 "code": 5,
@@ -980,7 +980,7 @@ def test_update_refs(fa_data_client):
         ],
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "places/query")  # noqa: F821
     assert len(entries["hits"]) == 2
     for val in entries["hits"]:
         assert "entry" in val
@@ -992,7 +992,7 @@ def test_update_refs(fa_data_client):
 
     client.delete("/places/6/delete")
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "places/query")  # noqa: F821
     assert len(entries["hits"]) == 1
     entry = entries["hits"][0]
     assert "v_smaller_places" not in entry
@@ -1001,12 +1001,12 @@ def test_update_refs(fa_data_client):
 @pytest.mark.skip()
 def test_update_refs2(fa_data_client):
     client = init(
-        fa_data_client, es, [{"code": 3, "name": "test3", "municipality": [2, 3]}]
+        fa_data_client, es, [{"code": 3, "name": "test3", "municipality": [2, 3]}]  # noqa: F821
     )
 
     client.post(
         "places/3/update",
-        data=json.dumps(
+        data=json.dumps(  # noqa: F821
             {
                 "entry": {"code": 3, "name": "test3", "municipality": [2]},
                 "message": "changes",
@@ -1016,7 +1016,7 @@ def test_update_refs2(fa_data_client):
         content_type="application/json",
     )
 
-    entries = get_json(client, "places/query")
+    entries = get_json(client, "places/query")  # noqa: F821
     assert len(entries["hits"]) == 1
     assert entries["hits"][0]["id"] == "3"
     assert entries["hits"][0]["entry"]["municipality"] == [2]
@@ -1025,6 +1025,6 @@ def test_update_refs2(fa_data_client):
         or len(entries["hits"][0]["municipality"]) == 0
     )
     with client.application.app_context():
-        db_entry = entryread.get_entry("places", "3")
+        db_entry = entryread.get_entry("places", "3")  # noqa: F821
         assert len(db_entry.municipality) == 1
         assert db_entry.municipality[0].municipality == 2

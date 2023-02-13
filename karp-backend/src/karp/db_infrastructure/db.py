@@ -1,44 +1,44 @@
 """Handles all sql db connections."""
-import collections
-import json
-from typing import Any, Dict, Optional
+import collections  # noqa: F401
+import json  # noqa: F401
+from typing import Any, Dict, Optional  # noqa: F401
 
 import attr
 import sqlalchemy
 from sqlalchemy import (
-    JSON,
-    Column,
-    Enum,
-    ForeignKey,
-    Integer,
+    JSON,  # noqa: F401
+    Column,  # noqa: F401
+    Enum,  # noqa: F401
+    ForeignKey,  # noqa: F401
+    Integer,  # noqa: F401
     MetaData,
-    String,
+    String,  # noqa: F401
     Table,
-    Text,
-    Unicode,
-    and_,
-    event,
-    exc,
-    func,
-    or_,
+    Text,  # noqa: F401
+    Unicode,  # noqa: F401
+    and_,  # noqa: F401
+    event,  # noqa: F401
+    exc,  # noqa: F401
+    func,  # noqa: F401
+    or_,  # noqa: F401
 )
-from sqlalchemy.dialects.mysql import DOUBLE
+from sqlalchemy.dialects.mysql import DOUBLE  # noqa: F401
 from sqlalchemy.engine import Engine
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.exc import SQLAlchemyError  # noqa: F401
+from sqlalchemy.ext.declarative import declared_attr  # noqa: F401
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.ext.mutable import Mutable
-from sqlalchemy.orm import aliased, mapper, relationship
+from sqlalchemy.ext.mutable import Mutable  # noqa: F401
+from sqlalchemy.orm import aliased, mapper, relationship  # noqa: F401
 from sqlalchemy.orm.session import Session, sessionmaker
 from sqlalchemy.schema import (
-    ForeignKeyConstraint,
-    PrimaryKeyConstraint,
-    UniqueConstraint,
+    ForeignKeyConstraint,  # noqa: F401
+    PrimaryKeyConstraint,  # noqa: F401
+    UniqueConstraint,  # noqa: F401
 )
-from sqlalchemy.sql import delete, insert, update
-from sqlalchemy.types import VARCHAR, Boolean, Float, Time, TypeDecorator
-from sqlalchemy_json import NestedMutableJson
-from sqlalchemy_utils import UUIDType
+from sqlalchemy.sql import delete, insert, update  # noqa: F401
+from sqlalchemy.types import VARCHAR, Boolean, Float, Time, TypeDecorator  # noqa: F401
+from sqlalchemy_json import NestedMutableJson  # noqa: F401
+from sqlalchemy_utils import UUIDType  # noqa: F401
 from karp.db_infrastructure.types import ULIDType
 
 

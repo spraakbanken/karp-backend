@@ -5,7 +5,7 @@ from karp.foundation.value_objects.unique_id import make_unique_id
 
 from karp.lex import EntryDto
 from karp.search import EntryTransformer
-from karp.search_infrastructure import GenericEntryTransformer
+from karp.search_infrastructure import GenericEntryTransformer  # noqa: F401
 
 from karp.tests.unit.lex import factories as lex_factories
 

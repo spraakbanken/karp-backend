@@ -68,7 +68,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
             sql.and_(
                 EntryUowModel.entity_id == subq.c.entity_id,
                 EntryUowModel.last_modified == subq.c.maxdate,
-                EntryUowModel.discarded == False,
+                EntryUowModel.discarded == False,  # noqa: E712
             ),
         )
 

@@ -1,13 +1,13 @@
-from karp.foundation import value_objects
-from karp.lex.domain.entities.morphology import Morphology
-from karp.lex.domain.entities.resource import Resource
+from karp.foundation import value_objects  # noqa: F401
+from karp.lex.domain.entities.morphology import Morphology  # noqa: F401
+from karp.lex.domain.entities.resource import Resource  # noqa: F401
 
 from .factories import random_resource
 
 
 def test_morphology():
-    resource = random_resource()
-    entry = {"baseform": "Appalacherna", "paradigm": "pm_plg_alperna", "pos": "pm"}
+    resource = random_resource()  # noqa: F841
+    entry = {"baseform": "Appalacherna", "paradigm": "pm_plg_alperna", "pos": "pm"}  # noqa: F841
 
     # morphology = Morphology.create_resource(
     #     resource_type='SaldoMorphology',

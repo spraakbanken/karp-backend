@@ -3,7 +3,7 @@ from typing import List
 import pytest
 
 from karp.search.application.queries import QueryRequest
-from karp.search.domain.query import Query
+from karp.search.domain.query import Query  # noqa: F401
 from karp.search_infrastructure.queries import EsQuery
 
 

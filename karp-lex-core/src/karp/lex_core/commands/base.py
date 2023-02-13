@@ -1,6 +1,6 @@
-import pydantic
-
 from datetime import datetime, timezone
+
+import pydantic
 
 
 def utc_now() -> float:

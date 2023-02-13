@@ -19,7 +19,7 @@ from karp.lex_core.commands import (
     SetEntryRepoId,
 )
 from karp.lex_core import commands
-from karp.lex.domain.value_objects import EntrySchema
+from karp.lex.domain.value_objects import EntrySchema  # noqa: F401
 from karp.lex.application.use_cases import (
     AddingEntries,
     AddingEntry,
@@ -35,20 +35,20 @@ from karp.lex.application.use_cases import (
     UpdatingResource,
 )
 from karp.lex.application.queries import (
-    EntryDto,
-    EntryViews,
-    GetEntryDiff,
-    GetEntryHistory,
-    GetHistory,
-    GetHistoryDto,
-    GetPublishedResources,
+    EntryDto,  # noqa: F401
+    EntryViews,  # noqa: F401
+    GetEntryDiff,  # noqa: F401
+    GetEntryHistory,  # noqa: F401
+    GetHistory,  # noqa: F401
+    GetHistoryDto,  # noqa: F401
+    GetPublishedResources,  # noqa: F401
     GetResources,
-    HistoryDto,
+    HistoryDto,  # noqa: F401
     ResourceDto,
-    ReadOnlyResourceRepository,
-    EntryRepoDto,
-    ReadOnlyEntryRepoRepository,
-    ListEntryRepos,
+    ReadOnlyResourceRepository,  # noqa: F401
+    EntryRepoDto,  # noqa: F401
+    ReadOnlyEntryRepoRepository,  # noqa: F401
+    ListEntryRepos,  # noqa: F401
 )
 
 

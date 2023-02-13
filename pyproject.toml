@@ -22,19 +22,19 @@ classifiers = [
 ]
 packages = [
 	{ include = "development" },
-	{ include = "karp/auth", from = "components" },
-	{ include = "karp/auth_infrastructure", from = "components" },
-	{ include = "karp/command_bus", from = "components" },
-	{ include = "karp/foundation", from = "components" },
-	{ include = "karp/lex", from = "components" },
-	{ include = "karp/lex_infrastructure", from = "components" },
-	{ include = "karp/main", from = "components" },
-	{ include = "karp/search", from = "components" },
-	{ include = "karp/search_infrastructure", from = "components" },
-	{ include = "karp/utility", from = "components" },
-	{ include = "karp/tests", from = "components" },
-	{ include = "karp/cliapp", from = "bases" },
-	{ include = "karp/karp_v6_api", from = "bases" },
+	{ include = "karp/auth", from = "karp-backend/src" },
+	{ include = "karp/auth_infrastructure", from = "karp-backend/src" },
+	{ include = "karp/command_bus", from = "karp-backend/src" },
+	{ include = "karp/foundation", from = "karp-backend/src" },
+	{ include = "karp/lex", from = "karp-backend/src" },
+	{ include = "karp/lex_infrastructure", from = "karp-backend/src" },
+	{ include = "karp/main", from = "karp-backend/src" },
+	{ include = "karp/search", from = "karp-backend/src" },
+	{ include = "karp/search_infrastructure", from = "karp-backend/src" },
+	{ include = "karp/utility", from = "karp-backend/src" },
+	{ include = "karp/tests", from = "karp-backend/src" },
+	{ include = "karp/cliapp", from = "karp-backend/src" },
+	{ include = "karp/karp_v6_api", from = "karp-backend/src" },
 	{ include = "karp/lex_core", from = "karp-lex-core/src" },
 ]
 
@@ -136,21 +136,5 @@ ignore_decorators = ["@abc.abstractmethod"]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.ruff]
-# Enable flake8-bugbear (`B`) rules.
-select = ["E", "F", "B"]
 
-# Never enforce `E501` (line length violations).
-ignore = ["E501"]
-
-line-length = 97
-
-# Avoid trying to fix flake8-bugbear (`B`) violations.
-unfixable = ["B"]
-
-# Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
-[tool.ruff.per-file-ignores]
-"__init__.py" = ["E402"]
-"components/karp/tests/unit/test_morphological_entry.py" = ["F841", "F821"]
-"bases/karp/karp_v6_api/routes/resources_api.py" = ["B008"]
 

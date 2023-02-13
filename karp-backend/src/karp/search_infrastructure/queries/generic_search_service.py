@@ -2,7 +2,7 @@ from collections import Counter
 import typing
 
 from karp.lex.application.repositories import (
-    ResourceUnitOfWork,
+    ResourceUnitOfWork,  # noqa: F401
     EntryUowRepositoryUnitOfWork,
 )
 from karp.lex.application.queries import (
@@ -49,7 +49,7 @@ class GenericSearchService(SearchService):
 
     def query(self, request: QueryRequest):
         if request.q:
-            model = self.parser.parse(request.q)
+            model = self.parser.parse(request.q)  # noqa: F841
         resource_id = request.resource_ids[0]
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_uow_repo_uow, self.entry_uow_repo_uow.repo.get_by_id(
@@ -85,7 +85,7 @@ class GenericSearchService(SearchService):
 
     def query_split(self, request: QueryRequest):
         if request.q:
-            model = self.parser.parse(request.q)
+            model = self.parser.parse(request.q)  # noqa: F841
         dist = {}
         for resource_id in request.resource_ids:
             entry_repo_id = self.get_entry_repo_id.query(resource_id)

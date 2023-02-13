@@ -6,19 +6,19 @@ authors = ["Kristoffer Andersson <kristoffer.andersson@gu.se>"]
 license = "MIT"
 readme = "README.md"
 packages = [
-	{ include = "karp/auth", from = "components" },
-	{ include = "karp/auth_infrastructure", from = "components" },
-	{ include = "karp/command_bus", from = "components" },
-	{ include = "karp/foundation", from = "components" },
-	{ include = "karp/lex", from = "components" },
-	{ include = "karp/lex_infrastructure", from = "components" },
-	{ include = "karp/main", from = "components" },
-	{ include = "karp/search", from = "components" },
-	{ include = "karp/search_infrastructure", from = "components" },
-	{ include = "karp/utility", from = "components" },
-	{ include = "karp/tests", from = "components" },
-	{ include = "karp/cliapp", from = "bases" },
-	{ include = "karp/karp_v6_api", from = "bases" },
+	{ include = "karp/auth", from = "src" },
+	{ include = "karp/auth_infrastructure", from = "src" },
+	{ include = "karp/command_bus", from = "src" },
+	{ include = "karp/foundation", from = "src" },
+	{ include = "karp/lex", from = "src" },
+	{ include = "karp/lex_infrastructure", from = "src" },
+	{ include = "karp/main", from = "src" },
+	{ include = "karp/search", from = "src" },
+	{ include = "karp/search_infrastructure", from = "src" },
+	{ include = "karp/utility", from = "src" },
+	{ include = "karp/tests", from = "src" },
+	{ include = "karp/cliapp", from = "src" },
+	{ include = "karp/karp_v6_api", from = "src" },
 ]
 
 [tool.poetry.dependencies]

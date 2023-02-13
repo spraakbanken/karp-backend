@@ -8,11 +8,11 @@ from sqlalchemy.orm import Session
 from karp import lex
 from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
-    GetPublishedResources,
-    GetResources,
-    ResourceDto,
-    ListEntryRepos,
-    EntryRepoDto,
+    GetPublishedResources,  # noqa: F401
+    GetResources,  # noqa: F401
+    ResourceDto,  # noqa: F401
+    ListEntryRepos,  # noqa: F401
+    EntryRepoDto,  # noqa: F401
     GetReferencedEntries,
     GetEntryRepositoryId,
     EntryViews,
@@ -35,7 +35,7 @@ from karp.lex_infrastructure.queries import (
     GenericGetEntryRepositoryId,
     GenericEntryViews,
     GenericGetEntryDiff,
-    GenericEntryQuery,
+    GenericEntryQuery,  # noqa: F401
     GenericGetEntryHistory,
     GenericGetHistory,
     SqlReadOnlyEntryRepoRepository,

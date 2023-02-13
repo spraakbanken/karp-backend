@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: F401
 from fastapi import status
 from karp import auth
 

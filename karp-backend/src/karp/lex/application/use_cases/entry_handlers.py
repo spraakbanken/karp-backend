@@ -1,5 +1,5 @@
 import logging
-import typing
+import typing  # noqa: F401
 
 from sb_json_tools import jsondiff
 
@@ -8,7 +8,7 @@ from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain import errors
 from karp.foundation.value_objects import unique_id
 
-from karp.foundation import events as foundation_events
+from karp.foundation import events as foundation_events  # noqa: F401
 from karp.lex_core import commands
 from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application import repositories

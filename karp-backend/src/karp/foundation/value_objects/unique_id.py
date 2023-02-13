@@ -2,10 +2,10 @@
 
 Borrowed from https://bitbucket.org/sixty-north/d5-kanban-python
 """
-import uuid
+import uuid  # noqa: F401
 import typing
 
-import pydantic
+import pydantic  # noqa: F401
 import ulid
 
 # UniqueId = uuid.UUID

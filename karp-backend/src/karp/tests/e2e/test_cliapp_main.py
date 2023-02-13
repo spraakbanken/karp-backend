@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: F401
 
 from typer import Typer
 from typer.testing import CliRunner

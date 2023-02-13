@@ -1,6 +1,6 @@
 import logging
 import random
-from re import I
+from re import I  # noqa: F401
 from typing import Optional
 import urllib.parse
 from urllib.parse import urlunparse

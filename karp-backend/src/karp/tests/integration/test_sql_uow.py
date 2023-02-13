@@ -6,7 +6,7 @@ from karp.foundation.events import EventBus, Event
 from karp.lex_infrastructure import SqlResourceUnitOfWork
 from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
 
-from karp.tests.unit.lex import adapters, factories
+from karp.tests.unit.lex import adapters, factories  # noqa: F401
 
 
 class InMemoryEventBus(EventBus):

@@ -2,7 +2,7 @@
 import datetime
 from typing import Optional, Union
 
-from deprecated import deprecated
+from deprecated import deprecated  # noqa: F401
 
 from karp.foundation.errors import ConsistencyError
 from karp.foundation import errors

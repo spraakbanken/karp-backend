@@ -151,7 +151,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             db.and_(
                 ResourceModel.resource_id == subq.c.resource_id,
                 ResourceModel.last_modified == subq.c.maxdate,
-                ResourceModel.is_published == True,
+                ResourceModel.is_published == True,  # noqa: E712
             ),
         )
 
@@ -200,7 +200,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             db.and_(
                 ResourceModel.entity_id == subq.c.entity_id,
                 ResourceModel.last_modified == subq.c.maxdate,
-                ResourceModel.discarded == False,
+                ResourceModel.discarded == False,  # noqa: E712
             ),
         )
 

@@ -3,18 +3,18 @@ import pytest
 
 from karp.command_bus import CommandBus
 from karp.lex import Lex
-from karp.lex_core import commands as lex_commands
+from karp.lex_core import commands as lex_commands  # noqa: F401
 from karp.lex.application.repositories import (
-    EntryUowRepositoryUnitOfWork,
+    EntryUowRepositoryUnitOfWork,  # noqa: F401
 )
 from karp.main.modules import CommandBusMod, EventBusMod
 
 from .adapters import (
-    InMemoryEntryUowRepositoryUnitOfWork,
+    InMemoryEntryUowRepositoryUnitOfWork,  # noqa: F401
     # InMemoryEntryUowFactory,
-    InMemoryResourceUnitOfWork,
+    InMemoryResourceUnitOfWork,  # noqa: F401
 )
-from . import adapters, factories
+from . import adapters, factories  # noqa: F401
 
 
 # @pytest.fixture(name="entry_repo_repo_uow")

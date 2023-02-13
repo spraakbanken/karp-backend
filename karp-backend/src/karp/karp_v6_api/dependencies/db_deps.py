@@ -1,13 +1,13 @@
-from typing import Callable, Type
-from fastapi import Depends
+from typing import Callable, Type  # noqa: F401
+from fastapi import Depends  # noqa: F401
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 from starlette.requests import Request
 
 from karp.db_infrastructure import Database
 
-from karp.lex_infrastructure import SqlResourceUnitOfWork
-from karp.lex_infrastructure.repositories import SqlResourceRepository
+from karp.lex_infrastructure import SqlResourceUnitOfWork  # noqa: F401
+from karp.lex_infrastructure.repositories import SqlResourceRepository  # noqa: F401
 
 
 def get_database(request: Request) -> Database:

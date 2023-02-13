@@ -2,11 +2,11 @@ import collections
 import logging
 import typing
 
-import logging
+import logging  # noqa: F811
 
 from karp.lex.application.queries.resources import ResourceDto
 
-from karp.lex.domain import entities, errors as lex_errors
+from karp.lex.domain import entities, errors as lex_errors  # noqa: F401
 from karp.lex.application.queries import (
     GetReferencedEntries,
     ReadOnlyResourceRepository,
@@ -14,8 +14,8 @@ from karp.lex.application.queries import (
     EntryDto,
 )
 from karp.lex.application.repositories import (
-    ResourceUnitOfWork,
-    EntryUowRepositoryUnitOfWork,
+    ResourceUnitOfWork,  # noqa: F401
+    EntryUowRepositoryUnitOfWork,  # noqa: F401
 )
 from karp.search.application.transformers import EntryTransformer
 from karp.search.application.repositories import IndexUnitOfWork, IndexEntry

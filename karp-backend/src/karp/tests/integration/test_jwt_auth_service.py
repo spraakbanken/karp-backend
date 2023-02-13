@@ -1,26 +1,26 @@
 """Unit tests for JWTAuthenticator"""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta  # noqa: F401
 from pathlib import Path
 from typing import Dict, Optional, Type
 
-import jwt
-import pydantic
+import jwt  # noqa: F401
+import pydantic  # noqa: F401
 import pytest
 
-from karp.foundation.time import utc_now
+from karp.foundation.time import utc_now  # noqa: F401
 from karp.auth.domain.errors import (
     AuthError,
     ExpiredToken,
-    InvalidTokenSignature,
+    InvalidTokenSignature,  # noqa: F401
     InvalidTokenAudience,
     InvalidTokenPayload,
     TokenError,
 )
 from karp.auth_infrastructure.services.jwt_auth_service import (
     JWTAuthService,
-    JWTCreds,
-    JWTMeta,
-    JWTPayload,
+    JWTCreds,  # noqa: F401
+    JWTMeta,  # noqa: F401
+    JWTPayload,  # noqa: F401
 )
 
 from karp.main.config import AUTH_JWT_AUDIENCE

@@ -1,9 +1,9 @@
 import abc
 import logging
-from typing import List, Optional
+from typing import List, Optional  # noqa: F401
 
 from karp.foundation import value_objects
-from karp.auth.domain import errors
+from karp.auth.domain import errors  # noqa: F401
 from karp.auth.domain.entities.user import User
 
 

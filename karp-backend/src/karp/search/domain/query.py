@@ -1,6 +1,6 @@
 import typing
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional  # noqa: F401
 
 import pydantic
 
@@ -89,7 +89,7 @@ class Query(pydantic.BaseModel):
             return
 
         field_translations = {}
-        for resource in self.resources:
+        for resource in self.resources:  # noqa: B007
             # ft = resourcemgr.get_field_translations(resource)
             ft = {}
             if ft:

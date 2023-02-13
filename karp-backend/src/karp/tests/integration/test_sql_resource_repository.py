@@ -2,7 +2,7 @@
 
 import pytest
 
-from karp.lex.domain.errors import IntegrityError
+from karp.lex.domain.errors import IntegrityError  # noqa: F401
 from karp.lex.domain.entities.resource import Resource, ResourceOp
 from karp.lex_infrastructure.repositories.sql_resources import SqlResourceRepository
 from karp.tests.unit.lex import factories
@@ -23,7 +23,7 @@ def test_sql_resource_repo_put_resource(resource_repo):
     resource = factories.ResourceFactory()
 
     resource_repo.save(resource)
-    expected_version = 1
+    expected_version = 1  # noqa: F841
 
     assert resource_repo.resource_ids() == [resource.resource_id]
 

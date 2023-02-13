@@ -1,13 +1,13 @@
-from typing import Dict, Optional
+from typing import Dict, Optional  # noqa: F401
 
 import pytest
 from karp.foundation.value_objects.unique_id import make_unique_id
 
 from karp.lex.domain import errors
 
-from karp.lex.application import repositories
+from karp.lex.application import repositories  # noqa: F401
 from karp.lex.application.repositories import (
-    ResourceUnitOfWork,
+    ResourceUnitOfWork,  # noqa: F401
     EntryUowRepositoryUnitOfWork,
 )
 from karp.lex import commands
@@ -421,7 +421,7 @@ class TestAddEntriesInChunks:
         lex_ctx.command_bus.dispatch(cmd2)  # type: ignore [arg-type]
 
         entry_id = "beta"
-        entity_id = make_unique_id()
+        entity_id = make_unique_id()  # noqa: F841
         cmd3 = factories.AddEntriesInChunksFactory(
             resource_id=cmd2.resource_id,
             entries=[{"baseform": entry_id}],

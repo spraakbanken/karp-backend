@@ -4,7 +4,7 @@ Perform health checks on the server.
 Used to perform readiness and liveness probes on the server.
 """
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Response, status  # noqa: F401
 
 from karp.karp_v6_api import schemas
 

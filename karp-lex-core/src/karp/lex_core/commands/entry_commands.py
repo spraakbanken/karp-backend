@@ -1,8 +1,8 @@
 import typing
 
 import pydantic
+from karp.lex_core.value_objects import UniqueId, unique_id
 
-from karp.lex_core.value_objects import unique_id, UniqueId
 from .base import Command
 
 

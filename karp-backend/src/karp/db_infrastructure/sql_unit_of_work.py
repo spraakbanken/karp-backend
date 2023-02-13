@@ -1,7 +1,7 @@
 import enum
 import logging
-import typing
-from typing import Dict, Optional
+import typing  # noqa: F401
+from typing import Dict, Optional  # noqa: F401
 
 import regex
 from sqlalchemy.orm import Session

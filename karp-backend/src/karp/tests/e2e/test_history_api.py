@@ -1,14 +1,14 @@
 # import json
 import re
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone  # noqa: F401
 
 import pytest  # pyre-ignore
 from starlette import status
 
 from karp import auth
 from karp.foundation.time import utc_now
-from karp.lex.application.queries.entries import EntryDto, GetHistoryDto, HistoryDto
+from karp.lex.application.queries.entries import EntryDto, GetHistoryDto, HistoryDto  # noqa: F401
 
 places = [
     {"code": 103, "name": "a", "municipality": [1]},

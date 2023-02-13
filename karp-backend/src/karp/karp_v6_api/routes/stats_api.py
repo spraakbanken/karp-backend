@@ -1,11 +1,11 @@
 import typing
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Security, status
+from fastapi import APIRouter, Depends, HTTPException, Response, Security, status  # noqa: F401
 
 from karp import auth
 from karp.foundation.value_objects import PermissionLevel
 from karp.search.application.queries import SearchService, StatisticsDto
-from karp.karp_v6_api import schemas
+from karp.karp_v6_api import schemas  # noqa: F401
 
 from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
@@ -21,9 +21,9 @@ router = APIRouter()
 def get_field_values(
     resource_id: str,
     field: str,
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    search_service: SearchService = Depends(inject_from_req(SearchService)),
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),  # noqa: B008
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
+    search_service: SearchService = Depends(inject_from_req(SearchService)),  # noqa: B008
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(

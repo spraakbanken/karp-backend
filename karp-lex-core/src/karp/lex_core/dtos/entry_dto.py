@@ -1,11 +1,9 @@
 from datetime import datetime
-from typing import TypeVar, Generic, Optional
-
-from pydantic import root_validator
-from pydantic.generics import GenericModel
+from typing import Generic, Optional, TypeVar
 
 from karp.lex_core.value_objects import UniqueIdStr
-
+from pydantic import root_validator
+from pydantic.generics import GenericModel
 
 T = TypeVar("T")
 

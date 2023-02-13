@@ -1,7 +1,7 @@
 import logging
-from os import stat
-import traceback
-import sys
+from os import stat  # noqa: F401
+import traceback  # noqa: F401
+import sys  # noqa: F401
 import time
 from typing import Any
 
@@ -9,23 +9,23 @@ try:
     from importlib.metadata import entry_points
 except ImportError:
     # used if python < 3.8
-    from importlib_metadata import entry_points  # type: ignore
+    from importlib_metadata import entry_points  # type: ignore  # noqa: F401
 
 from fastapi import FastAPI, Request, Response, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
-import injector
+import injector  # noqa: F401
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
-import logging
+import logging  # noqa: F811
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
 
 from karp import main
 from karp.foundation import errors as foundation_errors
-from karp.foundation.value_objects import unique_id
+from karp.foundation.value_objects import unique_id  # noqa: F401
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes

@@ -2,7 +2,7 @@
 import logging
 import typing
 from typing import Dict, List, Optional, Generic, Tuple, TypeVar
-from attr import has
+from attr import has  # noqa: F401
 
 import injector
 import regex
@@ -21,8 +21,8 @@ from karp.lex.domain.events import Event
 # from karp.domain.errors import NonExistingField, RepositoryError
 from karp.lex.domain.entities.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
     Entry,
-    EntryOp,
-    EntryStatus,
+    EntryOp,  # noqa: F401
+    EntryStatus,  # noqa: F401
 )
 from karp.db_infrastructure import db
 from karp.lex_infrastructure.sql import sql_models
@@ -161,7 +161,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
             sa.and_(
                 self.history_model.entity_id == subq.c.entity_id,
                 self.history_model.last_modified == subq.c.maxdate,
-                self.history_model.discarded == False,
+                self.history_model.discarded == False,  # noqa: E712
             ),
         )
 
@@ -185,7 +185,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
             sa.and_(
                 self.history_model.entity_id == subq.c.entity_id,
                 self.history_model.last_modified == subq.c.maxdate,
-                self.history_model.discarded == False,
+                self.history_model.discarded == False,  # noqa: E712
             ),
         )
         return self._session.execute(stmt).scalar()
@@ -203,7 +203,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
         query_and = sa.and_(
             self.history_model.entity_id == subq.c.entity_id,
             self.history_model.last_modified == subq.c.maxdate,
-            self.history_model.discarded == False,
+            self.history_model.discarded == False,  # noqa: E712
         )
 
         for filter_key, filter_value in filters.items():

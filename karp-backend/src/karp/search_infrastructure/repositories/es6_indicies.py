@@ -1,10 +1,10 @@
-from datetime import datetime
+from datetime import datetime  # noqa: F401
 import logging
-import re
-from typing import Dict, Iterable, List, Optional, Any, Tuple, Union
+import re  # noqa: F401
+from typing import Dict, Iterable, List, Optional, Any, Tuple, Union  # noqa: F401
 
 import elasticsearch
-from elasticsearch import exceptions as es_exceptions
+from elasticsearch import exceptions as es_exceptions  # noqa: F401
 
 from karp.foundation.events import EventBus
 
@@ -14,7 +14,7 @@ from karp.search.application.repositories import (
     IndexEntry,
     IndexUnitOfWork,
 )
-from karp.search.domain.errors import UnsupportedField
+from karp.search.domain.errors import UnsupportedField  # noqa: F401
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 
 

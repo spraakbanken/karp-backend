@@ -1,7 +1,7 @@
 """LexicalResource"""
 import enum
 import typing
-from typing import Any, Callable, Dict, Tuple, Optional, Type, Union
+from typing import Any, Callable, Dict, Tuple, Optional, Type, Union  # noqa: F401
 
 from karp.lex.domain import constraints
 from karp.foundation.entity import Entity, TimestampedVersionedEntity

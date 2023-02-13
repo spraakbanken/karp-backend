@@ -1,16 +1,16 @@
 import logging
 from typing import Optional
-import uuid
+import uuid  # noqa: F401
 
 from fastapi import (
     APIRouter,
-    Body,
+    Body,  # noqa: F401
     Depends,
     HTTPException,
     Response,
     Security,
     status,
-    Path,
+    Path,  # noqa: F401
     Query,
 )
 import pydantic
@@ -41,10 +41,10 @@ logger = logging.getLogger(__name__)
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
-    version: Optional[int] = Query(None),
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),
+    version: Optional[int] = Query(None),  # noqa: B008
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),  # noqa: B008
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
+    get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),  # noqa: B008
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
@@ -78,9 +78,9 @@ def get_history_for_entry(
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
-    user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(deps.get_auth_service),
-    adding_entry_uc: lex.AddingEntry = Depends(deps.get_lex_uc(lex.AddingEntry)),
+    user: User = Security(deps.get_user, scopes=["write"]),  # noqa: B008
+    auth_service: AuthService = Depends(deps.get_auth_service),  # noqa: B008
+    adding_entry_uc: lex.AddingEntry = Depends(deps.get_lex_uc(lex.AddingEntry)),  # noqa: B008
 ):
 
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -123,10 +123,10 @@ def add_entry(
 def preview_entry(
     resource_id: str,
     data: schemas.EntryAdd,
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    preview_entry: search.PreviewEntry = Depends(
-        deps.inject_from_req(search.PreviewEntry)
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),  # noqa: B008
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
+    preview_entry: search.PreviewEntry = Depends(  # noqa: B008
+        deps.inject_from_req(search.PreviewEntry)  # noqa: B008
     ),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
@@ -141,7 +141,7 @@ def preview_entry(
         )
     except pydantic.ValidationError as err:
         logger.exception("data is not valid")
-        raise HTTPException(
+        raise HTTPException(  # noqa: B904
             status_code=status.HTTP_400_BAD_REQUEST, detail={"error": str(err)}
         )
     else:
@@ -163,9 +163,9 @@ def update_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
     data: schemas.EntryUpdate,
-    user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(deps.get_auth_service),
-    updating_entry_uc: lex.UpdatingEntry = Depends(deps.get_lex_uc(lex.UpdatingEntry)),
+    user: User = Security(deps.get_user, scopes=["write"]),  # noqa: B008
+    auth_service: AuthService = Depends(deps.get_auth_service),  # noqa: B008
+    updating_entry_uc: lex.UpdatingEntry = Depends(deps.get_lex_uc(lex.UpdatingEntry)),  # noqa: B008
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -229,7 +229,7 @@ def update_entry(
         return responses.JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj
         )
-    except Exception as err:
+    except Exception as err:  # noqa: F841
         logger.exception(
             "error occured",
             extra={"resource_id": resource_id, "entry_id": entry_id, "data": data},
@@ -250,9 +250,9 @@ def update_entry(
 def delete_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
-    user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(deps.get_auth_service),
-    deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry)),
+    user: User = Security(deps.get_user, scopes=["write"]),  # noqa: B008
+    auth_service: AuthService = Depends(deps.get_auth_service),  # noqa: B008
+    deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry)),  # noqa: B008
 ):
     """Delete a entry from a resource."""
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
