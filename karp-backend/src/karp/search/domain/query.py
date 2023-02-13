@@ -7,7 +7,7 @@ import pydantic
 from karp.search.domain import errors, query_dsl  # , resourcemgr
 
 # from karp.domain import errors
-from karp.util import convert as util_convert
+# from karp.util import convert as util_convert
 from karp.utility.container import arg_get
 
 
@@ -60,18 +60,18 @@ class Query(pydantic.BaseModel):
         self.resources = resource_str.split(",")
         self.from_ = arg_get(args, "from", int, 0)
         self.size = arg_get(args, "size", int, 25)
-        self.lexicon_stats = arg_get(args, "lexicon_stats", util_convert.str2bool, True)
-        self.include_fields = arg_get(
-            args, "include_fields", util_convert.str2list(",")
-        )
-        self.exclude_fields = arg_get(
-            args, "exclude_fields", util_convert.str2list(",")
-        )
+        # self.lexicon_stats = arg_get(args, "lexicon_stats", util_convert.str2bool, True)
+        # self.include_fields = arg_get(
+        #     args, "include_fields", util_convert.str2list(",")
+        # )
+        # self.exclude_fields = arg_get(
+        #     args, "exclude_fields", util_convert.str2list(",")
+        # )
         self.fields = []
         self.format = arg_get(args, "format")
         self.format_query = arg_get(args, "format_query")
         self.q = arg_get(args, "q") or ""
-        self.sort: List[str] = arg_get(args, "sort", util_convert.str2list(",")) or []
+        # self.sort: List[str] = arg_get(args, "sort", util_convert.str2list(",")) or []
         # self.sort_dict: Dict[str, List[str]] = {}
         #         if not self.sort:
         #             if len(self.resources) == 1:

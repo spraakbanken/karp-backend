@@ -38,7 +38,6 @@ from sqlalchemy.schema import (
 from sqlalchemy.sql import delete, insert, update  # noqa: F401
 from sqlalchemy.types import VARCHAR, Boolean, Float, Time, TypeDecorator  # noqa: F401
 from sqlalchemy_json import NestedMutableJson  # noqa: F401
-from sqlalchemy_utils import UUIDType  # noqa: F401
 from karp.db_infrastructure.types import ULIDType
 
 

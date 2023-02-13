@@ -130,7 +130,7 @@ class Es6SearchService(search.SearchService):
 
     def build_query(self, args, resource_str: str) -> EsQuery:
         query = EsQuery()
-        query.parse_arguments(args, resource_str)
+        # query.parse_arguments(args, resource_str)
         return query
 
     def _format_result(self, resource_ids, response):
