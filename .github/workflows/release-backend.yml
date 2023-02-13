@@ -99,17 +99,18 @@ jobs:
         run: just karp-backend/install-dev
 
       - name: Setup up environment
-        run: cp -v .env.ci .env
+        run: echo "AUTH_JWT_PUBKEY_PATH=../assets/testing/pubkey.pem" >> karp-backend/.env
+        
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es-version, '6')
         run: |
           wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
           tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
           ./elasticsearch-${{ matrix.es-version }}/bin/elasticsearch-plugin install analysis-icu
-          echo "TEST_ELASTICSEARCH_ENABLED=True" >> .env
-          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
-          echo "SEARCH_CONTEXT=es6_search_service" >> .env
-          cat .env
+          echo "TEST_ELASTICSEARCH_ENABLED=True" >> karp-backend/.env
+          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> karp-backend/.env
+          echo "SEARCH_CONTEXT=es6_search_service" >> karp-backend/.env
+          cat karp-backend/.env
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
         env:
