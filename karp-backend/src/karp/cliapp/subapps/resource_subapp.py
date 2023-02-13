@@ -104,7 +104,7 @@ def update(
     message: Optional[str] = typer.Option(None, "-m", "--message"),
     user: Optional[str] = typer.Option(None, "-u", "--user"),
 ):
-    # bus = inject_from_ctx(CommandBus, ctx)
+    _bus = inject_from_ctx(CommandBus, ctx)
     config_dict = jsonlib.load_from_file(config)
     resource_id = config_dict.pop("resource_id")
     if resource_id is None:
@@ -262,7 +262,7 @@ def set_permissions(
     version: int,
     level: str,
 ):
-    bus = inject_from_ctx(CommandBus, ctx)
+    _bus = inject_from_ctx(CommandBus, ctx)
 
 
 #     # TODO use level
