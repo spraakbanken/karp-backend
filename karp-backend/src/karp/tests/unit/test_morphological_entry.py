@@ -7,7 +7,6 @@ from karp.lex.domain.entities.entry import Entry
 #                                                     create_morphological_entry)
 
 
-
 pytestmark = pytest.mark.skip()
 
 

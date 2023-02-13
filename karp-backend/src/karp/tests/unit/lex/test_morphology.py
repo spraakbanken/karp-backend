@@ -7,7 +7,11 @@ from .factories import random_resource
 
 def test_morphology():
     resource = random_resource()  # noqa: F841
-    entry = {"baseform": "Appalacherna", "paradigm": "pm_plg_alperna", "pos": "pm"}  # noqa: F841
+    entry = {
+        "baseform": "Appalacherna",
+        "paradigm": "pm_plg_alperna",
+        "pos": "pm",
+    }  # noqa: F841
 
     # morphology = Morphology.create_resource(
     #     resource_type='SaldoMorphology',

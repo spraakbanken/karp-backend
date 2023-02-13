@@ -6,7 +6,6 @@ from karp.lex.domain import entities
 from karp.foundation.value_objects import unique_id
 
 
-
 def random_entry(entry_id: str = None, body: Dict = None) -> entities.Entry:
     return entities.create_entry(
         entity_id=unique_id.make_unique_id(),

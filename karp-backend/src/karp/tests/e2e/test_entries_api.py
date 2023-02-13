@@ -11,7 +11,11 @@ from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
 from karp.foundation.time import utc_now
-from karp.foundation.value_objects import make_unique_id, UniqueId, unique_id  # noqa: F401
+from karp.foundation.value_objects import (
+    make_unique_id,
+    UniqueId,
+    unique_id,
+)  # noqa: F401
 from karp.lex.application.queries import EntryDto
 
 # from karp.application import ctx, config
@@ -1001,7 +1005,9 @@ def test_update_refs(fa_data_client):
 @pytest.mark.skip()
 def test_update_refs2(fa_data_client):
     client = init(
-        fa_data_client, es, [{"code": 3, "name": "test3", "municipality": [2, 3]}]  # noqa: F821
+        fa_data_client,
+        es,
+        [{"code": 3, "name": "test3", "municipality": [2, 3]}],  # noqa: F821
     )
 
     client.post(

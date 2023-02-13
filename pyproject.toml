@@ -111,7 +111,6 @@ isort = "^5.10.1"
 cryptography = "^38.0.1"
 types-tabulate = "^0.8.11"
 vulture = "^2.5"
-pylint = "^2.15.2"
 black = "^22.8.0"
 elasticsearch-test-py = "^1.1.0"
 requests = "^2.28.1"
@@ -124,6 +123,11 @@ types-factory-boy = "^0.3.1"
 types-deprecated = "^1.2.9"
 httpx = "^0.23.1"
 pre-commit = "^2.20.0"
+
+[tool.poetry.group.ci]
+optional = true
+
+[tool.poetry.group.ci.dependencies]
 ruff = "^0.0.243"
 
 [tool.vulture]

@@ -79,7 +79,9 @@ def test_resource_update_changes_last_modified_and_version():
     previous_version = resource.version
 
     conf["fields"]["new"] = {"type": "string"}
-    domain_events = resource.update(name="new name", config=conf, user="Test", version=1)
+    domain_events = resource.update(
+        name="new name", config=conf, user="Test", version=1
+    )
 
     assert resource.last_modified > previous_last_modified
     assert resource.last_modified_by == "Test"
@@ -214,7 +216,9 @@ def test_resource_has_entry_json_schema():
 )
 def test_discarded_resource_has_event(field, value):
     resource, _ = random_resource()
-    domain_events = resource.discard(user="alice@example.org", message="bad", timestamp=123.45)
+    domain_events = resource.discard(
+        user="alice@example.org", message="bad", timestamp=123.45
+    )
     assert resource.discarded
     assert domain_events[-1] == events.ResourceDiscarded(
         entity_id=resource.id,

@@ -28,15 +28,15 @@ jobs:
         task:
           - name: Lint code
             run: just lint
-            allow_failure: true
+            allow_failure: false
           - name: Lint code 'karp-lex-core'
-            run: poetry run just lint-project karp-lex-core
+            run: poetry run just karp-lex-core/lint
             allow_failure: false
           - name: Typecheck
             run: just type-check
             allow_failure: true
           - name: Typecheck 'karp-lex-core'
-            run: poetry run just type-check-project karp-lex-core
+            run: poetry run just karp-lex-core/type-check
             allow_failure: false
           - name: Unit tests
             run: just unit-tests
@@ -82,7 +82,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: just install-dev
+        run: just install-ci
 
       - name: Setup up environment
         run: cp -v .env.ci .env
@@ -172,7 +172,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: just install-dev
+        run: just install-ci
 
       - name: Setup up environment
         run: cp -v .env.ci .env

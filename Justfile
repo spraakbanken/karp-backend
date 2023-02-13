@@ -20,14 +20,17 @@ alias dev := install-dev
 
 # setup production environment
 install:
-	poetry install --no-dev -E mysql
+	poetry install --only main -E mysql
 
 # setup development environment
 install-dev:
 	poetry install -E mysql
 
+install-ci: install-dev
+	poetry install --only ci -E mysql
+
 install-wo-mysql:
-	poetry install --no-dev
+	poetry install --only main
 
 install-dev-wo-mysql:
 	poetry install
@@ -120,11 +123,6 @@ lint-project project:
 
 serve-docs:
 	cd docs/karp-backend-v6 && {{INVENV}} mkdocs serve && cd -
-
-
-lint-refactorings: check-pylint-refactorings
-check-pylint-refactorings:
-	{{INVENV}} pylint --disable=C,W,E --enable=R karp
 
 # type-check code
 type-check:

@@ -37,7 +37,9 @@ def bearer_scheme(authorization=Header(None)):  # noqa: B008
 
 
 def get_resource_permissions(
-    query: lex.GetPublishedResources = Depends(lex_deps.get_published_resources),  # noqa: B008
+    query: lex.GetPublishedResources = Depends(
+        lex_deps.get_published_resources
+    ),  # noqa: B008
 ) -> auth.GetResourcePermissions:
     return LexGetResourcePermissions(query)
 
@@ -47,13 +49,17 @@ def get_resource_permissions(
 
 
 def get_is_resource_protected(
-    repo: lex.ReadOnlyResourceRepository = Depends(lex_deps.get_resources_read_repo),  # noqa: B008
+    repo: lex.ReadOnlyResourceRepository = Depends(
+        lex_deps.get_resources_read_repo
+    ),  # noqa: B008
 ) -> auth.IsResourceProtected:
     return LexIsResourceProtected(repo)
 
 
 def get_auth_service(
-    config: auth.AuthServiceConfig = Depends(inject_from_req(auth.AuthServiceConfig)),  # noqa: B008
+    config: auth.AuthServiceConfig = Depends(
+        inject_from_req(auth.AuthServiceConfig)
+    ),  # noqa: B008
     query: auth.IsResourceProtected = Depends(get_is_resource_protected),  # noqa: B008
 ) -> auth.AuthService:
     return JWTAuthService(
@@ -64,7 +70,9 @@ def get_auth_service(
 
 def get_current_user(
     security_scopes: SecurityScopes,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),  # noqa: B008
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(
+        bearer_scheme
+    ),  # noqa: B008
     auth_service: auth.AuthService = Depends(get_auth_service),  # noqa: B008
 ) -> Optional[auth.User]:
     if not credentials:

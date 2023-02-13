@@ -5,7 +5,10 @@ from .entry_handlers import (
     ImportingEntries,
     UpdatingEntry,  # noqa: F401
 )
-from .entry_repo_handlers import CreatingEntryRepo, DeletingEntryRepository  # noqa: F401
+from .entry_repo_handlers import (
+    CreatingEntryRepo,
+    DeletingEntryRepository,
+)  # noqa: F401
 from .resource_handlers import (
     CreatingResource,  # noqa: F401
     DeletingResource,  # noqa: F401

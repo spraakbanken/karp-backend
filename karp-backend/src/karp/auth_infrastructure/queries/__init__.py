@@ -1,1 +1,4 @@
-from .lex_resources import LexGetResourcePermissions, LexIsResourceProtected  # noqa: F401
+from .lex_resources import (
+    LexGetResourcePermissions,
+    LexIsResourceProtected,
+)  # noqa: F401

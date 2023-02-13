@@ -25,7 +25,11 @@ from karp.search.application.queries import (
     QueryRequest,  # noqa: F401
     StatisticsDto,  # noqa: F401
 )
-from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry  # noqa: F401
+from karp.search.application.repositories import (
+    IndexUnitOfWork,
+    Index,
+    IndexEntry,
+)  # noqa: F401
 from karp.search.application.transformers import (
     EntryTransformer,
     PreProcessor,

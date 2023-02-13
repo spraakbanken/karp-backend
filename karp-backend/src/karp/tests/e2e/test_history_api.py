@@ -8,7 +8,11 @@ from starlette import status
 
 from karp import auth
 from karp.foundation.time import utc_now
-from karp.lex.application.queries.entries import EntryDto, GetHistoryDto, HistoryDto  # noqa: F401
+from karp.lex.application.queries.entries import (
+    EntryDto,
+    GetHistoryDto,
+    HistoryDto,
+)  # noqa: F401
 
 places = [
     {"code": 103, "name": "a", "municipality": [1]},

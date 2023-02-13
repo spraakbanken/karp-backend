@@ -256,15 +256,18 @@ class InMemoryEntryUnitOfWorkCreator:
         message: str,
         timestamp: float,
     ) -> lex_repositories.EntryUnitOfWork:
-        return InMemoryEntryUnitOfWork(
-            entity_id=entity_id,
-            name=name,
-            config=config,
-            connection_str=connection_str,
-            message=message,
-            user=user,
-            event_bus=self.event_bus,
-        ), []
+        return (
+            InMemoryEntryUnitOfWork(
+                entity_id=entity_id,
+                name=name,
+                config=config,
+                connection_str=connection_str,
+                message=message,
+                user=user,
+                event_bus=self.event_bus,
+            ),
+            [],
+        )
 
 
 def create_entry_uow2(

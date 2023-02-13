@@ -10,7 +10,7 @@ from .events import (
 )
 
 
-__all__ = [    
+__all__ = [
     "Event",
     "ResourceCreated",
     "ResourceDiscarded",
