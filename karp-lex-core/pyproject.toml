@@ -10,14 +10,14 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://spraakbanken.gu.se"
 
-documentation = "https://github.com/spraakbanken/karp-lex-core"
-repository = "https://github.com/spraakbanken/karp-lex-core"
+documentation = "https://github.com/spraakbanken/karp-backend"
+repository = "https://github.com/spraakbanken/karp-backend"
 packages = [
     {include = "karp/lex_core", from = "src"},
 ]
 
 [tool.poetry.urls]
-"Bug Tracker" = "https://github.com/spraakbanken/karp-lex-core/issues"
+"Bug Tracker" = "https://github.com/spraakbanken/karp-backend/issues"
 
 [tool.poetry.dependencies]
 python = "^3.10"

@@ -1,7 +1,28 @@
-set fallback
+alias dev := install-dev
 
 INVENV := if env_var_or_default('VIRTUAL_ENV', "") == "" { "poetry run" } else { "" }
 
+# setup development environment
+install-dev:
+	poetry install
+
+# setup CI environment
+install-ci: install-dev
+	poetry install --only ci
+
+default-cov := "--cov=src/karp"
+cov-report := "term-missing"
+
+# run tests with code coverage
+test-w-coverage cov=default-cov +tests="src/karp/lex_core/tests": clean-pyc
+	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} {{tests}}
+
+unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
+
+# run given test(s)
+test *tests="src/karp/lex_core/tests":
+	{{INVENV}} pytest -vv {{tests}}
+	
 # lint the code
 lint:
     {{INVENV}} ruff src
@@ -17,3 +38,10 @@ build:
 # bump given part of version
 bumpversion part="patch":
 	{{INVENV}} bump2version {{part}}
+
+clean: clean-pyc
+clean-pyc:
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +

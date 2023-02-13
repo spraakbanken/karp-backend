@@ -14,10 +14,9 @@ This is the version 6 of Karp backend, [for the legacy version (v5)](https://git
 
 ## Development
 
-This project uses [poetry](https://python-poetry.org) and the plugins `poetry-multiproject-plugin` and `poetry-polylith-plugin`.
+This project uses [poetry](https://python-poetry.org).
 
-The metadata to each lives in `projects/<project-name>` which include code from at least 1 bases (from `bases`) and 0 or more
-components (from `components`).
+The metadata and source-code to each project lives in `<project-name>`.
 
 Provided are both a Makefile and a Justfile. They should behave the same.
 
