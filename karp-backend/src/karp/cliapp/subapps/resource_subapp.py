@@ -97,8 +97,24 @@ def set_entry_repo(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def update(ctx: typer.Context, config: Path):
+def update(
+    ctx: typer.Context,
+    config: Path,
+    version: int = typer.Option(..., "-v", "--version"),
+    message: Optional[str] = typer.Option(None, "-m", "--message"),
+    user: Optional[str] = typer.Option(None, "-u", "--user"),
+):
     bus = inject_from_ctx(CommandBus, ctx)
+    config_dict = jsonlib.load_from_file(config)
+    resource_id = config_dict.pop("resource_id")
+    if resource_id is None:
+        raise ValueError("resource_id must be present")
+    resource_name = config_dict.pop("resource_name") or resource_id
+    cmd = lex_commands.UpdateResource(
+        version=version, name=resource_name, resource_id=resource_id, config=config_dict, messag
+    )
+    print(f"cmd={cmd}")
+    raise NotImplementedError("Update resource config")
     # if config.is_file():
     #     with open(config) as fp:
     #         new_resource = resources.update_resource_from_file(fp)
