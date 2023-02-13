@@ -113,8 +113,13 @@ jobs:
           echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> .env
           cat .env
           pip install -e .[elasticsearch7]
+
+      - name: Write node info
+        run: |
+          echo "mariadb.network = ${{ job.services.mariadb.network }}"
+          echo "mariadb.ports = ${{ job.services.mariadb.ports['3306'] }}"
       - name: Run all tests for coverage report
-        run: just cov-report=xml all-tests-w-coverage
+        run: just cov-report=xml test-w-coverage
         env:
           DB_TEST_DATABASE: karp
           DB_USER: karp

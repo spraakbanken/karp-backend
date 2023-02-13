@@ -1,0 +1,19 @@
+set fallback
+
+INVENV := if env_var_or_default('VIRTUAL_ENV', "") == "" { "poetry run" } else { "" }
+
+# lint the code
+lint:
+    {{INVENV}} ruff src
+
+# type-check the code
+type-check:
+    {{INVENV}} mypy --config-file mypy.ini -p karp
+
+# build the project
+build:
+    poetry build
+
+# bump given part of version
+bumpversion part="patch":
+	{{INVENV}} bump2version {{part}}
