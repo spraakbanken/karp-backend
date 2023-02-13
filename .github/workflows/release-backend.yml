@@ -38,12 +38,12 @@ jobs:
           virtualenvs-in-project: true
 
       - name: Install dependencies
-        run: just karp-backend/install-dev
+        run: just karp-backend/install-ci
 
       - name: Setup up environment
         run: cp -v .env.ci .env
 
-      - name: Lint with pylint
+      - name: Lint with ruff
         run: just karp-backend/lint
 
   test:
