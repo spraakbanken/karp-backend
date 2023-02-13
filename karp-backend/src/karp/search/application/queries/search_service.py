@@ -55,7 +55,6 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
 
 
 class SearchService(abc.ABC):
-
     # def build_query(self, args, resource_str: str) -> Query:
     #     query = Query()
     #     query.parse_arguments(args, resource_str)

@@ -480,7 +480,6 @@ def create_resource(
     message: typing.Optional[str] = None,
     name: typing.Optional[str] = None,
 ) -> Tuple[Resource, list[events.Event]]:
-
     resource_id_in_config = config.pop("resource_id", None)
     resource_id = resource_id or resource_id_in_config
     if resource_id is None:

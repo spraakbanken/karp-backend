@@ -100,7 +100,6 @@ logger = logging.getLogger(__name__)
 
 
 def create_app() -> FastAPI:
-
     app_context = main.bootstrap_app()
 
     app = FastAPI(
@@ -182,7 +181,6 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def injector_middleware(request: Request, call_next):
-
         response: Response = JSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )

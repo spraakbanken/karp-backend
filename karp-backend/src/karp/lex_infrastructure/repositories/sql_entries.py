@@ -207,7 +207,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
         )
 
         for filter_key, filter_value in filters.items():
-
             query_and = query_and & (
                 sa_func.json_extract(self.history_model.body, f"$.{filter_key}")
                 == filter_value

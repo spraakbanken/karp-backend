@@ -39,7 +39,6 @@ class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
 
     def execute(self, command: commands.CreateResource) -> ResourceDto:
         with self.entry_repo_uow as uow:
-
             entry_repo_exists = uow.repo.get_by_id_optional(command.entry_repo_id)
             if not entry_repo_exists:
                 raise errors.NoSuchEntryRepository(

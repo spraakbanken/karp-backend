@@ -173,7 +173,6 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
         **kwargs,
     ):
         with self.index_uow as uw:
-
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 entry = EntryDto(
                     entity_id=event.entity_id,
@@ -211,7 +210,6 @@ class EntryUpdatedHandler(foundation_events.EventHandler[lex_events.EntryUpdated
         **kwargs,
     ):
         with self.index_uow as uw:
-
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 entry = EntryDto(
                     entity_id=event.entity_id,

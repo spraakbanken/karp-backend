@@ -43,7 +43,6 @@ def init(
     entries: List[Dict],
     access_token: auth.AccessToken,
 ) -> list[str]:
-
     result = []
     for entry in entries:
         response = client.post(
@@ -61,7 +60,6 @@ def fixture_entry_places_214_id(
     fa_data_client,
     write_token: auth.AccessToken,
 ):
-
     ids = init(
         fa_data_client,
         [
@@ -77,7 +75,6 @@ def fixture_entry_places_209_id(
     fa_data_client,
     write_token: auth.AccessToken,
 ):
-
     ids = init(
         fa_data_client,
         [
@@ -134,7 +131,6 @@ class TestAddEntry:
         fa_data_client,
         write_token: auth.AccessToken,
     ):
-
         response = fa_data_client.put(
             "/entries/places",
             json={
@@ -341,7 +337,6 @@ class TestDeleteEntry:
         fa_data_client,
         write_token: auth.AccessToken,
     ):
-
         entry_id = make_unique_id()
 
         response = fa_data_client.delete(
@@ -364,7 +359,6 @@ class TestDeleteEntry:
         fa_data_client,
         write_token: auth.AccessToken,
     ):
-
         entry_id = "00000000000000000000000000"
 
         response = fa_data_client.delete(

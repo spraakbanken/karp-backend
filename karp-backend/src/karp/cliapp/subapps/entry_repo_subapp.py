@@ -46,7 +46,6 @@ def delete(
     ctx: typer.Context,
     user: Optional[str] = typer.Option(None),
 ):
-
     # bus = inject_from_ctx(CommandBus, ctx)
 
     # delete_entry_repo = DeleteEntryRepo(

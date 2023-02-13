@@ -28,7 +28,6 @@ def create_access_token(
     audience: str = AUTH_JWT_AUDIENCE,
     expires_in: int = None,
 ) -> str:
-
     priv_key = priv_key or jwt_private_key
     expires_in = expires_in or 60
 

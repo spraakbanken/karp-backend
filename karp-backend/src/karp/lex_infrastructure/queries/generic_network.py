@@ -82,7 +82,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                     yield _create_ref(ref_resource_id, ref_resource_version, entry)
 
         # src_body = json.loads(src_entry.body)
-        for (ref_resource_id, ref_resource_version, field_name, field) in resource_refs:
+        for ref_resource_id, ref_resource_version, field_name, field in resource_refs:
             ids = src_entry.body.get(field_name)
             if ids is None:
                 continue

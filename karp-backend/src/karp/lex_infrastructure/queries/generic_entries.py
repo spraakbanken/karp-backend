@@ -207,7 +207,6 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
         self,
         request: EntryDiffRequest,
     ) -> EntryDiffDto:
-
         entry_repo_id = self.get_entry_repo_id(request.resource_id)
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             entry_repo_id

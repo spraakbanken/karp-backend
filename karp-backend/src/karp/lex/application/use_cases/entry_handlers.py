@@ -191,7 +191,6 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
             resource.entry_repository_id
         ) as uw:
             for i, entry_raw in enumerate(command.entries):
-
                 entry_schema.validate_entry(entry_raw)
 
                 entry, events = resource.create_entry_from_dict(

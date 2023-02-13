@@ -157,7 +157,7 @@ class Es6MappingRepository(MappingRepository):
             str, Dict[str, Dict[str, Dict[str, Dict]]]
         ] = self.es.indices.get_mapping()
         # print(f"mapping = {mapping}")
-        for (alias, index) in aliases:
+        for alias, index in aliases:
             if (
                 "mappings" in mapping[index]
                 and "entry" in mapping[index]["mappings"]

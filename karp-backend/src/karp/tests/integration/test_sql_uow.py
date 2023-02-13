@@ -75,7 +75,6 @@ class TestSqlEntryUnitOfWork:
         assert rows == []
 
     def test_rolls_back_on_error(self, sqlite_session_factory):
-
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},

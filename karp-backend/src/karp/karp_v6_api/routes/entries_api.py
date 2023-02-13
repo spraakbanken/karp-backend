@@ -84,7 +84,6 @@ def add_entry(
         deps.get_lex_uc(lex.AddingEntry)
     ),  # noqa: B008
 ):
-
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

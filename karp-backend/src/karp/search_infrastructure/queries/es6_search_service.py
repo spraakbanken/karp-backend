@@ -141,7 +141,6 @@ class Es6SearchService(search.SearchService):
         }
 
         def format_entry(entry):
-
             dict_entry = entry.to_dict()
             version = dict_entry.pop("_entry_version", None)
             last_modified_by = dict_entry.pop("_last_modified_by", None)

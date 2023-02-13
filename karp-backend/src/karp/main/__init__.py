@@ -216,7 +216,6 @@ def configure_logging(settings: dict[str, str]) -> None:
 
 
 def setup_logging():
-
     # Clear Gunicorn access log to remove duplicate requests logging
     # logging.getLogger("gunicorn.access").handlers.clear()
     logging.basicConfig(
