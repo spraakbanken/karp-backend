@@ -49,8 +49,8 @@ init-db:
 
 # build parser
 build-parser:
-    {{INVENV}} tatsu grammars/query_v6.ebnf > components/karp/search/domain/query_dsl/karp_query_v6_parser.py
-    {{INVENV}} tatsu --object-model grammars/query_v6.ebnf > components/karp/search/domain/query_dsl/karp_query_v6_model.py
+    {{INVENV}} tatsu grammars/query_v6.ebnf > karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_parser.py
+    {{INVENV}} tatsu --object-model grammars/query_v6.ebnf > karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_model.py
 
 serve: install-dev
 	{{INVENV}} uvicorn --factory karp.karp_v6_api.main:create_app
@@ -68,7 +68,7 @@ all-tests: clean-pyc unit-tests integration-tests e2e-tests
 
 # run all tests with code coverage
 all-tests-w-coverage:
-	{{INVENV}} pytest -vv --cov=bases/karp --cov=components/karp --cov-report=xml components/karp/tests bases/karp/lex_core/tests
+	{{INVENV}} pytest -vv --cov=karp --cov-report=xml karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests
 
 # run all tests for karp-lex-core
 test-lex-core: (test 'karp-lex-core/src/karp/lex_core/tests')
@@ -81,37 +81,37 @@ unit-tests: test
 
 # run unit tests with code coverage
 unit-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=bases --cov=components --cov-report={{cov-report}} components/karp/tests/unit components/karp/tests/foundation/unit
+	{{INVENV}} pytest -vv --cov=karp --cov-report={{cov-report}} karp-backend/src/karp/tests/unit karp-backend/src/karp/tests/foundation/unit
 
-all-test-dirs := "components/karp/tests bases/karp/lex_core/tests"
-default-cov := "--cov=bases --cov=components"
+all-test-dirs := "karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests"
+default-cov := "--cov=karp"
 
 # run tests with code coverage
 test-w-coverage cov=default-cov +tests=all-test-dirs: clean-pyc
 	{{INVENV}} pytest -vv {{cov}}  --cov-report={{cov-report}} {{tests}}
 
-unit-test-dirs := "components/karp/tests/unit bases/karp/lex_core/tests"
+unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
 
 # run given test(s)
 test *tests=unit-test-dirs:
 	{{INVENV}} pytest -vv {{tests}}
 
 # run end-to-end tests
-e2e-tests: clean-pyc (test "components/karp/tests/e2e")
+e2e-tests: clean-pyc (test "karp-backend/src/karp/tests/e2e")
 
 # run end-to-end tests with code coverage
 e2e-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml components/karp/tests/e2e
+	{{INVENV}} pytest -vv --cov=karp --cov-report=xml karp-backend/src/karp/tests/e2e
 
 # run integration tests
-integration-tests: clean-pyc (test "components/karp/tests/integration")
+integration-tests: clean-pyc (test "karp-backend/src/karp/tests/integration")
 
 # run integration tests with code coverage
-integration-tests-w-coverage: clean-pyc (test-w-coverage default-cov "components/karp/tests/integration")
+integration-tests-w-coverage: clean-pyc (test-w-coverage default-cov "karp-backend/src/karp/tests/integration")
 
 # lint code
 lint:
-	{{INVENV}} ruff bases/karp components/karp
+	{{INVENV}} ruff karp-backend karp-lex-core
 
 # lint specific project
 lint-project project:
