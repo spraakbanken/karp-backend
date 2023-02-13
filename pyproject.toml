@@ -22,20 +22,20 @@ classifiers = [
 ]
 packages = [
 	{ include = "development" },
-	{ include = "karp/auth", from = "karp-backend/src" },
-	{ include = "karp/auth_infrastructure", from = "karp-backend/src" },
-	{ include = "karp/command_bus", from = "karp-backend/src" },
-	{ include = "karp/foundation", from = "karp-backend/src" },
-	{ include = "karp/lex", from = "karp-backend/src" },
-	{ include = "karp/lex_infrastructure", from = "karp-backend/src" },
-	{ include = "karp/main", from = "karp-backend/src" },
-	{ include = "karp/search", from = "karp-backend/src" },
-	{ include = "karp/search_infrastructure", from = "karp-backend/src" },
-	{ include = "karp/utility", from = "karp-backend/src" },
-	{ include = "karp/tests", from = "karp-backend/src" },
-	{ include = "karp/cliapp", from = "karp-backend/src" },
-	{ include = "karp/karp_v6_api", from = "karp-backend/src" },
-	{ include = "karp/lex_core", from = "karp-lex-core/src" },
+	# { include = "karp/auth", from = "karp-backend/src" },
+	# { include = "karp/auth_infrastructure", from = "karp-backend/src" },
+	# { include = "karp/command_bus", from = "karp-backend/src" },
+	# { include = "karp/foundation", from = "karp-backend/src" },
+	# { include = "karp/lex", from = "karp-backend/src" },
+	# { include = "karp/lex_infrastructure", from = "karp-backend/src" },
+	# { include = "karp/main", from = "karp-backend/src" },
+	# { include = "karp/search", from = "karp-backend/src" },
+	# { include = "karp/search_infrastructure", from = "karp-backend/src" },
+	# { include = "karp/utility", from = "karp-backend/src" },
+	# { include = "karp/tests", from = "karp-backend/src" },
+	# { include = "karp/cliapp", from = "karp-backend/src" },
+	{ include = "karp", from = "karp-backend/src" },
+	{ include = "karp", from = "karp-lex-core/src" },
 ]
 
 [tool.poetry.scripts]
@@ -122,7 +122,6 @@ mkdocstrings-python = "^0.7.1"
 types-factory-boy = "^0.3.1"
 types-deprecated = "^1.2.9"
 httpx = "^0.23.1"
-pre-commit = "^2.20.0"
 
 [tool.poetry.group.ci]
 optional = true
