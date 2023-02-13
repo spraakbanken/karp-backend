@@ -6,7 +6,7 @@ from starlette.config import Config  # noqa: F401
 from starlette.datastructures import Secret  # noqa: F401
 
 PROJECT_NAME = "Karp"
-VERSION = "6.2.2"
+VERSION = "6.2.3"
 API_PREFIX = "/"
 # SECRET_KEY = config("SECRET_KEY", cast=Secret, default="CHANGEME")
 
