@@ -53,6 +53,7 @@ tqdm = "^4.64.1"
 typer = "^0.7.0"
 ulid-py = "^1.1.0"
 urllib3 = "^1.26.13"
+karp-lex-core = ">=0.3.2"
 
 [tool.poetry.extras]
 mysql = ["mysqlclient", "PyMySQL", "aiomysql"]
