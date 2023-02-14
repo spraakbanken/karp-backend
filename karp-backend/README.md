@@ -95,11 +95,19 @@ Usage:
 - Increase major number `X.b.c => (X+1).0.0`: `make bumpversion-major` or `bumpversion major`
 - To custom version `a.b.c => X.Y.Z`: `bumpversion --new-version X.Y.Z`
 
-`bumpversion` is configured in [`.bumpversion.cfg`](.bumpversion.cfg).
+`bumpversion` is configured in [`.bumpversion.cfg`](karp-backend/.bumpversion.cfg).
 
 The version is changed in the following files:
 
 - [`setup.py`](setup.py)
 - [`src/karp/__init__.py`](src/karp/__init__.py)
 - [`.bumpversion.cfg`](.bumpversion.cfg)
-- [`doc/karp_api_spec.yaml`](doc/karp_api_spec.yaml)
+
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## Latest Changes
+
