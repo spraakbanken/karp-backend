@@ -2,6 +2,8 @@ name: Build & Publish karp-backend
 
 on:
   push:
+    branches:
+      - main
     tags:
       - karp-backend-v*
 
@@ -99,7 +101,7 @@ jobs:
         run: just karp-backend/install-dev
 
       - name: Setup up environment
-        run: echo "AUTH_JWT_PUBKEY_PATH=../assets/testing/pubkey.pem" >> karp-backend/.env
+        run: cp -v .env.ci karp-backend/.env
         
       - name: Install Elasticsearch 6
         if: startsWith( matrix.es-version, '6')
