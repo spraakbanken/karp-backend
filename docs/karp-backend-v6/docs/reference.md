@@ -1,1 +1,1 @@
-::: karp.lex.domain.entities.resource
+# Reference
