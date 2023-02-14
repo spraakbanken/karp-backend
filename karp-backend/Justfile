@@ -5,11 +5,11 @@ INVENV := if env_var_or_default('VIRTUAL_ENV', "") == "" { "poetry run" } else {
 
 # setup development environment
 install-dev:
-	poetry install
+	poetry install --extras mysql
 
 # setup CI environment
 install-ci: install-dev
-	poetry install --only ci
+	poetry install --only ci --extras mysql
 
 default-cov := "--cov=src/karp"
 cov-report := "term-missing"

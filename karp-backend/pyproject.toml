@@ -55,9 +55,15 @@ ulid-py = "^1.1.0"
 urllib3 = "^1.26.13"
 karp-lex-core = ">=0.3.2"
 
+[tool.poetry.scripts]
+karp-cli = "karp.cliapp.main:cliapp"
+
 [tool.poetry.extras]
 mysql = ["mysqlclient", "PyMySQL", "aiomysql"]
 sqlite = ["aiosqlite"]
+
+[tool.poetry.urls]
+"Bug Tracker" = "https://github.com/spraakbanken/karp-backend/issues"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.2.1"
