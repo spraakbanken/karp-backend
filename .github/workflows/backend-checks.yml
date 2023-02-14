@@ -1,0 +1,81 @@
+name: Code checks for karp-backend
+
+on:
+  push:
+    branches:
+      - "*"
+    tags-ignore:
+      - v*
+    paths:
+      - 'karp-backend/**'
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - 'karp-backend/**'
+
+env:
+  POETRY_VERSION: 1.3.1
+  JUST_VERSION: "1.13.0"
+
+jobs:
+  checks:
+    name: ${{ matrix.task.name }} py-${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      max-parallel: 4
+      fail-fast: false
+      matrix:
+        python-version: ["3.10"]
+        os: [ubuntu-latest]
+        task:
+          - name: Lint code
+            run: just karp-backend/lint
+            allow_failure: false
+          - name: Typecheck
+            run: just karp-backend/type-check
+            allow_failure: true
+          - name: Check formatting
+            run: just karp-backend/check-fmt
+            allow_failure: false
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: extractions/setup-just@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Load cached $HOME/.local
+      #   uses: actions/cache@v3.1.6
+      #   with:
+      #     path: ~/.local
+      #     key: dotlocal-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('.github/workflows/build.yml') }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1.3
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: karp-backend/.venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('.github/workflows/backend-checks.yml') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: just karp-backend/install-ci
+
+      - name: ${{ matrix.task.name }}
+        run: ${{ matrix.task.run }}
+        continue-on-error: ${{ matrix.task.allow_failure }}
+
