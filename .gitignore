@@ -127,3 +127,4 @@ pubkey.pem
 old_files/
 sketch/
 /data/
+/logs/
