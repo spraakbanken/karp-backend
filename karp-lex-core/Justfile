@@ -31,6 +31,14 @@ lint:
 type-check:
     {{INVENV}} mypy --config-file mypy.ini -p karp.lex_core
 
+# run formatter
+fmt:
+	{{INVENV}} black .
+
+# test if code is formatted
+check-fmt:
+	{{INVENV}} black . --check
+
 # build the project
 build:
     poetry build
