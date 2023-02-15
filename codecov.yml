@@ -1,2 +1,24 @@
-ignore:
-  - "karp/tests/*"
+coverage:
+  status:
+    project: off
+    patch: off
+
+flag_management:
+  default_rules:
+    carryforward: true
+
+  individual_flags:
+    - name: karp-backend
+      paths:
+        - karp-backend/
+      statuses:
+        - type: project
+          target: auto
+          threshold: 1%
+    - name: karp-lex-core
+      paths:
+        - karp-lex-core/
+      statuses:
+        - type: project
+          target: auto
+          threshold: 1%

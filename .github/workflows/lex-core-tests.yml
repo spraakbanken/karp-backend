@@ -1,0 +1,85 @@
+name: Test karp-lex-core with Coverage
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+
+env:
+  POETRY_VERSION: 1.3.1
+  JUST_VERSION: "1.13.0"
+
+jobs:
+  coverage:
+    name: Test coverage py-${{ matrix.python-version }} es-${{ matrix.es-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      max-parallel: 4
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11"]
+        es-version: ["6.8.23"]
+        os: [ubuntu-latest]
+
+    steps:
+      #----------------------------------------------
+      #       check-out repo and set-up python
+      #----------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Set up python ${{ matrix.python-version }}
+        id: setup-python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: extractions/setup-just@v1
+        with:
+          just-version: ${{ env.JUST_VERSION }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      #----------------------------------------------
+      #  -----  install & configure poetry  -----
+      #----------------------------------------------
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: ${{ env.POETRY_VERSION }}
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      #----------------------------------------------
+      #       load cached venv if cache exists
+      #----------------------------------------------
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v3
+        with:
+          path: karp-lex-core/.venv
+          key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('.github/workflows/lex-core-tests.yml') }}
+
+      #----------------------------------------------
+      # install dependencies if cache does not exist
+      #----------------------------------------------
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: just karp-lex-core/install-dev
+        
+      #----------------------------------------------
+      # install your root project, if required
+      #----------------------------------------------
+      # - name: Install library
+      #   run: poetry install --no-interaction
+
+      - name: Run all tests for coverage report
+        run: just cov-report=xml karp-lex-core/test-w-coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: false
+          verbose: true
+          flags: karp-lex-core
