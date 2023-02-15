@@ -2,8 +2,6 @@ name: Build & Publish karp-backend
 
 on:
   push:
-    branches:
-      - main
     tags:
       - karp-backend-v*
 
