@@ -104,7 +104,8 @@ def update(
     message: Optional[str] = typer.Option(None, "-m", "--message"),
     user: Optional[str] = typer.Option(None, "-u", "--user"),
 ):
-    _bus = inject_from_ctx(CommandBus, ctx)
+    """Update resource config."""
+
     config_dict = jsonlib.load_from_file(config)
     resource_id = config_dict.pop("resource_id")
     if resource_id is None:
@@ -119,21 +120,16 @@ def update(
         user=user or "local admin",
     )
     print(f"cmd={cmd}")
-    raise NotImplementedError("Update resource config")
-    # if config.is_file():
-    #     with open(config) as fp:
-    #         new_resource = resources.update_resource_from_file(fp)
-    #     new_resources = [new_resource]
-    # elif config.is_dir():
-    #     new_resources = resources.update_resource_from_dir(config)
-    # else:
-    #     typer.echo("Must give either --config or --config-dir")
-    #     raise typer.Exit(3)  # Usage error
-    # for (resource_id, version) in new_resources:
-    #     if version is None:
-    #         typer.echo(f"Nothing to do for resource '{resource_id}'")
-    #     else:
-    #         typer.echo(f"Updated version {version} of resource '{resource_id}'")
+    bus = inject_from_ctx(CommandBus, ctx)
+    try:
+        bus.dispatch(cmd)
+    except Exception as err:
+        typer.echo(f"Error occurred: {err}", err=True)
+        raise typer.Exit(400)
+    else:
+        print(f"The config of '{resource_id}' is updated.")
+        print("You may need to reindex the resource,")
+        print(f"run `karp-cli resource reindex {resource_id}`")
 
 
 @subapp.command()
