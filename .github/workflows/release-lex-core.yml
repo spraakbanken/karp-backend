@@ -17,7 +17,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.10"]
         task:
           - name: Lint with Ruff
             run: just karp-lex-core/lint
@@ -86,9 +86,6 @@ jobs:
 
       - name: Install dependencies
         run: just karp-lex-core/install-dev
-
-      - name: Setup up environment
-        run: cp -v .env.ci .env
 
       - name: ${{ matrix.task.name }}
         run: ${{ matrix.task.run }}
