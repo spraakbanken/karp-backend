@@ -1,17 +1,12 @@
 from datetime import datetime
 from typing import Generic, Optional, TypeVar
 
+from karp.lex_core import alias_generators
 from karp.lex_core.value_objects import UniqueIdStr
 from pydantic import root_validator
 from pydantic.generics import GenericModel
 
 T = TypeVar("T")
-
-
-def to_lower_camel(s: str) -> str:
-    return "".join(
-        word.capitalize() if i > 0 else word for i, word in enumerate(s.split("_"))
-    )
 
 
 class EntryDto(GenericModel, Generic[T]):
@@ -26,7 +21,7 @@ class EntryDto(GenericModel, Generic[T]):
 
     class Config:
         extra = "forbid"
-        alias_generator = to_lower_camel
+        alias_generator = alias_generators.to_lower_camel
 
     @root_validator(pre=True)
     @classmethod
