@@ -5,12 +5,14 @@ on:
     branches:
       - "*"
     paths:
-      - 'karp-backend/**'
+      - 'karp-backend/**/*.py'
+      - 'karp-backend/pyproject.toml'
   pull_request:
     branches:
       - "*"
     paths:
-      - 'karp-backend/**'
+      - 'karp-backend/**/*.py'
+      - 'karp-backend/pyproject.toml'
 
 env:
   POETRY_VERSION: 1.3.1

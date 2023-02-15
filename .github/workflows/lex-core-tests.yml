@@ -5,7 +5,8 @@ on:
     branches:
       - "*"
     paths:
-      - 'karp-lex-core/**'
+      - 'karp-lex-core/**/*.py'
+      - 'karp-lex-core/pyproject.toml'
   pull_request:
     branches:
       - "*"
