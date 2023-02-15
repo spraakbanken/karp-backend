@@ -1,24 +1,27 @@
-from typing import Dict, Optional
+from typing import Literal, Optional
 
 import pydantic
-from karp.lex_core.value_objects import UniqueId, make_unique_id
+from karp.lex_core.value_objects import UniqueIdStr, make_unique_id_str
 
 from .base import Command
 
 
 class CreateEntryRepository(Command):
-    entity_id: UniqueId = pydantic.Field(default_factory=make_unique_id)
+    entity_id: UniqueIdStr = pydantic.Field(default_factory=make_unique_id_str)
     repository_type: str
     name: str
     connection_str: Optional[str] = None
-    config: Dict
+    config: dict
     message: str
     user: str
+    cmdtype: Literal["create_entry_repository"] = "create_entry_repository"
 
     @classmethod
-    def from_dict(cls, data: Dict, *, user: str, message: Optional[str] = None):
+    def from_dict(
+        cls, data: dict, *, user: str, message: Optional[str] = None
+    ) -> "CreateEntryRepository":
         return cls(
-            entity_id=make_unique_id(),
+            entity_id=make_unique_id_str(),
             repository_type=data.pop("repository_type", "default"),
             name=data.pop("resource_id"),
             connection_str=data.pop("connection_str", None),
@@ -29,6 +32,8 @@ class CreateEntryRepository(Command):
 
 
 class DeleteEntryRepository(Command):
-    entity_id: UniqueId
+    entity_id: UniqueIdStr
+    version: int
     message: str
     user: str
+    cmdtype: Literal["delete_entry_repository"] = "delete_entry_repository"
