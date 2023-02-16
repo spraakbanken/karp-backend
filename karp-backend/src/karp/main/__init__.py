@@ -1,7 +1,7 @@
-import json  # noqa: F401
+import json
 from logging.config import dictConfig
 import logging
-import os  # noqa: F401
+import os
 import typing
 from dataclasses import dataclass
 
@@ -9,16 +9,16 @@ from dataclasses import dataclass
 try:
     from importlib.metadata import entry_points
 except ImportError:
-    from importlib_metadata import entry_points  # type: ignore  # noqa: F401
+    from importlib_metadata import entry_points  # type: ignore
 
 import injector
-from json_streams import jsonlib  # noqa: F401
+from json_streams import jsonlib
 from sqlalchemy import pool
-from sqlalchemy.engine import Engine, create_engine, url as sa_url  # noqa: F401
+from sqlalchemy.engine import Engine, create_engine, url as sa_url
 import logging  # noqa: F811
 import asgi_correlation_id
 
-from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url  # noqa: F401
+from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import (
@@ -33,7 +33,7 @@ from karp.main.modules import (
     Db,
     EventBusMod,
     ElasticSearchMod,
-    install_auth_service,  # noqa: F401
+    install_auth_service,
 )
 from karp.search import Search
 

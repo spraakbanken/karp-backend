@@ -45,7 +45,7 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
 def create(
     ctx: typer.Context,
     config: Path,
-    entry_repo_id: Optional[str] = typer.Option(None, help="id for entry-repo"),
+    entry_repo_id: Optional[str] = typer.Option(None, help="id for entry-repo"),  # noqa: B008
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
@@ -81,8 +81,8 @@ def create(
 def set_entry_repo(
     ctx: typer.Context,
     resource_id: str,
-    entry_repo_id: str = typer.Argument(..., help="id for entry-repo"),
-    user: Optional[str] = typer.Option(None),
+    entry_repo_id: str = typer.Argument(..., help="id for entry-repo"),  # noqa: B008
+    user: Optional[str] = typer.Option(None),  # noqa: B008
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     entry_repo_uuid = unique_id.parse(entry_repo_id)
@@ -100,9 +100,9 @@ def set_entry_repo(
 def update(
     ctx: typer.Context,
     config: Path,
-    version: int = typer.Option(..., "-v", "--version"),
-    message: Optional[str] = typer.Option(None, "-m", "--message"),
-    user: Optional[str] = typer.Option(None, "-u", "--user"),
+    version: int = typer.Option(..., "-v", "--version"),  # noqa: B008
+    message: Optional[str] = typer.Option(None, "-m", "--message"),  # noqa: B008
+    user: Optional[str] = typer.Option(None, "-u", "--user"),  # noqa: B008
 ):
     """Update resource config."""
 
@@ -125,7 +125,7 @@ def update(
         bus.dispatch(cmd)
     except Exception as err:
         typer.echo(f"Error occurred: {err}", err=True)
-        raise typer.Exit(400)
+        raise typer.Exit(400)  # noqa: B904
     else:
         print(f"The config of '{resource_id}' is updated.")
         print("You may need to reindex the resource,")
@@ -210,7 +210,7 @@ def reindex(ctx: typer.Context, resource_id: str):
 @cli_timer
 def list_resources(
     ctx: typer.Context,
-    show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),
+    show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),  # noqa: B008
 ):
     if show_published:
         query = inject_from_ctx(GetPublishedResources, ctx)
@@ -280,8 +280,8 @@ def export():
 def delete(
     ctx: typer.Context,
     resource_id: str,
-    user: Optional[str] = typer.Option(None),
-    message: Optional[str] = typer.Option(None),
+    user: Optional[str] = typer.Option(None),  # noqa: B008
+    message: Optional[str] = typer.Option(None),  # noqa: B008
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     cmd = lex_commands.DeleteResource(

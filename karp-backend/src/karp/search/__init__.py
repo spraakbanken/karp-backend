@@ -6,7 +6,7 @@ from karp.command_bus import CommandHandler
 from karp.foundation.events import EventHandler
 from karp.lex.domain import events as lex_events
 from karp.search.domain import commands
-from karp.search.domain.errors import IncompleteQuery  # noqa: F401
+from karp.search.domain.errors import IncompleteQuery
 from karp.search.application.use_cases import (
     CreateSearchServiceHandler,
     DeletingIndex,
@@ -18,18 +18,18 @@ from karp.search.application.use_cases import (
 )
 from karp.search.application.queries import (
     ResourceViews,
-    PreviewEntry,  # noqa: F401
-    PreviewEntryInputDto,  # noqa: F401
-    EntryPreviewDto,  # noqa: F401
-    SearchService,  # noqa: F401
-    QueryRequest,  # noqa: F401
-    StatisticsDto,  # noqa: F401
+    PreviewEntry,
+    PreviewEntryInputDto,
+    EntryPreviewDto,
+    SearchService,
+    QueryRequest,
+    StatisticsDto,
 )
 from karp.search.application.repositories import (
     IndexUnitOfWork,
     Index,
     IndexEntry,
-)  # noqa: F401
+)
 from karp.search.application.transformers import (
     EntryTransformer,
     PreProcessor,

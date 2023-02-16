@@ -16,7 +16,7 @@ def cli_error_handler(func):
             return func(*args, **kwargs)
         except KarpError as e:
             logger.error(e.message)
-            raise typer.Exit(e.code)
+            raise typer.Exit(e.code)  # noqa: B904
 
     return func_wrapper
 

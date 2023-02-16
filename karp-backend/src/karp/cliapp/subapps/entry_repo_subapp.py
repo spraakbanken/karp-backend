@@ -22,7 +22,7 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):
         data = json.load(infile)
     except Exception as err:
         typer.echo(f"Error reading file '{infile.name}': {str(err)}")
-        raise typer.Exit(123)
+        raise typer.Exit(123)  # noqa: B904
     create_entry_repo = CreateEntryRepository.from_dict(
         data,
         user="local admin",
@@ -44,7 +44,7 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):
 def delete(
     entity_id: str,  # TODO: use UniqueIdStr when supported,
     ctx: typer.Context,
-    user: Optional[str] = typer.Option(None),
+    user: Optional[str] = typer.Option(None),  # noqa: B008
 ):
     # bus = inject_from_ctx(CommandBus, ctx)
 

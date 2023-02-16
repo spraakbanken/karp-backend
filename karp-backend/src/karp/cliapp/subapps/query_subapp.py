@@ -15,7 +15,7 @@ subapp = typer.Typer()
 def resource(
     ctx: typer.Context,
     resource_id: str,
-    output: Optional[Path] = typer.Option(
+    output: Optional[Path] = typer.Option(  # noqa: B008
         None, help="Path to write to. Defaults to stdout."
     ),
 ):

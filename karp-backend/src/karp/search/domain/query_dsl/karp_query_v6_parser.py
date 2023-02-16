@@ -60,12 +60,12 @@ class KarpQueryV6Parser(Parser):
         super().__init__(config=config)
 
     @tatsumasu()
-    def _start_(self):  # noqa
+    def _start_(self):
         self._expression_()
         self._check_eof()
 
     @tatsumasu()
-    def _expression_(self):  # noqa
+    def _expression_(self):
         with self._choice():
             with self._option():
                 self._logical_expression_()
@@ -81,7 +81,7 @@ class KarpQueryV6Parser(Parser):
             )
 
     @tatsumasu()
-    def _query_expression_(self):  # noqa
+    def _query_expression_(self):
         with self._choice():
             with self._option():
                 self._contains_()
@@ -119,7 +119,7 @@ class KarpQueryV6Parser(Parser):
             )
 
     @tatsumasu()
-    def _logical_expression_(self):  # noqa
+    def _logical_expression_(self):
         with self._choice():
             with self._option():
                 self._and_()
@@ -130,7 +130,7 @@ class KarpQueryV6Parser(Parser):
             self._error("expecting one of: " "'and' 'not' 'or'")
 
     @tatsumasu("And")
-    def _and_(self):  # noqa
+    def _and_(self):
         self._token("and")
         self.name_last_node("op")
         self._token("(")
@@ -150,7 +150,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["op"], ["exps"])
 
     @tatsumasu("Contains")
-    def _contains_(self):  # noqa
+    def _contains_(self):
         self._token("contains")
         self.name_last_node("op")
         self._token("|")
@@ -163,7 +163,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu("Endswith")
-    def _endswith_(self):  # noqa
+    def _endswith_(self):
         self._token("endswith")
         self.name_last_node("op")
         self._token("|")
@@ -176,7 +176,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu("Equals")
-    def _equals_(self):  # noqa
+    def _equals_(self):
         self._token("equals")
         self.name_last_node("op")
         self._token("|")
@@ -189,7 +189,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu("Exists")
-    def _exists_(self):  # noqa
+    def _exists_(self):
         self._token("exists")
         self.name_last_node("op")
         self._token("|")
@@ -199,7 +199,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["field", "op"], [])
 
     @tatsumasu("Freergxp")
-    def _freergxp_(self):  # noqa
+    def _freergxp_(self):
         self._token("freergxp")
         self.name_last_node("op")
         self._token("|")
@@ -209,7 +209,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "op"], [])
 
     @tatsumasu()
-    def _freetext_(self):  # noqa
+    def _freetext_(self):
         with self._choice():
             with self._option():
                 self._freetext_any_()
@@ -220,7 +220,7 @@ class KarpQueryV6Parser(Parser):
             )
 
     @tatsumasu("FreetextAnyButString")
-    def _freetext_any_(self):  # noqa
+    def _freetext_any_(self):
         self._token("freetext")
         self.name_last_node("op")
         self._token("|")
@@ -230,7 +230,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "op"], [])
 
     @tatsumasu("FreetextString")
-    def _freetext_string_(self):  # noqa
+    def _freetext_string_(self):
         self._token("freetext")
         self.name_last_node("op")
         self._token("|")
@@ -240,7 +240,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "op"], [])
 
     @tatsumasu("Gt")
-    def _gt_(self):  # noqa
+    def _gt_(self):
         self._token("gt")
         self.name_last_node("op")
         self._token("|")
@@ -253,7 +253,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu("Gte")
-    def _gte_(self):  # noqa
+    def _gte_(self):
         self._token("gte")
         self.name_last_node("op")
         self._token("|")
@@ -266,7 +266,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu("Lt")
-    def _lt_(self):  # noqa
+    def _lt_(self):
         self._token("lt")
         self.name_last_node("op")
         self._token("|")
@@ -279,7 +279,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu("Lte")
-    def _lte_(self):  # noqa
+    def _lte_(self):
         self._token("lte")
         self.name_last_node("op")
         self._token("|")
@@ -292,7 +292,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu("Missing")
-    def _missing_(self):  # noqa
+    def _missing_(self):
         self._token("missing")
         self.name_last_node("op")
         self._token("|")
@@ -302,7 +302,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["field", "op"], [])
 
     @tatsumasu("Not")
-    def _not_(self):  # noqa
+    def _not_(self):
         self._token("not")
         self.name_last_node("op")
         self._token("(")
@@ -322,7 +322,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["op"], ["exps"])
 
     @tatsumasu("Or")
-    def _or_(self):  # noqa
+    def _or_(self):
         self._token("or")
         self.name_last_node("op")
         self._token("(")
@@ -342,7 +342,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["op"], ["exps"])
 
     @tatsumasu("Regexp")
-    def _regexp_(self):  # noqa
+    def _regexp_(self):
         self._token("regexp")
         self.name_last_node("op")
         self._token("|")
@@ -355,7 +355,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu("Startswith")
-    def _startswith_(self):  # noqa
+    def _startswith_(self):
         self._token("startswith")
         self.name_last_node("op")
         self._token("|")
@@ -368,7 +368,7 @@ class KarpQueryV6Parser(Parser):
         self._define(["arg", "field", "op"], [])
 
     @tatsumasu()
-    def _argument_(self):  # noqa
+    def _argument_(self):
         with self._choice():
             with self._option():
                 self._integer_()
@@ -377,95 +377,95 @@ class KarpQueryV6Parser(Parser):
             self._error("expecting one of: " "<integer> <string> [^|()]+ \\d+")
 
     @tatsumasu()
-    def _any_but_string_(self):  # noqa
+    def _any_but_string_(self):
         self._integer_()
 
     @tatsumasu()
-    def _string_(self):  # noqa
+    def _string_(self):
         self._pattern("[^|()]+")
 
     @tatsumasu("int")
-    def _integer_(self):  # noqa
+    def _integer_(self):
         self._pattern("\\d+")
 
 
 class KarpQueryV6Semantics:
-    def start(self, ast):  # noqa
+    def start(self, ast):
         return ast
 
-    def expression(self, ast):  # noqa
+    def expression(self, ast):
         return ast
 
-    def query_expression(self, ast):  # noqa
+    def query_expression(self, ast):
         return ast
 
-    def logical_expression(self, ast):  # noqa
+    def logical_expression(self, ast):
         return ast
 
-    def and_(self, ast):  # noqa
+    def and_(self, ast):
         return ast
 
-    def contains(self, ast):  # noqa
+    def contains(self, ast):
         return ast
 
-    def endswith(self, ast):  # noqa
+    def endswith(self, ast):
         return ast
 
-    def equals(self, ast):  # noqa
+    def equals(self, ast):
         return ast
 
-    def exists(self, ast):  # noqa
+    def exists(self, ast):
         return ast
 
-    def freergxp(self, ast):  # noqa
+    def freergxp(self, ast):
         return ast
 
-    def freetext(self, ast):  # noqa
+    def freetext(self, ast):
         return ast
 
-    def freetext_any(self, ast):  # noqa
+    def freetext_any(self, ast):
         return ast
 
-    def freetext_string(self, ast):  # noqa
+    def freetext_string(self, ast):
         return ast
 
-    def gt(self, ast):  # noqa
+    def gt(self, ast):
         return ast
 
-    def gte(self, ast):  # noqa
+    def gte(self, ast):
         return ast
 
-    def lt(self, ast):  # noqa
+    def lt(self, ast):
         return ast
 
-    def lte(self, ast):  # noqa
+    def lte(self, ast):
         return ast
 
-    def missing(self, ast):  # noqa
+    def missing(self, ast):
         return ast
 
-    def not_(self, ast):  # noqa
+    def not_(self, ast):
         return ast
 
-    def or_(self, ast):  # noqa
+    def or_(self, ast):
         return ast
 
-    def regexp(self, ast):  # noqa
+    def regexp(self, ast):
         return ast
 
-    def startswith(self, ast):  # noqa
+    def startswith(self, ast):
         return ast
 
-    def argument(self, ast):  # noqa
+    def argument(self, ast):
         return ast
 
-    def any_but_string(self, ast):  # noqa
+    def any_but_string(self, ast):
         return ast
 
-    def string(self, ast):  # noqa
+    def string(self, ast):
         return ast
 
-    def integer(self, ast):  # noqa
+    def integer(self, ast):
         return ast
 
 

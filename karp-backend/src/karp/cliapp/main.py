@@ -19,7 +19,7 @@ def create_app():
     @app.callback()
     def set_app_context(
         ctx: typer.Context,
-        version: Optional[bool] = typer.Option(
+        version: Optional[bool] = typer.Option(  # noqa: B008
             None, "--version", callback=version_callback, is_eager=True
         ),
     ):

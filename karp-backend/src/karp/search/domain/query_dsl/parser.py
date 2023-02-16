@@ -7,30 +7,30 @@ from .token import Token
 
 
 class op:
-    AND = "AND"  # noqa: E221
-    NOT = "NOT"  # noqa: E221
-    OR = "OR"  # noqa: E221
-    AND_OR = [AND, OR]  # noqa: E221
-    LOGICAL = [AND, OR, NOT]  # noqa: E221
-    ARG_AND = "ARG_AND"  # noqa: E221
-    ARG_OR = "ARG_OR"  # noqa: E221
-    ARG_NOT = "ARG_NOT"  # noqa: E221
-    ARG_LOGICAL = [ARG_AND, ARG_OR, ARG_NOT]  # noqa: E221
-    FREETEXT = "FREETEXT"  # noqa: E221
-    FREERGXP = "FREERGXP"  # noqa: E221
-    EXISTS = "EXISTS"  # noqa: E221
-    MISSING = "MISSING"  # noqa: E221
-    UNARY_OPS = [FREETEXT, FREERGXP, EXISTS, MISSING]  # noqa: E221
-    EQUALS = "EQUALS"  # noqa: E221
-    GT = "GT"  # noqa: E221
-    GTE = "GTE"  # noqa: E221
-    LT = "LT"  # noqa: E221
-    LTE = "LTE"  # noqa: E221
-    RANGE_OPS = [GT, GTE, LT, LTE]  # noqa: E221
-    CONTAINS = "CONTAINS"  # noqa: E221
-    STARTSWITH = "STARTSWITH"  # noqa: E221
-    ENDSWITH = "ENDSWITH"  # noqa: E221
-    REGEXP = "REGEXP"  # noqa: E221
+    AND = "AND"
+    NOT = "NOT"
+    OR = "OR"
+    AND_OR = [AND, OR]
+    LOGICAL = [AND, OR, NOT]
+    ARG_AND = "ARG_AND"
+    ARG_OR = "ARG_OR"
+    ARG_NOT = "ARG_NOT"
+    ARG_LOGICAL = [ARG_AND, ARG_OR, ARG_NOT]
+    FREETEXT = "FREETEXT"
+    FREERGXP = "FREERGXP"
+    EXISTS = "EXISTS"
+    MISSING = "MISSING"
+    UNARY_OPS = [FREETEXT, FREERGXP, EXISTS, MISSING]
+    EQUALS = "EQUALS"
+    GT = "GT"
+    GTE = "GTE"
+    LT = "LT"
+    LTE = "LTE"
+    RANGE_OPS = [GT, GTE, LT, LTE]
+    CONTAINS = "CONTAINS"
+    STARTSWITH = "STARTSWITH"
+    ENDSWITH = "ENDSWITH"
+    REGEXP = "REGEXP"
     BINARY_OPS = [
         EQUALS,
         GT,
@@ -41,9 +41,9 @@ class op:
         STARTSWITH,
         ENDSWITH,
         REGEXP,
-    ]  # noqa: E221
-    REGEX_OPS = [CONTAINS, STARTSWITH, ENDSWITH, REGEXP]  # noqa: E221
-    OPS = [  # noqa: E221
+    ]
+    REGEX_OPS = [CONTAINS, STARTSWITH, ENDSWITH, REGEXP]
+    OPS = [
         CONTAINS,
         ENDSWITH,
         EQUALS,
@@ -58,11 +58,11 @@ class op:
         REGEXP,
         STARTSWITH,
     ]
-    INT = "INT"  # noqa: E221
-    FLOAT = "FLOAT"  # noqa: E221
-    STRING = "STRING"  # noqa: E221
-    ARGS = [INT, FLOAT, STRING]  # noqa: E221
-    SEP = "||"  # noqa: E221
+    INT = "INT"
+    FLOAT = "FLOAT"
+    STRING = "STRING"
+    ARGS = [INT, FLOAT, STRING]
+    SEP = "||"
 
 
 def is_a(x: Union[Node, Token], type_) -> bool:
@@ -92,8 +92,8 @@ def arg_token_string(s) -> Token:
 
 
 class KarpTNGLexer:
-    SEPARATOR_1 = "||"  # noqa: E221
-    SEPARATOR_2 = "|"  # noqa: E221
+    SEPARATOR_1 = "||"
+    SEPARATOR_2 = "|"
     logical = {
         "and": op.AND,
         "not": op.NOT,

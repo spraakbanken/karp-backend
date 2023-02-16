@@ -12,7 +12,7 @@ from karp.lex.application.queries.entries import (
     EntryDto,
     GetHistoryDto,  # noqa: F401
     HistoryDto,  # noqa: F401
-)  # noqa: F401
+)
 
 places = [
     {"code": 103, "name": "a", "municipality": [1]},

@@ -11,7 +11,7 @@ def test_morphology():
         "baseform": "Appalacherna",
         "paradigm": "pm_plg_alperna",
         "pos": "pm",
-    }  # noqa: F841
+    }
 
     # morphology = Morphology.create_resource(
     #     resource_type='SaldoMorphology',

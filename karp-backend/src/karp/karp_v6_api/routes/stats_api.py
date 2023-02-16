@@ -7,7 +7,7 @@ from fastapi import (
     Response,  # noqa: F401
     Security,
     status,
-)  # noqa: F401
+)
 
 from karp import auth
 from karp.foundation.value_objects import PermissionLevel
@@ -30,9 +30,9 @@ def get_field_values(
     field: str,
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),  # noqa: B008
     auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    search_service: SearchService = Depends(
-        inject_from_req(SearchService)
-    ),  # noqa: B008
+    search_service: SearchService = Depends(  # noqa: B008
+        inject_from_req(SearchService)  # noqa: B008
+    ),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(

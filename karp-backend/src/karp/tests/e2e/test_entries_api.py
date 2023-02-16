@@ -15,7 +15,7 @@ from karp.foundation.value_objects import (
     make_unique_id,
     UniqueId,  # noqa: F401
     unique_id,
-)  # noqa: F401
+)
 from karp.lex.application.queries import EntryDto
 
 # from karp.application import ctx, config
@@ -1001,7 +1001,7 @@ def test_update_refs2(fa_data_client):
     client = init(
         fa_data_client,
         es,  # noqa: F821
-        [{"code": 3, "name": "test3", "municipality": [2, 3]}],  # noqa: F821
+        [{"code": 3, "name": "test3", "municipality": [2, 3]}],
     )
 
     client.post(

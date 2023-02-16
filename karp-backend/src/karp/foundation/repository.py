@@ -20,14 +20,14 @@ class Repository(Generic[EntityType], abc.ABC):
 
     def _check_id_has_correct_type(self, id_) -> None:
         if not isinstance(id_, unique_id.UniqueId):
-            raise ValueError(f"expected UniqueId, got '{id_}' (type: ´{type(id_)}')")
+            raise ValueError(f"expected UniqueId, got '{id_}' (type: `{type(id_)}')")
 
     def _ensure_correct_id_type(self, v) -> unique_id.UniqueId:
         try:
             return unique_id.parse(v)
         except ValueError as exc:
             raise ValueError(
-                f"expected valid UniqueId, got '{v}' (type: ´{type(v)}')"
+                f"expected valid UniqueId, got '{v}' (type: `{type(v)}')"
             ) from exc
 
     def by_id(

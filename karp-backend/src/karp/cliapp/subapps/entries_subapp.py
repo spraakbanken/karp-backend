@@ -38,8 +38,8 @@ def add_entries_to_resource(
     data: Path,
     chunked: bool = False,
     chunk_size: int = 1000,
-    user: Optional[str] = typer.Option(None),
-    message: Optional[str] = typer.Option(None),
+    user: Optional[str] = typer.Option(None),  # noqa: B008
+    message: Optional[str] = typer.Option(None),  # noqa: B008
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     user = user or "local admin"
@@ -74,8 +74,8 @@ def import_entries_to_resource(
     data: Path,
     chunked: bool = False,
     chunk_size: int = 1000,
-    user: Optional[str] = typer.Option(None),
-    message: Optional[str] = typer.Option(None),
+    user: Optional[str] = typer.Option(None),  # noqa: B008
+    message: Optional[str] = typer.Option(None),  # noqa: B008
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     user = user or "local admin"
@@ -113,7 +113,7 @@ def update_entries(resource_id: str, data: Path):
 def export_entries(
     ctx: typer.Context,
     resource_id: str,
-    output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
+    output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),  # noqa: B008
 ):
     entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)
     all_entries = entry_views.all_entries(resource_id=resource_id)
@@ -149,15 +149,15 @@ class Counter(collections.abc.Generator):
 @cli_timer
 def validate_entries(
     ctx: typer.Context,
-    path: Optional[Path] = typer.Argument(None),
-    config_path: Optional[Path] = typer.Option(
+    path: Optional[Path] = typer.Argument(None),  # noqa: B008
+    config_path: Optional[Path] = typer.Option(  # noqa: B008
         None,
         "--config",
         "-c",
         help="resource config",
     ),
-    resource_id_raw: Optional[str] = typer.Option(None, "--resource_id"),
-    output: Optional[Path] = typer.Option(
+    resource_id_raw: Optional[str] = typer.Option(None, "--resource_id"),  # noqa: B008
+    output: Optional[Path] = typer.Option(  # noqa: B008
         None, "--output", "-o", help="file to write to"
     ),
 ):

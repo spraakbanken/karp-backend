@@ -15,7 +15,7 @@ from karp.karp_v6_api.dependencies import db_deps
 from karp.karp_v6_api.dependencies.db_deps import (
     get_database,  # noqa: F401
     get_session,
-)  # noqa: F401
+)
 from karp.karp_v6_api.dependencies import event_deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 
@@ -65,12 +65,12 @@ def get_entry_repo_uow(
 
 def get_lex_uc(Use_case_type: Type) -> Callable:
     def factory(
-        resource_uow: ResourceUnitOfWork = Depends(
+        resource_uow: ResourceUnitOfWork = Depends(  # noqa: B008
             get_resource_unit_of_work
-        ),  # noqa: B008
-        entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
+        ),
+        entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(  # noqa: B008
             get_entry_repo_uow
-        ),  # noqa: B008
+        ),
     ) -> Use_case_type:
         return Use_case_type(
             resource_uow=resource_uow,
@@ -94,9 +94,9 @@ def get_published_resources(
 
 def get_entry_diff(
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),  # noqa: B008
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(  # noqa: B008
         get_entry_repo_uow
-    ),  # noqa: B008
+    ),
 ) -> lex.GetEntryDiff:
     return GenericGetEntryDiff(
         resource_uow=resource_uow,
@@ -106,9 +106,9 @@ def get_entry_diff(
 
 def get_entry_history(
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),  # noqa: B008
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(  # noqa: B008
         get_entry_repo_uow
-    ),  # noqa: B008
+    ),
 ) -> lex.GetEntryHistory:
     return GenericGetEntryHistory(
         resource_uow=resource_uow,
@@ -118,9 +118,9 @@ def get_entry_history(
 
 def get_history(
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),  # noqa: B008
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(  # noqa: B008
         get_entry_repo_uow
-    ),  # noqa: B008
+    ),
 ) -> lex.GetHistory:
     return GenericGetHistory(
         resource_uow=resource_uow,

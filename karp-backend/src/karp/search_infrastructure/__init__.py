@@ -1,18 +1,18 @@
 from typing import Optional
 import elasticsearch
 import injector
-from sqlalchemy.orm import sessionmaker  # noqa: F401
+from sqlalchemy.orm import sessionmaker
 import logging
 
 from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
     GetReferencedEntries,
     GetEntryRepositoryId,
-    ReadOnlyResourceRepository,  # noqa: F401
+    ReadOnlyResourceRepository,
     EntryViews,
 )
 from karp.lex.application.repositories import (
-    ResourceUnitOfWork,  # noqa: F401
+    ResourceUnitOfWork,
     EntryUowRepositoryUnitOfWork,
 )
 from karp import lex, search

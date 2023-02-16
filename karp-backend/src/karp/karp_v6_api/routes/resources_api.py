@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @router.get("/permissions", response_model=list[ResourcePermissionDto])
 def list_resource_permissions(
-    query: GetResourcePermissions = Depends(deps.get_resource_permissions),
+    query: GetResourcePermissions = Depends(deps.get_resource_permissions),  # noqa: B008
 ):
     return query.query()
 
@@ -32,17 +32,17 @@ def list_resource_permissions(
     response_model=list[ResourceProtected],
 )
 def get_all_resources(
-    get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),
+    get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),  # noqa: B008
 ) -> typing.Iterable[lex.ResourceDto]:
     return get_resources.query()
 
 
 @router.post("/", response_model=ResourceDto, status_code=status.HTTP_201_CREATED)
 def create_new_resource(
-    new_resource: ResourceCreate = Body(...),
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
+    new_resource: ResourceCreate = Body(...),  # noqa: B008
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),  # noqa: B008
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),  # noqa: B008
 ) -> ResourceDto:
     logger.info(
         "creating new resource",
@@ -92,10 +92,10 @@ def create_new_resource(
 )
 def publishing_resource(
     resource_id: str,
-    resource_publish: schemas.ResourcePublish = Body(...),
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
+    resource_publish: schemas.ResourcePublish = Body(...),  # noqa: B008
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),  # noqa: B008
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),  # noqa: B008
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
@@ -133,7 +133,7 @@ def publishing_resource(
 )
 def get_resource_by_resource_id(
     resource_id: str,
-    resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
+    resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),  # noqa: B008
 ) -> ResourcePublic:
     if resource := resource_repo.get_by_resource_id(resource_id):
         return ResourcePublic(**resource.dict())
