@@ -3,7 +3,7 @@ from karp.foundation import constraints
 from karp.lex.domain import errors
 
 
-def valid_resource_id(name: str):
+def valid_resource_id(name: str):  # noqa: ANN201, D103
     try:
         name = constraints.length_ge("resource_id", name, 2)
         return constraints.no_space_in_str(name)

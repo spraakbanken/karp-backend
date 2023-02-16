@@ -1,4 +1,4 @@
-import factory
+import factory  # noqa: I001
 
 from karp.domain.model import Entry, Resource  # noqa: F401
 

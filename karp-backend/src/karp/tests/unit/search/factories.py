@@ -1,4 +1,4 @@
-import factory
+import factory  # noqa: I001
 
 
 from karp.search.domain import commands

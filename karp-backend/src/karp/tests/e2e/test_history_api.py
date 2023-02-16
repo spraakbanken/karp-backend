@@ -1,5 +1,5 @@
 # import json
-import re
+import re  # noqa: I001
 import time
 from datetime import datetime, timezone  # noqa: F401
 
@@ -22,7 +22,7 @@ places = [
 ]
 
 
-def get_helper(client, url: str, access_token: auth.AccessToken):
+def get_helper(client, url: str, access_token: auth.AccessToken):  # noqa: ANN201, ANN001
     response = client.get(
         url,
         headers=access_token.as_header(),
@@ -37,7 +37,7 @@ def username(name: str) -> str:
 
 @pytest.fixture(name="history_entity_ids", scope="session")
 def fixture_history_entity_ids(
-    fa_data_client,
+    fa_data_client,  # noqa: ANN001
     user1_token: auth.AccessToken,
     user2_token: auth.AccessToken,
     user4_token: auth.AccessToken,
@@ -100,13 +100,13 @@ def fixture_history_entity_ids(
 
 
 class TestGetHistory:
-    def test_route_exist(self, fa_data_client):
+    def test_route_exist(self, fa_data_client):  # noqa: ANN201, ANN001
         response = fa_data_client.get("/history/places")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_empty_user_history(
+    def test_empty_user_history(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -116,9 +116,9 @@ class TestGetHistory:
         assert len(response_data["history"]) == 0
         assert response_data["total"] == 0
 
-    def test_user1_history(
+    def test_user1_history(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -132,9 +132,9 @@ class TestGetHistory:
         for history_entry in response_data["history"]:
             assert "user1" == history_entry["user_id"]
 
-    def test_user2_history(
+    def test_user2_history(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -154,9 +154,9 @@ class TestGetHistory:
         for history_entry in response_data["history"]:
             assert "user2" == history_entry["user_id"]
 
-    def test_user_history_from_date(
+    def test_user_history_from_date(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -167,9 +167,9 @@ class TestGetHistory:
         )
         assert 4 > len(response_data["history"]), len(response_data["history"])
 
-    def test_user_history_to_date(
+    def test_user_history_to_date(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -180,9 +180,9 @@ class TestGetHistory:
         )
         assert len(response_data["history"]) == 4
 
-    def test_entry_id(
+    def test_entry_id(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -195,9 +195,9 @@ class TestGetHistory:
         for history_entry in response_data["history"]:
             assert history_entry["entity_id"] == history_entity_ids[1]
 
-    def test_entry_id_and_user_id(
+    def test_entry_id_and_user_id(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -212,9 +212,9 @@ class TestGetHistory:
         assert "user2" == history_entry["user_id"]
         assert "UPDATED" == history_entry["op"]
 
-    def test_diff_against_nothing(
+    def test_diff_against_nothing(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -231,8 +231,8 @@ class TestGetHistory:
             assert "ADDED" == diff["type"]
 
 
-def test_historical_entry(
-    fa_data_client,
+def test_historical_entry(  # noqa: ANN201
+    fa_data_client,  # noqa: ANN001
     admin_token: auth.AccessToken,
     history_entity_ids: list[str],
 ):
@@ -251,9 +251,9 @@ def test_historical_entry(
 
 
 class TestGetEntryDiff:
-    def test_diff1(
+    def test_diff1(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -274,9 +274,9 @@ class TestGetEntryDiff:
         assert response_data["from_version"] == 1
         assert response_data["to_version"] == 2
 
-    def test_diff2(
+    def test_diff2(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -293,9 +293,9 @@ class TestGetEntryDiff:
         assert response_data["from_version"] == 1
         assert response_data["to_version"] == 9
 
-    def test_diff_from_first_to_date(
+    def test_diff_from_first_to_date(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -315,9 +315,9 @@ class TestGetEntryDiff:
         assert response_data["to_version"] > 6
 
     @pytest.mark.xfail()
-    def test_diff_from_date_to_last(
+    def test_diff_from_date_to_last(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -336,9 +336,9 @@ class TestGetEntryDiff:
         assert response_data["from_version"] == 8
         assert response_data["to_version"] == 9
 
-    def test_diff_from_first_to_version(
+    def test_diff_from_first_to_version(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -354,9 +354,9 @@ class TestGetEntryDiff:
         assert response_data["from_version"] == 1
         assert response_data["to_version"] == 7
 
-    def test_diff_from_version_to_last(
+    def test_diff_from_version_to_last(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -372,9 +372,9 @@ class TestGetEntryDiff:
         assert response_data["from_version"] == 7
         assert response_data["to_version"] == 9
 
-    def test_diff_mix_version_date(
+    def test_diff_mix_version_date(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -390,9 +390,9 @@ class TestGetEntryDiff:
         assert response_data["from_version"] == 2
         assert response_data["to_version"] > 6
 
-    def test_diff_to_entry_data(
+    def test_diff_to_entry_data(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
@@ -411,9 +411,9 @@ class TestGetEntryDiff:
         assert response_data["from_version"] == 1
         assert response_data["to_version"] is None
 
-    def test_diff_no_flags(
+    def test_diff_no_flags(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         user4_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):

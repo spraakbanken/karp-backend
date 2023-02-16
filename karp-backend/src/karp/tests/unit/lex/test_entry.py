@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict  # noqa: I001
 
 
 from karp.lex.domain import events
@@ -18,7 +18,7 @@ def random_entry(entry_id: str = None, body: Dict = None) -> entities.Entry:
     )
 
 
-def test_new_entry_has_event():
+def test_new_entry_has_event():  # noqa: ANN201
     entry, domain_events = random_entry()
     assert domain_events[-1] == events.EntryAdded(
         entity_id=entry.id,
@@ -30,7 +30,7 @@ def test_new_entry_has_event():
     )
 
 
-def test_discarded_entry_has_event():
+def test_discarded_entry_has_event():  # noqa: ANN201
     entry, _ = random_entry()
     domain_events = entry.discard(
         user="alice@example.org",

@@ -1,9 +1,9 @@
-from karp.lex_infrastructure.queries import generic_network
+from karp.lex_infrastructure.queries import generic_network  # noqa: I001
 
 from karp.tests.unit.lex import factories
 
 
-def test__create_ref():
+def test__create_ref():  # noqa: ANN201
     resource_id = "resource_id"
     resource_version = 1
     _id = 5

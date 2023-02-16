@@ -1,25 +1,25 @@
-from dataclasses import dataclass
+from dataclasses import dataclass  # noqa: D100
 
 from karp.lex.domain.value_objects import UniqueId
 
 
 @dataclass
-class ResourceReference:
+class ResourceReference:  # noqa: D101
     resource_id: UniqueId
 
 
 @dataclass
-class ResourceSoftReference:
+class ResourceSoftReference:  # noqa: D101
     resource_id: str
 
 
 @dataclass
-class EntryReference:
+class EntryReference:  # noqa: D101
     resource_id: UniqueId
     entry_id: UniqueId
 
 
 @dataclass
-class EntrySoftReference:
+class EntrySoftReference:  # noqa: D101
     resource_id: str
     entry_id: str

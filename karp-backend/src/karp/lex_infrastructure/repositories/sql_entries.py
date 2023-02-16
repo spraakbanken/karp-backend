@@ -1,5 +1,5 @@
 """SQL repositories for entries."""
-import logging
+import logging  # noqa: I001
 import typing
 from typing import Dict, List, Optional, Generic, Tuple, TypeVar
 from attr import has  # noqa: F401
@@ -36,10 +36,10 @@ DUPLICATE_PROG = regex.compile(DUPLICATE_PATTERN)
 NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 
 
-class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
-    def __init__(
+class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
-        history_model,
+        history_model,  # noqa: ANN001
         resource_config: Dict,
         *,
         session: db.Session,
@@ -52,7 +52,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
         self.resource_config = resource_config
 
     @classmethod
-    def from_dict(
+    def from_dict(  # noqa: ANN206, D102
         cls,
         name: str,
         resource_config: typing.Dict,
@@ -86,12 +86,12 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
             "resource_id": resource_id,
         }
 
-    def _save(self, entry: Entry):
+    def _save(self, entry: Entry):  # noqa: ANN202
         self._check_has_session()
 
         return self._insert_history(entry)
 
-    def _insert_history(self, entry: Entry):
+    def _insert_history(self, entry: Entry):  # noqa: ANN202
         self._check_has_session()
         try:
             ins_stmt = db.insert(self.history_model)
@@ -102,7 +102,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
         except db.exc.DBAPIError as exc:
             raise errors.RepositoryError("db failure") from exc
 
-    def entity_ids(self) -> List[str]:
+    def entity_ids(self) -> List[str]:  # noqa: D102
         stmt = self._stmt_latest_not_discarded()
         stmt = stmt.order_by(self.history_model.last_modified.desc())
         query = self._session.execute(stmt).scalars()
@@ -111,7 +111,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
 
     def _by_id(
         self,
-        id: str,
+        id: str,  # noqa: A002
         *,
         version: Optional[int] = None,
         after_date: Optional[float] = None,
@@ -138,7 +138,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
-    def teardown(self):
+    def teardown(self):  # noqa: ANN201
         """Use for testing purpose."""
         logger.info("starting teardown")
 
@@ -146,14 +146,14 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
         self.history_model.__table__.drop(bind=self._session.bind)
         logger.info("dropped history_model")
 
-    def all_entries(self) -> typing.Iterable[Entry]:
+    def all_entries(self) -> typing.Iterable[Entry]:  # noqa: D102
         stmt = self._stmt_latest_not_discarded()
         query = self._session.execute(stmt).scalars()
 
         return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
 
     # TODO Rename this here and in `entity_ids` and `all_entries`
-    def _stmt_latest_not_discarded(self):
+    def _stmt_latest_not_discarded(self):  # noqa: ANN202
         self._check_has_session()
         subq = self._subq_for_latest()
         return sql.select(self.history_model).join(
@@ -175,7 +175,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
             .subquery("t2")
         )
 
-    def num_entities(self) -> int:
+    def num_entities(self) -> int:  # noqa: D102
         self._check_has_session()
 
         subq = self._subq_for_latest()
@@ -190,7 +190,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
         )
         return self._session.execute(stmt).scalar()
 
-    def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:
+    def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:  # noqa: D102, ANN003
         self._check_has_session()
 
         if filters is None:
@@ -221,7 +221,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
             for row in self._session.execute(stmt).scalars().all()
         ]
 
-    def get_history(
+    def get_history(  # noqa: ANN201, D102
         self,
         user_id: Optional[str] = None,
         entry_id: Optional[str] = None,
@@ -268,7 +268,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
             "repo_id": entry.repo_id,
         }
 
-    def _history_row_to_entry(self, row) -> Entry:
+    def _history_row_to_entry(self, row) -> Entry:  # noqa: ANN001
         return Entry(
             body=row.body,
             message=row.message,
@@ -283,17 +283,17 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):
         )
 
 
-class SqlEntryUnitOfWork(
+class SqlEntryUnitOfWork(  # noqa: D101
     SqlUnitOfWork,
     repositories.EntryUnitOfWork,
 ):
     repository_type: str = "sql_entries_base"
 
-    def __init__(
+    def __init__(  # noqa: D107, ANN204
         self,
         session_factory: sessionmaker,
         event_bus: EventBus,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
     ):
         SqlUnitOfWork.__init__(self)
         if not hasattr(self, "__enter__"):
@@ -303,7 +303,7 @@ class SqlEntryUnitOfWork(
         self._entries = None
         self._session = None
 
-    def _begin(self):
+    def _begin(self):  # noqa: ANN202
         if self._session is None:
             self._session = self.session_factory()
         if self._entries is None:
@@ -314,35 +314,35 @@ class SqlEntryUnitOfWork(
             )
         return self
 
-    def table_name(self) -> str:
+    def table_name(self) -> str:  # noqa: D102
         return self.name
 
     @property
-    def repo(self) -> SqlEntryRepository:
+    def repo(self) -> SqlEntryRepository:  # noqa: D102
         if self._entries is None:
             raise RuntimeError("No entries")
         return self._entries
 
     @classmethod
-    def from_dict(cls, settings: typing.Dict, resource_config, **kwargs):
+    def from_dict(cls, settings: typing.Dict, resource_config, **kwargs):  # noqa: ANN003, ANN206, D102, ANN001
         return cls(repo_settings=settings, resource_config=resource_config, **kwargs)
 
-    def collect_new_events(self) -> typing.Iterable:
+    def collect_new_events(self) -> typing.Iterable:  # noqa: D102
         return super().collect_new_events() if self._entries else []
 
 
-class SqlEntryUnitOfWorkV1(SqlEntryUnitOfWork):
+class SqlEntryUnitOfWorkV1(SqlEntryUnitOfWork):  # noqa: D101
     repository_type: str = "sql_entries_v1"
 
 
-class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):
+class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):  # noqa: D101
     repository_type: str = "sql_entries_v2"
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003, D107
         super().__init__(*args, **kwargs)
-        assert hasattr(self, "__enter__")
+        assert hasattr(self, "__enter__")  # noqa: S101
 
-    def table_name(self) -> str:
+    def table_name(self) -> str:  # noqa: D102
         u = ulid.from_uuid(self.entity_id)
         random_part = u.randomness().str
         return f"{self.name}_{random_part}"
@@ -351,11 +351,11 @@ class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):
 SqlEntryUowType = TypeVar("SqlEntryUowType", bound=SqlEntryUnitOfWork)
 
 
-class SqlEntryUowCreator(Generic[SqlEntryUowType]):
+class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
     repository_type: str = "repository_type"
 
     @injector.inject
-    def __init__(
+    def __init__(  # noqa: D107, ANN204
         self,
         session_factory: sessionmaker,
         event_bus: EventBus,
@@ -364,10 +364,10 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):
         self.event_bus = event_bus
         self.cache = {}
 
-    def _create_uow(self, **kwargs) -> SqlEntryUowType:
+    def _create_uow(self, **kwargs) -> SqlEntryUowType:  # noqa: ANN003
         raise NotImplementedError(f"please implement this for {self}")
 
-    def __call__(
+    def __call__(  # noqa: D102
         self,
         entity_id: UniqueId,
         name: str,
@@ -406,15 +406,15 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):
         return self.cache[entity_id], []
 
 
-class SqlEntryUowV1Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV1]):
+class SqlEntryUowV1Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV1]):  # noqa: D101
     repository_type: str = "sql_entries_v1"
 
-    def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV1:
+    def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV1:  # noqa: ANN003
         return SqlEntryUnitOfWorkV1(**kwargs)
 
 
-class SqlEntryUowV2Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV2]):
+class SqlEntryUowV2Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV2]):  # noqa: D101
     repository_type: str = "sql_entries_v2"
 
-    def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV2:
+    def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV2:  # noqa: ANN003
         return SqlEntryUnitOfWorkV2(**kwargs)

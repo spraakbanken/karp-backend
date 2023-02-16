@@ -1,4 +1,4 @@
-from .search_service import (
+from .search_service import (  # noqa: I001
     EntryDto,
     SearchService,
     QueryRequest,

@@ -1,11 +1,11 @@
-import pytest
+import pytest  # noqa: I001
 
 from karp.lex.application import repositories
 from karp.foundation.value_objects import unique_id
 from . import adapters
 
 
-def test_create_fake_entry_repo_uow(
+def test_create_fake_entry_repo_uow(  # noqa: ANN201
     lex_ctx: adapters.UnitTestContext,
 ):
     uow_factory = lex_ctx.container.get(repositories.EntryRepositoryUnitOfWorkFactory)
@@ -26,7 +26,7 @@ def test_create_fake_entry_repo_uow(
 
 
 @pytest.mark.skip()
-def test_create_fake_entry_repo_uow2(
+def test_create_fake_entry_repo_uow2(  # noqa: ANN201
     lex_ctx: adapters.UnitTestContext,
 ):
     uow_factory = lex_ctx.container.get(repositories.EntryRepositoryUnitOfWorkFactory)

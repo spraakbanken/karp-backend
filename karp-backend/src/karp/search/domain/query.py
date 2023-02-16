@@ -1,4 +1,4 @@
-import typing
+import typing  # noqa: D100, I001
 from enum import Enum
 from typing import Dict, List, Optional  # noqa: F401
 
@@ -11,7 +11,7 @@ from karp.search.domain import errors, query_dsl  # , resourcemgr
 from karp.utility.container import arg_get
 
 
-class Format(str, Enum):
+class Format(str, Enum):  # noqa: D101
     json = "json"
     csv = "csv"
     xml = "xml"
@@ -19,7 +19,7 @@ class Format(str, Enum):
     tsb = "tsb"
 
 
-class Query(pydantic.BaseModel):
+class Query(pydantic.BaseModel):  # noqa: D101
     fields: typing.List[str]
     resources: typing.List[str]
     sort: typing.List[str]
@@ -41,20 +41,20 @@ class Query(pydantic.BaseModel):
         "resources", "include_fields", "exclude_fields", "sort", pre=True
     )
     @classmethod
-    def split_str(cls, v):
+    def split_str(cls, v):  # noqa: ANN206, D102, ANN001
         if isinstance(v, str):
             return v.split(",")
         return v
 
     @pydantic.validator("fields", "sort", pre=True, always=True)
     @classmethod
-    def set_ts_now(cls, v):
+    def set_ts_now(cls, v):  # noqa: ANN206, D102, ANN001
         return v or []
 
-    class Config:
+    class Config:  # noqa: D106
         arbitrary_types_allowed = True
 
-    def parse_arguments(self, args, resource_str: str):
+    def parse_arguments(self, args, resource_str: str):  # noqa: ANN201, D102, ANN001
         if resource_str is None:
             raise errors.IncompleteQuery("No resources are defined.")
         self.resources = resource_str.split(",")
@@ -84,7 +84,7 @@ class Query(pydantic.BaseModel):
         self.ast = query_dsl.parse(self.q)
         self._update_ast()
 
-    def _update_ast(self):
+    def _update_ast(self):  # noqa: ANN202, C901
         if self.ast.is_empty():
             return
 
@@ -99,7 +99,7 @@ class Query(pydantic.BaseModel):
                     else:
                         field_translations[field] = set(lst)
 
-        def translate_node(node: query_dsl.Node):
+        def translate_node(node: query_dsl.Node):  # noqa: ANN202, C901
             print("node = {node!r}".format(node=node))
             if query_dsl.is_a(
                 node, [query_dsl.op.FREERGXP, query_dsl.op.FREETEXT, query_dsl.op.ARGS]

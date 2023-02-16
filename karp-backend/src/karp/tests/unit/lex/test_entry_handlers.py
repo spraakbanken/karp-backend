@@ -1,16 +1,13 @@
-from typing import Dict, Optional  # noqa: F401
 
 import pytest
 from karp.foundation.value_objects.unique_id import make_unique_id
-
-from karp.lex.domain import errors
-
+from karp.lex import commands
 from karp.lex.application import repositories  # noqa: F401
 from karp.lex.application.repositories import (
-    ResourceUnitOfWork,  # noqa: F401
     EntryUowRepositoryUnitOfWork,
+    ResourceUnitOfWork,  # noqa: F401
 )
-from karp.lex import commands
+from karp.lex.domain import errors
 
 from . import adapters, factories
 
@@ -24,7 +21,7 @@ from . import adapters, factories
 
 
 class TestAddEntry:
-    def test_cannot_add_entry_to_nonexistent_resource(
+    def test_cannot_add_entry_to_nonexistent_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -35,7 +32,7 @@ class TestAddEntry:
                 )
             )
 
-    def test_add_entry(
+    def test_add_entry(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -80,7 +77,7 @@ class TestAddEntry:
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     @pytest.mark.skip(reason="we don't use entry_id anymore")
-    def test_create_entry_with_same_entry_id_raises(
+    def test_create_entry_with_same_entry_id_raises(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -115,7 +112,7 @@ class TestAddEntry:
 
 
 class TestUpdateEntry:
-    def test_update_entry(
+    def test_update_entry(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -172,7 +169,7 @@ class TestUpdateEntry:
         # )
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
-    def test_cannot_update_entry_in_nonexistent_resource(
+    def test_cannot_update_entry_in_nonexistent_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -189,7 +186,7 @@ class TestUpdateEntry:
                 )
             )
 
-    def test_update_of_entry_id_changes_entry_id(
+    def test_update_of_entry_id_changes_entry_id(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -243,7 +240,7 @@ class TestUpdateEntry:
 
 
 class TestDeleteEntry:
-    def test_can_delete_entry(
+    def test_can_delete_entry(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -302,7 +299,7 @@ class TestDeleteEntry:
 
 
 class TestAddEntries:
-    def test_cannot_add_entries_to_nonexistent_resource(
+    def test_cannot_add_entries_to_nonexistent_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -313,7 +310,7 @@ class TestAddEntries:
                 )
             )
 
-    def test_add_entry(
+    def test_add_entry(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -357,7 +354,7 @@ class TestAddEntries:
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     @pytest.mark.skip(reason="we don't use entry_id")
-    def test_add_entry_with_same_entry_id_raises(
+    def test_add_entry_with_same_entry_id_raises(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -392,7 +389,7 @@ class TestAddEntries:
 
 
 class TestAddEntriesInChunks:
-    def test_cannot_add_entries_to_nonexistent_resource(
+    def test_cannot_add_entries_to_nonexistent_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -403,7 +400,7 @@ class TestAddEntriesInChunks:
                 )
             )
 
-    def test_add_entry(
+    def test_add_entry(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -448,7 +445,7 @@ class TestAddEntriesInChunks:
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     @pytest.mark.skip(reason="we don't use entry_id")
-    def test_add_entry_with_same_entry_id_raises(
+    def test_add_entry_with_same_entry_id_raises(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -483,7 +480,7 @@ class TestAddEntriesInChunks:
 
 
 class TestImportEntries:
-    def test_cannot_import_entries_to_nonexistent_resource(
+    def test_cannot_import_entries_to_nonexistent_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -494,7 +491,7 @@ class TestImportEntries:
                 )
             )
 
-    def test_import_entries(
+    def test_import_entries(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -545,7 +542,7 @@ class TestImportEntries:
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     @pytest.mark.skip(reason="we don't use entry_id")
-    def test_import_entries_with_same_entry_id_raises(
+    def test_import_entries_with_same_entry_id_raises(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -584,7 +581,7 @@ class TestImportEntries:
 
 
 class TestImportEntriesInChunks:
-    def test_cannot_import_entries_to_nonexistent_resource(
+    def test_cannot_import_entries_to_nonexistent_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -595,7 +592,7 @@ class TestImportEntriesInChunks:
                 )
             )
 
-    def test_import_entries(
+    def test_import_entries(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -646,7 +643,7 @@ class TestImportEntriesInChunks:
         # assert bus.ctx.index_uow.was_committed #type: ignore [attr-defined]
 
     @pytest.mark.skip(reason="we don't use entry_id")
-    def test_import_entries_with_same_entry_id_raises(
+    def test_import_entries_with_same_entry_id_raises(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):

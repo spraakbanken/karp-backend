@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100, I001
 from datetime import datetime
 import logging
 import re
@@ -24,18 +24,18 @@ KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
 
-class MappingRepository(abc.ABC):
+class MappingRepository(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def get_index_name(self, resource_id: str) -> str:
+    def get_index_name(self, resource_id: str) -> str:  # noqa: D102
         ...
 
     @abc.abstractmethod
-    def get_alias_name(self, resource_id: str) -> str:
+    def get_alias_name(self, resource_id: str) -> str:  # noqa: D102
         ...
 
 
-class Es6MappingRepository(MappingRepository):
-    def __init__(
+class Es6MappingRepository(MappingRepository):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         es: elasticsearch.Elasticsearch,
         prefix: str = "",
@@ -48,7 +48,7 @@ class Es6MappingRepository(MappingRepository):
         self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
         self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
 
-    def ensure_config_index_exist(self) -> None:
+    def ensure_config_index_exist(self) -> None:  # noqa: D102
         if not self.es.indices.exists(index=self._config_index):
             self.es.indices.create(
                 index=self._config_index,
@@ -70,17 +70,17 @@ class Es6MappingRepository(MappingRepository):
                 },
             )
 
-    def create_index_name(self, resource_id: str) -> str:
+    def create_index_name(self, resource_id: str) -> str:  # noqa: D102
         date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
         return f"{self._prefix}{resource_id}_{date}"
 
-    def create_alias_name(self, resource_id: str) -> str:
+    def create_alias_name(self, resource_id: str) -> str:  # noqa: D102
         return f"{self._prefix}{resource_id}"
 
-    def create_index_and_alias_name(self, resource_id: str) -> dict[str, str]:
+    def create_index_and_alias_name(self, resource_id: str) -> dict[str, str]:  # noqa: D102
         return self._update_config(resource_id)
 
-    def get_name_base(self, resource_id: str) -> str:
+    def get_name_base(self, resource_id: str) -> str:  # noqa: D102
         return f"{self._prefix}{resource_id}"
 
     def _update_config(self, resource_id: str) -> dict[str, str]:
@@ -95,7 +95,7 @@ class Es6MappingRepository(MappingRepository):
         )
         return names
 
-    def get_index_name(self, resource_id: str) -> str:
+    def get_index_name(self, resource_id: str) -> str:  # noqa: D102
         try:
             res = self.es.get(
                 index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
@@ -107,7 +107,7 @@ class Es6MappingRepository(MappingRepository):
             return self._update_config(resource_id)["index_name"]
         return res["_source"]["index_name"]
 
-    def get_alias_name(self, resource_id: str) -> str:
+    def get_alias_name(self, resource_id: str) -> str:  # noqa: D102
         try:
             res = self.es.get(
                 index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
@@ -120,7 +120,7 @@ class Es6MappingRepository(MappingRepository):
         return res["_source"]["alias_name"]
 
     @staticmethod
-    def get_analyzed_fields_from_mapping(
+    def get_analyzed_fields_from_mapping(  # noqa: D102
         properties: Dict[str, Dict[str, Dict[str, Any]]]
     ) -> List[str]:
         analyzed_fields = []
@@ -142,7 +142,7 @@ class Es6MappingRepository(MappingRepository):
         Create a field mapping based on the mappings of elasticsearch
         currently the only information we need is if a field is analyzed (i.e. text)
         or not.
-        """
+        """  # noqa: D202, D212, D205
 
         field_mapping: Dict[str, List[str]] = {}
         sortable_fields = {}
@@ -184,7 +184,7 @@ class Es6MappingRepository(MappingRepository):
     def _get_all_aliases(self) -> List[Tuple[str, str]]:
         """
         :return: a list of tuples (alias_name, index_name)
-        """
+        """  # noqa: D200, D212
         result = self.es.cat.aliases(h="alias,index")
         logger.debug(f"{result}")
         index_names = []
@@ -208,7 +208,7 @@ class Es6MappingRepository(MappingRepository):
 
         Returns:
             List[str] -- values that ES can sort by.
-        """
+        """  # noqa: D406, D407
         translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None
@@ -230,7 +230,7 @@ class Es6MappingRepository(MappingRepository):
 
         return translated_sort_fields
 
-    def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
+    def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:  # noqa: D102
         logger.debug(
             f"es6_indextranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
         )
@@ -241,7 +241,7 @@ class Es6MappingRepository(MappingRepository):
                 f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
             )
 
-    def on_publish_resource(self, alias_name: str, index_name: str):
+    def on_publish_resource(self, alias_name: str, index_name: str):  # noqa: ANN201, D102
         mapping = self._get_index_mappings(index=index_name)
         if (
             "mappings" in mapping[index_name]
@@ -260,10 +260,10 @@ class Es6MappingRepository(MappingRepository):
             )
 
     @staticmethod
-    def create_sortable_map_from_mapping(properties: Dict) -> Dict[str, List[str]]:
+    def create_sortable_map_from_mapping(properties: Dict) -> Dict[str, List[str]]:  # noqa: D102
         sortable_map = {}
 
-        def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):
+        def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):  # noqa: ANN202, ANN001
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():
                     ext_base_name = f"{base_name}.{ext_name}"

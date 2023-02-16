@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100, I001
 from typing import Iterable, Optional, Dict
 
 import pydantic
@@ -7,7 +7,7 @@ from karp.foundation.value_objects import UniqueIdStr, UniqueId
 from karp.foundation.value_objects.unique_id import UniqueIdPrimitive
 
 
-class ResourceDto(pydantic.BaseModel):
+class ResourceDto(pydantic.BaseModel):  # noqa: D101
     resource_id: str
     entity_id: UniqueIdStr
     is_published: bool
@@ -21,26 +21,26 @@ class ResourceDto(pydantic.BaseModel):
     discarded: bool
 
 
-class GetPublishedResources(abc.ABC):
+class GetPublishedResources(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def query(self) -> Iterable[ResourceDto]:
+    def query(self) -> Iterable[ResourceDto]:  # noqa: D102
         pass
 
 
-class GetResources(abc.ABC):
+class GetResources(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def query(self) -> Iterable[ResourceDto]:
+    def query(self) -> Iterable[ResourceDto]:  # noqa: D102
         pass
 
 
-class GetEntryRepositoryId(abc.ABC):
+class GetEntryRepositoryId(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def query(self, resource_id: str) -> UniqueId:
+    def query(self, resource_id: str) -> UniqueId:  # noqa: D102
         raise NotImplementedError()
 
 
-class ReadOnlyResourceRepository(abc.ABC):
-    def get_by_resource_id(
+class ReadOnlyResourceRepository(abc.ABC):  # noqa: D101
+    def get_by_resource_id(  # noqa: D102
         self, resource_id: str, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         resource = self._get_by_resource_id(resource_id)
@@ -52,7 +52,7 @@ class ReadOnlyResourceRepository(abc.ABC):
         return resource
 
     @abc.abstractmethod
-    def get_by_id(
+    def get_by_id(  # noqa: D102
         self, entity_id: UniqueIdPrimitive, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         pass
@@ -62,5 +62,5 @@ class ReadOnlyResourceRepository(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_published_resources(self) -> Iterable[ResourceDto]:
+    def get_published_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
         pass

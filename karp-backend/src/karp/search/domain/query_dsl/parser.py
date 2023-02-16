@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union  # noqa: D100
 
 from .basic_ast import Ast
 from .errors import ParseError, SyntaxError
@@ -6,7 +6,7 @@ from .node import Node, create_binary_node, create_unary_node
 from .token import Token
 
 
-class op:
+class op:  # noqa: D101
     AND = "AND"
     NOT = "NOT"
     OR = "OR"
@@ -65,14 +65,14 @@ class op:
     SEP = "||"
 
 
-def is_a(x: Union[Node, Token], type_) -> bool:
+def is_a(x: Union[Node, Token], type_) -> bool:  # noqa: D103, ANN001
     if isinstance(type_, list):
         return x.type in type_
     else:
         return x.type == type_
 
 
-def arg_token_any(s) -> Token:
+def arg_token_any(s) -> Token:  # noqa: D103, ANN001
     try:
         v = int(s)
         return Token(op.INT, v)
@@ -87,11 +87,11 @@ def arg_token_any(s) -> Token:
     return Token(op.STRING, s)
 
 
-def arg_token_string(s) -> Token:
+def arg_token_string(s) -> Token:  # noqa: D103, ANN001
     return Token(op.STRING, s)
 
 
-class KarpTNGLexer:
+class KarpTNGLexer:  # noqa: D101
     SEPARATOR_1 = "||"
     SEPARATOR_2 = "|"
     logical = {
@@ -146,7 +146,7 @@ class KarpTNGLexer:
         "lte": arg_token_any,
     }
 
-    def tokenize(self, s: str):
+    def tokenize(self, s: str):  # noqa: ANN201, D102, C901
         print("Tokenizing {s}".format(s=s))
         exprs = s.split(self.SEPARATOR_1)
         arg_types = []
@@ -194,7 +194,7 @@ class KarpTNGLexer:
             yield Token(op.SEP)
 
 
-def create_node(tok: Token):
+def create_node(tok: Token):  # noqa: ANN201, D103
     if is_a(tok, op.UNARY_OPS) or is_a(tok, op.NOT):
         return create_unary_node(tok.type, tok.value)
     elif is_a(tok, op.BINARY_OPS):
@@ -207,8 +207,8 @@ def create_node(tok: Token):
         return None
 
 
-class KarpTNGParser:
-    def parse(self, tokens):
+class KarpTNGParser:  # noqa: D101
+    def parse(self, tokens):  # noqa: ANN201, C901, D102, ANN001
         curr = None
         stack = []
         for tok in tokens:
@@ -270,7 +270,7 @@ _lexer = KarpTNGLexer()
 _parser = KarpTNGParser()
 
 
-def parse(s: Optional[str]) -> Ast:
+def parse(s: Optional[str]) -> Ast:  # noqa: D103
     if not s:
         return Ast()
     return Ast(_parser.parse(_lexer.tokenize(s)))

@@ -1,5 +1,5 @@
-"""LexicalResource"""
-import enum
+"""LexicalResource"""  # noqa: D400, D415
+import enum  # noqa: I001
 import typing
 from typing import Any, Callable, Dict, Tuple, Optional, Type, Union  # noqa: F401
 
@@ -15,13 +15,13 @@ from karp.utility.time import utc_now
 # pylint: disable=unsubscriptable-object
 
 
-class ResourceOp(enum.Enum):
+class ResourceOp(enum.Enum):  # noqa: D101
     ADDED = "ADDED"
     UPDATED = "UPDATED"
     DELETED = "DELETED"
 
 
-class Resource(TimestampedVersionedEntity):
+class Resource(TimestampedVersionedEntity):  # noqa: D101
     DiscardedEntityError = errors.DiscardedEntityError
     resource_type: str = "resource"
 
@@ -81,7 +81,7 @@ class Resource(TimestampedVersionedEntity):
     #         obj._message = f"Release '{self.release_name}' created."
     #         obj._increment_version()
 
-    def __init__(
+    def __init__(  # noqa: D107, ANN204
         self,
         *,
         entity_id: unique_id.UniqueId,
@@ -96,7 +96,7 @@ class Resource(TimestampedVersionedEntity):
         # entry_repository_type: typing.Optional[str] = None,
         # entry_repository_settings: typing.Optional[typing.Dict] = None,
         # entry_repository: EntryRepository = None,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
     ):
         super().__init__(entity_id=entity_id, version=version, **kwargs)
         self._resource_id = resource_id
@@ -126,41 +126,41 @@ class Resource(TimestampedVersionedEntity):
         #     )
 
     @property
-    def resource_id(self) -> str:
+    def resource_id(self) -> str:  # noqa: D102
         return self._resource_id
 
     @property
-    def entry_repository_id(self) -> unique_id.UniqueId:
+    def entry_repository_id(self) -> unique_id.UniqueId:  # noqa: D102
         return self._entry_repo_id
 
     @property
-    def entry_repository_settings(self) -> typing.Dict:
+    def entry_repository_settings(self) -> typing.Dict:  # noqa: D102
         return self.config["entry_repository_settings"]
 
     @entry_repository_settings.setter
-    def entry_repository_settings(self, entry_repository_settings: typing.Dict):
+    def entry_repository_settings(self, entry_repository_settings: typing.Dict):  # noqa: ANN202
         self.config["entry_repository_settings"] = entry_repository_settings
 
     @property
-    def name(self):
+    def name(self):  # noqa: ANN201, D102
         return self._name
 
     @name.setter
-    def name(self, name):
+    def name(self, name):  # noqa: ANN202, ANN001
         self._check_not_discarded()
         self._name = name
 
     @property
-    def message(self):
+    def message(self):  # noqa: ANN201, D102
         return self._message
 
     @property
-    def releases(self):
+    def releases(self):  # noqa: ANN201
         """Releases for this resource."""
         return self._releases
 
     @property
-    def op(self):
+    def op(self):  # noqa: ANN201, D102
         return self._op
 
     # @property
@@ -199,7 +199,7 @@ class Resource(TimestampedVersionedEntity):
     #         )
     #     )
 
-    def publish(
+    def publish(  # noqa: D102
         self,
         *,
         user: str,
@@ -223,7 +223,7 @@ class Resource(TimestampedVersionedEntity):
             )
         ]
 
-    def set_entry_repo_id(
+    def set_entry_repo_id(  # noqa: ANN201, D102
         self,
         *,
         entry_repo_id: unique_id.UniqueId,
@@ -247,7 +247,7 @@ class Resource(TimestampedVersionedEntity):
             )
         ]
 
-    def set_resource_id(
+    def set_resource_id(  # noqa: D102
         self,
         *,
         resource_id: str,
@@ -274,7 +274,7 @@ class Resource(TimestampedVersionedEntity):
             )
         ]
 
-    def update(
+    def update(  # noqa: D102
         self,
         *,
         name: str,
@@ -303,7 +303,7 @@ class Resource(TimestampedVersionedEntity):
             )
         ]
 
-    def set_config(
+    def set_config(  # noqa: D102
         self,
         *,
         config: dict[str, Any],
@@ -330,7 +330,7 @@ class Resource(TimestampedVersionedEntity):
             )
         ]
 
-    def _update_metadata(
+    def _update_metadata(  # noqa: ANN202
         self, timestamp: Optional[float], user: str, message: str, version: int
     ):
         self._check_not_discarded()
@@ -341,7 +341,7 @@ class Resource(TimestampedVersionedEntity):
         self._op = ResourceOp.UPDATED
         self._increment_version()
 
-    def add_new_release(self, *, name: str, user: str, description: str):
+    def add_new_release(self, *, name: str, user: str, description: str):  # noqa: ANN201, D102
         self._check_not_discarded()
         raise NotImplementedError()
         # event = Resource.NewReleaseAdded(
@@ -357,11 +357,11 @@ class Resource(TimestampedVersionedEntity):
 
         # return self.release_with_name(name)
 
-    def release_with_name(self, name: str):
+    def release_with_name(self, name: str):  # noqa: ANN201, D102
         self._check_not_discarded()
         raise NotImplementedError()
 
-    def discard(self, *, user: str, message: str, timestamp: float = None):
+    def discard(self, *, user: str, message: str, timestamp: float = None):  # noqa: ANN201, D102
         self._check_not_discarded()
         self._op = ResourceOp.DELETED
         self._message = message or "Entry deleted."
@@ -384,7 +384,7 @@ class Resource(TimestampedVersionedEntity):
         ]
 
     @property
-    def entry_json_schema(self) -> Dict:
+    def entry_json_schema(self) -> Dict:  # noqa: D102
         if self._entry_json_schema is None:
             self._entry_json_schema = json_schema.create_entry_json_schema(
                 self.config["fields"]
@@ -395,7 +395,7 @@ class Resource(TimestampedVersionedEntity):
     # def id_getter(self) -> Callable[[Dict], str]:
     #     return create_field_getter(self.config["id"], str)
 
-    def dict(self) -> Dict:
+    def dict(self) -> Dict:  # noqa: A003, D102
         return {
             "entity_id": self.entity_id,
             "resource_id": self.resource_id,
@@ -412,7 +412,7 @@ class Resource(TimestampedVersionedEntity):
             "config": self.config,
         }
 
-    def create_entry_from_dict(
+    def create_entry_from_dict(  # noqa: D102
         self,
         entry_raw: Dict,
         *,
@@ -434,17 +434,17 @@ class Resource(TimestampedVersionedEntity):
             last_modified=timestamp,
         )
 
-    def is_protected(self, level: PermissionLevel):
+    def is_protected(self, level: PermissionLevel):  # noqa: ANN201
         """
         Level can be READ, WRITE or ADMIN
-        """
+        """  # noqa: D200, D400, D212, D415
         protection = self.config.get("protected", {})
         return level == "WRITE" or level == "ADMIN" or protection.get("read")
 
 
 # ===== Entities =====
-class Release(Entity):
-    def __init__(self, name: str, publication_date: float, description: str, **kwargs):
+class Release(Entity):  # noqa: D101
+    def __init__(self, name: str, publication_date: float, description: str, **kwargs):  # noqa: ANN003, ANN204, D107
         super().__init__(**kwargs)
         self._name = name
         self._publication_date = publication_date
@@ -469,7 +469,7 @@ class Release(Entity):
 # ===== Factories =====
 
 
-def create_resource(
+def create_resource(  # noqa: D103
     config: Dict,
     entry_repo_id: unique_id.UniqueId,
     created_by: str = None,

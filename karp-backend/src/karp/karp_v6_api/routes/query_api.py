@@ -2,8 +2,8 @@
 Query API.
 
 ## Query DSL
-"""
-import logging
+"""  # noqa: D212
+import logging  # noqa: I001
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
@@ -28,19 +28,19 @@ router = APIRouter()
     description="Returns a list of entries matching the given ids",
     name="Get lexical entries by id",
 )
-def get_entries_by_id(
-    resource_id: str = Path(  # noqa: B008
+def get_entries_by_id(  # noqa: ANN201, D103
+    resource_id: str = Path(
         ..., description="The resource to perform operation on"
     ),
-    entry_ids: str = Path(  # noqa: B008
+    entry_ids: str = Path(
         ...,
         description="Comma-separated. The ids to perform operation on.",
         regex=r"^\w(,\w)*",
     ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),  # noqa: B008
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    search_service: SearchService = Depends(  # noqa: B008
-        inject_from_req(SearchService)  # noqa: B008
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    search_service: SearchService = Depends(
+        inject_from_req(SearchService)
     ),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
@@ -54,43 +54,43 @@ def get_entries_by_id(
 
 
 @router.get("/split/{resources}", name="Query per resource")
-def query_split(
-    resources: str = Path(  # noqa: B008
+def query_split(  # noqa: ANN201, D103
+    resources: str = Path(
         ...,
         regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
         description="A comma-separated list of resource identifiers",
     ),
-    q: Optional[str] = Query(  # noqa: B008
+    q: Optional[str] = Query(
         None,
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned.",
     ),
-    from_: int = Query(  # noqa: B008
+    from_: int = Query(
         0, alias="from", description="Specify which entry should be the first returned."
     ),
-    size: int = Query(25, description="Number of entries in page."),  # noqa: B008
-    sort: str = Query(  # noqa: B008
+    size: int = Query(25, description="Number of entries in page."),
+    sort: str = Query(
         None,
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
-    lexicon_stats: bool = Query(  # noqa: B008
+    lexicon_stats: bool = Query(
         True, description="Show the hit count per lexicon"
     ),
-    include_fields: Optional[List[str]] = Query(  # noqa: B008
+    include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
-    exclude_fields: Optional[List[str]] = Query(  # noqa: B008
+    exclude_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to remove from result"
     ),
-    format: schemas.EntryFormat = Query(  # noqa: B008
+    format: schemas.EntryFormat = Query(  # noqa: A002
         schemas.EntryFormat.json,
         description="Will return the result in the specified format.",
     ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),  # noqa: B008
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    search_service: SearchService = Depends(  # noqa: B008
-        inject_from_req(SearchService)  # noqa: B008
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    search_service: SearchService = Depends(
+        inject_from_req(SearchService)
     ),
 ):
     logger.debug("/query/split called", extra={"resources": resources})
@@ -135,50 +135,50 @@ def query_split(
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
 )
-def query(
-    resources: str = Path(  # noqa: B008
+def query(  # noqa: ANN201
+    resources: str = Path(
         ...,
         regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
         description="A comma-separated list of resource identifiers",
     ),
-    q: Optional[str] = Query(  # noqa: B008
+    q: Optional[str] = Query(
         None,
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned.",
     ),
-    from_: int = Query(  # noqa: B008
+    from_: int = Query(
         0, alias="from", description="Specify which entry should be the first returned."
     ),
-    size: int = Query(25, description="Number of entries in page."),  # noqa: B008
-    sort: List[str] = Query(  # noqa: B008
+    size: int = Query(25, description="Number of entries in page."),
+    sort: List[str] = Query(
         [],
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
-    lexicon_stats: bool = Query(  # noqa: B008
+    lexicon_stats: bool = Query(
         True, description="Show the hit count per lexicon"
     ),
-    include_fields: Optional[List[str]] = Query(  # noqa: B008
+    include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
-    exclude_fields: Optional[List[str]] = Query(  # noqa: B008
+    exclude_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to remove from result"
     ),
-    format_: schemas.EntryFormat = Query(  # noqa: B008
+    format_: schemas.EntryFormat = Query(
         schemas.EntryFormat.json,
         alias="format",
         description="Will return the result in the specified format.",
     ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),  # noqa: B008
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    search_service: SearchService = Depends(  # noqa: B008
-        inject_from_req(SearchService)  # noqa: B008
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    search_service: SearchService = Depends(
+        inject_from_req(SearchService)
     ),
 ):
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.
 
-    """
+    """  # noqa: D401, D200, D212
     logger.debug(
         "Called 'query' called with",
         extra={"resources": resources, "from": from_, "size": size},
@@ -214,5 +214,5 @@ def query(
     return response
 
 
-def init_app(app):
+def init_app(app):  # noqa: ANN201, D103, ANN001
     app.include_router(router)

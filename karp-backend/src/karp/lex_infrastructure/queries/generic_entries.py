@@ -1,4 +1,4 @@
-import typing
+import typing  # noqa: D100, I001
 
 from sb_json_tools import jsondiff
 import logging
@@ -26,8 +26,8 @@ from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 logger = logging.getLogger(__name__)
 
 
-class GenericEntryViews(EntryViews):
-    def __init__(
+class GenericEntryViews(EntryViews):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         get_entry_repo_id: GetEntryRepositoryId,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -36,14 +36,14 @@ class GenericEntryViews(EntryViews):
         self.get_entry_repo_id = get_entry_repo_id
         self.entry_repo_uow = entry_repo_uow
 
-    def get_by_id(self, resource_id: str, entity_id: unique_id.UniqueId) -> EntryDto:
+    def get_by_id(self, resource_id: str, entity_id: unique_id.UniqueId) -> EntryDto:  # noqa: D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return self._entry_to_entry_dto(uw.repo.by_id(entity_id), resource_id)
 
-    def get_by_id_optional(
+    def get_by_id_optional(  # noqa: D102
         self, resource_id: str, entity_id: unique_id.UniqueId
     ) -> typing.Optional[EntryDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
@@ -73,14 +73,14 @@ class GenericEntryViews(EntryViews):
     #             return self._entry_to_entry_dto(entry, resource_id)
     #     return None
 
-    def get_total(self, resource_id: str) -> int:
+    def get_total(self, resource_id: str) -> int:  # noqa: D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return uw.repo.num_entities()
 
-    def get_by_referenceable(self, resource_id: str, filters):
+    def get_by_referenceable(self, resource_id: str, filters):  # noqa: ANN201, D102, ANN001
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
@@ -90,7 +90,7 @@ class GenericEntryViews(EntryViews):
                 for entry in uw.repo.by_referenceable(filters)
             )
 
-    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
+    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:  # noqa: D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
@@ -112,8 +112,8 @@ class GenericEntryViews(EntryViews):
         )
 
 
-class GenericEntryQuery:
-    def __init__(
+class GenericEntryQuery:  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         resource_uow: lex.ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -121,13 +121,13 @@ class GenericEntryQuery:
         self._resource_uow = resource_uow
         self.entry_repo_uow = entry_repo_uow
 
-    def get_entry_repo_id(self, resource_id: str) -> unique_id.UniqueId:
+    def get_entry_repo_id(self, resource_id: str) -> unique_id.UniqueId:  # noqa: D102
         with self._resource_uow as uw:
             return uw.repo.by_resource_id(resource_id).entry_repository_id
 
 
-class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
-    def query(
+class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):  # noqa: D101
+    def query(  # noqa: D102
         self,
         resource_id: str,
         entity_id: unique_id.UniqueId,
@@ -151,8 +151,8 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
         )
 
 
-class GenericGetHistory(GenericEntryQuery, GetHistory):
-    def query(
+class GenericGetHistory(GenericEntryQuery, GetHistory):  # noqa: D101
+    def query(  # noqa: D102
         self,
         request: EntryHistoryRequest,
     ) -> GetHistoryDto:
@@ -202,8 +202,8 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
         return GetHistoryDto(history=result, total=total)
 
 
-class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
-    def query(
+class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):  # noqa: D101
+    def query(  # noqa: D102
         self,
         request: EntryDiffRequest,
     ) -> EntryDiffDto:

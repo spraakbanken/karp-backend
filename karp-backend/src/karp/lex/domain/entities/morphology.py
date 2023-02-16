@@ -1,5 +1,5 @@
-from .resource import Resource
+from .resource import Resource  # noqa: D100
 
 
-class Morphology(Resource):
+class Morphology(Resource):  # noqa: D101
     pass

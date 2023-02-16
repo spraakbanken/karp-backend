@@ -1,7 +1,7 @@
 """Pytest entry point."""
 
 # pylint: disable=wrong-import-position,missing-function-docstring
-from karp.main import AppContext
+from karp.main import AppContext  # noqa: I001
 from karp.tests.integration.auth.adapters import create_bearer_token
 from karp import auth
 import os
@@ -32,7 +32,7 @@ from karp.main.config import config
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
-def fixture_in_memory_sqlite_db():
+def fixture_in_memory_sqlite_db():  # noqa: ANN201
     engine = create_engine("sqlite:///:memory:")
     metadata.create_all(engine)
     yield engine
@@ -41,7 +41,7 @@ def fixture_in_memory_sqlite_db():
 
 
 @pytest.fixture
-def sqlite_session_factory(in_memory_sqlite_db):
+def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201, ANN001
     yield sessionmaker(bind=in_memory_sqlite_db)
 
 
@@ -53,7 +53,7 @@ def setup_environment() -> None:
 
 
 @pytest.fixture(scope="session")
-def apply_migrations(setup_environment: None):
+def apply_migrations(setup_environment: None):  # noqa: ANN201
     from karp.main.migrations import use_cases
 
     print("running alembic upgrade ...")
@@ -152,8 +152,8 @@ def create_and_publish_resource(
 
 
 @pytest.fixture(scope="session", name="fa_data_client")
-def fixture_fa_data_client(
-    fa_client,
+def fixture_fa_data_client(  # noqa: ANN201
+    fa_client,  # noqa: ANN001
     admin_token: auth.AccessToken,
 ):
     ok, msg = create_and_publish_resource(
@@ -273,7 +273,7 @@ def write_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(name="init_search_service", scope="session")
-def fixture_init_search_service():
+def fixture_init_search_service():  # noqa: ANN201
     print("fixture: use_main_index")
     if not config("TEST_ELASTICSEARCH_ENABLED"):
         print("don't use elasticsearch")
@@ -290,7 +290,7 @@ def fixture_init_search_service():
 
 
 @pytest.fixture
-def json_schema_config():
+def json_schema_config():  # noqa: ANN201
     return common_data.CONFIG_PLACES
 
 

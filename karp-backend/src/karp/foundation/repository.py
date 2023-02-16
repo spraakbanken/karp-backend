@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100, I001
 import ulid
 from typing import Generic, TypeVar, Optional, Type, Union
 
@@ -8,21 +8,21 @@ from .errors import NotFoundError
 EntityType = TypeVar("EntityType")
 
 
-class Repository(Generic[EntityType], abc.ABC):
+class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
     EntityNotFound: Type[NotFoundError] = NotFoundError
 
-    def save(self, entity: EntityType):
+    def save(self, entity: EntityType):  # noqa: ANN201, D102
         self._save(entity)
 
     @abc.abstractmethod
-    def _save(self, entity: EntityType):
+    def _save(self, entity: EntityType):  # noqa: ANN202
         raise NotImplementedError()
 
-    def _check_id_has_correct_type(self, id_) -> None:
+    def _check_id_has_correct_type(self, id_) -> None:  # noqa: ANN001
         if not isinstance(id_, unique_id.UniqueId):
             raise ValueError(f"expected UniqueId, got '{id_}' (type: `{type(id_)}')")
 
-    def _ensure_correct_id_type(self, v) -> unique_id.UniqueId:
+    def _ensure_correct_id_type(self, v) -> unique_id.UniqueId:  # noqa: ANN001
         try:
             return unique_id.parse(v)
         except ValueError as exc:
@@ -30,8 +30,8 @@ class Repository(Generic[EntityType], abc.ABC):
                 f"expected valid UniqueId, got '{v}' (type: `{type(v)}')"
             ) from exc
 
-    def by_id(
-        self, id_: unique_id.UniqueId, *, version: Optional[int] = None, **kwargs
+    def by_id(  # noqa: D102
+        self, id_: unique_id.UniqueId, *, version: Optional[int] = None, **kwargs  # noqa: ANN003
     ) -> EntityType:
         if entity := self._by_id(self._ensure_correct_id_type(id_), version=version):
             return entity
@@ -40,8 +40,8 @@ class Repository(Generic[EntityType], abc.ABC):
 
     get_by_id = by_id
 
-    def get_by_id_optional(
-        self, id_: unique_id.UniqueId, *, version: Optional[int] = None, **kwargs
+    def get_by_id_optional(  # noqa: D102
+        self, id_: unique_id.UniqueId, *, version: Optional[int] = None, **kwargs  # noqa: ANN003
     ) -> Optional[EntityType]:
         return self._by_id(self._ensure_correct_id_type(id_), version=version)
 
@@ -51,10 +51,10 @@ class Repository(Generic[EntityType], abc.ABC):
         id_: Union[unique_id.UniqueId, ulid.ULID, str],
         *,
         version: Optional[int] = None,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
     ) -> Optional[EntityType]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def num_entities(self) -> int:
+    def num_entities(self) -> int:  # noqa: D102
         ...

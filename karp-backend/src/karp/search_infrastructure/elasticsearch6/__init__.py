@@ -1,4 +1,4 @@
-from karp.search_infrastructure.elasticsearch6.es_mapping_repo import (
+from karp.search_infrastructure.elasticsearch6.es_mapping_repo import (  # noqa: I001
     Es6MappingRepository,
 )
 

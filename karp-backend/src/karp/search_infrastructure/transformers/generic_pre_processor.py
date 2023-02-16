@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 import typing
 
 from karp.lex.application.queries import EntryViews
@@ -9,8 +9,8 @@ from karp.search.application.transformers import PreProcessor, EntryTransformer
 logger = logging.getLogger(__name__)
 
 
-class GenericPreProcessor(PreProcessor):
-    def __init__(
+class GenericPreProcessor(PreProcessor):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         entry_transformer: EntryTransformer,
         entry_views: EntryViews,
@@ -19,7 +19,7 @@ class GenericPreProcessor(PreProcessor):
         self.entry_transformer = entry_transformer
         self.entry_views = entry_views
 
-    def process(
+    def process(  # noqa: D102
         self,
         resource_id: str,
     ) -> typing.Iterable[IndexEntry]:

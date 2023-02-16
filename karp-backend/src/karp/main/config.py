@@ -1,4 +1,4 @@
-import os
+import os  # noqa: D100, I001
 
 import environs
 from sqlalchemy.engine import URL as DatabaseUrl, make_url
@@ -11,21 +11,21 @@ API_PREFIX = "/"
 # SECRET_KEY = config("SECRET_KEY", cast=Secret, default="CHANGEME")
 
 
-def load_env() -> environs.Env:
+def load_env() -> environs.Env:  # noqa: D103
     config_path = os.environ.get("CONFIG_PATH", ".env")
     env = environs.Env()
     env.read_env(config_path)
     return env
 
 
-def parse_database_name(env: environs.Env) -> str:
+def parse_database_name(env: environs.Env) -> str:  # noqa: D103
     database_name = env("DB_DATABASE", "karp")
     if env("TESTING", None):
         database_name = env("DB_TEST_DATABASE", None) or f"{database_name}_test"
     return database_name
 
 
-def parse_database_url(env: environs.Env) -> DatabaseUrl:
+def parse_database_url(env: environs.Env) -> DatabaseUrl:  # noqa: D103
     database_url = env("DATABASE_URL", None)
     if env.bool("TESTING", False):
         if database_test_url := env("DATABASE_TEST_URL", None):
@@ -49,7 +49,7 @@ def parse_database_url(env: environs.Env) -> DatabaseUrl:
     )
 
 
-def parse_database_url_wo_db(env: environs.Env) -> DatabaseUrl:
+def parse_database_url_wo_db(env: environs.Env) -> DatabaseUrl:  # noqa: D103
     return DatabaseUrl.create(
         drivername=env("DB_DRIVER", "mysql+pymysql"),
         username=env("DB_USER", None),
@@ -70,7 +70,7 @@ DATABASE_NAME = parse_database_name(config)
 AUTH_JWT_AUDIENCE = "spraakbanken:auth"
 
 
-def parse_sqlalchemy_url_wo_db(env: environs.Env) -> DatabaseUrl:
+def parse_sqlalchemy_url_wo_db(env: environs.Env) -> DatabaseUrl:  # noqa: D103
     return DatabaseUrl.create(
         drivername=env("DB_DRIVER", "mysql+pymysql"),
         username=env("DB_USER", None),

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List  # noqa: I001
 
 import pytest
 

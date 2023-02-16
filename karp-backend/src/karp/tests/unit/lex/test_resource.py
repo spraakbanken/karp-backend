@@ -1,4 +1,4 @@
-import copy
+import copy  # noqa: I001
 from unittest import mock
 
 import pytest
@@ -15,7 +15,7 @@ from . import factories
 from .factories import random_resource
 
 
-def test_create_resource_creates_resource():
+def test_create_resource_creates_resource():  # noqa: ANN201
     resource_id = "test_resource"
     name = "Test resource"
     conf = {
@@ -60,7 +60,7 @@ def test_create_resource_creates_resource():
     )
 
 
-def test_resource_update_changes_last_modified_and_version():
+def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
     resource_id = "test_resource"
     name = "Test resource"
     conf = {
@@ -197,7 +197,7 @@ def test_resource_update_changes_last_modified_and_version():
 #     assert release.root.id == resource.id
 
 
-def test_resource_has_entry_json_schema():
+def test_resource_has_entry_json_schema():  # noqa: ANN201
     resource = factories.ResourceFactory()
 
     json_schema = resource.entry_json_schema
@@ -214,7 +214,7 @@ def test_resource_has_entry_json_schema():
         ("name", "New name"),
     ],
 )
-def test_discarded_resource_has_event(field, value):
+def test_discarded_resource_has_event(field, value):  # noqa: ANN201, ANN001
     resource, _ = random_resource()
     domain_events = resource.discard(
         user="alice@example.org", message="bad", timestamp=123.45
@@ -235,7 +235,7 @@ def test_discarded_resource_has_event(field, value):
         setattr(resource, field, value)
 
 
-def test_published_resource_has_event():
+def test_published_resource_has_event():  # noqa: ANN201
     resource, _ = random_resource()
     previous_version = resource.version
     domain_events = resource.publish(

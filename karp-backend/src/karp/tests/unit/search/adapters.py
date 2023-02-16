@@ -1,4 +1,4 @@
-import dataclasses
+import dataclasses  # noqa: I001
 from typing import Dict, Iterable, Optional
 
 import injector
@@ -30,19 +30,19 @@ class InMemoryIndex(Index):
         super().__init__()
         self.indicies: dict[str, InMemoryIndex.Index] = {}
 
-    def create_index(self, resource_id: str, config: Dict):
+    def create_index(self, resource_id: str, config: Dict):  # noqa: ANN201
         self.indicies[resource_id] = InMemoryIndex.Index(
             config=config, created_at=utc_now()
         )
 
-    def publish_index(self, alias_name: str, index_name: str = None):
+    def publish_index(self, alias_name: str, index_name: str = None):  # noqa: ANN201
         self.indicies[alias_name].published = True
 
-    def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
+    def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):  # noqa: ANN201
         for entry in entries:
             self.indicies[resource_id].entries[entry.id] = entry
 
-    def delete_entry(
+    def delete_entry(  # noqa: ANN201
         self,
         resource_id: str,
         *,
@@ -71,7 +71,7 @@ class InMemoryIndex(Index):
 
 
 class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, IndexUnitOfWork):
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus):  # noqa: ANN204
         # super().__init__()
         IndexUnitOfWork.__init__(self, event_bus=event_bus)
         self._index = InMemoryIndex()

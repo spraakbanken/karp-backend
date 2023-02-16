@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 from typing import Optional
 import uuid  # noqa: F401
 
@@ -38,13 +38,13 @@ logger = logging.getLogger(__name__)
     "/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"]
 )
 @router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
-def get_history_for_entry(
+def get_history_for_entry(  # noqa: ANN201, D103
     resource_id: str,
     entry_id: UniqueIdStr,
-    version: Optional[int] = Query(None),  # noqa: B008
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),  # noqa: B008
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),  # noqa: B008
+    version: Optional[int] = Query(None),
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
@@ -75,13 +75,13 @@ def get_history_for_entry(
     tags=["Editing"],
     response_model=schemas.EntryAddResponse,
 )
-def add_entry(
+def add_entry(  # noqa: ANN201, D103
     resource_id: str,
     data: schemas.EntryAdd,
-    user: User = Security(deps.get_user, scopes=["write"]),  # noqa: B008
-    auth_service: AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    adding_entry_uc: lex.AddingEntry = Depends(  # noqa: B008
-        deps.get_lex_uc(lex.AddingEntry)  # noqa: B008
+    user: User = Security(deps.get_user, scopes=["write"]),
+    auth_service: AuthService = Depends(deps.get_auth_service),
+    adding_entry_uc: lex.AddingEntry = Depends(
+        deps.get_lex_uc(lex.AddingEntry)
     ),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -121,13 +121,13 @@ def add_entry(
 
 
 @router.post("/{resource_id}/preview")
-def preview_entry(
+def preview_entry(  # noqa: ANN201, D103
     resource_id: str,
     data: schemas.EntryAdd,
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),  # noqa: B008
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    preview_entry: search.PreviewEntry = Depends(  # noqa: B008
-        deps.inject_from_req(search.PreviewEntry)  # noqa: B008
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    preview_entry: search.PreviewEntry = Depends(
+        deps.inject_from_req(search.PreviewEntry)
     ),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
@@ -159,15 +159,15 @@ def preview_entry(
     tags=["Editing"],
     response_model=schemas.EntryAddResponse,
 )
-def update_entry(
+def update_entry(  # noqa: ANN201, D103
     response: Response,
     resource_id: str,
     entry_id: UniqueIdStr,
     data: schemas.EntryUpdate,
-    user: User = Security(deps.get_user, scopes=["write"]),  # noqa: B008
-    auth_service: AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    updating_entry_uc: lex.UpdatingEntry = Depends(  # noqa: B008
-        deps.get_lex_uc(lex.UpdatingEntry)  # noqa: B008
+    user: User = Security(deps.get_user, scopes=["write"]),
+    auth_service: AuthService = Depends(deps.get_auth_service),
+    updating_entry_uc: lex.UpdatingEntry = Depends(
+        deps.get_lex_uc(lex.UpdatingEntry)
     ),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -250,13 +250,13 @@ def update_entry(
     tags=["Editing"],
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_entry(
+def delete_entry(  # noqa: ANN201
     resource_id: str,
     entry_id: UniqueIdStr,
-    user: User = Security(deps.get_user, scopes=["write"]),  # noqa: B008
-    auth_service: AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    deleting_entry_uc: lex.DeletingEntry = Depends(  # noqa: B008
-        deps.get_lex_uc(lex.DeletingEntry)  # noqa: B008
+    user: User = Security(deps.get_user, scopes=["write"]),
+    auth_service: AuthService = Depends(deps.get_auth_service),
+    deleting_entry_uc: lex.DeletingEntry = Depends(
+        deps.get_lex_uc(lex.DeletingEntry)
     ),
 ):
     """Delete a entry from a resource."""
@@ -287,5 +287,5 @@ def delete_entry(
     return
 
 
-def init_app(app):
+def init_app(app):  # noqa: ANN201, D103, ANN001
     app.include_router(router)

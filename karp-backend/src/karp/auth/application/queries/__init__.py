@@ -1,4 +1,4 @@
-from .resources import (
+from .resources import (  # noqa: I001
     GetResourcePermissions,
     ResourcePermissionDto,
     IsResourceProtected,

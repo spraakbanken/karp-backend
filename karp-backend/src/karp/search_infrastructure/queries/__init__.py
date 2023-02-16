@@ -1,4 +1,4 @@
-from karp.search_infrastructure.queries.generic_entries import (
+from karp.search_infrastructure.queries.generic_entries import (  # noqa: I001
     GenericPreviewEntry,
 )
 from .generic_resources import GenericResourceViews

@@ -1,4 +1,4 @@
-from .entry_repos import SqlListEntryRepos, SqlReadOnlyEntryRepoRepository
+from .entry_repos import SqlListEntryRepos, SqlReadOnlyEntryRepoRepository  # noqa: I001
 from .generic_entries import (
     GenericEntryViews,
     GenericEntryQuery,

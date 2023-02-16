@@ -5,7 +5,7 @@ from karp.lex.domain.entities.resource import Resource  # noqa: F401
 from .factories import random_resource
 
 
-def test_morphology():
+def test_morphology():  # noqa: ANN201
     resource = random_resource()  # noqa: F841
     entry = {  # noqa: F841
         "baseform": "Appalacherna",

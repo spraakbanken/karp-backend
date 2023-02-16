@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 import os
 import pathlib
 
@@ -26,7 +26,7 @@ logger = logging.getLogger("alembic.env")
 #     return not (type_ == "table" and (name in entry_tables or name in history_tables))
 
 
-def run_migrations_online():
+def run_migrations_online():  # noqa: ANN201
     """Run migrations in 'online' mode.
 
     In this scenario we need to create an Engine
@@ -81,7 +81,7 @@ def run_migrations_online():
 def run_migrations_offline() -> None:
     """
     Run migrations in 'offline' mode.
-    """
+    """  # noqa: D202, D200, D212
 
     if os.environ.get("TESTING"):
         raise RuntimeError(

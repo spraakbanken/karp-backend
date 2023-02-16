@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter  # noqa: D100, I001
 import typing
 
 from karp.lex.application.repositories import (
@@ -19,8 +19,8 @@ from karp.search.application.queries import (
 from karp.search.domain import query_dsl
 
 
-class GenericSearchService(SearchService):
-    def __init__(
+class GenericSearchService(SearchService):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         get_entry_repo_id: GetEntryRepositoryId,
         entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -31,7 +31,7 @@ class GenericSearchService(SearchService):
             semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
         )
 
-    def statistics(
+    def statistics(  # noqa: D102
         self, resource_id: str, field: str
     ) -> typing.Iterable[StatisticsDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
@@ -47,7 +47,7 @@ class GenericSearchService(SearchService):
                 if key is not None
             )
 
-    def query(self, request: QueryRequest):
+    def query(self, request: QueryRequest):  # noqa: ANN201, D102
         if request.q:
             model = self.parser.parse(request.q)  # noqa: F841
         resource_id = request.resource_ids[0]
@@ -83,7 +83,7 @@ class GenericSearchService(SearchService):
 
         return response
 
-    def query_split(self, request: QueryRequest):
+    def query_split(self, request: QueryRequest):  # noqa: ANN201, D102
         if request.q:
             model = self.parser.parse(request.q)  # noqa: F841
         dist = {}
@@ -111,5 +111,5 @@ class GenericSearchService(SearchService):
             distribution={resource: len(hits) for resource, hits in dist.items()},
         )
 
-    def search_ids(self):
+    def search_ids(self):  # noqa: D102, ANN201
         pass

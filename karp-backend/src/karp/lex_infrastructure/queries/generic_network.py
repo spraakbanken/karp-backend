@@ -1,4 +1,4 @@
-import collections
+import collections  # noqa: D100, I001
 import logging
 import typing
 
@@ -25,8 +25,8 @@ from karp.lex.domain.errors import EntryNotFound  # noqa: F401
 logger = logging.getLogger(__name__)
 
 
-class GenericGetReferencedEntries(GetReferencedEntries):
-    def __init__(
+class GenericGetReferencedEntries(GetReferencedEntries):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         resource_repo: ReadOnlyResourceRepository,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -35,7 +35,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         self.resource_repo = resource_repo
         self.entry_repo_uow = entry_repo_uow
 
-    def query(
+    def query(  # noqa: D102
         self,
         resource_id: str,
         # version: typing.Optional[int],
@@ -100,12 +100,12 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                                 ref_resource_id, ref_resource_version, entry
                             )
 
-    def get_refs(
-        self, resource_id, version=None
+    def get_refs(  # noqa: C901
+        self, resource_id, version=None  # noqa: ANN001
     ) -> Tuple[List[Tuple[str, int, str, Dict]], List[Tuple[str, int, str, Dict]]]:
         """
         Goes through all other resource configs finding resources and fields that refer to this resource
-        """
+        """  # noqa: D200, D400, D212, D415
         resource_backrefs = collections.defaultdict(
             lambda: collections.defaultdict(dict)
         )
@@ -157,7 +157,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                         other_resource.version
                     ][field_name] = field
 
-        def flatten_dict(ref_dict):
+        def flatten_dict(ref_dict):  # noqa: ANN202, ANN001
             ref_list = []
             for ref_resource_id, versions in ref_dict.items():
                 for ref_version, field_names in versions.items():

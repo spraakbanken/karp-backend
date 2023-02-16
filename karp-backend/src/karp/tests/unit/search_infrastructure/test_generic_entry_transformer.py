@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any  # noqa: I001
 
 import pytest
 from karp.foundation.value_objects.unique_id import make_unique_id
@@ -17,12 +17,12 @@ class TestGenericEntryTransformer:
             ("single", {"type": "boolean"}, True),
         ],
     )
-    def test_transform_to_index_entry(
+    def test_transform_to_index_entry(  # noqa: ANN201
         self,
         field_name: str,
         field_config: dict,
-        field_value: Any,
-        search_unit_ctx,
+        field_value: Any,  # noqa: ANN401
+        search_unit_ctx,  # noqa: ANN001
     ):
         resource_id = "transform_res"
         create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
@@ -75,12 +75,12 @@ class TestGenericEntryTransformer:
             ),
         ],
     )
-    def test_transform_to_index_entry_collection(
+    def test_transform_to_index_entry_collection(  # noqa: ANN201
         self,
         field_name: str,
         field_config: dict,
-        field_value: Any,
-        search_unit_ctx,
+        field_value: Any,  # noqa: ANN401
+        search_unit_ctx,  # noqa: ANN001
     ):
         resource_id = "transform_res"
         create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
@@ -132,12 +132,12 @@ class TestGenericEntryTransformer:
             ),
         ],
     )
-    def test_transform_to_index_entry_object(
+    def test_transform_to_index_entry_object(  # noqa: ANN201
         self,
         field_name: str,
         field_config: dict,
-        field_value: Any,
-        search_unit_ctx,
+        field_value: Any,  # noqa: ANN401
+        search_unit_ctx,  # noqa: ANN001
     ):
         resource_id = "transform_res"
         create_entry_repo = lex_factories.CreateEntryRepositoryFactory()

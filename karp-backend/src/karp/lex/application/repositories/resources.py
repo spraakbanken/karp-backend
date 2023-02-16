@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100, I001
 import logging
 import typing
 import uuid  # noqa: F401
@@ -12,18 +12,18 @@ from karp.lex.domain import errors
 logger = logging.getLogger("karp")
 
 
-class ResourceRepository(repository.Repository[entities.Resource]):
+class ResourceRepository(repository.Repository[entities.Resource]):  # noqa: D101
     EntityNotFound = errors.ResourceNotFound
 
     @abc.abstractmethod
-    def check_status(self):
+    def check_status(self):  # noqa: ANN201, D102
         pass
 
     @abc.abstractmethod
-    def resource_ids(self) -> typing.Iterable[str]:
+    def resource_ids(self) -> typing.Iterable[str]:  # noqa: D102
         raise NotImplementedError()
 
-    def get_by_resource_id(
+    def get_by_resource_id(  # noqa: D102
         self, resource_id: str, *, version: Optional[int] = None
     ) -> entities.Resource:
         if resource := self.get_by_resource_id_optional(resource_id, version=version):
@@ -33,7 +33,7 @@ class ResourceRepository(repository.Repository[entities.Resource]):
                 f"Entity with resource_id='{resource_id}' can't be found."
             )
 
-    def get_by_resource_id_optional(
+    def get_by_resource_id_optional(  # noqa: D102
         self, resource_id: str, *, version: Optional[int] = None
     ) -> typing.Optional[entities.Resource]:
         resource = self._by_resource_id(resource_id)
@@ -65,14 +65,14 @@ class ResourceRepository(repository.Repository[entities.Resource]):
     # def get_active_resource(self, resource_id: str) -> Optional[Resource]:
     #     raise NotImplementedError()
 
-    def get_published_resources(self) -> typing.List[entities.Resource]:
+    def get_published_resources(self) -> typing.List[entities.Resource]:  # noqa: D102
         return list(self._get_published_resources())
 
     @abc.abstractmethod
     def _get_published_resources(self) -> typing.Iterable[entities.Resource]:
         raise NotImplementedError()
 
-    def get_all_resources(self) -> typing.List[entities.Resource]:
+    def get_all_resources(self) -> typing.List[entities.Resource]:  # noqa: D102
         return list(self._get_all_resources())
 
     @abc.abstractmethod
@@ -80,10 +80,10 @@ class ResourceRepository(repository.Repository[entities.Resource]):
         raise NotImplementedError()
 
 
-class ResourceUnitOfWork(unit_of_work.UnitOfWork[ResourceRepository]):
-    def __init__(self, event_bus: events.EventBus):
+class ResourceUnitOfWork(unit_of_work.UnitOfWork[ResourceRepository]):  # noqa: D101
+    def __init__(self, event_bus: events.EventBus):  # noqa: D107, ANN204
         unit_of_work.UnitOfWork.__init__(self, event_bus=event_bus)
 
     @property
-    def resources(self) -> ResourceRepository:
+    def resources(self) -> ResourceRepository:  # noqa: D102
         return self.repo

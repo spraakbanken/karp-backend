@@ -1,25 +1,23 @@
-import uuid  # noqa: F401
-from typing import Dict
-
-from pydantic import BaseModel
+from typing import Dict  # noqa: D100
 
 from karp.foundation import events, time
 from karp.foundation.value_objects import unique_id
+from pydantic import BaseModel
 
 
-class Event(events.Event, BaseModel):
+class Event(events.Event, BaseModel):  # noqa: D101
     timestamp: float
 
-    class Config:
+    class Config:  # noqa: D106
         arbitrary_types_allowed = True
 
 
-class AppStarted(Event):
-    def __init__(self):
+class AppStarted(Event):  # noqa: D101
+    def __init__(self):  # noqa: D107, ANN204
         self.timestamp = time.utc_now()
 
 
-class ResourceCreated(Event):
+class ResourceCreated(Event):  # noqa: D101
     entity_id: unique_id.UniqueId
     resource_id: str
     entry_repo_id: unique_id.UniqueId
@@ -29,7 +27,7 @@ class ResourceCreated(Event):
     message: str
 
 
-class ResourceLoaded(Event):
+class ResourceLoaded(Event):  # noqa: D101
     entity_id: unique_id.UniqueId
     resource_id: str
     name: str
@@ -39,7 +37,7 @@ class ResourceLoaded(Event):
     version: int
 
 
-class ResourceDiscarded(Event):
+class ResourceDiscarded(Event):  # noqa: D101
     entity_id: unique_id.UniqueId
     resource_id: str
     name: str
@@ -49,18 +47,7 @@ class ResourceDiscarded(Event):
     version: int
 
 
-class ResourcePublished(Event):
-    entity_id: unique_id.UniqueId
-    resource_id: str
-    entry_repo_id: unique_id.UniqueId
-    version: int
-    name: str
-    config: Dict
-    user: str
-    message: str
-
-
-class ResourceUpdated(Event):
+class ResourcePublished(Event):  # noqa: D101
     entity_id: unique_id.UniqueId
     resource_id: str
     entry_repo_id: unique_id.UniqueId
@@ -71,7 +58,18 @@ class ResourceUpdated(Event):
     message: str
 
 
-class EntryAdded(Event):
+class ResourceUpdated(Event):  # noqa: D101
+    entity_id: unique_id.UniqueId
+    resource_id: str
+    entry_repo_id: unique_id.UniqueId
+    version: int
+    name: str
+    config: Dict
+    user: str
+    message: str
+
+
+class EntryAdded(Event):  # noqa: D101
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
     # entry_id: str
@@ -80,7 +78,7 @@ class EntryAdded(Event):
     user: str
 
 
-class EntryUpdated(Event):
+class EntryUpdated(Event):  # noqa: D101
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
     # entry_id: str
@@ -90,7 +88,7 @@ class EntryUpdated(Event):
     version: int
 
 
-class EntryDeleted(Event):
+class EntryDeleted(Event):  # noqa: D101
     entity_id: unique_id.UniqueId
     repo_id: unique_id.UniqueId
     # entry_id: str

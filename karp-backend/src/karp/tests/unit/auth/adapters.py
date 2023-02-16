@@ -1,4 +1,4 @@
-from karp.auth.application.queries import IsResourceProtected
+from karp.auth.application.queries import IsResourceProtected  # noqa: I001
 from karp.auth import PermissionLevel
 
 

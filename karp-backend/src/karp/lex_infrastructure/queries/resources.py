@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional  # noqa: D100, I001
 
 import sqlalchemy as sa
 from sqlalchemy import sql
@@ -15,8 +15,8 @@ from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.lex_infrastructure.queries.base import SqlQuery
 
 
-class SqlGetPublishedResources(GetPublishedResources, SqlQuery):
-    def query(self) -> Iterable[ResourceDto]:
+class SqlGetPublishedResources(GetPublishedResources, SqlQuery):  # noqa: D101
+    def query(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -37,8 +37,8 @@ class SqlGetPublishedResources(GetPublishedResources, SqlQuery):
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
 
-class SqlGetResources(GetResources, SqlQuery):
-    def query(self) -> Iterable[ResourceDto]:
+class SqlGetResources(GetResources, SqlQuery):  # noqa: D101
+    def query(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -58,8 +58,8 @@ class SqlGetResources(GetResources, SqlQuery):
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
 
-class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
-    def get_by_id(
+class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):  # noqa: D101
+    def get_by_id(  # noqa: D102
         self, entity_id: UniqueId, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         filters: dict[str, UniqueId | str | int] = {"entity_id": entity_id}
@@ -98,7 +98,7 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
 
         return _row_to_dto(row) if row else None
 
-    def get_published_resources(self) -> Iterable[ResourceDto]:
+    def get_published_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -118,7 +118,7 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
         )
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
-    def get_all_resources(self) -> Iterable[ResourceDto]:
+    def get_all_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -138,7 +138,7 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
 
-def _row_to_dto(row_proxy) -> ResourceDto:
+def _row_to_dto(row_proxy) -> ResourceDto:  # noqa: ANN001
     return ResourceDto(
         entity_id=row_proxy.entity_id,
         resource_id=row_proxy.resource_id,

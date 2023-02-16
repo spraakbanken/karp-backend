@@ -1,4 +1,4 @@
-from .entry_handlers import (
+from .entry_handlers import (  # noqa: I001
     AddingEntry,
     AddingEntries,
     DeletingEntry,

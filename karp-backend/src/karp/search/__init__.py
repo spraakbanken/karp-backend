@@ -1,4 +1,4 @@
-from typing import List
+from typing import List  # noqa: I001
 
 import injector
 
@@ -36,9 +36,9 @@ from karp.search.application.transformers import (
 )
 
 
-class Search(injector.Module):
+class Search(injector.Module):  # noqa: D101
     @injector.provider
-    def reindex_resource(
+    def reindex_resource(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         pre_processor: PreProcessor,
@@ -51,26 +51,26 @@ class Search(injector.Module):
         )
 
     @injector.multiprovider
-    def create_index(
+    def create_index(  # noqa: D102
         self, index_uow: IndexUnitOfWork
     ) -> List[EventHandler[lex_events.ResourceCreated]]:
         return [CreateSearchServiceHandler(index_uow)]
 
     @injector.multiprovider
-    def deleting_index(
+    def deleting_index(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
     ) -> List[EventHandler[lex_events.ResourceDiscarded]]:
         return [DeletingIndex(index_uow=index_uow)]
 
     @injector.multiprovider
-    def publish_index(
+    def publish_index(  # noqa: D102
         self, index_uow: IndexUnitOfWork
     ) -> List[EventHandler[lex_events.ResourcePublished]]:
         return [ResourcePublishedHandler(index_uow)]
 
     @injector.multiprovider
-    def add_entry(
+    def add_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
@@ -85,7 +85,7 @@ class Search(injector.Module):
         ]
 
     @injector.multiprovider
-    def update_entry(
+    def update_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
@@ -100,7 +100,7 @@ class Search(injector.Module):
         ]
 
     @injector.multiprovider
-    def delete_entry(
+    def delete_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,

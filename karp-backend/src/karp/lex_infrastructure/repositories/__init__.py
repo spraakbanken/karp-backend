@@ -1,4 +1,4 @@
-from .sql_entry_uows import SqlEntryUowRepository, SqlEntryUowRepositoryUnitOfWork
+from .sql_entry_uows import SqlEntryUowRepository, SqlEntryUowRepositoryUnitOfWork  # noqa: I001
 from .sql_entries import (
     SqlEntryUowV1Creator,
     SqlEntryUowV2Creator,

@@ -1,4 +1,4 @@
-import enum
+import enum  # noqa: D100, I001
 import logging
 import typing  # noqa: F401
 from typing import Dict, Optional  # noqa: F401
@@ -13,14 +13,14 @@ DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 logger = logging.getLogger(__name__)
 
 
-class SqlUnitOfWork:
-    class State(enum.Enum):
+class SqlUnitOfWork:  # noqa: D101
+    class State(enum.Enum):  # noqa: D106
         initialized = 0
         begun = 1
         committed = 2
         aborted = 3
 
-    def __init__(
+    def __init__(  # noqa: D107, ANN204
         self,
         *,
         session: Optional[Session] = None,
@@ -46,15 +46,15 @@ class SqlUnitOfWork:
     #         self.close()
     #     return False  # re-raise
 
-    def begin(self):
+    def begin(self):  # noqa: ANN201, D102
         self._check_state(expected_state=SqlUnitOfWork.State.initialized)
         self._state = SqlUnitOfWork.State.begun
         return self._begin()
 
-    def _begin(self):
+    def _begin(self):  # noqa: ANN202
         return self
 
-    def _check_state(self, expected_state):
+    def _check_state(self, expected_state):  # noqa: ANN202, ANN001
         if self._state != expected_state:
             pass
             # logger.warning(
@@ -66,7 +66,7 @@ class SqlUnitOfWork:
             #     f"State conflict. repositories is in state '{self._state!s}' and not '{expected_state!s}'"
             # )
 
-    def _commit(self):
+    def _commit(self):  # noqa: ANN202
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         # try:
         logger.info(
@@ -103,18 +103,18 @@ class SqlUnitOfWork:
         #         raise errors.IntegrityError(key=key, value=value) from err
         #     raise errors.IntegrityError("Unknown integrity error") from err
 
-    def abort(self):
+    def abort(self):  # noqa: ANN201, D102
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         self._session.rollback()
         self._state = SqlUnitOfWork.State.initialized
 
-    def rollback(self):
+    def rollback(self):  # noqa: ANN201, D102
         logger.debug("rollback called")
         self._check_state(expected_state=SqlUnitOfWork.State.begun)
         self._session.rollback()
         self._state = SqlUnitOfWork.State.initialized
 
-    def _close(self):
+    def _close(self):  # noqa: ANN202
         if self._session_is_created_here:
             logger.debug("closing session=%s", self._session)
             self._session.close()

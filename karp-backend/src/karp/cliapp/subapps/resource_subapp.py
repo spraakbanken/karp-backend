@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
@@ -31,7 +31,7 @@ subapp = typer.Typer()
 T = TypeVar("T")
 
 
-def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
+def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:  # noqa: D103
     for i, choice in enumerate(choices):
         typer.echo(f"{i}) {choice_fmt(choice)}")
     while True:
@@ -42,10 +42,10 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def create(
+def create(  # noqa: ANN201, D103
     ctx: typer.Context,
     config: Path,
-    entry_repo_id: Optional[str] = typer.Option(None, help="id for entry-repo"),  # noqa: B008
+    entry_repo_id: Optional[str] = typer.Option(None, help="id for entry-repo"),
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     if config.is_file():
@@ -78,11 +78,11 @@ def create(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def set_entry_repo(
+def set_entry_repo(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
-    entry_repo_id: str = typer.Argument(..., help="id for entry-repo"),  # noqa: B008
-    user: Optional[str] = typer.Option(None),  # noqa: B008
+    entry_repo_id: str = typer.Argument(..., help="id for entry-repo"),
+    user: Optional[str] = typer.Option(None),
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     entry_repo_uuid = unique_id.parse(entry_repo_id)
@@ -97,14 +97,14 @@ def set_entry_repo(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def update(
+def update(  # noqa: ANN201
     ctx: typer.Context,
     config: Path,
-    version: int = typer.Option(..., "-v", "--version"),  # noqa: B008
-    message: Optional[str] = typer.Option(None, "-m", "--message"),  # noqa: B008
-    user: Optional[str] = typer.Option(None, "-u", "--user"),  # noqa: B008
+    version: int = typer.Option(..., "-v", "--version"),
+    message: Optional[str] = typer.Option(None, "-m", "--message"),
+    user: Optional[str] = typer.Option(None, "-u", "--user"),
 ):
-    """Update resource config."""
+    """Update resource config."""  # noqa: D202
 
     config_dict = jsonlib.load_from_file(config)
     resource_id = config_dict.pop("resource_id")
@@ -123,7 +123,7 @@ def update(
     bus = inject_from_ctx(CommandBus, ctx)
     try:
         bus.dispatch(cmd)
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001
         typer.echo(f"Error occurred: {err}", err=True)
         raise typer.Exit(400)  # noqa: B904
     else:
@@ -135,7 +135,7 @@ def update(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def publish(ctx: typer.Context, resource_id: str, version: int):
+def publish(ctx: typer.Context, resource_id: str, version: int):  # noqa: ANN201, D103
     bus = inject_from_ctx(CommandBus, ctx)
     try:
         cmd = lex_commands.PublishResource(
@@ -154,7 +154,7 @@ def publish(ctx: typer.Context, resource_id: str, version: int):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex(ctx: typer.Context, resource_id: str):
+def reindex(ctx: typer.Context, resource_id: str):  # noqa: ANN201, D103
     bus = inject_from_ctx(CommandBus, ctx)
     cmd = search_commands.ReindexResource(resource_id=resource_id)
     bus.dispatch(cmd)
@@ -208,9 +208,9 @@ def reindex(ctx: typer.Context, resource_id: str):
 @subapp.command("list")
 @cli_error_handler
 @cli_timer
-def list_resources(
+def list_resources(  # noqa: ANN201, D103
     ctx: typer.Context,
-    show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),  # noqa: B008
+    show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),
 ):
     if show_published:
         query = inject_from_ctx(GetPublishedResources, ctx)
@@ -230,7 +230,7 @@ def list_resources(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
+def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):  # noqa: ANN201, D103
     repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx)
     resource = repo.get_by_resource_id(resource_id, version=version)
     #     if version:
@@ -252,7 +252,7 @@ def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def set_permissions(
+def set_permissions(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
     version: int,
@@ -270,18 +270,18 @@ def set_permissions(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def export():
+def export():  # noqa: ANN201, D103
     raise NotImplementedError()
 
 
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def delete(
+def delete(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
-    user: Optional[str] = typer.Option(None),  # noqa: B008
-    message: Optional[str] = typer.Option(None),  # noqa: B008
+    user: Optional[str] = typer.Option(None),
+    message: Optional[str] = typer.Option(None),
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     cmd = lex_commands.DeleteResource(
@@ -293,5 +293,5 @@ def delete(
     typer.echo(f"Deleted resource '{resource_id}' ({resource})")
 
 
-def init_app(app):
+def init_app(app):  # noqa: ANN201, D103, ANN001
     app.add_typer(subapp, name="resource")

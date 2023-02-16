@@ -1,4 +1,4 @@
-from unittest import mock
+from unittest import mock  # noqa: I001
 
 import pytest
 import ulid
@@ -15,7 +15,7 @@ def example_uow() -> lex.CreateEntryRepository:
 
 
 @pytest.fixture
-def sql_entry_uow_v1_creator(sqlite_session_factory) -> SqlEntryUowV1Creator:
+def sql_entry_uow_v1_creator(sqlite_session_factory) -> SqlEntryUowV1Creator:  # noqa: ANN001
     return SqlEntryUowV1Creator(
         event_bus=mock.Mock(spec=EventBus),
         session_factory=sqlite_session_factory,
@@ -23,7 +23,7 @@ def sql_entry_uow_v1_creator(sqlite_session_factory) -> SqlEntryUowV1Creator:
 
 
 @pytest.fixture
-def sql_entry_uow_v2_creator(sqlite_session_factory) -> SqlEntryUowV2Creator:
+def sql_entry_uow_v2_creator(sqlite_session_factory) -> SqlEntryUowV2Creator:  # noqa: ANN001
     return SqlEntryUowV2Creator(
         event_bus=mock.Mock(spec=EventBus),
         session_factory=sqlite_session_factory,
@@ -31,13 +31,13 @@ def sql_entry_uow_v2_creator(sqlite_session_factory) -> SqlEntryUowV2Creator:
 
 
 class TestSqlEntryUowV1:
-    def test_creator_repository_type(
+    def test_creator_repository_type(  # noqa: ANN201
         self,
         sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
     ):
         assert sql_entry_uow_v1_creator.repository_type == "sql_entries_v1"
 
-    def test_uow_repository_type(
+    def test_uow_repository_type(  # noqa: ANN201
         self,
         sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
         example_uow: lex.CreateEntryRepository,
@@ -47,7 +47,7 @@ class TestSqlEntryUowV1:
         )
         assert entry_uow.repository_type == "sql_entries_v1"
 
-    def test_repo_table_name(
+    def test_repo_table_name(  # noqa: ANN201
         self,
         sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
         example_uow: lex.CreateEntryRepository,
@@ -60,13 +60,13 @@ class TestSqlEntryUowV1:
 
 
 class TestSqlEntryUowV2:
-    def test_creator_repository_type(
+    def test_creator_repository_type(  # noqa: ANN201
         self,
         sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
     ):
         assert sql_entry_uow_v2_creator.repository_type == "sql_entries_v2"
 
-    def test_uow_repository_type(
+    def test_uow_repository_type(  # noqa: ANN201
         self,
         sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
         example_uow: lex.CreateEntryRepository,
@@ -76,7 +76,7 @@ class TestSqlEntryUowV2:
         )
         assert entry_uow.repository_type == "sql_entries_v2"
 
-    def test_repo_table_name(
+    def test_repo_table_name(  # noqa: ANN201
         self,
         sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
         example_uow: lex.CreateEntryRepository,

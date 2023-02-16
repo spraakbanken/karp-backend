@@ -6,7 +6,7 @@ from . import adapters, factories
 
 
 class TestCreateEntryRepository:
-    def test_create_entry_repository(
+    def test_create_entry_repository(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -19,7 +19,7 @@ class TestCreateEntryRepository:
 
 
 class TestDeleteEntryRepository:
-    def test_delete_entry_repository_succeeds(
+    def test_delete_entry_repository_succeeds(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):

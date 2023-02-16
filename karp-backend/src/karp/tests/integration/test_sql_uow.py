@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: I001
 
 from karp.foundation.value_objects import make_unique_id
 from karp.foundation.events import EventBus, Event
@@ -19,7 +19,7 @@ class InMemoryEventBus(EventBus):
 
 
 class TestSqlResourceUnitOfWork:
-    def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):
+    def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):  # noqa: ANN201, ANN001
         uow = SqlResourceUnitOfWork(
             session_factory=sqlite_session_factory, event_bus=InMemoryEventBus()
         )
@@ -31,8 +31,8 @@ class TestSqlResourceUnitOfWork:
         rows = list(new_session.execute('SELECT * FROM "resources"'))
         assert rows == []
 
-    def test_rolls_back_on_error(self, sqlite_session_factory):
-        def do_something_that_fails(resource):
+    def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201, ANN001
+        def do_something_that_fails(resource):  # noqa: ANN202, ANN001
             print(resource.to_string())
 
         uow = SqlResourceUnitOfWork(
@@ -54,7 +54,7 @@ class MyException(Exception):
 
 
 class TestSqlEntryUnitOfWork:
-    def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):
+    def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):  # noqa: ANN201, ANN001
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},
@@ -74,7 +74,7 @@ class TestSqlEntryUnitOfWork:
         rows = list(new_session.execute('SELECT * FROM "test"'))
         assert rows == []
 
-    def test_rolls_back_on_error(self, sqlite_session_factory):
+    def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201, ANN001
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},

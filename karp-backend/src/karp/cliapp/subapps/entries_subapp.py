@@ -1,4 +1,4 @@
-import collections.abc
+import collections.abc  # noqa: D100, I001
 import logging
 from pathlib import Path
 import sys  # noqa: F401
@@ -31,15 +31,15 @@ subapp = typer.Typer()
 @subapp.command("add")
 @cli_error_handler
 @cli_timer
-def add_entries_to_resource(
+def add_entries_to_resource(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
     # version: Optional[int],
     data: Path,
     chunked: bool = False,
     chunk_size: int = 1000,
-    user: Optional[str] = typer.Option(None),  # noqa: B008
-    message: Optional[str] = typer.Option(None),  # noqa: B008
+    user: Optional[str] = typer.Option(None),
+    message: Optional[str] = typer.Option(None),
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     user = user or "local admin"
@@ -67,15 +67,15 @@ def add_entries_to_resource(
 @subapp.command("import")
 @cli_error_handler
 @cli_timer
-def import_entries_to_resource(
+def import_entries_to_resource(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
     # version: Optional[int],
     data: Path,
     chunked: bool = False,
     chunk_size: int = 1000,
-    user: Optional[str] = typer.Option(None),  # noqa: B008
-    message: Optional[str] = typer.Option(None),  # noqa: B008
+    user: Optional[str] = typer.Option(None),
+    message: Optional[str] = typer.Option(None),
 ):
     bus = inject_from_ctx(CommandBus, ctx)
     user = user or "local admin"
@@ -103,17 +103,17 @@ def import_entries_to_resource(
 @subapp.command("update")
 @cli_error_handler
 @cli_timer
-def update_entries(resource_id: str, data: Path):
+def update_entries(resource_id: str, data: Path):  # noqa: ANN201, D103
     raise NotImplementedError("")
 
 
 @subapp.command("export")
 @cli_error_handler
 @cli_timer
-def export_entries(
+def export_entries(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
-    output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),  # noqa: B008
+    output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
 ):
     entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)
     all_entries = entry_views.all_entries(resource_id=resource_id)
@@ -127,37 +127,37 @@ def export_entries(
     )
 
 
-class Counter(collections.abc.Generator):
-    def __init__(self, sink) -> None:
+class Counter(collections.abc.Generator):  # noqa: D101
+    def __init__(self, sink) -> None:  # noqa: D107, ANN001
         self._counter: int = 0
         self._sink = sink
 
     @property
-    def counter(self) -> int:
+    def counter(self) -> int:  # noqa: D102
         return self._counter
 
-    def send(self, value):
+    def send(self, value):  # noqa: ANN201, D102, ANN001
         self._counter += 1
         self._sink.send(value)
 
-    def throw(self, typ=None, val=None, tb=None):
+    def throw(self, typ=None, val=None, tb=None):  # noqa: ANN201, D102, ANN001
         raise StopIteration
 
 
 @subapp.command("validate")
 @cli_error_handler
 @cli_timer
-def validate_entries(
+def validate_entries(  # noqa: ANN201, D103
     ctx: typer.Context,
-    path: Optional[Path] = typer.Argument(None),  # noqa: B008
-    config_path: Optional[Path] = typer.Option(  # noqa: B008
+    path: Optional[Path] = typer.Argument(None),
+    config_path: Optional[Path] = typer.Option(
         None,
         "--config",
         "-c",
         help="resource config",
     ),
-    resource_id_raw: Optional[str] = typer.Option(None, "--resource_id"),  # noqa: B008
-    output: Optional[Path] = typer.Option(  # noqa: B008
+    resource_id_raw: Optional[str] = typer.Option(None, "--resource_id"),
+    output: Optional[Path] = typer.Option(
         None, "--output", "-o", help="file to write to"
     ),
 ):
@@ -217,5 +217,5 @@ def validate_entries(
         raise typer.Exit(error_code)
 
 
-def init_app(app):
+def init_app(app):  # noqa: ANN201, D103, ANN001
     app.add_typer(subapp, name="entries")

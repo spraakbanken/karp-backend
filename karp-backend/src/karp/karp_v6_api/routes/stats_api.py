@@ -1,4 +1,4 @@
-import typing
+import typing  # noqa: D100, I001
 
 from fastapi import (
     APIRouter,
@@ -25,13 +25,13 @@ router = APIRouter()
     "/{resource_id}/{field}",
     response_model=typing.List[StatisticsDto],
 )
-def get_field_values(
+def get_field_values(  # noqa: ANN201, D103
     resource_id: str,
     field: str,
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),  # noqa: B008
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    search_service: SearchService = Depends(  # noqa: B008
-        inject_from_req(SearchService)  # noqa: B008
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    search_service: SearchService = Depends(
+        inject_from_req(SearchService)
     ),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
@@ -44,5 +44,5 @@ def get_field_values(
     return search_service.statistics(resource_id, field)
 
 
-def init_app(app):
+def init_app(app):  # noqa: ANN201, D103, ANN001
     app.include_router(router)

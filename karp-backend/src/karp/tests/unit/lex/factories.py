@@ -1,5 +1,5 @@
 """Factories used in tests."""
-import typing
+import typing  # noqa: I001
 
 import factory
 import factory.fuzzy
@@ -59,7 +59,7 @@ class EntryFactory(factory.Factory):
     repository_id = factory.LazyFunction(make_unique_id)
 
 
-def random_resource(config: typing.Optional[typing.Dict] = None):
+def random_resource(config: typing.Optional[typing.Dict] = None):  # noqa: ANN201
     config = config or {"fields": {"wf": {"type" "string"}, "id": "wf"}}
     return entities.create_resource(
         entity_id=make_unique_id(),
@@ -105,7 +105,7 @@ class EntryAddedFactory(factory.Factory):
         model = events.EntryAdded
 
     timestamp = factory.LazyFunction(utc_now)
-    id = factory.LazyFunction(make_unique_id)
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
     resource_id = factory.Faker("word")
     entry_id = factory.Faker("word")
     body = factory.Faker("resource_config")

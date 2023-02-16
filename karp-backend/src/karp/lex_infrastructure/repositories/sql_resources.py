@@ -1,5 +1,5 @@
-"""SQL Resource Repository"""
-import logging
+"""SQL Resource Repository"""  # noqa: D400, D415
+import logging  # noqa: I001
 import typing
 from typing import List, Optional, Union
 from karp.lex_core.value_objects import UniqueId
@@ -21,12 +21,12 @@ from karp.db_infrastructure.sql_repository import SqlRepository
 logger = logging.getLogger(__name__)
 
 
-class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
-    def __init__(self, session: db.Session):
+class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):  # noqa: D101
+    def __init__(self, session: db.Session):  # noqa: D107, ANN204
         repositories.ResourceRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
 
-    def check_status(self):
+    def check_status(self):  # noqa: ANN201, D102
         self._check_has_session()
         try:
             self._session.execute("SELECT 1")
@@ -35,15 +35,15 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             raise errors.RepositoryStatusError("Database error") from err
 
     @classmethod
-    def primary_key(cls):
+    def primary_key(cls):  # noqa: ANN206, D102
         return "resource_id"
 
-    def _save(self, resource: Resource):
+    def _save(self, resource: Resource):  # noqa: ANN202
         self._check_has_session()
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
 
-    def resource_ids(self) -> List[str]:
+    def resource_ids(self) -> List[str]:  # noqa: D102
         self._check_has_session()
         subq = (
             sql.select(
@@ -67,7 +67,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         # return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
 
     def _by_id(
-        self, id: Union[UniqueId, str], *, version: Optional[int] = None, **kwargs
+        self, id: Union[UniqueId, str], *, version: Optional[int] = None, **kwargs  # noqa: ANN003, A002
     ) -> typing.Optional[entities.Resource]:
         self._check_has_session()
         query = self._session.query(ResourceModel).filter_by(entity_id=id)
@@ -106,7 +106,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
-    def get_active_resource(self, resource_id: str) -> Optional[Resource]:
+    def get_active_resource(self, resource_id: str) -> Optional[Resource]:  # noqa: D102
         self._check_has_session()
         query = self._session.query(ResourceModel)
         resource_dto = query.filter_by(
@@ -114,7 +114,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         ).one_or_none()
         return resource_dto.to_entity() if resource_dto else None
 
-    def get_latest_version(self, resource_id: str) -> int:
+    def get_latest_version(self, resource_id: str) -> int:  # noqa: D102
         self._check_has_session()
         row = (
             self._session.query(ResourceModel)
@@ -124,7 +124,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         )
         return 0 if row is None else row.version
 
-    def history_by_resource_id(
+    def history_by_resource_id(  # noqa: D102
         self, resource_id: str
     ) -> typing.List[entities.Resource]:
         self._check_has_session()
@@ -185,7 +185,7 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
             if resource_dto is not None
         ]
 
-    def num_entities(self) -> int:
+    def num_entities(self) -> int:  # noqa: D102
         self._check_has_session()
         subq = (
             self._session.query(
@@ -223,8 +223,8 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):
         }
 
 
-class SqlResourceUnitOfWork(SqlUnitOfWork, repositories.ResourceUnitOfWork):
-    def __init__(
+class SqlResourceUnitOfWork(SqlUnitOfWork, repositories.ResourceUnitOfWork):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         event_bus: EventBus,
         *,
@@ -238,7 +238,7 @@ class SqlResourceUnitOfWork(SqlUnitOfWork, repositories.ResourceUnitOfWork):
         self.session_factory = session_factory
         self._resources = None
 
-    def _begin(self):
+    def _begin(self):  # noqa: ANN202
         if self._session_is_created_here:
             self._session = self.session_factory()  # type: ignore
         logger.info("using session", extra={"session": self._session})
@@ -246,7 +246,7 @@ class SqlResourceUnitOfWork(SqlUnitOfWork, repositories.ResourceUnitOfWork):
         return self
 
     @property
-    def repo(self) -> SqlResourceRepository:
+    def repo(self) -> SqlResourceRepository:  # noqa: D102
         if self._resources is None:
             raise RuntimeError("No resources")
         return self._resources

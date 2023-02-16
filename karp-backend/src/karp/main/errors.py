@@ -1,10 +1,10 @@
-import enum
+import enum  # noqa: D100
 from typing import IO, Optional
 
 NoIndexModuleConfigured = 10
 
 
-class ClientErrorCodes(enum.IntEnum):
+class ClientErrorCodes(enum.IntEnum):  # noqa: D101
     UNKNOWN_ERROR = 1
     RESOURCE_DOES_NOT_EXIST = 20
     RESOURCE_NOT_PUBLISHED = 21
@@ -29,20 +29,20 @@ class ClientErrorCodes(enum.IntEnum):
     SEARCH_UNSUPPORTED_FIELD = 83
 
 
-class KarpError(Exception):
-    def __init__(self, message: str, code: int = None, http_return_code: int = 400):
+class KarpError(Exception):  # noqa: D101
+    def __init__(self, message: str, code: int = None, http_return_code: int = 400):  # noqa: D107, ANN204
         super().__init__(message)
         self.message = message
         self.code = code or ClientErrorCodes.UNKNOWN_ERROR
         self.http_return_code = http_return_code
 
 
-class UserError(KarpError):
+class UserError(KarpError):  # noqa: D101
     pass
 
 
-class ResourceNotFoundError(KarpError):
-    def __init__(self, resource_id, version: int = None):
+class ResourceNotFoundError(KarpError):  # noqa: D101
+    def __init__(self, resource_id, version: int = None):  # noqa: D107, ANN204, ANN001
         super().__init__(
             "Resource not found. ID: {resource_id}, version: {version}".format(
                 resource_id=resource_id, version=version
@@ -51,8 +51,8 @@ class ResourceNotFoundError(KarpError):
         )
 
 
-class ResourceInvalidConfigError(KarpError):
-    def __init__(self, resource_id, config_file: IO, validation_error_msg: str):
+class ResourceInvalidConfigError(KarpError):  # noqa: D101
+    def __init__(self, resource_id, config_file: IO, validation_error_msg: str):  # noqa: D107, ANN204, ANN001
         msg_fmt = """
         Resource config is not valid.
         ID: {resource_id},
@@ -69,8 +69,8 @@ class ResourceInvalidConfigError(KarpError):
         )
 
 
-class ResourceConfigUpdateError(KarpError):
-    def __init__(self, msg, resource_id, config_file: IO):
+class ResourceConfigUpdateError(KarpError):  # noqa: D101
+    def __init__(self, msg, resource_id, config_file: IO):  # noqa: D107, ANN204, ANN001
         msg_fmt = """
         Cannot update config for resource.
         Message: '{msg}'
@@ -87,17 +87,17 @@ class ResourceConfigUpdateError(KarpError):
         )
 
 
-class ResourceAlreadyPublished(KarpError):
-    def __init__(self, resource_id: str):
+class ResourceAlreadyPublished(KarpError):  # noqa: D101
+    def __init__(self, resource_id: str):  # noqa: D107, ANN204
         super().__init__(
             f"Resource '{resource_id}' already published",
             code=ClientErrorCodes.RESOURCE_ALREADY_PUBLISHED,
         )
 
 
-class EntryNotFoundError(KarpError):
-    def __init__(
-        self, resource_id, entry_id, entry_version=None, resource_version=None
+class EntryNotFoundError(KarpError):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
+        self, resource_id, entry_id, entry_version=None, resource_version=None  # noqa: ANN001
     ):
         msg = "Entry '{entry_id}' (version {entry_version}) not found. resource_id: {resource_id}, version: {resource_version}"
         super().__init__(
@@ -111,8 +111,8 @@ class EntryNotFoundError(KarpError):
         )
 
 
-class UpdateConflict(KarpError):
-    def __init__(self, diff):
+class UpdateConflict(KarpError):  # noqa: D101
+    def __init__(self, diff):  # noqa: D107, ANN204, ANN001
         super().__init__(
             "Version conflict. Please update entry.",
             code=ClientErrorCodes.VERSION_CONFLICT,
@@ -120,16 +120,16 @@ class UpdateConflict(KarpError):
         self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}
 
 
-class EntryIdMismatch(UserError):
-    def __init__(self, new_entry_id: str, entry_id: str):
+class EntryIdMismatch(UserError):  # noqa: D101
+    def __init__(self, new_entry_id: str, entry_id: str):  # noqa: D107, ANN204
         super().__init__(
             f"entry_id '{new_entry_id}' does not equal '{entry_id}'",
             code=ClientErrorCodes.ENTRY_ID_MISMATCH,
         )
 
 
-class PluginNotFoundError(KarpError):
-    def __init__(self, plugin_id: str, resource_id: str = None):
+class PluginNotFoundError(KarpError):  # noqa: D101
+    def __init__(self, plugin_id: str, resource_id: str = None):  # noqa: D107, ANN204
         super().__init__(
             "Plugin '{plugin_id}' not found, referenced by '{resource_id}'".format(
                 plugin_id=plugin_id, resource_id=resource_id if resource_id else "..."
@@ -138,8 +138,8 @@ class PluginNotFoundError(KarpError):
         )
 
 
-class IntegrityError(UserError):
-    def __init__(
+class IntegrityError(UserError):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         message: Optional[str] = None,
         *,

@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100, I001
 import typing
 
 import pydantic
@@ -9,7 +9,7 @@ from karp.lex.domain.entities.entry import EntryOp
 
 
 # pylint: disable=unsubscriptable-object
-class EntryDto(pydantic.BaseModel):
+class EntryDto(pydantic.BaseModel):  # noqa: D101
     # entry_id: str
     # entity_id: typing.Optional[unique_id.UniqueId] = None
     entity_id: unique_id.UniqueIdStr
@@ -20,7 +20,7 @@ class EntryDto(pydantic.BaseModel):
     last_modified_by: str
 
 
-class EntryDiffRequest(pydantic.BaseModel):
+class EntryDiffRequest(pydantic.BaseModel):  # noqa: D101
     resource_id: str
     # entry_id: str
     entity_id: unique_id.UniqueIdStr
@@ -31,7 +31,7 @@ class EntryDiffRequest(pydantic.BaseModel):
     entry: typing.Optional[typing.Dict] = None
 
 
-class EntryHistoryRequest(pydantic.BaseModel):
+class EntryHistoryRequest(pydantic.BaseModel):  # noqa: D101
     resource_id: str
     user_id: typing.Optional[str] = None
     entry_id: typing.Optional[unique_id.UniqueIdStr] = None
@@ -43,13 +43,13 @@ class EntryHistoryRequest(pydantic.BaseModel):
     page_size: int = 100
 
 
-class EntryDiffDto(pydantic.BaseModel):
+class EntryDiffDto(pydantic.BaseModel):  # noqa: D101
     diff: typing.Any
     from_version: typing.Optional[int]
     to_version: typing.Optional[int]
 
 
-class HistoryDto(pydantic.BaseModel):
+class HistoryDto(pydantic.BaseModel):  # noqa: D101
     timestamp: float
     message: str
     # entry_id: str
@@ -60,15 +60,15 @@ class HistoryDto(pydantic.BaseModel):
     diff: list[dict]
 
 
-class GetEntryDiff(abc.ABC):
+class GetEntryDiff(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def query(self, request: EntryDiffRequest) -> EntryDiffDto:
+    def query(self, request: EntryDiffRequest) -> EntryDiffDto:  # noqa: D102
         pass
 
 
-class GetEntryHistory(abc.ABC):
+class GetEntryHistory(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def query(
+    def query(  # noqa: D102
         self,
         resource_id: str,
         entity_id: unique_id.UniqueIdStr,
@@ -78,20 +78,20 @@ class GetEntryHistory(abc.ABC):
         pass
 
 
-class GetHistoryDto(pydantic.BaseModel):
+class GetHistoryDto(pydantic.BaseModel):  # noqa: D101
     history: list[HistoryDto]
     total: int
 
 
-class GetHistory(abc.ABC):
+class GetHistory(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def query(self, request: EntryHistoryRequest) -> GetHistoryDto:
+    def query(self, request: EntryHistoryRequest) -> GetHistoryDto:  # noqa: D102
         pass
 
 
-class EntryViews(abc.ABC):
+class EntryViews(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def get_by_id(
+    def get_by_id(  # noqa: D102
         self,
         resource_id: str,
         entity_id: unique_id.UniqueIdStr,
@@ -99,7 +99,7 @@ class EntryViews(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def get_by_id_optional(
+    def get_by_id_optional(  # noqa: D102
         self,
         resource_id: str,
         entity_id: unique_id.UniqueIdStr,
@@ -123,15 +123,15 @@ class EntryViews(abc.ABC):
     #     pass
 
     @abc.abstractmethod
-    def get_total(self, resource_id: str) -> int:
+    def get_total(self, resource_id: str) -> int:  # noqa: D102
         pass
 
     @abc.abstractmethod
-    def get_by_referenceable(
-        self, resource_id: str, filters
+    def get_by_referenceable(  # noqa: D102
+        self, resource_id: str, filters  # noqa: ANN001
     ) -> typing.Iterable[EntryDto]:
         pass
 
     @abc.abstractmethod
-    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
+    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:  # noqa: D102
         pass

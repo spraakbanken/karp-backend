@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100, I001
 import logging
 from typing import List, Generic, TypeVar, Any, Iterable
 
@@ -12,25 +12,25 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-class Event:
+class Event:  # noqa: D101
     pass
 
 
-class EventMixin:
-    def __init__(self) -> None:
+class EventMixin:  # noqa: D101
+    def __init__(self) -> None:  # noqa: D107
         self._pending_domain_events: List[Event] = []
 
     def _record_event(self, event: Event) -> None:
         self._pending_domain_events.append(event)
 
     @property
-    def domain_events(self) -> List[Event]:
+    def domain_events(self) -> List[Event]:  # noqa: D102
         return self._pending_domain_events[:]
 
-    def collect_new_events(self) -> Iterable[Event]:
+    def collect_new_events(self) -> Iterable[Event]:  # noqa: D102
         return self._pending_domain_events[:]
 
-    def clear_events(self) -> None:
+    def clear_events(self) -> None:  # noqa: D102
         self._pending_domain_events.clear()
 
 
@@ -40,21 +40,21 @@ class EventHandler(Generic[T]):
     e.g EventHandler[ResourceCreated].
     """
 
-    def __call__(self, event: T, *args: Any, **kwds: Any) -> Any:
+    def __call__(self, event: T, *args: Any, **kwds: Any) -> Any:  # noqa: D102, ANN401
         raise NotImplementedError()
 
 
-class EventBus(abc.ABC):
+class EventBus(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def post(self, event: Event) -> None:
+    def post(self, event: Event) -> None:  # noqa: D102
         raise NotImplementedError
 
 
-class InjectorEventBus(EventBus):
-    def __init__(self, container: injector.Injector) -> None:
+class InjectorEventBus(EventBus):  # noqa: D101
+    def __init__(self, container: injector.Injector) -> None:  # noqa: D107
         self._container = container
 
-    def post(self, event: Event) -> None:
+    def post(self, event: Event) -> None:  # noqa: D102
         logger.info("handling event", extra={"karp_event": event})
         try:
             evt_handlers = self._container.get(

@@ -1,4 +1,4 @@
-import dataclasses
+import dataclasses  # noqa: I001
 import typing
 from typing import Dict, Iterable, Optional
 
@@ -24,14 +24,14 @@ class UnitTestContext:
 
 
 class InMemoryResourceRepository(lex_repositories.ResourceRepository):
-    def __init__(self):
+    def __init__(self):  # noqa: ANN204
         super().__init__()
         self.resources = {}
 
-    def check_status(self):
+    def check_status(self):  # noqa: ANN201
         pass
 
-    def _save(self, resource):
+    def _save(self, resource):  # noqa: ANN202, ANN001
         self.resources[resource.id] = resource
 
     # def _update(self, resource):
@@ -39,16 +39,16 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
     #     self.resources.discard(r)
     #     self.resources.add(resource)
 
-    def _by_id(self, id_, *, version=None):
+    def _by_id(self, id_, *, version=None):  # noqa: ANN202, ANN001
         return self.resources.get(id_)
 
-    def _by_resource_id(self, resource_id):
+    def _by_resource_id(self, resource_id):  # noqa: ANN202, ANN001
         return next(
             (res for res in self.resources.values() if res.resource_id == resource_id),
             None,
         )
 
-    def __len__(self):
+    def __len__(self):  # noqa: ANN204
         return len(self.resources)
 
     def _get_published_resources(self) -> typing.Iterable[lex_entities.Resource]:
@@ -65,7 +65,7 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
 
 
 class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
-    def __init__(self, resources: Dict):
+    def __init__(self, resources: Dict):  # noqa: ANN204
         self.resources = resources
 
     def get_by_id(
@@ -86,7 +86,7 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
             None,
         )
 
-    def _row_to_dto(self, res) -> ResourceDto:
+    def _row_to_dto(self, res) -> ResourceDto:  # noqa: ANN001
         return ResourceDto(
             entity_id=res.entity_id,
             resource_id=res.resource_id,
@@ -108,29 +108,29 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
 
 
 class InMemoryEntryRepository(lex_repositories.EntryRepository):
-    def __init__(self):
+    def __init__(self):  # noqa: ANN204
         super().__init__()
         self.entries = set()
 
-    def check_status(self):
+    def check_status(self):  # noqa: ANN201
         pass
 
-    def _save(self, entry):
+    def _save(self, entry):  # noqa: ANN202, ANN001
         self.entries.add(entry)
 
-    def _update(self, entry):
+    def _update(self, entry):  # noqa: ANN202, ANN001
         r = self._by_id(entry.id)
         self.entries.discard(r)
         self.entries.add(entry)
 
-    def _by_id(
+    def _by_id(  # noqa: ANN202
         self,
-        id,
+        id,  # noqa: A002, ANN001
         *,
-        version=None,
-        after_date=None,
-        before_date=None,
-        oldest_first=False,
+        version=None,  # noqa: ANN001
+        after_date=None,  # noqa: ANN001
+        before_date=None,  # noqa: ANN001
+        oldest_first=False,  # noqa: ANN001
     ):
         return next((r for r in self.entries if r.id == id), None)
 
@@ -144,14 +144,14 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
     # ):
     #     return next((r for r in self.entries if r.entry_id == entry_id), None)
 
-    def __len__(self):
+    def __len__(self):  # noqa: ANN204
         return len(self.entries)
 
-    def _create_repository_settings(self, *args):
+    def _create_repository_settings(self, *args):  # noqa: ANN002, ANN202
         pass
 
     @classmethod
-    def from_dict(cls, _):
+    def from_dict(cls, _):  # noqa: ANN206, ANN001
         return cls()
 
     def all_entries(self) -> typing.Iterable[lex_entities.Entry]:
@@ -161,15 +161,15 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
         return sum(not e.discarded for e in self.entries)
 
     def by_referenceable(
-        self, filters: Optional[Dict] = None, **kwargs
+        self, filters: Optional[Dict] = None, **kwargs  # noqa: ANN003
     ) -> list[lex_entities.Entry]:
         return []
 
 
 class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork):
-    def __init__(
+    def __init__(  # noqa: ANN204
         self,
-        entity_id,
+        entity_id,  # noqa: ANN001
         name: str,
         config: typing.Dict,
         connection_str: typing.Optional[str],
@@ -198,7 +198,7 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
 
 
 class InMemoryEntryUnitOfWork2(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork):
-    def __init__(self, entity_id, name: str, config: typing.Dict):
+    def __init__(self, entity_id, name: str, config: typing.Dict):  # noqa: ANN204, ANN001
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
             self, entity_id=entity_id, name=name, config=config
@@ -216,7 +216,7 @@ class InMemoryEntryUnitOfWork2(InMemoryUnitOfWork, lex_repositories.EntryUnitOfW
 class InMemoryResourceUnitOfWork(
     InMemoryUnitOfWork, lex_repositories.ResourceUnitOfWork
 ):
-    def __init__(self, event_bus: EventBus):
+    def __init__(self, event_bus: EventBus):  # noqa: ANN204
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.ResourceUnitOfWork.__init__(self, event_bus=event_bus)
         self._resources = InMemoryResourceRepository()
@@ -287,13 +287,13 @@ class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
         super().__init__()
         self._storage: dict[UniqueId, dict] = {}
 
-    def _save(self, entry_repo):
+    def _save(self, entry_repo):  # noqa: ANN202, ANN001
         self._storage[entry_repo.id] = entry_repo
 
-    def _by_id(self, id_, *, version: Optional[int] = None):
+    def _by_id(self, id_, *, version: Optional[int] = None):  # noqa: ANN202, ANN001
         return self._storage.get(id_)
 
-    def __len__(self):
+    def __len__(self):  # noqa: ANN204
         return len(self._storage)
 
     def num_entities(self) -> int:

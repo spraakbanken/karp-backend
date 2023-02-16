@@ -1,4 +1,4 @@
-import unicodedata
+import unicodedata  # noqa: D100
 
 
 def shave_marks(txt: str) -> str:

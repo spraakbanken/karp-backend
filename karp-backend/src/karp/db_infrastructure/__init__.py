@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine, orm, pool
 
 
-class Database:
-    def __init__(self, db_url: str) -> None:
+class Database:  # noqa: D101
+    def __init__(self, db_url: str) -> None:  # noqa: D107
         kwargs = {}
         if str(db_url).startswith("sqlite"):
             kwargs["poolclass"] = pool.SingletonThreadPool
@@ -14,7 +14,7 @@ class Database:
             bind=self._engine,
         )
 
-    def disconnect(self):
+    def disconnect(self):  # noqa: ANN201, D102
         pass
 
 

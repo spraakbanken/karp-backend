@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 
 import fastjsonschema
 
@@ -8,14 +8,14 @@ from karp.lex.domain import errors
 logger = logging.getLogger(__name__)
 
 
-class EntrySchema:
-    def __init__(self, json_schema: dict):
+class EntrySchema:  # noqa: D101
+    def __init__(self, json_schema: dict):  # noqa: D107, ANN204
         try:
             self._compiled_schema = fastjsonschema.compile(json_schema)
         except fastjsonschema.JsonSchemaDefinitionException as e:
             raise errors.InvalidEntrySchema() from e
 
-    def validate_entry(self, json_obj: dict):
+    def validate_entry(self, json_obj: dict):  # noqa: ANN201, D102
         try:
             self._compiled_schema(json_obj)
         except fastjsonschema.JsonSchemaException as e:

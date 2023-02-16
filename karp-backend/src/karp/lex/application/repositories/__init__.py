@@ -1,4 +1,4 @@
-from .entries import EntryRepository, EntryUnitOfWork
+from .entries import EntryRepository, EntryUnitOfWork  # noqa: I001
 from .entry_repositories import (
     EntryUowRepository,
     EntryUowRepositoryUnitOfWork,

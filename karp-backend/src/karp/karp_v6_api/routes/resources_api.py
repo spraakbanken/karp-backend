@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 import typing
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Security, status
@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/permissions", response_model=list[ResourcePermissionDto])
-def list_resource_permissions(
-    query: GetResourcePermissions = Depends(deps.get_resource_permissions),  # noqa: B008
+def list_resource_permissions(  # noqa: ANN201, D103
+    query: GetResourcePermissions = Depends(deps.get_resource_permissions),
 ):
     return query.query()
 
@@ -31,18 +31,18 @@ def list_resource_permissions(
     "/",
     response_model=list[ResourceProtected],
 )
-def get_all_resources(
-    get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),  # noqa: B008
+def get_all_resources(  # noqa: D103
+    get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),
 ) -> typing.Iterable[lex.ResourceDto]:
     return get_resources.query()
 
 
 @router.post("/", response_model=ResourceDto, status_code=status.HTTP_201_CREATED)
-def create_new_resource(
-    new_resource: ResourceCreate = Body(...),  # noqa: B008
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),  # noqa: B008
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),  # noqa: B008
+def create_new_resource(  # noqa: D103
+    new_resource: ResourceCreate = Body(...),
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
 ) -> ResourceDto:
     logger.info(
         "creating new resource",
@@ -90,12 +90,12 @@ def create_new_resource(
     # response_model=ResourceDto,
     status_code=status.HTTP_200_OK,
 )
-def publishing_resource(
+def publishing_resource(  # noqa: ANN201, D103
     resource_id: str,
-    resource_publish: schemas.ResourcePublish = Body(...),  # noqa: B008
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),  # noqa: B008
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),  # noqa: B008
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),  # noqa: B008
+    resource_publish: schemas.ResourcePublish = Body(...),
+    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
@@ -131,9 +131,9 @@ def publishing_resource(
     "/{resource_id}",
     response_model=ResourcePublic,
 )
-def get_resource_by_resource_id(
+def get_resource_by_resource_id(  # noqa: D103
     resource_id: str,
-    resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),  # noqa: B008
+    resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
 ) -> ResourcePublic:
     if resource := resource_repo.get_by_resource_id(resource_id):
         return ResourcePublic(**resource.dict())
@@ -144,5 +144,5 @@ def get_resource_by_resource_id(
         )
 
 
-def init_app(app):
+def init_app(app):  # noqa: ANN201, D103, ANN001
     app.include_router(router)

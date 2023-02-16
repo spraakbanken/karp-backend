@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 
 from karp.command_bus import CommandHandler
 from karp.lex.application.repositories.entries import EntryUnitOfWork
@@ -9,15 +9,15 @@ from karp.lex.application import repositories
 logger = logging.getLogger(__name__)
 
 
-class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
-    def __init__(
+class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
     ):
         self._entry_repo_uow = entry_repo_uow
 
-    def execute(self, command: commands.CreateEntryRepository) -> EntryUnitOfWork:
+    def execute(self, command: commands.CreateEntryRepository) -> EntryUnitOfWork:  # noqa: D102
         entry_repo, events = self._entry_repo_uow.factory.create(
             repository_type=command.repository_type,
             entity_id=command.entity_id,
@@ -38,15 +38,15 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
         return entry_repo
 
 
-class DeletingEntryRepository(CommandHandler[commands.DeleteEntryRepository]):
-    def __init__(
+class DeletingEntryRepository(CommandHandler[commands.DeleteEntryRepository]):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
     ):
         self._entry_repo_uow = entry_repo_uow
 
-    def execute(self, command: commands.DeleteEntryRepository) -> None:
+    def execute(self, command: commands.DeleteEntryRepository) -> None:  # noqa: D102
         with self._entry_repo_uow as uow:
             entry_repo = uow.repo.get_by_id(command.entity_id)
             events = entry_repo.discard(user=command.user, timestamp=command.timestamp)

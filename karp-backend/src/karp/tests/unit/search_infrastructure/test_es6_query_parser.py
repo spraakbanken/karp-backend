@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: I001
 
 import elasticsearch_dsl as es_dsl
 
@@ -67,7 +67,7 @@ def parser() -> KarpQueryV6Parser:
         # )
     ],
 )
-def test_es_query(parser, q, expected):
+def test_es_query(parser, q, expected):  # noqa: ANN201, ANN001
     model = parser.parse(q)
 
     query = EsQueryBuilder().walk(model)
@@ -126,7 +126,7 @@ def test_es_query(parser, q, expected):
         #         )
     ],
 )
-def test_combined_es_query(parser, q, expected):
+def test_combined_es_query(parser, q, expected):  # noqa: ANN201, ANN001
     query = EsQueryBuilder().walk(parser.parse(q))
 
     assert query == expected

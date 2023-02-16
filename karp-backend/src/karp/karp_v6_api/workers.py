@@ -1,4 +1,4 @@
-from starlette.config import Config
+from starlette.config import Config  # noqa: D100, I001
 from uvicorn.workers import UvicornWorker
 
 
@@ -12,7 +12,7 @@ class ConfigurableWorker(UvicornWorker):
     All of the command line options for uvicorn are potential configuration options
     (see https://www.uvicorn.org/settings/ for the complete list).
 
-    """
+    """  # noqa: D212
 
     #: dict: Set the equivalent of uvicorn command line options as keys.
     CONFIG_KWARGS = {

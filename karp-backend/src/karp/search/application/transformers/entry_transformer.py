@@ -1,12 +1,12 @@
-import abc
+import abc  # noqa: D100
 
 from karp import lex
 from karp.search.application.repositories import IndexEntry
 
 
-class EntryTransformer(abc.ABC):
+class EntryTransformer(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def transform(
+    def transform(  # noqa: D102
         self,
         resource_id: str,
         src_entry: lex.EntryDto,

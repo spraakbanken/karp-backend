@@ -1,4 +1,4 @@
-import json
+import json  # noqa: D100, I001
 from typing import Optional
 
 from tabulate import tabulate
@@ -17,10 +17,10 @@ subapp = typer.Typer()
 
 
 @subapp.command()
-def create(infile: typer.FileBinaryRead, ctx: typer.Context):
+def create(infile: typer.FileBinaryRead, ctx: typer.Context):  # noqa: ANN201, D103
     try:
         data = json.load(infile)
-    except Exception as err:
+    except Exception as err:  # noqa: BLE001
         typer.echo(f"Error reading file '{infile.name}': {str(err)}")
         raise typer.Exit(123)  # noqa: B904
     create_entry_repo = CreateEntryRepository.from_dict(
@@ -41,10 +41,10 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):
 
 
 @subapp.command()
-def delete(
+def delete(  # noqa: ANN201, D103
     entity_id: str,  # TODO: use UniqueIdStr when supported,
     ctx: typer.Context,
-    user: Optional[str] = typer.Option(None),  # noqa: B008
+    user: Optional[str] = typer.Option(None),
 ):
     # bus = inject_from_ctx(CommandBus, ctx)
 
@@ -57,7 +57,7 @@ def delete(
 
 
 @subapp.command()
-def list(ctx: typer.Context):
+def list(ctx: typer.Context):  # noqa: ANN201, D103, A001
     query = inject_from_ctx(ListEntryRepos, ctx)
     typer.echo(
         tabulate(
@@ -71,7 +71,7 @@ def list(ctx: typer.Context):
 
 
 @subapp.command()
-def show(ctx: typer.Context, name: str):
+def show(ctx: typer.Context, name: str):  # noqa: ANN201, D103
     repo = inject_from_ctx(lex.ReadOnlyEntryRepoRepository, ctx)
     entry_repo = repo.get_by_name(name)
     if entry_repo:
@@ -81,5 +81,5 @@ def show(ctx: typer.Context, name: str):
         raise typer.Exit(2)
 
 
-def init_app(app: typer.Typer) -> None:
+def init_app(app: typer.Typer) -> None:  # noqa: D103
     app.add_typer(subapp, name="entry-repo")

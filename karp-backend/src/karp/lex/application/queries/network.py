@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100
 import typing
 
 import pydantic
@@ -6,15 +6,15 @@ import pydantic
 from .entries import EntryDto
 
 
-class ReferenceDto(pydantic.BaseModel):
+class ReferenceDto(pydantic.BaseModel):  # noqa: D101
     resource_id: str
     resource_version: typing.Optional[int]
     entry: EntryDto
 
 
-class GetReferencedEntries(abc.ABC):
+class GetReferencedEntries(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def query(
+    def query(  # noqa: D102
         self,
         resource_id: str,
         entry_id: str,

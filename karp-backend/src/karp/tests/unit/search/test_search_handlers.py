@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable  # noqa: I001
 
 import pytest
 
@@ -21,8 +21,8 @@ def fixture_resource_created() -> ResourceCreated:
         (lex_factories.ResourcePublishedFactory, lambda x: x.published),
     ],
 )
-def test_index_reacts_on_lex_events(
-    event_factory,
+def test_index_reacts_on_lex_events(  # noqa: ANN201
+    event_factory,  # noqa: ANN001
     predicate: Callable,
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
@@ -38,7 +38,7 @@ def test_index_reacts_on_lex_events(
     assert predicate(index_uow.repo.indicies[resource_created.resource_id])  # type: ignore [attr-defined]
 
 
-def test_index_reacts_on_entry_added_event(
+def test_index_reacts_on_entry_added_event(  # noqa: ANN201
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
@@ -65,7 +65,7 @@ def test_index_reacts_on_entry_added_event(
     assert str(create_entry.entity_id) in resource_index.entries
 
 
-def test_index_reacts_on_entry_updated_event(
+def test_index_reacts_on_entry_updated_event(  # noqa: ANN201
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
@@ -98,7 +98,7 @@ def test_index_reacts_on_entry_updated_event(
     assert entry.entry["wordclass"] == "adjektiv"
 
 
-def test_index_reacts_on_entry_deleted_event(
+def test_index_reacts_on_entry_deleted_event(  # noqa: ANN201
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
@@ -130,7 +130,7 @@ def test_index_reacts_on_entry_deleted_event(
     assert "bra" not in resource_index.entries
 
 
-def test_reindex_resource_command(
+def test_reindex_resource_command(  # noqa: ANN201
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()

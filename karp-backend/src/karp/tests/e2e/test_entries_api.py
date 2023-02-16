@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List  # noqa: I001
 import uuid  # noqa: F401
 
 import pytest  # pyre-ignore
@@ -30,7 +30,7 @@ from karp.lex.application.queries import EntryDto
 # )
 
 
-def get_entry_uow(container, resource_id: str):
+def get_entry_uow(container, resource_id: str):  # noqa: ANN201, ANN001
     get_entry_repository_id = container.get(GetEntryRepositoryId)  # type: ignore [misc]
     entry_repo_id = get_entry_repository_id.query("places")
     entry_uow_repo_uow = container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
@@ -39,7 +39,7 @@ def get_entry_uow(container, resource_id: str):
 
 
 def init(
-    client,
+    client,  # noqa: ANN001
     entries: List[Dict],
     access_token: auth.AccessToken,
 ) -> list[str]:
@@ -56,8 +56,8 @@ def init(
 
 
 @pytest.fixture(name="entry_places_214_id", scope="session")
-def fixture_entry_places_214_id(
-    fa_data_client,
+def fixture_entry_places_214_id(  # noqa: ANN201
+    fa_data_client,  # noqa: ANN001
     write_token: auth.AccessToken,
 ):
     ids = init(
@@ -71,8 +71,8 @@ def fixture_entry_places_214_id(
 
 
 @pytest.fixture(name="entry_places_209_id", scope="session")
-def fixture_entry_places_209_id(
-    fa_data_client,
+def fixture_entry_places_209_id(  # noqa: ANN201
+    fa_data_client,  # noqa: ANN001
     write_token: auth.AccessToken,
 ):
     ids = init(
@@ -86,7 +86,7 @@ def fixture_entry_places_209_id(
 
 
 class TestEntriesRoutes:
-    def test_routes_exist(self, fa_data_client):
+    def test_routes_exist(self, fa_data_client):  # noqa: ANN201, ANN001
         response = fa_data_client.post("/entries/places/add")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
@@ -101,7 +101,7 @@ class TestEntriesRoutes:
 
 
 class TestAddEntry:
-    def test_put_route_exist(self, fa_data_client):
+    def test_put_route_exist(self, fa_data_client):  # noqa: ANN201, ANN001
         response = fa_data_client.put("/entries/places")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
@@ -112,9 +112,9 @@ class TestAddEntry:
             ({"user": "a@b.se"},),
         ],
     )
-    def test_invalid_data_returns_422(
+    def test_invalid_data_returns_422(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         invalid_data: Dict,
         write_token: auth.AccessToken,
     ):
@@ -126,9 +126,9 @@ class TestAddEntry:
         print(f"{response.json()=}")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_add_with_valid_data_returns_201(
+    def test_add_with_valid_data_returns_201(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         response = fa_data_client.put(
@@ -157,9 +157,9 @@ class TestAddEntry:
         with entry_uow as uw:
             assert new_id in uw.repo.entity_ids()
 
-    def test_add_with_valid_data_and_entity_id_returns_201(
+    def test_add_with_valid_data_and_entity_id_returns_201(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entity_id = make_unique_id()
@@ -191,9 +191,9 @@ class TestAddEntry:
             assert new_id in uw.repo.entity_ids()
 
     @pytest.mark.skip(reason="we don't use entry_id")
-    def test_adding_existing_fails_with_400(
+    def test_adding_existing_fails_with_400(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = 204
@@ -241,9 +241,9 @@ class TestAddEntry:
             == f"An entry with entry_id '{entry_id}' already exists."
         )
 
-    def test_add_fails_with_invalid_entry(
+    def test_add_fails_with_invalid_entry(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         response = fa_data_client.post(
@@ -260,9 +260,9 @@ class TestAddEntry:
 
 
 class TestDeleteEntry:
-    def test_delete(
+    def test_delete(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = 205
@@ -296,9 +296,9 @@ class TestDeleteEntry:
             assert uw.repo.by_id(entity_id).discarded
             assert entity_id not in uw.repo.entity_ids()
 
-    def test_delete_rest(
+    def test_delete_rest(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = 205
@@ -332,9 +332,9 @@ class TestDeleteEntry:
             assert uw.repo.by_id(entity_id).discarded
             assert entity_id not in uw.repo.entity_ids()
 
-    def test_delete_non_existing_fails(
+    def test_delete_non_existing_fails(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = make_unique_id()
@@ -354,9 +354,9 @@ class TestDeleteEntry:
             == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
         )
 
-    def test_delete_rest_non_existing_fails(
+    def test_delete_rest_non_existing_fails(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = "00000000000000000000000000"
@@ -378,9 +378,9 @@ class TestDeleteEntry:
 
 
 class TestUpdateEntry:
-    def test_update_non_existing_fails(
+    def test_update_non_existing_fails(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = make_unique_id()
@@ -409,9 +409,9 @@ class TestUpdateEntry:
             == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
         )
 
-    def test_update_wo_changes_succeeds(
+    def test_update_wo_changes_succeeds(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = 206
@@ -452,9 +452,9 @@ class TestUpdateEntry:
         )
         assert response.status_code == status.HTTP_200_OK
 
-    def test_update_wrong_version_fails(
+    def test_update_wrong_version_fails(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = 207
@@ -504,9 +504,9 @@ class TestUpdateEntry:
             {"type": "CHANGE", "field": "population", "before": 4, "after": 5}
         ]
 
-    def test_update_returns_200_on_valid_data(
+    def test_update_returns_200_on_valid_data(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = 208
@@ -557,9 +557,9 @@ class TestUpdateEntry:
             assert uw.repo.by_id(entity_id).body["population"] == 5
             assert entity_id in uw.repo.entity_ids()
 
-    def test_update_several_times(
+    def test_update_several_times(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
         entry_places_209_id: str,
     ):
@@ -581,9 +581,9 @@ class TestUpdateEntry:
             assert response.status_code == status.HTTP_200_OK
 
     @pytest.mark.xfail()
-    def test_update_entry_id(
+    def test_update_entry_id(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = 210
@@ -631,9 +631,9 @@ class TestUpdateEntry:
             assert str(entry_id) not in entry_ids
             assert str(entry_id + 1) in entry_ids
 
-    def test_update_changes_last_modified(
+    def test_update_changes_last_modified(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
     ):
         entry_id = 212
@@ -681,15 +681,15 @@ class TestUpdateEntry:
 
 
 class TestGetEntry:
-    def test_get_entry_wo_auth_returns_403(
-        self, fa_data_client, entry_places_214_id: str
+    def test_get_entry_wo_auth_returns_403(  # noqa: ANN201
+        self, fa_data_client, entry_places_214_id: str  # noqa: ANN001
     ):
         response = fa_data_client.get(f"/entries/places/{entry_places_214_id}")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_get_entry_w_lower_auth_returns_401(
+    def test_get_entry_w_lower_auth_returns_401(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         write_token: auth.AccessToken,
         entry_places_214_id: str,
     ):
@@ -699,9 +699,9 @@ class TestGetEntry:
         )
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_get_entry_by_entry_id(
+    def test_get_entry_by_entry_id(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         entry_places_214_id: str,
     ):
@@ -715,9 +715,9 @@ class TestGetEntry:
         assert entry.entity_id == entry_places_214_id
         assert entry.version == 1
 
-    def test_route_w_version_exist(
+    def test_route_w_version_exist(  # noqa: ANN201
         self,
-        fa_data_client,
+        fa_data_client,  # noqa: ANN001
         admin_token: auth.AccessToken,
         entry_places_209_id: str,
     ):
@@ -733,16 +733,16 @@ class TestGetEntry:
 
 
 class TestPreviewEntry:
-    def test_preview_fails_with_422_on_invalid_data(
-        self, fa_data_client, read_token: auth.AccessToken
+    def test_preview_fails_with_422_on_invalid_data(  # noqa: ANN201
+        self, fa_data_client, read_token: auth.AccessToken  # noqa: ANN001
     ):
         response = fa_data_client.post(
             "/entries/places/preview", json={}, headers=read_token.as_header()
         )
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_preview_returns_200_on_valid_data(
-        self, fa_data_client, read_token: auth.AccessToken
+    def test_preview_returns_200_on_valid_data(  # noqa: ANN201
+        self, fa_data_client, read_token: auth.AccessToken  # noqa: ANN001
     ):
         response = fa_data_client.post(
             "/entries/places/preview",
@@ -765,7 +765,7 @@ class TestPreviewEntry:
 
 
 @pytest.mark.skip()
-def test_update_wrong_id(fa_data_client, write_token: auth.AccessToken):
+def test_update_wrong_id(fa_data_client, write_token: auth.AccessToken):  # noqa: ANN201, ANN001
     response = fa_data_client.post(
         "/entries/places/add",
         json={
@@ -817,7 +817,7 @@ def test_update_wrong_id(fa_data_client, write_token: auth.AccessToken):
 
 
 @pytest.mark.skip()
-def test_refs(fa_data_client):
+def test_refs(fa_data_client):  # noqa: ANN201, ANN001
     client = init(
         fa_data_client,
         [
@@ -859,7 +859,7 @@ def test_refs(fa_data_client):
 
 
 @pytest.mark.skip()
-def test_external_refs(fa_data_client):
+def test_external_refs(fa_data_client):  # noqa: ANN201, ANN001
     client = init(
         fa_data_client,
         [
@@ -953,7 +953,7 @@ def test_external_refs(fa_data_client):
 
 
 @pytest.mark.skip()
-def test_update_refs(fa_data_client):
+def test_update_refs(fa_data_client):  # noqa: ANN201, ANN001
     client = init(
         fa_data_client,
         es,  # noqa: F821
@@ -997,7 +997,7 @@ def test_update_refs(fa_data_client):
 
 
 @pytest.mark.skip()
-def test_update_refs2(fa_data_client):
+def test_update_refs2(fa_data_client):  # noqa: ANN201, ANN001
     client = init(
         fa_data_client,
         es,  # noqa: F821

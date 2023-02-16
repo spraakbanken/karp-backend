@@ -1,5 +1,5 @@
 """Model for a lexical entry."""
-import enum
+import enum  # noqa: I001
 import logging
 import typing
 from typing import Dict, Optional, Any, Tuple
@@ -12,22 +12,22 @@ from karp.foundation.value_objects import unique_id
 logger = logging.getLogger("karp")
 
 
-class EntryOp(enum.Enum):
+class EntryOp(enum.Enum):  # noqa: D101
     ADDED = "ADDED"
     DELETED = "DELETED"
     UPDATED = "UPDATED"
 
 
-class EntryStatus(enum.Enum):
+class EntryStatus(enum.Enum):  # noqa: D101
     IN_PROGRESS = "IN-PROGRESS"
     IN_REVIEW = "IN_REVIEW"
     OK = "OK"
 
 
-class Entry(TimestampedVersionedEntity):
+class Entry(TimestampedVersionedEntity):  # noqa: D101
     DiscardedEntityError = errors.DiscardedEntityError
 
-    def __init__(
+    def __init__(  # noqa: D107, ANN204
         self,
         *,
         # entry_id: str,
@@ -39,7 +39,7 @@ class Entry(TimestampedVersionedEntity):
         status: EntryStatus = EntryStatus.IN_PROGRESS,
         op: EntryOp = EntryOp.ADDED,
         version: int = 1,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
         # version: int = 0
     ):
         super().__init__(version=version, **kwargs)
@@ -52,7 +52,7 @@ class Entry(TimestampedVersionedEntity):
         self._repo_id = repository_id
 
     @property
-    def repo_id(self) -> unique_id.UniqueId:
+    def repo_id(self) -> unique_id.UniqueId:  # noqa: D102
         return self._repo_id
 
     # @property
@@ -67,13 +67,13 @@ class Entry(TimestampedVersionedEntity):
     #     self._entry_id = constraints.length_gt_zero("entry_id", entry_id)
 
     @property
-    def body(self):
+    def body(self):  # noqa: ANN201
         """The body of the entry."""
         return self._body
 
     # @body.setter
     # @deprecated(version="6.0.7", reason="use update")
-    def update_body(
+    def update_body(  # noqa: ANN201, D102
         self,
         body: Dict,
         *,
@@ -98,12 +98,12 @@ class Entry(TimestampedVersionedEntity):
         ]
 
     @property
-    def op(self):
+    def op(self):  # noqa: ANN201
         """The latest operation of this entry."""
         return self._op
 
     @property
-    def status(self):
+    def status(self):  # noqa: ANN201
         """The workflow status of this entry."""
         return self._status
 
@@ -115,11 +115,11 @@ class Entry(TimestampedVersionedEntity):
     #     self._status = status
 
     @property
-    def message(self):
+    def message(self):  # noqa: ANN201
         """The message for the latest operation of this entry."""
         return self._message
 
-    def dict(self) -> Dict[str, Any]:
+    def dict(self) -> Dict[str, Any]:  # noqa: A003, D102
         return {
             # "entry_id": self._entry_id,
             "entity_id": self.entity_id,
@@ -132,7 +132,7 @@ class Entry(TimestampedVersionedEntity):
             "message": self._message,
         }
 
-    def discard(
+    def discard(  # noqa: ANN201, D102
         self,
         *,
         user: str,
@@ -156,19 +156,19 @@ class Entry(TimestampedVersionedEntity):
             )
         ]
 
-    def _update_field(self, arg0, user: str, timestamp: Optional[float]):
+    def _update_field(self, arg0, user: str, timestamp: Optional[float]):  # noqa: ANN202, ANN001
         result = arg0
         self._last_modified_by = user
         self._last_modified = self._ensure_timestamp(timestamp)
         self._increment_version()
         return result
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # noqa: D105
         return f"Entry(id={self._id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"
 
 
 # === Factories ===
-def create_entry(
+def create_entry(  # noqa: D103
     # entry_id: str,
     body: Dict,
     *,

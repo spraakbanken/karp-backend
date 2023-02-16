@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 
 from typing import Iterable
 
@@ -74,8 +74,8 @@ logger = logging.getLogger(__name__)
 # ):
 
 
-class ReindexingResource(command_bus.CommandHandler[commands.ReindexResource]):
-    def __init__(
+class ReindexingResource(command_bus.CommandHandler[commands.ReindexResource]):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         index_uow: IndexUnitOfWork,
         resource_views: ResourceViews,
@@ -86,7 +86,7 @@ class ReindexingResource(command_bus.CommandHandler[commands.ReindexResource]):
         self.resource_views = resource_views
         self.pre_processor = pre_processor
 
-    def execute(self, command: commands.ReindexResource) -> None:
+    def execute(self, command: commands.ReindexResource) -> None:  # noqa: D102
         logger.debug("Reindexing resource '%s'", command.resource_id)
         with self.index_uow as uw:
             uw.repo.create_index(
@@ -99,17 +99,17 @@ class ReindexingResource(command_bus.CommandHandler[commands.ReindexResource]):
             uw.commit()
 
 
-class ResourcePublishedHandler(
+class ResourcePublishedHandler(  # noqa: D101
     foundation_events.EventHandler[lex_events.ResourcePublished]
 ):
-    def __init__(self, index_uow: IndexUnitOfWork):
+    def __init__(self, index_uow: IndexUnitOfWork):  # noqa: D107, ANN204
         self.index_uow = index_uow
 
-    def __call__(
+    def __call__(  # noqa: D102
         self,
         event: events.ResourcePublished,
-        *args,
-        **kwargs,
+        *args,  # noqa: ANN002
+        **kwargs,  # noqa: ANN003
     ) -> None:
         # research_service(event, ctx)
         with self.index_uow as uw:
@@ -119,29 +119,29 @@ class ResourcePublishedHandler(
         #     resourcemgr.publish_resource(resource_id, version)
 
 
-class CreateSearchServiceHandler(
+class CreateSearchServiceHandler(  # noqa: D101
     foundation_events.EventHandler[lex_events.ResourceCreated]
 ):
-    def __init__(self, index_uow: IndexUnitOfWork):
+    def __init__(self, index_uow: IndexUnitOfWork):  # noqa: D107, ANN204
         self.index_uow = index_uow
 
-    def collect_new_events(self) -> Iterable[foundation_events.Event]:
+    def collect_new_events(self) -> Iterable[foundation_events.Event]:  # noqa: D102
         yield from self.index_uow.collect_new_events()
 
-    def __call__(self, event: events.ResourceCreated, *args, **kwargs):
+    def __call__(self, event: events.ResourceCreated, *args, **kwargs):  # noqa: ANN003, ANN204, ANN002, D102
         with self.index_uow as uw:
             uw.repo.create_index(event.resource_id, event.config)
             uw.commit()
 
 
-class DeletingIndex(foundation_events.EventHandler[lex_events.ResourceDiscarded]):
-    def __init__(self, index_uow: IndexUnitOfWork):
+class DeletingIndex(foundation_events.EventHandler[lex_events.ResourceDiscarded]):  # noqa: D101
+    def __init__(self, index_uow: IndexUnitOfWork):  # noqa: D107, ANN204
         self.index_uow = index_uow
 
-    def collect_new_events(self) -> Iterable[foundation_events.Event]:
+    def collect_new_events(self) -> Iterable[foundation_events.Event]:  # noqa: D102
         yield from self.index_uow.collect_new_events()
 
-    def __call__(self, event: events.ResourceDiscarded, *args, **kwargs):
+    def __call__(self, event: events.ResourceDiscarded, *args, **kwargs):  # noqa: ANN003, ANN204, ANN002, D102
         pass
 
 
@@ -155,8 +155,8 @@ class DeletingIndex(foundation_events.EventHandler[lex_events.ResourceDiscarded]
 #         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
-class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
-    def __init__(
+class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
@@ -166,11 +166,11 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
 
-    def __call__(
+    def __call__(  # noqa: D102, ANN204
         self,
         event: events.EntryAdded,
-        *args,
-        **kwargs,
+        *args,  # noqa: ANN002
+        **kwargs,  # noqa: ANN003
     ):
         with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
@@ -192,8 +192,8 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):
             uw.commit()
 
 
-class EntryUpdatedHandler(foundation_events.EventHandler[lex_events.EntryUpdated]):
-    def __init__(
+class EntryUpdatedHandler(foundation_events.EventHandler[lex_events.EntryUpdated]):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
@@ -203,11 +203,11 @@ class EntryUpdatedHandler(foundation_events.EventHandler[lex_events.EntryUpdated
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
 
-    def __call__(
+    def __call__(  # noqa: D102, ANN204
         self,
         event: events.EntryUpdated,
-        *args,
-        **kwargs,
+        *args,  # noqa: ANN002
+        **kwargs,  # noqa: ANN003
     ):
         with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
@@ -231,8 +231,8 @@ class EntryUpdatedHandler(foundation_events.EventHandler[lex_events.EntryUpdated
             # ctx.index_uow.commit()
 
 
-class EntryDeletedHandler(foundation_events.EventHandler[lex_events.EntryDeleted]):
-    def __init__(
+class EntryDeletedHandler(foundation_events.EventHandler[lex_events.EntryDeleted]):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
@@ -242,7 +242,7 @@ class EntryDeletedHandler(foundation_events.EventHandler[lex_events.EntryDeleted
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
 
-    def __call__(self, event: events.EntryDeleted):
+    def __call__(self, event: events.EntryDeleted):  # noqa: D102, ANN204
         with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 # uw.repo.delete_entry(resource_id, entry_id=event.entry_id)

@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: I001
 from paradigmextract import morphparser
 
 from karp.lex.domain.entities.entry import Entry
@@ -10,7 +10,7 @@ from karp.lex.domain.entities.entry import Entry
 pytestmark = pytest.mark.skip()
 
 
-def test_morph_entry_has_entry_id():
+def test_morph_entry_has_entry_id():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "pn_test", pos="pn", form_msds=[], var_insts=[], resource_id="m"
     )
@@ -20,7 +20,7 @@ def test_morph_entry_has_entry_id():
     assert morph_entry.entry_id == "pn_test"
 
 
-def test_morph_entry_has_function_get_inflection_table():
+def test_morph_entry_has_function_get_inflection_table():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "pn_test", pos="pn", form_msds=[], var_insts=[], resource_id="m"
     )
@@ -28,7 +28,7 @@ def test_morph_entry_has_function_get_inflection_table():
     assert hasattr(morph_entry, "get_inflection_table")
 
 
-def test_morph_entry_inflect_av_1_blå():
+def test_morph_entry_inflect_av_1_blå():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "av_1_blå",
         pos="av",
@@ -96,7 +96,7 @@ def test_morph_entry_inflect_av_1_blå():
     ]
 
 
-def test_morph_entry_inflect_av_1_höger():
+def test_morph_entry_inflect_av_1_höger():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "av_1_höger", pos="av", form_msds=[], var_insts=[], resource_id="m"
     )
@@ -106,7 +106,7 @@ def test_morph_entry_inflect_av_1_höger():
     pass
 
 
-def test_morph_entry_inflect_nn_0n_ansvar():
+def test_morph_entry_inflect_nn_0n_ansvar():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "nn_0n_ansvar",
         pos="nn",
@@ -130,7 +130,7 @@ def test_morph_entry_inflect_nn_0n_ansvar():
     ]
 
 
-def test_morph_entry_inflect_nn_3u_son():
+def test_morph_entry_inflect_nn_3u_son():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "nn_3u_son",
         pos="nn",
@@ -163,7 +163,7 @@ def test_morph_entry_inflect_nn_3u_son():
 
 
 @pytest.mark.xfail(reason="can't match")
-def test_morph_entry_inflect_nn_2u_bövel():
+def test_morph_entry_inflect_nn_2u_bövel():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "nn_2u_bövel",
         pos="nn",
@@ -176,7 +176,7 @@ def test_morph_entry_inflect_nn_2u_bövel():
     assert inflection_table == [("sg indef nom", "sommar")]
 
 
-def test_morph_entry_inflect_nn_0n_syre():
+def test_morph_entry_inflect_nn_0n_syre():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "nn_0n_syre",
         pos="nn",
@@ -201,7 +201,7 @@ def test_morph_entry_inflect_nn_0n_syre():
 
 
 @pytest.mark.skip(reason="How shall it be used.")
-def test_morph_entry_inflect_ab():
+def test_morph_entry_inflect_ab():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "ab_1_illa", pos="ab", form_msds=[("")], var_insts=[], resource_id="m"
     )
@@ -209,7 +209,7 @@ def test_morph_entry_inflect_ab():
     inflection_table = morph_entry.get_inflection_table("")
 
 
-def test_morph_entry_inflect_vb_2a_känna():
+def test_morph_entry_inflect_vb_2a_känna():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "vb_2a_känna",
         pos="vb",
@@ -245,7 +245,7 @@ def test_morph_entry_inflect_vb_2a_känna():
     ]
 
 
-def test_morph_entry_inflect_vb_1a_laga():
+def test_morph_entry_inflect_vb_1a_laga():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "vb_1a_laga",
         pos="vb",
@@ -279,7 +279,7 @@ def test_morph_entry_inflect_vb_1a_laga():
     ]
 
 
-def test_morph_entry_vb_1s_andas():
+def test_morph_entry_vb_1s_andas():  # noqa: ANN201
     morph_entry = create_morphological_entry(
         "vb_1s_andas",
         pos="vb",

@@ -1,4 +1,4 @@
-import copy
+import copy  # noqa: I001
 
 import pytest
 
@@ -14,7 +14,7 @@ from . import adapters, factories
 
 
 class TestCreateResource:
-    def test_create_resource_w_no_entry_repo_raises(
+    def test_create_resource_w_no_entry_repo_raises(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -22,7 +22,7 @@ class TestCreateResource:
         with pytest.raises(errors.NoSuchEntryRepository):
             lex_ctx.command_bus.dispatch(cmd)
 
-    def test_create_resource(
+    def test_create_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -41,7 +41,7 @@ class TestCreateResource:
         assert resource.resource_id == cmd.resource_id
         # assert len(resource.domain_events) == 1
 
-    def test_create_resource_with_same_resource_id_raises(
+    def test_create_resource_with_same_resource_id_raises(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -61,7 +61,7 @@ class TestCreateResource:
 
         assert resource_uow.was_rolled_back  # type: ignore [attr-defined]
 
-    def test_bad_resource_id_raises(
+    def test_bad_resource_id_raises(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -77,7 +77,7 @@ class TestCreateResource:
 
 
 class TestUpdateResource:
-    def test_update_resource(
+    def test_update_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -114,7 +114,7 @@ class TestUpdateResource:
 
 
 class TestPublishResource:
-    def test_publish_resource(
+    def test_publish_resource(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
