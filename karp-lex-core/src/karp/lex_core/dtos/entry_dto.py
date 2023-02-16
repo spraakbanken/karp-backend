@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime  # noqa: D100
 from typing import Generic, Optional, TypeVar
 
 from karp.lex_core import alias_generators
@@ -9,7 +9,7 @@ from pydantic.generics import GenericModel
 T = TypeVar("T")
 
 
-class GenericEntryDto(GenericModel, Generic[T]):
+class GenericEntryDto(GenericModel, Generic[T]):  # noqa: D101
     entry: T
     last_modified_by: Optional[str]
     last_modified: Optional[datetime]
@@ -19,13 +19,13 @@ class GenericEntryDto(GenericModel, Generic[T]):
     resource: Optional[str]
     discarded: bool = False
 
-    class Config:
+    class Config:  # noqa: D106
         extra = "forbid"
         alias_generator = alias_generators.to_lower_camel
 
     @root_validator(pre=True)
     @classmethod
-    def allow_snake_case(cls, values):
+    def allow_snake_case(cls, values):  # noqa: ANN206, D102, ANN001
         if "last_modified" in values:
             values["lastModified"] = values.pop("last_modified")
         if "last_modified_by" in values:
@@ -34,9 +34,9 @@ class GenericEntryDto(GenericModel, Generic[T]):
             values["entityId"] = values.pop("entity_id")
         return values
 
-    def serialize(self):
+    def serialize(self):  # noqa: ANN201, D102
         return self.dict(by_alias=True, exclude_none=True)
 
 
-class EntryDto(GenericEntryDto[dict]):
+class EntryDto(GenericEntryDto[dict]):  # noqa: D101
     ...

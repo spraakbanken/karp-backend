@@ -1,18 +1,22 @@
-import typing
-from typing import Literal, Optional
+"""Commands for lex resources."""
+
+from typing import Generic, Literal, Optional, TypeVar
 
 import pydantic
 from karp.lex_core.value_objects import unique_id
+from pydantic.generics import GenericModel
 
 from .base import Command
 
+T = TypeVar("T")
 
-class EntityOrResourceIdMixin(Command):
+
+class EntityOrResourceIdMixin(Command):  # noqa: D101
     resource_id: Optional[str]
     entity_id: Optional[unique_id.UniqueIdStr]
 
     @pydantic.root_validator(pre=True)
-    def resource_or_entity_id(cls, values) -> dict:
+    def resource_or_entity_id(cls, values) -> dict:  # noqa: D102, ANN001
         entity_id = None
         if "entityId" in values:
             entity_id = values["entityId"]
@@ -39,23 +43,27 @@ class EntityOrResourceIdMixin(Command):
         }
 
 
-class CreateResource(Command):
+class GenericCreateResource(GenericModel, Generic[T], Command):  # noqa: D101
     entity_id: unique_id.UniqueIdStr = pydantic.Field(
         default_factory=unique_id.make_unique_id_str
     )
     resource_id: str
     name: str
-    config: dict
+    config: T
     entry_repo_id: unique_id.UniqueIdStr
     cmdtype: Literal["create_resource"] = "create_resource"
 
+
+class CreateResource(GenericCreateResource[dict]):
+    """Command to create a resource."""
+
     @classmethod
-    def from_dict(
+    def from_dict(  # noqa: D102
         cls,
         data: dict,
         entry_repo_id: unique_id.UniqueIdPrimitive,
-        user: typing.Optional[str] = None,
-        message: typing.Optional[str] = None,
+        user: Optional[str] = None,
+        message: Optional[str] = None,
     ) -> "CreateResource":
         try:
             resource_id = data.pop("resource_id")
@@ -78,24 +86,30 @@ class CreateResource(Command):
         )
 
 
-class UpdateResource(EntityOrResourceIdMixin, Command):
+class GenericUpdateResource(EntityOrResourceIdMixin, GenericModel, Generic[T], Command):
+    """Generic command for updating a resource."""
+
     version: int
     name: str
-    config: dict
+    config: T
     cmdtype: Literal["update_resource"] = "update_resource"
 
 
-class PublishResource(EntityOrResourceIdMixin, Command):
+class UpdateResource(GenericUpdateResource[dict]):
+    """Command for updating a resource."""
+
+
+class PublishResource(EntityOrResourceIdMixin, Command):  # noqa: D101
     version: int
     cmdtype: Literal["publish_resource"] = "publish_resource"
 
 
-class DeleteResource(EntityOrResourceIdMixin, Command):
+class DeleteResource(EntityOrResourceIdMixin, Command):  # noqa: D101
     version: int
     cmdtype: Literal["delete_resource"] = "delete_resource"
 
 
-class SetEntryRepoId(EntityOrResourceIdMixin, Command):
+class SetEntryRepoId(EntityOrResourceIdMixin, Command):  # noqa: D101
     entry_repo_id: unique_id.UniqueIdStr
     version: int
     cmdtype: Literal["set_entry_repo_id"] = "set_entry_repo_id"

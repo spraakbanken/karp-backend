@@ -9,6 +9,8 @@ from .entry_commands import (
     AddEntriesInChunks,
     AddEntry,
     DeleteEntry,
+    GenericAddEntry,
+    GenericUpdateEntry,
     ImportEntries,
     ImportEntriesInChunks,
     UpdateEntry,
@@ -17,6 +19,8 @@ from .entry_repo_commands import CreateEntryRepository, DeleteEntryRepository
 from .resource_commands import (
     CreateResource,
     DeleteResource,
+    GenericCreateResource,
+    GenericUpdateResource,
     PublishResource,
     SetEntryRepoId,
     UpdateResource,
@@ -28,6 +32,8 @@ __all__ = [
     "AddEntriesInChunks",
     "AddEntry",
     "DeleteEntry",
+    "GenericAddEntry",
+    "GenericUpdateEntry",
     "ImportEntries",
     "ImportEntriesInChunks",
     "UpdateEntry",
@@ -37,6 +43,8 @@ __all__ = [
     # Resource commands
     "CreateResource",
     "DeleteResource",
+    "GenericCreateResource",
+    "GenericUpdateResource",
     "PublishResource",
     "SetEntryRepoId",
     "UpdateResource",
@@ -52,19 +60,19 @@ ResourceCommandType = Union[
 ]
 
 
-class LexCommand(BaseModel):
+class LexCommand(BaseModel):  # noqa: D101
     command: Union[EntryCommandType, EntryRepoCommandType, ResourceCommandType] = Field(
         ..., discriminator="cmdtype"
     )
 
 
-class EntryCommand(BaseModel):
+class EntryCommand(BaseModel):  # noqa: D101
     command: EntryCommandType = Field(..., discriminator="cmdtype")
 
 
-class EntryRepoCommand(BaseModel):
+class EntryRepoCommand(BaseModel):  # noqa: D101
     command: EntryRepoCommandType = Field(..., discriminator="cmdtype")
 
 
-class ResourceCommand(BaseModel):
+class ResourceCommand(BaseModel):  # noqa: D101
     command: ResourceCommandType = Field(..., discriminator="cmdtype")

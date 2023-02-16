@@ -1,14 +1,14 @@
 from karp.lex_core.dtos import EntryDto
 
 
-def test_can_create_entry_dto():
+def test_can_create_entry_dto():  # noqa: ANN201
     entry_dto = EntryDto(entry={"field": "value"})
 
     assert entry_dto.last_modified is None
     assert entry_dto.last_modified_by is None
 
 
-def test_can_create_entry_dto_with_last_modified_by():
+def test_can_create_entry_dto_with_last_modified_by():  # noqa: ANN201
     entry_dto = EntryDto(
         entry={"field": "value"}, lastModifiedBy="username@example.com"
     )
@@ -17,7 +17,7 @@ def test_can_create_entry_dto_with_last_modified_by():
     assert entry_dto.last_modified_by == "username@example.com"
 
 
-def test_example_snake_case():
+def test_example_snake_case():  # noqa: ANN201
     data = {
         "entity_id": "01GMMWP3ECHP7JEB9NVGRTZ7M6",
         "resource": "fulaord",

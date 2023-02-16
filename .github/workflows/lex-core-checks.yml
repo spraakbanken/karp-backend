@@ -8,6 +8,7 @@ on:
       - v*
     paths:
       - 'karp-lex-core/**'
+      - '!karp-lex-core/README.md'
   pull_request:
     branches:
       - "*"

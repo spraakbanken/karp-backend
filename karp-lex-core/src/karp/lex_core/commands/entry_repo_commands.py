@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Literal, Optional  # noqa: D100
 
 import pydantic
 from karp.lex_core.value_objects import UniqueIdStr, make_unique_id_str
@@ -6,7 +6,7 @@ from karp.lex_core.value_objects import UniqueIdStr, make_unique_id_str
 from .base import Command
 
 
-class CreateEntryRepository(Command):
+class CreateEntryRepository(Command):  # noqa: D101
     entity_id: UniqueIdStr = pydantic.Field(default_factory=make_unique_id_str)
     repository_type: str
     name: str
@@ -17,7 +17,7 @@ class CreateEntryRepository(Command):
     cmdtype: Literal["create_entry_repository"] = "create_entry_repository"
 
     @classmethod
-    def from_dict(
+    def from_dict(  # noqa: D102
         cls, data: dict, *, user: str, message: Optional[str] = None
     ) -> "CreateEntryRepository":
         return cls(
@@ -31,7 +31,7 @@ class CreateEntryRepository(Command):
         )
 
 
-class DeleteEntryRepository(Command):
+class DeleteEntryRepository(Command):  # noqa: D101
     entity_id: UniqueIdStr
     version: int
     message: str

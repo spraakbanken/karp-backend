@@ -26,17 +26,17 @@ def make_unique_id(
 parse = ulid.parse
 
 
-class UniqueIdStr(str):
+class UniqueIdStr(str):  # noqa: D101
     @classmethod
-    def __modify_schema__(cls, field_schema):
+    def __modify_schema__(cls, field_schema):  # noqa: ANN206, ANN001, D105
         field_schema.update(examples=["01BJQMF54D093DXEAWZ6JYRPAQ"])
 
     @classmethod
-    def __get_validators__(cls):
+    def __get_validators__(cls):  # noqa: ANN206, D105
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):
+    def validate(cls, v):  # noqa: ANN206, D102, ANN001
         if isinstance(v, UniqueId):
             return str(v)
         elif not isinstance(v, str):
@@ -47,7 +47,7 @@ class UniqueIdStr(str):
 
         return cls(v)
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # noqa: D105
         return f"UniqueIdStr({super().__repr__()})"
 
 

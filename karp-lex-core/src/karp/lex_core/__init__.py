@@ -1,4 +1,4 @@
-__version__ = "0.3.2"
+__version__ = "0.3.2"  # noqa: D104
 
 
 from karp.lex_core import commands, value_objects
