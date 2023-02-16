@@ -1,5 +1,3 @@
-from karp.lex_core.dtos.entry_dto import EntryDto
+from karp.lex_core.dtos.entry_dto import EntryDto, GenericEntryDto
 
-EntryDtoDict = EntryDto[dict]
-
-__all__ = ["EntryDto", "EntryDtoDict"]
+__all__ = ["EntryDto", "GenericEntryDto"]

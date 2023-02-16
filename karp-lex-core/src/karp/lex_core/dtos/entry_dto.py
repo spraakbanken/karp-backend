@@ -9,7 +9,7 @@ from pydantic.generics import GenericModel
 T = TypeVar("T")
 
 
-class EntryDto(GenericModel, Generic[T]):
+class GenericEntryDto(GenericModel, Generic[T]):
     entry: T
     last_modified_by: Optional[str]
     last_modified: Optional[datetime]
@@ -36,3 +36,7 @@ class EntryDto(GenericModel, Generic[T]):
 
     def serialize(self):
         return self.dict(by_alias=True, exclude_none=True)
+
+
+class EntryDto(GenericEntryDto[dict]):
+    ...

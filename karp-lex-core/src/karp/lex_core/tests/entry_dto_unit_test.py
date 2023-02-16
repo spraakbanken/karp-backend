@@ -1,15 +1,15 @@
-from karp.lex_core.dtos import EntryDtoDict
+from karp.lex_core.dtos import EntryDto
 
 
 def test_can_create_entry_dto():
-    entry_dto = EntryDtoDict(entry={"field": "value"})
+    entry_dto = EntryDto(entry={"field": "value"})
 
     assert entry_dto.last_modified is None
     assert entry_dto.last_modified_by is None
 
 
 def test_can_create_entry_dto_with_last_modified_by():
-    entry_dto = EntryDtoDict(
+    entry_dto = EntryDto(
         entry={"field": "value"}, lastModifiedBy="username@example.com"
     )
 
@@ -31,7 +31,7 @@ def test_example_snake_case():
         "last_modified": 1671443451.340828,
         "last_modified_by": "local admin",
     }
-    entry_dto = EntryDtoDict(**data)
+    entry_dto = EntryDto(**data)
 
     assert entry_dto.entity_id == data["entity_id"]
     assert entry_dto.resource == data["resource"]
