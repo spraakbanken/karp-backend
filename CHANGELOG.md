@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Added: Generic Commands. PR [#224](https://github.com/spraakbanken/karp-backend/pull/224) by [@kod-kristoff](https://github.com/kod-kristoff).
 * added: cmdtype tags. PR [#223](https://github.com/spraakbanken/karp-backend/pull/223) by [@kod-kristoff](https://github.com/kod-kristoff).
 * fix: enable cli resource update again. PR [#222](https://github.com/spraakbanken/karp-backend/pull/222) by [@kod-kristoff](https://github.com/kod-kristoff).
 * Simpler workspace. PR [#221](https://github.com/spraakbanken/karp-backend/pull/221) by [@kod-kristoff](https://github.com/kod-kristoff).
