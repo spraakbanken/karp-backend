@@ -14,3 +14,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* added: cmdtype tags. PR [#223](https://github.com/spraakbanken/karp-backend/pull/223) by [@kod-kristoff](https://github.com/kod-kristoff).
