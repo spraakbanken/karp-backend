@@ -52,3 +52,10 @@ class UniqueIdStr(str):
 
 
 UniqueIdPrimitive = typing.Union[ulid.api.api.ULIDPrimitive, UniqueIdStr]
+
+
+def make_unique_id_str(
+    t: typing.Optional[ulid.codec.TimestampPrimitive] = None,
+) -> UniqueIdStr:
+    """Generate an UniqueIdStr that are sortable."""
+    return UniqueIdStr(make_unique_id(t))

@@ -1,5 +1,5 @@
 # Enable flake8-bugbear (`B`) rules.
-select = ["E", "F", "B", "I"]
+select = ["E", "F", "B", "I", "RUF", "C90", "S", "YTT"]
 
 # Never enforce `E501` (line length violations).
 # ignore = ["E501"]
@@ -10,6 +10,7 @@ line-length = 97
 unfixable = ["B"]
 
 # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
-# [per-file-ignores]
+[per-file-ignores]
+"src/karp/lex_core/tests/*" = ["S101"]
 # "__init__.py" = ["E402"]
 
