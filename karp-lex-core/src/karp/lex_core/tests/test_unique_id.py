@@ -12,8 +12,7 @@ class TestUniqueId:
     def test_bad_tyoe_raises_type_error(self) -> None:
         with pytest.raises(TypeError):
             UniqueId.validate(None)
-    
+
     def test_bad_input_raises_value_error(self) -> None:
         with pytest.raises(ValueError):
             UniqueId.validate("not-an-ulid")
-    

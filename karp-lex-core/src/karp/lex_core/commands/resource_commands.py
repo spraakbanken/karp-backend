@@ -39,7 +39,7 @@ class EntityOrResourceIdMixin(Command):  # noqa: D101
 
 
 class GenericCreateResource(GenericModel, Generic[T], Command):  # noqa: D101
-    id: UniqueId = pydantic.Field(default_factory=make_unique_id) # noqa: A003
+    id: UniqueId = pydantic.Field(default_factory=make_unique_id)  # noqa: A003
     resource_id: str
     name: str
     config: T

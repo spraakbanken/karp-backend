@@ -19,7 +19,7 @@ def test_can_create_entry_dto_with_last_modified_by():  # noqa: ANN201
 
 def test_example_snake_case():  # noqa: ANN201
     data = {
-        "entity_id": "01GMMWP3ECHP7JEB9NVGRTZ7M6",
+        "id": "01GMMWP3ECHP7JEB9NVGRTZ7M6",
         "resource": "fulaord",
         "version": 1,
         "entry": {
@@ -33,7 +33,7 @@ def test_example_snake_case():  # noqa: ANN201
     }
     entry_dto = EntryDto(**data)
 
-    assert entry_dto.entity_id == data["entity_id"]
+    assert entry_dto.id == data["id"]
     assert entry_dto.resource == data["resource"]
     assert entry_dto.version == data["version"]
     assert entry_dto.last_modified.timestamp() == data["last_modified"]  # type: ignore
@@ -41,4 +41,4 @@ def test_example_snake_case():  # noqa: ANN201
 
     serialized_entry = entry_dto.serialize()
 
-    assert serialized_entry["entityId"] == data["entity_id"]
+    assert serialized_entry["id"] == data["id"]
