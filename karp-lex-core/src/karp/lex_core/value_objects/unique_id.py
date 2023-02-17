@@ -4,9 +4,39 @@ import typing
 import ulid
 import ulid.codec
 
-UniqueId = ulid.ULID
+# UniqueId = ulid.ULID
 UniqueIdType = ulid.ULID
 typing_UniqueId = ulid.ULID
+
+UniqueIdPrimitive = ulid.api.api.ULIDPrimitive
+# UniqueIdPrimitive = typing.Union[ulid.api.api.ULIDPrimitive, UniqueIdStr]
+
+class UniqueId(ulid.ULID):  # noqa: D101
+    @classmethod
+    def __modify_schema__(cls, field_schema):  # noqa: ANN206, ANN001, D105
+        field_schema.update(examples=["01BJQMF54D093DXEAWZ6JYRPAQ"])
+
+    @classmethod
+    def __get_validators__(cls):  # noqa: ANN206, D105
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v) -> "UniqueId":  # noqa: D102, ANN001
+        if isinstance(v, UniqueId):
+            return v
+        if isinstance(v, ulid.ULID):
+            return v
+        if not isinstance(v, UniqueIdPrimitive):
+            msg = f"Unsupported type ('{type(v)}')"
+            raise TypeError(msg)
+        try:
+            return ulid.parse(v)
+        except ValueError as err:
+            msg = "not a valid ULID"
+            raise ValueError(msg) from err
+
+    def __repr__(self) -> str:  # noqa: D105
+        return f"UniqueId({super().__repr__()})"
 
 
 def make_unique_id(
@@ -51,7 +81,6 @@ class UniqueIdStr(str):  # noqa: D101
         return f"UniqueIdStr({super().__repr__()})"
 
 
-UniqueIdPrimitive = typing.Union[ulid.api.api.ULIDPrimitive, UniqueIdStr]
 
 
 def make_unique_id_str(

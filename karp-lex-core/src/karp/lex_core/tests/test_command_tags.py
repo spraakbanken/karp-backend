@@ -34,7 +34,7 @@ from karp.lex_core.commands import (
         ),
         (
             {
-                "entityId": "01GSAHD0K063FBMFE19BFDM4E9",
+                "id": "01GSAHD0K063FBMFE19BFDM4E9",
                 "version": 4,
                 "resourceId": "abc",
                 "cmdtype": "delete_entry",
@@ -45,7 +45,7 @@ from karp.lex_core.commands import (
         ),
         (
             {
-                "entityId": "01GSAHD0K063FBMFE19BFDM4E9",
+                "id": "01GSAHD0K063FBMFE19BFDM4E9",
                 "version": 4,
                 "resourceId": "abc",
                 "cmdtype": "update_entry",
@@ -80,7 +80,7 @@ def test_entry_command(data: dict, expected_cls: Type) -> None:
         ),
         (
             {
-                "entityId": "01GSAHD0K063FBMFE19BFDM4E9",
+                "id": "01GSAHD0K063FBMFE19BFDM4E9",
                 "version": 4,
                 "cmdtype": "delete_entry_repository",
                 "user": "user1",
@@ -114,7 +114,7 @@ def test_entry_repo_command(data: dict, expected_cls: Type) -> None:
         ),
         (
             {
-                "entityId": "01GSAHD0K063FBMFE19BFDM4E9",
+                "id": "01GSAHD0K063FBMFE19BFDM4E9",
                 "version": 4,
                 # "resourceId": "abc",
                 "cmdtype": "delete_resource",
@@ -125,7 +125,7 @@ def test_entry_repo_command(data: dict, expected_cls: Type) -> None:
         ),
         (
             {
-                # "entityId": "01GSAHD0K063FBMFE19BFDM4E9",
+                # "id": "01GSAHD0K063FBMFE19BFDM4E9",
                 "version": 4,
                 "resourceId": "abc",
                 "name": "abc",
@@ -138,7 +138,7 @@ def test_entry_repo_command(data: dict, expected_cls: Type) -> None:
         ),
         (
             {
-                "entityId": "01GSAHD0K063FBMFE19BFDM4E9",
+                "id": "01GSAHD0K063FBMFE19BFDM4E9",
                 "version": 4,
                 # "resourceId": "abc",
                 "cmdtype": "publish_resource",

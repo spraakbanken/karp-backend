@@ -24,8 +24,8 @@ test *tests="src/karp/lex_core/tests":
 	{{INVENV}} pytest -vv {{tests}}
 	
 # lint the code
-lint:
-    {{INVENV}} ruff src
+lint *flags="":
+    {{INVENV}} ruff {{flags}} src
 
 # type-check the code
 type-check:

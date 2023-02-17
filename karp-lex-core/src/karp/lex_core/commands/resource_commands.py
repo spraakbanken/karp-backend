@@ -4,6 +4,7 @@ from typing import Generic, Literal, Optional, TypeVar
 
 import pydantic
 from karp.lex_core.value_objects import unique_id
+from karp.lex_core.value_objects.unique_id import UniqueId, make_unique_id
 from pydantic.generics import GenericModel
 
 from .base import Command
@@ -13,40 +14,32 @@ T = TypeVar("T")
 
 class EntityOrResourceIdMixin(Command):  # noqa: D101
     resource_id: Optional[str]
-    entity_id: Optional[unique_id.UniqueIdStr]
+    id: Optional[unique_id.UniqueId]  # noqa: A003
 
     @pydantic.root_validator(pre=True)
-    def resource_or_entity_id(cls, values) -> dict:  # noqa: D102, ANN001
-        entity_id = None
-        if "entityId" in values:
-            entity_id = values["entityId"]
-
+    def resource_id_or_id(cls, values) -> dict:  # noqa: D102, ANN001
         resource_id = None
         if "resourceId" in values:
             resource_id = values["resourceId"]
 
-        if entity_id and resource_id:
-            raise ValueError("Can't give both 'entityId' and 'resourceId'")
-
-        if entity_id is None and resource_id is None:
-            raise ValueError("Must give either 'entityId' or 'resourceId'")
+        if "id" in values and resource_id:
+            raise ValueError("Can't give both 'id' and 'resourceId'")
 
         if resource_id:
             return dict(values) | {
-                "entityId": None,
+                "id": None,
                 "resourceId": resource_id,
             }
-
-        return dict(values) | {
-            "entityId": entity_id,
-            "resourceId": None,
-        }
+        elif "id" in values:
+            return dict(values) | {
+                "resourceId": None,
+            }
+        else:
+            raise ValueError("Must give either 'id' or 'resourceId'")
 
 
 class GenericCreateResource(GenericModel, Generic[T], Command):  # noqa: D101
-    entity_id: unique_id.UniqueIdStr = pydantic.Field(
-        default_factory=unique_id.make_unique_id_str
-    )
+    id: UniqueId = pydantic.Field(default_factory=make_unique_id) # noqa: A003
     resource_id: str
     name: str
     config: T
@@ -110,6 +103,6 @@ class DeleteResource(EntityOrResourceIdMixin, Command):  # noqa: D101
 
 
 class SetEntryRepoId(EntityOrResourceIdMixin, Command):  # noqa: D101
-    entry_repo_id: unique_id.UniqueIdStr
+    entry_repo_id: UniqueId
     version: int
     cmdtype: Literal["set_entry_repo_id"] = "set_entry_repo_id"

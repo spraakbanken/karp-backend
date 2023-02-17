@@ -1,7 +1,7 @@
 from typing import Generic, Iterable, Literal, Optional, TypeVar  # noqa: D100
 
 import pydantic
-from karp.lex_core.value_objects import UniqueIdStr, make_unique_id_str
+from karp.lex_core.value_objects import UniqueId, make_unique_id
 from pydantic.generics import GenericModel
 
 from .base import Command
@@ -10,7 +10,7 @@ T = TypeVar("T")
 
 
 class GenericAddEntry(GenericModel, Generic[T], Command):  # noqa: D101
-    entity_id: UniqueIdStr = pydantic.Field(default_factory=make_unique_id_str)
+    id: UniqueId = pydantic.Field(default_factory=make_unique_id)  # noqa: A003
     resource_id: str
     entry: T
     message: str
@@ -34,7 +34,7 @@ class AddEntriesInChunks(AddEntries):  # noqa: D101
 
 class DeleteEntry(Command):  # noqa: D101
     resource_id: str
-    entity_id: UniqueIdStr
+    id: UniqueId  # noqa: A003
     version: int
     message: Optional[str] = None
     cmdtype: Literal["delete_entry"] = "delete_entry"
@@ -50,7 +50,7 @@ class ImportEntriesInChunks(AddEntriesInChunks):  # noqa: D101
 
 class GenericUpdateEntry(GenericModel, Generic[T], Command):  # noqa: D101
     resource_id: str
-    entity_id: UniqueIdStr
+    id: UniqueId  # noqa: A003
     version: int
     entry: T
     message: str

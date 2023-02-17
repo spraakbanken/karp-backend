@@ -32,7 +32,7 @@ class TestAddEntry:
 class TestUpdateEntry:
     def test_generic_cmd_exported_is_imported_as_nongeneric(self):  # noqa: ANN201
         cmd = GenericUpdateEntry[Ex](
-            entityId="01GSAHD0K063FBMFE19BFDM4E9",
+            id="01GSAHD0K063FBMFE19BFDM4E9",
             entry={"baseform": "ord"},
             version=3,
             message="add",
@@ -66,7 +66,7 @@ class TestCreateResource:
 class TestUpdateResource:
     def test_generic_cmd_exported_is_imported_as_nongeneric(self):  # noqa: ANN201
         cmd = GenericUpdateResource[ExResource](
-            entityId="01GSAHD0K063FBMFE19BFDM4E9",
+            id="01GSAHD0K063FBMFE19BFDM4E9",
             config={"fields": {"baseform": {"type": "string"}}},
             version=3,
             message="add",
