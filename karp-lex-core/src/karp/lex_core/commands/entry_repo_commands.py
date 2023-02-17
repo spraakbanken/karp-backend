@@ -22,9 +22,9 @@ class CreateEntryRepository(Command):  # noqa: D101
     ) -> "CreateEntryRepository":
         return cls(
             # id=make_unique_id_str(),
-            repository_type=data.pop("repository_type", "default"),
+            repositoryType=data.pop("repository_type", "default"),
             name=data.pop("resource_id"),
-            connection_str=data.pop("connection_str", None),
+            connectionStr=data.pop("connection_str", None),
             config=data,
             user=user,
             message=message or "Entry repository created",

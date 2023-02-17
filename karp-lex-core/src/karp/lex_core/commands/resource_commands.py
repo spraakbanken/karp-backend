@@ -3,8 +3,11 @@
 from typing import Generic, Literal, Optional, TypeVar
 
 import pydantic
-from karp.lex_core.value_objects import unique_id
-from karp.lex_core.value_objects.unique_id import UniqueId, make_unique_id
+from karp.lex_core.value_objects.unique_id import (
+    UniqueId,
+    UniqueIdPrimitive,
+    make_unique_id,
+)
 from pydantic.generics import GenericModel
 
 from .base import Command
@@ -14,7 +17,7 @@ T = TypeVar("T")
 
 class EntityOrResourceIdMixin(Command):  # noqa: D101
     resource_id: Optional[str]
-    id: Optional[unique_id.UniqueId]  # noqa: A003
+    id: Optional[UniqueId]  # noqa: A003
 
     @pydantic.root_validator(pre=True)
     def resource_id_or_id(cls, values) -> dict:  # noqa: D102, ANN001
@@ -43,7 +46,7 @@ class GenericCreateResource(GenericModel, Generic[T], Command):  # noqa: D101
     resource_id: str
     name: str
     config: T
-    entry_repo_id: unique_id.UniqueIdStr
+    entry_repo_id: UniqueId
     cmdtype: Literal["create_resource"] = "create_resource"
 
 
@@ -54,7 +57,7 @@ class CreateResource(GenericCreateResource[dict]):
     def from_dict(  # noqa: D102
         cls,
         data: dict,
-        entry_repo_id: unique_id.UniqueIdPrimitive,
+        entry_repo_id: UniqueIdPrimitive,
         user: Optional[str] = None,
         message: Optional[str] = None,
     ) -> "CreateResource":
@@ -67,13 +70,11 @@ class CreateResource(GenericCreateResource[dict]):
         except KeyError as exc:
             raise ValueError("'resource_name' is missing") from exc
 
-        entry_repo_id = unique_id.parse(entry_repo_id)
-
         return cls(
-            resource_id=resource_id,
+            resourceId=resource_id,
             name=name,
             config=data,
-            entry_repo_id=entry_repo_id,
+            entryRepoId=entry_repo_id,
             user=user or "Unknown user",
             message=message or f"Resource '{resource_id}' created.",
         )
