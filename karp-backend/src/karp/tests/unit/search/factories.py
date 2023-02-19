@@ -8,4 +8,4 @@ class ReindexResourceFactory(factory.Factory):
     class Meta:
         model = commands.ReindexResource
 
-    resource_id = factory.Faker("word")
+    resourceId = factory.Faker("word")

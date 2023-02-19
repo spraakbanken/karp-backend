@@ -28,8 +28,8 @@ class TestGenericEntryTransformer:
         create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
         search_unit_ctx.command_bus.dispatch(create_entry_repo)
         create_resource = lex_factories.CreateResourceFactory(
-            entry_repo_id=create_entry_repo.entity_id,
-            resource_id=resource_id,
+            entryRepoId=create_entry_repo.id,
+            resourceId=resource_id,
             config={
                 "fields": {
                     "id": {"type": "string"},
@@ -87,8 +87,8 @@ class TestGenericEntryTransformer:
         search_unit_ctx.command_bus.dispatch(create_entry_repo)
         field_config["collection"] = True
         create_resource = lex_factories.CreateResourceFactory(
-            entry_repo_id=create_entry_repo.entity_id,
-            resource_id=resource_id,
+            entryRepoId=create_entry_repo.id,
+            resourceId=resource_id,
             config={
                 "fields": {
                     "id": {"type": "string"},
@@ -143,8 +143,8 @@ class TestGenericEntryTransformer:
         create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
         search_unit_ctx.command_bus.dispatch(create_entry_repo)
         create_resource = lex_factories.CreateResourceFactory(
-            entry_repo_id=create_entry_repo.entity_id,
-            resource_id=resource_id,
+            entryRepoId=create_entry_repo.id,
+            resourceId=resource_id,
             config={
                 "fields": {
                     "id": {"type": "string"},

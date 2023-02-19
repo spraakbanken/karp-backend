@@ -29,6 +29,6 @@ class TestDeleteEntryRepository:
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         assert entry_uow_repo_uow.repo.num_entities() == 1
 
-        cmd = factories.DeleteEntryRepositoryFactory(entity_id=cmd.entity_id)
+        cmd = factories.DeleteEntryRepositoryFactory(id=cmd.id)
         lex_ctx.command_bus.dispatch(cmd)
         assert entry_uow_repo_uow.repo.num_entities() == 0

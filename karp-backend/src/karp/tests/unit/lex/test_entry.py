@@ -1,12 +1,8 @@
-from typing import Dict  # noqa: I001
-
-
-from karp.lex.domain import events
-from karp.lex.domain import entities
 from karp.foundation.value_objects import unique_id
+from karp.lex.domain import entities, events
 
 
-def random_entry(entry_id: str = None, body: Dict = None) -> entities.Entry:
+def random_entry(entry_id: str = None, body: dict = None) -> entities.Entry:
     return entities.create_entry(
         entity_id=unique_id.make_unique_id(),
         repo_id=unique_id.make_unique_id(),
