@@ -21,14 +21,20 @@ logger = logging.getLogger(__name__)
 
 
 class BasingResource:  # noqa: D101
-    def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:  # noqa: D107
+    def __init__(  # noqa: D107
+        self, resource_uow: repositories.ResourceUnitOfWork
+    ) -> None:
         self.resource_uow = resource_uow
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:  # noqa: D102
+    def collect_new_events(  # noqa: D102
+        self,
+    ) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
 
 
-class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):  # noqa: D101
+class CreatingResource(  # noqa: D101
+    CommandHandler[commands.CreateResource], BasingResource
+):
     def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
@@ -74,11 +80,15 @@ class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
             uow.commit()
         return ResourceDto(**resource.dict())
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:  # noqa: D102
+    def collect_new_events(  # noqa: D102
+        self,
+    ) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
 
 
-class SettingEntryRepoId(CommandHandler[commands.SetEntryRepoId], BasingResource):  # noqa: D101
+class SettingEntryRepoId(  # noqa: D101
+    CommandHandler[commands.SetEntryRepoId], BasingResource
+):
     def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
@@ -109,8 +119,12 @@ class SettingEntryRepoId(CommandHandler[commands.SetEntryRepoId], BasingResource
             uow.commit()
 
 
-class UpdatingResource(CommandHandler[commands.UpdateResource], BasingResource):  # noqa: D101
-    def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:  # noqa: D107
+class UpdatingResource(  # noqa: D101
+    CommandHandler[commands.UpdateResource], BasingResource
+):
+    def __init__(  # noqa: D107
+        self, resource_uow: repositories.ResourceUnitOfWork
+    ) -> None:
         super().__init__(resource_uow=resource_uow)
 
     def execute(self, command: commands.UpdateResource):  # noqa: ANN201, D102
@@ -129,11 +143,15 @@ class UpdatingResource(CommandHandler[commands.UpdateResource], BasingResource):
             uow.post_on_commit(events)
             uow.commit()
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:  # noqa: D102
+    def collect_new_events(  # noqa: D102
+        self,
+    ) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
 
 
-class PublishingResource(CommandHandler[commands.PublishResource], BasingResource):  # noqa: D101
+class PublishingResource(  # noqa: D101
+    CommandHandler[commands.PublishResource], BasingResource
+):
     def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
@@ -157,11 +175,15 @@ class PublishingResource(CommandHandler[commands.PublishResource], BasingResourc
             uow.post_on_commit(events)
             uow.commit()
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:  # noqa: D102
+    def collect_new_events(  # noqa: D102
+        self,
+    ) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()
 
 
-class DeletingResource(CommandHandler[commands.DeleteResource], BasingResource):  # noqa: D101
+class DeletingResource(  # noqa: D101
+    CommandHandler[commands.DeleteResource], BasingResource
+):
     def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
@@ -182,5 +204,7 @@ class DeletingResource(CommandHandler[commands.DeleteResource], BasingResource):
             uow.post_on_commit(events)
             uow.commit()
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:  # noqa: D102
+    def collect_new_events(  # noqa: D102
+        self,
+    ) -> typing.Iterable[foundation_events.Event]:
         yield from self.resource_uow.collect_new_events()

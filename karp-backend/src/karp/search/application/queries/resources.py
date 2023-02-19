@@ -10,5 +10,7 @@ class ResourceViews(abc.ABC):  # noqa: D101
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_resource_ids(self, repo_id: unique_id.UniqueId) -> typing.List[str]:  # noqa: D102
+    def get_resource_ids(  # noqa: D102
+        self, repo_id: unique_id.UniqueId
+    ) -> typing.List[str]:
         raise NotImplementedError()

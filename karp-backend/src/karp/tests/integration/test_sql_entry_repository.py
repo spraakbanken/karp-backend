@@ -83,11 +83,15 @@ class TestSqlEntryRepoGetHistory:
 
 
 class TestSqlEntryRepoByReferencable:
-    def test_by_referenceable_wo_filter_raises_value_error(self, entry_repo):  # noqa: ANN201, ANN001
+    def test_by_referenceable_wo_filter_raises_value_error(  # noqa: ANN201
+        self, entry_repo  # noqa: ANN001
+    ):
         with pytest.raises(ValueError):
             entry_repo.by_referenceable()
 
-    def test_by_referenceable_w_kwargs_returns_entry(self, entry_repo):  # noqa: ANN201, ANN001
+    def test_by_referenceable_w_kwargs_returns_entry(  # noqa: ANN201
+        self, entry_repo  # noqa: ANN001
+    ):
         entry = factories.EntryFactory(body={"a": "b"})
         entry_repo.save(entry)
 
@@ -96,7 +100,9 @@ class TestSqlEntryRepoByReferencable:
         print(f"{entry_copies=}")
         assert entry_copies[0].id == entry.id
 
-    def test_by_referenceable_w_filters_returns_entry(self, entry_repo):  # noqa: ANN201, ANN001
+    def test_by_referenceable_w_filters_returns_entry(  # noqa: ANN201
+        self, entry_repo  # noqa: ANN001
+    ):
         entry = factories.EntryFactory(body={"a": "b"})
         entry_repo.save(entry)
 
@@ -114,7 +120,9 @@ class TestSqlEntryRepoByReferencable:
         assert len(entry_copies) == 1
         assert entry_copies[0].version == 2
 
-    def test_by_referenceable_w_many_filters_returns_one_entry(self, entry_repo):  # noqa: ANN201, ANN001
+    def test_by_referenceable_w_many_filters_returns_one_entry(  # noqa: ANN201
+        self, entry_repo  # noqa: ANN001
+    ):
         entry = factories.EntryFactory(body={"a": "b"})
         entry_repo.save(entry)
         entry2 = factories.EntryFactory(body={"a": "b", "c": "d"})

@@ -30,7 +30,9 @@ class ClientErrorCodes(enum.IntEnum):  # noqa: D101
 
 
 class KarpError(Exception):  # noqa: D101
-    def __init__(self, message: str, code: int = None, http_return_code: int = 400):  # noqa: D107, ANN204
+    def __init__(  # noqa: D107
+        self, message: str, code: int = None, http_return_code: int = 400
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.code = code or ClientErrorCodes.UNKNOWN_ERROR
@@ -52,7 +54,9 @@ class ResourceNotFoundError(KarpError):  # noqa: D101
 
 
 class ResourceInvalidConfigError(KarpError):  # noqa: D101
-    def __init__(self, resource_id, config_file: IO, validation_error_msg: str):  # noqa: D107, ANN204, ANN001
+    def __init__(  # noqa: D107
+        self, resource_id, config_file: IO, validation_error_msg: str  # noqa: ANN001
+    ) -> None:
         msg_fmt = """
         Resource config is not valid.
         ID: {resource_id},
@@ -97,7 +101,11 @@ class ResourceAlreadyPublished(KarpError):  # noqa: D101
 
 class EntryNotFoundError(KarpError):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
-        self, resource_id, entry_id, entry_version=None, resource_version=None  # noqa: ANN001
+        self,
+        resource_id,  # noqa: ANN001
+        entry_id,  # noqa: ANN001
+        entry_version=None,  # noqa: ANN001
+        resource_version=None,  # noqa: ANN001
     ):
         msg = "Entry '{entry_id}' (version {entry_version}) not found. resource_id: {resource_id}, version: {resource_version}"
         super().__init__(

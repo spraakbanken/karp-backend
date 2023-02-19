@@ -191,7 +191,9 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
 
 
 class InMemoryEntryUnitOfWork2(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork):
-    def __init__(self, entity_id, name: str, config: typing.Dict):  # noqa: ANN204, ANN001
+    def __init__(
+        self, entity_id, name: str, config: typing.Dict  # noqa: ANN001
+    ) -> None:
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
             self, entity_id=entity_id, name=name, config=config
@@ -254,16 +256,15 @@ class InMemoryEntryUnitOfWorkCreator:
             entity_id = UniqueId.validate(entity_id)
         if entity_id not in self._cache:
             self._cache[entity_id] = InMemoryEntryUnitOfWork(
-                    entity_id=entity_id,
-                    name=name,
-                    config=config,
-                    connection_str=connection_str,
-                    message=message,
-                    user=user,
-                    event_bus=self.event_bus,
-                )
+                entity_id=entity_id,
+                name=name,
+                config=config,
+                connection_str=connection_str,
+                message=message,
+                user=user,
+                event_bus=self.event_bus,
+            )
         return self._cache[entity_id], []
-        
 
 
 def create_entry_uow2(

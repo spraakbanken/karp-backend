@@ -127,7 +127,9 @@ class ElasticSearchMod(injector.Module):  # noqa: D101
 TEST_AUTH_SERVICE = "DUMMY_AUTH"
 
 
-def install_auth_service(container: injector.Injector, settings: Dict[str, str]):  # noqa: ANN201, D103
+def install_auth_service(  # noqa: ANN201, D103
+    container: injector.Injector, settings: Dict[str, str]
+):
     auth_service_name = settings.get("auth.name", "")
     container.binder.install(AuthInfrastructure())
 

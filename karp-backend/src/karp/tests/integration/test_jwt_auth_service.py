@@ -58,7 +58,9 @@ def test_authenticate_expired_token(jwt_authenticator):  # noqa: ANN201, ANN001
 
 
 class TestAuthTokens:
-    def test_can_create_access_token_successfully(self, jwt_authenticator) -> None:  # noqa: ANN001
+    def test_can_create_access_token_successfully(
+        self, jwt_authenticator  # noqa: ANN001
+    ) -> None:
         access_token = create_access_token(
             user="test_user",
             levels={},
@@ -67,7 +69,9 @@ class TestAuthTokens:
         assert user is not None
         assert user.identifier == "test_user"
 
-    def test_token_missing_user_is_invalid(self, jwt_authenticator) -> None:  # noqa: ANN001
+    def test_token_missing_user_is_invalid(
+        self, jwt_authenticator  # noqa: ANN001
+    ) -> None:
         access_token = create_access_token(
             user=None,
             levels={},

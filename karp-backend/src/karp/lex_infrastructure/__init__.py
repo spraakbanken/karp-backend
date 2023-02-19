@@ -54,7 +54,9 @@ logger = logging.getLogger(__name__)
 
 class LexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def get_published_resources(self, conn: Connection) -> lex.GetPublishedResources:  # noqa: D102
+    def get_published_resources(  # noqa: D102
+        self, conn: Connection
+    ) -> lex.GetPublishedResources:
         return SqlGetPublishedResources(conn)
 
     @injector.provider

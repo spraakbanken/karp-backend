@@ -77,7 +77,9 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
     def create_alias_name(self, resource_id: str) -> str:  # noqa: D102
         return f"{self._prefix}{resource_id}"
 
-    def create_index_and_alias_name(self, resource_id: str) -> dict[str, str]:  # noqa: D102
+    def create_index_and_alias_name(  # noqa: D102
+        self, resource_id: str
+    ) -> dict[str, str]:
         return self._update_config(resource_id)
 
     def get_name_base(self, resource_id: str) -> str:  # noqa: D102
@@ -230,7 +232,9 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
 
         return translated_sort_fields
 
-    def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:  # noqa: D102
+    def translate_sort_field(  # noqa: D102
+        self, resource_id: str, sort_value: str
+    ) -> List[str]:
         logger.debug(
             f"es6_indextranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
         )
@@ -241,7 +245,9 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
                 f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
             )
 
-    def on_publish_resource(self, alias_name: str, index_name: str):  # noqa: ANN201, D102
+    def on_publish_resource(  # noqa: ANN201, D102
+        self, alias_name: str, index_name: str
+    ):
         mapping = self._get_index_mappings(index=index_name)
         if (
             "mappings" in mapping[index_name]
@@ -260,10 +266,14 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
             )
 
     @staticmethod
-    def create_sortable_map_from_mapping(properties: Dict) -> Dict[str, List[str]]:  # noqa: D102
+    def create_sortable_map_from_mapping(  # noqa: D102
+        properties: Dict,
+    ) -> Dict[str, List[str]]:
         sortable_map = {}
 
-        def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):  # noqa: ANN202, ANN001
+        def parse_prop_value(  # noqa: ANN202
+            sort_map, base_name, prop_name, prop_value: Dict  # noqa: ANN001
+        ):
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():
                     ext_base_name = f"{base_name}.{ext_name}"

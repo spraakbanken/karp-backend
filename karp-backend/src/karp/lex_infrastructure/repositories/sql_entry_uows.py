@@ -40,7 +40,9 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
         self._session.add(EntryUowModel.from_entity(entry_uow))
         logger.debug("session=%s, session.new=%s", self._session, self._session.new)
 
-    def _by_id(self, id_: UniqueId, **kwargs) -> Optional[EntryUnitOfWork]:  # noqa: ANN003
+    def _by_id(
+        self, id_: UniqueId, **kwargs  # noqa: ANN003
+    ) -> Optional[EntryUnitOfWork]:
         # stmt = sql.select(EntryUowModel).where(EntryUowModel.id == id_)
         # row = self._session.execute(stmt).first()
         stmt = (
@@ -88,7 +90,9 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
         return uow
 
 
-class SqlEntryUowRepositoryUnitOfWork(SqlUnitOfWork, EntryUowRepositoryUnitOfWork):  # noqa: D101
+class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
+    SqlUnitOfWork, EntryUowRepositoryUnitOfWork
+):
     def __init__(  # noqa: D107, ANN204
         self,
         *,

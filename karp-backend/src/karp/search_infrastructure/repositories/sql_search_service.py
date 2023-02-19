@@ -15,7 +15,9 @@ class SqlSearchService(Index):  # noqa: D101
             semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
         )
 
-    def create_index(self, resource_id: str, resource_config: Dict):  # noqa: ANN201, D102
+    def create_index(  # noqa: D102, ANN201
+        self, resource_id: str, resource_config: Dict
+    ):
         pass
 
     def publish_index(self, resource_id: str):  # noqa: ANN201, D102
@@ -33,7 +35,9 @@ class SqlSearchService(Index):  # noqa: D101
     def statistics(self):  # noqa: ANN201, D102
         pass
 
-    def add_entries(self, resource_id, entries: Iterable[IndexEntry]):  # noqa: ANN201, D102, ANN001
+    def add_entries(  # noqa: D102, ANN201
+        self, resource_id, entries: Iterable[IndexEntry]  # noqa: ANN001
+    ):
         pass
 
     def delete_entry(  # noqa: ANN201, D102

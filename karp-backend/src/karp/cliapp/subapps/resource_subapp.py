@@ -230,7 +230,9 @@ def list_resources(  # noqa: ANN201, D103
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):  # noqa: ANN201, D103
+def show(  # noqa: ANN201, D103
+    ctx: typer.Context, resource_id: str, version: Optional[int] = None
+):
     repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx)
     resource = repo.get_by_resource_id(resource_id, version=version)
     #     if version:

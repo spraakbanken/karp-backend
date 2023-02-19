@@ -1,4 +1,3 @@
-
 from karp.main import config
 from typer import Typer
 from typer.testing import CliRunner

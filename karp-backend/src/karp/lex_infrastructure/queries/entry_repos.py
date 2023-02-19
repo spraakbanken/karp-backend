@@ -21,7 +21,9 @@ def _row_to_dto(row_proxy) -> EntryRepoDto:  # noqa: ANN001
     )
 
 
-class SqlReadOnlyEntryRepoRepository(SqlQuery, ReadOnlyEntryRepoRepository):  # noqa: D101
+class SqlReadOnlyEntryRepoRepository(  # noqa: D101
+    SqlQuery, ReadOnlyEntryRepoRepository
+):
     def get_by_name(self, name: str) -> Optional[EntryRepoDto]:  # noqa: D102
         stmt = select(EntryUowModel).filter_by(name=name)
 

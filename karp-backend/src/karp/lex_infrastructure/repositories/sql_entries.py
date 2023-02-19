@@ -190,7 +190,9 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
         )
         return self._session.execute(stmt).scalar()
 
-    def by_referenceable(self, filters: Optional[Dict] = None, **kwargs) -> List[Entry]:  # noqa: D102, ANN003
+    def by_referenceable(  # noqa: D102
+        self, filters: Optional[Dict] = None, **kwargs  # noqa: ANN003
+    ) -> List[Entry]:
         self._check_has_session()
 
         if filters is None:
@@ -324,7 +326,9 @@ class SqlEntryUnitOfWork(  # noqa: D101
         return self._entries
 
     @classmethod
-    def from_dict(cls, settings: typing.Dict, resource_config, **kwargs):  # noqa: ANN003, ANN206, D102, ANN001
+    def from_dict(  # noqa: ANN206, D102
+        cls, settings: typing.Dict, resource_config, **kwargs  # noqa: ANN003, ANN001
+    ):
         return cls(repo_settings=settings, resource_config=resource_config, **kwargs)
 
     def collect_new_events(self) -> typing.Iterable:  # noqa: D102

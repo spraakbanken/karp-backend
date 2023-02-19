@@ -31,7 +31,11 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
             ) from exc
 
     def by_id(  # noqa: D102
-        self, id_: unique_id.UniqueId, *, version: Optional[int] = None, **kwargs  # noqa: ANN003
+        self,
+        id_: unique_id.UniqueId,
+        *,
+        version: Optional[int] = None,
+        **kwargs,  # noqa: ANN003
     ) -> EntityType:
         if entity := self._by_id(self._ensure_correct_id_type(id_), version=version):
             return entity
@@ -41,7 +45,11 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
     get_by_id = by_id
 
     def get_by_id_optional(  # noqa: D102
-        self, id_: unique_id.UniqueId, *, version: Optional[int] = None, **kwargs  # noqa: ANN003
+        self,
+        id_: unique_id.UniqueId,
+        *,
+        version: Optional[int] = None,
+        **kwargs,  # noqa: ANN003
     ) -> Optional[EntityType]:
         return self._by_id(self._ensure_correct_id_type(id_), version=version)
 

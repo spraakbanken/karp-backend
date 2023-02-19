@@ -39,7 +39,9 @@ class EntryUnitOfWorkCreator(Protocol):  # noqa: D101
         ...
 
 
-class InjectorEntryUnitOfWorkRepoFactory(EntryRepositoryUnitOfWorkFactory):  # noqa: D101
+class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
+    EntryRepositoryUnitOfWorkFactory
+):
     def __init__(self, container: injector.Injector) -> None:  # noqa: D107
         self._container = container
 
@@ -77,7 +79,9 @@ class EntryUowRepository(repository.Repository[EntryUnitOfWork]):  # noqa: D101
     pass
 
 
-class EntryUowRepositoryUnitOfWork(unit_of_work.UnitOfWork[EntryUowRepository]):  # noqa: D101
+class EntryUowRepositoryUnitOfWork(  # noqa: D101
+    unit_of_work.UnitOfWork[EntryUowRepository]
+):
     def __init__(  # noqa: D107, ANN204
         self,
         *,

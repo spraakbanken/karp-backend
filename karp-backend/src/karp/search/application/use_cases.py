@@ -74,7 +74,9 @@ logger = logging.getLogger(__name__)
 # ):
 
 
-class ReindexingResource(command_bus.CommandHandler[commands.ReindexResource]):  # noqa: D101
+class ReindexingResource(  # noqa: D101
+    command_bus.CommandHandler[commands.ReindexResource]
+):
     def __init__(  # noqa: D107
         self,
         index_uow: IndexUnitOfWork,
@@ -128,20 +130,26 @@ class CreateSearchServiceHandler(  # noqa: D101
     def collect_new_events(self) -> Iterable[foundation_events.Event]:  # noqa: D102
         yield from self.index_uow.collect_new_events()
 
-    def __call__(self, event: events.ResourceCreated, *args, **kwargs):  # noqa: ANN003, ANN204, ANN002, D102
+    def __call__(  # noqa: D102, ANN204
+        self, event: events.ResourceCreated, *args, **kwargs  # noqa: ANN002, ANN003
+    ):
         with self.index_uow as uw:
             uw.repo.create_index(event.resource_id, event.config)
             uw.commit()
 
 
-class DeletingIndex(foundation_events.EventHandler[lex_events.ResourceDiscarded]):  # noqa: D101
+class DeletingIndex(  # noqa: D101
+    foundation_events.EventHandler[lex_events.ResourceDiscarded]
+):
     def __init__(self, index_uow: IndexUnitOfWork):  # noqa: D107, ANN204
         self.index_uow = index_uow
 
     def collect_new_events(self) -> Iterable[foundation_events.Event]:  # noqa: D102
         yield from self.index_uow.collect_new_events()
 
-    def __call__(self, event: events.ResourceDiscarded, *args, **kwargs):  # noqa: ANN003, ANN204, ANN002, D102
+    def __call__(  # noqa: D102, ANN204
+        self, event: events.ResourceDiscarded, *args, **kwargs  # noqa: ANN002, ANN003
+    ):
         pass
 
 
@@ -155,7 +163,9 @@ class DeletingIndex(foundation_events.EventHandler[lex_events.ResourceDiscarded]
 #         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
-class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]):  # noqa: D101
+class EntryAddedHandler(  # noqa: D101
+    foundation_events.EventHandler[lex_events.EntryAdded]
+):
     def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,
@@ -192,7 +202,9 @@ class EntryAddedHandler(foundation_events.EventHandler[lex_events.EntryAdded]): 
             uw.commit()
 
 
-class EntryUpdatedHandler(foundation_events.EventHandler[lex_events.EntryUpdated]):  # noqa: D101
+class EntryUpdatedHandler(  # noqa: D101
+    foundation_events.EventHandler[lex_events.EntryUpdated]
+):
     def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,
@@ -231,7 +243,9 @@ class EntryUpdatedHandler(foundation_events.EventHandler[lex_events.EntryUpdated
             # ctx.index_uow.commit()
 
 
-class EntryDeletedHandler(foundation_events.EventHandler[lex_events.EntryDeleted]):  # noqa: D101
+class EntryDeletedHandler(  # noqa: D101
+    foundation_events.EventHandler[lex_events.EntryDeleted]
+):
     def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,

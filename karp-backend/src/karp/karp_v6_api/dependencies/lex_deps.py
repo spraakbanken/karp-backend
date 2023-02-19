@@ -65,12 +65,8 @@ def get_entry_repo_uow(  # noqa: D103
 
 def get_lex_uc(Use_case_type: Type) -> Callable:  # noqa: D103
     def factory(
-        resource_uow: ResourceUnitOfWork = Depends(
-            get_resource_unit_of_work
-        ),
-        entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
-            get_entry_repo_uow
-        ),
+        resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
+        entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
     ) -> Use_case_type:
         return Use_case_type(
             resource_uow=resource_uow,
@@ -94,9 +90,7 @@ def get_published_resources(  # noqa: D103
 
 def get_entry_diff(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
-        get_entry_repo_uow
-    ),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> lex.GetEntryDiff:
     return GenericGetEntryDiff(
         resource_uow=resource_uow,
@@ -106,9 +100,7 @@ def get_entry_diff(  # noqa: D103
 
 def get_entry_history(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
-        get_entry_repo_uow
-    ),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> lex.GetEntryHistory:
     return GenericGetEntryHistory(
         resource_uow=resource_uow,
@@ -118,9 +110,7 @@ def get_entry_history(  # noqa: D103
 
 def get_history(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
-        get_entry_repo_uow
-    ),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> lex.GetHistory:
     return GenericGetHistory(
         resource_uow=resource_uow,

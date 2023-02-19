@@ -30,9 +30,7 @@ def get_field_values(  # noqa: ANN201, D103
     field: str,
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    search_service: SearchService = Depends(
-        inject_from_req(SearchService)
-    ),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(

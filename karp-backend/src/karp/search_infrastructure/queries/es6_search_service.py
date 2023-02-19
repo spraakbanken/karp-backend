@@ -226,7 +226,9 @@ class Es6SearchService(search.SearchService):  # noqa: D101
         return result
 
     # TODO Rename this here and in `search_with_query`
-    def _extracted_from_search_with_query_47(self, query, es_query):  # noqa: ANN202, ANN001
+    def _extracted_from_search_with_query_47(  # noqa: ANN202
+        self, query, es_query  # noqa: ANN001
+    ):
         alias_names = [
             self.mapping_repo.get_alias_name(resource) for resource in query.resources
         ]

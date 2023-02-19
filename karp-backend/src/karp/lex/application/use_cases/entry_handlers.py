@@ -27,7 +27,9 @@ class BasingEntry:  # noqa: D101
         self.entry_repo_uow = entry_repo_uow
         self.resource_uow = resource_uow
 
-    def get_entry_uow(self, entry_repo_id: unique_id.UniqueId) -> EntryUnitOfWork:  # noqa: D102
+    def get_entry_uow(  # noqa: D102
+        self, entry_repo_id: unique_id.UniqueId
+    ) -> EntryUnitOfWork:
         with self.entry_repo_uow as uw:
             return uw.repo.get_by_id(entry_repo_id)
 
@@ -215,7 +217,9 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):  # noqa: 
         return created_db_entries
 
 
-class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):  # noqa: D101
+class ImportingEntries(  # noqa: D101
+    BasingEntry, CommandHandler[commands.ImportEntries]
+):
     def execute(self, command: commands.ImportEntries):  # noqa: ANN201
         """
         Import entries to DB and INDEX (if present and resource is active).

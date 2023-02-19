@@ -38,7 +38,9 @@ class InMemoryIndex(Index):
     def publish_index(self, alias_name: str, index_name: str = None):  # noqa: ANN201
         self.indicies[alias_name].published = True
 
-    def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):  # noqa: ANN201
+    def add_entries(  # noqa: ANN201
+        self, resource_id: str, entries: Iterable[IndexEntry]
+    ):
         for entry in entries:
             self.indicies[resource_id].entries[entry.id] = entry
 

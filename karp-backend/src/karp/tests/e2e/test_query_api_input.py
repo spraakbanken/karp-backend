@@ -17,7 +17,9 @@ class TestQueryApiInput:
         ],
     )
     @pytest.mark.parametrize("path", ["query", "query/split"])
-    def test_valid_query_strings(self, fa_client, path: str, query_string: str):  # noqa: ANN201, ANN001
+    def test_valid_query_strings(  # noqa: ANN201
+        self, fa_client, path: str, query_string: str  # noqa: ANN001
+    ):
         response = fa_client.get(f"/{path}/places?{query_string}")
 
         print(f"{response.json()=}")

@@ -13,7 +13,9 @@ from karp.utility.time import monotonic_utc_now
 class Entity(events.EventMixin):  # noqa: D101
     DiscardedEntityError = errors.DiscardedEntityError
 
-    def __init__(self, entity_id, discarded: bool = False, aggregate_root=None):  # noqa: ANN001, ANN204, D107
+    def __init__(  # noqa: D107
+        self, entity_id, discarded: bool = False, aggregate_root=None  # noqa: ANN001
+    ) -> None:
         super().__init__()
         self._id = entity_id
         self._discarded = discarded
@@ -56,7 +58,9 @@ class Entity(events.EventMixin):  # noqa: D101
 
 
 class VersionedEntity(Entity):  # noqa: D101
-    def __init__(self, entity_id, version: int, discarded: bool = False):  # noqa: ANN001, ANN204, D107
+    def __init__(  # noqa: D107
+        self, entity_id, version: int, discarded: bool = False  # noqa: ANN001
+    ) -> None:
         super().__init__(entity_id, discarded=discarded)
         self._version = version
 

@@ -61,7 +61,9 @@ class TestCreateResource:
         response = fa_client.post("/resources/", json={})
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_invalid_data_returns_422(self, fa_client, admin_token: auth.AccessToken):  # noqa: ANN201, ANN001
+    def test_invalid_data_returns_422(  # noqa: ANN201
+        self, fa_client, admin_token: auth.AccessToken  # noqa: ANN001
+    ):
         response = fa_client.post(
             "/resources/",
             json={},
@@ -71,7 +73,10 @@ class TestCreateResource:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_valid_input_creates_resource(  # noqa: ANN201
-        self, fa_client, new_resource: ResourceCreate, admin_token: auth.AccessToken  # noqa: ANN001
+        self,
+        fa_client,  # noqa: ANN001
+        new_resource: ResourceCreate,
+        admin_token: auth.AccessToken,
     ):
         response = fa_client.post(
             "/resources/",

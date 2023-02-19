@@ -138,7 +138,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         return self.config["entry_repository_settings"]
 
     @entry_repository_settings.setter
-    def entry_repository_settings(self, entry_repository_settings: typing.Dict):  # noqa: ANN202
+    def entry_repository_settings(  # noqa: ANN202
+        self, entry_repository_settings: typing.Dict
+    ):
         self.config["entry_repository_settings"] = entry_repository_settings
 
     @property
@@ -341,7 +343,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._op = ResourceOp.UPDATED
         self._increment_version()
 
-    def add_new_release(self, *, name: str, user: str, description: str):  # noqa: ANN201, D102
+    def add_new_release(  # noqa: ANN201, D102
+        self, *, name: str, user: str, description: str
+    ):
         self._check_not_discarded()
         raise NotImplementedError()
         # event = Resource.NewReleaseAdded(
@@ -361,7 +365,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._check_not_discarded()
         raise NotImplementedError()
 
-    def discard(self, *, user: str, message: str, timestamp: float = None):  # noqa: ANN201, D102
+    def discard(  # noqa: ANN201, D102
+        self, *, user: str, message: str, timestamp: float = None
+    ):
         self._check_not_discarded()
         self._op = ResourceOp.DELETED
         self._message = message or "Entry deleted."
@@ -444,7 +450,13 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
 
 # ===== Entities =====
 class Release(Entity):  # noqa: D101
-    def __init__(self, name: str, publication_date: float, description: str, **kwargs):  # noqa: ANN003, ANN204, D107
+    def __init__(  # noqa: D107
+        self,
+        name: str,
+        publication_date: float,
+        description: str,
+        **kwargs,  # noqa: ANN003
+    ) -> None:
         super().__init__(**kwargs)
         self._name = name
         self._publication_date = publication_date

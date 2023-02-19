@@ -19,7 +19,9 @@ class InMemoryEventBus(EventBus):
 
 
 class TestSqlResourceUnitOfWork:
-    def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):  # noqa: ANN201, ANN001
+    def test_rolls_back_uncommitted_work_by_default(  # noqa: ANN201
+        self, sqlite_session_factory  # noqa: ANN001
+    ):
         uow = SqlResourceUnitOfWork(
             session_factory=sqlite_session_factory, event_bus=InMemoryEventBus()
         )
@@ -54,7 +56,9 @@ class MyException(Exception):
 
 
 class TestSqlEntryUnitOfWork:
-    def test_rolls_back_uncommitted_work_by_default(self, sqlite_session_factory):  # noqa: ANN201, ANN001
+    def test_rolls_back_uncommitted_work_by_default(  # noqa: ANN201
+        self, sqlite_session_factory  # noqa: ANN001
+    ):
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},

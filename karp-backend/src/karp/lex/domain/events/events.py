@@ -19,7 +19,7 @@ class AppStarted(Event):  # noqa: D101
 
 class ResourceCreated(Event):
     """Event emitted when a resource is created."""
-    
+
     entity_id: unique_id.UniqueIdStr
     resource_id: str
     entry_repo_id: unique_id.UniqueIdStr

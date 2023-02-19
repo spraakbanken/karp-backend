@@ -1,4 +1,3 @@
-
 import pytest
 from karp.foundation.value_objects.unique_id import make_unique_id
 from karp.lex import commands

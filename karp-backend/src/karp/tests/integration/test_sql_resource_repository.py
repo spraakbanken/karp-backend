@@ -164,7 +164,9 @@ def test_sql_resource_repo_put_another_resource(resource_repo):  # noqa: ANN201,
 
 
 class TestSqlResourceRepo:
-    def test_discard_resource_and_insert_new(self, resource_repo):  # noqa: ANN201, ANN001
+    def test_discard_resource_and_insert_new(  # noqa: ANN201
+        self, resource_repo  # noqa: ANN001
+    ):
         resource = factories.ResourceFactory()
         resource_repo.save(resource)
 
@@ -183,7 +185,9 @@ class TestSqlResourceRepo:
 
         assert resource_repo.resource_ids() == [resource.resource_id]
 
-    def test_change_resource_id_changes_resource_ids(self, resource_repo):  # noqa: ANN201, ANN001
+    def test_change_resource_id_changes_resource_ids(  # noqa: ANN201
+        self, resource_repo  # noqa: ANN001
+    ):
         resource = factories.ResourceFactory()
         resource_repo.save(resource)
 

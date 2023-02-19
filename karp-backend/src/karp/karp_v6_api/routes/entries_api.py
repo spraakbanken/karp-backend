@@ -80,9 +80,7 @@ def add_entry(  # noqa: ANN201, D103
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    adding_entry_uc: lex.AddingEntry = Depends(
-        deps.get_lex_uc(lex.AddingEntry)
-    ),
+    adding_entry_uc: lex.AddingEntry = Depends(deps.get_lex_uc(lex.AddingEntry)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -166,9 +164,7 @@ def update_entry(  # noqa: ANN201, D103
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    updating_entry_uc: lex.UpdatingEntry = Depends(
-        deps.get_lex_uc(lex.UpdatingEntry)
-    ),
+    updating_entry_uc: lex.UpdatingEntry = Depends(deps.get_lex_uc(lex.UpdatingEntry)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -255,9 +251,7 @@ def delete_entry(  # noqa: ANN201
     entry_id: UniqueIdStr,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    deleting_entry_uc: lex.DeletingEntry = Depends(
-        deps.get_lex_uc(lex.DeletingEntry)
-    ),
+    deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry)),
 ):
     """Delete a entry from a resource."""
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):

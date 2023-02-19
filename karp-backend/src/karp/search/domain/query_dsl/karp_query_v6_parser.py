@@ -25,7 +25,9 @@ KEYWORDS = {}  # type: ignore
 
 
 class KarpQueryV6Buffer(Buffer):  # noqa: D101
-    def __init__(self, text, /, config: ParserConfig = None, **settings):  # noqa: ANN003, ANN204, D107, ANN001
+    def __init__(  # noqa: D107
+        self, text, /, config: ParserConfig = None, **settings  # noqa: ANN003, ANN001
+    ) -> None:
         config = ParserConfig.new(
             config,
             owner=self,
@@ -42,7 +44,9 @@ class KarpQueryV6Buffer(Buffer):  # noqa: D101
 
 
 class KarpQueryV6Parser(Parser):  # noqa: D101
-    def __init__(self, /, config: ParserConfig = None, **settings):  # noqa: ANN003, ANN204, D107, ANN001
+    def __init__(  # noqa: D107
+        self, /, config: ParserConfig = None, **settings  # noqa: ANN003, ANN001
+    ) -> None:
         config = ParserConfig.new(
             config,
             owner=self,

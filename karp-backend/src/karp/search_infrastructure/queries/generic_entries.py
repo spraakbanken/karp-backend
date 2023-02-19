@@ -13,7 +13,9 @@ class GenericPreviewEntry(search.PreviewEntry):  # noqa: D101
         self.entry_transformer = entry_transformer
         self.resource_uow = resource_uow
 
-    def query(self, input_dto: search.PreviewEntryInputDto) -> search.EntryPreviewDto:  # noqa: D102
+    def query(  # noqa: D102
+        self, input_dto: search.PreviewEntryInputDto
+    ) -> search.EntryPreviewDto:
         with self.resource_uow:
             resource = self.resource_uow.repo.get_by_resource_id(input_dto.resource_id)
 

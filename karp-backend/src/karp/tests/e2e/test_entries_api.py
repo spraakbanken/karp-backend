@@ -765,7 +765,9 @@ class TestPreviewEntry:
 
 
 @pytest.mark.skip()
-def test_update_wrong_id(fa_data_client, write_token: auth.AccessToken):  # noqa: ANN201, ANN001
+def test_update_wrong_id(  # noqa: ANN201
+    fa_data_client, write_token: auth.AccessToken  # noqa: ANN001
+):
     response = fa_data_client.post(
         "/entries/places/add",
         json={

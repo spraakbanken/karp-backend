@@ -6,7 +6,7 @@ from karp.utility import time
 
 class Command(pydantic.BaseModel):  # noqa: D101
     timestamp: float = pydantic.Field(default_factory=time.utc_now)
-    
+
     class Config:  # noqa: D106
         # arbitrary_types_allowed = True
         extra = "forbid"

@@ -13,7 +13,9 @@ class GenericResourceViews(ResourceViews):  # noqa: D101
         with self._resource_uow as uw:
             return uw.repo.by_resource_id(resource_id).config
 
-    def get_resource_ids(self, repo_id: unique_id.UniqueId) -> typing.List[str]:  # noqa: D102
+    def get_resource_ids(  # noqa: D102
+        self, repo_id: unique_id.UniqueId
+    ) -> typing.List[str]:
         with self._resource_uow as uw:
             return [
                 resource.resource_id

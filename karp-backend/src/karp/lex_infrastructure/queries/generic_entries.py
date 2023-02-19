@@ -36,7 +36,9 @@ class GenericEntryViews(EntryViews):  # noqa: D101
         self.get_entry_repo_id = get_entry_repo_id
         self.entry_repo_uow = entry_repo_uow
 
-    def get_by_id(self, resource_id: str, entity_id: unique_id.UniqueId) -> EntryDto:  # noqa: D102
+    def get_by_id(  # noqa: D102
+        self, resource_id: str, entity_id: unique_id.UniqueId
+    ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
@@ -80,7 +82,9 @@ class GenericEntryViews(EntryViews):  # noqa: D101
         with entry_uow as uw:
             return uw.repo.num_entities()
 
-    def get_by_referenceable(self, resource_id: str, filters):  # noqa: ANN201, D102, ANN001
+    def get_by_referenceable(  # noqa: ANN201, D102
+        self, resource_id: str, filters  # noqa: ANN001
+    ):
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)

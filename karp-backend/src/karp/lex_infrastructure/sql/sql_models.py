@@ -182,7 +182,9 @@ class BaseHistoryEntry:  # noqa: D101
 # Dynamic models
 
 
-def get_or_create_entry_history_model(resource_id: str) -> BaseHistoryEntry:  # noqa: D103
+def get_or_create_entry_history_model(  # noqa: D103
+    resource_id: str,
+) -> BaseHistoryEntry:
     history_table_name = create_history_table_name(resource_id)
     if history_table_name in class_cache:
         history_model = class_cache[history_table_name]

@@ -21,7 +21,9 @@ from karp.db_infrastructure.sql_repository import SqlRepository
 logger = logging.getLogger(__name__)
 
 
-class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):  # noqa: D101
+class SqlResourceRepository(  # noqa: D101
+    SqlRepository, repositories.ResourceRepository
+):
     def __init__(self, session: db.Session):  # noqa: D107, ANN204
         repositories.ResourceRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
@@ -67,7 +69,11 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):  # 
         # return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
 
     def _by_id(
-        self, id: Union[UniqueId, str], *, version: Optional[int] = None, **kwargs  # noqa: ANN003, A002
+        self,
+        id: Union[UniqueId, str],  # noqa: A002
+        *,
+        version: Optional[int] = None,
+        **kwargs,  # noqa: ANN003
     ) -> typing.Optional[entities.Resource]:
         self._check_has_session()
         query = self._session.query(ResourceModel).filter_by(entity_id=id)
@@ -223,7 +229,9 @@ class SqlResourceRepository(SqlRepository, repositories.ResourceRepository):  # 
         }
 
 
-class SqlResourceUnitOfWork(SqlUnitOfWork, repositories.ResourceUnitOfWork):  # noqa: D101
+class SqlResourceUnitOfWork(  # noqa: D101
+    SqlUnitOfWork, repositories.ResourceUnitOfWork
+):
     def __init__(  # noqa: D107, ANN204
         self,
         event_bus: EventBus,

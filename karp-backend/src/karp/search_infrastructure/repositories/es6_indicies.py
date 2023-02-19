@@ -81,7 +81,9 @@ class Es6Index(Index):  # noqa: D101
         )
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
-    def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):  # noqa: ANN201, D102
+    def add_entries(  # noqa: D102, ANN201
+        self, resource_id: str, entries: Iterable[IndexEntry]
+    ):
         index_name = self.mapping_repo.get_index_name(resource_id)
         index_to_es = []
         for entry in entries:
@@ -136,7 +138,9 @@ def _create_es_mapping(config):  # noqa: C901, ANN202, ANN001
 
     fields = config["fields"]
 
-    def recursive_field(parent_schema, parent_field_name, parent_field_def):  # noqa: C901, ANN202, ANN001
+    def recursive_field(  # noqa: ANN202, C901
+        parent_schema, parent_field_name, parent_field_def  # noqa: ANN001
+    ):
         if parent_field_def.get("virtual", False):
             fun = parent_field_def["function"]
             if list(fun.keys())[0] == "multi_ref":

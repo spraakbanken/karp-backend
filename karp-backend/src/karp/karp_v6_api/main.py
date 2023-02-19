@@ -140,7 +140,9 @@ def create_app() -> FastAPI:  # noqa: D103, C901
         )
 
     @app.exception_handler(foundation_errors.NotFoundError)
-    async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):  # noqa: ANN202
+    async def _entity_not_found(  # noqa: ANN202
+        request: Request, exc: foundation_errors.NotFoundError
+    ):
         return JSONResponse(
             status_code=404,
             content={
@@ -161,12 +163,16 @@ def create_app() -> FastAPI:  # noqa: D103, C901
         )
 
     @app.exception_handler(lex_errors.LexDomainError)
-    def _lex_error_handler(request: Request, exc: lex_errors.LexDomainError):  # noqa: ANN202
+    def _lex_error_handler(  # noqa: ANN202
+        request: Request, exc: lex_errors.LexDomainError
+    ):
         logger.exception(exc)
         return lex_exc2response(exc)
 
     @app.exception_handler(Exception)
-    async def unhandled_exception_handler(request: Request, exc: Exception):  # noqa: ANN202
+    async def unhandled_exception_handler(  # noqa: ANN202
+        request: Request, exc: Exception
+    ):
         return await http_exception_handler(
             request,
             HTTPException(
@@ -203,7 +209,9 @@ def create_app() -> FastAPI:  # noqa: D103, C901
         return response
 
     @app.middleware("http")
-    async def _logging_middleware(request: Request, call_next) -> Response:  # noqa: ANN001
+    async def _logging_middleware(
+        request: Request, call_next  # noqa: ANN001
+    ) -> Response:
         response: Response = JSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )

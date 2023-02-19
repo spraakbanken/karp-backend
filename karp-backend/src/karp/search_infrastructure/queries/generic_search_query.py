@@ -21,7 +21,9 @@ class GenericSearchQuery(SearchQuery):  # noqa: D101
             if not resource.is_published:
                 raise errors.ResourceNotPublished(resource_id)
 
-    def check_all_resources_published(self, resource_ids: typing.Iterable[str]):  # noqa: ANN201, D102
+    def check_all_resources_published(  # noqa: ANN201, D102
+        self, resource_ids: typing.Iterable[str]
+    ):
         with self.resource_uow:
             for resource_id in resource_ids:
                 resource = self.resource_uow.repo.by_resource_id(resource_id)

@@ -362,7 +362,9 @@ def test_contains_and_separate_calls(  # noqa: ANN201
         # ("name", "|or|vik|bo", ["Alvik", "Rutvik", "Bjurvik", "Hambo"]),
     ],
 )
-def test_endswith(fa_data_client, field: str, value, expected_result: List[str]):  # noqa: ANN201, ANN001
+def test_endswith(  # noqa: ANN201
+    fa_data_client, field: str, value, expected_result: List[str]  # noqa: ANN001
+):
     query = f"/query/places?q=endswith|{field}|{value}"
     _test_path(fa_data_client, query, expected_result)
 
@@ -400,7 +402,9 @@ def test_endswith(fa_data_client, field: str, value, expected_result: List[str])
         # ("population", "|or|6312|3122", ["Alvik", "Grund test", "Grunds"]),
     ],
 )
-def test_equals(fa_data_client, field: str, value, expected_result: List[str]):  # noqa: ANN201, ANN001
+def test_equals(  # noqa: ANN201
+    fa_data_client, field: str, value, expected_result: List[str]  # noqa: ANN001
+):
     query = f"/query/places?q=equals|{field}|{value}"
     _test_path(fa_data_client, query, expected_result)
 
@@ -416,7 +420,9 @@ def test_equals(fa_data_client, field: str, value, expected_result: List[str]): 
         ("name", [])
     ],
 )
-def test_exists(fa_data_client, field: str, expected_result: List[str]):  # noqa: ANN201, ANN001
+def test_exists(  # noqa: ANN201
+    fa_data_client, field: str, expected_result: List[str]  # noqa: ANN001
+):
     query = f"/query/places?q=exists|{field}"
     _test_path(fa_data_client, query, expected_result)
 
@@ -455,7 +461,9 @@ def test_exists(fa_data_client, field: str, expected_result: List[str]):  # noqa
         ),
     ],
 )
-def test_freergxp(fa_data_client, field: str, expected_result: List[str]):  # noqa: ANN201, ANN001
+def test_freergxp(  # noqa: ANN201
+    fa_data_client, field: str, expected_result: List[str]  # noqa: ANN001
+):
     query = f"/query/places?q=freergxp|{field}"
     _test_path(fa_data_client, query, expected_result)
 
@@ -498,7 +506,9 @@ def test_freergxp(fa_data_client, field: str, expected_result: List[str]):  # no
         ),
     ],
 )
-def test_freetext(fa_data_client, field: str, expected_result: List[str]):  # noqa: ANN201, ANN001
+def test_freetext(  # noqa: ANN201
+    fa_data_client, field: str, expected_result: List[str]  # noqa: ANN001
+):
     query = f"/query/places?q=freetext|{field}"
     _test_path(fa_data_client, query, expected_result)
 
@@ -647,7 +657,9 @@ def test_lt(fa_data_client, field, value, expected_n_hits: int):  # noqa: ANN201
         ("name.raw", ("B",), 2),
     ],
 )
-def test_lte(fa_data_client, field, value, expected_n_hits: int):  # noqa: ANN201, ANN001
+def test_lte(  # noqa: ANN201
+    fa_data_client, field, value, expected_n_hits: int  # noqa: ANN001
+):
     query = f"/query/places?q=lte|{field}|{value[0]}"
     _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
     # _test_against_entries(fa_data_client, query, field, lambda x: x <= value[-1])
@@ -828,7 +840,9 @@ def test_binary_range_1st_arg_and(  # noqa: ANN201
         ),
     ],
 )
-def test_and_gt_lt(fa_data_client, field, lower, upper, expected_n_hits):  # noqa: ANN201, ANN001
+def test_and_gt_lt(  # noqa: ANN201
+    fa_data_client, field, lower, upper, expected_n_hits  # noqa: ANN001
+):
     query = f"/query/places?q=and(gt|{field}|{lower[0]}||lt|{field}|{upper[0]})"
     print(f"testing query='{query}'")
     _test_against_entries(
@@ -844,7 +858,9 @@ def test_and_gt_lt(fa_data_client, field, lower, upper, expected_n_hits):  # noq
 @pytest.mark.parametrize(
     "query,expected_n_hits", [("and(gt|name|alhamn||lt|name|bjurvik)", 2)]
 )
-def test_and_gt_lt_expected_length(fa_data_client, query: str, expected_n_hits: int):  # noqa: ANN201, ANN001
+def test_and_gt_lt_expected_length(  # noqa: ANN201
+    fa_data_client, query: str, expected_n_hits: int  # noqa: ANN001
+):
     path = f"/query/places?q={query}"
     _test_path_has_expected_length(fa_data_client, path, expected_n_hits)
 
@@ -866,7 +882,9 @@ def test_and_gt_lt_expected_length(fa_data_client, query: str, expected_n_hits: 
         # ),
     ],
 )
-def test_missing(fa_data_client, field: str, expected_length: int):  # noqa: ANN201, ANN001
+def test_missing(  # noqa: ANN201
+    fa_data_client, field: str, expected_length: int  # noqa: ANN001
+):
     query = f"/query/places?q=missing|{field}"
     _test_path_has_expected_length(fa_data_client, query, expected_length)
 
@@ -883,7 +901,9 @@ def test_missing(fa_data_client, field: str, expected_length: int):  # noqa: ANN
         ("freergxp|.*test||freergxp|.*vik", 14),
     ],
 )
-def test_not(fa_data_client, queries: str, expected_length: int):  # noqa: ANN201, ANN001
+def test_not(  # noqa: ANN201
+    fa_data_client, queries: str, expected_length: int  # noqa: ANN001
+):
     query = f"/query/places?q=not({queries})"
     _test_path_has_expected_length(fa_data_client, query, expected_length)
 
@@ -899,7 +919,9 @@ def test_not(fa_data_client, queries: str, expected_length: int):  # noqa: ANN20
         ),
     ],
 )
-def test_or(fa_data_client, queries: List[str], expected_result: List[str]):  # noqa: ANN201, ANN001
+def test_or(  # noqa: ANN201
+    fa_data_client, queries: List[str], expected_result: List[str]  # noqa: ANN001
+):
     query = f"/query/places?q=or({'||'.join(queries)})"
     _test_path(fa_data_client, query, expected_result)
 
@@ -920,7 +942,9 @@ def test_or(fa_data_client, queries: List[str], expected_result: List[str]):  # 
         # ("|not|name|", "Al.*", ["Grund test", "Hambo", "Bjurvik"]),
     ],
 )
-def test_regexp(fa_data_client, field: str, value, expected_result: List[str]):  # noqa: ANN201, ANN001
+def test_regexp(  # noqa: ANN201
+    fa_data_client, field: str, value, expected_result: List[str]  # noqa: ANN001
+):
     query = f"/query/places?q=regexp|{field}|{value}"
     _test_path(fa_data_client, query, expected_result)
 
@@ -940,7 +964,9 @@ def test_regexp(fa_data_client, field: str, value, expected_result: List[str]): 
         # ("|not|name|", "Al", ["Grund test", "Hambo", "Bjurvik"]),
     ],
 )
-def test_startswith(fa_data_client, field: str, value, expected_result: List[str]):  # noqa: ANN201, ANN001
+def test_startswith(  # noqa: ANN201
+    fa_data_client, field: str, value, expected_result: List[str]  # noqa: ANN001
+):
     query = f"/query/places?q=startswith|{field}|{value}"
     _test_path(fa_data_client, query, expected_result)
 
@@ -1125,7 +1151,9 @@ def test_pagination_fewer(fa_data_client):  # noqa: ANN201, ANN001
         ("freetext|eat my shorts"),
     ],
 )
-def test_distribution_in_result(fa_data_client, query: str, endpoint: str):  # noqa: ANN201, ANN001
+def test_distribution_in_result(  # noqa: ANN201
+    fa_data_client, query: str, endpoint: str  # noqa: ANN001
+):
     result = get_json(
         fa_data_client,
         f"/{endpoint}/places?{f'q={query}&' if query else ''}lexicon_stats=true",
@@ -1150,7 +1178,9 @@ def test_sorting(fa_data_client, endpoint: str):  # noqa: ANN201, ANN001
 
 @pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize("fields", [(["population"])])
-def test_query_include_fields(fa_data_client, fields: List[str]) -> None:  # noqa: ANN001
+def test_query_include_fields(
+    fa_data_client, fields: List[str]  # noqa: ANN001
+) -> None:
     result = get_json(
         fa_data_client,
         f"/query/places?{'&'.join((f'include_field={field}' for field in fields))}",

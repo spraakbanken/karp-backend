@@ -29,7 +29,9 @@ class DiscardedEntityError(LexDomainError):  # noqa: D101
 class EntryNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "Entry"
 
-    def __init__(self, *args, entity_id=None, **kwargs):  # noqa: ANN003, ANN204, ANN002, D107, ANN001
+    def __init__(  # noqa: D107
+        self, *args, entity_id=None, **kwargs  # noqa: ANN002, ANN003, ANN001
+    ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, **kwargs)
         # super().__init__(entity_id, *args, **kwargs)
@@ -38,7 +40,9 @@ class EntryNotFound(NotFoundError, LexDomainError):  # noqa: D101
 class EntryRepoNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "EntryRepository"
 
-    def __init__(self, entity_id, *args, **kwargs):  # noqa: ANN003, ANN204, ANN002, D107, ANN001
+    def __init__(  # noqa: D107
+        self, entity_id, *args, **kwargs  # noqa: ANN002, ANN003, ANN001
+    ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, entity_id, *args, **kwargs)
 
@@ -46,7 +50,9 @@ class EntryRepoNotFound(NotFoundError, LexDomainError):  # noqa: D101
 class ResourceNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "Resource"
 
-    def __init__(self, entity_id, *args, **kwargs):  # noqa: ANN003, ANN204, ANN002, D107, ANN001
+    def __init__(  # noqa: D107
+        self, entity_id, *args, **kwargs  # noqa: ANN002, ANN003, ANN001
+    ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, entity_id, *args, **kwargs)
 

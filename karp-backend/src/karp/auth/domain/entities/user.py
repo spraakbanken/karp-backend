@@ -21,7 +21,9 @@ class User:  # noqa: D101
     def identifier(self) -> str:  # noqa: D102
         return self._identifier
 
-    def has_enough_permissions(self, resource_id: str, level: PermissionLevel) -> bool:  # noqa: D102
+    def has_enough_permissions(  # noqa: D102
+        self, resource_id: str, level: PermissionLevel
+    ) -> bool:
         try:
             return (self._permissions.get(resource_id) is not None) and (
                 self._permissions[resource_id] >= self._levels[level]

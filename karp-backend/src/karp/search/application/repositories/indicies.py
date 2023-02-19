@@ -24,7 +24,9 @@ class Index(repository.Repository[IndexEntry]):  # noqa: D101
         pass
 
     @abc.abstractmethod
-    def add_entries(self, resource_id: str, entries: typing.Iterable[IndexEntry]):  # noqa: ANN201, D102
+    def add_entries(  # noqa: ANN201, D102
+        self, resource_id: str, entries: typing.Iterable[IndexEntry]
+    ):
         pass
 
     @abc.abstractmethod
@@ -39,7 +41,9 @@ class Index(repository.Repository[IndexEntry]):  # noqa: D101
     def create_empty_object(self) -> IndexEntry:  # noqa: D102
         return IndexEntry(id="", entry={})
 
-    def assign_field(self, _index_entry: IndexEntry, field_name: str, part):  # noqa: ANN201, D102, ANN001
+    def assign_field(  # noqa: ANN201, D102
+        self, _index_entry: IndexEntry, field_name: str, part  # noqa: ANN001
+    ):
         if isinstance(part, IndexEntry):
             part = part.entry
         _index_entry.entry[field_name] = part

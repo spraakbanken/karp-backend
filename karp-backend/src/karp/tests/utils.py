@@ -5,7 +5,10 @@ from karp import auth
 
 
 def get_json(  # noqa: ANN201
-    client, path: str, expected_status_code: int = status.HTTP_200_OK, **kwargs  # noqa: ANN003, ANN001
+    client,  # noqa: ANN001
+    path: str,
+    expected_status_code: int = status.HTTP_200_OK,
+    **kwargs,  # noqa: ANN003
 ):
     """Call the get on the client with the given path.
 

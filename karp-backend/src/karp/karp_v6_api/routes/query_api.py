@@ -29,9 +29,7 @@ router = APIRouter()
     name="Get lexical entries by id",
 )
 def get_entries_by_id(  # noqa: ANN201, D103
-    resource_id: str = Path(
-        ..., description="The resource to perform operation on"
-    ),
+    resource_id: str = Path(..., description="The resource to perform operation on"),
     entry_ids: str = Path(
         ...,
         description="Comma-separated. The ids to perform operation on.",
@@ -39,9 +37,7 @@ def get_entries_by_id(  # noqa: ANN201, D103
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    search_service: SearchService = Depends(
-        inject_from_req(SearchService)
-    ),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
     if not auth_service.authorize(auth.PermissionLevel.read, user, [resource_id]):
@@ -74,9 +70,7 @@ def query_split(  # noqa: ANN201, D103
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
-    lexicon_stats: bool = Query(
-        True, description="Show the hit count per lexicon"
-    ),
+    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
@@ -89,9 +83,7 @@ def query_split(  # noqa: ANN201, D103
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    search_service: SearchService = Depends(
-        inject_from_req(SearchService)
-    ),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     logger.debug("/query/split called", extra={"resources": resources})
     resource_list = resources.split(",")
@@ -155,9 +147,7 @@ def query(  # noqa: ANN201
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
-    lexicon_stats: bool = Query(
-        True, description="Show the hit count per lexicon"
-    ),
+    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     include_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to return"
     ),
@@ -171,9 +161,7 @@ def query(  # noqa: ANN201
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    search_service: SearchService = Depends(
-        inject_from_req(SearchService)
-    ),
+    search_service: SearchService = Depends(inject_from_req(SearchService)),
 ):
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.
