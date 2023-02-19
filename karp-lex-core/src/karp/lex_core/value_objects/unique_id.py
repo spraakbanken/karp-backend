@@ -5,8 +5,6 @@ import ulid
 import ulid.codec
 
 # UniqueId = ulid.ULID
-UniqueIdType = ulid.ULID
-typing_UniqueId = ulid.ULID
 
 UniqueIdPrimitive = ulid.api.api.ULIDPrimitive
 # UniqueIdPrimitive = typing.Union[ulid.api.api.ULIDPrimitive, UniqueIdStr]
@@ -38,6 +36,10 @@ class UniqueId(ulid.ULID):  # noqa: D101
 
     def __repr__(self) -> str:  # noqa: D105
         return f"UniqueId({super().__repr__()})"
+
+
+UniqueIdType = (ulid.ULID, UniqueId)
+typing_UniqueId = typing.Union[ulid.ULID, UniqueId]
 
 
 def make_unique_id(

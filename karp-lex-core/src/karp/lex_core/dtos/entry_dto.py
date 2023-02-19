@@ -20,7 +20,7 @@ class GenericEntryDto(GenericModel, Generic[T]):  # noqa: D101
     discarded: bool = False
 
     class Config:  # noqa: D106
-        extra = "forbid"
+        # extra = "forbid"
         alias_generator = alias_generators.to_lower_camel
 
     @root_validator(pre=True)
