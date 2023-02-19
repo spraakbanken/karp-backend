@@ -36,7 +36,7 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
         if entity := self._by_id(self._ensure_correct_id_type(id_), version=version):
             return entity
         else:
-            raise self.EntityNotFound(f"Entity with id={id_} is not found")
+            self.raise_entity_not_found(f"Entity with id={id_} is not found")
 
     get_by_id = by_id
 
@@ -58,3 +58,10 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
     @abc.abstractmethod
     def num_entities(self) -> int:  # noqa: D102
         ...
+
+    def raise_entity_not_found(self, msg: str) -> None:
+        """Raise entity not found.
+
+        Override this to get preciser traceback.
+        """
+        raise self.EntityNotFound(msg)

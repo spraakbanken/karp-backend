@@ -52,14 +52,14 @@ class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
             if (
                 existing_resource
                 and not existing_resource.discarded
-                and existing_resource.entity_id != command.entity_id
+                and existing_resource.id != command.id
             ):
                 raise errors.IntegrityError(
                     f"Resource with resource_id='{command.resource_id}' already exists."
                 )
 
             resource, events = entities.create_resource(
-                entity_id=command.entity_id,
+                entity_id=command.id,
                 resource_id=command.resource_id,
                 config=command.config,
                 message=command.message,

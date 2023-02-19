@@ -17,40 +17,42 @@ class AppStarted(Event):  # noqa: D101
         self.timestamp = time.utc_now()
 
 
-class ResourceCreated(Event):  # noqa: D101
-    entity_id: unique_id.UniqueId
+class ResourceCreated(Event):
+    """Event emitted when a resource is created."""
+    
+    entity_id: unique_id.UniqueIdStr
     resource_id: str
-    entry_repo_id: unique_id.UniqueId
+    entry_repo_id: unique_id.UniqueIdStr
     name: str
-    config: Dict
+    config: dict
     user: str
     message: str
 
 
-class ResourceLoaded(Event):  # noqa: D101
-    entity_id: unique_id.UniqueId
-    resource_id: str
-    name: str
-    config: Dict
-    user: str
-    message: str
-    version: int
+# class ResourceLoaded(Event):
+#     entity_id: unique_id.UniqueIdStr
+#     resource_id: str
+#     name: str
+#     config: dict
+#     user: str
+#     message: str
+#     version: int
 
 
 class ResourceDiscarded(Event):  # noqa: D101
-    entity_id: unique_id.UniqueId
+    entity_id: unique_id.UniqueIdStr
     resource_id: str
     name: str
-    config: Dict
+    config: dict
     user: str
     message: str
     version: int
 
 
 class ResourcePublished(Event):  # noqa: D101
-    entity_id: unique_id.UniqueId
+    entity_id: unique_id.UniqueIdStr
     resource_id: str
-    entry_repo_id: unique_id.UniqueId
+    entry_repo_id: unique_id.UniqueIdStr
     version: int
     name: str
     config: Dict
@@ -59,39 +61,36 @@ class ResourcePublished(Event):  # noqa: D101
 
 
 class ResourceUpdated(Event):  # noqa: D101
-    entity_id: unique_id.UniqueId
+    entity_id: unique_id.UniqueIdStr
     resource_id: str
-    entry_repo_id: unique_id.UniqueId
+    entry_repo_id: unique_id.UniqueIdStr
     version: int
     name: str
-    config: Dict
+    config: dict
     user: str
     message: str
 
 
 class EntryAdded(Event):  # noqa: D101
-    entity_id: unique_id.UniqueId
-    repo_id: unique_id.UniqueId
-    # entry_id: str
-    body: Dict
+    entity_id: unique_id.UniqueIdStr
+    repo_id: unique_id.UniqueIdStr
+    body: dict
     message: str
     user: str
 
 
 class EntryUpdated(Event):  # noqa: D101
-    entity_id: unique_id.UniqueId
-    repo_id: unique_id.UniqueId
-    # entry_id: str
-    body: Dict
+    entity_id: unique_id.UniqueIdStr
+    repo_id: unique_id.UniqueIdStr
+    body: dict
     message: str
     user: str
     version: int
 
 
 class EntryDeleted(Event):  # noqa: D101
-    entity_id: unique_id.UniqueId
-    repo_id: unique_id.UniqueId
-    # entry_id: str
+    entity_id: unique_id.UniqueIdStr
+    repo_id: unique_id.UniqueIdStr
     version: int
     message: str
     user: str

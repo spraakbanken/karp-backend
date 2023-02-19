@@ -2,7 +2,6 @@ import collections  # noqa: D100, I001
 import logging
 import typing
 
-# from karp.infrastructure.unit_of_work import unit_of_work
 from typing import Any, Dict, Iterator, List, Optional, Tuple  # noqa: F401
 from karp.foundation.value_objects.unique_id import UniqueId
 from karp.lex.application.queries.entries import EntryDto
@@ -16,11 +15,7 @@ from karp.lex.application.queries import (
 )
 from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 
-# from karp.resourcemgr import get_resource
-# import karp.resourcemgr.entryread as entryread
 from karp.lex.domain.errors import EntryNotFound  # noqa: F401
-
-# from karp.services import context
 
 logger = logging.getLogger(__name__)
 

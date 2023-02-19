@@ -20,7 +20,7 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):  # noqa
     def execute(self, command: commands.CreateEntryRepository) -> EntryUnitOfWork:  # noqa: D102
         entry_repo, events = self._entry_repo_uow.factory.create(
             repository_type=command.repository_type,
-            entity_id=command.entity_id,
+            entity_id=command.id,
             name=command.name,
             config=command.config,
             connection_str=command.connection_str,
@@ -48,7 +48,7 @@ class DeletingEntryRepository(CommandHandler[commands.DeleteEntryRepository]):  
 
     def execute(self, command: commands.DeleteEntryRepository) -> None:  # noqa: D102
         with self._entry_repo_uow as uow:
-            entry_repo = uow.repo.get_by_id(command.entity_id)
+            entry_repo = uow.repo.get_by_id(command.id)
             events = entry_repo.discard(user=command.user, timestamp=command.timestamp)
             uow.repo.save(entry_repo)
             uow.post_on_commit(events)
