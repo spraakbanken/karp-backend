@@ -3,13 +3,13 @@ name: Test karp-lex-core with Coverage
 on:
   push:
     branches:
-      - "*"
+      - "**"
     paths:
       - 'karp-lex-core/**/*.py'
       - 'karp-lex-core/pyproject.toml'
   pull_request:
     branches:
-      - "*"
+      - "**"
     paths:
       - 'karp-lex-core/**'
 
