@@ -50,10 +50,10 @@ def get_diff(  # noqa: ANN201, D103
     diff_request = EntryDiffRequest(
         resourceId=resource_id,
         id=unique_id.parse(entry_id),
-        from_version=from_version,
-        to_version=to_version,
-        from_date=from_date,
-        to_date=to_date,
+        fromVersion=from_version,
+        toVersion=to_version,
+        fromDate=from_date,
+        toDate=to_date,
         entry=entry,
     )
     return get_entry_diff.query(diff_request)
@@ -84,15 +84,15 @@ def get_history(  # noqa: ANN201, D103
             headers={"WWW-Authenticate": 'Bearer scope="admin"'},
         )
     history_request = EntryHistoryRequest(
-        resource_id=resource_id,
-        page_size=page_size,
-        current_page=current_page,
-        from_date=from_date,
-        to_date=to_date,
-        user_id=user_id,
-        entry_id=entry_id,
-        from_version=from_version,
-        to_version=to_version,
+        resourceId=resource_id,
+        pageSize=page_size,
+        currentPage=current_page,
+        fromDate=from_date,
+        toDate=to_date,
+        userId=user_id,
+        entryId=entry_id,
+        fromVersion=from_version,
+        toVersion=to_version,
     )
     return get_history.query(history_request)
 
