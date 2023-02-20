@@ -70,7 +70,7 @@ class UniqueIdStr(str):  # noqa: D101
 
     @classmethod
     def validate(cls, v):  # noqa: ANN206, D102, ANN001
-        if isinstance(v, UniqueId):
+        if isinstance(v, (UniqueId, ulid.ULID)):
             return str(v)
         elif not isinstance(v, str):
             raise TypeError("string or UniqueId required")
