@@ -209,9 +209,7 @@ def create_app() -> FastAPI:  # noqa: D103, C901
         return response
 
     @app.middleware("http")
-    async def _logging_middleware(
-        request: Request, call_next
-    ) -> Response:
+    async def _logging_middleware(request: Request, call_next) -> Response:
         response: Response = JSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )

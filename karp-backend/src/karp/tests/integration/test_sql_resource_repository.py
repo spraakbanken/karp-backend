@@ -164,9 +164,7 @@ def test_sql_resource_repo_put_another_resource(resource_repo):  # noqa: ANN201
 
 
 class TestSqlResourceRepo:
-    def test_discard_resource_and_insert_new(  # noqa: ANN201
-        self, resource_repo
-    ):
+    def test_discard_resource_and_insert_new(self, resource_repo):  # noqa: ANN201
         resource = factories.ResourceFactory()
         resource_repo.save(resource)
 

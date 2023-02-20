@@ -22,9 +22,7 @@ places = [
 ]
 
 
-def get_helper(  # noqa: ANN201
-    client, url: str, access_token: auth.AccessToken
-):
+def get_helper(client, url: str, access_token: auth.AccessToken):  # noqa: ANN201
     response = client.get(
         url,
         headers=access_token.as_header(),

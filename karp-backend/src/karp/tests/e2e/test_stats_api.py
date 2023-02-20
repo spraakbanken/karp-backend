@@ -14,9 +14,7 @@ def test_stats_wo_auth(fa_data_client):  # noqa: ANN201
     assert len(entries) == 4
 
 
-def test_stats_w_auth(  # noqa: ANN201
-    fa_data_client, read_token: auth.AccessToken
-):
+def test_stats_w_auth(fa_data_client, read_token: auth.AccessToken):  # noqa: ANN201
     response = fa_data_client.get(
         "/stats/places/area",
         headers=read_token.as_header(),

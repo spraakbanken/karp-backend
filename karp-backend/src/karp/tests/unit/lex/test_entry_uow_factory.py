@@ -1,4 +1,3 @@
-
 from karp.lex.application import repositories
 from karp.lex_core.value_objects import unique_id
 

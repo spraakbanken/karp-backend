@@ -420,9 +420,7 @@ def test_equals(  # noqa: ANN201
         ("name", [])
     ],
 )
-def test_exists(  # noqa: ANN201
-    fa_data_client, field: str, expected_result: List[str]
-):
+def test_exists(fa_data_client, field: str, expected_result: List[str]):  # noqa: ANN201
     query = f"/query/places?q=exists|{field}"
     _test_path(fa_data_client, query, expected_result)
 
@@ -657,9 +655,7 @@ def test_lt(fa_data_client, field, value, expected_n_hits: int):  # noqa: ANN201
         ("name.raw", ("B",), 2),
     ],
 )
-def test_lte(  # noqa: ANN201
-    fa_data_client, field, value, expected_n_hits: int
-):
+def test_lte(fa_data_client, field, value, expected_n_hits: int):  # noqa: ANN201
     query = f"/query/places?q=lte|{field}|{value[0]}"
     _test_path_has_expected_length(fa_data_client, query, expected_n_hits)
     # _test_against_entries(fa_data_client, query, field, lambda x: x <= value[-1])
@@ -882,9 +878,7 @@ def test_and_gt_lt_expected_length(  # noqa: ANN201
         # ),
     ],
 )
-def test_missing(  # noqa: ANN201
-    fa_data_client, field: str, expected_length: int
-):
+def test_missing(fa_data_client, field: str, expected_length: int):  # noqa: ANN201
     query = f"/query/places?q=missing|{field}"
     _test_path_has_expected_length(fa_data_client, query, expected_length)
 
@@ -901,9 +895,7 @@ def test_missing(  # noqa: ANN201
         ("freergxp|.*test||freergxp|.*vik", 14),
     ],
 )
-def test_not(  # noqa: ANN201
-    fa_data_client, queries: str, expected_length: int
-):
+def test_not(fa_data_client, queries: str, expected_length: int):  # noqa: ANN201
     query = f"/query/places?q=not({queries})"
     _test_path_has_expected_length(fa_data_client, query, expected_length)
 
@@ -1178,9 +1170,7 @@ def test_sorting(fa_data_client, endpoint: str):  # noqa: ANN201
 
 @pytest.mark.xfail(reason="unstable")
 @pytest.mark.parametrize("fields", [(["population"])])
-def test_query_include_fields(
-    fa_data_client, fields: List[str]
-) -> None:
+def test_query_include_fields(fa_data_client, fields: List[str]) -> None:
     result = get_json(
         fa_data_client,
         f"/query/places?{'&'.join((f'include_field={field}' for field in fields))}",

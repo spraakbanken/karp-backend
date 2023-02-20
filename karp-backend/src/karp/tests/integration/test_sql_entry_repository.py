@@ -89,9 +89,7 @@ class TestSqlEntryRepoByReferencable:
         with pytest.raises(ValueError):
             entry_repo.by_referenceable()
 
-    def test_by_referenceable_w_kwargs_returns_entry(  # noqa: ANN201
-        self, entry_repo
-    ):
+    def test_by_referenceable_w_kwargs_returns_entry(self, entry_repo):  # noqa: ANN201
         entry = factories.EntryFactory(body={"a": "b"})
         entry_repo.save(entry)
 
@@ -100,9 +98,7 @@ class TestSqlEntryRepoByReferencable:
         print(f"{entry_copies=}")
         assert entry_copies[0].id == entry.id
 
-    def test_by_referenceable_w_filters_returns_entry(  # noqa: ANN201
-        self, entry_repo
-    ):
+    def test_by_referenceable_w_filters_returns_entry(self, entry_repo):  # noqa: ANN201
         entry = factories.EntryFactory(body={"a": "b"})
         entry_repo.save(entry)
 
