@@ -44,7 +44,7 @@ class AppContext:  # noqa: D101
     settings: typing.Dict
 
 
-def bootstrap_app(container=None) -> AppContext:  # noqa: D103, ANN001
+def bootstrap_app(container=None) -> AppContext:  # noqa: D103
     env = config.load_env()
     db_url = config.parse_database_url(env)
     es_enabled = env.bool("ELASTICSEARCH_ENABLED", False)

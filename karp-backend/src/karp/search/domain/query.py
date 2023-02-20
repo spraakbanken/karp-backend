@@ -41,20 +41,20 @@ class Query(pydantic.BaseModel):  # noqa: D101
         "resources", "include_fields", "exclude_fields", "sort", pre=True
     )
     @classmethod
-    def split_str(cls, v):  # noqa: ANN206, D102, ANN001
+    def split_str(cls, v):  # noqa: ANN206, D102
         if isinstance(v, str):
             return v.split(",")
         return v
 
     @pydantic.validator("fields", "sort", pre=True, always=True)
     @classmethod
-    def set_ts_now(cls, v):  # noqa: ANN206, D102, ANN001
+    def set_ts_now(cls, v):  # noqa: ANN206, D102
         return v or []
 
     class Config:  # noqa: D106
         arbitrary_types_allowed = True
 
-    def parse_arguments(self, args, resource_str: str):  # noqa: ANN201, D102, ANN001
+    def parse_arguments(self, args, resource_str: str):  # noqa: ANN201, D102
         if resource_str is None:
             raise errors.IncompleteQuery("No resources are defined.")
         self.resources = resource_str.split(",")

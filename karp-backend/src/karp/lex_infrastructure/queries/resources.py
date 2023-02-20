@@ -137,7 +137,7 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):  # no
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
 
-def _row_to_dto(row_proxy) -> ResourceDto:  # noqa: ANN001
+def _row_to_dto(row_proxy) -> ResourceDto:
     return ResourceDto(
         id=row_proxy.entity_id,
         resourceId=row_proxy.resource_id,

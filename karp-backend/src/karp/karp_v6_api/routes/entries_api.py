@@ -7,7 +7,6 @@ from fastapi import (
     Body,  # noqa: F401
     Depends,
     HTTPException,
-    Response,
     Security,
     status,
     Path,  # noqa: F401
@@ -19,7 +18,7 @@ from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
 
 from karp.main import errors as karp_errors
-from karp import auth, lex, search
+from karp import auth, search
 from karp.lex.application.queries import EntryDto, GetEntryHistory
 from karp.lex import commands
 from karp.lex.domain import errors
@@ -263,5 +262,5 @@ def delete_entry(  # noqa: ANN201
     return
 
 
-def init_app(app):  # noqa: ANN201, D103, ANN001
+def init_app(app):  # noqa: ANN201, D103
     app.include_router(router)

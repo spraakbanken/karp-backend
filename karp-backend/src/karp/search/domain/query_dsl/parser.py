@@ -65,14 +65,14 @@ class op:  # noqa: D101
     SEP = "||"
 
 
-def is_a(x: Union[Node, Token], type_) -> bool:  # noqa: D103, ANN001
+def is_a(x: Union[Node, Token], type_) -> bool:  # noqa: D103
     if isinstance(type_, list):
         return x.type in type_
     else:
         return x.type == type_
 
 
-def arg_token_any(s) -> Token:  # noqa: D103, ANN001
+def arg_token_any(s) -> Token:  # noqa: D103
     try:
         v = int(s)
         return Token(op.INT, v)
@@ -87,7 +87,7 @@ def arg_token_any(s) -> Token:  # noqa: D103, ANN001
     return Token(op.STRING, s)
 
 
-def arg_token_string(s) -> Token:  # noqa: D103, ANN001
+def arg_token_string(s) -> Token:  # noqa: D103
     return Token(op.STRING, s)
 
 
@@ -208,7 +208,7 @@ def create_node(tok: Token):  # noqa: ANN201, D103
 
 
 class KarpTNGParser:  # noqa: D101
-    def parse(self, tokens):  # noqa: ANN201, C901, D102, ANN001
+    def parse(self, tokens):  # noqa: ANN201, C901, D102
         curr = None
         stack = []
         for tok in tokens:

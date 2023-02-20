@@ -272,7 +272,7 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
         sortable_map = {}
 
         def parse_prop_value(  # noqa: ANN202
-            sort_map, base_name, prop_name, prop_value: Dict  # noqa: ANN001
+            sort_map, base_name, prop_name, prop_value: Dict
         ):
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():

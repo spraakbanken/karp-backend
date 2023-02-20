@@ -18,14 +18,14 @@ class Entity(events.EventMixin):  # noqa: D101
         self,
         id: UniqueId,  # noqa: A002
         discarded: bool = False,
-        aggregate_root=None,  # noqa: ANN001
+        aggregate_root=None,
     ) -> None:
         super().__init__()
         self._id = id
         self._discarded = discarded
         self._root = aggregate_root
 
-    def queue_event(self, event):  # noqa: ANN201, D102, ANN001
+    def queue_event(self, event):  # noqa: ANN201, D102
         self._record_event(event)
 
     @property
@@ -54,7 +54,7 @@ class Entity(events.EventMixin):  # noqa: D101
                 f"Attempt to use {self!r}, entity_id = {self.entity_id}"
             )
 
-    def _validate_event_applicability(self, event):  # noqa: ANN202, ANN001
+    def _validate_event_applicability(self, event):  # noqa: ANN202
         if event.entity_id != self.id:
             raise ConsistencyError(
                 f"Event entity id mismatch: {event.entity_id} != {self.id}"

@@ -41,7 +41,7 @@ def fixture_in_memory_sqlite_db():  # noqa: ANN201
 
 
 @pytest.fixture
-def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201, ANN001
+def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201
     yield sessionmaker(bind=in_memory_sqlite_db)
 
 
@@ -154,7 +154,7 @@ def create_and_publish_resource(
 
 @pytest.fixture(scope="session", name="fa_data_client")
 def fixture_fa_data_client(  # noqa: ANN201
-    fa_client,  # noqa: ANN001
+    fa_client,
     admin_token: auth.AccessToken,
 ):
     ok, msg = create_and_publish_resource(

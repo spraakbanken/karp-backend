@@ -214,7 +214,7 @@ def test_resource_has_entry_json_schema():  # noqa: ANN201
         ("name", "New name"),
     ],
 )
-def test_discarded_resource_has_event(field, value):  # noqa: ANN201, ANN001
+def test_discarded_resource_has_event(field, value):  # noqa: ANN201
     resource, _ = random_resource()
     domain_events = resource.discard(
         user="alice@example.org", message="bad", timestamp=123.45

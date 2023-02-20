@@ -48,7 +48,7 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member  # noqa: D1
 
     @pydantic.validator("resource_ids", pre=True)
     @classmethod
-    def split_str(cls, v):  # noqa: ANN206, D102, ANN001
+    def split_str(cls, v):  # noqa: ANN206, D102
         if isinstance(v, str):
             return v.split(",")
         return v

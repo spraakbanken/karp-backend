@@ -30,7 +30,7 @@ class EntryNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "Entry"
 
     def __init__(  # noqa: D107
-        self, *args, entity_id=None, **kwargs  # noqa: ANN002, ANN003, ANN001
+        self, *args, entity_id=None, **kwargs  # noqa: ANN002, ANN003
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, **kwargs)
@@ -41,7 +41,7 @@ class EntryRepoNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "EntryRepository"
 
     def __init__(  # noqa: D107
-        self, entity_id, *args, **kwargs  # noqa: ANN002, ANN003, ANN001
+        self, entity_id, *args, **kwargs  # noqa: ANN002, ANN003
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, entity_id, *args, **kwargs)
@@ -51,7 +51,7 @@ class ResourceNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "Resource"
 
     def __init__(  # noqa: D107
-        self, entity_id, *args, **kwargs  # noqa: ANN002, ANN003, ANN001
+        self, entity_id, *args, **kwargs  # noqa: ANN002, ANN003
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, entity_id, *args, **kwargs)
@@ -93,7 +93,7 @@ class MissingIdField(InvalidEntry):  # noqa: D101
 
 
 class UpdateConflict(LexDomainError):  # noqa: D101
-    def __init__(self, diff):  # noqa: D107, ANN204, ANN001
+    def __init__(self, diff):  # noqa: D107, ANN204
         super().__init__(
             "Version conflict. Please update entry.",
         )

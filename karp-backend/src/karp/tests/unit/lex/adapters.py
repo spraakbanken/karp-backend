@@ -45,12 +45,12 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
     #     self.resources.discard(r)
     #     self.resources.add(resource)
 
-    def _by_id(self, id_, *, version=None):  # noqa: ANN202, ANN001
+    def _by_id(self, id_, *, version=None):  # noqa: ANN202
         if resource := self.resources.get(id_):
             return copy.deepcopy(resource)
         return None
 
-    def _by_resource_id(self, resource_id):  # noqa: ANN202, ANN001
+    def _by_resource_id(self, resource_id):  # noqa: ANN202
         return next(
             (res for res in self.resources.values() if res.resource_id == resource_id),
             None,
@@ -111,18 +111,18 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
     def check_status(self):  # noqa: ANN201
         pass
 
-    def _save(self, entry):  # noqa: ANN202, ANN001
+    def _save(self, entry):  # noqa: ANN202
         entry_id = self._ensure_correct_id_type(entry.id)
         self.entries[entry_id] = copy.deepcopy(entry)
 
     def _by_id(  # noqa: ANN202
         self,
-        id,  # noqa: A002, ANN001
+        id,  # noqa: A002
         *,
-        version=None,  # noqa: ANN001
-        after_date=None,  # noqa: ANN001
-        before_date=None,  # noqa: ANN001
-        oldest_first=False,  # noqa: ANN001
+        version=None,
+        after_date=None,
+        before_date=None,
+        oldest_first=False,
     ):
         entry_id = self._ensure_correct_id_type(id)
         if entry := self.entries.get(entry_id):
@@ -137,7 +137,7 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
         pass
 
     @classmethod
-    def from_dict(cls, _):  # noqa: ANN206, ANN001
+    def from_dict(cls, _):  # noqa: ANN206
         return cls()
 
     def all_entries(self) -> typing.Iterable[lex_entities.Entry]:

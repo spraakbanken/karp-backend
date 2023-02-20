@@ -79,7 +79,7 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
         # indexer: SearchService,
         _src_entry: typing.Dict,
         _index_entry: IndexEntry,
-        fields,  # noqa: ANN001
+        fields,
     ):
         logger.debug("transforming [part of] entry", extra={"src_entry": _src_entry})
         for field_name, field_conf in fields:

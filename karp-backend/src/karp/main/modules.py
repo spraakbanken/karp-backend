@@ -59,7 +59,7 @@ class RequestScope(injector.Scope):  # noqa: D101
     def __enter__(self) -> None:  # noqa: D105
         self.enter()
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore  # noqa: ANN001, D105
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore  # noqa: D105
         self.exit()
 
     def get(self, key: Type[T], provider: Provider[T]) -> Provider[T]:  # noqa: D102
@@ -142,14 +142,14 @@ def install_auth_service(  # noqa: ANN201, D103
 
 
 def request_configuration(conn: Connection, session: Session):  # noqa: ANN201, D103
-    def configure_request_container(binder):  # noqa: ANN202, ANN001
+    def configure_request_container(binder):  # noqa: ANN202
         binder.bind(Connection, to=injector.InstanceProvider(conn))
         binder.bind(Session, to=injector.InstanceProvider(session))
 
     return configure_request_container
 
 
-def load_modules(group_name: str, app=None):  # noqa: ANN201, D103, ANN001
+def load_modules(group_name: str, app=None):  # noqa: ANN201, D103
     logger.debug("Loading %s", group_name)
     if sys.version_info.minor < 10:  # noqa: YTT204
         karp_modules = entry_points().get(group_name)

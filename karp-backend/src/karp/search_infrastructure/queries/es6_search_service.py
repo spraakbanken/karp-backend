@@ -33,22 +33,22 @@ logger = logging.getLogger(__name__)
 
 
 class EsQueryBuilder(query_dsl.NodeWalker):  # noqa: D101
-    def walk_object(self, node):  # noqa: ANN201, D102, ANN001
+    def walk_object(self, node):  # noqa: ANN201, D102
         return node
 
-    def walk__and(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__and(self, node):  # noqa: ANN201, D102
         result = self.walk(node.exps[0])
         for n in node.exps[1:]:
             result = result & self.walk(n)
 
         return result
 
-    def walk__contains(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__contains(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
             "regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}.*"}
         )
 
-    def walk__endswith(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__endswith(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}"})
 
     # def walk__equals(self, node):
@@ -59,7 +59,7 @@ class EsQueryBuilder(query_dsl.NodeWalker):  # noqa: D101
     #         },
     #     )
 
-    def walk__equals(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__equals(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
             "match",
             **{
@@ -67,21 +67,21 @@ class EsQueryBuilder(query_dsl.NodeWalker):  # noqa: D101
             },
         )
 
-    def walk__exists(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__exists(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("exists", field=self.walk(node.field))
 
-    def walk__freergxp(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__freergxp(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
             "query_string", query=f"/{self.walk(node.arg)}/", default_field="*"
         )
 
-    def walk__freetext_string(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__freetext_string(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("multi_match", query=self.walk(node.arg), fuzziness=1)
 
-    def walk__freetext_any_but_string(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__freetext_any_but_string(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("multi_match", query=self.walk(node.arg))
 
-    def walk_range(self, node):  # noqa: ANN201, D102, ANN001
+    def walk_range(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
             "range",
             **{self.walk(node.field): {self.walk(node.op): self.walk(node.arg)}},
@@ -92,26 +92,26 @@ class EsQueryBuilder(query_dsl.NodeWalker):  # noqa: D101
     walk__lt = walk_range
     walk__lte = walk_range
 
-    def walk__missing(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__missing(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
             "bool", must_not=es_dsl.Q("exists", field=self.walk(node.field))
         )
 
-    def walk__not(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__not(self, node):  # noqa: ANN201, D102
         must_nots = [self.walk(expr) for expr in node.exps]
         return es_dsl.Q("bool", must_not=must_nots)
 
-    def walk__or(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__or(self, node):  # noqa: ANN201, D102
         result = self.walk(node.exps[0])
         for n in node.exps[1:]:
             result = result | self.walk(n)
 
         return result
 
-    def walk__regexp(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__regexp(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("regexp", **{self.walk(node.field): self.walk(node.arg)})
 
-    def walk__startswith(self, node):  # noqa: ANN201, D102, ANN001
+    def walk__startswith(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("regexp", **{self.walk(node.field): f"{self.walk(node.arg)}.*"})
 
 
@@ -128,19 +128,19 @@ class Es6SearchService(search.SearchService):  # noqa: D101
             semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
         )
 
-    def build_query(self, args, resource_str: str) -> EsQuery:  # noqa: D102, ANN001
+    def build_query(self, args, resource_str: str) -> EsQuery:  # noqa: D102
         query = EsQuery()
         # query.parse_arguments(args, resource_str)
         return query
 
-    def _format_result(self, resource_ids, response):  # noqa: ANN202, ANN001
+    def _format_result(self, resource_ids, response):  # noqa: ANN202
         logger.debug("_format_result called", extra={"resource_ids": resource_ids})
         resource_id_map = {
             resource_id: self.mapping_repo.get_name_base(resource_id)
             for resource_id in resource_ids
         }
 
-        def format_entry(entry):  # noqa: ANN202, ANN001
+        def format_entry(entry):  # noqa: ANN202
             dict_entry = entry.to_dict()
             version = dict_entry.pop("_entry_version", None)
             last_modified_by = dict_entry.pop("_last_modified_by", None)
@@ -227,7 +227,7 @@ class Es6SearchService(search.SearchService):  # noqa: D101
 
     # TODO Rename this here and in `search_with_query`
     def _extracted_from_search_with_query_47(  # noqa: ANN202
-        self, query, es_query  # noqa: ANN001
+        self, query, es_query
     ):
         alias_names = [
             self.mapping_repo.get_alias_name(resource) for resource in query.resources

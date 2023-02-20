@@ -202,5 +202,5 @@ def query(  # noqa: ANN201
     return response
 
 
-def init_app(app):  # noqa: ANN201, D103, ANN001
+def init_app(app):  # noqa: ANN201, D103
     app.include_router(router)

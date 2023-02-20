@@ -26,7 +26,7 @@ class Es6Index(Index):  # noqa: D101
         self.es = es
         self.mapping_repo = mapping_repo
 
-    def create_index(self, resource_id: str, config):  # noqa: ANN201, D102, ANN001
+    def create_index(self, resource_id: str, config):  # noqa: ANN201, D102
         logger.info("creating es mapping")
         mapping = create_es6_mapping(config)
 
@@ -133,13 +133,13 @@ class Es6Index(Index):  # noqa: D101
             )
 
 
-def _create_es_mapping(config):  # noqa: C901, ANN202, ANN001
+def _create_es_mapping(config):  # noqa: C901, ANN202
     es_mapping = {"dynamic": False, "properties": {}}
 
     fields = config["fields"]
 
     def recursive_field(  # noqa: ANN202, C901
-        parent_schema, parent_field_name, parent_field_def  # noqa: ANN001
+        parent_schema, parent_field_name, parent_field_def
     ):
         if parent_field_def.get("virtual", False):
             fun = parent_field_def["function"]

@@ -76,7 +76,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         return self._name
 
     @name.setter
-    def name(self, name):  # noqa: ANN202, ANN001
+    def name(self, name):  # noqa: ANN202
         self._check_not_discarded()
         self._name = name
 

@@ -14,7 +14,7 @@ def bootstrap_message_bus(  # noqa: D103
     *,
     resource_uow: repositories.ResourceUnitOfWork,
     entry_uows: repositories.EntriesUnitOfWork,
-    entry_uow_factory,  #: repositories.EntryUowFactory,  # noqa: ANN001
+    entry_uow_factory,  #: repositories.EntryUowFactory,
     search_service_uow: SearchServiceUnitOfWork,
     entry_repo_repo_uow: lex_repositories.EntryRepositoryRepositoryUnitOfWork,
     raise_on_all_errors: bool = False

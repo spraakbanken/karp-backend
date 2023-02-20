@@ -186,7 +186,7 @@ def create_app() -> FastAPI:  # noqa: D103, C901
         )
 
     @app.middleware("http")
-    async def injector_middleware(request: Request, call_next):  # noqa: ANN202, ANN001
+    async def injector_middleware(request: Request, call_next):  # noqa: ANN202
         response: Response = JSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )
@@ -210,7 +210,7 @@ def create_app() -> FastAPI:  # noqa: D103, C901
 
     @app.middleware("http")
     async def _logging_middleware(
-        request: Request, call_next  # noqa: ANN001
+        request: Request, call_next
     ) -> Response:
         response: Response = JSONResponse(
             status_code=500, content={"detail": "Internal server error"}

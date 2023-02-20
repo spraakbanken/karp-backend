@@ -9,7 +9,7 @@ from karp.main.errors import KarpError
 logger = logging.getLogger("karp")
 
 
-def cli_error_handler(func):  # noqa: ANN201, D103, ANN001
+def cli_error_handler(func):  # noqa: ANN201, D103
     @functools.wraps(func)
     def func_wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
         try:
@@ -21,7 +21,7 @@ def cli_error_handler(func):  # noqa: ANN201, D103, ANN001
     return func_wrapper
 
 
-def cli_timer(func):  # noqa: ANN201, D103, ANN001
+def cli_timer(func):  # noqa: ANN201, D103
     @functools.wraps(func)
     def func_wrapper(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
         before_t = time.time()

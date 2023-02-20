@@ -9,17 +9,17 @@ from karp.tests.unit.lex import factories
 
 
 @pytest.fixture(name="resource_repo")  # , scope="module")
-def fixture_resource_repo(sqlite_session_factory):  # noqa: ANN201, ANN001
+def fixture_resource_repo(sqlite_session_factory):  # noqa: ANN201
     session = sqlite_session_factory()
     return SqlResourceRepository(session)
 
 
-def test_sql_resource_repo_empty(resource_repo):  # noqa: ANN201, ANN001
+def test_sql_resource_repo_empty(resource_repo):  # noqa: ANN201
     assert resource_repo.resource_ids() == []
     assert resource_repo.history_by_resource_id("test_id") == []
 
 
-def test_sql_resource_repo_put_resource(resource_repo):  # noqa: ANN201, ANN001
+def test_sql_resource_repo_put_resource(resource_repo):  # noqa: ANN201
     resource = factories.ResourceFactory()
 
     resource_repo.save(resource)
@@ -111,7 +111,7 @@ def test_sql_resource_repo_put_resource(resource_repo):  # noqa: ANN201, ANN001
 # )
 
 
-def test_sql_resource_repo_update_resource(resource_repo):  # noqa: ANN201, ANN001
+def test_sql_resource_repo_update_resource(resource_repo):  # noqa: ANN201
     resource = factories.ResourceFactory(
         config={"a": "b"},
     )
@@ -151,7 +151,7 @@ def test_sql_resource_repo_update_resource(resource_repo):  # noqa: ANN201, ANN0
     assert resource_repo.get_by_resource_id(resource.resource_id).version == 3
 
 
-def test_sql_resource_repo_put_another_resource(resource_repo):  # noqa: ANN201, ANN001
+def test_sql_resource_repo_put_another_resource(resource_repo):  # noqa: ANN201
     resource = factories.ResourceFactory()
     resource_repo.save(resource)
 
@@ -165,7 +165,7 @@ def test_sql_resource_repo_put_another_resource(resource_repo):  # noqa: ANN201,
 
 class TestSqlResourceRepo:
     def test_discard_resource_and_insert_new(  # noqa: ANN201
-        self, resource_repo  # noqa: ANN001
+        self, resource_repo
     ):
         resource = factories.ResourceFactory()
         resource_repo.save(resource)
@@ -186,7 +186,7 @@ class TestSqlResourceRepo:
         assert resource_repo.resource_ids() == [resource.resource_id]
 
     def test_change_resource_id_changes_resource_ids(  # noqa: ANN201
-        self, resource_repo  # noqa: ANN001
+        self, resource_repo
     ):
         resource = factories.ResourceFactory()
         resource_repo.save(resource)

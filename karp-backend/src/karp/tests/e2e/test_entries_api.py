@@ -17,7 +17,7 @@ from karp.lex_core.value_objects import (
 from karp.lex.application.queries import EntryDto
 
 
-def get_entry_uow(container, resource_id: str):  # noqa: ANN201, ANN001
+def get_entry_uow(container, resource_id: str):  # noqa: ANN201
     get_entry_repository_id = container.get(GetEntryRepositoryId)  # type: ignore [misc]
     entry_repo_id = get_entry_repository_id.query("places")
     entry_uow_repo_uow = container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
@@ -26,7 +26,7 @@ def get_entry_uow(container, resource_id: str):  # noqa: ANN201, ANN001
 
 
 def init(
-    client,  # noqa: ANN001
+    client,
     entries: List[Dict],
     access_token: auth.AccessToken,
 ) -> list[str]:
@@ -44,7 +44,7 @@ def init(
 
 @pytest.fixture(name="entry_places_214_id", scope="session")
 def fixture_entry_places_214_id(  # noqa: ANN201
-    fa_data_client,  # noqa: ANN001
+    fa_data_client,
     write_token: auth.AccessToken,
 ):
     ids = init(
@@ -59,7 +59,7 @@ def fixture_entry_places_214_id(  # noqa: ANN201
 
 @pytest.fixture(name="entry_places_209_id", scope="session")
 def fixture_entry_places_209_id(  # noqa: ANN201
-    fa_data_client,  # noqa: ANN001
+    fa_data_client,
     write_token: auth.AccessToken,
 ):
     ids = init(
@@ -73,7 +73,7 @@ def fixture_entry_places_209_id(  # noqa: ANN201
 
 
 class TestEntriesRoutes:
-    def test_routes_exist(self, fa_data_client):  # noqa: ANN201, ANN001
+    def test_routes_exist(self, fa_data_client):  # noqa: ANN201
         response = fa_data_client.post("/entries/places/add")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
@@ -88,7 +88,7 @@ class TestEntriesRoutes:
 
 
 class TestAddEntry:
-    def test_put_route_exist(self, fa_data_client):  # noqa: ANN201, ANN001
+    def test_put_route_exist(self, fa_data_client):  # noqa: ANN201
         response = fa_data_client.put("/entries/places")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
@@ -101,7 +101,7 @@ class TestAddEntry:
     )
     def test_invalid_data_returns_422(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         invalid_data: Dict,
         write_token: auth.AccessToken,
     ):
@@ -115,7 +115,7 @@ class TestAddEntry:
 
     def test_add_with_valid_data_returns_201(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         response = fa_data_client.put(
@@ -146,7 +146,7 @@ class TestAddEntry:
 
     def test_add_with_valid_data_and_entity_id_returns_201(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entity_id = make_unique_id()
@@ -180,7 +180,7 @@ class TestAddEntry:
     @pytest.mark.skip(reason="we don't use entry_id")
     def test_adding_existing_fails_with_400(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = 204
@@ -230,7 +230,7 @@ class TestAddEntry:
 
     def test_add_fails_with_invalid_entry(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         response = fa_data_client.post(
@@ -249,7 +249,7 @@ class TestAddEntry:
 class TestDeleteEntry:
     def test_delete(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = 205
@@ -285,7 +285,7 @@ class TestDeleteEntry:
 
     def test_delete_rest(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = 205
@@ -321,7 +321,7 @@ class TestDeleteEntry:
 
     def test_delete_non_existing_fails(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = make_unique_id()
@@ -343,7 +343,7 @@ class TestDeleteEntry:
 
     def test_delete_rest_non_existing_fails(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = "00000000000000000000000000"
@@ -367,7 +367,7 @@ class TestDeleteEntry:
 class TestUpdateEntry:
     def test_update_non_existing_fails(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = make_unique_id()
@@ -398,7 +398,7 @@ class TestUpdateEntry:
 
     def test_update_wo_changes_succeeds(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = 206
@@ -441,7 +441,7 @@ class TestUpdateEntry:
 
     def test_update_wrong_version_fails(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = 207
@@ -493,7 +493,7 @@ class TestUpdateEntry:
 
     def test_update_returns_200_on_valid_data(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = 208
@@ -546,7 +546,7 @@ class TestUpdateEntry:
 
     def test_update_several_times(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
         entry_places_209_id: str,
     ):
@@ -570,7 +570,7 @@ class TestUpdateEntry:
     @pytest.mark.xfail()
     def test_update_entry_id(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = 210
@@ -620,7 +620,7 @@ class TestUpdateEntry:
 
     def test_update_changes_last_modified(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
     ):
         entry_id = 212
@@ -669,14 +669,14 @@ class TestUpdateEntry:
 
 class TestGetEntry:
     def test_get_entry_wo_auth_returns_403(  # noqa: ANN201
-        self, fa_data_client, entry_places_214_id: str  # noqa: ANN001
+        self, fa_data_client, entry_places_214_id: str
     ):
         response = fa_data_client.get(f"/entries/places/{entry_places_214_id}")
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_entry_w_lower_auth_returns_401(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         write_token: auth.AccessToken,
         entry_places_214_id: str,
     ):
@@ -688,7 +688,7 @@ class TestGetEntry:
 
     def test_get_entry_by_entry_id(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         admin_token: auth.AccessToken,
         entry_places_214_id: str,
     ):
@@ -704,7 +704,7 @@ class TestGetEntry:
 
     def test_route_w_version_exist(  # noqa: ANN201
         self,
-        fa_data_client,  # noqa: ANN001
+        fa_data_client,
         admin_token: auth.AccessToken,
         entry_places_209_id: str,
     ):
@@ -721,7 +721,7 @@ class TestGetEntry:
 
 class TestPreviewEntry:
     def test_preview_fails_with_422_on_invalid_data(  # noqa: ANN201
-        self, fa_data_client, read_token: auth.AccessToken  # noqa: ANN001
+        self, fa_data_client, read_token: auth.AccessToken
     ):
         response = fa_data_client.post(
             "/entries/places/preview", json={}, headers=read_token.as_header()
@@ -729,7 +729,7 @@ class TestPreviewEntry:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     def test_preview_returns_200_on_valid_data(  # noqa: ANN201
-        self, fa_data_client, read_token: auth.AccessToken  # noqa: ANN001
+        self, fa_data_client, read_token: auth.AccessToken
     ):
         response = fa_data_client.post(
             "/entries/places/preview",
@@ -753,7 +753,7 @@ class TestPreviewEntry:
 
 @pytest.mark.skip()
 def test_update_wrong_id(  # noqa: ANN201
-    fa_data_client, write_token: auth.AccessToken  # noqa: ANN001
+    fa_data_client, write_token: auth.AccessToken
 ):
     response = fa_data_client.post(
         "/entries/places/add",
@@ -806,7 +806,7 @@ def test_update_wrong_id(  # noqa: ANN201
 
 
 @pytest.mark.skip()
-def test_refs(fa_data_client):  # noqa: ANN201, ANN001
+def test_refs(fa_data_client):  # noqa: ANN201
     client = init(
         fa_data_client,
         [
@@ -848,7 +848,7 @@ def test_refs(fa_data_client):  # noqa: ANN201, ANN001
 
 
 @pytest.mark.skip()
-def test_external_refs(fa_data_client):  # noqa: ANN201, ANN001
+def test_external_refs(fa_data_client):  # noqa: ANN201
     client = init(
         fa_data_client,
         [
@@ -942,7 +942,7 @@ def test_external_refs(fa_data_client):  # noqa: ANN201, ANN001
 
 
 @pytest.mark.skip()
-def test_update_refs(fa_data_client):  # noqa: ANN201, ANN001
+def test_update_refs(fa_data_client):  # noqa: ANN201
     client = init(
         fa_data_client,
         es,  # noqa: F821
@@ -986,7 +986,7 @@ def test_update_refs(fa_data_client):  # noqa: ANN201, ANN001
 
 
 @pytest.mark.skip()
-def test_update_refs2(fa_data_client):  # noqa: ANN201, ANN001
+def test_update_refs2(fa_data_client):  # noqa: ANN201
     client = init(
         fa_data_client,
         es,  # noqa: F821

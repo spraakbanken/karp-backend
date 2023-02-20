@@ -1,5 +1,5 @@
 class Node:  # noqa: D100, D101
-    def __init__(self, type_, arity: int, value=None):  # noqa: D107, ANN204, ANN001
+    def __init__(self, type_, arity: int, value=None):  # noqa: D107, ANN204
         self.type = type_
         self.arity = arity
         self.value = value
@@ -8,7 +8,7 @@ class Node:  # noqa: D100, D101
     def __repr__(self):  # noqa: ANN204, D105
         return "<Node {t} {v} {c}>".format(t=self.type, v=self.value, c=self.children)
 
-    def _pprint(self, level):  # noqa: ANN202, ANN001
+    def _pprint(self, level):  # noqa: ANN202
         fill = " "
         print(
             "{indent} Node {t} {v}".format(
@@ -21,7 +21,7 @@ class Node:  # noqa: D100, D101
     def pprint(self, level: int = 0):  # noqa: ANN201, D102
         self._pprint(level)
 
-    def add_child(self, child):  # noqa: ANN201, D102, ANN001
+    def add_child(self, child):  # noqa: ANN201, D102
         self.children.append(child)
 
     def n_children(self) -> int:  # noqa: D102
@@ -33,9 +33,9 @@ class Node:  # noqa: D100, D101
             yield from child.gen_stream()
 
 
-def create_unary_node(type_, value=None):  # noqa: ANN201, D103, ANN001
+def create_unary_node(type_, value=None):  # noqa: ANN201, D103
     return Node(type_, 1, value)
 
 
-def create_binary_node(type_, value=None):  # noqa: ANN201, D103, ANN001
+def create_binary_node(type_, value=None):  # noqa: ANN201, D103
     return Node(type_, 2, value)

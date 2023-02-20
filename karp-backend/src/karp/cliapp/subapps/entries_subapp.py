@@ -128,7 +128,7 @@ def export_entries(  # noqa: ANN201, D103
 
 
 class Counter(collections.abc.Generator):  # noqa: D101
-    def __init__(self, sink) -> None:  # noqa: D107, ANN001
+    def __init__(self, sink) -> None:  # noqa: D107
         self._counter: int = 0
         self._sink = sink
 
@@ -136,11 +136,11 @@ class Counter(collections.abc.Generator):  # noqa: D101
     def counter(self) -> int:  # noqa: D102
         return self._counter
 
-    def send(self, value):  # noqa: ANN201, D102, ANN001
+    def send(self, value):  # noqa: ANN201, D102
         self._counter += 1
         self._sink.send(value)
 
-    def throw(self, typ=None, val=None, tb=None):  # noqa: ANN201, D102, ANN001
+    def throw(self, typ=None, val=None, tb=None):  # noqa: ANN201, D102
         raise StopIteration
 
 
@@ -217,5 +217,5 @@ def validate_entries(  # noqa: ANN201, D103
         raise typer.Exit(error_code)
 
 
-def init_app(app):  # noqa: ANN201, D103, ANN001
+def init_app(app):  # noqa: ANN201, D103
     app.add_typer(subapp, name="entries")

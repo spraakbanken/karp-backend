@@ -3,7 +3,7 @@ from fastapi import status
 from karp import auth
 
 
-def test_stats_wo_auth(fa_data_client):  # noqa: ANN201, ANN001
+def test_stats_wo_auth(fa_data_client):  # noqa: ANN201
     response = fa_data_client.get(
         "/stats/places/area",
     )
@@ -15,7 +15,7 @@ def test_stats_wo_auth(fa_data_client):  # noqa: ANN201, ANN001
 
 
 def test_stats_w_auth(  # noqa: ANN201
-    fa_data_client, read_token: auth.AccessToken  # noqa: ANN001
+    fa_data_client, read_token: auth.AccessToken
 ):
     response = fa_data_client.get(
         "/stats/places/area",

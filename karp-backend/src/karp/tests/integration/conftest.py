@@ -37,7 +37,7 @@ def fixture_in_memory_sqlite_db():  # noqa: ANN201
 
 
 @pytest.fixture
-def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201, ANN001
+def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201
     yield sessionmaker(bind=in_memory_sqlite_db)
 
 

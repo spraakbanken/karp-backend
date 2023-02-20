@@ -5,7 +5,7 @@ from karp import auth
 
 
 def get_json(  # noqa: ANN201
-    client,  # noqa: ANN001
+    client,
     path: str,
     expected_status_code: int = status.HTTP_200_OK,
     **kwargs,  # noqa: ANN003
@@ -30,7 +30,7 @@ def get_json(  # noqa: ANN201
 
 
 def add_entries(  # noqa: ANN201
-    client,  # noqa: ANN001
+    client,
     entries: Dict,
     access_token: auth.AccessToken,
 ):

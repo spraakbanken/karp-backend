@@ -10,7 +10,7 @@ class SqlRepository:  # noqa: D101
     def __init__(self, session: Session) -> None:  # noqa: D107
         self._session: Session = session
 
-    def set_session(self, session):  # noqa: ANN201, D102, ANN001
+    def set_session(self, session):  # noqa: ANN201, D102
         self._session = session
 
     def unset_session(self):  # noqa: ANN201, D102

@@ -1,5 +1,5 @@
 class QueryDSLError(Exception):  # noqa: D100, D101
-    def __init__(self, message):  # noqa: D107, ANN204, ANN001
+    def __init__(self, message):  # noqa: D107, ANN204
         super().__init__(message)
 
 

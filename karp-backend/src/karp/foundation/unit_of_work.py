@@ -20,14 +20,14 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):  # noqa: D101
     def __enter__(self):  # noqa: ANN204, D105
         return self.begin()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN001, ANN204, D105
+    def __exit__(self, exc_type, exc_val, exc_tb):  # noqa: ANN204, D105
         self.rollback()
         self.close()
 
     def begin(self):  # noqa: ANN201, D102
         return self
 
-    def post_on_commit(self, events):  # noqa: ANN201, D102, ANN001
+    def post_on_commit(self, events):  # noqa: ANN201, D102
         if events is None:
             raise TypeError("expecting Iterable")
         self._event_queue.extend(events)

@@ -293,5 +293,5 @@ def delete(  # noqa: ANN201, D103
     typer.echo(f"Deleted resource '{resource_id}' ({resource})")
 
 
-def init_app(app):  # noqa: ANN201, D103, ANN001
+def init_app(app):  # noqa: ANN201, D103
     app.add_typer(subapp, name="resource")

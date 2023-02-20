@@ -24,7 +24,7 @@ class ModelBase(Node):  # noqa: D101
 
 
 class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):  # noqa: D101
-    def __init__(self, context=None, types=None):  # noqa: D107, ANN204, ANN001
+    def __init__(self, context=None, types=None):  # noqa: D107, ANN204
         types = [
             t
             for t in globals().values()

@@ -18,7 +18,7 @@ class EsQuery(Query):  # noqa: D101
         # self.query = None
         # self.resource_str: Optional[str] = None
 
-    def parse_arguments(self, args, resource_str: str):  # noqa: ANN201, D102, ANN001
+    def parse_arguments(self, args, resource_str: str):  # noqa: ANN201, D102
         super().parse_arguments(args, resource_str)
         self.resource_str = resource_str
         # if not self.ast.is_empty():

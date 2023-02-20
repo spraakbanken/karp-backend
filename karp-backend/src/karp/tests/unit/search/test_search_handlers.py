@@ -22,7 +22,7 @@ def fixture_resource_created() -> ResourceCreated:
     ],
 )
 def test_index_reacts_on_lex_events(  # noqa: ANN201
-    event_factory,  # noqa: ANN001
+    event_factory,
     predicate: Callable,
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):

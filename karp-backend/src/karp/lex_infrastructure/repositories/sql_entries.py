@@ -39,7 +39,7 @@ NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
-        history_model,  # noqa: ANN001
+        history_model,
         resource_config: Dict,
         *,
         session: db.Session,
@@ -270,7 +270,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
             "repo_id": entry.repo_id,
         }
 
-    def _history_row_to_entry(self, row) -> Entry:  # noqa: ANN001
+    def _history_row_to_entry(self, row) -> Entry:
         return Entry(
             body=row.body,
             message=row.message,
@@ -327,7 +327,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
 
     @classmethod
     def from_dict(  # noqa: ANN206, D102
-        cls, settings: typing.Dict, resource_config, **kwargs  # noqa: ANN003, ANN001
+        cls, settings: typing.Dict, resource_config, **kwargs  # noqa: ANN003
     ):
         return cls(repo_settings=settings, resource_config=resource_config, **kwargs)
 

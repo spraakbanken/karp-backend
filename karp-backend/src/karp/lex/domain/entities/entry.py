@@ -156,7 +156,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         ]
 
     def _update_field(  # noqa: ANN202
-        self, arg0, user: str, timestamp: Optional[float]  # noqa: ANN001
+        self, arg0, user: str, timestamp: Optional[float]
     ):
         result = arg0
         self._last_modified_by = user

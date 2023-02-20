@@ -66,7 +66,7 @@ class GenericEntryViews(EntryViews):  # noqa: D101
             return uw.repo.num_entities()
 
     def get_by_referenceable(  # noqa: ANN201, D102
-        self, resource_id: str, filters  # noqa: ANN001
+        self, resource_id: str, filters
     ):
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:

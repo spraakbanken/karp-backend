@@ -42,7 +42,7 @@ class Index(repository.Repository[IndexEntry]):  # noqa: D101
         return IndexEntry(id="", entry={})
 
     def assign_field(  # noqa: ANN201, D102
-        self, _index_entry: IndexEntry, field_name: str, part  # noqa: ANN001
+        self, _index_entry: IndexEntry, field_name: str, part
     ):
         if isinstance(part, IndexEntry):
             part = part.entry
@@ -51,15 +51,15 @@ class Index(repository.Repository[IndexEntry]):  # noqa: D101
     def create_empty_list(self) -> typing.List:  # noqa: D102
         return []
 
-    def add_to_list_field(self, elems: typing.List, elem):  # noqa: ANN201, D102, ANN001
+    def add_to_list_field(self, elems: typing.List, elem):  # noqa: ANN201, D102
         if isinstance(elem, IndexEntry):
             elem = elem.entry
         elems.append(elem)
 
-    def _save(self, _notused):  # noqa: ANN202, ANN001
+    def _save(self, _notused):  # noqa: ANN202
         pass
 
-    def _by_id(self, id) -> None:  # noqa: A002, ANN001
+    def _by_id(self, id) -> None:  # noqa: A002
         return None
 
     def num_entities(self) -> int:  # noqa: D102

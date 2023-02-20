@@ -26,7 +26,8 @@ class EntryDto(IdMixin, BaseModel):  # noqa: D101
     entry: typing.Dict
     last_modified: float
     last_modified_by: str
-    message: str
+    message: str | None = None
+    discarded: bool = False
 
 
 class EntryDiffRequest(IdMixin, BaseModel):  # noqa: D101
@@ -133,7 +134,7 @@ class EntryViews(abc.ABC):  # noqa: D101
 
     @abc.abstractmethod
     def get_by_referenceable(  # noqa: D102
-        self, resource_id: str, filters  # noqa: ANN001
+        self, resource_id: str, filters
     ) -> typing.Iterable[EntryDto]:
         pass
 

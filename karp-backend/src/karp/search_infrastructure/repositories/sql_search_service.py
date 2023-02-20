@@ -36,7 +36,7 @@ class SqlSearchService(Index):  # noqa: D101
         pass
 
     def add_entries(  # noqa: D102, ANN201
-        self, resource_id, entries: Iterable[IndexEntry]  # noqa: ANN001
+        self, resource_id, entries: Iterable[IndexEntry]
     ):
         pass
 
@@ -58,8 +58,8 @@ class SqlIndexUnitOfWork(IndexUnitOfWork):  # noqa: D101
 
     def __init__(  # noqa: D107, ANN204
         self,
-        session_factory,  # noqa: ANN001
-        event_bus,  # noqa: ANN001
+        session_factory,
+        event_bus,
     ):
         super().__init__(event_bus)
         # session_factory=DEFAULT_SESSION_FACTORY):

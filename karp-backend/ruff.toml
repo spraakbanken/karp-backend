@@ -17,7 +17,7 @@ select = [
 ]
 
 # Never enforce `E501` (line length violations).
-ignore = ["E501","ANN101", "ANN102","B008","D203", "D213","D104"]
+ignore = ["E501","ANN001","ANN101", "ANN102","B008","D203", "D213","D104"]
 
 line-length = 97
 

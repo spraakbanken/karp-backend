@@ -96,7 +96,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):  # noqa: D101
                             )
 
     def get_refs(  # noqa: C901
-        self, resource_id, version=None  # noqa: ANN001
+        self, resource_id, version=None
     ) -> Tuple[List[Tuple[str, int, str, Dict]], List[Tuple[str, int, str, Dict]]]:
         """
         Goes through all other resource configs finding resources and fields that refer to this resource
@@ -152,7 +152,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):  # noqa: D101
                         other_resource.version
                     ][field_name] = field
 
-        def flatten_dict(ref_dict):  # noqa: ANN202, ANN001
+        def flatten_dict(ref_dict):  # noqa: ANN202
             ref_list = []
             for ref_resource_id, versions in ref_dict.items():
                 for ref_version, field_names in versions.items():

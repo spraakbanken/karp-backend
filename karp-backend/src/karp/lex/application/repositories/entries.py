@@ -138,7 +138,7 @@ class EntryUnitOfWork(  # noqa: D101
         return self._message
 
     def discard(  # noqa: ANN201, D102
-        self, *, user, timestamp: Optional[float] = None  # noqa: ANN001
+        self, *, user, timestamp: Optional[float] = None
     ):
         self._discarded = True
         self._last_modified = self._ensure_timestamp(timestamp)

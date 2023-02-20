@@ -3,7 +3,7 @@ from .sql_search_service import SqlSearchService
 
 
 class SqlSearchServiceUnitOfWork(search.IndexUnitOfWork):  # noqa: D101
-    def __init__(self, session_factory):  # noqa: D107, ANN204, ANN001
+    def __init__(self, session_factory):  # noqa: D107, ANN204
         # session_factory=DEFAULT_SESSION_FACTORY):
         self.session_factory = session_factory
         self._index = SqlSearchService()

@@ -5,7 +5,7 @@ import pytest  # pyre-ignore
 from karp.search.domain.query_dsl import op, parser
 
 
-def _test_nodes(r, facit):  # noqa: ANN202, ANN001
+def _test_nodes(r, facit):  # noqa: ANN202
     for x, f in zip_longest(r.gen_stream(), facit):
         assert x is not None, "x is too short"
         assert f is not None, "x is too long"
@@ -342,7 +342,7 @@ def _test_nodes(r, facit):  # noqa: ANN202, ANN001
         ),
     ],
 )
-def test_karp_tng_parser_success(query, facit):  # noqa: ANN201, ANN001
+def test_karp_tng_parser_success(query, facit):  # noqa: ANN201
     r = parser.parse(query)
 
     assert r is not None

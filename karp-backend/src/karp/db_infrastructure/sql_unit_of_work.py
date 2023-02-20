@@ -54,7 +54,7 @@ class SqlUnitOfWork:  # noqa: D101
     def _begin(self):  # noqa: ANN202
         return self
 
-    def _check_state(self, expected_state):  # noqa: ANN202, ANN001
+    def _check_state(self, expected_state):  # noqa: ANN202
         if self._state != expected_state:
             pass
             # logger.warning(

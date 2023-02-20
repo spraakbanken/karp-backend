@@ -26,7 +26,7 @@ KEYWORDS = {}  # type: ignore
 
 class KarpQueryV6Buffer(Buffer):  # noqa: D101
     def __init__(  # noqa: D107
-        self, text, /, config: ParserConfig = None, **settings  # noqa: ANN003, ANN001
+        self, text, /, config: ParserConfig = None, **settings  # noqa: ANN003
     ) -> None:
         config = ParserConfig.new(
             config,
@@ -394,86 +394,86 @@ class KarpQueryV6Parser(Parser):  # noqa: D101
 
 
 class KarpQueryV6Semantics:  # noqa: D101
-    def start(self, ast):  # noqa: ANN201, D102, ANN001
+    def start(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def expression(self, ast):  # noqa: ANN201, D102, ANN001
+    def expression(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def query_expression(self, ast):  # noqa: ANN201, D102, ANN001
+    def query_expression(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def logical_expression(self, ast):  # noqa: ANN201, D102, ANN001
+    def logical_expression(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def and_(self, ast):  # noqa: ANN201, D102, ANN001
+    def and_(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def contains(self, ast):  # noqa: ANN201, D102, ANN001
+    def contains(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def endswith(self, ast):  # noqa: ANN201, D102, ANN001
+    def endswith(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def equals(self, ast):  # noqa: ANN201, D102, ANN001
+    def equals(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def exists(self, ast):  # noqa: ANN201, D102, ANN001
+    def exists(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def freergxp(self, ast):  # noqa: ANN201, D102, ANN001
+    def freergxp(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def freetext(self, ast):  # noqa: ANN201, D102, ANN001
+    def freetext(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def freetext_any(self, ast):  # noqa: ANN201, D102, ANN001
+    def freetext_any(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def freetext_string(self, ast):  # noqa: ANN201, D102, ANN001
+    def freetext_string(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def gt(self, ast):  # noqa: ANN201, D102, ANN001
+    def gt(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def gte(self, ast):  # noqa: ANN201, D102, ANN001
+    def gte(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def lt(self, ast):  # noqa: ANN201, D102, ANN001
+    def lt(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def lte(self, ast):  # noqa: ANN201, D102, ANN001
+    def lte(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def missing(self, ast):  # noqa: ANN201, D102, ANN001
+    def missing(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def not_(self, ast):  # noqa: ANN201, D102, ANN001
+    def not_(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def or_(self, ast):  # noqa: ANN201, D102, ANN001
+    def or_(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def regexp(self, ast):  # noqa: ANN201, D102, ANN001
+    def regexp(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def startswith(self, ast):  # noqa: ANN201, D102, ANN001
+    def startswith(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def argument(self, ast):  # noqa: ANN201, D102, ANN001
+    def argument(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def any_but_string(self, ast):  # noqa: ANN201, D102, ANN001
+    def any_but_string(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def string(self, ast):  # noqa: ANN201, D102, ANN001
+    def string(self, ast):  # noqa: ANN201, D102
         return ast
 
-    def integer(self, ast):  # noqa: ANN201, D102, ANN001
+    def integer(self, ast):  # noqa: ANN201, D102
         return ast
 
 
-def main(filename, **kwargs):  # noqa: ANN201, ANN003, D103, ANN001
+def main(filename, **kwargs):  # noqa: ANN201, ANN003, D103
     if not filename or filename == "-":
         text = sys.stdin.read()
     else:

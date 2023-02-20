@@ -44,7 +44,7 @@ class UserError(KarpError):  # noqa: D101
 
 
 class ResourceNotFoundError(KarpError):  # noqa: D101
-    def __init__(self, resource_id, version: int = None):  # noqa: D107, ANN204, ANN001
+    def __init__(self, resource_id, version: int = None):  # noqa: D107, ANN204
         super().__init__(
             "Resource not found. ID: {resource_id}, version: {version}".format(
                 resource_id=resource_id, version=version
@@ -55,7 +55,7 @@ class ResourceNotFoundError(KarpError):  # noqa: D101
 
 class ResourceInvalidConfigError(KarpError):  # noqa: D101
     def __init__(  # noqa: D107
-        self, resource_id, config_file: IO, validation_error_msg: str  # noqa: ANN001
+        self, resource_id, config_file: IO, validation_error_msg: str
     ) -> None:
         msg_fmt = """
         Resource config is not valid.
@@ -74,7 +74,7 @@ class ResourceInvalidConfigError(KarpError):  # noqa: D101
 
 
 class ResourceConfigUpdateError(KarpError):  # noqa: D101
-    def __init__(self, msg, resource_id, config_file: IO):  # noqa: D107, ANN204, ANN001
+    def __init__(self, msg, resource_id, config_file: IO):  # noqa: D107, ANN204
         msg_fmt = """
         Cannot update config for resource.
         Message: '{msg}'
@@ -102,10 +102,10 @@ class ResourceAlreadyPublished(KarpError):  # noqa: D101
 class EntryNotFoundError(KarpError):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
-        resource_id,  # noqa: ANN001
-        entry_id,  # noqa: ANN001
-        entry_version=None,  # noqa: ANN001
-        resource_version=None,  # noqa: ANN001
+        resource_id,
+        entry_id,
+        entry_version=None,
+        resource_version=None,
     ):
         msg = "Entry '{entry_id}' (version {entry_version}) not found. resource_id: {resource_id}, version: {resource_version}"
         super().__init__(
@@ -120,7 +120,7 @@ class EntryNotFoundError(KarpError):  # noqa: D101
 
 
 class UpdateConflict(KarpError):  # noqa: D101
-    def __init__(self, diff):  # noqa: D107, ANN204, ANN001
+    def __init__(self, diff):  # noqa: D107, ANN204
         super().__init__(
             "Version conflict. Please update entry.",
             code=ClientErrorCodes.VERSION_CONFLICT,

@@ -24,7 +24,7 @@ def create_entry_json_schema(fields: Dict[str, Any]):  # noqa: ANN201
     }
 
     def recursive_field(  # noqa: ANN202
-        parent_schema, parent_field_name, parent_field_def  # noqa: ANN001
+        parent_schema, parent_field_name, parent_field_def
     ):
         if parent_field_def.get("virtual", False):
             return

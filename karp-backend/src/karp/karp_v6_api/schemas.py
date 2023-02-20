@@ -15,6 +15,7 @@ class BaseModel(pydantic.BaseModel):
         alias_generator = alias_generators.to_lower_camel
 
     def serialize(self) -> dict:
+        """Serialize model to dict."""
         return self.dict(by_alias=True)
 
 

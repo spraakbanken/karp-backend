@@ -77,7 +77,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
 
         return query.count()
 
-    def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:  # noqa: ANN001
+    def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:
         uow, _events = self.entry_uow_factory.create(
             repository_type=row_proxy.type,
             id=row_proxy.entity_id,

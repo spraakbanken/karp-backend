@@ -97,5 +97,5 @@ def get_history(  # noqa: ANN201, D103
     return get_history.query(history_request)
 
 
-def init_app(app):  # noqa: ANN201, D103, ANN001
+def init_app(app):  # noqa: ANN201, D103
     app.include_router(router)

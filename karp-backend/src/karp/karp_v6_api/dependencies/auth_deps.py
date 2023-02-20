@@ -27,7 +27,7 @@ auth_scheme = HTTPBearer()
 logger = logging.getLogger(__name__)
 
 
-def bearer_scheme(authorization=Header(None)):  # noqa: ANN001, ANN201, D103
+def bearer_scheme(authorization=Header(None)):  # noqa: ANN201, D103
     if not authorization:
         return None
     scheme, credentials = security_utils.get_authorization_scheme_param(authorization)

@@ -21,7 +21,7 @@ class TestGenericEntryTransformer:
         field_name: str,
         field_config: dict,
         field_value: Any,  # noqa: ANN401
-        search_unit_ctx,  # noqa: ANN001
+        search_unit_ctx,
     ):
         resource_id = "transform_res"
         create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
@@ -79,7 +79,7 @@ class TestGenericEntryTransformer:
         field_name: str,
         field_config: dict,
         field_value: Any,  # noqa: ANN401
-        search_unit_ctx,  # noqa: ANN001
+        search_unit_ctx,
     ):
         resource_id = "transform_res"
         create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
@@ -136,7 +136,7 @@ class TestGenericEntryTransformer:
         field_name: str,
         field_config: dict,
         field_value: Any,  # noqa: ANN401
-        search_unit_ctx,  # noqa: ANN001
+        search_unit_ctx,
     ):
         resource_id = "transform_res"
         create_entry_repo = lex_factories.CreateEntryRepositoryFactory()

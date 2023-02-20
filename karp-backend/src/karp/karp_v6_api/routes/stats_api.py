@@ -42,5 +42,5 @@ def get_field_values(  # noqa: ANN201, D103
     return search_service.statistics(resource_id, field)
 
 
-def init_app(app):  # noqa: ANN201, D103, ANN001
+def init_app(app):  # noqa: ANN201, D103
     app.include_router(router)

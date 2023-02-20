@@ -41,12 +41,12 @@ def jwt_authenticator():  # noqa: ANN201
     )
 
 
-def test_authenticate_invalid_token(jwt_authenticator):  # noqa: ANN201, ANN001
+def test_authenticate_invalid_token(jwt_authenticator):  # noqa: ANN201
     with pytest.raises(AuthError):
         jwt_authenticator.authenticate("scheme", "invalid")
 
 
-def test_authenticate_expired_token(jwt_authenticator):  # noqa: ANN201, ANN001
+def test_authenticate_expired_token(jwt_authenticator):  # noqa: ANN201
     token = create_access_token(
         user=None,
         levels={},
@@ -59,7 +59,7 @@ def test_authenticate_expired_token(jwt_authenticator):  # noqa: ANN201, ANN001
 
 class TestAuthTokens:
     def test_can_create_access_token_successfully(
-        self, jwt_authenticator  # noqa: ANN001
+        self, jwt_authenticator
     ) -> None:
         access_token = create_access_token(
             user="test_user",
@@ -70,7 +70,7 @@ class TestAuthTokens:
         assert user.identifier == "test_user"
 
     def test_token_missing_user_is_invalid(
-        self, jwt_authenticator  # noqa: ANN001
+        self, jwt_authenticator
     ) -> None:
         access_token = create_access_token(
             user=None,
@@ -97,7 +97,7 @@ class TestAuthTokens:
     )
     def test_invalid_token_content_raises_error(
         self,
-        jwt_authenticator,  # noqa: ANN001
+        jwt_authenticator,
         user: str,
         levels: Optional[Dict],
         secret_key: Optional[str],

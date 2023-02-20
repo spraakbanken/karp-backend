@@ -20,25 +20,25 @@ def new_resource() -> ResourceCreate:
 
 
 class TestResourcesRoutes:
-    def test_get_resource_exist(self, fa_data_client):  # noqa: ANN201, ANN001
+    def test_get_resource_exist(self, fa_data_client):  # noqa: ANN201
         response = fa_data_client.get("/resources/places")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_get_resources_exist(self, fa_client):  # noqa: ANN201, ANN001
+    def test_get_resources_exist(self, fa_client):  # noqa: ANN201
         response = fa_client.get("/resources")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_post_resources_exist(self, fa_client):  # noqa: ANN201, ANN001
+    def test_post_resources_exist(self, fa_client):  # noqa: ANN201
         response = fa_client.post("/resources")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_get_resource_permissionss_exist(self, fa_client):  # noqa: ANN201, ANN001
+    def test_get_resource_permissionss_exist(self, fa_client):  # noqa: ANN201
         response = fa_client.get("/resources/permissions")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
 class TestGetResourcePermissions:
-    def test_get_resources(self, fa_data_client):  # noqa: ANN201, ANN001
+    def test_get_resources(self, fa_data_client):  # noqa: ANN201
         response = fa_data_client.get("/resources/permissions")
 
         assert response.status_code == status.HTTP_200_OK
@@ -57,12 +57,12 @@ class TestGetResourcePermissions:
 
 
 class TestCreateResource:
-    def test_missing_auth_header_returns_403(self, fa_client):  # noqa: ANN201, ANN001
+    def test_missing_auth_header_returns_403(self, fa_client):  # noqa: ANN201
         response = fa_client.post("/resources/", json={})
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_invalid_data_returns_422(  # noqa: ANN201
-        self, fa_client, admin_token: auth.AccessToken  # noqa: ANN001
+        self, fa_client, admin_token: auth.AccessToken
     ):
         response = fa_client.post(
             "/resources/",
@@ -74,7 +74,7 @@ class TestCreateResource:
 
     def test_valid_input_creates_resource(  # noqa: ANN201
         self,
-        fa_client,  # noqa: ANN001
+        fa_client,
         new_resource: ResourceCreate,
         admin_token: auth.AccessToken,
     ):
@@ -96,7 +96,7 @@ class TestCreateResource:
 
 
 class TestGetResource:
-    def test_get_resource_by_resource_id(self, fa_client):  # noqa: ANN201, ANN001
+    def test_get_resource_by_resource_id(self, fa_client):  # noqa: ANN201
         response = fa_client.get("/resources/test_resource")
         print(f"{response.json()=}")
         assert response.status_code == status.HTTP_200_OK
@@ -106,7 +106,7 @@ class TestGetResource:
 
 
 class TestGetResources:
-    def test_get_resources(self, fa_data_client):  # noqa: ANN201, ANN001
+    def test_get_resources(self, fa_data_client):  # noqa: ANN201
         response = fa_data_client.get("/resources/")
         response_data = response.json()
         print(f"{response_data=}")

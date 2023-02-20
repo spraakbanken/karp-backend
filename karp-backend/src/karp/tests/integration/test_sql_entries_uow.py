@@ -19,7 +19,7 @@ def example_uow() -> lex.CreateEntryRepository:
 
 @pytest.fixture
 def sql_entry_uow_v1_creator(
-    sqlite_session_factory,  # noqa: ANN001
+    sqlite_session_factory,
 ) -> SqlEntryUowV1Creator:
     return SqlEntryUowV1Creator(
         event_bus=mock.Mock(spec=EventBus),
@@ -29,7 +29,7 @@ def sql_entry_uow_v1_creator(
 
 @pytest.fixture
 def sql_entry_uow_v2_creator(
-    sqlite_session_factory,  # noqa: ANN001
+    sqlite_session_factory,
 ) -> SqlEntryUowV2Creator:
     return SqlEntryUowV2Creator(
         event_bus=mock.Mock(spec=EventBus),

@@ -20,7 +20,7 @@ class InMemoryEventBus(EventBus):
 
 class TestSqlResourceUnitOfWork:
     def test_rolls_back_uncommitted_work_by_default(  # noqa: ANN201
-        self, sqlite_session_factory  # noqa: ANN001
+        self, sqlite_session_factory
     ):
         uow = SqlResourceUnitOfWork(
             session_factory=sqlite_session_factory, event_bus=InMemoryEventBus()
@@ -33,8 +33,8 @@ class TestSqlResourceUnitOfWork:
         rows = list(new_session.execute('SELECT * FROM "resources"'))
         assert not rows
 
-    def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201, ANN001
-        def do_something_that_fails(resource):  # noqa: ANN202, ANN001
+    def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201
+        def do_something_that_fails(resource):  # noqa: ANN202
             print(resource.to_string())
 
         uow = SqlResourceUnitOfWork(
@@ -57,7 +57,7 @@ class MyException(Exception):
 
 class TestSqlEntryUnitOfWork:
     def test_rolls_back_uncommitted_work_by_default(  # noqa: ANN201
-        self, sqlite_session_factory  # noqa: ANN001
+        self, sqlite_session_factory
     ):
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
@@ -78,7 +78,7 @@ class TestSqlEntryUnitOfWork:
         rows = list(new_session.execute('SELECT * FROM "test"'))
         assert not rows
 
-    def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201, ANN001
+    def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},

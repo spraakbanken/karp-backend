@@ -96,7 +96,7 @@ def test_error(problem_config: dict):  # noqa: ANN201
     _entry_schema = EntrySchema(json_schema)
 
 
-def test_create_json_schema(json_schema_config):  # noqa: ANN201, ANN001
+def test_create_json_schema(json_schema_config):  # noqa: ANN201
     json_schema = create_entry_json_schema(json_schema_config["fields"])
     assert json_schema["type"] == "object"
 

@@ -13,7 +13,7 @@ class SqlListEntryRepos(ListEntryRepos, SqlQuery):  # noqa: D101
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
 
-def _row_to_dto(row_proxy) -> EntryRepoDto:  # noqa: ANN001
+def _row_to_dto(row_proxy) -> EntryRepoDto:
     return EntryRepoDto(
         name=row_proxy.name,
         entity_id=row_proxy.entity_id,
