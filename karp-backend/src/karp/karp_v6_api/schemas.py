@@ -2,9 +2,17 @@ import typing  # noqa: D100, I001
 from enum import Enum
 from typing import Dict, Optional
 
-from pydantic import BaseModel
+import pydantic
 
-from karp.foundation.value_objects import unique_id
+from karp.lex_core import alias_generators
+from karp.lex_core.value_objects import unique_id
+
+
+class BaseModel(pydantic.BaseModel):
+    """Base class for schema classes."""
+    
+    class Config:  # noqa: D106
+        alias_generator = alias_generators.to_lower_camel
 
 
 class SystemResponse(BaseModel):  # noqa: D101
@@ -63,8 +71,8 @@ class EntryUpdate(EntryBase):  # noqa: D101
     version: int
 
 
-class EntityIdMixin(BaseModel):  # noqa: D101
-    entity_id: unique_id.UniqueIdStr
+class IdMixin(BaseModel):  # noqa: D101
+    id: unique_id.UniqueIdStr  # noqa: A003
 
 
 class EntryAddResponse(BaseModel):  # noqa: D101
@@ -85,7 +93,7 @@ class ResourceCreate(ResourceBase):  # noqa: D101
     pass
 
 
-class ResourcePublic(EntityIdMixin, ResourceBase):  # noqa: D101
+class ResourcePublic(IdMixin, ResourceBase):  # noqa: D101
     last_modified: float
 
 
