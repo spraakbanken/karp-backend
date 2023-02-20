@@ -26,6 +26,7 @@ class EntryDto(IdMixin, BaseModel):  # noqa: D101
     entry: typing.Dict
     last_modified: float
     last_modified_by: str
+    message: str
 
 
 class EntryDiffRequest(IdMixin, BaseModel):  # noqa: D101

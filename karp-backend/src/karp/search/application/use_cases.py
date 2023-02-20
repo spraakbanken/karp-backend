@@ -115,7 +115,7 @@ class EntryAddedHandler(  # noqa: D101
                 entry = EntryDto(
                     id=event.id,
                     # entry_id=event.entry_id,
-                    repository_id=event.repo_id,
+                    # repository_id=event.repo_id,
                     resource=resource_id,
                     entry=event.body,
                     message=event.message,
@@ -153,7 +153,7 @@ class EntryUpdatedHandler(  # noqa: D101
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 entry = EntryDto(
                     id=event.id,
-                    repository_id=event.repo_id,
+                    # repository_id=event.repo_id,
                     resource=resource_id,
                     entry=event.body,
                     message=event.message,

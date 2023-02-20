@@ -95,6 +95,7 @@ class GenericEntryViews(EntryViews):  # noqa: D101
             entry=entry.body,
             lastModified=entry.last_modified,
             lastModifiedBy=entry.last_modified_by,
+            message=entry.message,
         )
 
 
@@ -132,6 +133,7 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):  # noqa: D101
             entry=result.body,
             lastModifiedBy=result.last_modified_by,
             lastModified=result.last_modified,
+            message=result.message,
         )
 
 
