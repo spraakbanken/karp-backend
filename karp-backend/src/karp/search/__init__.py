@@ -41,6 +41,8 @@ __all__ = [
     "IndexEntry",
     "PreProcessor",
     "ResourceViews",
+    "PreviewEntry",
+    "PreviewEntryInputDto",
 ]
 
 

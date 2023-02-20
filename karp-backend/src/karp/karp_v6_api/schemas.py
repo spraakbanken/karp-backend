@@ -10,9 +10,12 @@ from karp.lex_core.value_objects import unique_id
 
 class BaseModel(pydantic.BaseModel):
     """Base class for schema classes."""
-    
+
     class Config:  # noqa: D106
         alias_generator = alias_generators.to_lower_camel
+
+    def serialize(self) -> dict:
+        return self.dict(by_alias=True)
 
 
 class SystemResponse(BaseModel):  # noqa: D101
@@ -85,8 +88,6 @@ class ResourceBase(BaseModel):  # noqa: D101
     config: typing.Dict
     message: Optional[str] = None
     entry_repo_id: Optional[unique_id.UniqueIdStr] = None
-    is_published: Optional[bool] = None
-    version: Optional[int] = None
 
 
 class ResourceCreate(ResourceBase):  # noqa: D101
@@ -95,10 +96,14 @@ class ResourceCreate(ResourceBase):  # noqa: D101
 
 class ResourcePublic(IdMixin, ResourceBase):  # noqa: D101
     last_modified: float
+    is_published: Optional[bool] = None
+    version: Optional[int] = None
 
 
 class ResourceProtected(ResourcePublic):  # noqa: D101
     last_modified_by: str
+    is_published: Optional[bool] = None
+    version: Optional[int] = None
 
 
 class ResourcePublish(BaseModel):  # noqa: D101

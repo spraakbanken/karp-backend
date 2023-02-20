@@ -39,7 +39,7 @@ class ResourceModel(db.Base):  # noqa: D101
     )
 
     def __repr__(self):  # noqa: ANN204, D105
-        return """<ResourceDTO(
+        return """<ResourceModel(
                     history_id={},
                     entity_id={},
                     resource_id={},
@@ -67,7 +67,7 @@ class ResourceModel(db.Base):  # noqa: D101
 
     def to_entity(self) -> entities.Resource:  # noqa: D102
         return entities.Resource(
-            entity_id=self.entity_id,
+            id=self.entity_id,
             resource_id=self.resource_id,
             version=self.version,
             name=self.name,

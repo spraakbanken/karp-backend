@@ -1,7 +1,6 @@
 from typing import Dict, List  # noqa: I001
-import uuid  # noqa: F401
 
-import pytest  # pyre-ignore
+import pytest
 from fastapi import status
 
 from karp import auth
@@ -11,23 +10,11 @@ from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
 from karp.foundation.time import utc_now
-from karp.foundation.value_objects import (
+from karp.lex_core.value_objects import (
     make_unique_id,
-    UniqueId,  # noqa: F401
     unique_id,
 )
 from karp.lex.application.queries import EntryDto
-
-# from karp.application import ctx, config
-# from karp.infrastructure.unit_of_work import unit_of_work
-
-
-# from tests.utils import get_json
-
-# from tests.integration_tests.common_fixtures import (
-#     fixture_fa_data_client,
-#     fixture_places,
-# )
 
 
 def get_entry_uow(container, resource_id: str):  # noqa: ANN201, ANN001

@@ -10,7 +10,6 @@ from karp.lex.application.queries import (
     GetResources,
 )
 from karp.lex.application.queries.resources import ReadOnlyResourceRepository
-from karp.lex.domain.entities import resource  # noqa: F401
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.lex_infrastructure.queries.base import SqlQuery
 
@@ -55,7 +54,7 @@ class SqlGetResources(GetResources, SqlQuery):  # noqa: D101
                 ResourceModel.last_modified == subq.c.maxdate,
             ),
         )
-        return (_row_to_dto(row) for row in self._conn.execute(stmt))
+        return [_row_to_dto(row) for row in self._conn.execute(stmt)]
 
 
 class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):  # noqa: D101
@@ -140,14 +139,14 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):  # no
 
 def _row_to_dto(row_proxy) -> ResourceDto:  # noqa: ANN001
     return ResourceDto(
-        entity_id=row_proxy.entity_id,
-        resource_id=row_proxy.resource_id,
+        id=row_proxy.entity_id,
+        resourceId=row_proxy.resource_id,
         version=row_proxy.version,
         config=row_proxy.config,
-        is_published=row_proxy.is_published,
-        entry_repository_id=row_proxy.entry_repo_id,
-        last_modified=row_proxy.last_modified,
-        last_modified_by=row_proxy.last_modified_by,
+        isPublished=row_proxy.is_published,
+        entryRepositoryId=row_proxy.entry_repo_id,
+        lastModified=row_proxy.last_modified,
+        lastModifiedBy=row_proxy.last_modified_by,
         message=row_proxy.message,
         name=row_proxy.name,
         discarded=row_proxy.discarded,

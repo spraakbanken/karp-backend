@@ -1,9 +1,9 @@
 import pytest  # noqa: I001
 
-from karp.foundation.value_objects import make_unique_id
+from karp.lex_core.value_objects import make_unique_id
 from karp.foundation.events import EventBus, Event
 
-from karp.lex_infrastructure import SqlResourceUnitOfWork
+from karp.lex_infrastructure.repositories import SqlResourceUnitOfWork
 from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
 
 from karp.tests.unit.lex import adapters, factories  # noqa: F401
@@ -31,7 +31,7 @@ class TestSqlResourceUnitOfWork:
 
         new_session = sqlite_session_factory()
         rows = list(new_session.execute('SELECT * FROM "resources"'))
-        assert rows == []
+        assert not rows
 
     def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201, ANN001
         def do_something_that_fails(resource):  # noqa: ANN202, ANN001
@@ -48,7 +48,7 @@ class TestSqlResourceUnitOfWork:
 
         new_session = sqlite_session_factory()
         rows = list(new_session.execute('SELECT * FROM "resources"'))
-        assert rows == []
+        assert not rows
 
 
 class MyException(Exception):
@@ -68,7 +68,7 @@ class TestSqlEntryUnitOfWork:
             config={},
             connection_str=":memory:",
             message="test message",
-            entity_id=make_unique_id(),
+            id=make_unique_id(),
         )
         with uow:
             entry = factories.EntryFactory()  # resource_id="abc")
@@ -76,7 +76,7 @@ class TestSqlEntryUnitOfWork:
 
         new_session = sqlite_session_factory()
         rows = list(new_session.execute('SELECT * FROM "test"'))
-        assert rows == []
+        assert not rows
 
     def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201, ANN001
         uow = SqlEntryUnitOfWork(
@@ -88,7 +88,7 @@ class TestSqlEntryUnitOfWork:
             config={},
             connection_str=":memory:",
             message="test message",
-            entity_id=make_unique_id(),
+            id=make_unique_id(),
         )
         with pytest.raises(MyException):
             with uow:
@@ -98,7 +98,7 @@ class TestSqlEntryUnitOfWork:
 
         new_session = sqlite_session_factory()
         rows = list(new_session.execute('SELECT * FROM "test"'))
-        assert rows == []
+        assert not rows
 
 
 def do_something_that_fails() -> None:

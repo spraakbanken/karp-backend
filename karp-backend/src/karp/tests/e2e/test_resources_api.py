@@ -9,7 +9,7 @@ from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic
 @pytest.fixture
 def new_resource() -> ResourceCreate:
     return ResourceCreate(
-        resource_id="test_resource",
+        resourceId="test_resource",
         name="Test resource",
         message="test",
         config={
@@ -80,7 +80,7 @@ class TestCreateResource:
     ):
         response = fa_client.post(
             "/resources/",
-            json=new_resource.dict(),
+            json=new_resource.serialize(),
             headers=admin_token.as_header(),
         )
         print(f"{response.json()=}")
@@ -90,8 +90,8 @@ class TestCreateResource:
             **response.json(),
         )
         expected_resource = new_resource
-        expected_resource.version = 1
-        expected_resource.is_published = False
+        # expected_resource.version = 1
+        # expected_resource.is_published = False
         assert created_resource == expected_resource
 
 

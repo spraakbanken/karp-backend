@@ -22,21 +22,18 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):  # noqa: ANN201, D
         data = json.load(infile)
     except Exception as err:  # noqa: BLE001
         typer.echo(f"Error reading file '{infile.name}': {str(err)}")
-        raise typer.Exit(123)  # noqa: B904
+        raise typer.Exit(123) from err
     create_entry_repo = CreateEntryRepository.from_dict(
         data,
         user="local admin",
     )
 
-    bus = inject_from_ctx(CommandBus, ctx)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
 
     bus.dispatch(create_entry_repo)
 
-    typer.echo(
-        "Entry repository '{name}' with id '{id}' created.".format(
-            name=create_entry_repo.name,
-            id=create_entry_repo.entity_id,
-        )
+    print(
+        f"Entry repository '{create_entry_repo.name}' with id '{create_entry_repo.id}' created."
     )
 
 
@@ -58,7 +55,7 @@ def delete(  # noqa: ANN201, D103
 
 @subapp.command()
 def list(ctx: typer.Context):  # noqa: ANN201, D103, A001
-    query = inject_from_ctx(ListEntryRepos, ctx)
+    query = inject_from_ctx(ListEntryRepos, ctx)  # type: ignore [misc]
     typer.echo(
         tabulate(
             [
@@ -72,9 +69,8 @@ def list(ctx: typer.Context):  # noqa: ANN201, D103, A001
 
 @subapp.command()
 def show(ctx: typer.Context, name: str):  # noqa: ANN201, D103
-    repo = inject_from_ctx(lex.ReadOnlyEntryRepoRepository, ctx)
-    entry_repo = repo.get_by_name(name)
-    if entry_repo:
+    repo = inject_from_ctx(lex.ReadOnlyEntryRepoRepository, ctx)  # type: ignore [misc]
+    if entry_repo := repo.get_by_name(name):
         typer.echo(tabulate(((key, value) for key, value in entry_repo.dict().items())))
     else:
         typer.echo("No such entry-repo")

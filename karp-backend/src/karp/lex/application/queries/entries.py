@@ -12,6 +12,7 @@ from karp.lex.domain.entities.entry import EntryOp
 class BaseModel(pydantic.BaseModel):  # noqa: D101
     class Config:  # noqa: D106
         # arbitrary_types_allowed = True
+        extra = "forbid"
         alias_generator = alias_generators.to_lower_camel
 
 

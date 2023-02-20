@@ -98,7 +98,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
             history_dict = self._entry_to_history_dict(entry)
             ins_stmt = ins_stmt.values(**history_dict)
             result = self._session.execute(ins_stmt)
-            return result.lastrowid or result.returned_defaults["history_id"]
+            return result.lastrowid or result.returned_defaults["history_id"]  # type: ignore [attr-defined]
         except db.exc.DBAPIError as exc:
             raise errors.RepositoryError("db failure") from exc
 
@@ -188,7 +188,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
                 self.history_model.discarded == False,  # noqa: E712
             ),
         )
-        return self._session.execute(stmt).scalar()
+        return self._session.execute(stmt).scalar()  # type: ignore [return-value]
 
     def by_referenceable(  # noqa: D102
         self, filters: Optional[Dict] = None, **kwargs  # noqa: ANN003
@@ -258,7 +258,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
     ) -> Dict:
         return {
             "history_id": history_id,
-            "entity_id": entry.entity_id,
+            "entity_id": entry.id,
             "version": entry.version,
             "last_modified": entry.last_modified,
             "last_modified_by": entry.last_modified_by,
@@ -276,7 +276,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
             message=row.message,
             status=row.status,
             op=row.op,
-            entity_id=row.entity_id,
+            id=row.entity_id,
             last_modified=row.last_modified,
             last_modified_by=row.last_modified_by,
             discarded=row.discarded,
@@ -366,7 +366,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
     ):
         self._session_factory = session_factory
         self.event_bus = event_bus
-        self.cache = {}
+        self.cache: dict[UniqueId, SqlEntryUowType] = {}
 
     def _create_uow(self, **kwargs) -> SqlEntryUowType:  # noqa: ANN003
         raise NotImplementedError(f"please implement this for {self}")
@@ -381,23 +381,23 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
         message: str,
         timestamp: float,
     ) -> Tuple[SqlEntryUowType, list[Event]]:
-        return (
-            self._create_uow(
-                entity_id=id,
-                name=name,
-                config=config,
-                connection_str=connection_str,
-                last_modified_by=user,
-                message=message,
-                last_modified=timestamp,
-                session_factory=self._session_factory,
-                event_bus=self.event_bus,
-            ),
-            [],
-        )
+        # return (
+        #     self._create_uow(
+        #         id=id,
+        #         name=name,
+        #         config=config,
+        #         connection_str=connection_str,
+        #         last_modified_by=user,
+        #         message=message,
+        #         last_modified=timestamp,
+        #         session_factory=self._session_factory,
+        #         event_bus=self.event_bus,
+        #     ),
+        #     [],
+        # )
         if id not in self.cache:
             self.cache[id] = self._create_uow(
-                entity_id=id,
+                id=id,
                 name=name,
                 config=config,
                 connection_str=connection_str,

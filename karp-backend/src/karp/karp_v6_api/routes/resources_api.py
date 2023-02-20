@@ -60,7 +60,7 @@ def create_new_resource(  # noqa: D103
         if new_resource.entry_repo_id is None:
             entry_repo = command_bus.dispatch(
                 commands.CreateEntryRepository(
-                    repository_type="default",
+                    repositoryType="default",
                     name=new_resource.resource_id,
                     config=new_resource.config,
                     user=user.identifier,
@@ -70,7 +70,7 @@ def create_new_resource(  # noqa: D103
             new_resource.entry_repo_id = entry_repo.entity_id
         create_resource = commands.CreateResource(
             user=user.identifier,
-            **new_resource.dict(),
+            **new_resource.serialize(),
         )
         resource = command_bus.dispatch(create_resource)
         logger.info("resource created", extra={"resource": resource})
@@ -111,7 +111,7 @@ def publishing_resource(  # noqa: ANN201, D103
         resource_publish.resource_id = resource_id
         publish_resource = commands.PublishResource(
             user=user.identifier,
-            **resource_publish.dict(),
+            **resource_publish.serialize(),
         )
         command_bus.dispatch(publish_resource)
         logger.info("resource published", extra={"resource_id": resource_id})
@@ -136,7 +136,7 @@ def get_resource_by_resource_id(  # noqa: D103
     resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
 ) -> ResourcePublic:
     if resource := resource_repo.get_by_resource_id(resource_id):
-        return ResourcePublic(**resource.dict())
+        return resource  # type: ignore [return-value]
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

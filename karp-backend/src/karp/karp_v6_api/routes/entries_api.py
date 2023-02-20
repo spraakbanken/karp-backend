@@ -15,7 +15,7 @@ from fastapi import (
 )
 import pydantic
 from starlette import responses
-from karp.lex_core.value_objects import unique_id
+from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
 
 from karp.main import errors as karp_errors
@@ -27,6 +27,7 @@ from karp.auth import User
 from karp.foundation.value_objects import PermissionLevel
 from karp.auth import AuthService
 from karp.karp_v6_api import schemas, dependencies as deps
+from karp.command_bus import CommandBus
 
 
 router = APIRouter()
@@ -80,7 +81,7 @@ def add_entry(  # noqa: ANN201, D103
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    adding_entry_uc: lex.AddingEntry = Depends(deps.get_lex_uc(lex.AddingEntry)),
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -90,9 +91,9 @@ def add_entry(  # noqa: ANN201, D103
         )
     logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
-        new_entry = adding_entry_uc.execute(
+        new_entry = command_bus.dispatch(
             commands.AddEntry(
-                resource_id=resource_id,
+                resourceId=resource_id,
                 user=user.identifier,
                 message=data.message,
                 entry=data.entry,
@@ -115,7 +116,7 @@ def add_entry(  # noqa: ANN201, D103
             },
         )
 
-    return {"newID": new_entry.entity_id}
+    return {"newID": new_entry.id}
 
 
 @router.post("/{resource_id}/preview")
@@ -136,7 +137,7 @@ def preview_entry(  # noqa: ANN201, D103
         )
     try:
         input_dto = search.PreviewEntryInputDto(
-            resource_id=resource_id, entry=data.entry, user=user.identifier
+            resourceId=resource_id, entry=data.entry, user=user.identifier
         )
     except pydantic.ValidationError as err:
         logger.exception("data is not valid")
@@ -158,13 +159,12 @@ def preview_entry(  # noqa: ANN201, D103
     response_model=schemas.EntryAddResponse,
 )
 def update_entry(  # noqa: ANN201, D103
-    response: Response,
     resource_id: str,
-    entry_id: UniqueIdStr,
+    entry_id: UniqueId,
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    updating_entry_uc: lex.UpdatingEntry = Depends(deps.get_lex_uc(lex.UpdatingEntry)),
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -173,13 +173,6 @@ def update_entry(  # noqa: ANN201, D103
             headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
 
-    #     force_update = convert.str2bool(request.args.get("force", "false"))
-    #     data = request.get_json()
-    #     version = data.get("version")
-    #     entry = data.get("entry")
-    #     message = data.get("message")
-    #     if not (version and entry and message):
-    #         raise KarpError("Missing version, entry or message")
     logger.info(
         "updating entry",
         extra={
@@ -190,28 +183,17 @@ def update_entry(  # noqa: ANN201, D103
         },
     )
     try:
-        entry = updating_entry_uc.execute(
+        entry = command_bus.dispatch(
             commands.UpdateEntry(
-                resource_id=resource_id,
-                entity_id=unique_id.parse(entry_id),
+                resourceId=resource_id,
+                id=unique_id.parse(entry_id),
                 version=data.version,
                 user=user.identifier,
                 message=data.message,
                 entry=data.entry,
             )
         )
-        # new_entry = entries.add_entry(
-        #     resource_id, data.entry, user.identifier, message=data.message
-        # )
-        # new_id = entries.update_entry(
-        #     resource_id,
-        #     entry_id,
-        #     data.version,
-        #     data.entry,
-        #     user.identifier,
-        #     message=data.message,
-        #     # force=force_update,
-        # )
+
         return {"newID": entry.entity_id}
     except errors.EntryNotFound:
         return responses.JSONResponse(
@@ -248,10 +230,10 @@ def update_entry(  # noqa: ANN201, D103
 )
 def delete_entry(  # noqa: ANN201
     resource_id: str,
-    entry_id: UniqueIdStr,
+    entry_id: UniqueId,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    deleting_entry_uc: lex.DeletingEntry = Depends(deps.get_lex_uc(lex.DeletingEntry)),
+    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
 ):
     """Delete a entry from a resource."""
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -261,10 +243,10 @@ def delete_entry(  # noqa: ANN201
             headers={"WWW-Authenticate": 'Bearer scope="lexica:write"'},
         )
     try:
-        deleting_entry_uc.execute(
+        command_bus.dispatch(
             commands.DeleteEntry(
-                resource_id=resource_id,
-                entity_id=unique_id.parse(entry_id),
+                resourceId=resource_id,
+                id=unique_id.parse(entry_id),
                 user=user.identifier,
             )
         )
@@ -275,7 +257,7 @@ def delete_entry(  # noqa: ANN201
                 "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
                 "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
                 "resource": resource_id,
-                "entity_id": entry_id,
+                "id": entry_id,
             },
         )
     return

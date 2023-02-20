@@ -195,7 +195,7 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):  # noqa: D101
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             entry_repo_id
         ) as uw:
-            db_entry = uw.repo.by_id(request.entity_id)
+            db_entry = uw.repo.by_id(request.id)
 
             #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
             #

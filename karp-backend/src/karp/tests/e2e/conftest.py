@@ -118,17 +118,18 @@ def create_and_publish_resource(
 
     resource_id = resource_config.pop("resource_id")
     resource = ResourceCreate(
-        resource_id=resource_id,
+        resourceId=resource_id,
         name=resource_config.pop("resource_name"),
         config=resource_config,
         message=f"{resource_id} added",
     )
     response = client.post(
         "/resources/",
-        json=resource.dict(),
+        json=resource.serialize(),
         headers=access_token.as_header(),
     )
     if response.status_code != 201:
+        print(f"{response.json()=}")
         return False, {
             "error": f"Failed create resource: unexpected status_code: {response.status_code} != 201 ",
             "response.json": response.json(),

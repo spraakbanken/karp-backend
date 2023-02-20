@@ -8,8 +8,8 @@ from tabulate import tabulate
 
 from karp import lex
 from karp.command_bus import CommandBus
-from karp.lex_core.value_objects import unique_id
-from karp.lex import commands as lex_commands
+from karp.lex_core.value_objects import UniqueIdStr, unique_id
+from karp.lex_core import commands as lex_commands
 from karp.search import commands as search_commands
 from karp.lex.application.queries import (
     GetPublishedResources,
@@ -47,25 +47,25 @@ def create(  # noqa: ANN201, D103
     config: Path,
     entry_repo_id: Optional[str] = typer.Option(None, help="id for entry-repo"),
 ):
-    bus = inject_from_ctx(CommandBus, ctx)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
     if config.is_file():
         data = jsonlib.load_from_file(config)
         if not entry_repo_id:
-            query = inject_from_ctx(ListEntryRepos, ctx)
+            query = inject_from_ctx(ListEntryRepos, ctx)  # type: ignore [misc]
             entry_repos = list(query.query())
             entry_repo = choose_from(
                 entry_repos, lambda x: f"{x.name} {x.repository_type}"
             )
             entry_repo_uuid = entry_repo.entity_id
         else:
-            entry_repo_uuid = entry_repo_id
+            entry_repo_uuid = UniqueIdStr.validate(entry_repo_id)
         cmd = lex_commands.CreateResource.from_dict(
             data,
             user="local admin",
             entry_repo_id=entry_repo_uuid,
         )
         bus.dispatch(cmd)
-        typer.echo(f"Created resource '{cmd.resource_id}' ({cmd.entity_id})")
+        print(f"Created resource '{cmd.resource_id}' ({cmd.id})")
 
     elif config.is_dir():
         typer.Abort("not supported yetls")
@@ -84,11 +84,11 @@ def set_entry_repo(  # noqa: ANN201, D103
     entry_repo_id: str = typer.Argument(..., help="id for entry-repo"),
     user: Optional[str] = typer.Option(None),
 ):
-    bus = inject_from_ctx(CommandBus, ctx)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
     entry_repo_uuid = unique_id.parse(entry_repo_id)
     cmd = lex_commands.SetEntryRepoId(
-        resource_id=resource_id,
-        entry_repo_id=entry_repo_uuid,
+        resourceId=resource_id,
+        entryRepoId=entry_repo_uuid,
         user=user or "local admin",
     )
     bus.dispatch(cmd)
@@ -114,18 +114,18 @@ def update(  # noqa: ANN201
     cmd = lex_commands.UpdateResource(
         version=version,
         name=resource_name,
-        resource_id=resource_id,
+        resourceId=resource_id,
         config=config_dict,
         message=message or "config updated",
         user=user or "local admin",
     )
     print(f"cmd={cmd}")
-    bus = inject_from_ctx(CommandBus, ctx)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
     try:
         bus.dispatch(cmd)
     except Exception as err:  # noqa: BLE001
         typer.echo(f"Error occurred: {err}", err=True)
-        raise typer.Exit(400)  # noqa: B904
+        raise typer.Exit(400) from err
     else:
         print(f"The config of '{resource_id}' is updated.")
         print("You may need to reindex the resource,")
@@ -136,10 +136,10 @@ def update(  # noqa: ANN201
 @cli_error_handler
 @cli_timer
 def publish(ctx: typer.Context, resource_id: str, version: int):  # noqa: ANN201, D103
-    bus = inject_from_ctx(CommandBus, ctx)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
     try:
         cmd = lex_commands.PublishResource(
-            resource_id=resource_id,
+            resourceId=resource_id,
             message=f"Publish '{resource_id}",
             user="local admin",
             version=version,
@@ -155,8 +155,8 @@ def publish(ctx: typer.Context, resource_id: str, version: int):  # noqa: ANN201
 @cli_error_handler
 @cli_timer
 def reindex(ctx: typer.Context, resource_id: str):  # noqa: ANN201, D103
-    bus = inject_from_ctx(CommandBus, ctx)
-    cmd = search_commands.ReindexResource(resource_id=resource_id)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
+    cmd = search_commands.ReindexResource(resourceId=resource_id)
     bus.dispatch(cmd)
 
     typer.echo(f"Successfully reindexed all data in {resource_id}")
@@ -213,9 +213,9 @@ def list_resources(  # noqa: ANN201, D103
     show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),
 ):
     if show_published:
-        query = inject_from_ctx(GetPublishedResources, ctx)
+        query = inject_from_ctx(GetPublishedResources, ctx)  # type: ignore [misc]
     else:
-        query = inject_from_ctx(GetResources, ctx)
+        query = inject_from_ctx(GetResources, ctx)  # type: ignore [misc,assignment]
     typer.echo(
         tabulate(
             [
@@ -233,18 +233,16 @@ def list_resources(  # noqa: ANN201, D103
 def show(  # noqa: ANN201, D103
     ctx: typer.Context, resource_id: str, version: Optional[int] = None
 ):
-    repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx)
+    repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx)  # type: ignore [misc]
     resource = repo.get_by_resource_id(resource_id, version=version)
     #     if version:
     #         resource = database.get_resource_definition(resource_id, version)
     #     else:
     #         resource = database.get_active_or_latest_resource_definition(resource_id)
     if not resource:
+        version_str = version or "latest"
         typer.echo(
-            "Can't find resource '{resource_id}', version '{version}'".format(
-                resource_id=resource_id,
-                version=version if version else "latest",
-            )
+            f"Can't find resource '{resource_id}', version '{version_str}'", err=True
         )
         raise typer.Exit(3)
 
@@ -260,7 +258,7 @@ def set_permissions(  # noqa: ANN201, D103
     version: int,
     level: str,
 ):
-    _bus = inject_from_ctx(CommandBus, ctx)
+    _bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
 
 
 #     # TODO use level
@@ -285,7 +283,7 @@ def delete(  # noqa: ANN201, D103
     user: Optional[str] = typer.Option(None),
     message: Optional[str] = typer.Option(None),
 ):
-    bus = inject_from_ctx(CommandBus, ctx)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
     cmd = lex_commands.DeleteResource(
         resource_id=resource_id,
         user=user or "local admin",

@@ -48,8 +48,8 @@ def get_diff(  # noqa: ANN201, D103
         )
 
     diff_request = EntryDiffRequest(
-        resource_id=resource_id,
-        entity_id=unique_id.parse(entry_id),
+        resourceId=resource_id,
+        id=unique_id.parse(entry_id),
         from_version=from_version,
         to_version=to_version,
         from_date=from_date,
