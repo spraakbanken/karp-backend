@@ -21,10 +21,7 @@ class EntityOrResourceIdMixin(Command):  # noqa: D101
 
     @pydantic.root_validator(pre=True)
     def resource_id_or_id(cls, values) -> dict:  # noqa: D102, ANN001
-        resource_id = None
-        if "resourceId" in values:
-            resource_id = values["resourceId"]
-
+        resource_id = values["resourceId"] if "resourceId" in values else None
         if "id" in values and resource_id:
             raise ValueError("Can't give both 'id' and 'resourceId'")
 
