@@ -1,19 +1,24 @@
 import copy
 import dataclasses
 import typing
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Tuple
 
 import injector
 from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
-from karp.lex import EntryRepositoryUnitOfWorkFactory
 from karp.lex.application import repositories as lex_repositories
 from karp.lex.application.queries import (
     ReadOnlyResourceRepository,
     ResourceDto,
 )
+from karp.lex.application.repositories import (
+    EntryRepositoryUnitOfWorkFactory,
+    EntryUnitOfWork,
+)
 from karp.lex.domain import entities as lex_entities
+from karp.lex.domain import events
 from karp.lex_core.value_objects import UniqueId, UniqueIdType
+from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
 from karp.tests.foundation.adapters import InMemoryUnitOfWork
 
 
@@ -72,10 +77,10 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
         self.resources = resources
 
     def get_by_id(
-        self, entity_id: UniqueId, version: Optional[int] = None
+        self, id: UniqueIdPrimitive, version: Optional[int] = None  # noqa: A002
     ) -> Optional[ResourceDto]:
-        resource = self.resources.get(entity_id)
-        if resource:
+        resource_id = UniqueId.validate(id)
+        if resource := self.resources.get(resource_id):
             return self._row_to_dto(resource)
         return None
 
@@ -89,20 +94,8 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
             None,
         )
 
-    def _row_to_dto(self, res) -> ResourceDto:  # noqa: ANN001
-        return ResourceDto(
-            entity_id=res.entity_id,
-            resource_id=res.resource_id,
-            last_modified=res.last_modified,
-            last_modified_by=res.last_modified_by,
-            version=res.version,
-            config=res.config,
-            is_published=res.is_published,
-            entry_repository_id=res.entry_repository_id,
-            name=res.name,
-            message=res.message,
-            discarded=res.discarded,
-        )
+    def _row_to_dto(self, res: lex_entities.Resource) -> ResourceDto:
+        return ResourceDto(**res.serialize())
 
     def get_published_resources(self) -> Iterable[ResourceDto]:
         return (
@@ -162,7 +155,7 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
 class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork):
     def __init__(  # noqa: ANN204
         self,
-        entity_id,  # noqa: ANN001
+        id: UniqueId,  # noqa: A002
         name: str,
         config: typing.Dict,
         connection_str: typing.Optional[str],
@@ -173,30 +166,12 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
             self,
-            entity_id=entity_id,
+            id=id,
             name=name,
             config=config,
             connection_str=connection_str,
             message=message,
             event_bus=event_bus,
-        )
-        self._entries = InMemoryEntryRepository()
-        # self.id = entity_id
-        # self.name = name
-        # self.config = config
-
-    @property
-    def repo(self) -> lex_repositories.EntryRepository:
-        return self._entries
-
-
-class InMemoryEntryUnitOfWork2(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork):
-    def __init__(
-        self, entity_id, name: str, config: typing.Dict  # noqa: ANN001
-    ) -> None:
-        InMemoryUnitOfWork.__init__(self)
-        lex_repositories.EntryUnitOfWork.__init__(
-            self, entity_id=entity_id, name=name, config=config
         )
         self._entries = InMemoryEntryRepository()
         # self.id = entity_id
@@ -240,23 +215,25 @@ class InMemoryEntryUnitOfWorkCreator:
     @injector.inject
     def __init__(self, event_bus: EventBus) -> None:
         self.event_bus = event_bus
-        self._cache = {}
+        self._cache: dict[UniqueId, InMemoryEntryUnitOfWork] = {}
 
     def __call__(
         self,
-        entity_id: UniqueId,
+        id: UniqueId,  # noqa: A002
         name: str,
         config: Dict,
         connection_str: Optional[str],
         user: str,
         message: str,
         timestamp: float,
-    ) -> lex_repositories.EntryUnitOfWork:
-        if not isinstance(entity_id, UniqueIdType):
-            entity_id = UniqueId.validate(entity_id)
+    ) -> Tuple[lex_repositories.EntryUnitOfWork, list[events.Event]]:
+        if not isinstance(id, UniqueIdType):
+            entity_id = UniqueId.validate(id)
+        else:
+            entity_id = id
         if entity_id not in self._cache:
             self._cache[entity_id] = InMemoryEntryUnitOfWork(
-                entity_id=entity_id,
+                id=entity_id,
                 name=name,
                 config=config,
                 connection_str=connection_str,
@@ -267,29 +244,35 @@ class InMemoryEntryUnitOfWorkCreator:
         return self._cache[entity_id], []
 
 
-def create_entry_uow2(
-    entity_id: UniqueId,
-    name: str,
-    config: Dict,
-) -> lex_repositories.EntryUnitOfWork:
-    return InMemoryEntryUnitOfWork2(
-        entity_id=entity_id,
-        name=name,
-        config=config,
-    )
+# def create_entry_uow2(
+#     entity_id: UniqueId,
+#     name: str,
+#     config: Dict,
+# ) -> lex_repositories.EntryUnitOfWork:
+#     return InMemoryEntryUnitOfWork2(
+#         entity_id=entity_id,
+#         name=name,
+#         config=config,
+#     )
 
 
 class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
     def __init__(self) -> None:
         super().__init__()
-        self._storage: dict[UniqueId, dict] = {}
+        self._storage: dict[UniqueId, EntryUnitOfWork] = {}
 
-    def _save(self, entry_repo) -> None:  # noqa: ANN001
+    def _save(self, entry_repo: EntryUnitOfWork) -> None:
         entry_repo_id = self._ensure_correct_id_type(entry_repo.id)
         self._storage[entry_repo_id] = entry_repo
 
-    def _by_id(self, id_, *, version: Optional[int] = None):  # noqa: ANN202, ANN001
-        entry_repo_id = self._ensure_correct_id_type(id_)
+    def _by_id(
+        self,
+        id: UniqueId,  # noqa: A002
+        *,
+        version: Optional[int] = None,
+        **kwargs,  # noqa: ANN003
+    ) -> EntryUnitOfWork | None:
+        entry_repo_id = self._ensure_correct_id_type(id)
         return self._storage.get(entry_repo_id)
 
     def __len__(self):  # noqa: ANN204
@@ -354,7 +337,7 @@ class InMemoryLexInfrastructure(injector.Module):
         resource_uow: lex_repositories.ResourceUnitOfWork,
     ) -> ReadOnlyResourceRepository:
         return InMemoryReadResourceRepository(
-            resources=resource_uow.repo.resources,
+            resources=resource_uow.repo.resources,  # type: ignore
         )
 
 

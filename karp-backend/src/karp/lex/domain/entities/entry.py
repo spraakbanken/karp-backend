@@ -7,7 +7,7 @@ from typing import Dict, Optional, Any, Tuple
 
 from karp.lex.domain import errors, events
 from karp.foundation.entity import TimestampedVersionedEntity
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import UniqueId, unique_id
 
 logger = logging.getLogger("karp")
 
@@ -30,7 +30,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
         *,
-        # entry_id: str,
+        id: UniqueId,  # noqa: A002
         body: Dict,
         message: str,
         # resource_id: str,
@@ -42,7 +42,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         **kwargs,  # noqa: ANN003
         # version: int = 0
     ):
-        super().__init__(version=version, **kwargs)
+        super().__init__(id=UniqueId.validate(id), version=version, **kwargs)
         # self._entry_id = entry_id
         self._body = body
         self._op = op
@@ -87,12 +87,12 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         self._op = EntryOp.UPDATED
         return [
             events.EntryUpdated(
-                entity_id=self.id,
+                id=self.id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
                 body=self.body,
-                repo_id=self.repo_id,
+                repoId=self.repo_id,
                 message=self.message,
             )
         ]
@@ -119,15 +119,14 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         """The message for the latest operation of this entry."""
         return self._message
 
-    def dict(self) -> Dict[str, Any]:  # noqa: A003, D102
+    def serialize(self) -> Dict[str, Any]:  # noqa: D102
         return {
-            # "entry_id": self._entry_id,
-            "entity_id": self.entity_id,
+            "id": self.id,
             "resource": "",
             "version": self._version,
             "entry": self._body,
-            "last_modified": self._last_modified,
-            "last_modified_by": self._last_modified_by,
+            "lastModified": self._last_modified,
+            "lastModifiedBy": self._last_modified_by,
             "discarded": self._discarded,
             "message": self._message,
         }
@@ -146,13 +145,13 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         self._discarded = self._update_field(True, user, timestamp)
         return [
             events.EntryDeleted(
-                entity_id=self.id,
+                id=self.id,
                 # entry_id=self.entry_id,
                 timestamp=self.last_modified,
                 user=user,
                 message=self._message,
                 version=self.version,
-                repo_id=self.repo_id,
+                repoId=self.repo_id,
             )
         ]
 
@@ -174,7 +173,7 @@ def create_entry(  # noqa: D103
     # entry_id: str,
     body: Dict,
     *,
-    entity_id: unique_id.UniqueId,
+    id: unique_id.UniqueId,  # noqa: A002
     repo_id: unique_id.UniqueId,
     last_modified_by: str = None,
     message: Optional[str] = None,
@@ -183,22 +182,20 @@ def create_entry(  # noqa: D103
     # if not isinstance(entry_id, str):
     #     entry_id = str(entry_id)
     entry = Entry(
-        # entry_id=entry_id,
         body=body,
         message="Entry added." if not message else message,
         status=EntryStatus.IN_PROGRESS,
         op=EntryOp.ADDED,
-        # entity_id=unique_id.make_unique_id(),
+        # id=unique_id.make_unique_id(),
         version=1,
         last_modified_by="Unknown user" if not last_modified_by else last_modified_by,
         repository_id=repo_id,
-        entity_id=entity_id,
+        id=id,
         last_modified=last_modified,
     )
     event = events.EntryAdded(
-        repo_id=repo_id,
-        entity_id=entry.id,
-        # entry_id=entry.entry_id,
+        repoId=repo_id,
+        id=entry.id,
         body=entry.body,
         message=entry.message or "",
         user=entry.last_modified_by,

@@ -1,6 +1,5 @@
 import logging  # noqa: D100, I001
 
-from typing import Iterable
 
 from karp.foundation import events as foundation_events
 
@@ -13,65 +12,9 @@ from karp.search.application.transformers import EntryTransformer, PreProcessor
 
 from karp.lex.domain import events
 
-# , errors, events, search_service, model
 from karp.search.domain import commands
 
 logger = logging.getLogger(__name__)
-
-
-# def pre_process_resource(
-#     resource_obj: Resource,
-# ) -> List[Tuple[str, EntryMetadata, Dict]]:
-#     metadata = resourcemgr.get_all_metadata(resource_obj)
-#     fields = resource_obj.config["fields"].items()
-#     entries = resource_obj.entities.query.filter_by(deleted=False)
-#     return [
-#         (
-#             entry.entry_id,
-#             metadata[entry.id],
-#             transform_to_search_service_entry(resource_obj, json.loads(entry.body), fields),
-#         )
-#         for entry in entries
-#     ]
-
-# metadata = resourcemgr.get_all_metadata(resource_obj)
-# fields = resource_obj.config["fields"].items()
-# entries = resource_obj.entities.query.filter_by(deleted=False)
-# return [
-#     (
-#         entry.entry_id,
-#         metadata[entry.id],
-#         transform_to_search_service_entry(resource_obj, json.loads(entry.body), fields),
-#     )
-#     for entry in entries
-# ]
-
-
-# def research_service(
-#     resource_id: str,
-#     version: Optional[int] = None,
-#     search_entries: Optional[List[Tuple[str, EntryMetadata, Dict]]] = None,
-# ) -> None:
-#     """
-#     If `search_entries` is not given, they will be fetched from DB and processed using `transform_to_search_service_entry`
-#     If `search_entries` is given, they most have the same format as the output from `pre_process_resource`
-#     """
-#     resource_obj = resourcemgr.get_resource(resource_id, version=version)
-#     try:
-#         search_service_name = search_serviceer.impl.create_search_service(resource_id, resource_obj.config)
-#     except NotImplementedError:
-#         _logger.error("No SearchService module is loaded. Check your configurations...")
-#         sys.exit(errors.NoSearchServiceModuleConfigured)
-#     if not search_entries:
-#         search_entries = pre_process_resource(resource_obj)
-#     add_entries(search_service_name, search_entries, update_refs=False)
-#     search_serviceer.impl.publish_search_service(resource_id, search_service_name)
-# def research_service(
-#     search_serviceer: SearchService,
-#     resource_repo: ResourceRepository,
-#     resource: Resource,
-#     search_entries: Optional[List[IndexEntry]] = None,
-# ):
 
 
 class ReindexingResource(  # noqa: D101
@@ -127,12 +70,10 @@ class CreateSearchServiceHandler(  # noqa: D101
     def __init__(self, index_uow: IndexUnitOfWork):  # noqa: D107, ANN204
         self.index_uow = index_uow
 
-    def collect_new_events(self) -> Iterable[foundation_events.Event]:  # noqa: D102
-        yield from self.index_uow.collect_new_events()
-
     def __call__(  # noqa: D102, ANN204
         self, event: events.ResourceCreated, *args, **kwargs  # noqa: ANN002, ANN003
     ):
+        print(f"{event.resource_id=}")
         with self.index_uow as uw:
             uw.repo.create_index(event.resource_id, event.config)
             uw.commit()
@@ -144,23 +85,10 @@ class DeletingIndex(  # noqa: D101
     def __init__(self, index_uow: IndexUnitOfWork):  # noqa: D107, ANN204
         self.index_uow = index_uow
 
-    def collect_new_events(self) -> Iterable[foundation_events.Event]:  # noqa: D102
-        yield from self.index_uow.collect_new_events()
-
     def __call__(  # noqa: D102, ANN204
         self, event: events.ResourceDiscarded, *args, **kwargs  # noqa: ANN002, ANN003
     ):
         pass
-
-
-# def add_entries(
-#     resource_id: str,
-#     entries: List[Tuple[str, EntryMetadata, Dict]],
-#     update_refs: bool = True,
-# ) -> None:
-#     search_serviceer.impl.add_entries(resource_id, entries)
-#     if update_refs:
-#         _update_references(resource_id, [entry_id for (entry_id, _, _) in entries])
 
 
 class EntryAddedHandler(  # noqa: D101
@@ -185,14 +113,14 @@ class EntryAddedHandler(  # noqa: D101
         with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 entry = EntryDto(
-                    entity_id=event.entity_id,
+                    id=event.id,
                     # entry_id=event.entry_id,
                     repository_id=event.repo_id,
                     resource=resource_id,
                     entry=event.body,
                     message=event.message,
-                    last_modified=event.timestamp,
-                    last_modified_by=event.user,
+                    lastModified=event.timestamp,
+                    lastModifiedBy=event.user,
                     version=1,
                 )
                 uw.repo.add_entries(
@@ -224,20 +152,19 @@ class EntryUpdatedHandler(  # noqa: D101
         with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 entry = EntryDto(
-                    entity_id=event.entity_id,
-                    # entry_id=event.entry_id,
+                    id=event.id,
                     repository_id=event.repo_id,
                     resource=resource_id,
                     entry=event.body,
                     message=event.message,
-                    last_modified=event.timestamp,
-                    last_modified_by=event.user,
+                    lastModified=event.timestamp,
+                    lastModifiedBy=event.user,
                     version=event.version,
                 )
                 uw.repo.add_entries(
                     resource_id, [self.entry_transformer.transform(resource_id, entry)]
                 )
-                self.entry_transformer.update_references(resource_id, [event.entity_id])
+                self.entry_transformer.update_references(resource_id, [event.id])
             uw.commit()
             # add_entries(event.resource_id, [entry], ctx)
             # ctx.index_uow.commit()
@@ -260,6 +187,6 @@ class EntryDeletedHandler(  # noqa: D101
         with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 # uw.repo.delete_entry(resource_id, entry_id=event.entry_id)
-                uw.repo.delete_entry(resource_id, entry_id=event.entity_id)
-                self.entry_transformer.update_references(resource_id, [event.entity_id])
+                uw.repo.delete_entry(resource_id, entry_id=event.id)
+                self.entry_transformer.update_references(resource_id, [event.id])
             uw.commit()

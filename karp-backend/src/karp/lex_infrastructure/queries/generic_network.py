@@ -3,7 +3,7 @@ import logging
 import typing
 
 from typing import Any, Dict, Iterator, List, Optional, Tuple  # noqa: F401
-from karp.foundation.value_objects.unique_id import UniqueId
+from karp.lex_core.value_objects.unique_id import UniqueId
 from karp.lex.application.queries.entries import EntryDto
 
 from karp.lex.domain import entities  # noqa: F401
@@ -169,5 +169,5 @@ def _create_ref(resource_id: str, resource_version: int, entry: Entry) -> Refere
     return ReferenceDto(
         resource_id=resource_id,
         resource_version=resource_version,
-        entry=EntryDto(**entry.dict()),
+        entry=EntryDto(**entry.serialize()),
     )

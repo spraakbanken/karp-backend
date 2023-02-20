@@ -8,7 +8,7 @@ from tabulate import tabulate
 
 from karp import lex
 from karp.command_bus import CommandBus
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import unique_id
 from karp.lex import commands as lex_commands
 from karp.search import commands as search_commands
 from karp.lex.application.queries import (

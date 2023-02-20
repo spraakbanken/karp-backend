@@ -15,8 +15,8 @@ from fastapi import (
 )
 import pydantic
 from starlette import responses
-from karp.foundation.value_objects import unique_id
-from karp.foundation.value_objects.unique_id import UniqueIdStr
+from karp.lex_core.value_objects import unique_id
+from karp.lex_core.value_objects.unique_id import UniqueIdStr
 
 from karp.main import errors as karp_errors
 from karp import auth, lex, search

@@ -68,9 +68,13 @@ __all__ = [
     "CreatingResource",
     "ImportingEntries",
     # dtos
+    "GetHistoryDto",
     "ResourceDto",
+    "HistoryDto",
     # queries
     "GetResources",
+    # repositories
+    "ResourceUnitOfWork",
 ]
 
 

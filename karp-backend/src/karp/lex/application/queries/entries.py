@@ -3,16 +3,23 @@ import typing
 
 import pydantic
 
-from karp.foundation.value_objects import unique_id
+from karp.lex_core import alias_generators
+from karp.lex_core.value_objects import unique_id
 
 from karp.lex.domain.entities.entry import EntryOp
 
 
-# pylint: disable=unsubscriptable-object
-class EntryDto(pydantic.BaseModel):  # noqa: D101
-    # entry_id: str
-    # entity_id: typing.Optional[unique_id.UniqueId] = None
-    entity_id: unique_id.UniqueIdStr
+class BaseModel(pydantic.BaseModel):  # noqa: D101
+    class Config:  # noqa: D106
+        # arbitrary_types_allowed = True
+        alias_generator = alias_generators.to_lower_camel
+
+
+class IdMixin(BaseModel):  # noqa: D101
+    id: unique_id.UniqueIdStr  # noqa: A003
+
+
+class EntryDto(IdMixin, BaseModel):  # noqa: D101
     resource: str
     version: int
     entry: typing.Dict
@@ -20,10 +27,8 @@ class EntryDto(pydantic.BaseModel):  # noqa: D101
     last_modified_by: str
 
 
-class EntryDiffRequest(pydantic.BaseModel):  # noqa: D101
+class EntryDiffRequest(IdMixin, BaseModel):  # noqa: D101
     resource_id: str
-    # entry_id: str
-    entity_id: unique_id.UniqueIdStr
     from_version: typing.Optional[int] = None
     to_version: typing.Optional[int] = None
     from_date: typing.Optional[float] = None
@@ -31,7 +36,7 @@ class EntryDiffRequest(pydantic.BaseModel):  # noqa: D101
     entry: typing.Optional[typing.Dict] = None
 
 
-class EntryHistoryRequest(pydantic.BaseModel):  # noqa: D101
+class EntryHistoryRequest(BaseModel):  # noqa: D101
     resource_id: str
     user_id: typing.Optional[str] = None
     entry_id: typing.Optional[unique_id.UniqueIdStr] = None
@@ -43,17 +48,15 @@ class EntryHistoryRequest(pydantic.BaseModel):  # noqa: D101
     page_size: int = 100
 
 
-class EntryDiffDto(pydantic.BaseModel):  # noqa: D101
+class EntryDiffDto(BaseModel):  # noqa: D101
     diff: typing.Any
     from_version: typing.Optional[int]
     to_version: typing.Optional[int]
 
 
-class HistoryDto(pydantic.BaseModel):  # noqa: D101
+class HistoryDto(IdMixin, BaseModel):  # noqa: D101
     timestamp: float
     message: str
-    # entry_id: str
-    entity_id: unique_id.UniqueIdStr
     version: int
     op: EntryOp
     user_id: str
@@ -78,7 +81,7 @@ class GetEntryHistory(abc.ABC):  # noqa: D101
         pass
 
 
-class GetHistoryDto(pydantic.BaseModel):  # noqa: D101
+class GetHistoryDto(BaseModel):  # noqa: D101
     history: list[HistoryDto]
     total: int
 

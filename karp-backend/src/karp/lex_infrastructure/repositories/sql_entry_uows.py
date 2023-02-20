@@ -6,7 +6,7 @@ from sqlalchemy import sql
 from sqlalchemy import orm as sa_orm
 
 from karp.foundation.events import EventBus
-from karp.foundation.value_objects import UniqueId
+from karp.lex_core.value_objects import UniqueId
 from karp.lex.application.repositories import (
     EntryUnitOfWork,
     EntryUowRepositoryUnitOfWork,
@@ -41,19 +41,20 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
         logger.debug("session=%s, session.new=%s", self._session, self._session.new)
 
     def _by_id(
-        self, id_: UniqueId, **kwargs  # noqa: ANN003
+        self,
+        id: UniqueId,  # noqa: A002
+        *,
+        version: Optional[int] = None,
+        **kwargs,  # noqa: ANN003
     ) -> Optional[EntryUnitOfWork]:
         # stmt = sql.select(EntryUowModel).where(EntryUowModel.id == id_)
         # row = self._session.execute(stmt).first()
         stmt = (
             self._session.query(EntryUowModel)
-            .filter_by(entity_id=id_)
+            .filter_by(entity_id=id)
             .order_by(EntryUowModel.last_modified.desc())
         )
-        row = stmt.first()
-        if row:
-            return self._row_to_entity(row)
-        return None
+        return self._row_to_entity(row) if (row := stmt.first()) else None
 
     def num_entities(self) -> int:  # noqa: D102
         self._check_has_session()
@@ -79,7 +80,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
     def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:  # noqa: ANN001
         uow, _events = self.entry_uow_factory.create(
             repository_type=row_proxy.type,
-            entity_id=row_proxy.entity_id,
+            id=row_proxy.entity_id,
             name=row_proxy.name,
             config=row_proxy.config,
             connection_str=row_proxy.connection_str,

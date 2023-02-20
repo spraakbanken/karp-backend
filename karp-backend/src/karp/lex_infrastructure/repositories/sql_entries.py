@@ -12,7 +12,7 @@ from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker
 import ulid
 
-from karp.foundation.value_objects import UniqueId
+from karp.lex_core.value_objects import UniqueId
 from karp.foundation.events import EventBus
 from karp.lex.domain import errors
 from karp.lex.application import repositories
@@ -373,7 +373,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
 
     def __call__(  # noqa: D102
         self,
-        entity_id: UniqueId,
+        id: UniqueId,  # noqa: A002
         name: str,
         config: Dict,
         connection_str: Optional[str],
@@ -383,7 +383,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
     ) -> Tuple[SqlEntryUowType, list[Event]]:
         return (
             self._create_uow(
-                entity_id=entity_id,
+                entity_id=id,
                 name=name,
                 config=config,
                 connection_str=connection_str,
@@ -395,9 +395,9 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
             ),
             [],
         )
-        if entity_id not in self.cache:
-            self.cache[entity_id] = self._create_uow(
-                entity_id=entity_id,
+        if id not in self.cache:
+            self.cache[id] = self._create_uow(
+                entity_id=id,
                 name=name,
                 config=config,
                 connection_str=connection_str,
@@ -407,7 +407,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
                 session_factory=self._session_factory,
                 event_bus=self.event_bus,
             )
-        return self.cache[entity_id], []
+        return self.cache[id], []
 
 
 class SqlEntryUowV1Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV1]):  # noqa: D101

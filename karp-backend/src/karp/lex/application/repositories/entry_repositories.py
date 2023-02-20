@@ -4,7 +4,7 @@ from typing import Dict, Optional, Protocol, Tuple
 import injector
 
 from karp.foundation import repository, unit_of_work, events
-from karp.foundation.value_objects import UniqueId
+from karp.lex_core.value_objects import UniqueId
 from karp.lex.domain import errors
 from .entries import EntryUnitOfWork
 
@@ -14,7 +14,7 @@ class EntryRepositoryUnitOfWorkFactory:  # noqa: D101
     def create(  # noqa: D102
         self,
         repository_type: str,
-        entity_id: UniqueId,
+        id: UniqueId,  # noqa: A002
         name: str,
         config: dict,
         connection_str: Optional[str],
@@ -28,7 +28,7 @@ class EntryRepositoryUnitOfWorkFactory:  # noqa: D101
 class EntryUnitOfWorkCreator(Protocol):  # noqa: D101
     def __call__(  # noqa: D102
         self,
-        entity_id: UniqueId,
+        id: UniqueId,  # noqa: A002
         name: str,
         config: dict,
         connection_str: Optional[str],
@@ -48,7 +48,7 @@ class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
     def create(  # noqa: D102
         self,
         repository_type: str,
-        entity_id: UniqueId,
+        id: UniqueId,  # noqa: A002
         name: str,
         config: dict,
         connection_str: Optional[str],
@@ -61,10 +61,10 @@ class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
         ]
 
         uow_factory: EntryUnitOfWorkCreator = self._container.create_object(
-            uow_factory_cls
+            uow_factory_cls  # type: ignore[arg-type]
         )
         return uow_factory(
-            entity_id=entity_id,
+            id=id,
             name=name,
             config=config,
             connection_str=connection_str,

@@ -22,7 +22,7 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):  # noqa
     ) -> EntryUnitOfWork:
         entry_repo, events = self._entry_repo_uow.factory.create(
             repository_type=command.repository_type,
-            entity_id=command.id,
+            id=command.id,
             name=command.name,
             config=command.config,
             connection_str=command.connection_str,

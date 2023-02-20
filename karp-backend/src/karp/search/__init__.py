@@ -35,6 +35,14 @@ from karp.search.application.transformers import (
     PreProcessor,
 )
 
+__all__ = [
+    "EntryTransformer",
+    "IndexUnitOfWork",
+    "IndexEntry",
+    "PreProcessor",
+    "ResourceViews",
+]
+
 
 class Search(injector.Module):  # noqa: D101
     @injector.provider

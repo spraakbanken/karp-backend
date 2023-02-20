@@ -6,7 +6,7 @@ from sb_json_tools import jsondiff
 from karp.command_bus import CommandHandler
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain import errors
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import unique_id
 
 from karp.foundation import events as foundation_events  # noqa: F401
 from karp.lex_core import commands
@@ -65,7 +65,7 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):  # noqa: D101
                 command.entry,
                 user=command.user,
                 message=command.message,
-                entity_id=command.id,
+                id=command.id,
                 timestamp=command.timestamp,
             )
             uw.entries.save(entry)
@@ -199,7 +199,7 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):  # noqa: 
                     entry_raw,
                     user=command.user,
                     message=command.message,
-                    entity_id=unique_id.make_unique_id(),
+                    id=unique_id.make_unique_id(),
                 )
                 existing_entry = uw.repo.get_by_id_optional(entry.id)
                 if existing_entry and not existing_entry.discarded:
@@ -261,7 +261,7 @@ class ImportingEntries(  # noqa: D101
                     entry_raw["entry"],
                     user=entry_raw.get("user") or command.user,
                     message=entry_raw.get("message") or command.message,
-                    entity_id=entry_raw.get("id") or unique_id.make_unique_id(),
+                    id=entry_raw.get("id") or unique_id.make_unique_id(),
                     timestamp=entry_raw.get("last_modified"),
                 )
                 # if id := entry_raw.get("id"):

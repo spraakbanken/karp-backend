@@ -1,24 +1,10 @@
 import abc  # noqa: D100, I001
-from typing import Iterable, Optional, Dict
-
-import pydantic
-
-from karp.foundation.value_objects import UniqueIdStr, UniqueId
-from karp.foundation.value_objects.unique_id import UniqueIdPrimitive
+from typing import Iterable, Optional
 
 
-class ResourceDto(pydantic.BaseModel):  # noqa: D101
-    resource_id: str
-    entity_id: UniqueIdStr
-    is_published: bool
-    version: int
-    name: str
-    last_modified_by: str
-    message: str
-    last_modified: float
-    config: Dict
-    entry_repository_id: UniqueIdStr
-    discarded: bool
+from karp.lex_core.value_objects import UniqueId
+from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
+from karp.lex.application.dtos import ResourceDto
 
 
 class GetPublishedResources(abc.ABC):  # noqa: D101
@@ -48,12 +34,12 @@ class ReadOnlyResourceRepository(abc.ABC):  # noqa: D101
             return None
 
         if version is not None:
-            resource = self.get_by_id(resource.entity_id, version=version)
+            resource = self.get_by_id(resource.id, version=version)
         return resource
 
     @abc.abstractmethod
     def get_by_id(  # noqa: D102
-        self, entity_id: UniqueIdPrimitive, version: Optional[int] = None
+        self, id: UniqueIdPrimitive, version: Optional[int] = None  # noqa: A002
     ) -> Optional[ResourceDto]:
         pass
 

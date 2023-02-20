@@ -3,7 +3,7 @@ from typing import Optional  # noqa: F401
 
 import pydantic
 from karp.search.application.repositories import IndexEntry
-from karp.foundation.value_objects import unique_id  # noqa: F401
+from karp.lex_core.value_objects import unique_id  # noqa: F401
 
 
 class PreviewEntryInputDto(pydantic.BaseModel):  # noqa: D101

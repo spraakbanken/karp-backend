@@ -3,7 +3,7 @@ from typing import Iterable, Optional
 
 import pydantic
 
-from karp.foundation.value_objects import UniqueIdStr
+from karp.lex_core.value_objects import UniqueIdStr
 
 
 class EntryRepoDto(pydantic.BaseModel):  # noqa: D101

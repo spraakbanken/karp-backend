@@ -2,7 +2,7 @@ import abc  # noqa: D100, I001
 import ulid
 from typing import Generic, TypeVar, Optional, Type, Union
 
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import UniqueId, unique_id
 from .errors import NotFoundError
 
 EntityType = TypeVar("EntityType")
@@ -24,7 +24,7 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
 
     def _ensure_correct_id_type(self, v) -> unique_id.UniqueId:  # noqa: ANN001
         try:
-            return unique_id.parse(v)
+            return unique_id.UniqueId.validate(v)
         except ValueError as exc:
             raise ValueError(
                 f"expected valid UniqueId, got '{v}' (type: `{type(v)}')"
@@ -32,15 +32,17 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
 
     def by_id(  # noqa: D102
         self,
-        id_: unique_id.UniqueId,
+        id: UniqueId,  # noqa: A002
         *,
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
     ) -> EntityType:
-        if entity := self._by_id(self._ensure_correct_id_type(id_), version=version):
+        if entity := self._by_id(self._ensure_correct_id_type(id), version=version):
             return entity
-        else:
-            self.raise_entity_not_found(f"Entity with id={id_} is not found")
+        entity_not_found = self.create_entity_not_found(
+            f"Entity with id={id} is not found"
+        )
+        raise entity_not_found
 
     get_by_id = by_id
 
@@ -67,9 +69,9 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
     def num_entities(self) -> int:  # noqa: D102
         ...
 
-    def raise_entity_not_found(self, msg: str) -> None:
-        """Raise entity not found.
+    def create_entity_not_found(self, msg: str) -> Exception:
+        """Create EntityNotFound.
 
         Override this to get preciser traceback.
         """
-        raise self.EntityNotFound(msg)
+        return self.EntityNotFound(msg)

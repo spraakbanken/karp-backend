@@ -1,5 +1,5 @@
 import typing  # noqa: D100, I001
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import unique_id
 from karp.lex.application.repositories import ResourceUnitOfWork
 from karp.search.application.queries import ResourceViews
 

@@ -5,7 +5,10 @@ import ulid
 
 from karp.foundation.events import EventBus
 from karp import lex
-from karp.lex_infrastructure import SqlEntryUowV1Creator, SqlEntryUowV2Creator
+from karp.lex_infrastructure.repositories import (
+    SqlEntryUowV1Creator,
+    SqlEntryUowV2Creator,
+)
 from karp.tests.unit.lex import factories
 
 
@@ -35,10 +38,10 @@ def sql_entry_uow_v2_creator(
 
 
 class TestSqlEntryUowV1:
-    def test_creator_repository_type(  # noqa: ANN201
+    def test_creator_repository_type(
         self,
         sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
-    ):
+    ) -> None:
         assert sql_entry_uow_v1_creator.repository_type == "sql_entries_v1"
 
     def test_uow_repository_type(  # noqa: ANN201
@@ -47,7 +50,7 @@ class TestSqlEntryUowV1:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow, _ = sql_entry_uow_v1_creator(
-            **example_uow.dict(exclude={"repository_type"})
+            **example_uow.dict(exclude={"repository_type", "cmdtype"})
         )
         assert entry_uow.repository_type == "sql_entries_v1"
 
@@ -57,7 +60,7 @@ class TestSqlEntryUowV1:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow, _ = sql_entry_uow_v1_creator(
-            **example_uow.dict(exclude={"repository_type"})
+            **example_uow.dict(exclude={"repository_type", "cmdtype"})
         )
         with entry_uow as uw:
             assert uw.repo.history_model.__tablename__ == example_uow.name
@@ -76,7 +79,7 @@ class TestSqlEntryUowV2:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow, _ = sql_entry_uow_v2_creator(
-            **example_uow.dict(exclude={"repository_type"})
+            **example_uow.dict(exclude={"repository_type", "cmdtype"})
         )
         assert entry_uow.repository_type == "sql_entries_v2"
 
@@ -86,7 +89,7 @@ class TestSqlEntryUowV2:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow, _ = sql_entry_uow_v2_creator(
-            **example_uow.dict(exclude={"repository_type"})
+            **example_uow.dict(exclude={"repository_type", "cmdtype"})
         )
         random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str
         with entry_uow as uw:

@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple
 
 from karp.foundation import entity, events, repository, unit_of_work
 from karp.lex.domain import entities, errors
-from karp.lex.domain.value_objects import UniqueId
+from karp.lex_core.value_objects import UniqueId
 
 
 class EntryRepository(repository.Repository[entities.Entry]):  # noqa: D101
@@ -59,58 +59,8 @@ class EntryRepository(repository.Repository[entities.Entry]):  # noqa: D101
     ) -> typing.Optional[entities.Entry]:
         raise NotImplementedError()
 
-    # # @abc.abstractmethod
-    # def move(self, entry: entities.Entry, *, old_entry_id: str):
-    #     raise NotImplementedError()
-
-    # # @abc.abstractmethod
-    # def delete(self, entry: entities.Entry):
-    #     raise NotImplementedError()
-
-    # @abc.abstractmethod
-    # def entry_ids(self) -> List[str]:
-    # raise NotImplementedError()
-
     def entity_ids(self) -> List[str]:  # noqa: D102
         raise NotImplementedError()
-
-    # def by_entry_id(
-    #     self, entry_id: str, *, version: Optional[int] = None
-    # ) -> entities.Entry:
-    #     entry = self.get_by_entry_id_optional(
-    #         entry_id,
-    #         version=version,
-    #     )
-    #     if not entry:
-    #         raise errors.EntryNotFound(
-    #             f'Entry with entry_id="{entry_id}"',
-    #             entity_id=None,
-    #         )
-    #     return entry
-
-    # get_by_entry_id = by_entry_id
-
-    # def get_by_entry_id_optional(
-    #     self,
-    #     entry_id: str,
-    #     *,
-    #     version: Optional[int] = None,
-    # ) -> Optional[entities.Entry]:
-    #     entry = self._by_entry_id(entry_id)
-    #     if not entry:
-    #         return None
-    #     if version:
-    #         entry = self._by_id(entry.entity_id, version=version)
-    #     if entry:
-    #         return entry
-    #     return None
-
-    # @abc.abstractmethod
-    # def _by_entry_id(
-    #     self,
-    #     entry_id: str,
-    # ) -> Optional[entities.Entry]:
-    #     raise NotImplementedError()
 
     # @abc.abstractmethod
     def teardown(self):  # noqa: ANN201
@@ -156,11 +106,12 @@ class EntryUnitOfWork(  # noqa: D101
         connection_str: Optional[str],
         message: str,
         event_bus: events.EventBus,
+        id: UniqueId,  # noqa: A002
         *args,  # noqa: ANN002
         **kwargs,  # noqa: ANN003
     ):
         unit_of_work.UnitOfWork.__init__(self, event_bus)
-        entity.TimestampedEntity.__init__(self, *args, **kwargs)
+        entity.TimestampedEntity.__init__(self, *args, id=id, **kwargs)
         self._name = name
         self._connection_str = connection_str
         self._config = config

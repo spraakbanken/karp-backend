@@ -1,5 +1,5 @@
 from karp import lex, search  # noqa: D100
-from karp.foundation.value_objects.unique_id import make_unique_id
+from karp.lex_core.value_objects.unique_id import make_unique_id
 from karp.utility.time import utc_now
 
 

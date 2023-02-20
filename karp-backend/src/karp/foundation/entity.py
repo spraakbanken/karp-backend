@@ -7,6 +7,7 @@ from deprecated import deprecated  # noqa: F401
 from karp.foundation.errors import ConsistencyError
 from karp.foundation import errors
 from karp.foundation import events
+from karp.lex_core.value_objects import UniqueId
 from karp.utility.time import monotonic_utc_now
 
 
@@ -14,10 +15,13 @@ class Entity(events.EventMixin):  # noqa: D101
     DiscardedEntityError = errors.DiscardedEntityError
 
     def __init__(  # noqa: D107
-        self, entity_id, discarded: bool = False, aggregate_root=None  # noqa: ANN001
+        self,
+        id: UniqueId,  # noqa: A002
+        discarded: bool = False,
+        aggregate_root=None,  # noqa: ANN001
     ) -> None:
         super().__init__()
-        self._id = entity_id
+        self._id = id
         self._discarded = discarded
         self._root = aggregate_root
 
@@ -59,9 +63,12 @@ class Entity(events.EventMixin):  # noqa: D101
 
 class VersionedEntity(Entity):  # noqa: D101
     def __init__(  # noqa: D107
-        self, entity_id, version: int, discarded: bool = False  # noqa: ANN001
+        self,
+        id: UniqueId,  # noqa: A002
+        version: int,
+        discarded: bool = False,
     ) -> None:
-        super().__init__(entity_id, discarded=discarded)
+        super().__init__(id, discarded=discarded)
         self._version = version
 
     @property
@@ -82,12 +89,12 @@ class VersionedEntity(Entity):  # noqa: D101
 class TimestampedEntity(Entity):  # noqa: D101
     def __init__(  # noqa: D107
         self,
-        entity_id,  # noqa: ANN001
+        id: UniqueId,  # noqa: A002
         last_modified: Optional[float] = None,
         last_modified_by: Optional[str] = None,
         discarded: bool = False,
     ) -> None:
-        super().__init__(entity_id, discarded=discarded)
+        super().__init__(id=id, discarded=discarded)
         self._last_modified = self._ensure_timestamp(last_modified)
         self._last_modified_by = (
             "Unknown user" if last_modified_by is None else last_modified_by
@@ -122,17 +129,17 @@ class TimestampedEntity(Entity):  # noqa: D101
 class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):  # noqa: D101
     def __init__(  # noqa: D107
         self,
-        entity_id,  # noqa: ANN001
+        id: UniqueId,  # noqa: A002
         last_modified: Optional[float] = None,
         last_modified_by: Optional[str] = None,
         discarded: bool = False,
         *,
         version: int,
     ) -> None:
-        super().__init__(entity_id, version=version, discarded=discarded)
+        super().__init__(id, version=version, discarded=discarded)
         TimestampedEntity.__init__(
             self,
-            entity_id=entity_id,
+            id=id,
             discarded=discarded,
             last_modified=last_modified,
             last_modified_by=last_modified_by,

@@ -33,7 +33,7 @@ def test_create_resource_creates_resource():  # noqa: ANN201
 
     assert isinstance(resource, Resource)
     assert isinstance(resource.entity_id, unique_id.UniqueIdType)
-    assert resource.entity_id == unique_id.parse(str(resource.entity_id))
+    assert resource.id == unique_id.parse(str(resource.id))
     assert resource.version == 1
     assert resource.resource_id == resource_id
     assert resource.name == name
@@ -50,9 +50,9 @@ def test_create_resource_creates_resource():  # noqa: ANN201
     assert resource.op == ResourceOp.ADDED
     assert domain_events[-1] == events.ResourceCreated(
         timestamp=resource.last_modified,
-        entity_id=resource.id,
-        entry_repo_id=resource.entry_repository_id,
-        resource_id=resource.resource_id,
+        id=resource.id,
+        entryRepoId=resource.entry_repository_id,
+        resourceId=resource.resource_id,
         name=resource.name,
         config=resource.config,
         user=resource.last_modified_by,
@@ -88,9 +88,9 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
     assert resource.version == (previous_version + 1)
     assert domain_events[-1] == events.ResourceUpdated(
         timestamp=resource.last_modified,
-        entity_id=resource.id,
-        entry_repo_id=resource.entry_repository_id,
-        resource_id=resource.resource_id,
+        id=resource.id,
+        entryRepoId=resource.entry_repository_id,
+        resourceId=resource.resource_id,
         name=resource.name,
         config=resource.config,
         user=resource.last_modified_by,
@@ -151,7 +151,7 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
 # def test_resource_new_release_added_with_wrong_version_raises_consistency_error():
 #     resource = factories.ResourceFactory()
 #     event = Resource.NewReleaseAdded(
-#         entity_id=resource.id,
+#         id=resource.id,
 #         entity_version=12,
 #     )
 #     with pytest.raises(ConsistencyError):
@@ -162,7 +162,7 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
 # def test_resource_new_release_added_with_wrong_last_modified_raises_consistency_error():
 #     resource = factories.ResourceFactory()
 #     event = Resource.NewReleaseAdded(
-#         entity_id=resource.id, entity_version=resource.version, entity_last_modified=2
+#         id=resource.id, entity_version=resource.version, entity_last_modified=2
 #     )
 #     with pytest.raises(ConsistencyError):
 #         event.mutate(resource)
@@ -170,7 +170,7 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
 
 # def test_release_created_has_id():
 #     release = Release(
-#         entity_id="e", name="e-name", publication_date=12345.0, description="ee"
+#         id="e", name="e-name", publication_date=12345.0, description="ee"
 #     )
 
 #     assert release.id == "e"
@@ -183,7 +183,7 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
 # def test_release_created_w_resource_has_id():
 #     resource = factories.ResourceFactory()
 #     release = Release(
-#         entity_id="e",
+#         id="e",
 #         name="e-name",
 #         publication_date=12345.0,
 #         description="ee",
@@ -221,9 +221,9 @@ def test_discarded_resource_has_event(field, value):  # noqa: ANN201, ANN001
     )
     assert resource.discarded
     assert domain_events[-1] == events.ResourceDiscarded(
-        entity_id=resource.id,
-        # entry_repo_id=resource.entry_repository_id,
-        resource_id=resource.resource_id,
+        id=resource.id,
+        # entryRepoId=resource.entry_repository_id,
+        resourceId=resource.resource_id,
         user=resource.last_modified_by,
         timestamp=resource.last_modified,
         message=resource.message,
@@ -244,9 +244,9 @@ def test_published_resource_has_event():  # noqa: ANN201
     assert resource.is_published
     assert resource.version == (previous_version + 1)
     assert domain_events[-1] == events.ResourcePublished(
-        entity_id=resource.id,
-        entry_repo_id=resource.entry_repository_id,
-        resource_id=resource.resource_id,
+        id=resource.id,
+        entryRepoId=resource.entry_repository_id,
+        resourceId=resource.resource_id,
         user=resource.last_modified_by,
         timestamp=resource.last_modified,
         version=resource.version,

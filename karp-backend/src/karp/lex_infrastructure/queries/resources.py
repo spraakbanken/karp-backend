@@ -2,7 +2,7 @@ from typing import Iterable, Optional  # noqa: D100, I001
 
 import sqlalchemy as sa
 from sqlalchemy import sql
-from karp.foundation.value_objects.unique_id import UniqueId
+from karp.lex_core.value_objects.unique_id import UniqueId
 
 from karp.lex.application.queries import (
     GetPublishedResources,

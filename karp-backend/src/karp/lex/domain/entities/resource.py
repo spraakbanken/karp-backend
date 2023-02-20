@@ -8,7 +8,7 @@ from karp.foundation.entity import Entity, TimestampedVersionedEntity
 from karp.foundation.value_objects import PermissionLevel
 from .entry import Entry, create_entry
 from karp.lex.domain import errors, events
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import unique_id
 from karp.utility import json_schema, time
 from karp.utility.time import utc_now
 
@@ -25,66 +25,10 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     DiscardedEntityError = errors.DiscardedEntityError
     resource_type: str = "resource"
 
-    # @classmethod
-    # def create_resource(cls, resource_type: str, resource_config: Dict):
-    #     if resource_type == cls.resource_type:
-    #         return cls.from_dict(resource_config)
-
-    # @classmethod
-    # def from_dict(cls, config: Dict, **kwargs):
-
-    #     resource_id = config.pop("resource_id")
-    #     resource_name = config.pop("resource_name")
-
-    #     #     entry_repository = EntryRepository.create(
-    #     #         config["entry_repository_type"],
-    #     #         entry_repository_settings
-    #     #     )
-
-    #     resource = cls(
-    #         resource_id=resource_id,
-    #         name=resource_name,
-    #         config=config,
-    #         message="Resource added.",
-    #         op=ResourceOp.ADDED,
-    #         entity_id=unique_id.make_unique_id(),
-    #         version=1,
-    #         **kwargs,
-    #     )
-    #     resource.queue_event(
-    #         events.ResourceCreated(
-    #             entity_id=resource.id,
-    #             id=resource.id,
-    #             resource_id=resource.resource_id,
-    #             name=resource.name,
-    #             config=resource.config,
-    #             timestamp=resource.last_modified,
-    #             user=resource.last_modified_by,
-    #             message=resource.message,
-    #         )
-    #     )
-    #     return resource
-
-    # class NewReleaseAdded:
-    #     def mutate(self, obj):
-    #         obj._validate_event_applicability(self)
-    #         release = Release(
-    #             entity_id=self.release_id,
-    #             name=self.release_name,
-    #             publication_date=self.timestamp,
-    #             description=self.release_description,
-    #             aggregate_root=obj,
-    #         )
-    #         obj._releases.append(release)
-    #         obj._last_modified = self.timestamp
-    #         obj._last_modified_by = self.user
-    #         obj._message = f"Release '{self.release_name}' created."
-    #         obj._increment_version()
-
     def __init__(  # noqa: D107, ANN204
         self,
         *,
-        entity_id: unique_id.UniqueId,
+        id: unique_id.UniqueId,  # noqa: A002
         resource_id: str,
         name: str,
         config: Dict[str, Any],
@@ -98,7 +42,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         # entry_repository: EntryRepository = None,
         **kwargs,  # noqa: ANN003
     ):
-        super().__init__(entity_id=entity_id, version=version, **kwargs)
+        super().__init__(id=unique_id.UniqueId.validate(id), version=version, **kwargs)
         self._resource_id = resource_id
         self._name = name
         self.is_published = is_published
@@ -106,24 +50,8 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._message = message
         self._op = op
         self._releases = []
-        # self._entry_repository = None
-        # self.entry_repository_type = entry_repository_type
-        # self.entry_repository_settings = entry_repository_settings
         self._entry_json_schema = None
-        self._entry_repo_id = entry_repo_id
-        # if not self.events or not isinstance(self.events[-1], events.ResourceCreated):
-        #     self.queue_event(
-        #         events.ResourceLoaded(
-        #             id=self._id,
-        #             resource_id=self._resource_id,
-        #             name=self._name,
-        #             config=self.config,
-        #             timestamp=self._last_modified,
-        #             user=self._last_modified_by,
-        #             message=self._message,
-        #             version=self.version,
-        #         )
-        #     )
+        self._entry_repo_id = unique_id.UniqueId.validate(entry_repo_id)
 
     @property
     def resource_id(self) -> str:  # noqa: D102
@@ -165,42 +93,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     def op(self):  # noqa: ANN201, D102
         return self._op
 
-    # @property
-    # def entry_repository(self):
-    #     from karp.domain.repository import EntryRepository
-
-    #     if self._entry_repository is None:
-    #         self._entry_repository = EntryRepository.create(
-    #             self.entry_repository_type,
-    #             {"table_name": self._resource_id, "config": self.config},
-    #         )
-    #     return self._entry_repository
-
-    # def stamp(
-    #     self,
-    #     *,
-    #     user: str,
-    #     timestamp: float = None,
-    #     message: str = None,
-    #     increment_version: bool = True,
-    # ):
-    #     self._update_metadata(timestamp, user, message, "Updated")
-    #     if increment_version:
-    #         self._version += 1
-    #     self.queue_event(
-    #         events.ResourceUpdated(
-    #             entity_id=self.id,
-    #             resource_id=self.resource_id,
-    #             name=self.name,
-    #             config=self.config,
-    #             version=self.version,
-    #             timestamp=self.last_modified,
-    #             user=self.last_modified_by,
-    #             message=self.message,
-    #             entry_repo_id=self.entry_repository_id,
-    #         )
-    #     )
-
     def publish(  # noqa: D102
         self,
         *,
@@ -213,9 +105,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self.is_published = True
         return [
             events.ResourcePublished(
-                entity_id=self.id,
-                resource_id=self.resource_id,
-                entry_repo_id=self.entry_repository_id,
+                id=self.id,
+                resourceId=self.resource_id,
+                entryRepoId=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -237,9 +129,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._entry_repo_id = entry_repo_id
         return [
             events.ResourceUpdated(
-                entity_id=self.entity_id,
-                resource_id=self.resource_id,
-                entry_repo_id=self.entry_repository_id,
+                id=self.id,
+                resourceId=self.resource_id,
+                entryRepoId=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -257,16 +149,16 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         version: int,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ) -> None:
+    ) -> list[events.Event]:
         self._update_metadata(
             timestamp, user, message or "setting resource_id", version
         )
         self._resource_id = resource_id
         return [
             events.ResourceUpdated(
-                entity_id=self.entity_id,
-                resource_id=self.resource_id,
-                entry_repo_id=self.entry_repository_id,
+                id=self.id,
+                resourceId=self.resource_id,
+                entryRepoId=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -293,9 +185,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self.config = config
         return [
             events.ResourceUpdated(
-                entity_id=self.entity_id,
-                resource_id=self.resource_id,
-                entry_repo_id=self.entry_repository_id,
+                id=self.id,
+                resourceId=self.resource_id,
+                entryRepoId=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -320,9 +212,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self.config = config
         return [
             events.ResourceUpdated(
-                entity_id=self.entity_id,
-                resource_id=self.resource_id,
-                entry_repo_id=self.entry_repository_id,
+                id=self.id,
+                resourceId=self.resource_id,
+                entryRepoId=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -349,7 +241,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._check_not_discarded()
         raise NotImplementedError()
         # event = Resource.NewReleaseAdded(
-        #     entity_id=self.id,
+        #     id=self.id,
         #     entity_version=self.version,
         #     entity_last_modified=self.last_modified,
         #     release_id=unique_id.make_unique_id(),
@@ -377,13 +269,12 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._version += 1
         return [
             events.ResourceDiscarded(
-                entity_id=self.id,
+                id=self.id,
                 version=self.version,
-                # entry_repo_id=self.entry_repository_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 message=self.message,
-                resource_id=self.resource_id,
+                resourceId=self.resource_id,
                 name=self.name,
                 config=self.config,
             )
@@ -401,18 +292,18 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     # def id_getter(self) -> Callable[[Dict], str]:
     #     return create_field_getter(self.config["id"], str)
 
-    def dict(self) -> Dict:  # noqa: A003, D102
+    def serialize(self) -> Dict:  # noqa: D102
         return {
-            "entity_id": self.entity_id,
-            "resource_id": self.resource_id,
+            "id": self.id,
+            "resourceId": self.resource_id,
             "name": self.name,
             "version": self.version,
-            "last_modified": self.last_modified,
-            "last_modified_by": self.last_modified_by,
+            "lastModified": self.last_modified,
+            "lastModifiedBy": self.last_modified_by,
             "op": self.op,
             "message": self.message,
-            "entry_repository_id": self.entry_repository_id,
-            "is_published": self.is_published,
+            "entryRepositoryId": self.entry_repository_id,
+            "isPublished": self.is_published,
             "discarded": self.discarded,
             "resource_type": self.resource_type,
             "config": self.config,
@@ -423,20 +314,17 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         entry_raw: Dict,
         *,
         user: str,
-        entity_id: unique_id.UniqueId,
+        id: unique_id.UniqueId,  # noqa: A002
         message: Optional[str] = None,
         timestamp: Optional[float] = None,
     ) -> Tuple[Entry, list[events.Event]]:
         self._check_not_discarded()
-        # id_getter = self.id_getter()
         return create_entry(
-            # id_getter(entry_raw),
             entry_raw,
             repo_id=self.entry_repository_id,
-            # resource_id=self.resource_id,
             last_modified_by=user,
             message=message,
-            entity_id=entity_id,
+            id=id,
             last_modified=timestamp,
         )
 
@@ -482,32 +370,26 @@ class Release(Entity):  # noqa: D101
 
 
 def create_resource(  # noqa: D103
-    config: Dict,
+    config: dict[str, Any],
     entry_repo_id: unique_id.UniqueId,
     created_by: str = None,
     user: str = None,
     created_at: float = None,
-    entity_id: unique_id.UniqueId = None,
+    id: unique_id.UniqueId = None,  # noqa: A002
     resource_id: typing.Optional[str] = None,
     message: typing.Optional[str] = None,
     name: typing.Optional[str] = None,
 ) -> Tuple[Resource, list[events.Event]]:
-    resource_id_in_config = config.pop("resource_id", None)
+    resource_id_in_config: Optional[str] = config.pop("resource_id", None)
     resource_id = resource_id or resource_id_in_config
     if resource_id is None:
         raise ValueError("resource_id is missing")
     resource_id = constraints.valid_resource_id(resource_id)
     name_in_config = config.pop("resource_name", None)
     resource_name = name or name_in_config or resource_id
-    entity_id = entity_id or unique_id.make_unique_id()
-    #
-    #     entry_repository = EntryRepository.create(
-    #         config["entry_repository_type"],
-    #         entry_repository_settings
-    #     )
 
     resource = Resource(
-        entity_id=entity_id,
+        id=id or unique_id.make_unique_id(),
         resource_id=resource_id,
         name=resource_name,
         config=config,
@@ -519,9 +401,9 @@ def create_resource(  # noqa: D103
         last_modified_by=user or created_by or "unknown",
     )
     event = events.ResourceCreated(
-        entity_id=resource.id,
-        resource_id=resource.resource_id,
-        entry_repo_id=resource.entry_repository_id,
+        id=resource.id,
+        resourceId=resource.resource_id,
+        entryRepoId=resource.entry_repository_id,
         name=resource.name,
         config=resource.config,
         timestamp=resource.last_modified,

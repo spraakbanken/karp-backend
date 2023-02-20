@@ -7,7 +7,8 @@ from faker.providers import BaseProvider
 
 from karp.lex import commands
 from karp.lex.domain import entities, events
-from karp.foundation.value_objects import make_unique_id, MachineName
+from karp.foundation.value_objects import MachineName
+from karp.lex_core.value_objects import make_unique_id
 from karp.utility.time import utc_now
 
 
@@ -36,7 +37,7 @@ class ResourceFactory(factory.Factory):
     class Meta:
         model = entities.Resource
 
-    entity_id = factory.LazyFunction(make_unique_id)
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
     entry_repo_id = factory.LazyFunction(make_unique_id)
     resource_id: str = factory.Faker("word")
     name: str = factory.Faker("word")
@@ -50,7 +51,7 @@ class EntryFactory(factory.Factory):
     class Meta:
         model = entities.Entry
 
-    entity_id = factory.LazyFunction(make_unique_id)
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
     # entry_id = factory.Faker("word")
     last_modified_by = factory.Faker("email")
     last_modified = factory.LazyFunction(utc_now)
@@ -62,7 +63,7 @@ class EntryFactory(factory.Factory):
 def random_resource(config: typing.Optional[typing.Dict] = None):  # noqa: ANN201
     config = config or {"fields": {"wf": {"type" "string"}, "id": "wf"}}
     return entities.create_resource(
-        entity_id=make_unique_id(),
+        id=make_unique_id(),
         entry_repo_id=make_unique_id(),
         resource_id="resource",
         config=config,
@@ -76,9 +77,9 @@ class ResourceCreatedFactory(factory.Factory):
         model = events.ResourceCreated
 
     timestamp = factory.LazyFunction(utc_now)
-    entity_id = factory.LazyFunction(make_unique_id)
-    entry_repo_id = factory.LazyFunction(make_unique_id)
-    resource_id = factory.Faker("word")
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
+    entryRepoId = factory.LazyFunction(make_unique_id)
+    resourceId = factory.Faker("word")
     name = factory.Faker("word")
     config = factory.Faker("resource_config")
     user = factory.Faker("email")
@@ -90,9 +91,9 @@ class ResourcePublishedFactory(factory.Factory):
         model = events.ResourcePublished
 
     timestamp = factory.LazyFunction(utc_now)
-    entity_id = factory.LazyFunction(make_unique_id)
-    entry_repo_id = factory.LazyFunction(make_unique_id)
-    resource_id = factory.Faker("word")
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
+    entryRepoId = factory.LazyFunction(make_unique_id)
+    resourceId = factory.Faker("word")
     name = factory.Faker("word")
     config = factory.Faker("resource_config")
     user = factory.Faker("email")

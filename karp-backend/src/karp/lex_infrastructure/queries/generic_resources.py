@@ -1,6 +1,7 @@
-from karp.foundation.value_objects import UniqueId  # noqa: D100
+"""Resource queries."""
 from karp.lex.application.queries import GetEntryRepositoryId
 from karp.lex.application.repositories import ResourceUnitOfWork
+from karp.lex_core.value_objects import UniqueId
 
 
 class GenericGetEntryRepositoryId(GetEntryRepositoryId):  # noqa: D101

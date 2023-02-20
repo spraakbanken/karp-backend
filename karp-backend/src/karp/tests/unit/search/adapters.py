@@ -69,13 +69,13 @@ class InMemoryIndex(Index):
     #    def statistics(self, resource_id: str, field: str):
     #        return {}
     def num_entities(self) -> int:
-        return sum(len(entries) for entries in self.indicies.values())
+        return sum(len(index.entries) for index in self.indicies.values())
 
 
 class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, IndexUnitOfWork):
     def __init__(self, event_bus: EventBus):  # noqa: ANN204
         # super().__init__()
-        IndexUnitOfWork.__init__(self, event_bus=event_bus)
+        IndexUnitOfWork.__init__(self, event_bus=event_bus)  # type:ignore [arg-type]
         self._index = InMemoryIndex()
 
     @property

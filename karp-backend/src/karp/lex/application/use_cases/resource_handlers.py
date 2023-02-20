@@ -1,23 +1,15 @@
 import logging  # noqa: D100, I001
-import typing
 
 
 from karp.lex.domain import errors, entities
-from karp.foundation import events as foundation_events
 from karp.command_bus import CommandHandler
 from karp.lex.application.queries import ResourceDto
 from karp.lex.application import repositories as lex_repositories
-from karp.lex import commands
+from karp.lex_core import commands
 from karp.lex.application import repositories
 
 
 logger = logging.getLogger(__name__)
-
-# resource_models = {}  # Dict
-# history_models = {}  # Dict
-# resource_configs = {}  # Dict
-# resource_versions = {}  # Dict[str, int]
-# field_translations = {}  # Dict[str, Dict[str, List[str]]]
 
 
 class BasingResource:  # noqa: D101
@@ -25,11 +17,6 @@ class BasingResource:  # noqa: D101
         self, resource_uow: repositories.ResourceUnitOfWork
     ) -> None:
         self.resource_uow = resource_uow
-
-    def collect_new_events(  # noqa: D102
-        self,
-    ) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
 
 
 class CreatingResource(  # noqa: D101
@@ -65,7 +52,7 @@ class CreatingResource(  # noqa: D101
                 )
 
             resource, events = entities.create_resource(
-                entity_id=command.id,
+                id=command.id,
                 resource_id=command.resource_id,
                 config=command.config,
                 message=command.message,
@@ -78,12 +65,7 @@ class CreatingResource(  # noqa: D101
             uow.repo.save(resource)
             uow.post_on_commit(events)
             uow.commit()
-        return ResourceDto(**resource.dict())
-
-    def collect_new_events(  # noqa: D102
-        self,
-    ) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
+        return ResourceDto(**resource.serialize())
 
 
 class SettingEntryRepoId(  # noqa: D101
@@ -143,11 +125,6 @@ class UpdatingResource(  # noqa: D101
             uow.post_on_commit(events)
             uow.commit()
 
-    def collect_new_events(  # noqa: D102
-        self,
-    ) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
-
 
 class PublishingResource(  # noqa: D101
     CommandHandler[commands.PublishResource], BasingResource
@@ -175,11 +152,6 @@ class PublishingResource(  # noqa: D101
             uow.post_on_commit(events)
             uow.commit()
 
-    def collect_new_events(  # noqa: D102
-        self,
-    ) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
-
 
 class DeletingResource(  # noqa: D101
     CommandHandler[commands.DeleteResource], BasingResource
@@ -203,8 +175,3 @@ class DeletingResource(  # noqa: D101
             uow.repo.save(resource)
             uow.post_on_commit(events)
             uow.commit()
-
-    def collect_new_events(  # noqa: D102
-        self,
-    ) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()

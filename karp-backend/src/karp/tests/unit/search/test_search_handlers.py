@@ -29,7 +29,7 @@ def test_index_reacts_on_lex_events(  # noqa: ANN201
     resource_created = lex_factories.ResourceCreatedFactory()
     search_unit_ctx.event_bus.post(resource_created)  # type: ignore [arg-type]
     if event_factory:
-        event = event_factory(resource_id=resource_created.resource_id)
+        event = event_factory(resourceId=resource_created.resource_id)
         search_unit_ctx.event_bus.post(event)
 
     index_uow = search_unit_ctx.container.get(IndexUnitOfWork)  # type: ignore [misc]

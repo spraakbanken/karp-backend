@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 
 from karp.auth import AuthService  # noqa: F401
 from karp import auth, lex
-from karp.foundation.value_objects import unique_id
-from karp.foundation.value_objects.unique_id import UniqueIdStr
+from karp.lex_core.value_objects import unique_id
+from karp.lex_core.value_objects.unique_id import UniqueIdStr
 
 from karp.lex.application.queries import (
     EntryDiffDto,

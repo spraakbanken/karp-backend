@@ -2,7 +2,7 @@ import pytest  # noqa: I001
 from starlette import status
 
 from karp import auth
-from karp.foundation.value_objects import unique_id  # noqa: F401
+from karp.lex_core.value_objects import unique_id  # noqa: F401
 from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic
 
 

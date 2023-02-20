@@ -45,7 +45,7 @@ class KarpQueryV6Buffer(Buffer):  # noqa: D101
 
 class KarpQueryV6Parser(Parser):  # noqa: D101
     def __init__(  # noqa: D107
-        self, /, config: ParserConfig = None, **settings  # noqa: ANN003, ANN001
+        self, /, config: ParserConfig = None, **settings  # noqa: ANN003
     ) -> None:
         config = ParserConfig.new(
             config,

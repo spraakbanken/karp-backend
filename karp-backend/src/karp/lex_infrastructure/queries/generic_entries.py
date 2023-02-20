@@ -19,7 +19,7 @@ from karp.lex.application.queries import (
     EntryDiffRequest,
     GetEntryRepositoryId,
 )
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import UniqueId, UniqueIdStr, unique_id
 from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 
 
@@ -37,43 +37,26 @@ class GenericEntryViews(EntryViews):  # noqa: D101
         self.entry_repo_uow = entry_repo_uow
 
     def get_by_id(  # noqa: D102
-        self, resource_id: str, entity_id: unique_id.UniqueId
+        self, resource_id: str, id: UniqueIdStr  # noqa: A002
     ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            return self._entry_to_entry_dto(uw.repo.by_id(entity_id), resource_id)
+            return self._entry_to_entry_dto(
+                uw.repo.by_id(UniqueId.validate(id)), resource_id
+            )
 
     def get_by_id_optional(  # noqa: D102
-        self, resource_id: str, entity_id: unique_id.UniqueId
+        self, resource_id: str, id: UniqueIdStr  # noqa: A002
     ) -> typing.Optional[EntryDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            if entry := uw.repo.get_by_id_optional(entity_id):
+            if entry := uw.repo.get_by_id_optional(UniqueId.validate(id)):
                 return self._entry_to_entry_dto(entry, resource_id)
         return None
-
-    # def get_by_entry_id(self, resource_id: str, entry_id: str) -> EntryDto:
-    #     entry_repo_id = self.get_entry_repo_id.query(resource_id)
-    #     with self.entry_repo_uow as uw:
-    #         entry_uow = uw.repo.get_by_id(entry_repo_id)
-    #     with entry_uow as uw:
-    #         return self._entry_to_entry_dto(uw.repo.by_entry_id(entry_id), resource_id)
-
-    # def get_by_entry_id_optional(
-    #     self, resource_id: str, entry_id: str
-    # ) -> typing.Optional[EntryDto]:
-    #     entry_repo_id = self.get_entry_repo_id.query(resource_id)
-    #     with self.entry_repo_uow as uw:
-    #         entry_uow = uw.repo.get_by_id(entry_repo_id)
-    #     with entry_uow as uw:
-    #         entry = uw.repo.get_by_entry_id_optional(entry_id)
-    #         if entry:
-    #             return self._entry_to_entry_dto(entry, resource_id)
-    #     return None
 
     def get_total(self, resource_id: str) -> int:  # noqa: D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
@@ -106,13 +89,12 @@ class GenericEntryViews(EntryViews):  # noqa: D101
 
     def _entry_to_entry_dto(self, entry: Entry, resource_id: str) -> EntryDto:
         return EntryDto(
-            # entry_id=entry.entry_id,
-            entity_id=entry.entity_id,
+            id=entry.id,
             resource=resource_id,
             version=entry.version,
             entry=entry.body,
-            last_modified=entry.last_modified,
-            last_modified_by=entry.last_modified_by,
+            lastModified=entry.last_modified,
+            lastModifiedBy=entry.last_modified_by,
         )
 
 
@@ -134,24 +116,22 @@ class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):  # noqa: D101
     def query(  # noqa: D102
         self,
         resource_id: str,
-        entity_id: unique_id.UniqueId,
-        # entry_id: str,
+        id: UniqueIdStr,  # noqa: A002
         version: typing.Optional[int],
     ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id(resource_id)
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             entry_repo_id
         ) as uw:
-            result = uw.repo.by_id(entity_id, version=version)
+            result = uw.repo.by_id(UniqueId.validate(id), version=version)
 
         return EntryDto(
-            # entry_id=entry_id,
-            entity_id=result.id,
+            id=result.id,
             resource=resource_id,
             version=result.version,
             entry=result.body,
-            last_modified_by=result.last_modified_by,
-            last_modified=result.last_modified,
+            lastModifiedBy=result.last_modified_by,
+            lastModified=result.last_modified,
         )
 
 

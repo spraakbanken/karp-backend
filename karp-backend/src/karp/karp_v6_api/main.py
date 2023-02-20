@@ -25,7 +25,7 @@ from asgi_correlation_id.context import correlation_id
 
 from karp import main
 from karp.foundation import errors as foundation_errors
-from karp.foundation.value_objects import unique_id  # noqa: F401
+from karp.lex_core.value_objects import unique_id  # noqa: F401
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
