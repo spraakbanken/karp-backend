@@ -1,7 +1,8 @@
 # import json
 import re  # noqa: I001
 import time
-from datetime import datetime, timezone  # noqa: F401
+from datetime import datetime, timezone
+from karp.lex.domain.entities import EntryOp  # noqa: F401
 
 import pytest  # pyre-ignore
 from starlette import status
@@ -9,6 +10,7 @@ from starlette import status
 from karp import auth
 from karp.foundation.time import utc_now
 from karp.lex.application.queries.entries import (
+    EntryDiffDto,
     EntryDto,
     GetHistoryDto,  # noqa: F401
     HistoryDto,  # noqa: F401
@@ -22,7 +24,7 @@ places = [
 ]
 
 
-def get_helper(client, url: str, access_token: auth.AccessToken):  # noqa: ANN201
+def get_helper(client, url: str, access_token: auth.AccessToken) -> dict:
     response = client.get(
         url,
         headers=access_token.as_header(),
@@ -127,10 +129,11 @@ class TestGetHistory:
             "/history/places?user_id=user1",
             admin_token,
         )
-        assert len(response_data["history"]) == 4
-        assert response_data["total"] == 4
-        for history_entry in response_data["history"]:
-            assert "user1" == history_entry["user_id"]
+        history = GetHistoryDto(**response_data)
+        assert len(history.history) == 4
+        assert history.total == 4
+        for history_entry in history.history:
+            assert "user1" == history_entry.user_id
 
     def test_user2_history(  # noqa: ANN201
         self,
@@ -143,16 +146,16 @@ class TestGetHistory:
             "/history/places?user_id=user2",
             admin_token,
         )
-        assert 4 == len(response_data["history"])
-        assert response_data["history"][0]["op"] == "ADDED"
-        assert response_data["history"][1]["op"] == "ADDED"
-        assert "UPDATED" == response_data["history"][2]["op"]
-        assert "UPDATED" == response_data["history"][3]["op"]
-        assert re.match(
-            r"^\d{10}\.\d{3,6}$", str(response_data["history"][3]["timestamp"])
-        )
-        for history_entry in response_data["history"]:
-            assert "user2" == history_entry["user_id"]
+        history = GetHistoryDto(**response_data)
+        assert len(history.history) == 4
+        print(f"{history=}")
+        assert history.history[0].op == EntryOp.ADDED
+        assert history.history[1].op == EntryOp.ADDED
+        assert history.history[2].op == EntryOp.UPDATED
+        assert history.history[3].op == EntryOp.UPDATED
+        assert re.match(r"^\d{10}\.\d{3,6}$", str(history.history[3].timestamp))
+        for history_entry in history.history:
+            assert history_entry.user_id == "user2"
 
     def test_user_history_from_date(  # noqa: ANN201
         self,
@@ -191,9 +194,10 @@ class TestGetHistory:
             f"/history/places?entry_id={history_entity_ids[1]}",
             admin_token,
         )
-        assert 2 == len(response_data["history"])
-        for history_entry in response_data["history"]:
-            assert history_entry["entity_id"] == history_entity_ids[1]
+        history = GetHistoryDto(**response_data)
+        assert len(history.history) == 2
+        for history_entry in history.history:
+            assert history_entry.id == history_entity_ids[1]
 
     def test_entry_id_and_user_id(  # noqa: ANN201
         self,
@@ -206,11 +210,12 @@ class TestGetHistory:
             f"/history/places?entry_id={history_entity_ids[0]}&user_id=user2",
             admin_token,
         )
-        assert 1 == len(response_data["history"])
-        history_entry = response_data["history"][0]
-        assert history_entry["entity_id"] == history_entity_ids[0]
-        assert "user2" == history_entry["user_id"]
-        assert "UPDATED" == history_entry["op"]
+        history = GetHistoryDto(**response_data)
+        assert len(history.history) == 1
+        history_entry = history.history[0]
+        assert history_entry.id == history_entity_ids[0]
+        assert history_entry.user_id == "user2"
+        assert history_entry.op == EntryOp.UPDATED
 
     def test_diff_against_nothing(  # noqa: ANN201
         self,
@@ -223,12 +228,13 @@ class TestGetHistory:
             f"/history/places?entry_id={history_entity_ids[0]}&to_version=2",
             admin_token,
         )
-        assert 1 == len(response_data["history"])
-        history_entry = response_data["history"][0]
-        assert "ADDED" == history_entry["op"]
-        for diff in history_entry["diff"]:
+        history = GetHistoryDto(**response_data)
+        assert len(history.history) == 1
+        history_entry = history.history[0]
+        assert EntryOp.ADDED == history_entry.op
+        for diff in history_entry.diff:
             print(f"diff = {diff}")
-            assert "ADDED" == diff["type"]
+            assert diff["type"] == "ADDED"
 
 
 def test_historical_entry(  # noqa: ANN201
@@ -236,17 +242,17 @@ def test_historical_entry(  # noqa: ANN201
     admin_token: auth.AccessToken,
     history_entity_ids: list[str],
 ):
-    response_data = get_helper(
+    response_json = get_helper(
         fa_data_client,
         f"/entries/places/{history_entity_ids[1]}/2",
         admin_token,
     )
-    assert utc_now() > response_data["last_modified"]
-    assert "user2" == response_data["last_modified_by"]
-    assert "resource" in response_data
-    assert "bb" == response_data["entry"]["name"]
-    assert "version" in response_data
-    history_entry = EntryDto(**response_data)
+    history_entry = EntryDto(**response_json)
+    assert history_entry.last_modified < utc_now()
+    assert history_entry.last_modified_by == "user2"
+    # assert "resource" in response_data
+    assert history_entry.entry["name"] == "bb"
+    # assert "version" in response_data
     assert history_entry.version == 2
 
 
@@ -261,18 +267,16 @@ class TestGetEntryDiff:
             f"/history/diff/places/{history_entity_ids[0]}?from_version=1&to_version=2",
             headers=user4_token.as_header(),
         )
-        response_data = response.json()
-        print(f"response_data = {response_data}")
         assert response.status_code == status.HTTP_200_OK
+        response_data = EntryDiffDto(**response.json())
 
-        diff = response_data["diff"]
-        assert len(diff) == 1
-        assert "CHANGE" == diff[0]["type"]
-        assert "a" == diff[0]["before"]
-        assert "aa" == diff[0]["after"]
-        assert "name" == diff[0]["field"]
-        assert response_data["from_version"] == 1
-        assert response_data["to_version"] == 2
+        assert len(response_data.diff) == 1
+        assert response_data.diff[0]["type"] == "CHANGE"
+        assert response_data.diff[0]["before"] == "a"
+        assert response_data.diff[0]["after"] == "aa"
+        assert response_data.diff[0]["field"] == "name"
+        assert response_data.from_version == 1
+        assert response_data.to_version == 2
 
     def test_diff2(  # noqa: ANN201
         self,
@@ -285,13 +289,11 @@ class TestGetEntryDiff:
             headers=user4_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
-        response_data = response.json()
-        diff = response_data["diff"]
-        print(f"response = {response_data}")
-        assert "a" == diff[0]["before"]
-        assert "aaaaaaaaa" == diff[0]["after"]
-        assert response_data["from_version"] == 1
-        assert response_data["to_version"] == 9
+        response_data = EntryDiffDto(**response.json())
+        assert response_data.diff[0]["before"] == "a"
+        assert response_data.diff[0]["after"] == "aaaaaaaaa"
+        assert response_data.from_version == 1
+        assert response_data.to_version == 9
 
     def test_diff_from_first_to_date(  # noqa: ANN201
         self,
@@ -307,12 +309,12 @@ class TestGetEntryDiff:
             headers=user4_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
-        response_data = response.json()
-        diff = response_data["diff"]
-        assert "a" == diff[0]["before"]
-        assert diff[0]["after"] > "aaaaaa"
-        assert response_data["from_version"] == 1
-        assert response_data["to_version"] > 6
+        response_data = EntryDiffDto(**response.json())
+        assert response_data.diff[0]["before"] == "a"
+        assert response_data.diff[0]["after"] > "aaaaaa"
+        assert response_data.from_version == 1
+        assert response_data.to_version is not None
+        assert response_data.to_version > 6
 
     @pytest.mark.xfail()
     def test_diff_from_date_to_last(  # noqa: ANN201
@@ -329,12 +331,11 @@ class TestGetEntryDiff:
             headers=user4_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
-        response_data = response.json()
-        diff = response_data["diff"]
-        assert "aaaaaaaa" == diff[0]["before"]
-        assert "aaaaaaaaa" == diff[0]["after"]
-        assert response_data["from_version"] == 8
-        assert response_data["to_version"] == 9
+        response_data = EntryDiffDto(**response.json())
+        assert response_data.diff[0]["before"] == "aaaaaaaa"
+        assert response_data.diff[0]["after"] == "aaaaaaaaa"
+        assert response_data.from_version == 8
+        assert response_data.to_version == 9
 
     def test_diff_from_first_to_version(  # noqa: ANN201
         self,
@@ -347,12 +348,11 @@ class TestGetEntryDiff:
             headers=user4_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
-        response_data = response.json()
-        diff = response_data["diff"]
-        assert "a" == diff[0]["before"]
-        assert "aaaaaaa" == diff[0]["after"]
-        assert response_data["from_version"] == 1
-        assert response_data["to_version"] == 7
+        response_data = EntryDiffDto(**response.json())
+        assert response_data.diff[0]["before"] == "a"
+        assert response_data.diff[0]["after"] == "aaaaaaa"
+        assert response_data.from_version == 1
+        assert response_data.to_version == 7
 
     def test_diff_from_version_to_last(  # noqa: ANN201
         self,
@@ -365,12 +365,11 @@ class TestGetEntryDiff:
             headers=user4_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
-        response_data = response.json()
-        diff = response_data["diff"]
-        assert "aaaaaaa" == diff[0]["before"]
-        assert "aaaaaaaaa" == diff[0]["after"]
-        assert response_data["from_version"] == 7
-        assert response_data["to_version"] == 9
+        response_data = EntryDiffDto(**response.json())
+        assert response_data.diff[0]["before"] == "aaaaaaa"
+        assert response_data.diff[0]["after"] == "aaaaaaaaa"
+        assert response_data.from_version == 7
+        assert response_data.to_version == 9
 
     def test_diff_mix_version_date(  # noqa: ANN201
         self,
@@ -383,12 +382,12 @@ class TestGetEntryDiff:
             headers=user4_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
-        response_data = response.json()
-        diff = response_data["diff"]
-        assert "aa" == diff[0]["before"]
-        assert diff[0]["after"] > "aaaaaa"
-        assert response_data["from_version"] == 2
-        assert response_data["to_version"] > 6
+        response_data = EntryDiffDto(**response.json())
+        assert response_data.diff[0]["before"] == "aa"
+        assert response_data.diff[0]["after"] > "aaaaaa"
+        assert response_data.from_version == 2
+        assert response_data.to_version is not None
+        assert response_data.to_version > 6
 
     def test_diff_to_entry_data(  # noqa: ANN201
         self,
@@ -404,12 +403,11 @@ class TestGetEntryDiff:
             headers=user4_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
-        response_data = response.json()
-        diff = response_data["diff"]
-        assert "a" == diff[0]["before"]
-        assert "testing" == diff[0]["after"]
-        assert response_data["from_version"] == 1
-        assert response_data["to_version"] is None
+        response_data = EntryDiffDto(**response.json())
+        assert response_data.diff[0]["before"] == "a"
+        assert response_data.diff[0]["after"] == "testing"
+        assert response_data.from_version == 1
+        assert response_data.to_version is None
 
     def test_diff_no_flags(  # noqa: ANN201
         self,
@@ -422,9 +420,9 @@ class TestGetEntryDiff:
             headers=user4_token.as_header(),
         )
         assert response.status_code == status.HTTP_200_OK
-        response_data = response.json()
-        diff = response_data["diff"]
-        assert "a" == diff[0]["before"]
-        assert "aaaaaaaaa" == diff[0]["after"]
-        assert response_data["from_version"] == 1
-        assert response_data["to_version"] == 9
+        response_data = EntryDiffDto(**response.json())
+
+        assert response_data.diff[0]["before"] == "a"
+        assert response_data.diff[0]["after"] == "aaaaaaaaa"
+        assert response_data.from_version == 1
+        assert response_data.to_version == 9

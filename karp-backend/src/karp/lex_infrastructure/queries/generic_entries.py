@@ -173,11 +173,11 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):  # noqa: D101
                 HistoryDto(
                     timestamp=history_entry.last_modified,
                     message=history_entry.message or "",
-                    entity_id=history_entry.entity_id,
+                    id=history_entry.entity_id,
                     # entry_id=history_entry.entry_id,
                     version=history_entry.version,
                     op=history_entry.op,
-                    user_id=history_entry.last_modified_by,
+                    userId=history_entry.last_modified_by,
                     diff=history_diff,
                 )
             )
@@ -257,6 +257,6 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):  # noqa: D101
         #
         return EntryDiffDto(
             diff=jsondiff.compare(obj1_body, obj2_body),
-            from_version=obj1.version,
-            to_version=obj2.version if obj2 else None,
+            fromVersion=obj1.version,
+            toVersion=obj2.version if obj2 else None,
         )

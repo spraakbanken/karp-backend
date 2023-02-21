@@ -23,13 +23,12 @@ class GenericPreviewEntry(search.PreviewEntry):  # noqa: D101
 
         lex.EntrySchema(resource.entry_json_schema).validate_entry(input_dto.entry)
         input_entry = lex.EntryDto(
-            # entry_id=entry_id,
-            entity_id=make_unique_id(),
+            id=make_unique_id(),
             resource=input_dto.resource_id,
             version=0,
             entry=input_dto.entry,
-            last_modified=utc_now(),
-            last_modified_by=input_dto.user,
+            lastModified=utc_now(),
+            lastModifiedBy=input_dto.user,
         )
         entry = self.entry_transformer.transform(input_dto.resource_id, input_entry)
         return search.EntryPreviewDto(entry=entry)

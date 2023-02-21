@@ -142,7 +142,7 @@ def preview_entry(  # noqa: ANN201, D103
         logger.exception("data is not valid")
         raise HTTPException(  # noqa: B904
             status_code=status.HTTP_400_BAD_REQUEST, detail={"error": str(err)}
-        )
+        ) from err
     else:
         return preview_entry.query(input_dto)
 
@@ -193,7 +193,8 @@ def update_entry(  # noqa: ANN201, D103
             )
         )
 
-        return {"newID": entry.entity_id}
+        return schemas.EntryAddResponse(newID=entry.entity_id)
+
     except errors.EntryNotFound:
         return responses.JSONResponse(
             status_code=404,
@@ -201,7 +202,7 @@ def update_entry(  # noqa: ANN201, D103
                 "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
                 "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
                 "resource": resource_id,
-                "entry_id": entry_id,
+                "entry_id": entry_id.str,
             },
         )
     except errors.UpdateConflict as err:
@@ -212,24 +213,25 @@ def update_entry(  # noqa: ANN201, D103
     except Exception as err:  # noqa: F841
         logger.exception(
             "error occured",
-            extra={"resource_id": resource_id, "entry_id": entry_id, "data": data},
+            extra={"resource_id": resource_id, "entry_id": entry_id.str, "data": data},
         )
         raise
 
 
 @router.delete(
-    "/{resource_id}/{entry_id}/delete",
+    "/{resource_id}/{entry_id}/{version}/delete",
     tags=["Editing"],
     status_code=status.HTTP_204_NO_CONTENT,
 )
 @router.delete(
-    "/{resource_id}/{entry_id}",
+    "/{resource_id}/{entry_id}/{version}",
     tags=["Editing"],
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def delete_entry(  # noqa: ANN201
     resource_id: str,
     entry_id: UniqueId,
+    version: int,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
     command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
@@ -247,6 +249,7 @@ def delete_entry(  # noqa: ANN201
                 resourceId=resource_id,
                 id=unique_id.parse(entry_id),
                 user=user.identifier,
+                version=version,
             )
         )
     except errors.EntryNotFound:
@@ -256,7 +259,7 @@ def delete_entry(  # noqa: ANN201
                 "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
                 "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
                 "resource": resource_id,
-                "id": entry_id,
+                "id": entry_id.str,
             },
         )
     return

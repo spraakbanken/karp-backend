@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict, Optional
 
 import pydantic
+import ulid
 
 from karp.lex_core import alias_generators
 from karp.lex_core.value_objects import unique_id
@@ -13,6 +14,7 @@ class BaseModel(pydantic.BaseModel):
 
     class Config:  # noqa: D106
         alias_generator = alias_generators.to_lower_camel
+        json_encoders = {ulid.ULID: lambda u: u.str}
 
     def serialize(self) -> dict:
         """Serialize model to dict."""

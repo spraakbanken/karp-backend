@@ -271,7 +271,7 @@ class TestDeleteEntry:
 
         entity_id = response.json()["newID"]
         response = fa_data_client.delete(
-            f"/entries/places/{entity_id}/delete", headers=write_token.as_header()
+            f"/entries/places/{entity_id}/1/delete", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -283,6 +283,30 @@ class TestDeleteEntry:
             assert uw.repo.by_id(entity_id).discarded
             assert entity_id not in uw.repo.entity_ids()
 
+    def test_delete_non_existing_fails(  # noqa: ANN201
+        self,
+        fa_data_client,
+        write_token: auth.AccessToken,
+    ):
+        entry_id = make_unique_id()
+
+        response = fa_data_client.delete(
+            f"/entries/places/{entry_id}/3/delete", headers=write_token.as_header()
+        )
+
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+
+        response_data = response.json()
+
+        assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_FOUND
+
+        assert (
+            response_data["error"]
+            == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
+        )
+
+
+class TestDeleteEntryRest:
     def test_delete_rest(  # noqa: ANN201
         self,
         fa_data_client,
@@ -307,7 +331,7 @@ class TestDeleteEntry:
 
         entity_id = response.json()["newID"]
         response = fa_data_client.delete(
-            f"/entries/places/{entity_id}", headers=write_token.as_header()
+            f"/entries/places/{entity_id}/1", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -319,28 +343,6 @@ class TestDeleteEntry:
             assert uw.repo.by_id(entity_id).discarded
             assert entity_id not in uw.repo.entity_ids()
 
-    def test_delete_non_existing_fails(  # noqa: ANN201
-        self,
-        fa_data_client,
-        write_token: auth.AccessToken,
-    ):
-        entry_id = make_unique_id()
-
-        response = fa_data_client.delete(
-            f"/entries/places/{entry_id}/delete", headers=write_token.as_header()
-        )
-
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-        response_data = response.json()
-
-        assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_FOUND
-
-        assert (
-            response_data["error"]
-            == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
-        )
-
     def test_delete_rest_non_existing_fails(  # noqa: ANN201
         self,
         fa_data_client,
@@ -349,7 +351,7 @@ class TestDeleteEntry:
         entry_id = "00000000000000000000000000"
 
         response = fa_data_client.delete(
-            f"/entries/places/{entry_id}", headers=write_token.as_header()
+            f"/entries/places/{entry_id}/2", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -699,7 +701,7 @@ class TestGetEntry:
         assert response.status_code == status.HTTP_200_OK
 
         entry = EntryDto(**response.json())
-        assert entry.entity_id == entry_places_214_id
+        assert entry.id == entry_places_214_id
         assert entry.version == 1
 
     def test_route_w_version_exist(  # noqa: ANN201
@@ -715,7 +717,7 @@ class TestGetEntry:
         assert response.status_code == status.HTTP_200_OK
 
         entry = EntryDto(**response.json())
-        assert entry.entity_id == entry_places_209_id
+        assert entry.id == entry_places_209_id
         assert entry.version == 5
 
 

@@ -43,6 +43,7 @@ __all__ = [
     "ResourceViews",
     "PreviewEntry",
     "PreviewEntryInputDto",
+    "EntryPreviewDto",
 ]
 
 
