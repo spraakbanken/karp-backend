@@ -1,6 +1,7 @@
 from typing import Dict  # noqa: D100
 
-from karp.foundation import events, time
+from karp import timings
+from karp.foundation import events
 from karp.lex_core import alias_generators
 from karp.lex_core.value_objects import unique_id
 from pydantic import BaseModel
@@ -16,7 +17,7 @@ class Event(events.Event, BaseModel):  # noqa: D101
 
 class AppStarted(Event):  # noqa: D101
     def __init__(self):  # noqa: D107, ANN204
-        self.timestamp = time.utc_now()
+        self.timestamp = timings.utc_now()
 
 
 class IdMixin(BaseModel):  # noqa: D101

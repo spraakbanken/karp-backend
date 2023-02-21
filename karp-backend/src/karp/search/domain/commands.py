@@ -1,12 +1,12 @@
 from typing import Literal  # noqa: D100
 
 import pydantic
+from karp import timings
 from karp.lex_core import alias_generators
-from karp.utility import time
 
 
 class Command(pydantic.BaseModel):  # noqa: D101
-    timestamp: float = pydantic.Field(default_factory=time.utc_now)
+    timestamp: float = pydantic.Field(default_factory=timings.utc_now)
 
     class Config:  # noqa: D106
         # arbitrary_types_allowed = True
