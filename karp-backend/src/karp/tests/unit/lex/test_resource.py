@@ -9,7 +9,7 @@ from karp.lex.domain.entities.resource import (
     ResourceOp,
     create_resource,
 )
-from karp.lex_core.value_objects import unique_id
+from karp.lex_core.value_objects import make_unique_id, unique_id
 
 from . import factories
 from .factories import random_resource
@@ -24,7 +24,7 @@ def test_create_resource_creates_resource():  # noqa: ANN201
         "sort": ["baseform"],
         "fields": {"baseform": {"type": "string", "required": True}},
     }
-    with mock.patch("karp.utility.time.utc_now", return_value=12345):
+    with mock.patch("karp.timings.utc_now", return_value=12345):
         resource, domain_events = create_resource(
             conf,
             created_by="kristoff@example.com",
@@ -206,33 +206,51 @@ def test_resource_has_entry_json_schema():  # noqa: ANN201
     assert "baseform" in json_schema["properties"]
 
 
-@pytest.mark.parametrize(
-    "field,value",
-    [
-        # ("resource_id", "new..1"),
-        # ("config", {"b": "r"}),
-        ("name", "New name"),
-    ],
-)
-def test_discarded_resource_has_event(field, value):  # noqa: ANN201
-    resource, _ = random_resource()
-    domain_events = resource.discard(
-        user="alice@example.org", message="bad", timestamp=123.45
-    )
-    assert resource.discarded
-    assert domain_events[-1] == events.ResourceDiscarded(
-        id=resource.id,
-        # entryRepoId=resource.entry_repository_id,
-        resourceId=resource.resource_id,
-        user=resource.last_modified_by,
-        timestamp=resource.last_modified,
-        message=resource.message,
-        version=2,
-        name=resource.name,
-        config=resource.config,
-    )
-    with pytest.raises(errors.DiscardedEntityError):
-        setattr(resource, field, value)
+class TestDiscardedResource:
+    def test_discarded_resource_has_event(self) -> None:
+        resource, _ = random_resource()
+        domain_events = resource.discard(
+            user="alice@example.org", message="bad", timestamp=12345678.9
+        )
+        assert resource.discarded
+        assert domain_events[-1] == events.ResourceDiscarded(
+            id=resource.id,
+            resourceId=resource.resource_id,
+            user=resource.last_modified_by,
+            timestamp=resource.last_modified,
+            message=resource.message,
+            version=2,
+            name=resource.name,
+            config=resource.config,
+        )
+
+    def test_discarded_resource_cant_be_updated(self) -> None:
+        resource, _ = random_resource()
+        _domain_events = resource.discard(user="alice@example.org", message="bad")
+        with pytest.raises(errors.DiscardedEntityError):
+            resource.publish(user="user1", message="publish", version=1)
+        with pytest.raises(errors.DiscardedEntityError):
+            resource.set_entry_repo_id(
+                entry_repo_id=make_unique_id(),
+                user="user1",
+                message="publish",
+                version=1,
+            )
+        with pytest.raises(errors.DiscardedEntityError):
+            resource.set_resource_id(
+                resource_id="new",
+                user="user1",
+                message="publish",
+                version=1,
+            )
+        with pytest.raises(errors.DiscardedEntityError):
+            resource.update(
+                name="new",
+                config=resource.config,
+                user="user1",
+                message="publish",
+                version=1,
+            )
 
 
 def test_published_resource_has_event():  # noqa: ANN201
@@ -254,3 +272,71 @@ def test_published_resource_has_event():  # noqa: ANN201
         name=resource.name,
         message=resource.message,
     )
+
+
+class TestUpdateResource:
+    def test_update_without_changes_returns_empty_list(self) -> None:
+        resource, _ = random_resource()
+        domain_events = resource.update(
+            name=resource.name,
+            config=resource.config,
+            user=resource.last_modified_by,
+            version=resource.version,
+        )
+
+        assert not domain_events
+
+
+class TestResourceSetEntryRepoId:
+    def test_set_entry_repo_id_returns_event(self) -> None:
+        resource, _ = random_resource()
+        entry_repo_id = make_unique_id()
+        username = "user1"
+        domain_events = resource.set_entry_repo_id(
+            entry_repo_id=entry_repo_id,
+            user=username,
+            version=resource.version,
+        )
+
+        assert domain_events[0].entry_repo_id == entry_repo_id
+        assert domain_events[0].user == username
+
+
+class TestResourceSetResourceId:
+    def test_set_resource_id_returns_event(self) -> None:
+        resource, _ = random_resource()
+        resource_id = "plus"
+        username = "user1"
+        domain_events = resource.set_resource_id(
+            resource_id=resource_id,
+            user=username,
+            version=resource.version,
+        )
+
+        assert domain_events[0].resource_id == resource_id
+        assert domain_events[0].user == username
+
+
+class TestResourceSetConfig:
+    def test_set_config_without_changes_returns_empty_list(self) -> None:
+        resource, _ = random_resource()
+        domain_events = resource.set_config(
+            config=resource.config,
+            user=resource.last_modified_by,
+            version=resource.version,
+        )
+
+        assert not domain_events
+
+    def test_set_config_returns_event(self) -> None:
+        resource, _ = random_resource()
+        config = {"fields": {"ff": {"type": "string"}}}
+        username = "user1"
+        domain_events = resource.set_config(
+            config=config,
+            user=username,
+            version=resource.version,
+        )
+
+        assert domain_events[0].config == config
+        assert domain_events[0].user == username

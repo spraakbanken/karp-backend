@@ -9,7 +9,7 @@ from karp.lex import commands
 from karp.lex.domain import entities, events
 from karp.foundation.value_objects import MachineName
 from karp.lex_core.value_objects import make_unique_id
-from karp.utility.time import utc_now
+from karp.timings import utc_now
 
 
 class ResourceConfigProvider(BaseProvider):

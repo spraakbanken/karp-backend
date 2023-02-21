@@ -1,7 +1,8 @@
 """LexicalResource"""  # noqa: D400, D415
 import enum  # noqa: I001
 import typing
-from typing import Any, Callable, Dict, Tuple, Optional, Type, Union  # noqa: F401
+from typing import Any, Dict, Tuple, Optional
+from karp import timings
 
 from karp.lex.domain import constraints
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
@@ -9,10 +10,7 @@ from karp.foundation.value_objects import PermissionLevel
 from .entry import Entry, create_entry
 from karp.lex.domain import errors, events
 from karp.lex_core.value_objects import unique_id
-from karp.utility import json_schema, time
-from karp.utility.time import utc_now
-
-# pylint: disable=unsubscriptable-object
+from karp.utility import json_schema
 
 
 class ResourceOp(enum.Enum):  # noqa: D101
@@ -62,23 +60,8 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         return self._entry_repo_id
 
     @property
-    def entry_repository_settings(self) -> typing.Dict:  # noqa: D102
-        return self.config["entry_repository_settings"]
-
-    @entry_repository_settings.setter
-    def entry_repository_settings(  # noqa: ANN202
-        self, entry_repository_settings: typing.Dict
-    ):
-        self.config["entry_repository_settings"] = entry_repository_settings
-
-    @property
     def name(self):  # noqa: ANN201, D102
         return self._name
-
-    @name.setter
-    def name(self, name):  # noqa: ANN202
-        self._check_not_discarded()
-        self._name = name
 
     @property
     def message(self):  # noqa: ANN201, D102
@@ -123,9 +106,12 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         entry_repo_id: unique_id.UniqueId,
         user: str,
         version: int,
+        message: str | None = None,
         timestamp: Optional[float] = None,
     ):
-        self._update_metadata(timestamp, user, "entry repo id updated", version=version)
+        self._update_metadata(
+            timestamp, user, message or "entry repo id updated", version=version
+        )
         self._entry_repo_id = entry_repo_id
         return [
             events.ResourceUpdated(
@@ -177,7 +163,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         version: int,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ) -> bool:
+    ) -> list[events.Event]:
         if self.name == name and self.config == config:
             return []
         self._update_metadata(timestamp, user, message or "updating", version)
@@ -205,7 +191,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         version: int,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ) -> bool:
+    ) -> list[events.Event]:
         if self.config == config:
             return []
         self._update_metadata(timestamp, user, message or "setting config", version)
@@ -259,13 +245,13 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
 
     def discard(  # noqa: ANN201, D102
         self, *, user: str, message: str, timestamp: float = None
-    ):
+    ) -> list[events.Event]:
         self._check_not_discarded()
         self._op = ResourceOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = True
         self._last_modified_by = user
-        self._last_modified = timestamp or utc_now()
+        self._last_modified = timestamp or timings.utc_now()
         self._version += 1
         return [
             events.ResourceDiscarded(
@@ -381,23 +367,23 @@ def create_resource(  # noqa: D103
     name: typing.Optional[str] = None,
 ) -> Tuple[Resource, list[events.Event]]:
     resource_id_in_config: Optional[str] = config.pop("resource_id", None)
-    resource_id = resource_id or resource_id_in_config
-    if resource_id is None:
+    resource_id_resolved = resource_id or resource_id_in_config
+    if resource_id_resolved is None:
         raise ValueError("resource_id is missing")
-    resource_id = constraints.valid_resource_id(resource_id)
-    name_in_config = config.pop("resource_name", None)
-    resource_name = name or name_in_config or resource_id
+    constraints.valid_resource_id(resource_id_resolved)
+    name_in_config: str = config.pop("resource_name", None)
+    resource_name: str = name or name_in_config or resource_id  # type: ignore [assignment]
 
     resource = Resource(
         id=id or unique_id.make_unique_id(),
-        resource_id=resource_id,
+        resource_id=resource_id_resolved,
         name=resource_name,
         config=config,
         entry_repo_id=entry_repo_id,
         message=message or "Resource added.",
         op=ResourceOp.ADDED,
         version=1,
-        last_modified=created_at or time.utc_now(),
+        last_modified=created_at or timings.utc_now(),
         last_modified_by=user or created_by or "unknown",
     )
     event = events.ResourceCreated(

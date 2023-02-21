@@ -8,7 +8,7 @@ from karp.foundation.errors import ConsistencyError
 from karp.foundation import errors
 from karp.foundation import events
 from karp.lex_core.value_objects import UniqueId
-from karp.utility.time import monotonic_utc_now
+from karp.timings import monotonic_utc_now
 
 
 class Entity(events.EventMixin):  # noqa: D101
