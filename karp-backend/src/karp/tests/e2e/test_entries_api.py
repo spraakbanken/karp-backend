@@ -9,7 +9,7 @@ from karp.lex.application.queries.resources import GetEntryRepositoryId
 from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
-from karp.foundation.time import utc_now
+from karp.timings import utc_now
 from karp.lex_core.value_objects import (
     make_unique_id,
     unique_id,

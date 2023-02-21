@@ -7,7 +7,7 @@ import os
 import jwt
 
 import pathlib
-from karp.foundation.time import utc_now
+from karp.timings import utc_now
 
 from karp.auth import AccessToken
 from karp.main.config import AUTH_JWT_AUDIENCE
