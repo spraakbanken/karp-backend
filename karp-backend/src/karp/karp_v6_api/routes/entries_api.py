@@ -140,7 +140,7 @@ def preview_entry(  # noqa: ANN201, D103
         )
     except pydantic.ValidationError as err:
         logger.exception("data is not valid")
-        raise HTTPException(  # noqa: B904
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail={"error": str(err)}
         ) from err
     else:

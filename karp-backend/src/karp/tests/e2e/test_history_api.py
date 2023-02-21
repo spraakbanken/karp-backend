@@ -1,8 +1,7 @@
 # import json
 import re  # noqa: I001
 import time
-from datetime import datetime, timezone
-from karp.lex.domain.entities import EntryOp  # noqa: F401
+from karp.lex.domain.entities import EntryOp
 
 import pytest  # pyre-ignore
 from starlette import status
@@ -12,7 +11,7 @@ from karp.foundation.time import utc_now
 from karp.lex.application.queries.entries import (
     EntryDiffDto,
     EntryDto,
-    GetHistoryDto,  # noqa: F401
+    GetHistoryDto,
     HistoryDto,  # noqa: F401
 )
 
