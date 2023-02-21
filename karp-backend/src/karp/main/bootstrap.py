@@ -1,4 +1,4 @@
-from karp.foundation import messagebus
+from karp.foundation import messagebus  # noqa: D100, I001
 from karp.lex.application import (
     handlers as lex_handlers,
     repositories as lex_repositories,
@@ -10,7 +10,7 @@ from karp.search.application.unit_of_work import SearchServiceUnitOfWork
 from karp.lex.application import repositories
 
 
-def bootstrap_message_bus(
+def bootstrap_message_bus(  # noqa: D103
     *,
     resource_uow: repositories.ResourceUnitOfWork,
     entry_uows: repositories.EntriesUnitOfWork,

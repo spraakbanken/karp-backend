@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100, I001
 import logging
 from typing import Dict, List, Type, Union, TypeVar, Generic, Iterable
 
@@ -11,13 +11,13 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-class Handler(Generic[T]):
+class Handler(Generic[T]):  # noqa: D101
     @abc.abstractmethod
-    def execute(self, t: T) -> None:
+    def execute(self, t: T) -> None:  # noqa: D102
         raise NotImplementedError
 
     @abc.abstractmethod
-    def collect_new_events(self) -> Iterable[Event]:
+    def collect_new_events(self) -> Iterable[Event]:  # noqa: D102
         raise NotImplementedError
 
 
@@ -25,15 +25,15 @@ CommandType = TypeVar("CommandType", bound=Command)
 EventType = TypeVar("EventType", bound=Event)
 
 
-class CommandHandler(Generic[CommandType], Handler[CommandType]):
+class CommandHandler(Generic[CommandType], Handler[CommandType]):  # noqa: D101
     pass
 
 
 Message = Union[Command, Event]
 
 
-class MessageBus:
-    def __init__(
+class MessageBus:  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         command_handlers: Dict[Type[Command], CommandHandler[Command]],
         event_handlers: Dict[Type[Event], List[Handler[Event]]],
@@ -44,7 +44,7 @@ class MessageBus:
         self.raise_on_all_errors = raise_on_all_errors
         self.queue: List[Message] = []
 
-    def handle(self, msg: Message):
+    def handle(self, msg: Message):  # noqa: ANN201, D102
         self.queue = [msg]
         while self.queue:
             msg = self.queue.pop(0)
@@ -55,7 +55,7 @@ class MessageBus:
             else:
                 raise Exception(f"{msg} was not an Event or Command")
 
-    def _handle_event(self, event: Event):
+    def _handle_event(self, event: Event):  # noqa: ANN202
         for evt_handler in self._event_handlers[type(event)]:
             logger.debug("handling event %s with handler %s", event, evt_handler)
             try:
@@ -67,7 +67,7 @@ class MessageBus:
             else:
                 self.queue.extend(evt_handler.collect_new_events())
 
-    def _handle_command(self, command: Command):
+    def _handle_command(self, command: Command):  # noqa: ANN202
         logger.debug("handling command %s", command)
         cmd_handler = self._command_handlers[type(command)]
         try:

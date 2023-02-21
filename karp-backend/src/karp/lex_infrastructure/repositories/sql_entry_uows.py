@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 from typing import Optional
 
 import sqlalchemy as sa
@@ -6,7 +6,7 @@ from sqlalchemy import sql
 from sqlalchemy import orm as sa_orm
 
 from karp.foundation.events import EventBus
-from karp.foundation.value_objects import UniqueId
+from karp.lex_core.value_objects import UniqueId
 from karp.lex.application.repositories import (
     EntryUnitOfWork,
     EntryUowRepositoryUnitOfWork,
@@ -22,8 +22,8 @@ from karp.lex_infrastructure.sql.sql_models import EntryUowModel
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
-    def __init__(
+class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
         session: sa_orm.Session,
@@ -33,27 +33,30 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
         SqlRepository.__init__(self, session)
         self.entry_uow_factory = entry_uow_factory
 
-    def _save(self, entry_uow: EntryUnitOfWork):
+    def _save(self, entry_uow: EntryUnitOfWork):  # noqa: ANN202
         logger.debug("saving entry_uow=%s", entry_uow)
         logger.debug("using session=%s", self._session)
         self._check_has_session()
         self._session.add(EntryUowModel.from_entity(entry_uow))
         logger.debug("session=%s, session.new=%s", self._session, self._session.new)
 
-    def _by_id(self, id_: UniqueId, **kwargs) -> Optional[EntryUnitOfWork]:
+    def _by_id(
+        self,
+        id: UniqueId,  # noqa: A002
+        *,
+        version: Optional[int] = None,
+        **kwargs,  # noqa: ANN003
+    ) -> Optional[EntryUnitOfWork]:
         # stmt = sql.select(EntryUowModel).where(EntryUowModel.id == id_)
         # row = self._session.execute(stmt).first()
         stmt = (
             self._session.query(EntryUowModel)
-            .filter_by(entity_id=id_)
+            .filter_by(entity_id=id)
             .order_by(EntryUowModel.last_modified.desc())
         )
-        row = stmt.first()
-        if row:
-            return self._row_to_entity(row)
-        return None
+        return self._row_to_entity(row) if (row := stmt.first()) else None
 
-    def num_entities(self) -> int:
+    def num_entities(self) -> int:  # noqa: D102
         self._check_has_session()
         subq = (
             self._session.query(
@@ -77,7 +80,7 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
     def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:
         uow, _events = self.entry_uow_factory.create(
             repository_type=row_proxy.type,
-            entity_id=row_proxy.entity_id,
+            id=row_proxy.entity_id,
             name=row_proxy.name,
             config=row_proxy.config,
             connection_str=row_proxy.connection_str,
@@ -88,8 +91,10 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):
         return uow
 
 
-class SqlEntryUowRepositoryUnitOfWork(SqlUnitOfWork, EntryUowRepositoryUnitOfWork):
-    def __init__(
+class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
+    SqlUnitOfWork, EntryUowRepositoryUnitOfWork
+):
+    def __init__(  # noqa: D107, ANN204
         self,
         *,
         event_bus: EventBus,
@@ -121,7 +126,7 @@ class SqlEntryUowRepositoryUnitOfWork(SqlUnitOfWork, EntryUowRepositoryUnitOfWor
     #         )
     #     return super().__enter__()
 
-    def _begin(self):
+    def _begin(self):  # noqa: ANN202
         logger.debug("called _begin")
         if self._session_is_created_here:
             self._session = self.session_factory()  # type: ignore
@@ -134,7 +139,7 @@ class SqlEntryUowRepositoryUnitOfWork(SqlUnitOfWork, EntryUowRepositoryUnitOfWor
         return self
 
     @property
-    def repo(self) -> SqlEntryUowRepository:
+    def repo(self) -> SqlEntryUowRepository:  # noqa: D102
         if self._repo is None:
             raise RuntimeError("No entry_uow_repository")
         return self._repo

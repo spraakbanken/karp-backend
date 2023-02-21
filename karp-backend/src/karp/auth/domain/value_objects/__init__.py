@@ -1,1 +1,1 @@
-from .token import AccessToken  # noqa: F401
+from .token import AccessToken

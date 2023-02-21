@@ -1,18 +1,18 @@
-from typing import Optional
+from typing import Optional  # noqa: I001
 import elasticsearch
 import injector
-from sqlalchemy.orm import sessionmaker  # noqa: F401
+from sqlalchemy.orm import sessionmaker
 import logging
 
 from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
     GetReferencedEntries,
     GetEntryRepositoryId,
-    ReadOnlyResourceRepository,  # noqa: F401
+    ReadOnlyResourceRepository,
     EntryViews,
 )
 from karp.lex.application.repositories import (
-    ResourceUnitOfWork,  # noqa: F401
+    ResourceUnitOfWork,
     EntryUowRepositoryUnitOfWork,
 )
 from karp import lex, search
@@ -47,9 +47,9 @@ from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 logger = logging.getLogger(__name__)
 
 
-class SearchInfrastructure(injector.Module):
+class SearchInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def entry_transformer(
+    def entry_transformer(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         resource_repo: lex.ReadOnlyResourceRepository,
@@ -64,7 +64,7 @@ class SearchInfrastructure(injector.Module):
         )
 
     @injector.provider
-    def pre_processor(
+    def pre_processor(  # noqa: D102
         self,
         entry_transformer: EntryTransformer,
         entry_views: EntryViews,
@@ -75,7 +75,7 @@ class SearchInfrastructure(injector.Module):
         )
 
     @injector.provider
-    def preview_entry(
+    def preview_entry(  # noqa: D102
         self,
         entry_transformer: EntryTransformer,
         resource_uow: lex.ResourceUnitOfWork,
@@ -86,17 +86,17 @@ class SearchInfrastructure(injector.Module):
         )
 
 
-class GenericSearchInfrastructure(injector.Module):
+class GenericSearchInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def get_resource_config(
+    def get_resource_config(  # noqa: D102
         self, resource_uow: lex.ResourceUnitOfWork
     ) -> ResourceViews:
         return GenericResourceViews(resource_uow=resource_uow)
 
 
-class GenericSearchIndexMod(injector.Module):
+class GenericSearchIndexMod(injector.Module):  # noqa: D101
     @injector.provider
-    def generic_search_service(
+    def generic_search_service(  # noqa: D102
         self,
         get_entry_repo_id: GetEntryRepositoryId,
         entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -107,26 +107,26 @@ class GenericSearchIndexMod(injector.Module):
         )
 
     @injector.provider
-    def noop_index_uow(
+    def noop_index_uow(  # noqa: D102
         self,
     ) -> IndexUnitOfWork:
         return NoOpIndexUnitOfWork()
 
 
-class Es6SearchIndexMod(injector.Module):
-    def __init__(self, index_prefix: Optional[str] = None) -> None:
+class Es6SearchIndexMod(injector.Module):  # noqa: D101
+    def __init__(self, index_prefix: Optional[str] = None) -> None:  # noqa: D107
         self._index_prefix = index_prefix or ""
 
     @injector.provider
     @injector.singleton
-    def es6_mapping_repo(
+    def es6_mapping_repo(  # noqa: D102
         self,
         es: elasticsearch.Elasticsearch,
     ) -> Es6MappingRepository:
         return Es6MappingRepository(es=es, prefix=self._index_prefix)
 
     @injector.provider
-    def es6_search_service(
+    def es6_search_service(  # noqa: D102
         self,
         es: elasticsearch.Elasticsearch,
         mapping_repo: Es6MappingRepository,
@@ -137,7 +137,7 @@ class Es6SearchIndexMod(injector.Module):
         )
 
     @injector.provider
-    def es6_index_uow(
+    def es6_index_uow(  # noqa: D102
         self,
         es: elasticsearch.Elasticsearch,
         event_bus: EventBus,

@@ -1,20 +1,20 @@
-from .entry_handlers import (
+from .entry_handlers import (  # noqa: I001
     AddingEntry,
     AddingEntries,
     DeletingEntry,
     ImportingEntries,
-    UpdatingEntry,  # noqa: F401
+    UpdatingEntry,
 )
 from .entry_repo_handlers import (
     CreatingEntryRepo,
     DeletingEntryRepository,
-)  # noqa: F401
+)
 from .resource_handlers import (
-    CreatingResource,  # noqa: F401
-    DeletingResource,  # noqa: F401
-    PublishingResource,  # noqa: F401
-    SettingEntryRepoId,  # noqa: F401
-    UpdatingResource,  # noqa: F401
+    CreatingResource,
+    DeletingResource,
+    PublishingResource,
+    SettingEntryRepoId,
+    UpdatingResource,
 )
 
 

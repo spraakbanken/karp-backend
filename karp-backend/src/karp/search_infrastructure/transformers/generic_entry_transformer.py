@@ -1,4 +1,4 @@
-import collections
+import collections  # noqa: D100, I001
 import logging
 import typing
 
@@ -6,26 +6,22 @@ import logging  # noqa: F811
 
 from karp.lex.application.queries.resources import ResourceDto
 
-from karp.lex.domain import entities, errors as lex_errors  # noqa: F401
+from karp.lex.domain import errors as lex_errors
 from karp.lex.application.queries import (
     GetReferencedEntries,
     ReadOnlyResourceRepository,
     EntryViews,
     EntryDto,
 )
-from karp.lex.application.repositories import (
-    ResourceUnitOfWork,  # noqa: F401
-    EntryUowRepositoryUnitOfWork,  # noqa: F401
-)
-from karp.search.application.transformers import EntryTransformer
-from karp.search.application.repositories import IndexUnitOfWork, IndexEntry
+from karp.search import EntryTransformer
+from karp.search import IndexUnitOfWork, IndexEntry
 
 
 logger = logging.getLogger(__name__)
 
 
-class GenericEntryTransformer(EntryTransformer):
-    def __init__(
+class GenericEntryTransformer(EntryTransformer):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         index_uow: IndexUnitOfWork,
         resource_repo: ReadOnlyResourceRepository,
@@ -44,13 +40,13 @@ class GenericEntryTransformer(EntryTransformer):
         TODO We can pre-fetch the needed entries (same code that only looks for refs?) or
         TODO somehow get the needed entries in bulk after transforming some entries and insert them into
         TODO the transformed entries afterward. Very tricky.
-        """
+        """  # noqa: D212, D205
         logger.debug(
             "transforming entry",
-            extra={"entity_id": src_entry.entity_id, "resource_id": resource_id},
+            extra={"entity_id": src_entry.id, "resource_id": resource_id},
         )
         index_entry = self.index_uow.repo.create_empty_object()
-        index_entry.id = str(src_entry.entity_id)
+        index_entry.id = str(src_entry.id)
         self.index_uow.repo.assign_field(
             index_entry, "_entry_version", src_entry.version
         )
@@ -76,7 +72,7 @@ class GenericEntryTransformer(EntryTransformer):
         )
         return index_entry
 
-    def _transform_to_index_entry(
+    def _transform_to_index_entry(  # noqa: ANN202, C901
         self,
         resource: ResourceDto,
         # resource_repo: ResourceRepository,
@@ -148,7 +144,7 @@ class GenericEntryTransformer(EntryTransformer):
                         _index_entry, f"v_{field_name}", res
                     )
 
-    def _resolve_ref(
+    def _resolve_ref(  # noqa: C901
         self,
         resource: ResourceDto,
         src_entry: dict,
@@ -251,7 +247,7 @@ class GenericEntryTransformer(EntryTransformer):
         # else:
         #     field_content = _src_entry.get(field_name)
 
-    def _evaluate_function(
+    def _evaluate_function(  # noqa: ANN202
         self,
         # resource_repo: ResourceRepository,
         # indexer: SearchService,
@@ -332,7 +328,7 @@ class GenericEntryTransformer(EntryTransformer):
             raise NotImplementedError()
         return res
 
-    def update_references(
+    def update_references(  # noqa: D102
         self,
         resource_id: str,
         # resource_repo: ResourceRepository,

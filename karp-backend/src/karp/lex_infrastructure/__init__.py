@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: I001
 from typing import Dict
 
 import injector
@@ -8,11 +8,11 @@ from sqlalchemy.orm import Session
 from karp import lex
 from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
-    GetPublishedResources,  # noqa: F401
-    GetResources,  # noqa: F401
-    ResourceDto,  # noqa: F401
-    ListEntryRepos,  # noqa: F401
-    EntryRepoDto,  # noqa: F401
+    GetPublishedResources,
+    GetResources,
+    ResourceDto,
+    ListEntryRepos,
+    EntryRepoDto,
     GetReferencedEntries,
     GetEntryRepositoryId,
     EntryViews,
@@ -35,7 +35,7 @@ from karp.lex_infrastructure.queries import (
     GenericGetEntryRepositoryId,
     GenericEntryViews,
     GenericGetEntryDiff,
-    GenericEntryQuery,  # noqa: F401
+    GenericEntryQuery,
     GenericGetEntryHistory,
     GenericGetHistory,
     SqlReadOnlyEntryRepoRepository,
@@ -52,34 +52,36 @@ from karp.lex_infrastructure.repositories import (
 logger = logging.getLogger(__name__)
 
 
-class LexInfrastructure(injector.Module):
+class LexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def get_published_resources(self, conn: Connection) -> lex.GetPublishedResources:
+    def get_published_resources(  # noqa: D102
+        self, conn: Connection
+    ) -> lex.GetPublishedResources:
         return SqlGetPublishedResources(conn)
 
     @injector.provider
-    def get_resources(self, conn: Connection) -> lex.GetResources:
+    def get_resources(self, conn: Connection) -> lex.GetResources:  # noqa: D102
         return SqlGetResources(conn)
 
     @injector.provider
-    def read_only_resource_repo(
+    def read_only_resource_repo(  # noqa: D102
         self, conn: Connection
     ) -> lex.ReadOnlyResourceRepository:
         return SqlReadOnlyResourceRepository(conn)
 
     @injector.provider
-    def list_entry_repos(self, conn: Connection) -> lex.ListEntryRepos:
+    def list_entry_repos(self, conn: Connection) -> lex.ListEntryRepos:  # noqa: D102
         return SqlListEntryRepos(conn)
 
     @injector.provider
-    def read_only_entry_repo_repo(
+    def read_only_entry_repo_repo(  # noqa: D102
         self, conn: Connection
     ) -> lex.ReadOnlyEntryRepoRepository:
         return SqlReadOnlyEntryRepoRepository(conn)
 
     @injector.provider
     # @injector.singleton
-    def entry_uow_repo(
+    def entry_uow_repo(  # noqa: D102
         self,
         session: Session,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
@@ -93,7 +95,7 @@ class LexInfrastructure(injector.Module):
         )
 
     @injector.provider
-    def resources_uow(
+    def resources_uow(  # noqa: D102
         self,
         session: Session,
         event_bus: EventBus,
@@ -104,7 +106,7 @@ class LexInfrastructure(injector.Module):
         )
 
     @injector.multiprovider
-    def entry_uow_creator_map(self) -> Dict[str, EntryUnitOfWorkCreator]:
+    def entry_uow_creator_map(self) -> Dict[str, EntryUnitOfWorkCreator]:  # noqa: D102
         return {
             "default": SqlEntryUowV2Creator,
             SqlEntryUowV1Creator.repository_type: SqlEntryUowV1Creator,
@@ -112,9 +114,9 @@ class LexInfrastructure(injector.Module):
         }
 
 
-class GenericLexInfrastructure(injector.Module):
+class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def get_referenced_entries(
+    def get_referenced_entries(  # noqa: D102
         self,
         resources_repo: ReadOnlyResourceRepository,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -125,7 +127,7 @@ class GenericLexInfrastructure(injector.Module):
         )
 
     @injector.provider
-    def gey_entry_diff(
+    def gey_entry_diff(  # noqa: D102
         self,
         resources_uow: lex.ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -136,7 +138,7 @@ class GenericLexInfrastructure(injector.Module):
         )
 
     @injector.provider
-    def get_entry_repo_id(
+    def get_entry_repo_id(  # noqa: D102
         self,
         resources_uow: ResourceUnitOfWork,
     ) -> GetEntryRepositoryId:
@@ -145,7 +147,7 @@ class GenericLexInfrastructure(injector.Module):
         )
 
     @injector.provider
-    def entry_views(
+    def entry_views(  # noqa: D102
         self,
         get_entry_repo_id: GetEntryRepositoryId,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -156,7 +158,7 @@ class GenericLexInfrastructure(injector.Module):
         )
 
     @injector.provider
-    def get_history(
+    def get_history(  # noqa: D102
         self,
         resources_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -167,7 +169,7 @@ class GenericLexInfrastructure(injector.Module):
         )
 
     @injector.provider
-    def get_entry_history(
+    def get_entry_history(  # noqa: D102
         self,
         resources_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,

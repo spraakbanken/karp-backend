@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: I001
 
 from typer import Typer
 from typer.testing import CliRunner
@@ -8,11 +8,11 @@ from karp.main import AppContext
 
 
 class TestCliResourceLifetime:
-    def test_help(self, runner: CliRunner, cliapp: Typer):
+    def test_help(self, runner: CliRunner, cliapp: Typer):  # noqa: ANN201
         result = runner.invoke(cliapp, ["resource", "--help"])
         assert result.exit_code == 0
 
-    def test_create_and_publish_repo(
+    def test_create_and_publish_repo(  # noqa: ANN201
         self,
         runner: CliRunner,
         cliapp: Typer,
@@ -45,7 +45,7 @@ class TestCliResourceLifetime:
         assert resource_repo.get_by_resource_id("lexlex") is not None
 
     @pytest.mark.xfail(reason="not ready")
-    def test_update_entry_repo(
+    def test_update_entry_repo(  # noqa: ANN201
         self,
         runner: CliRunner,
         cliapp: Typer,

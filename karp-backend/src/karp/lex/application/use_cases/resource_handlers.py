@@ -1,35 +1,28 @@
-import logging
-import typing
+import logging  # noqa: D100, I001
 
 
 from karp.lex.domain import errors, entities
-from karp.foundation import events as foundation_events
 from karp.command_bus import CommandHandler
 from karp.lex.application.queries import ResourceDto
 from karp.lex.application import repositories as lex_repositories
-from karp.lex import commands
+from karp.lex_core import commands
 from karp.lex.application import repositories
 
 
 logger = logging.getLogger(__name__)
 
-# resource_models = {}  # Dict
-# history_models = {}  # Dict
-# resource_configs = {}  # Dict
-# resource_versions = {}  # Dict[str, int]
-# field_translations = {}  # Dict[str, Dict[str, List[str]]]
 
-
-class BasingResource:
-    def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
+class BasingResource:  # noqa: D101
+    def __init__(  # noqa: D107
+        self, resource_uow: repositories.ResourceUnitOfWork
+    ) -> None:
         self.resource_uow = resource_uow
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
 
-
-class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
-    def __init__(
+class CreatingResource(  # noqa: D101
+    CommandHandler[commands.CreateResource], BasingResource
+):
+    def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
         entry_repo_uow: lex_repositories.EntryUowRepositoryUnitOfWork,
@@ -37,7 +30,7 @@ class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
         super().__init__(resource_uow=resource_uow)
         self.entry_repo_uow = entry_repo_uow
 
-    def execute(self, command: commands.CreateResource) -> ResourceDto:
+    def execute(self, command: commands.CreateResource) -> ResourceDto:  # noqa: D102
         with self.entry_repo_uow as uow:
             entry_repo_exists = uow.repo.get_by_id_optional(command.entry_repo_id)
             if not entry_repo_exists:
@@ -52,14 +45,14 @@ class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
             if (
                 existing_resource
                 and not existing_resource.discarded
-                and existing_resource.entity_id != command.entity_id
+                and existing_resource.id != command.id
             ):
                 raise errors.IntegrityError(
                     f"Resource with resource_id='{command.resource_id}' already exists."
                 )
 
             resource, events = entities.create_resource(
-                entity_id=command.entity_id,
+                id=command.id,
                 resource_id=command.resource_id,
                 config=command.config,
                 message=command.message,
@@ -72,14 +65,13 @@ class CreatingResource(CommandHandler[commands.CreateResource], BasingResource):
             uow.repo.save(resource)
             uow.post_on_commit(events)
             uow.commit()
-        return ResourceDto(**resource.dict())
-
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
+        return ResourceDto(**resource.serialize())
 
 
-class SettingEntryRepoId(CommandHandler[commands.SetEntryRepoId], BasingResource):
-    def __init__(
+class SettingEntryRepoId(  # noqa: D101
+    CommandHandler[commands.SetEntryRepoId], BasingResource
+):
+    def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
         entry_repo_uow: lex_repositories.EntryUowRepositoryUnitOfWork,
@@ -87,7 +79,7 @@ class SettingEntryRepoId(CommandHandler[commands.SetEntryRepoId], BasingResource
         super().__init__(resource_uow=resource_uow)
         self.entry_repo_uow = entry_repo_uow
 
-    def execute(self, command: commands.SetEntryRepoId) -> None:
+    def execute(self, command: commands.SetEntryRepoId) -> None:  # noqa: D102
         with self.entry_repo_uow as uow:
             entry_repo_exists = uow.repo.get_by_id_optional(command.entry_repo_id)
             if not entry_repo_exists:
@@ -109,11 +101,15 @@ class SettingEntryRepoId(CommandHandler[commands.SetEntryRepoId], BasingResource
             uow.commit()
 
 
-class UpdatingResource(CommandHandler[commands.UpdateResource], BasingResource):
-    def __init__(self, resource_uow: repositories.ResourceUnitOfWork) -> None:
+class UpdatingResource(  # noqa: D101
+    CommandHandler[commands.UpdateResource], BasingResource
+):
+    def __init__(  # noqa: D107
+        self, resource_uow: repositories.ResourceUnitOfWork
+    ) -> None:
         super().__init__(resource_uow=resource_uow)
 
-    def execute(self, command: commands.UpdateResource):
+    def execute(self, command: commands.UpdateResource):  # noqa: ANN201, D102
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(command.resource_id)
             events = resource.update(
@@ -129,19 +125,18 @@ class UpdatingResource(CommandHandler[commands.UpdateResource], BasingResource):
             uow.post_on_commit(events)
             uow.commit()
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
 
-
-class PublishingResource(CommandHandler[commands.PublishResource], BasingResource):
-    def __init__(
+class PublishingResource(  # noqa: D101
+    CommandHandler[commands.PublishResource], BasingResource
+):
+    def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
     ) -> None:
         super().__init__(resource_uow=resource_uow)
 
-    def execute(self, command: commands.PublishResource):
+    def execute(self, command: commands.PublishResource):  # noqa: ANN201, D102
         logger.info("publishing resource", extra={"resource_id": command.resource_id})
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(command.resource_id)
@@ -157,19 +152,18 @@ class PublishingResource(CommandHandler[commands.PublishResource], BasingResourc
             uow.post_on_commit(events)
             uow.commit()
 
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()
 
-
-class DeletingResource(CommandHandler[commands.DeleteResource], BasingResource):
-    def __init__(
+class DeletingResource(  # noqa: D101
+    CommandHandler[commands.DeleteResource], BasingResource
+):
+    def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
     ) -> None:
         super().__init__(resource_uow=resource_uow)
 
-    def execute(self, command: commands.DeleteResource):
+    def execute(self, command: commands.DeleteResource):  # noqa: ANN201, D102
         logger.info("deleting resource", extra={"resource_id": command.resource_id})
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(command.resource_id)
@@ -181,6 +175,3 @@ class DeletingResource(CommandHandler[commands.DeleteResource], BasingResource):
             uow.repo.save(resource)
             uow.post_on_commit(events)
             uow.commit()
-
-    def collect_new_events(self) -> typing.Iterable[foundation_events.Event]:
-        yield from self.resource_uow.collect_new_events()

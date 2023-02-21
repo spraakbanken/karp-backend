@@ -1,4 +1,4 @@
-import typing
+import typing  # noqa: D100, I001
 
 from sb_json_tools import jsondiff
 import logging
@@ -19,15 +19,15 @@ from karp.lex.application.queries import (
     EntryDiffRequest,
     GetEntryRepositoryId,
 )
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import UniqueId, UniqueIdStr, unique_id
 from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 
 
 logger = logging.getLogger(__name__)
 
 
-class GenericEntryViews(EntryViews):
-    def __init__(
+class GenericEntryViews(EntryViews):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         get_entry_repo_id: GetEntryRepositoryId,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -36,51 +36,36 @@ class GenericEntryViews(EntryViews):
         self.get_entry_repo_id = get_entry_repo_id
         self.entry_repo_uow = entry_repo_uow
 
-    def get_by_id(self, resource_id: str, entity_id: unique_id.UniqueId) -> EntryDto:
+    def get_by_id(  # noqa: D102
+        self, resource_id: str, id: UniqueIdStr  # noqa: A002
+    ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            return self._entry_to_entry_dto(uw.repo.by_id(entity_id), resource_id)
+            return self._entry_to_entry_dto(
+                uw.repo.by_id(UniqueId.validate(id)), resource_id
+            )
 
-    def get_by_id_optional(
-        self, resource_id: str, entity_id: unique_id.UniqueId
+    def get_by_id_optional(  # noqa: D102
+        self, resource_id: str, id: UniqueIdStr  # noqa: A002
     ) -> typing.Optional[EntryDto]:
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
-            if entry := uw.repo.get_by_id_optional(entity_id):
+            if entry := uw.repo.get_by_id_optional(UniqueId.validate(id)):
                 return self._entry_to_entry_dto(entry, resource_id)
         return None
 
-    # def get_by_entry_id(self, resource_id: str, entry_id: str) -> EntryDto:
-    #     entry_repo_id = self.get_entry_repo_id.query(resource_id)
-    #     with self.entry_repo_uow as uw:
-    #         entry_uow = uw.repo.get_by_id(entry_repo_id)
-    #     with entry_uow as uw:
-    #         return self._entry_to_entry_dto(uw.repo.by_entry_id(entry_id), resource_id)
-
-    # def get_by_entry_id_optional(
-    #     self, resource_id: str, entry_id: str
-    # ) -> typing.Optional[EntryDto]:
-    #     entry_repo_id = self.get_entry_repo_id.query(resource_id)
-    #     with self.entry_repo_uow as uw:
-    #         entry_uow = uw.repo.get_by_id(entry_repo_id)
-    #     with entry_uow as uw:
-    #         entry = uw.repo.get_by_entry_id_optional(entry_id)
-    #         if entry:
-    #             return self._entry_to_entry_dto(entry, resource_id)
-    #     return None
-
-    def get_total(self, resource_id: str) -> int:
+    def get_total(self, resource_id: str) -> int:  # noqa: D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return uw.repo.num_entities()
 
-    def get_by_referenceable(self, resource_id: str, filters):
+    def get_by_referenceable(self, resource_id: str, filters):  # noqa: ANN201, D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
@@ -90,7 +75,7 @@ class GenericEntryViews(EntryViews):
                 for entry in uw.repo.by_referenceable(filters)
             )
 
-    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
+    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:  # noqa: D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
             entry_uow = uw.repo.get_by_id(entry_repo_id)
@@ -102,18 +87,18 @@ class GenericEntryViews(EntryViews):
 
     def _entry_to_entry_dto(self, entry: Entry, resource_id: str) -> EntryDto:
         return EntryDto(
-            # entry_id=entry.entry_id,
-            entity_id=entry.entity_id,
+            id=entry.id,
             resource=resource_id,
             version=entry.version,
             entry=entry.body,
-            last_modified=entry.last_modified,
-            last_modified_by=entry.last_modified_by,
+            lastModified=entry.last_modified,
+            lastModifiedBy=entry.last_modified_by,
+            message=entry.message,
         )
 
 
-class GenericEntryQuery:
-    def __init__(
+class GenericEntryQuery:  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         resource_uow: lex.ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -121,38 +106,37 @@ class GenericEntryQuery:
         self._resource_uow = resource_uow
         self.entry_repo_uow = entry_repo_uow
 
-    def get_entry_repo_id(self, resource_id: str) -> unique_id.UniqueId:
+    def get_entry_repo_id(self, resource_id: str) -> unique_id.UniqueId:  # noqa: D102
         with self._resource_uow as uw:
             return uw.repo.by_resource_id(resource_id).entry_repository_id
 
 
-class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):
-    def query(
+class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):  # noqa: D101
+    def query(  # noqa: D102
         self,
         resource_id: str,
-        entity_id: unique_id.UniqueId,
-        # entry_id: str,
+        id: UniqueIdStr,  # noqa: A002
         version: typing.Optional[int],
     ) -> EntryDto:
         entry_repo_id = self.get_entry_repo_id(resource_id)
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             entry_repo_id
         ) as uw:
-            result = uw.repo.by_id(entity_id, version=version)
+            result = uw.repo.by_id(UniqueId.validate(id), version=version)
 
         return EntryDto(
-            # entry_id=entry_id,
-            entity_id=result.id,
+            id=result.id,
             resource=resource_id,
             version=result.version,
             entry=result.body,
-            last_modified_by=result.last_modified_by,
-            last_modified=result.last_modified,
+            lastModifiedBy=result.last_modified_by,
+            lastModified=result.last_modified,
+            message=result.message,
         )
 
 
-class GenericGetHistory(GenericEntryQuery, GetHistory):
-    def query(
+class GenericGetHistory(GenericEntryQuery, GetHistory):  # noqa: D101
+    def query(  # noqa: D102
         self,
         request: EntryHistoryRequest,
     ) -> GetHistoryDto:
@@ -189,11 +173,11 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
                 HistoryDto(
                     timestamp=history_entry.last_modified,
                     message=history_entry.message or "",
-                    entity_id=history_entry.entity_id,
+                    id=history_entry.entity_id,
                     # entry_id=history_entry.entry_id,
                     version=history_entry.version,
                     op=history_entry.op,
-                    user_id=history_entry.last_modified_by,
+                    userId=history_entry.last_modified_by,
                     diff=history_diff,
                 )
             )
@@ -202,8 +186,8 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):
         return GetHistoryDto(history=result, total=total)
 
 
-class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
-    def query(
+class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):  # noqa: D101
+    def query(  # noqa: D102
         self,
         request: EntryDiffRequest,
     ) -> EntryDiffDto:
@@ -211,7 +195,7 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             entry_repo_id
         ) as uw:
-            db_entry = uw.repo.by_id(request.entity_id)
+            db_entry = uw.repo.by_id(request.id)
 
             #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
             #
@@ -273,6 +257,6 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):
         #
         return EntryDiffDto(
             diff=jsondiff.compare(obj1_body, obj2_body),
-            from_version=obj1.version,
-            to_version=obj2.version if obj2 else None,
+            fromVersion=obj1.version,
+            toVersion=obj2.version if obj2 else None,
         )

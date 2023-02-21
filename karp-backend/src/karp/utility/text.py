@@ -1,4 +1,4 @@
-def noswedish(s: str) -> str:
+def noswedish(s: str) -> str:  # noqa: D103, D100
     result = ""
     for c in s:
         if c == "å":

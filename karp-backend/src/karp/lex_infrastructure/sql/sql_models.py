@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict  # noqa: D100, I001
 
 
 from karp.lex.domain import entities
@@ -8,7 +8,7 @@ from karp.lex.application.repositories import EntryUnitOfWork
 from karp.db_infrastructure import db
 
 
-class ResourceModel(db.Base):
+class ResourceModel(db.Base):  # noqa: D101
     __tablename__ = "resources"
     history_id = db.Column(db.Integer, primary_key=True)
     entity_id = db.Column(db.ULIDType, nullable=False)
@@ -38,8 +38,8 @@ class ResourceModel(db.Base):
         #    this works because the tuple (saldo, NULL) is not equal to (saldo, NULL)
     )
 
-    def __repr__(self):
-        return """<ResourceDTO(
+    def __repr__(self):  # noqa: ANN204, D105
+        return """<ResourceModel(
                     history_id={},
                     entity_id={},
                     resource_id={},
@@ -65,9 +65,9 @@ class ResourceModel(db.Base):
             self.discarded,
         )
 
-    def to_entity(self) -> entities.Resource:
+    def to_entity(self) -> entities.Resource:  # noqa: D102
         return entities.Resource(
-            entity_id=self.entity_id,
+            id=self.entity_id,
             resource_id=self.resource_id,
             version=self.version,
             name=self.name,
@@ -81,7 +81,7 @@ class ResourceModel(db.Base):
         )
 
     @staticmethod
-    def from_entity(resource: entities.Resource) -> "ResourceModel":
+    def from_entity(resource: entities.Resource) -> "ResourceModel":  # noqa: D102
         return ResourceModel(
             history_id=None,
             entity_id=resource.entity_id,
@@ -100,11 +100,11 @@ class ResourceModel(db.Base):
         )
 
 
-class EntryUowModel(db.Base):
+class EntryUowModel(db.Base):  # noqa: D101
     __tablename__ = "entry_repos"
     history_id = db.Column(db.Integer, primary_key=True)
     entity_id = db.Column(db.ULIDType, nullable=False)
-    type = db.Column(db.String(64), nullable=False)
+    type = db.Column(db.String(64), nullable=False)  # noqa: A003
     connection_str = db.Column(db.String(128))
     name = db.Column(db.String(64), nullable=False)
     config = db.Column(db.NestedMutableJson, nullable=False)
@@ -114,7 +114,7 @@ class EntryUowModel(db.Base):
     discarded = db.Column(db.Boolean, default=False)
 
     @staticmethod
-    def from_entity(entry_uow: EntryUnitOfWork) -> "EntryUowModel":
+    def from_entity(entry_uow: EntryUnitOfWork) -> "EntryUowModel":  # noqa: D102
         return EntryUowModel(
             history_id=None,
             entity_id=entry_uow.entity_id,
@@ -129,7 +129,7 @@ class EntryUowModel(db.Base):
         )
 
 
-class BaseRuntimeEntry:
+class BaseRuntimeEntry:  # noqa: D101
     entry_id = db.Column(
         # db.String(100, collation="utf8mb4_swedish_ci"), primary_key=True
         db.String(100),
@@ -140,7 +140,7 @@ class BaseRuntimeEntry:
     discarded = db.Column(db.Boolean, nullable=False)
 
 
-class BaseHistoryEntry:
+class BaseHistoryEntry:  # noqa: D101
     history_id = db.Column(db.Integer, primary_key=True)
     entity_id = db.Column(db.ULIDType, nullable=False)
     repo_id = db.Column(db.ULIDType, nullable=False)
@@ -156,13 +156,13 @@ class BaseHistoryEntry:
 
     @classmethod
     @db.declared_attr
-    def __table_args__(cls):
+    def __table_args__(cls):  # noqa: ANN206, D105
         return db.UniqueConstraint(
             "entity_id", "version", name="id_version_unique_constraint"
         )
 
     @classmethod
-    def from_entity(cls, entry: entities.Entry):
+    def from_entity(cls, entry: entities.Entry):  # noqa: ANN206, D102
         return cls(
             history_id=None,
             entity_id=entry.entity_id,
@@ -182,7 +182,9 @@ class BaseHistoryEntry:
 # Dynamic models
 
 
-def get_or_create_entry_history_model(resource_id: str) -> BaseHistoryEntry:
+def get_or_create_entry_history_model(  # noqa: D103
+    resource_id: str,
+) -> BaseHistoryEntry:
     history_table_name = create_history_table_name(resource_id)
     if history_table_name in class_cache:
         history_model = class_cache[history_table_name]
@@ -201,7 +203,7 @@ def get_or_create_entry_history_model(resource_id: str) -> BaseHistoryEntry:
     return sqlalchemy_class
 
 
-def get_or_create_entry_runtime_model(
+def get_or_create_entry_runtime_model(  # noqa: D103, C901
     resource_id: str, history_model: db.Table, config: Dict
 ) -> BaseRuntimeEntry:
     table_name = create_runtime_table_name(resource_id)
@@ -289,9 +291,9 @@ class_cache = {}
 # Helpers
 
 
-def create_runtime_table_name(resource_id: str) -> str:
+def create_runtime_table_name(resource_id: str) -> str:  # noqa: D103
     return f"runtime_{resource_id}"
 
 
-def create_history_table_name(resource_id: str) -> str:
+def create_history_table_name(resource_id: str) -> str:  # noqa: D103
     return resource_id

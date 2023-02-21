@@ -1,4 +1,4 @@
-import typer
+import typer  # noqa: I001
 
 from karp.cliapp.subapps import (
     database_subapp,
@@ -9,7 +9,7 @@ from karp.cliapp.subapps import (
 )
 
 
-def add_subapps(app: typer.Typer) -> None:
+def add_subapps(app: typer.Typer) -> None:  # noqa: D103
     database_subapp.init_app(app)
     entries_subapp.init_app(app)
     entry_repo_subapp.init_app(app)

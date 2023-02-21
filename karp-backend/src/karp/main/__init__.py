@@ -1,7 +1,7 @@
-import json  # noqa: F401
+import json  # noqa: I001
 from logging.config import dictConfig
 import logging
-import os  # noqa: F401
+import os
 import typing
 from dataclasses import dataclass
 
@@ -9,16 +9,16 @@ from dataclasses import dataclass
 try:
     from importlib.metadata import entry_points
 except ImportError:
-    from importlib_metadata import entry_points  # type: ignore  # noqa: F401
+    from importlib_metadata import entry_points  # type: ignore
 
-import injector
-from json_streams import jsonlib  # noqa: F401
+import injector  # noqa: I001
+from json_streams import jsonlib
 from sqlalchemy import pool
-from sqlalchemy.engine import Engine, create_engine, url as sa_url  # noqa: F401
+from sqlalchemy.engine import Engine, create_engine, url as sa_url
 import logging  # noqa: F811
 import asgi_correlation_id
 
-from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url  # noqa: F401
+from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import (
@@ -33,18 +33,18 @@ from karp.main.modules import (
     Db,
     EventBusMod,
     ElasticSearchMod,
-    install_auth_service,  # noqa: F401
+    install_auth_service,
 )
 from karp.search import Search
 
 
 @dataclass
-class AppContext:
+class AppContext:  # noqa: D101
     container: injector.Injector
     settings: typing.Dict
 
 
-def bootstrap_app(container=None) -> AppContext:
+def bootstrap_app(container=None) -> AppContext:  # noqa: D103
     env = config.load_env()
     db_url = config.parse_database_url(env)
     es_enabled = env.bool("ELASTICSEARCH_ENABLED", False)
@@ -120,7 +120,7 @@ def _setup_search_context(
         container.binder.install(GenericSearchIndexMod())
 
 
-def configure_logging(settings: dict[str, str]) -> None:
+def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
     dictConfig(
         {
             "version": 1,
@@ -215,7 +215,7 @@ def configure_logging(settings: dict[str, str]) -> None:
 #    return bus
 
 
-def setup_logging():
+def setup_logging():  # noqa: ANN201, D103
     # Clear Gunicorn access log to remove duplicate requests logging
     # logging.getLogger("gunicorn.access").handlers.clear()
     logging.basicConfig(
@@ -254,5 +254,5 @@ def setup_logging():
     return logger
 
 
-def load_infrastructure():
+def load_infrastructure():  # noqa: ANN201, D103
     modules.load_modules("karp.infrastructure")

@@ -1,19 +1,17 @@
 """Unit tests for JWTAuthenticator"""
-from datetime import datetime, timedelta  # noqa: F401
 from pathlib import Path
 from typing import Dict, Optional, Type
 
 import jwt  # noqa: F401
 import pydantic  # noqa: F401
 import pytest
-
-from karp.foundation.time import utc_now  # noqa: F401
+from cryptography.hazmat.primitives.asymmetric import rsa
 from karp.auth.domain.errors import (
     AuthError,
     ExpiredToken,
-    InvalidTokenSignature,  # noqa: F401
     InvalidTokenAudience,
     InvalidTokenPayload,
+    InvalidTokenSignature,  # noqa: F401
     TokenError,
 )
 from karp.auth_infrastructure.services.jwt_auth_service import (
@@ -22,11 +20,10 @@ from karp.auth_infrastructure.services.jwt_auth_service import (
     JWTMeta,  # noqa: F401
     JWTPayload,  # noqa: F401
 )
-
+from karp.foundation.time import utc_now  # noqa: F401
 from karp.main.config import AUTH_JWT_AUDIENCE
-from karp.tests.unit.auth import adapters
 from karp.tests.integration.auth.adapters import create_access_token
-from cryptography.hazmat.primitives.asymmetric import rsa
+from karp.tests.unit.auth import adapters
 
 # Generate our key
 
@@ -37,19 +34,19 @@ other_key = rsa.generate_private_key(
 
 
 @pytest.fixture
-def jwt_authenticator():
+def jwt_authenticator():  # noqa: ANN201
     return JWTAuthService(
         pubkey_path=Path("assets/testing/pubkey.pem"),
         is_resource_protected=adapters.InMemoryIsResourceProtected(),
     )
 
 
-def test_authenticate_invalid_token(jwt_authenticator):
+def test_authenticate_invalid_token(jwt_authenticator):  # noqa: ANN201
     with pytest.raises(AuthError):
         jwt_authenticator.authenticate("scheme", "invalid")
 
 
-def test_authenticate_expired_token(jwt_authenticator):
+def test_authenticate_expired_token(jwt_authenticator):  # noqa: ANN201
     token = create_access_token(
         user=None,
         levels={},

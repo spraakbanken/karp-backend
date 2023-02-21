@@ -3,14 +3,15 @@ name: Code checks for karp-backend
 on:
   push:
     branches:
-      - "*"
+      - '**/*'
     tags-ignore:
       - v*
     paths:
       - 'karp-backend/**'
+      - '!karp-backend/README.md'
   pull_request:
     branches:
-      - "*"
+      - '**/*'
     paths:
       - 'karp-backend/**'
 

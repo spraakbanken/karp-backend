@@ -1,5 +1,5 @@
-from karp.lex.domain.entities.morphology import Morphology
+from karp.lex.domain.entities.morphology import Morphology  # noqa: D100
 
 
-class SaldoMorphology(Morphology):
+class SaldoMorphology(Morphology):  # noqa: D101
     pass

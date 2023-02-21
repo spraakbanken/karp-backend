@@ -1,10 +1,9 @@
-import collections
+import collections  # noqa: D100, I001
 import logging
 import typing
 
-# from karp.infrastructure.unit_of_work import unit_of_work
 from typing import Any, Dict, Iterator, List, Optional, Tuple  # noqa: F401
-from karp.foundation.value_objects.unique_id import UniqueId
+from karp.lex_core.value_objects.unique_id import UniqueId
 from karp.lex.application.queries.entries import EntryDto
 
 from karp.lex.domain import entities  # noqa: F401
@@ -16,17 +15,13 @@ from karp.lex.application.queries import (
 )
 from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
 
-# from karp.resourcemgr import get_resource
-# import karp.resourcemgr.entryread as entryread
 from karp.lex.domain.errors import EntryNotFound  # noqa: F401
-
-# from karp.services import context
 
 logger = logging.getLogger(__name__)
 
 
-class GenericGetReferencedEntries(GetReferencedEntries):
-    def __init__(
+class GenericGetReferencedEntries(GetReferencedEntries):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         resource_repo: ReadOnlyResourceRepository,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
@@ -35,7 +30,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
         self.resource_repo = resource_repo
         self.entry_repo_uow = entry_repo_uow
 
-    def query(
+    def query(  # noqa: D102
         self,
         resource_id: str,
         # version: typing.Optional[int],
@@ -100,12 +95,12 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                                 ref_resource_id, ref_resource_version, entry
                             )
 
-    def get_refs(
+    def get_refs(  # noqa: C901
         self, resource_id, version=None
     ) -> Tuple[List[Tuple[str, int, str, Dict]], List[Tuple[str, int, str, Dict]]]:
         """
         Goes through all other resource configs finding resources and fields that refer to this resource
-        """
+        """  # noqa: D200, D400, D212, D415
         resource_backrefs = collections.defaultdict(
             lambda: collections.defaultdict(dict)
         )
@@ -157,7 +152,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):
                         other_resource.version
                     ][field_name] = field
 
-        def flatten_dict(ref_dict):
+        def flatten_dict(ref_dict):  # noqa: ANN202
             ref_list = []
             for ref_resource_id, versions in ref_dict.items():
                 for ref_version, field_names in versions.items():
@@ -174,5 +169,5 @@ def _create_ref(resource_id: str, resource_version: int, entry: Entry) -> Refere
     return ReferenceDto(
         resource_id=resource_id,
         resource_version=resource_version,
-        entry=EntryDto(**entry.dict()),
+        entry=EntryDto(**entry.serialize()),
     )

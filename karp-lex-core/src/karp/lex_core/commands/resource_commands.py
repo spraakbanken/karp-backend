@@ -3,7 +3,11 @@
 from typing import Generic, Literal, Optional, TypeVar
 
 import pydantic
-from karp.lex_core.value_objects import unique_id
+from karp.lex_core.value_objects.unique_id import (
+    UniqueId,
+    UniqueIdPrimitive,
+    make_unique_id,
+)
 from pydantic.generics import GenericModel
 
 from .base import Command
@@ -13,44 +17,33 @@ T = TypeVar("T")
 
 class EntityOrResourceIdMixin(Command):  # noqa: D101
     resource_id: Optional[str]
-    entity_id: Optional[unique_id.UniqueIdStr]
+    id: Optional[UniqueId]  # noqa: A003
 
     @pydantic.root_validator(pre=True)
-    def resource_or_entity_id(cls, values) -> dict:  # noqa: D102, ANN001
-        entity_id = None
-        if "entityId" in values:
-            entity_id = values["entityId"]
-
-        resource_id = None
-        if "resourceId" in values:
-            resource_id = values["resourceId"]
-
-        if entity_id and resource_id:
-            raise ValueError("Can't give both 'entityId' and 'resourceId'")
-
-        if entity_id is None and resource_id is None:
-            raise ValueError("Must give either 'entityId' or 'resourceId'")
+    def resource_id_or_id(cls, values) -> dict:  # noqa: D102, ANN001
+        resource_id = values["resourceId"] if "resourceId" in values else None
+        if "id" in values and resource_id:
+            raise ValueError("Can't give both 'id' and 'resourceId'")
 
         if resource_id:
             return dict(values) | {
-                "entityId": None,
+                "id": None,
                 "resourceId": resource_id,
             }
-
-        return dict(values) | {
-            "entityId": entity_id,
-            "resourceId": None,
-        }
+        elif "id" in values:
+            return dict(values) | {
+                "resourceId": None,
+            }
+        else:
+            raise ValueError("Must give either 'id' or 'resourceId'")
 
 
 class GenericCreateResource(GenericModel, Generic[T], Command):  # noqa: D101
-    entity_id: unique_id.UniqueIdStr = pydantic.Field(
-        default_factory=unique_id.make_unique_id_str
-    )
+    id: UniqueId = pydantic.Field(default_factory=make_unique_id)  # noqa: A003
     resource_id: str
     name: str
     config: T
-    entry_repo_id: unique_id.UniqueIdStr
+    entry_repo_id: UniqueId
     cmdtype: Literal["create_resource"] = "create_resource"
 
 
@@ -61,7 +54,7 @@ class CreateResource(GenericCreateResource[dict]):
     def from_dict(  # noqa: D102
         cls,
         data: dict,
-        entry_repo_id: unique_id.UniqueIdPrimitive,
+        entry_repo_id: UniqueIdPrimitive,
         user: Optional[str] = None,
         message: Optional[str] = None,
     ) -> "CreateResource":
@@ -74,13 +67,11 @@ class CreateResource(GenericCreateResource[dict]):
         except KeyError as exc:
             raise ValueError("'resource_name' is missing") from exc
 
-        entry_repo_id = unique_id.parse(entry_repo_id)
-
         return cls(
-            resource_id=resource_id,
+            resourceId=resource_id,
             name=name,
             config=data,
-            entry_repo_id=entry_repo_id,
+            entryRepoId=entry_repo_id,
             user=user or "Unknown user",
             message=message or f"Resource '{resource_id}' created.",
         )
@@ -110,6 +101,6 @@ class DeleteResource(EntityOrResourceIdMixin, Command):  # noqa: D101
 
 
 class SetEntryRepoId(EntityOrResourceIdMixin, Command):  # noqa: D101
-    entry_repo_id: unique_id.UniqueIdStr
+    entry_repo_id: UniqueId
     version: int
     cmdtype: Literal["set_entry_repo_id"] = "set_entry_repo_id"

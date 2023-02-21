@@ -1,20 +1,20 @@
-import abc
+import abc  # noqa: D100, I001
 from typing import Dict, Optional, Protocol, Tuple
 
 import injector
 
 from karp.foundation import repository, unit_of_work, events
-from karp.foundation.value_objects import UniqueId
+from karp.lex_core.value_objects import UniqueId
 from karp.lex.domain import errors
 from .entries import EntryUnitOfWork
 
 
-class EntryRepositoryUnitOfWorkFactory:
+class EntryRepositoryUnitOfWorkFactory:  # noqa: D101
     @abc.abstractmethod
-    def create(
+    def create(  # noqa: D102
         self,
         repository_type: str,
-        entity_id: UniqueId,
+        id: UniqueId,  # noqa: A002
         name: str,
         config: dict,
         connection_str: Optional[str],
@@ -25,10 +25,10 @@ class EntryRepositoryUnitOfWorkFactory:
         pass
 
 
-class EntryUnitOfWorkCreator(Protocol):
-    def __call__(
+class EntryUnitOfWorkCreator(Protocol):  # noqa: D101
+    def __call__(  # noqa: D102
         self,
-        entity_id: UniqueId,
+        id: UniqueId,  # noqa: A002
         name: str,
         config: dict,
         connection_str: Optional[str],
@@ -39,14 +39,16 @@ class EntryUnitOfWorkCreator(Protocol):
         ...
 
 
-class InjectorEntryUnitOfWorkRepoFactory(EntryRepositoryUnitOfWorkFactory):
-    def __init__(self, container: injector.Injector) -> None:
+class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
+    EntryRepositoryUnitOfWorkFactory
+):
+    def __init__(self, container: injector.Injector) -> None:  # noqa: D107
         self._container = container
 
-    def create(
+    def create(  # noqa: D102
         self,
         repository_type: str,
-        entity_id: UniqueId,
+        id: UniqueId,  # noqa: A002
         name: str,
         config: dict,
         connection_str: Optional[str],
@@ -59,10 +61,10 @@ class InjectorEntryUnitOfWorkRepoFactory(EntryRepositoryUnitOfWorkFactory):
         ]
 
         uow_factory: EntryUnitOfWorkCreator = self._container.create_object(
-            uow_factory_cls
+            uow_factory_cls  # type: ignore[arg-type]
         )
         return uow_factory(
-            entity_id=entity_id,
+            id=id,
             name=name,
             config=config,
             connection_str=connection_str,
@@ -72,13 +74,15 @@ class InjectorEntryUnitOfWorkRepoFactory(EntryRepositoryUnitOfWorkFactory):
         )
 
 
-class EntryUowRepository(repository.Repository[EntryUnitOfWork]):
+class EntryUowRepository(repository.Repository[EntryUnitOfWork]):  # noqa: D101
     EntityNotFound = errors.EntryRepoNotFound
     pass
 
 
-class EntryUowRepositoryUnitOfWork(unit_of_work.UnitOfWork[EntryUowRepository]):
-    def __init__(
+class EntryUowRepositoryUnitOfWork(  # noqa: D101
+    unit_of_work.UnitOfWork[EntryUowRepository]
+):
+    def __init__(  # noqa: D107, ANN204
         self,
         *,
         event_bus: events.EventBus,
@@ -88,5 +92,5 @@ class EntryUowRepositoryUnitOfWork(unit_of_work.UnitOfWork[EntryUowRepository]):
         self._entry_uow_factory = entry_uow_factory
 
     @property
-    def factory(self) -> EntryRepositoryUnitOfWorkFactory:
+    def factory(self) -> EntryRepositoryUnitOfWorkFactory:  # noqa: D102
         return self._entry_uow_factory

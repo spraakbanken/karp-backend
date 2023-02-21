@@ -1,10 +1,10 @@
 """Handles all sql db connections."""
-import collections  # noqa: F401
 import json  # noqa: F401
 from typing import Any, Dict, Optional  # noqa: F401
 
 import attr
 import sqlalchemy
+from karp.db_infrastructure.types import ULIDType
 from sqlalchemy import (
     JSON,  # noqa: F401
     Column,  # noqa: F401
@@ -26,9 +26,8 @@ from sqlalchemy.dialects.mysql import DOUBLE  # noqa: F401
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError  # noqa: F401
 from sqlalchemy.ext.declarative import declared_attr  # noqa: F401
-from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.mutable import Mutable  # noqa: F401
-from sqlalchemy.orm import aliased, mapper, relationship  # noqa: F401
+from sqlalchemy.orm import aliased, declarative_base, mapper, relationship  # noqa: F401
 from sqlalchemy.orm.session import Session, sessionmaker
 from sqlalchemy.schema import (
     ForeignKeyConstraint,  # noqa: F401
@@ -38,8 +37,6 @@ from sqlalchemy.schema import (
 from sqlalchemy.sql import delete, insert, update  # noqa: F401
 from sqlalchemy.types import VARCHAR, Boolean, Float, Time, TypeDecorator  # noqa: F401
 from sqlalchemy_json import NestedMutableJson  # noqa: F401
-from karp.db_infrastructure.types import ULIDType
-
 
 __all__ = ["ULIDType"]
 
@@ -53,33 +50,33 @@ Base = declarative_base(metadata=metadata)
 
 
 @attr.s(auto_attribs=True)
-class SQLEngineSessionfactory:
+class SQLEngineSessionfactory:  # noqa: D101
     engine: Engine = attr.ib()
     session_factory: sessionmaker = attr.ib()
     metadata: MetaData = attr.ib()
 
     @classmethod
-    def from_db_uri(cls, db_uri: str):
+    def from_db_uri(cls, db_uri: str):  # noqa: ANN206, D102
         engine = sqlalchemy.create_engine(db_uri)
         session_factory = sessionmaker(bind=engine)
         metadata_ = MetaData()
         return cls(engine, session_factory, metadata_)
 
 
-_db_handlers: Dict[str, SQLEngineSessionfactory] = dict()
+_db_handlers: Dict[str, SQLEngineSessionfactory] = dict()  # noqa: C408
 
 
-def create_session(db_uri: str) -> Session:
+def create_session(db_uri: str) -> Session:  # noqa: D103
     _assure_in_db_handlers(db_uri)
     return _db_handlers[db_uri].session_factory()
 
 
-def get_engine(db_uri: str) -> Engine:
+def get_engine(db_uri: str) -> Engine:  # noqa: D103
     _assure_in_db_handlers(db_uri)
     return _db_handlers[db_uri].engine
 
 
-def _assure_in_db_handlers(db_uri: str):
+def _assure_in_db_handlers(db_uri: str):  # noqa: ANN202
     if db_uri not in _db_handlers:
         _db_handlers[db_uri] = SQLEngineSessionfactory.from_db_uri(db_uri)
 
@@ -89,7 +86,7 @@ def _metadata(db_uri: str) -> MetaData:
     return _db_handlers[db_uri].metadata
 
 
-def get_table(table_name: str) -> Optional[Table]:
+def get_table(table_name: str) -> Optional[Table]:  # noqa: D103
     return metadata.tables.get(table_name)
 
 

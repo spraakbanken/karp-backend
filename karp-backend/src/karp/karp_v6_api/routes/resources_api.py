@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 import typing
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Security, status
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/permissions", response_model=list[ResourcePermissionDto])
-def list_resource_permissions(
+def list_resource_permissions(  # noqa: ANN201, D103
     query: GetResourcePermissions = Depends(deps.get_resource_permissions),
 ):
     return query.query()
@@ -31,14 +31,14 @@ def list_resource_permissions(
     "/",
     response_model=list[ResourceProtected],
 )
-def get_all_resources(
+def get_all_resources(  # noqa: D103
     get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),
 ) -> typing.Iterable[lex.ResourceDto]:
     return get_resources.query()
 
 
 @router.post("/", response_model=ResourceDto, status_code=status.HTTP_201_CREATED)
-def create_new_resource(
+def create_new_resource(  # noqa: D103
     new_resource: ResourceCreate = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
@@ -60,7 +60,7 @@ def create_new_resource(
         if new_resource.entry_repo_id is None:
             entry_repo = command_bus.dispatch(
                 commands.CreateEntryRepository(
-                    repository_type="default",
+                    repositoryType="default",
                     name=new_resource.resource_id,
                     config=new_resource.config,
                     user=user.identifier,
@@ -70,7 +70,7 @@ def create_new_resource(
             new_resource.entry_repo_id = entry_repo.entity_id
         create_resource = commands.CreateResource(
             user=user.identifier,
-            **new_resource.dict(),
+            **new_resource.serialize(),
         )
         resource = command_bus.dispatch(create_resource)
         logger.info("resource created", extra={"resource": resource})
@@ -90,7 +90,7 @@ def create_new_resource(
     # response_model=ResourceDto,
     status_code=status.HTTP_200_OK,
 )
-def publishing_resource(
+def publishing_resource(  # noqa: ANN201, D103
     resource_id: str,
     resource_publish: schemas.ResourcePublish = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
@@ -111,7 +111,7 @@ def publishing_resource(
         resource_publish.resource_id = resource_id
         publish_resource = commands.PublishResource(
             user=user.identifier,
-            **resource_publish.dict(),
+            **resource_publish.serialize(),
         )
         command_bus.dispatch(publish_resource)
         logger.info("resource published", extra={"resource_id": resource_id})
@@ -131,12 +131,12 @@ def publishing_resource(
     "/{resource_id}",
     response_model=ResourcePublic,
 )
-def get_resource_by_resource_id(
+def get_resource_by_resource_id(  # noqa: D103
     resource_id: str,
     resource_repo: ReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
 ) -> ResourcePublic:
     if resource := resource_repo.get_by_resource_id(resource_id):
-        return ResourcePublic(**resource.dict())
+        return resource  # type: ignore [return-value]
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -144,5 +144,5 @@ def get_resource_by_resource_id(
         )
 
 
-def init_app(app):
+def init_app(app):  # noqa: ANN201, D103
     app.include_router(router)

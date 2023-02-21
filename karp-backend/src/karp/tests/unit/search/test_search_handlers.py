@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable  # noqa: I001
 
 import pytest
 
@@ -21,7 +21,7 @@ def fixture_resource_created() -> ResourceCreated:
         (lex_factories.ResourcePublishedFactory, lambda x: x.published),
     ],
 )
-def test_index_reacts_on_lex_events(
+def test_index_reacts_on_lex_events(  # noqa: ANN201
     event_factory,
     predicate: Callable,
     search_unit_ctx: adapters.SearchUnitTestContext,
@@ -29,7 +29,7 @@ def test_index_reacts_on_lex_events(
     resource_created = lex_factories.ResourceCreatedFactory()
     search_unit_ctx.event_bus.post(resource_created)  # type: ignore [arg-type]
     if event_factory:
-        event = event_factory(resource_id=resource_created.resource_id)
+        event = event_factory(resourceId=resource_created.resource_id)
         search_unit_ctx.event_bus.post(event)
 
     index_uow = search_unit_ctx.container.get(IndexUnitOfWork)  # type: ignore [misc]
@@ -38,17 +38,17 @@ def test_index_reacts_on_lex_events(
     assert predicate(index_uow.repo.indicies[resource_created.resource_id])  # type: ignore [attr-defined]
 
 
-def test_index_reacts_on_entry_added_event(
+def test_index_reacts_on_entry_added_event(  # noqa: ANN201
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
     search_unit_ctx.command_bus.dispatch(create_entry_repo)  # type: ignore [arg-type]
     create_resource = lex_factories.CreateResourceFactory(
-        entry_repo_id=create_entry_repo.entity_id
+        entryRepoId=create_entry_repo.id
     )
     search_unit_ctx.command_bus.dispatch(create_resource)  # type: ignore [arg-type]
     create_entry = lex_factories.AddEntryFactory(
-        resource_id=create_resource.resource_id,
+        resourceId=create_resource.resource_id,
         entry={"baseform": "bra"},
     )
     search_unit_ctx.command_bus.dispatch(create_entry)  # type: ignore [arg-type]
@@ -62,27 +62,27 @@ def test_index_reacts_on_entry_added_event(
     resource_index = index_uow.repo.indicies[create_resource.resource_id]  # type: ignore [attr-defined]
     assert resource_index.created
     assert len(resource_index.entries) == 1
-    assert str(create_entry.entity_id) in resource_index.entries
+    assert str(create_entry.id) in resource_index.entries
 
 
-def test_index_reacts_on_entry_updated_event(
+def test_index_reacts_on_entry_updated_event(  # noqa: ANN201
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
     search_unit_ctx.command_bus.dispatch(create_entry_repo)  # type: ignore [arg-type]
     create_resource = lex_factories.CreateResourceFactory(
-        entry_repo_id=create_entry_repo.entity_id
+        entryRepoId=create_entry_repo.id
     )
     search_unit_ctx.command_bus.dispatch(create_resource)  # type: ignore [arg-type]
     create_entry = lex_factories.AddEntryFactory(
-        resource_id=create_resource.resource_id,
+        resourceId=create_resource.resource_id,
         entry={"baseform": "bra"},
     )
     search_unit_ctx.command_bus.dispatch(create_entry)  # type: ignore [arg-type]
 
     update_entry = lex_factories.UpdateEntryFactory(
-        resource_id=create_resource.resource_id,
-        entity_id=create_entry.entity_id,
+        resourceId=create_resource.resource_id,
+        id=create_entry.id,
         # entry_id="bra",
         entry={"baseform": "bra", "wordclass": "adjektiv"},
         version=1,
@@ -94,29 +94,28 @@ def test_index_reacts_on_entry_updated_event(
     resource_index = index_uow.repo.indicies[create_resource.resource_id]  # type: ignore [attr-defined]
     assert resource_index.created
     assert len(resource_index.entries) == 1
-    entry = resource_index.entries[str(update_entry.entity_id)]
+    entry = resource_index.entries[str(update_entry.id)]
     assert entry.entry["wordclass"] == "adjektiv"
 
 
-def test_index_reacts_on_entry_deleted_event(
+def test_index_reacts_on_entry_deleted_event(  # noqa: ANN201
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
     search_unit_ctx.command_bus.dispatch(create_entry_repo)  # type: ignore [arg-type]
     create_resource = lex_factories.CreateResourceFactory(
-        entry_repo_id=create_entry_repo.entity_id
+        entryRepoId=create_entry_repo.id
     )
     search_unit_ctx.command_bus.dispatch(create_resource)  # type: ignore [arg-type]
     create_entry = lex_factories.AddEntryFactory(
-        resource_id=create_resource.resource_id,
+        resourceId=create_resource.resource_id,
         entry={"baseform": "bra"},
     )
     search_unit_ctx.command_bus.dispatch(create_entry)  # type: ignore [arg-type]
 
     delete_entry = lex_factories.DeleteEntryFactory(
-        entity_id=create_entry.entity_id,
-        resource_id=create_resource.resource_id,
-        entry_id="bra",
+        id=create_entry.id,
+        resourceId=create_resource.resource_id,
         version=1,
     )
     search_unit_ctx.command_bus.dispatch(delete_entry)  # type: ignore [arg-type]
@@ -130,24 +129,24 @@ def test_index_reacts_on_entry_deleted_event(
     assert "bra" not in resource_index.entries
 
 
-def test_reindex_resource_command(
+def test_reindex_resource_command(  # noqa: ANN201
     search_unit_ctx: adapters.SearchUnitTestContext,
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
     search_unit_ctx.command_bus.dispatch(create_entry_repo)  # type: ignore [arg-type]
     create_resource = lex_factories.CreateResourceFactory(
-        entry_repo_id=create_entry_repo.entity_id
+        entryRepoId=create_entry_repo.id
     )
     search_unit_ctx.command_bus.dispatch(create_resource)  # type: ignore [arg-type]
     create_entry = lex_factories.AddEntryFactory(
-        resource_id=create_resource.resource_id,
+        resourceId=create_resource.resource_id,
         entry={"baseform": "bra"},
     )
     search_unit_ctx.command_bus.dispatch(create_entry)  # type: ignore [arg-type]
 
     reindex_resource = factories.ReindexResourceFactory(
-        resource_id=create_resource.resource_id,
-        version=1,
+        resourceId=create_resource.resource_id,
+        # version=1,
     )
     index_uow = search_unit_ctx.container.get(IndexUnitOfWork)  # type: ignore [misc]
     resource_index = index_uow.repo.indicies[create_resource.resource_id]  # type: ignore [attr-defined]

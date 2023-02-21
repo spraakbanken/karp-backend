@@ -1,8 +1,8 @@
-from typing import Iterable, Optional
+from typing import Iterable, Optional  # noqa: D100, I001
 
 import sqlalchemy as sa
 from sqlalchemy import sql
-from karp.foundation.value_objects.unique_id import UniqueId
+from karp.lex_core.value_objects.unique_id import UniqueId
 
 from karp.lex.application.queries import (
     GetPublishedResources,
@@ -10,13 +10,12 @@ from karp.lex.application.queries import (
     GetResources,
 )
 from karp.lex.application.queries.resources import ReadOnlyResourceRepository
-from karp.lex.domain.entities import resource  # noqa: F401
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.lex_infrastructure.queries.base import SqlQuery
 
 
-class SqlGetPublishedResources(GetPublishedResources, SqlQuery):
-    def query(self) -> Iterable[ResourceDto]:
+class SqlGetPublishedResources(GetPublishedResources, SqlQuery):  # noqa: D101
+    def query(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -37,8 +36,8 @@ class SqlGetPublishedResources(GetPublishedResources, SqlQuery):
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
 
-class SqlGetResources(GetResources, SqlQuery):
-    def query(self) -> Iterable[ResourceDto]:
+class SqlGetResources(GetResources, SqlQuery):  # noqa: D101
+    def query(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -55,11 +54,11 @@ class SqlGetResources(GetResources, SqlQuery):
                 ResourceModel.last_modified == subq.c.maxdate,
             ),
         )
-        return (_row_to_dto(row) for row in self._conn.execute(stmt))
+        return [_row_to_dto(row) for row in self._conn.execute(stmt)]
 
 
-class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
-    def get_by_id(
+class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):  # noqa: D101
+    def get_by_id(  # noqa: D102
         self, entity_id: UniqueId, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         filters: dict[str, UniqueId | str | int] = {"entity_id": entity_id}
@@ -98,7 +97,7 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
 
         return _row_to_dto(row) if row else None
 
-    def get_published_resources(self) -> Iterable[ResourceDto]:
+    def get_published_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -118,7 +117,7 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
         )
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
-    def get_all_resources(self) -> Iterable[ResourceDto]:
+    def get_all_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -140,14 +139,14 @@ class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):
 
 def _row_to_dto(row_proxy) -> ResourceDto:
     return ResourceDto(
-        entity_id=row_proxy.entity_id,
-        resource_id=row_proxy.resource_id,
+        id=row_proxy.entity_id,
+        resourceId=row_proxy.resource_id,
         version=row_proxy.version,
         config=row_proxy.config,
-        is_published=row_proxy.is_published,
-        entry_repository_id=row_proxy.entry_repo_id,
-        last_modified=row_proxy.last_modified,
-        last_modified_by=row_proxy.last_modified_by,
+        isPublished=row_proxy.is_published,
+        entryRepositoryId=row_proxy.entry_repo_id,
+        lastModified=row_proxy.last_modified,
+        lastModifiedBy=row_proxy.last_modified_by,
         message=row_proxy.message,
         name=row_proxy.name,
         discarded=row_proxy.discarded,

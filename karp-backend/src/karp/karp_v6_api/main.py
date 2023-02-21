@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 from os import stat  # noqa: F401
 import traceback  # noqa: F401
 import sys  # noqa: F401
@@ -11,7 +11,7 @@ except ImportError:
     # used if python < 3.8
     from importlib_metadata import entry_points  # type: ignore  # noqa: F401
 
-from fastapi import FastAPI, Request, Response, status, HTTPException
+from fastapi import FastAPI, Request, Response, status, HTTPException  # noqa: I001
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
@@ -25,7 +25,7 @@ from asgi_correlation_id.context import correlation_id
 
 from karp import main
 from karp.foundation import errors as foundation_errors
-from karp.foundation.value_objects import unique_id  # noqa: F401
+from karp.lex_core.value_objects import unique_id  # noqa: F401
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
@@ -99,7 +99,7 @@ tags_metadata = [
 logger = logging.getLogger(__name__)
 
 
-def create_app() -> FastAPI:
+def create_app() -> FastAPI:  # noqa: D103, C901
     app_context = main.bootstrap_app()
 
     app = FastAPI(
@@ -132,7 +132,7 @@ def create_app() -> FastAPI:
     from karp.main.errors import KarpError
 
     @app.exception_handler(KarpError)
-    async def _karp_error_handler(request: Request, exc: KarpError):
+    async def _karp_error_handler(request: Request, exc: KarpError):  # noqa: ANN202
         logger.exception(exc)
         return JSONResponse(
             status_code=exc.http_return_code,
@@ -140,7 +140,9 @@ def create_app() -> FastAPI:
         )
 
     @app.exception_handler(foundation_errors.NotFoundError)
-    async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):
+    async def _entity_not_found(  # noqa: ANN202
+        request: Request, exc: foundation_errors.NotFoundError
+    ):
         return JSONResponse(
             status_code=404,
             content={
@@ -150,7 +152,7 @@ def create_app() -> FastAPI:
         )
 
     @app.exception_handler(auth_errors.ResourceNotFound)
-    async def _auth_entity_not_found(
+    async def _auth_entity_not_found(  # noqa: ANN202
         request: Request, exc: auth_errors.ResourceNotFound
     ):
         return JSONResponse(
@@ -161,12 +163,16 @@ def create_app() -> FastAPI:
         )
 
     @app.exception_handler(lex_errors.LexDomainError)
-    def _lex_error_handler(request: Request, exc: lex_errors.LexDomainError):
+    def _lex_error_handler(  # noqa: ANN202
+        request: Request, exc: lex_errors.LexDomainError
+    ):
         logger.exception(exc)
         return lex_exc2response(exc)
 
     @app.exception_handler(Exception)
-    async def unhandled_exception_handler(request: Request, exc: Exception):
+    async def unhandled_exception_handler(  # noqa: ANN202
+        request: Request, exc: Exception
+    ):
         return await http_exception_handler(
             request,
             HTTPException(
@@ -180,7 +186,7 @@ def create_app() -> FastAPI:
         )
 
     @app.middleware("http")
-    async def injector_middleware(request: Request, call_next):
+    async def injector_middleware(request: Request, call_next):  # noqa: ANN202
         response: Response = JSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )
@@ -237,7 +243,7 @@ def create_app() -> FastAPI:
     return app
 
 
-def lex_exc2response(exc: lex_errors.LexDomainError) -> JSONResponse:
+def lex_exc2response(exc: lex_errors.LexDomainError) -> JSONResponse:  # noqa: D103
     status_code = 503
     content: dict[str, Any] = {"message": "Internal server error"}
     if isinstance(exc, lex_errors.UpdateConflict):

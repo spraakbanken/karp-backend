@@ -1,5 +1,5 @@
 """Pytest entry point."""
-import pytest
+import pytest  # noqa: I001
 
 from starlette.config import environ
 
@@ -11,5 +11,5 @@ from karp.tests import common_data, utils  # nopep8  # noqa: E402, F401
 
 
 @pytest.fixture
-def json_schema_config():
+def json_schema_config():  # noqa: ANN201
     return common_data.CONFIG_PLACES

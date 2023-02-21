@@ -112,8 +112,8 @@ integration-tests: clean-pyc (test "karp-backend/src/karp/tests/integration")
 integration-tests-w-coverage: clean-pyc (test-w-coverage default-cov "karp-backend/src/karp/tests/integration")
 
 # lint code
-lint:
-	{{INVENV}} ruff karp-backend karp-lex-core
+lint flags="":
+	{{INVENV}} ruff {{flags}} karp-backend karp-lex-core
 
 # lint specific project
 lint-project project:

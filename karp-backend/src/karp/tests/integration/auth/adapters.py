@@ -1,6 +1,6 @@
 """Unit tests for JWTAuthenticator"""
 
-from datetime import timedelta
+from datetime import timedelta  # noqa: I001
 from typing import Dict, Optional
 import os
 
@@ -58,5 +58,5 @@ def create_bearer_token(
 ) -> AccessToken:
     return AccessToken(
         access_token=create_access_token(user, levels, scope),
-        token_type="bearer",
+        token_type="bearer",  # noqa: S106
     )

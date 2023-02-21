@@ -1,14 +1,14 @@
-from typing import Dict
+from typing import Tuple
+
+from karp.lex.domain import entities, events
+from karp.lex_core.value_objects import unique_id
 
 
-from karp.lex.domain import events
-from karp.lex.domain import entities
-from karp.foundation.value_objects import unique_id
-
-
-def random_entry(entry_id: str = None, body: Dict = None) -> entities.Entry:
+def random_entry(
+    entry_id: str = None, body: dict = None
+) -> Tuple[entities.Entry, list[events.Event]]:
     return entities.create_entry(
-        entity_id=unique_id.make_unique_id(),
+        id=unique_id.make_unique_id(),
         repo_id=unique_id.make_unique_id(),
         # entry_id=entry_id or "a",
         body=body or {},
@@ -18,11 +18,11 @@ def random_entry(entry_id: str = None, body: Dict = None) -> entities.Entry:
     )
 
 
-def test_new_entry_has_event():
+def test_new_entry_has_event():  # noqa: ANN201
     entry, domain_events = random_entry()
     assert domain_events[-1] == events.EntryAdded(
-        entity_id=entry.id,
-        repo_id=entry.repo_id,
+        id=entry.id,
+        repoId=entry.repo_id,
         body=entry.body,
         user=entry.last_modified_by,
         timestamp=entry.last_modified,
@@ -30,7 +30,7 @@ def test_new_entry_has_event():
     )
 
 
-def test_discarded_entry_has_event():
+def test_discarded_entry_has_event():  # noqa: ANN201
     entry, _ = random_entry()
     domain_events = entry.discard(
         user="alice@example.org",
@@ -39,9 +39,9 @@ def test_discarded_entry_has_event():
     )
     assert entry.discarded
     assert domain_events[-1] == events.EntryDeleted(
-        entity_id=entry.id,
+        id=entry.id,
         # entry_id=entry.entry_id,
-        repo_id=entry.repo_id,
+        repoId=entry.repo_id,
         user=entry.last_modified_by,
         timestamp=entry.last_modified,
         message=entry.message,
@@ -76,9 +76,9 @@ def test_discarded_entry_has_event():
 #     assert entry.op == entities.EntryOp.UPDATED
 #     assert entry.message == message
 #     assert entry.domain_events[-1] == events.EntryUpdated(
-#         entity_id=entry.id,
+#         id=entry.id,
 #         entry_id=entry.entry_id,
-#         repo_id=entry.repo_id,
+#         repoId=entry.repo_id,
 #         user=entry.last_modified_by,
 #         timestamp=entry.last_modified,
 #         message=entry.message,

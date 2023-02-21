@@ -6,7 +6,7 @@ from . import adapters, factories
 
 
 class TestCreateEntryRepository:
-    def test_create_entry_repository(
+    def test_create_entry_repository(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -19,7 +19,7 @@ class TestCreateEntryRepository:
 
 
 class TestDeleteEntryRepository:
-    def test_delete_entry_repository_succeeds(
+    def test_delete_entry_repository_succeeds(  # noqa: ANN201
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
@@ -29,6 +29,6 @@ class TestDeleteEntryRepository:
         entry_uow_repo_uow = lex_ctx.container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
         assert entry_uow_repo_uow.repo.num_entities() == 1
 
-        cmd = factories.DeleteEntryRepositoryFactory(entity_id=cmd.entity_id)
+        cmd = factories.DeleteEntryRepositoryFactory(id=cmd.id)
         lex_ctx.command_bus.dispatch(cmd)
         assert entry_uow_repo_uow.repo.num_entities() == 0

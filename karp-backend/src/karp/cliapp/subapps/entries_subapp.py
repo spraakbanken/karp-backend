@@ -1,4 +1,4 @@
-import collections.abc
+import collections.abc  # noqa: D100, I001
 import logging
 from pathlib import Path
 import sys  # noqa: F401
@@ -31,7 +31,7 @@ subapp = typer.Typer()
 @subapp.command("add")
 @cli_error_handler
 @cli_timer
-def add_entries_to_resource(
+def add_entries_to_resource(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
     # version: Optional[int],
@@ -67,7 +67,7 @@ def add_entries_to_resource(
 @subapp.command("import")
 @cli_error_handler
 @cli_timer
-def import_entries_to_resource(
+def import_entries_to_resource(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
     # version: Optional[int],
@@ -103,14 +103,14 @@ def import_entries_to_resource(
 @subapp.command("update")
 @cli_error_handler
 @cli_timer
-def update_entries(resource_id: str, data: Path):
+def update_entries(resource_id: str, data: Path):  # noqa: ANN201, D103
     raise NotImplementedError("")
 
 
 @subapp.command("export")
 @cli_error_handler
 @cli_timer
-def export_entries(
+def export_entries(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
     output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
@@ -127,27 +127,27 @@ def export_entries(
     )
 
 
-class Counter(collections.abc.Generator):
-    def __init__(self, sink) -> None:
+class Counter(collections.abc.Generator):  # noqa: D101
+    def __init__(self, sink) -> None:  # noqa: D107
         self._counter: int = 0
         self._sink = sink
 
     @property
-    def counter(self) -> int:
+    def counter(self) -> int:  # noqa: D102
         return self._counter
 
-    def send(self, value):
+    def send(self, value):  # noqa: ANN201, D102
         self._counter += 1
         self._sink.send(value)
 
-    def throw(self, typ=None, val=None, tb=None):
+    def throw(self, typ=None, val=None, tb=None):  # noqa: ANN201, D102
         raise StopIteration
 
 
 @subapp.command("validate")
 @cli_error_handler
 @cli_timer
-def validate_entries(
+def validate_entries(  # noqa: ANN201, D103
     ctx: typer.Context,
     path: Optional[Path] = typer.Argument(None),
     config_path: Optional[Path] = typer.Option(
@@ -217,5 +217,5 @@ def validate_entries(
         raise typer.Exit(error_code)
 
 
-def init_app(app):
+def init_app(app):  # noqa: ANN201, D103
     app.add_typer(subapp, name="entries")

@@ -1,7 +1,7 @@
-from sqlalchemy.engine.url import URL, make_url
+from sqlalchemy.engine.url import URL, make_url  # noqa: D100
 
 
-def sqlalchemy_url(
+def sqlalchemy_url(  # noqa: D103
     db_url: str,
     driver: str = None,
     host: str = None,

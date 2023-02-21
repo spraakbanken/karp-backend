@@ -1,4 +1,4 @@
-from .events import (
+from .events import (  # noqa: I001
     Event,
     ResourceCreated,
     ResourceDiscarded,

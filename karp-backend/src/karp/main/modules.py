@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 from pathlib import Path
 import threading
 from typing import Dict, Type
@@ -10,7 +10,7 @@ except ImportError:
     # used if python == 3.9
     from importlib_metadata import entry_points  # type: ignore
 
-import elasticsearch
+import elasticsearch  # noqa: I001
 import injector
 from injector import Provider, T
 from sqlalchemy.engine import Connection, Engine
@@ -37,18 +37,18 @@ from karp.auth_infrastructure import (
 logger = logging.getLogger(__name__)
 
 
-class RequestScope(injector.Scope):
+class RequestScope(injector.Scope):  # noqa: D101
     REGISTRY_KEY = "RequestScopeRegistry"
 
-    def configure(self) -> None:
+    def configure(self) -> None:  # noqa: D102
         self._locals = threading.local()
 
-    def enter(self) -> None:
+    def enter(self) -> None:  # noqa: D102
         logger.warning("entering request scope")
-        assert not hasattr(self._locals, self.REGISTRY_KEY)
+        assert not hasattr(self._locals, self.REGISTRY_KEY)  # noqa: S101
         setattr(self._locals, self.REGISTRY_KEY, {})
 
-    def exit(self) -> None:
+    def exit(self) -> None:  # noqa: A003, D102
         logger.warning("exiting request scope")
         for key, provider in getattr(self._locals, self.REGISTRY_KEY).items():
             provider.get(self.injector).close()
@@ -56,13 +56,13 @@ class RequestScope(injector.Scope):
 
         delattr(self._locals, self.REGISTRY_KEY)
 
-    def __enter__(self) -> None:
+    def __enter__(self) -> None:  # noqa: D105
         self.enter()
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore  # noqa: D105
         self.exit()
 
-    def get(self, key: Type[T], provider: Provider[T]) -> Provider[T]:
+    def get(self, key: Type[T], provider: Provider[T]) -> Provider[T]:  # noqa: D102
         try:
             return getattr(self._locals, repr(key))  # type: ignore
         except AttributeError:
@@ -81,45 +81,45 @@ class RequestScope(injector.Scope):
 request = injector.ScopeDecorator(RequestScope)
 
 
-class CommandBusMod(injector.Module):
+class CommandBusMod(injector.Module):  # noqa: D101
     @injector.provider
-    def command_bus(self, inj: injector.Injector) -> CommandBus:
+    def command_bus(self, inj: injector.Injector) -> CommandBus:  # noqa: D102
         return InjectorCommandBus(inj)
 
 
-class EventBusMod(injector.Module):
+class EventBusMod(injector.Module):  # noqa: D101
     @injector.provider
-    def event_bus(self, inj: injector.Injector) -> EventBus:
+    def event_bus(self, inj: injector.Injector) -> EventBus:  # noqa: D102
         return InjectorEventBus(inj)
 
 
-class Db(injector.Module):
-    def __init__(self, engine: Engine) -> None:
+class Db(injector.Module):  # noqa: D101
+    def __init__(self, engine: Engine) -> None:  # noqa: D107
         self._engine = engine
 
     # @request
     @injector.provider
-    def connection(self) -> Connection:
+    def connection(self) -> Connection:  # noqa: D102
         return self._engine.connect()
 
     # @request
     @injector.provider
-    def session(self, connection: Connection) -> Session:
+    def session(self, connection: Connection) -> Session:  # noqa: D102
         return Session(bind=connection)
 
     # @request
     @injector.provider
-    def session_factory(self) -> sessionmaker:
+    def session_factory(self) -> sessionmaker:  # noqa: D102
         return sessionmaker(bind=self._engine)
 
 
-class ElasticSearchMod(injector.Module):
-    def __init__(self, es_url: str) -> None:
+class ElasticSearchMod(injector.Module):  # noqa: D101
+    def __init__(self, es_url: str) -> None:  # noqa: D107
         self._url = es_url
 
     @injector.provider
     @injector.singleton
-    def es(self) -> elasticsearch.Elasticsearch:
+    def es(self) -> elasticsearch.Elasticsearch:  # noqa: D102
         logger.info("Creating ES client url=%s", self._url)
         return elasticsearch.Elasticsearch(self._url)
 
@@ -127,7 +127,9 @@ class ElasticSearchMod(injector.Module):
 TEST_AUTH_SERVICE = "DUMMY_AUTH"
 
 
-def install_auth_service(container: injector.Injector, settings: Dict[str, str]):
+def install_auth_service(  # noqa: ANN201, D103
+    container: injector.Injector, settings: Dict[str, str]
+):
     auth_service_name = settings.get("auth.name", "")
     container.binder.install(AuthInfrastructure())
 
@@ -139,17 +141,17 @@ def install_auth_service(container: injector.Injector, settings: Dict[str, str])
         )
 
 
-def request_configuration(conn: Connection, session: Session):
-    def configure_request_container(binder):
+def request_configuration(conn: Connection, session: Session):  # noqa: ANN201, D103
+    def configure_request_container(binder):  # noqa: ANN202
         binder.bind(Connection, to=injector.InstanceProvider(conn))
         binder.bind(Session, to=injector.InstanceProvider(session))
 
     return configure_request_container
 
 
-def load_modules(group_name: str, app=None):
+def load_modules(group_name: str, app=None):  # noqa: ANN201, D103
     logger.debug("Loading %s", group_name)
-    if sys.version_info.minor < 10:
+    if sys.version_info.minor < 10:  # noqa: YTT204
         karp_modules = entry_points().get(group_name)
     else:
         karp_modules = entry_points(group=group_name)  # type: ignore

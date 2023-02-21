@@ -1,15 +1,15 @@
-import pytest
+import pytest  # noqa: I001
 from starlette import status
 
 from karp import auth
-from karp.foundation.value_objects import unique_id  # noqa: F401
+from karp.lex_core.value_objects import unique_id  # noqa: F401
 from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic
 
 
 @pytest.fixture
 def new_resource() -> ResourceCreate:
     return ResourceCreate(
-        resource_id="test_resource",
+        resourceId="test_resource",
         name="Test resource",
         message="test",
         config={
@@ -20,25 +20,25 @@ def new_resource() -> ResourceCreate:
 
 
 class TestResourcesRoutes:
-    def test_get_resource_exist(self, fa_data_client):
+    def test_get_resource_exist(self, fa_data_client):  # noqa: ANN201
         response = fa_data_client.get("/resources/places")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_get_resources_exist(self, fa_client):
+    def test_get_resources_exist(self, fa_client):  # noqa: ANN201
         response = fa_client.get("/resources")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_post_resources_exist(self, fa_client):
+    def test_post_resources_exist(self, fa_client):  # noqa: ANN201
         response = fa_client.post("/resources")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-    def test_get_resource_permissionss_exist(self, fa_client):
+    def test_get_resource_permissionss_exist(self, fa_client):  # noqa: ANN201
         response = fa_client.get("/resources/permissions")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
 class TestGetResourcePermissions:
-    def test_get_resources(self, fa_data_client):
+    def test_get_resources(self, fa_data_client):  # noqa: ANN201
         response = fa_data_client.get("/resources/permissions")
 
         assert response.status_code == status.HTTP_200_OK
@@ -57,11 +57,13 @@ class TestGetResourcePermissions:
 
 
 class TestCreateResource:
-    def test_missing_auth_header_returns_403(self, fa_client):
+    def test_missing_auth_header_returns_403(self, fa_client):  # noqa: ANN201
         response = fa_client.post("/resources/", json={})
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_invalid_data_returns_422(self, fa_client, admin_token: auth.AccessToken):
+    def test_invalid_data_returns_422(  # noqa: ANN201
+        self, fa_client, admin_token: auth.AccessToken
+    ):
         response = fa_client.post(
             "/resources/",
             json={},
@@ -70,12 +72,15 @@ class TestCreateResource:
         print(f"{response.json()=}")
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    def test_valid_input_creates_resource(
-        self, fa_client, new_resource: ResourceCreate, admin_token: auth.AccessToken
+    def test_valid_input_creates_resource(  # noqa: ANN201
+        self,
+        fa_client,
+        new_resource: ResourceCreate,
+        admin_token: auth.AccessToken,
     ):
         response = fa_client.post(
             "/resources/",
-            json=new_resource.dict(),
+            json=new_resource.serialize(),
             headers=admin_token.as_header(),
         )
         print(f"{response.json()=}")
@@ -85,13 +90,13 @@ class TestCreateResource:
             **response.json(),
         )
         expected_resource = new_resource
-        expected_resource.version = 1
-        expected_resource.is_published = False
+        # expected_resource.version = 1
+        # expected_resource.is_published = False
         assert created_resource == expected_resource
 
 
 class TestGetResource:
-    def test_get_resource_by_resource_id(self, fa_client):
+    def test_get_resource_by_resource_id(self, fa_client):  # noqa: ANN201
         response = fa_client.get("/resources/test_resource")
         print(f"{response.json()=}")
         assert response.status_code == status.HTTP_200_OK
@@ -101,7 +106,7 @@ class TestGetResource:
 
 
 class TestGetResources:
-    def test_get_resources(self, fa_data_client):
+    def test_get_resources(self, fa_data_client):  # noqa: ANN201
         response = fa_data_client.get("/resources/")
         response_data = response.json()
         print(f"{response_data=}")

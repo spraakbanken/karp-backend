@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: I001
 
 from fastapi import status
 
@@ -17,7 +17,9 @@ class TestQueryApiInput:
         ],
     )
     @pytest.mark.parametrize("path", ["query", "query/split"])
-    def test_valid_query_strings(self, fa_client, path: str, query_string: str):
+    def test_valid_query_strings(  # noqa: ANN201
+        self, fa_client, path: str, query_string: str
+    ):
         response = fa_client.get(f"/{path}/places?{query_string}")
 
         print(f"{response.json()=}")

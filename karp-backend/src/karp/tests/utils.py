@@ -1,11 +1,14 @@
 """Handle calls and json convertions."""
-from typing import Dict
+from typing import Dict  # noqa: I001
 from fastapi import status
 from karp import auth
 
 
-def get_json(
-    client, path: str, expected_status_code: int = status.HTTP_200_OK, **kwargs
+def get_json(  # noqa: ANN201
+    client,
+    path: str,
+    expected_status_code: int = status.HTTP_200_OK,
+    **kwargs,  # noqa: ANN003
 ):
     """Call the get on the client with the given path.
 
@@ -26,7 +29,7 @@ def get_json(
     return response_json
 
 
-def add_entries(
+def add_entries(  # noqa: ANN201
     client,
     entries: Dict,
     access_token: auth.AccessToken,

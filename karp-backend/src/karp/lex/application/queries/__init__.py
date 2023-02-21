@@ -1,4 +1,4 @@
-from .entries import (
+from .entries import (  # noqa: I001
     GetEntryDiff,
     GetEntryHistory,
     GetHistory,

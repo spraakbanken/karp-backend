@@ -1,4 +1,4 @@
-import injector
+import injector  # noqa: I001
 import pytest
 
 from karp.command_bus import CommandBus

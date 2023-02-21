@@ -4,8 +4,8 @@ Revision ID: 5bb29472d33f
 Revises:
 Create Date: 2018-12-12 13:48:19.255822
 
-"""
-from alembic import op
+"""  # noqa: D400, D415
+from alembic import op  # noqa: I001
 import sqlalchemy as sa
 from sqlalchemy_utils import UUIDType
 from sqlalchemy_json import NestedMutableJson
@@ -17,7 +17,7 @@ branch_labels = None
 depends_on = None
 
 
-def create_resources():
+def create_resources():  # noqa: ANN201, D103
     op.create_table(
         "resources",
         sa.Column("history_id", sa.Integer(), nullable=False),
@@ -41,7 +41,7 @@ def create_resources():
     )
 
 
-def upgrade():
+def upgrade():  # noqa: ANN201, D103
     create_resources()
     # op.create_table(
     #     "dummy_entry",
@@ -71,7 +71,7 @@ def upgrade():
     # )
 
 
-def downgrade():
+def downgrade():  # noqa: ANN201, D103
     op.drop_table("resources")
     # op.drop_table("dummy_history")
     # op.drop_table("dummy_entry")

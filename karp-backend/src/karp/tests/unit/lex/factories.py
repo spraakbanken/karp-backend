@@ -1,5 +1,5 @@
 """Factories used in tests."""
-import typing
+import typing  # noqa: I001
 
 import factory
 import factory.fuzzy
@@ -7,7 +7,8 @@ from faker.providers import BaseProvider
 
 from karp.lex import commands
 from karp.lex.domain import entities, events
-from karp.foundation.value_objects import make_unique_id, MachineName
+from karp.foundation.value_objects import MachineName
+from karp.lex_core.value_objects import make_unique_id
 from karp.utility.time import utc_now
 
 
@@ -36,7 +37,7 @@ class ResourceFactory(factory.Factory):
     class Meta:
         model = entities.Resource
 
-    entity_id = factory.LazyFunction(make_unique_id)
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
     entry_repo_id = factory.LazyFunction(make_unique_id)
     resource_id: str = factory.Faker("word")
     name: str = factory.Faker("word")
@@ -50,7 +51,7 @@ class EntryFactory(factory.Factory):
     class Meta:
         model = entities.Entry
 
-    entity_id = factory.LazyFunction(make_unique_id)
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
     # entry_id = factory.Faker("word")
     last_modified_by = factory.Faker("email")
     last_modified = factory.LazyFunction(utc_now)
@@ -59,10 +60,10 @@ class EntryFactory(factory.Factory):
     repository_id = factory.LazyFunction(make_unique_id)
 
 
-def random_resource(config: typing.Optional[typing.Dict] = None):
+def random_resource(config: typing.Optional[typing.Dict] = None):  # noqa: ANN201
     config = config or {"fields": {"wf": {"type" "string"}, "id": "wf"}}
     return entities.create_resource(
-        entity_id=make_unique_id(),
+        id=make_unique_id(),
         entry_repo_id=make_unique_id(),
         resource_id="resource",
         config=config,
@@ -76,9 +77,9 @@ class ResourceCreatedFactory(factory.Factory):
         model = events.ResourceCreated
 
     timestamp = factory.LazyFunction(utc_now)
-    entity_id = factory.LazyFunction(make_unique_id)
-    entry_repo_id = factory.LazyFunction(make_unique_id)
-    resource_id = factory.Faker("word")
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
+    entryRepoId = factory.LazyFunction(make_unique_id)
+    resourceId = factory.Faker("word")
     name = factory.Faker("word")
     config = factory.Faker("resource_config")
     user = factory.Faker("email")
@@ -90,9 +91,9 @@ class ResourcePublishedFactory(factory.Factory):
         model = events.ResourcePublished
 
     timestamp = factory.LazyFunction(utc_now)
-    entity_id = factory.LazyFunction(make_unique_id)
-    entry_repo_id = factory.LazyFunction(make_unique_id)
-    resource_id = factory.Faker("word")
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
+    entryRepoId = factory.LazyFunction(make_unique_id)
+    resourceId = factory.Faker("word")
     name = factory.Faker("word")
     config = factory.Faker("resource_config")
     user = factory.Faker("email")
@@ -105,7 +106,7 @@ class EntryAddedFactory(factory.Factory):
         model = events.EntryAdded
 
     timestamp = factory.LazyFunction(utc_now)
-    id = factory.LazyFunction(make_unique_id)
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
     resource_id = factory.Faker("word")
     entry_id = factory.Faker("word")
     body = factory.Faker("resource_config")
@@ -117,9 +118,9 @@ class CreateEntryRepositoryFactory(factory.Factory):
     class Meta:
         model = commands.CreateEntryRepository
 
-    entity_id = factory.LazyFunction(make_unique_id)
+    # id = factory.LazyFunction(make_unique_id)
     name = factory.Faker("word")
-    repository_type = "fake"
+    repositoryType = "fake"
     config = factory.Faker("resource_config")
     message = "entry repository created"
     user = factory.Faker("email")
@@ -129,9 +130,10 @@ class DeleteEntryRepositoryFactory(factory.Factory):
     class Meta:
         model = commands.DeleteEntryRepository
 
-    entity_id = factory.LazyFunction(make_unique_id)
+    id = factory.LazyFunction(make_unique_id)  # noqa: A003
     message = "entry repository deleted"
     user = factory.Faker("email")
+    version = 2
 
 
 class MachineNameFactory(factory.Factory):
@@ -145,13 +147,13 @@ class CreateResourceFactory(factory.Factory):
     class Meta:
         model = commands.CreateResource
 
-    entity_id = factory.LazyFunction(make_unique_id)
-    # resource_id = factory.SubFactory(MachineNameFactory)
-    resource_id = factory.fuzzy.FuzzyText(length=6, prefix="resource_")
+    # id = factory.LazyFunction(make_unique_id)
+    # resourceId = factory.SubFactory(MachineNameFactory)
+    resourceId = factory.fuzzy.FuzzyText(length=6, prefix="resource_")
     name = factory.Faker("word")
-    repository_type = "fake"
+    # repositoryType = "fake"
     config = factory.Faker("resource_config")
-    entry_repo_id = factory.LazyFunction(make_unique_id)
+    entryRepoId = factory.LazyFunction(make_unique_id)
     message = "created"
     user = factory.Faker("email")
 
@@ -160,21 +162,19 @@ class UpdateResourceFactory(factory.Factory):
     class Meta:
         model = commands.UpdateResource
 
-    resource_id = factory.Faker("word")
+    resourceId = factory.Faker("word")
     name = factory.Faker("word")
-    repository_type = "fake"
     config = factory.Faker("resource_config")
-    entry_repo_id = factory.LazyFunction(make_unique_id)
     message = "created"
-    created_by = "kristoff@example.com"
+    user = "kristoff@example.com"
 
 
 class AddEntryFactory(factory.Factory):
     class Meta:
         model = commands.AddEntry
 
-    entity_id = factory.LazyFunction(make_unique_id)
-    resource_id = factory.Faker("word")
+    # id = factory.LazyFunction(make_unique_id)
+    resourceId = factory.Faker("word")
     entry = {
         "baseform": "bra",
     }
@@ -186,7 +186,7 @@ class AddEntriesFactory(factory.Factory):
     class Meta:
         model = commands.AddEntries
 
-    resource_id = factory.Faker("word")
+    resourceId = factory.Faker("word")
     entries = [
         {
             "entry": {
@@ -202,7 +202,7 @@ class AddEntriesInChunksFactory(AddEntriesFactory):
     class Meta:
         model = commands.AddEntriesInChunks
 
-    chunk_size = 50
+    chunkSize = 50
 
 
 class ImportEntriesFactory(AddEntriesFactory):
@@ -223,8 +223,7 @@ class UpdateEntryFactory(factory.Factory):
     class Meta:
         model = commands.UpdateEntry
 
-    resource_id = factory.Faker("word")
-    entry_id = factory.Faker("word")
+    resourceId = factory.Faker("word")
     entry = {}
     user = factory.Faker("email")
     message = "added"
@@ -234,7 +233,6 @@ class DeleteEntryFactory(factory.Factory):
     class Meta:
         model = commands.DeleteEntry
 
-    resource_id = factory.Faker("word")
-    entry_id = factory.Faker("word")
+    resourceId = factory.Faker("word")
     user = factory.Faker("email")
     message = "deleted"

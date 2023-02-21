@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional  # noqa: I001
 
 import pytest
 
@@ -6,7 +6,7 @@ from karp.search_infrastructure.repositories.es6_indicies import create_es6_mapp
 
 
 class TestCreateEs6Mapping:
-    def test_minimal_valid_input(self):
+    def test_minimal_valid_input(self):  # noqa: ANN201
         data = {"fields": {}}
         mapping = create_es6_mapping(data)
 
@@ -26,7 +26,7 @@ class TestCreateEs6Mapping:
             ("name", {"type": "long_string"}, {"type": "text"}),
         ],
     )
-    def test_standard_types(
+    def test_standard_types(  # noqa: ANN201
         self, field: str, field_def: Dict, expected_property: Optional[Dict]
     ):
         data = {
@@ -64,7 +64,7 @@ class TestCreateEs6Mapping:
             ("name", {"type": "long_string"}, {"type": "text"}),
         ],
     )
-    def test_complex_types(
+    def test_complex_types(  # noqa: ANN201
         self, field: str, field_def: Dict, expected_property: Optional[Dict]
     ):
         data = {
@@ -77,7 +77,7 @@ class TestCreateEs6Mapping:
         expected_property = expected_property or field_def
         assert mapping["properties"][field] == expected_property
 
-    def test_sort(self):
+    def test_sort(self):  # noqa: ANN201
         data = {"fields": {"name": {"type": "string"}}, "sort": ["name"]}
 
         mapping = create_es6_mapping(data)
@@ -137,7 +137,7 @@ class TestCreateEs6Mapping:
         assert mapping == expected
 
     @pytest.mark.skip()
-    def test_sort_large(self):
+    def test_sort_large(self):  # noqa: ANN201
         data = {"fields": {"name": {"type": "string"}}, "sort": ["name"]}
 
         mapping = create_es6_mapping(data)

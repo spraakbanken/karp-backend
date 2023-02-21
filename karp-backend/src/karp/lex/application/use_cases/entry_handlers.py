@@ -1,4 +1,4 @@
-import logging
+import logging  # noqa: D100, I001
 import typing  # noqa: F401
 
 from sb_json_tools import jsondiff
@@ -6,7 +6,7 @@ from sb_json_tools import jsondiff
 from karp.command_bus import CommandHandler
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain import errors
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import unique_id
 
 from karp.foundation import events as foundation_events  # noqa: F401
 from karp.lex_core import commands
@@ -17,8 +17,8 @@ from karp.lex.application import repositories
 logger = logging.getLogger(__name__)
 
 
-class BasingEntry:
-    def __init__(
+class BasingEntry:  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
         resource_uow: repositories.ResourceUnitOfWork,
@@ -27,13 +27,15 @@ class BasingEntry:
         self.entry_repo_uow = entry_repo_uow
         self.resource_uow = resource_uow
 
-    def get_entry_uow(self, entry_repo_id: unique_id.UniqueId) -> EntryUnitOfWork:
+    def get_entry_uow(  # noqa: D102
+        self, entry_repo_id: unique_id.UniqueId
+    ) -> EntryUnitOfWork:
         with self.entry_repo_uow as uw:
             return uw.repo.get_by_id(entry_repo_id)
 
 
-class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
-    def execute(self, command: commands.AddEntry):
+class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):  # noqa: D101
+    def execute(self, command: commands.AddEntry):  # noqa: ANN201, D102
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(command.resource_id)
 
@@ -47,14 +49,14 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
 
         entry_uow = self.get_entry_uow(resource.entry_repository_id)
         with entry_uow as uw:
-            existing_entry = uw.repo.get_by_id_optional(command.entity_id)
+            existing_entry = uw.repo.get_by_id_optional(command.id)
             if (
                 existing_entry
                 and not existing_entry.discarded
-                and existing_entry.entity_id != command.entity_id
+                and existing_entry.id != command.id
             ):
                 raise errors.IntegrityError(
-                    f"An entry with entry_id '{command.entity_id}' already exists."
+                    f"An entry with entry_id '{command.id}' already exists."
                 )
 
             entry_schema.validate_entry(command.entry)
@@ -63,7 +65,7 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
                 command.entry,
                 user=command.user,
                 message=command.message,
-                entity_id=command.entity_id,
+                id=command.id,
                 timestamp=command.timestamp,
             )
             uw.entries.save(entry)
@@ -72,8 +74,8 @@ class AddingEntry(BasingEntry, CommandHandler[commands.AddEntry]):
         return entry
 
 
-class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
-    def execute(self, command: commands.UpdateEntry):
+class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):  # noqa: D101
+    def execute(self, command: commands.UpdateEntry):  # noqa: ANN201, D102
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(command.resource_id)
 
@@ -82,11 +84,11 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
 
         with self.get_entry_uow(resource.entry_repository_id) as uw:
             try:
-                current_db_entry = uw.repo.by_id(command.entity_id)
+                current_db_entry = uw.repo.by_id(command.id)
             except errors.EntryNotFound as err:
                 raise errors.EntryNotFound(
                     command.resource_id,
-                    entity_id=command.entity_id,
+                    id=command.id,
                 ) from err
 
             diff = jsondiff.compare(current_db_entry.body, command.entry)
@@ -155,8 +157,8 @@ class UpdatingEntry(BasingEntry, CommandHandler[commands.UpdateEntry]):
 #     )
 
 
-class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
-    def execute(self, command: commands.AddEntries):
+class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):  # noqa: D101
+    def execute(self, command: commands.AddEntries):  # noqa: ANN201
         """
         Add entries to DB and INDEX (if present and resource is active).
 
@@ -172,7 +174,7 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
         -------
         List
             List of the id's of the created entries.
-        """
+        """  # noqa: D202, D212
 
         if not isinstance(command.resource_id, str):
             raise ValueError(
@@ -197,12 +199,12 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
                     entry_raw,
                     user=command.user,
                     message=command.message,
-                    entity_id=unique_id.make_unique_id(),
+                    id=unique_id.make_unique_id(),
                 )
-                existing_entry = uw.repo.get_by_id_optional(entry.entity_id)
+                existing_entry = uw.repo.get_by_id_optional(entry.id)
                 if existing_entry and not existing_entry.discarded:
                     raise errors.IntegrityError(
-                        f"An entry with entry_id '{entry.entity_id}' already exists."
+                        f"An entry with entry_id '{entry.id}' already exists."
                     )
                 uw.entries.save(entry)
                 created_db_entries.append(entry)
@@ -215,8 +217,10 @@ class AddingEntries(BasingEntry, CommandHandler[commands.AddEntries]):
         return created_db_entries
 
 
-class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):
-    def execute(self, command: commands.ImportEntries):
+class ImportingEntries(  # noqa: D101
+    BasingEntry, CommandHandler[commands.ImportEntries]
+):
+    def execute(self, command: commands.ImportEntries):  # noqa: ANN201
         """
         Import entries to DB and INDEX (if present and resource is active).
 
@@ -232,7 +236,7 @@ class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):
         -------
         List
             List of the id's of the created entries.
-        """
+        """  # noqa: D202, D212
 
         if not isinstance(command.resource_id, str):
             raise ValueError(
@@ -257,17 +261,17 @@ class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):
                     entry_raw["entry"],
                     user=entry_raw.get("user") or command.user,
                     message=entry_raw.get("message") or command.message,
-                    entity_id=entry_raw.get("entity_id") or unique_id.make_unique_id(),
+                    id=entry_raw.get("id") or unique_id.make_unique_id(),
                     timestamp=entry_raw.get("last_modified"),
                 )
-                # if entity_id := entry_raw.get("entity_id"):
-                #     existing_entry = uw.repo.get_by_id_optional(entity_id)
+                # if id := entry_raw.get("id"):
+                #     existing_entry = uw.repo.get_by_id_optional(id)
                 #     if existing_entry and not existing_entry.discarded:
                 #         raise errors.IntegrityError(
-                #             f"An entry with entry_id '{entry.entity_id}' already exists."
+                #             f"An entry with entry_id '{entry.id}' already exists."
                 #         )
 
-                #             if entity_id != existing_entry.entity_id:
+                #             if id != existing_entry.id:
                 #                 raise integrity_error
                 #         else:
                 #             raise integrity_error
@@ -282,15 +286,15 @@ class ImportingEntries(BasingEntry, CommandHandler[commands.ImportEntries]):
         return created_db_entries
 
 
-class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):
-    def execute(self, command: commands.DeleteEntry):
+class DeletingEntry(BasingEntry, CommandHandler[commands.DeleteEntry]):  # noqa: D101
+    def execute(self, command: commands.DeleteEntry):  # noqa: ANN201, D102
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(command.resource_id)
 
         with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
             resource.entry_repository_id
         ) as uw:
-            entry = uw.repo.by_id(command.entity_id)
+            entry = uw.repo.by_id(command.id)
 
             events = entry.discard(
                 user=command.user,

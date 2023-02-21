@@ -1,4 +1,4 @@
-from typing import List
+from typing import List  # noqa: I001
 
 import injector
 
@@ -6,7 +6,7 @@ from karp.command_bus import CommandHandler
 from karp.foundation.events import EventHandler
 from karp.lex.domain import events as lex_events
 from karp.search.domain import commands
-from karp.search.domain.errors import IncompleteQuery  # noqa: F401
+from karp.search.domain.errors import IncompleteQuery
 from karp.search.application.use_cases import (
     CreateSearchServiceHandler,
     DeletingIndex,
@@ -18,27 +18,38 @@ from karp.search.application.use_cases import (
 )
 from karp.search.application.queries import (
     ResourceViews,
-    PreviewEntry,  # noqa: F401
-    PreviewEntryInputDto,  # noqa: F401
-    EntryPreviewDto,  # noqa: F401
-    SearchService,  # noqa: F401
-    QueryRequest,  # noqa: F401
-    StatisticsDto,  # noqa: F401
+    PreviewEntry,
+    PreviewEntryInputDto,
+    EntryPreviewDto,
+    SearchService,
+    QueryRequest,
+    StatisticsDto,
 )
 from karp.search.application.repositories import (
     IndexUnitOfWork,
     Index,
     IndexEntry,
-)  # noqa: F401
+)
 from karp.search.application.transformers import (
     EntryTransformer,
     PreProcessor,
 )
 
+__all__ = [
+    "EntryTransformer",
+    "IndexUnitOfWork",
+    "IndexEntry",
+    "PreProcessor",
+    "ResourceViews",
+    "PreviewEntry",
+    "PreviewEntryInputDto",
+    "EntryPreviewDto",
+]
 
-class Search(injector.Module):
+
+class Search(injector.Module):  # noqa: D101
     @injector.provider
-    def reindex_resource(
+    def reindex_resource(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         pre_processor: PreProcessor,
@@ -51,26 +62,26 @@ class Search(injector.Module):
         )
 
     @injector.multiprovider
-    def create_index(
+    def create_index(  # noqa: D102
         self, index_uow: IndexUnitOfWork
     ) -> List[EventHandler[lex_events.ResourceCreated]]:
         return [CreateSearchServiceHandler(index_uow)]
 
     @injector.multiprovider
-    def deleting_index(
+    def deleting_index(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
     ) -> List[EventHandler[lex_events.ResourceDiscarded]]:
         return [DeletingIndex(index_uow=index_uow)]
 
     @injector.multiprovider
-    def publish_index(
+    def publish_index(  # noqa: D102
         self, index_uow: IndexUnitOfWork
     ) -> List[EventHandler[lex_events.ResourcePublished]]:
         return [ResourcePublishedHandler(index_uow)]
 
     @injector.multiprovider
-    def add_entry(
+    def add_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
@@ -85,7 +96,7 @@ class Search(injector.Module):
         ]
 
     @injector.multiprovider
-    def update_entry(
+    def update_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
@@ -100,7 +111,7 @@ class Search(injector.Module):
         ]
 
     @injector.multiprovider
-    def delete_entry(
+    def delete_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,

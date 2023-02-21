@@ -1,5 +1,5 @@
 """Model for a lexical entry."""
-import enum
+import enum  # noqa: I001
 import logging
 import typing
 from typing import Dict, Optional, Any, Tuple
@@ -7,30 +7,30 @@ from typing import Dict, Optional, Any, Tuple
 
 from karp.lex.domain import errors, events
 from karp.foundation.entity import TimestampedVersionedEntity
-from karp.foundation.value_objects import unique_id
+from karp.lex_core.value_objects import UniqueId, unique_id
 
 logger = logging.getLogger("karp")
 
 
-class EntryOp(enum.Enum):
+class EntryOp(enum.Enum):  # noqa: D101
     ADDED = "ADDED"
     DELETED = "DELETED"
     UPDATED = "UPDATED"
 
 
-class EntryStatus(enum.Enum):
+class EntryStatus(enum.Enum):  # noqa: D101
     IN_PROGRESS = "IN-PROGRESS"
     IN_REVIEW = "IN_REVIEW"
     OK = "OK"
 
 
-class Entry(TimestampedVersionedEntity):
+class Entry(TimestampedVersionedEntity):  # noqa: D101
     DiscardedEntityError = errors.DiscardedEntityError
 
-    def __init__(
+    def __init__(  # noqa: D107, ANN204
         self,
         *,
-        # entry_id: str,
+        id: UniqueId,  # noqa: A002
         body: Dict,
         message: str,
         # resource_id: str,
@@ -39,10 +39,10 @@ class Entry(TimestampedVersionedEntity):
         status: EntryStatus = EntryStatus.IN_PROGRESS,
         op: EntryOp = EntryOp.ADDED,
         version: int = 1,
-        **kwargs,
+        **kwargs,  # noqa: ANN003
         # version: int = 0
     ):
-        super().__init__(version=version, **kwargs)
+        super().__init__(id=UniqueId.validate(id), version=version, **kwargs)
         # self._entry_id = entry_id
         self._body = body
         self._op = op
@@ -52,7 +52,7 @@ class Entry(TimestampedVersionedEntity):
         self._repo_id = repository_id
 
     @property
-    def repo_id(self) -> unique_id.UniqueId:
+    def repo_id(self) -> unique_id.UniqueId:  # noqa: D102
         return self._repo_id
 
     # @property
@@ -67,13 +67,13 @@ class Entry(TimestampedVersionedEntity):
     #     self._entry_id = constraints.length_gt_zero("entry_id", entry_id)
 
     @property
-    def body(self):
+    def body(self):  # noqa: ANN201
         """The body of the entry."""
         return self._body
 
     # @body.setter
     # @deprecated(version="6.0.7", reason="use update")
-    def update_body(
+    def update_body(  # noqa: ANN201, D102
         self,
         body: Dict,
         *,
@@ -87,23 +87,23 @@ class Entry(TimestampedVersionedEntity):
         self._op = EntryOp.UPDATED
         return [
             events.EntryUpdated(
-                entity_id=self.id,
+                id=self.id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
                 body=self.body,
-                repo_id=self.repo_id,
+                repoId=self.repo_id,
                 message=self.message,
             )
         ]
 
     @property
-    def op(self):
+    def op(self):  # noqa: ANN201
         """The latest operation of this entry."""
         return self._op
 
     @property
-    def status(self):
+    def status(self):  # noqa: ANN201
         """The workflow status of this entry."""
         return self._status
 
@@ -115,24 +115,23 @@ class Entry(TimestampedVersionedEntity):
     #     self._status = status
 
     @property
-    def message(self):
+    def message(self):  # noqa: ANN201
         """The message for the latest operation of this entry."""
         return self._message
 
-    def dict(self) -> Dict[str, Any]:
+    def serialize(self) -> Dict[str, Any]:  # noqa: D102
         return {
-            # "entry_id": self._entry_id,
-            "entity_id": self.entity_id,
+            "id": self.id,
             "resource": "",
             "version": self._version,
             "entry": self._body,
-            "last_modified": self._last_modified,
-            "last_modified_by": self._last_modified_by,
+            "lastModified": self._last_modified,
+            "lastModifiedBy": self._last_modified_by,
             "discarded": self._discarded,
             "message": self._message,
         }
 
-    def discard(
+    def discard(  # noqa: ANN201, D102
         self,
         *,
         user: str,
@@ -146,33 +145,35 @@ class Entry(TimestampedVersionedEntity):
         self._discarded = self._update_field(True, user, timestamp)
         return [
             events.EntryDeleted(
-                entity_id=self.id,
+                id=self.id,
                 # entry_id=self.entry_id,
                 timestamp=self.last_modified,
                 user=user,
                 message=self._message,
                 version=self.version,
-                repo_id=self.repo_id,
+                repoId=self.repo_id,
             )
         ]
 
-    def _update_field(self, arg0, user: str, timestamp: Optional[float]):
+    def _update_field(  # noqa: ANN202
+        self, arg0, user: str, timestamp: Optional[float]
+    ):
         result = arg0
         self._last_modified_by = user
         self._last_modified = self._ensure_timestamp(timestamp)
         self._increment_version()
         return result
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # noqa: D105
         return f"Entry(id={self._id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"
 
 
 # === Factories ===
-def create_entry(
+def create_entry(  # noqa: D103
     # entry_id: str,
     body: Dict,
     *,
-    entity_id: unique_id.UniqueId,
+    id: unique_id.UniqueId,  # noqa: A002
     repo_id: unique_id.UniqueId,
     last_modified_by: str = None,
     message: Optional[str] = None,
@@ -181,22 +182,20 @@ def create_entry(
     # if not isinstance(entry_id, str):
     #     entry_id = str(entry_id)
     entry = Entry(
-        # entry_id=entry_id,
         body=body,
         message="Entry added." if not message else message,
         status=EntryStatus.IN_PROGRESS,
         op=EntryOp.ADDED,
-        # entity_id=unique_id.make_unique_id(),
+        # id=unique_id.make_unique_id(),
         version=1,
         last_modified_by="Unknown user" if not last_modified_by else last_modified_by,
         repository_id=repo_id,
-        entity_id=entity_id,
+        id=id,
         last_modified=last_modified,
     )
     event = events.EntryAdded(
-        repo_id=repo_id,
-        entity_id=entry.id,
-        # entry_id=entry.entry_id,
+        repoId=repo_id,
+        id=entry.id,
         body=entry.body,
         message=entry.message or "",
         user=entry.last_modified_by,

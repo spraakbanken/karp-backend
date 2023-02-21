@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "karp-backend"
-version = "6.3.0"
+version = "6.1.12"
 description = ""
 authors = ["Kristoffer Andersson <kristoffer.andersson@gu.se>"]
 license = "MIT"
@@ -53,7 +53,7 @@ tqdm = "^4.64.1"
 typer = "^0.7.0"
 ulid-py = "^1.1.0"
 urllib3 = "^1.26.13"
-karp-lex-core = ">=0.3.2"
+karp-lex-core = ">=0.5.1"
 
 [tool.poetry.scripts]
 karp-cli = "karp.cliapp.main:cliapp"

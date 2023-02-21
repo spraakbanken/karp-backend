@@ -1,4 +1,4 @@
-import abc
+import abc  # noqa: D100, I001
 import logging
 from typing import Any, Generic, TypeVar
 
@@ -11,22 +11,22 @@ CommandType = TypeVar("CommandType")
 logger = logging.getLogger(__name__)
 
 
-class CommandHandler(Generic[CommandType]):
-    def execute(self, command: CommandType) -> Any:
+class CommandHandler(Generic[CommandType]):  # noqa: D101
+    def execute(self, command: CommandType) -> Any:  # noqa: D102, ANN401
         raise NotImplementedError()
 
 
-class CommandBus(abc.ABC):
+class CommandBus(abc.ABC):  # noqa: D101
     @abc.abstractmethod
-    def dispatch(self, command: Any) -> Any:
+    def dispatch(self, command: Any) -> Any:  # noqa: D102, ANN401
         raise NotImplementedError
 
 
-class InjectorCommandBus(CommandBus):
-    def __init__(self, container: injector.Injector) -> None:
+class InjectorCommandBus(CommandBus):  # noqa: D101
+    def __init__(self, container: injector.Injector) -> None:  # noqa: D107
         self._container = container
 
-    def dispatch(self, command: Any) -> Any:
+    def dispatch(self, command: Any) -> Any:  # noqa: D102, ANN401
         logger.info("Handling command: %s", command)
         cmd_cls = type(command)
         cmd_handler = self._container.get(CommandHandler[cmd_cls])  # type: ignore

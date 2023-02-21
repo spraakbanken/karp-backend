@@ -2,13 +2,13 @@
 from typing import Any, Dict
 
 
-def json_schema_type(in_type: str) -> str:
+def json_schema_type(in_type: str) -> str:  # noqa: D103
     if in_type == "long_string":
         return "string"
     return in_type
 
 
-def create_entry_json_schema(fields: Dict[str, Any]):
+def create_entry_json_schema(fields: Dict[str, Any]):  # noqa: ANN201
     """Create json_schema from fields definition.
 
     Args:
@@ -16,14 +16,16 @@ def create_entry_json_schema(fields: Dict[str, Any]):
 
     Returns:
         Dict[str]: The json_schema to use.
-    """
+    """  # noqa: D406, D407
     json_schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
         "properties": {},
     }
 
-    def recursive_field(parent_schema, parent_field_name, parent_field_def):
+    def recursive_field(  # noqa: ANN202
+        parent_schema, parent_field_name, parent_field_def
+    ):
         if parent_field_def.get("virtual", False):
             return
 

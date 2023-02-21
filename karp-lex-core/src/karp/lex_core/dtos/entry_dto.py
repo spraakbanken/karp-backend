@@ -13,14 +13,14 @@ class GenericEntryDto(GenericModel, Generic[T]):  # noqa: D101
     entry: T
     last_modified_by: Optional[str]
     last_modified: Optional[datetime]
-    entity_id: Optional[UniqueIdStr]
+    id: Optional[UniqueIdStr]  # noqa: A003
     message: Optional[str]
     version: Optional[int]
     resource: Optional[str]
     discarded: bool = False
 
     class Config:  # noqa: D106
-        extra = "forbid"
+        # extra = "forbid"
         alias_generator = alias_generators.to_lower_camel
 
     @root_validator(pre=True)

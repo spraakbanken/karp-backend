@@ -1,4 +1,4 @@
-from typing import Callable, Type
+from typing import Callable, Type  # noqa: D100, I001
 from fastapi import Depends
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
@@ -15,7 +15,7 @@ from karp.karp_v6_api.dependencies import db_deps
 from karp.karp_v6_api.dependencies.db_deps import (
     get_database,  # noqa: F401
     get_session,
-)  # noqa: F401
+)
 from karp.karp_v6_api.dependencies import event_deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 
@@ -33,15 +33,15 @@ from karp.lex_infrastructure import (
 from karp.lex_infrastructure.repositories import SqlResourceRepository
 
 
-def get_resource_repository(
-    db_session: Session = Depends(get_session),  # noqa: B008
+def get_resource_repository(  # noqa: D103
+    db_session: Session = Depends(get_session),
 ) -> SqlResourceRepository:
     return SqlResourceRepository(db_session)
 
 
-def get_resource_unit_of_work(
-    db_session: Session = Depends(get_session),  # noqa: B008
-    event_bus: EventBus = Depends(event_deps.get_eventbus),  # noqa: B008
+def get_resource_unit_of_work(  # noqa: D103
+    db_session: Session = Depends(get_session),
+    event_bus: EventBus = Depends(event_deps.get_eventbus),
 ) -> ResourceUnitOfWork:
     return SqlResourceUnitOfWork(
         event_bus=event_bus,
@@ -49,12 +49,12 @@ def get_resource_unit_of_work(
     )
 
 
-def get_entry_repo_uow(
-    db_session: Session = Depends(get_session),  # noqa: B008
-    entry_uow_factory: EntryRepositoryUnitOfWorkFactory = Depends(  # noqa: B008
-        inject_from_req(EntryRepositoryUnitOfWorkFactory)  # noqa: B008
+def get_entry_repo_uow(  # noqa: D103
+    db_session: Session = Depends(get_session),
+    entry_uow_factory: EntryRepositoryUnitOfWorkFactory = Depends(
+        inject_from_req(EntryRepositoryUnitOfWorkFactory)
     ),
-    event_bus: EventBus = Depends(event_deps.get_eventbus),  # noqa: B008
+    event_bus: EventBus = Depends(event_deps.get_eventbus),
 ) -> EntryUowRepositoryUnitOfWork:
     return SqlEntryUowRepositoryUnitOfWork(
         event_bus=event_bus,
@@ -63,14 +63,10 @@ def get_entry_repo_uow(
     )
 
 
-def get_lex_uc(Use_case_type: Type) -> Callable:
+def get_lex_uc(Use_case_type: Type) -> Callable:  # noqa: D103
     def factory(
-        resource_uow: ResourceUnitOfWork = Depends(
-            get_resource_unit_of_work
-        ),  # noqa: B008
-        entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
-            get_entry_repo_uow
-        ),  # noqa: B008
+        resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
+        entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
     ) -> Use_case_type:
         return Use_case_type(
             resource_uow=resource_uow,
@@ -80,23 +76,21 @@ def get_lex_uc(Use_case_type: Type) -> Callable:
     return factory
 
 
-def get_resources_read_repo(
-    conn: Connection = Depends(db_deps.get_connection),  # noqa: B008
+def get_resources_read_repo(  # noqa: D103
+    conn: Connection = Depends(db_deps.get_connection),
 ) -> lex.ReadOnlyResourceRepository:
     return SqlReadOnlyResourceRepository(conn)
 
 
-def get_published_resources(
-    conn: Connection = Depends(db_deps.get_connection),  # noqa: B008
+def get_published_resources(  # noqa: D103
+    conn: Connection = Depends(db_deps.get_connection),
 ) -> lex.GetPublishedResources:
     return SqlGetPublishedResources(conn)
 
 
-def get_entry_diff(
-    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),  # noqa: B008
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
-        get_entry_repo_uow
-    ),  # noqa: B008
+def get_entry_diff(  # noqa: D103
+    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> lex.GetEntryDiff:
     return GenericGetEntryDiff(
         resource_uow=resource_uow,
@@ -104,11 +98,9 @@ def get_entry_diff(
     )
 
 
-def get_entry_history(
-    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),  # noqa: B008
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
-        get_entry_repo_uow
-    ),  # noqa: B008
+def get_entry_history(  # noqa: D103
+    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> lex.GetEntryHistory:
     return GenericGetEntryHistory(
         resource_uow=resource_uow,
@@ -116,11 +108,9 @@ def get_entry_history(
     )
 
 
-def get_history(
-    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),  # noqa: B008
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(
-        get_entry_repo_uow
-    ),  # noqa: B008
+def get_history(  # noqa: D103
+    resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> lex.GetHistory:
     return GenericGetHistory(
         resource_uow=resource_uow,

@@ -1,13 +1,10 @@
-from datetime import datetime  # noqa: F401
-import logging
+import logging  # noqa: D100
 import re  # noqa: F401
-from typing import Dict, Iterable, List, Optional, Any, Tuple, Union  # noqa: F401
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union  # noqa: F401
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions  # noqa: F401
-
 from karp.foundation.events import EventBus
-
 from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
     Index,
@@ -17,12 +14,11 @@ from karp.search.application.repositories import (
 from karp.search.domain.errors import UnsupportedField  # noqa: F401
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 
-
 logger = logging.getLogger(__name__)
 
 
-class Es6Index(Index):
-    def __init__(
+class Es6Index(Index):  # noqa: D101
+    def __init__(  # noqa: D107, ANN204
         self,
         es: elasticsearch.Elasticsearch,
         mapping_repo: Es6MappingRepository,
@@ -30,7 +26,7 @@ class Es6Index(Index):
         self.es = es
         self.mapping_repo = mapping_repo
 
-    def create_index(self, resource_id: str, config):
+    def create_index(self, resource_id: str, config):  # noqa: ANN201, D102
         logger.info("creating es mapping")
         mapping = create_es6_mapping(config)
 
@@ -68,7 +64,7 @@ class Es6Index(Index):
         logger.info("index created")
         return index_alias_name
 
-    def publish_index(self, resource_id: str):
+    def publish_index(self, resource_id: str):  # noqa: ANN201, D102
         alias_name = self.mapping_repo.get_alias_name(resource_id)
         if self.es.indices.exists_alias(name=alias_name):
             self.es.indices.delete_alias(name=alias_name, index="*")
@@ -85,11 +81,13 @@ class Es6Index(Index):
         )
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
-    def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
+    def add_entries(  # noqa: D102, ANN201
+        self, resource_id: str, entries: Iterable[IndexEntry]
+    ):
         index_name = self.mapping_repo.get_index_name(resource_id)
         index_to_es = []
         for entry in entries:
-            assert isinstance(entry, IndexEntry)
+            assert isinstance(entry, IndexEntry)  # noqa: S101
             # entry.update(metadata.to_dict())
             index_to_es.append(
                 {
@@ -102,7 +100,7 @@ class Es6Index(Index):
 
         elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
-    def delete_entry(
+    def delete_entry(  # noqa: ANN201, D102
         self,
         resource_id: str,
         *,
@@ -135,12 +133,14 @@ class Es6Index(Index):
             )
 
 
-def _create_es_mapping(config):
+def _create_es_mapping(config):  # noqa: C901, ANN202
     es_mapping = {"dynamic": False, "properties": {}}
 
     fields = config["fields"]
 
-    def recursive_field(parent_schema, parent_field_name, parent_field_def):
+    def recursive_field(  # noqa: ANN202, C901
+        parent_schema, parent_field_name, parent_field_def
+    ):
         if parent_field_def.get("virtual", False):
             fun = parent_field_def["function"]
             if list(fun.keys())[0] == "multi_ref":
@@ -191,7 +191,7 @@ def _create_es_mapping(config):
     return es_mapping
 
 
-def create_es6_mapping(config: Dict) -> Dict:
+def create_es6_mapping(config: Dict) -> Dict:  # noqa: D103
     mapping = _create_es_mapping(config)
     mapping["settings"] = {
         "analysis": {
@@ -241,8 +241,8 @@ def create_es6_mapping(config: Dict) -> Dict:
     return mapping
 
 
-class Es6IndexUnitOfWork(IndexUnitOfWork):
-    def __init__(
+class Es6IndexUnitOfWork(IndexUnitOfWork):  # noqa: D101
+    def __init__(  # noqa: D107
         self,
         es: elasticsearch.Elasticsearch,
         event_bus: EventBus,
@@ -258,18 +258,18 @@ class Es6IndexUnitOfWork(IndexUnitOfWork):
     # def from_dict(cls, **kwargs):
     #     return cls()
 
-    def _commit(self):
+    def _commit(self):  # noqa: ANN202
         logger.debug("Calling _commit in Es6IndexUnitOfWork")
 
-    def rollback(self):
+    def rollback(self):  # noqa: ANN201, D102
         return super().rollback()
 
     @property
-    def repo(self) -> Es6Index:
+    def repo(self) -> Es6Index:  # noqa: D102
         return self._index
 
-    def _close(self):
+    def _close(self):  # noqa: ANN202
         pass
 
-    def begin(self):
+    def begin(self):  # noqa: ANN201, D102
         return self
