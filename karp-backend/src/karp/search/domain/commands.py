@@ -1,5 +1,6 @@
-import pydantic  # noqa: D100, I001
+from typing import Literal  # noqa: D100
 
+import pydantic
 from karp.lex_core import alias_generators
 from karp.utility import time
 
@@ -15,3 +16,4 @@ class Command(pydantic.BaseModel):  # noqa: D101
 
 class ReindexResource(Command):  # noqa: D101
     resource_id: str
+    cmdtype: Literal["reindex_resource"] = "reindex_resource"
