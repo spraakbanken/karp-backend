@@ -14,6 +14,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* changed: use camelCase in all api interactions. PR [#225](https://github.com/spraakbanken/karp-backend/pull/225) by [@kod-kristoff](https://github.com/kod-kristoff).
 ## 0.4.0
 ### Added
 * Added Generic Commands. PR [#224](https://github.com/spraakbanken/karp-backend/pull/224) by [@kod-kristoff](https://github.com/kod-kristoff).
