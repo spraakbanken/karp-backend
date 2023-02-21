@@ -3,6 +3,7 @@ import enum  # noqa: I001
 import typing
 from typing import Any, Dict, Tuple, Optional
 from karp import timings
+from karp.containers import container_get
 
 from karp.lex.domain import constraints
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
@@ -305,6 +306,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         timestamp: Optional[float] = None,
     ) -> Tuple[Entry, list[events.Event]]:
         self._check_not_discarded()
+        if "generators" in self.config:
+            self._use_generators(entry_raw)
+
         return create_entry(
             entry_raw,
             repo_id=self.entry_repository_id,
@@ -313,6 +317,12 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             id=id,
             last_modified=timestamp,
         )
+
+    def _use_generators(self, entry: dict) -> None:
+        """Fill missing values that should be generated."""
+        for field_name, generator_type in self.config["generators"].items():
+            if not container_get(entry, field_name):
+                raise NotImplementedError("use generator_type")
 
     def is_protected(self, level: PermissionLevel):  # noqa: ANN201
         """

@@ -25,3 +25,25 @@ def create_field_getter(  # noqa: D103
         return convert(result) if convert else result
 
     return getter
+
+
+def container_get(d: dict[str, Any], field_name: str) -> Any:
+    """Return field_name from given dict.
+
+    If field_name includes periods, the dict is decended.
+    """
+    if "." in field_name:
+        parts = field_name.split(".")
+        result = d
+        for part in parts:
+            if isinstance(result, dict):
+                result = result.get(part)
+            else:
+                msg = f"Can't descend in non-dict: {result}. Trying to get {part} of {field_name}"
+                raise ValueError(msg)
+        return result
+    else:
+        return d.get(field_name)
+
+
+# def _container_get(d: dict)
