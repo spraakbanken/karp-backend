@@ -1,4 +1,4 @@
-import typing  # noqa: D100, I001
+import typing  # noqa: D100
 from enum import Enum
 
 import pydantic

@@ -243,7 +243,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._check_not_discarded()
         raise NotImplementedError()
 
-    def discard(  # noqa: ANN201, D102
+    def discard(  # noqa: D102
         self, *, user: str, message: str, timestamp: float = None
     ) -> list[events.Event]:
         self._check_not_discarded()

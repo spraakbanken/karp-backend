@@ -3,12 +3,10 @@ from typing import Any, Dict
 
 
 def json_schema_type(in_type: str) -> str:  # noqa: D103
-    if in_type == "long_string":
-        return "string"
-    return in_type
+    return "string" if in_type == "long_string" else in_type
 
 
-def create_entry_json_schema(fields: Dict[str, Any]):  # noqa: ANN201
+def create_entry_json_schema(fields: Dict[str, Any]) -> dict[str, Any]:
     """Create json_schema from fields definition.
 
     Args:
@@ -16,6 +14,7 @@ def create_entry_json_schema(fields: Dict[str, Any]):  # noqa: ANN201
 
     Returns:
         Dict[str]: The json_schema to use.
+
     """  # noqa: D406, D407
     json_schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
