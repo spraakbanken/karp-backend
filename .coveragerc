@@ -1,3 +1,3 @@
 [run]
-source = karp
-omit = components/karp/tests/*,bases/karp/lex_core/tests/*
+source = karp-backend/src/karp,karp-lex-core/src/karp
+omit = karp-backend/src/karp/tests/*,karp-lex-core/src/karp/lex_core/tests/*

@@ -11,7 +11,7 @@ info:
 	@echo "Venv: {{VENV_NAME}}"
 	@echo "INVENV: '{{INVENV}}'"
 
-cov-report := "xml"
+cov-report := "term-missing"
 
 alias dev := install-dev
 
@@ -69,8 +69,8 @@ check-security-issues: install-dev
 all-tests: clean-pyc unit-tests integration-tests e2e-tests
 
 # run all tests with code coverage
-all-tests-w-coverage:
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests
+all-tests-w-coverage cov=default-cov:
+	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests
 
 # run all tests for karp-lex-core
 test-lex-core: (test 'karp-lex-core/src/karp/lex_core/tests')
