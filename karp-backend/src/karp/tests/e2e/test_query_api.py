@@ -165,9 +165,9 @@ def test_query_no_q(  # noqa: ANN201
 
     names = extract_names(entries)
 
-    entry_views = app_context.container.get(EntryViews)  # type: ignore [misc]
-    expected_result = {}  # noqa: F841
-    expected_total = entry_views.get_total(resource)
+    # entry_views = app_context.container.get(EntryViews)  # type: ignore [misc]
+    # expected_total = entry_views.get_total(resource)
+    expected_total = 22
     print(f"entries = {entries}")
     assert entries["total"] == expected_total
     assert len(names) == expected_total
@@ -214,8 +214,8 @@ def test_query_split(  # noqa: ANN201
     expected_result = {}
     for resource in resources:
         expected_result[resource] = entry_views.get_total(resource)
-    assert entries["distribution"] == expected_result
-    # assert entries["distribution"] == {"municipalities": 3, "places": 22}
+    # assert entries["distribution"] == expected_result
+    assert entries["distribution"] == {"municipalities": 3, "places": 22}
 
 
 @pytest.mark.xfail(reason="unstable")
