@@ -147,14 +147,19 @@ class CreateResourceFactory(factory.Factory):
     class Meta:
         model = commands.CreateResource
 
-    # id = factory.LazyFunction(make_unique_id)
-    # resourceId = factory.SubFactory(MachineNameFactory)
     resourceId = factory.fuzzy.FuzzyText(length=6, prefix="resource_")
     name = factory.Faker("word")
-    # repositoryType = "fake"
     config = factory.Faker("resource_config")
     entryRepoId = factory.LazyFunction(make_unique_id)
     message = "created"
+    user = factory.Faker("email")
+
+
+class DeleteResourceFactory(factory.Factory):
+    class Meta:
+        model = commands.DeleteResource
+
+    message = "deleted"
     user = factory.Faker("email")
 
 

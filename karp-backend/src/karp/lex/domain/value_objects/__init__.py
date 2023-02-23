@@ -1,4 +1,4 @@
-# from karp.lex_core.value_objects.unique_id import UniqueId, make_unique_id
+"""Value objects for lex."""
 from karp.lex.domain.value_objects.entry_schema import EntrySchema
 from karp.lex.domain.value_objects.resource_config import ResourceConfig
 

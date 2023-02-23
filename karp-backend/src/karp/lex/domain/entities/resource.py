@@ -1,17 +1,16 @@
-"""LexicalResource"""  # noqa: D400, D415
-import enum  # noqa: I001
+"""LexicalResource."""
+import enum
 import typing
-from typing import Any, Dict, Tuple, Optional
-from karp import timings
-from karp.containers import container_get
+from typing import Any, Dict, Optional, Tuple
 
-from karp.lex.domain import constraints
+from karp import timings
+from karp.containers import dict_get
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
 from karp.foundation.value_objects import PermissionLevel
-from .entry import Entry, create_entry
-from karp.lex.domain import errors, events
+from karp.lex.domain import constraints, errors, events
+from karp.lex.domain.entities import Entry, Generator, create_entry
+from karp.lex.domain.value_objects import EntrySchema
 from karp.lex_core.value_objects import unique_id
-from karp.utility import json_schema
 
 
 class ResourceOp(enum.Enum):  # noqa: D101
@@ -49,7 +48,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._message = message
         self._op = op
         self._releases = []
-        self._entry_json_schema = None
+        self._entry_schema = None
         self._entry_repo_id = unique_id.UniqueId.validate(entry_repo_id)
 
     @property
@@ -63,6 +62,11 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     @property
     def name(self):  # noqa: ANN201, D102
         return self._name
+
+    @property
+    def generators(self) -> dict[str, str]:
+        """Generators for entry fields."""
+        return self.config.get("generators", {})
 
     @property
     def message(self):  # noqa: ANN201, D102
@@ -268,18 +272,18 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         ]
 
     @property
-    def entry_json_schema(self) -> Dict:  # noqa: D102
-        if self._entry_json_schema is None:
-            self._entry_json_schema = json_schema.create_entry_json_schema(
-                self.config["fields"]
-            )
-        return self._entry_json_schema
+    def entry_schema(self) -> EntrySchema:
+        """Entry schema."""
+        if self._entry_schema is None:
+            self._entry_schema = EntrySchema.from_resource_config(self.config)
+        return self._entry_schema
 
     # @property
     # def id_getter(self) -> Callable[[Dict], str]:
     #     return create_field_getter(self.config["id"], str)
 
-    def serialize(self) -> Dict:  # noqa: D102
+    def serialize(self) -> dict[str, Any]:
+        """Serialize resource to camelCased dict."""
         return {
             "id": self.id,
             "resourceId": self.resource_id,
@@ -296,21 +300,26 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             "config": self.config,
         }
 
-    def create_entry_from_dict(  # noqa: D102
+    def _validate_entry(self, entry: dict[str, Any]) -> dict[str, Any]:
+        """Validate an entry against this resource's entry schema."""
+        return self.entry_schema.validate_entry(entry)
+
+    def create_entry_from_dict(
         self,
-        entry_raw: Dict,
+        entry_raw: dict[str, Any],
         *,
         user: str,
         id: unique_id.UniqueId,  # noqa: A002
         message: Optional[str] = None,
         timestamp: Optional[float] = None,
     ) -> Tuple[Entry, list[events.Event]]:
+        """Create an entry for this resource."""
         self._check_not_discarded()
-        if "generators" in self.config:
-            self._use_generators(entry_raw)
+        # if "generators" in self.config:
+        #     self._use_generators(entry_raw)
 
         return create_entry(
-            entry_raw,
+            self._validate_entry(entry_raw),
             repo_id=self.entry_repository_id,
             last_modified_by=user,
             message=message,
@@ -318,10 +327,67 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             last_modified=timestamp,
         )
 
+    def update_entry(
+        self,
+        *,
+        entry: Entry,
+        body: dict[str, Any],
+        version: int,
+        user: str,
+        message: Optional[str] = None,
+        timestamp: Optional[float] = None,
+    ) -> list[events.Event]:
+        """Create an entry for this resource."""
+        self._check_not_discarded()
+        # if "generators" in self.config:
+        #     self._use_generators(entry_raw)
+
+        return entry.update_body(
+            self._validate_entry(body),
+            version=version,
+            user=user,
+            message=message,
+            timestamp=timestamp,
+        )
+
+    def discard_entry(
+        self,
+        *,
+        entry: Entry,
+        version: int,
+        user: str,
+        message: Optional[str] = None,
+        timestamp: Optional[float] = None,
+    ) -> list[events.Event]:
+        """Create an entry for this resource."""
+        self._check_not_discarded()
+        # if "generators" in self.config:
+        #     self._use_generators(entry_raw)
+
+        return entry.discard(
+            version=version,
+            user=user,
+            message=message,
+            timestamp=timestamp,
+        )
+
+    def update_field_in_entry(
+        self,
+        entry: dict[str, Any],
+        field_name: str,
+        generator: Generator,
+    ) -> None:
+        """Use generator to update entry."""
+        if "." in field_name:
+            assert False
+        else:
+            if field_name not in entry:
+                entry[field_name] = generator.next_value()
+    
     def _use_generators(self, entry: dict) -> None:
         """Fill missing values that should be generated."""
         for field_name, generator_type in self.config["generators"].items():
-            if not container_get(entry, field_name):
+            if not dict_get(entry, field_name):
                 raise NotImplementedError("use generator_type")
 
     def is_protected(self, level: PermissionLevel):  # noqa: ANN201

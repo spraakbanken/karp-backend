@@ -1,4 +1,3 @@
-
 """Utilities for working with json_schema."""
 import logging
 from typing import Any
@@ -11,12 +10,15 @@ logger = logging.getLogger(__name__)
 
 class EntrySchema:  # noqa: D101
     def __init__(self, json_schema: dict) -> None:  # noqa: D107
+        if not isinstance(json_schema, dict):
+            msg = f"Expecting 'dict', got '{type(json_schema)}'"
+            raise TypeError(msg)
         try:
             self._compiled_schema = fastjsonschema.compile(json_schema)
         except fastjsonschema.JsonSchemaDefinitionException as e:
             raise errors.InvalidEntrySchema() from e
 
-    def validate_entry(self, json_obj: dict) -> None:
+    def validate_entry(self, json_obj: dict[str, Any]) -> dict[str, Any]:
         """Validate a entry against json schema."""
         try:
             self._compiled_schema(json_obj)
@@ -25,6 +27,7 @@ class EntrySchema:  # noqa: D101
                 "Entry not valid", extra={"entry": json_obj, "error_message": str(e)}
             )
             raise errors.InvalidEntry() from e
+        return json_obj
 
     @classmethod
     def from_resource_config(cls, resource_config: dict[str, Any]) -> "EntrySchema":

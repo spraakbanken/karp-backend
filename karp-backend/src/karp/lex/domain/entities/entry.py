@@ -55,33 +55,24 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
     def repo_id(self) -> unique_id.UniqueId:  # noqa: D102
         return self._repo_id
 
-    # @property
-    # def entry_id(self):
-    #     """The entry_id of this entry."""
-    #     return self._entry_id
-
-    # @entry_id.setter
-    # @deprecated(version="6.0.7", reason="use update")
-    # def entry_id(self, entry_id: str):
-    #     self._check_not_discarded()
-    #     self._entry_id = constraints.length_gt_zero("entry_id", entry_id)
-
     @property
     def body(self):  # noqa: ANN201
         """The body of the entry."""
         return self._body
 
-    # @body.setter
-    # @deprecated(version="6.0.7", reason="use update")
-    def update_body(  # noqa: ANN201, D102
+    def update_body(  # noqa: D102
         self,
         body: Dict,
         *,
+        version: int,
         user: str,
         message: Optional[str] = None,
         timestamp: Optional[float] = None,
-    ):
+    ) -> list[events.Event]:
         self._check_not_discarded()
+        if self._body == body:
+            return []
+        self._check_version(version)
         self._body = self._update_field(body, user, timestamp)
         self._message = message or "Entry updated"
         self._op = EntryOp.UPDATED
@@ -107,13 +98,6 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         """The workflow status of this entry."""
         return self._status
 
-    # @status.setter
-    # @deprecated(version="6.0.7", reason="use update")
-    # def status(self, status: EntryStatus):
-    #     """The workflow status of this entry."""
-    #     self._check_not_discarded()
-    #     self._status = status
-
     @property
     def message(self):  # noqa: ANN201
         """The message for the latest operation of this entry."""
@@ -131,15 +115,18 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
             "message": self._message,
         }
 
-    def discard(  # noqa: ANN201, D102
+    def discard(  # noqa: D102
         self,
         *,
+        version: int,
         user: str,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ):
+    ) -> list[events.Event]:
         if self._discarded:
             return []
+        self._check_not_discarded()
+        self._check_version(version)
         self._op = EntryOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = self._update_field(True, user, timestamp)
@@ -155,6 +142,11 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
             )
         ]
 
+    def _check_version(self, version: int) -> None:
+        if self.version != version:
+            msg = f"Expecting version '{self.version}', got '{version}'"
+            raise errors.UpdateConflict(msg)
+    
     def _update_field(  # noqa: ANN202
         self, arg0, user: str, timestamp: Optional[float]
     ):
