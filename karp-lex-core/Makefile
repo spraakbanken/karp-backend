@@ -23,8 +23,6 @@ cov := ${default_cov}
 test-w-coverage: clean-pyc
 	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${tests}
 
-unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
-
 # run given test(s)
 .PHONY: test
 test:
