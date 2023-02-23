@@ -146,7 +146,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         if self.version != version:
             msg = f"Expecting version '{self.version}', got '{version}'"
             raise errors.UpdateConflict(msg)
-    
+
     def _update_field(  # noqa: ANN202
         self, arg0, user: str, timestamp: Optional[float]
     ):
