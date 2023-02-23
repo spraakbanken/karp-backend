@@ -15,9 +15,6 @@ from karp.lex.application.repositories import (
     EntryRepositoryUnitOfWorkFactory,
     EntryUnitOfWork,
 )
-from karp.lex.application.repositories.mem import (
-    InMemoryGeneratorUnitOfWork,
-)
 from karp.lex.domain import entities as lex_entities
 from karp.lex.domain import events
 from karp.lex_core.value_objects import UniqueId, UniqueIdType
@@ -199,21 +196,6 @@ class InMemoryResourceUnitOfWork(
         return self._resources
 
 
-# class InMemoryEntryUowFactory(lex_repositories.EntryUowFactory):
-#     def create(
-#         self,
-#         resource_id: str,
-#         resource_config: typing.Dict,
-#         entry_repository_settings,
-#     ) -> lex_repositories.EntryUnitOfWork:
-#         entry_uow = InMemoryEntryUnitOfWork(entry_repository_settings)
-#         if "entry_repository_type" in resource_config:
-#             entry_uow.repo.type = resource_config["entry_repository_type"]
-#         if entry_repository_settings:
-#             entry_uow.repo_settings = entry_repository_settings
-#         return entry_uow
-
-
 class InMemoryEntryUnitOfWorkCreator:
     @injector.inject
     def __init__(self, event_bus: EventBus) -> None:
@@ -245,18 +227,6 @@ class InMemoryEntryUnitOfWorkCreator:
                 event_bus=self.event_bus,
             )
         return self._cache[entity_id], []
-
-
-# def create_entry_uow2(
-#     entity_id: UniqueId,
-#     name: str,
-#     config: Dict,
-# ) -> lex_repositories.EntryUnitOfWork:
-#     return InMemoryEntryUnitOfWork2(
-#         entity_id=entity_id,
-#         name=name,
-#         config=config,
-#     )
 
 
 class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
@@ -330,12 +300,7 @@ class InMemoryLexInfrastructure(injector.Module):
 
     @injector.provider
     @injector.singleton
-    def resource_uow(self, event_bus: EventBus) -> lex_repositories.GeneratorUnitOfWork:
-        return InMemoryGeneratorUnitOfWork(event_bus=event_bus)
-
-    @injector.provider
-    @injector.singleton
-    def generator_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:
+    def resource_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:
         return InMemoryResourceUnitOfWork(event_bus=event_bus)
 
     @injector.provider
@@ -347,5 +312,3 @@ class InMemoryLexInfrastructure(injector.Module):
         return InMemoryReadResourceRepository(
             resources=resource_uow.repo.resources,  # type: ignore
         )
-
-

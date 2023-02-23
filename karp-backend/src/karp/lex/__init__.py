@@ -4,7 +4,6 @@ from karp.command_bus import CommandHandler
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
-    GeneratorUnitOfWork,
     InjectorEntryUnitOfWorkRepoFactory,
     ResourceUnitOfWork,
 )
@@ -155,12 +154,10 @@ class Lex(injector.Module):  # noqa: D101
         self,
         resource_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
-        generator_uow: GeneratorUnitOfWork,
     ) -> CommandHandler[commands.AddEntry]:
         return AddingEntry(
             resource_uow=resource_uow,
             entry_repo_uow=entry_repo_uow,
-            generator_uow=generator_uow,
         )
 
     @injector.provider
@@ -204,12 +201,10 @@ class Lex(injector.Module):  # noqa: D101
         self,
         resource_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
-        generator_uow: GeneratorUnitOfWork,
     ) -> CommandHandler[commands.UpdateEntry]:
         return UpdatingEntry(
             resource_uow=resource_uow,
             entry_repo_uow=entry_repo_uow,
-            generator_uow=generator_uow,
         )
 
     @injector.provider
