@@ -37,7 +37,7 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
     ) -> EntityType:
-        if entity := self._by_id(self._ensure_correct_id_type(id), version=version):
+        if entity := self._by_id(id, version=version):
             return entity
         entity_not_found = self.create_entity_not_found(
             f"Entity with id={id} is not found"
@@ -48,17 +48,17 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
 
     def get_by_id_optional(  # noqa: D102
         self,
-        id_: unique_id.UniqueId,
+        id: UniqueId,  # noqa: A002
         *,
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
     ) -> Optional[EntityType]:
-        return self._by_id(self._ensure_correct_id_type(id_), version=version)
+        return self._by_id(id, version=version)
 
     @abc.abstractmethod
     def _by_id(
         self,
-        id_: Union[unique_id.UniqueId, ulid.ULID, str],
+        id: UniqueId,  # noqa: A002
         *,
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
