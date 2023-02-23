@@ -21,7 +21,7 @@ class GenericPreviewEntry(search.PreviewEntry):  # noqa: D101
 
         # entry_id = resource.id_getter()(input_dto.entry)
 
-        lex.EntrySchema(resource.entry_json_schema).validate_entry(input_dto.entry)
+        resource.entry_schema.validate_entry(input_dto.entry)
         input_entry = lex.EntryDto(
             id=make_unique_id(),
             resource=input_dto.resource_id,
