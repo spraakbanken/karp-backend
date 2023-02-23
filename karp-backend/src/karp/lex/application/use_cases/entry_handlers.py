@@ -1,13 +1,10 @@
 """Handling of entry commands."""
 import logging
-from typing import Any
 
 from karp.command_bus import CommandHandler
-from karp.containers import dict_get
 from karp.lex.application import repositories
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain import errors
-from karp.lex.domain.entities import Resource
 from karp.lex_core import commands
 from karp.lex_core.value_objects import unique_id
 
@@ -31,51 +28,26 @@ class BaseEntryHandler:  # noqa: D101
             return uw.repo.get_by_id(entry_repo_id)
 
 
-def update_entry_w_generators(
-    *,
-    entry: dict[str, Any],
-    generators: dict[str, str],
-    generator_uow: repositories.GeneratorUnitOfWork,
-    resource: Resource,
-) -> None:
-    """Update entry from generators."""
-    with generator_uow as uw:
-        for field_name, generator_type in generators.items():
-            generator = uw.repo.get(generator_type, resource_id=resource.id)
-            resource.update_field_in_entry(entry, field_name, generator)
-
-
-
-    
 class AddingEntry(BaseEntryHandler, CommandHandler[commands.AddEntry]):  # noqa: D101
     def __init__(
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
         resource_uow: repositories.ResourceUnitOfWork,
-        generator_uow: repositories.GeneratorUnitOfWork,
     ) -> None:
         """Usecase for adding an entry."""
         super().__init__(
             entry_repo_uow=entry_repo_uow,
             resource_uow=resource_uow,
         )
-        self.generator_uow = generator_uow
 
     def execute(self, command: commands.AddEntry):  # noqa: ANN201, D102
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(command.resource_id)
 
-        if resource.generators:
-            update_entry_w_generators(
-                entry=command.entry,
-                generators=resource.generators,
-                generator_uow=self.generator_uow,
-                resource=resource,
-            )
         entry_uow = self.get_entry_uow(resource.entry_repository_id)
         with entry_uow as uw:
             entry, events = resource.create_entry_from_dict(
-                command.entry,
+                command.entry,  # type: ignore [arg-type]
                 user=command.user,
                 message=command.message,
                 id=command.id,
@@ -87,23 +59,19 @@ class AddingEntry(BaseEntryHandler, CommandHandler[commands.AddEntry]):  # noqa:
         return entry
 
 
-class UpdatingEntry(
-    BaseEntryHandler, CommandHandler[commands.UpdateEntry]
-):
+class UpdatingEntry(BaseEntryHandler, CommandHandler[commands.UpdateEntry]):
     """Usecase for updating an entry."""
 
     def __init__(
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
         resource_uow: repositories.ResourceUnitOfWork,
-        generator_uow: repositories.GeneratorUnitOfWork,
     ) -> None:
         """Create usecase for updating an entry."""
         super().__init__(
             entry_repo_uow=entry_repo_uow,
             resource_uow=resource_uow,
         )
-        self.generator_uow = generator_uow
 
     def execute(self, command: commands.UpdateEntry):  # noqa: ANN201, D102
         with self.resource_uow:
@@ -120,7 +88,7 @@ class UpdatingEntry(
 
             events = resource.update_entry(
                 entry=current_db_entry,
-                body=command.entry,
+                body=command.entry,  # type: ignore [arg-type]
                 version=command.version,
                 user=command.user,
                 message=command.message,
@@ -133,11 +101,9 @@ class UpdatingEntry(
         return current_db_entry
 
 
-class AddingEntries(
-    BaseEntryHandler, CommandHandler[commands.AddEntries]
-):
+class AddingEntries(BaseEntryHandler, CommandHandler[commands.AddEntries]):
     """Adding entries."""
-    
+
     def execute(self, command: commands.AddEntries):  # noqa: ANN201
         """
         Add entries to DB and INDEX (if present and resource is active).
@@ -244,11 +210,9 @@ class ImportingEntries(  # noqa: D101
         return created_db_entries
 
 
-class DeletingEntry(
-    BaseEntryHandler, CommandHandler[commands.DeleteEntry]
-):
+class DeletingEntry(BaseEntryHandler, CommandHandler[commands.DeleteEntry]):
     """Use case for deleting an entry."""
-    
+
     def execute(self, command: commands.DeleteEntry) -> None:  # noqa: D102
         with self.resource_uow:
             resource = self.resource_uow.repo.by_resource_id(command.resource_id)

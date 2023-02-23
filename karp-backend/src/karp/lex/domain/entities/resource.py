@@ -8,7 +8,7 @@ from karp.containers import dict_get
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
 from karp.foundation.value_objects import PermissionLevel
 from karp.lex.domain import constraints, errors, events
-from karp.lex.domain.entities import Entry, Generator, create_entry
+from karp.lex.domain.entities import Entry, create_entry
 from karp.lex.domain.value_objects import EntrySchema
 from karp.lex_core.value_objects import unique_id
 
@@ -370,25 +370,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             message=message,
             timestamp=timestamp,
         )
-
-    def update_field_in_entry(
-        self,
-        entry: dict[str, Any],
-        field_name: str,
-        generator: Generator,
-    ) -> None:
-        """Use generator to update entry."""
-        if "." in field_name:
-            assert False
-        else:
-            if field_name not in entry:
-                entry[field_name] = generator.next_value()
-    
-    def _use_generators(self, entry: dict) -> None:
-        """Fill missing values that should be generated."""
-        for field_name, generator_type in self.config["generators"].items():
-            if not dict_get(entry, field_name):
-                raise NotImplementedError("use generator_type")
 
     def is_protected(self, level: PermissionLevel):  # noqa: ANN201
         """
