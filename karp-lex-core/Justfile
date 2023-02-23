@@ -12,9 +12,10 @@ install-ci: install-dev
 
 default-cov := "--cov=src/karp"
 cov-report := "term-missing"
+cov := default-cov
 
 # run tests with code coverage
-test-w-coverage cov=default-cov +tests="src/karp/lex_core/tests": clean-pyc
+test-w-coverage +tests="src/karp/lex_core/tests": clean-pyc
 	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} {{tests}}
 
 unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
@@ -22,7 +23,7 @@ unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_c
 # run given test(s)
 test *tests="src/karp/lex_core/tests":
 	{{INVENV}} pytest -vv {{tests}}
-	
+
 # lint the code
 lint *flags="":
     {{INVENV}} ruff {{flags}} src
