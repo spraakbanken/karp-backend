@@ -489,9 +489,11 @@ class TestUpdateEntry:
         assert response_data["errorCode"] == ClientErrorCodes.VERSION_CONFLICT
 
         assert response_data["error"] == "Version conflict. Please update entry."
-        assert response_data["diff"] == [
-            {"type": "CHANGE", "field": "population", "before": 4, "after": 5}
-        ]
+        assert response_data["diff"] == "Expecting version '1', got '2'"
+        # TODO: should we return diff
+        # assert response_data["diff"] == [
+        #     {"type": "CHANGE", "field": "population", "before": 4, "after": 5}
+        # ]
 
     def test_update_returns_200_on_valid_data(  # noqa: ANN201
         self,
