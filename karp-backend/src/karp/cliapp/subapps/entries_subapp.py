@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 from karp.command_bus import CommandBus
 from karp import lex
-from karp.utility import json_schema
+from karp.lex.domain.value_objects import entry_schema
 
 # from karp.lex.domain.errors import ResourceAlreadyPublished
 
@@ -185,7 +185,7 @@ def validate_entries(  # noqa: ANN201, D103
         typer.echo("You must provide either '--resource_id' or '--config/-c'", err=True)
         raise typer.Exit(code=300)
 
-    schema = json_schema.create_entry_json_schema(config["fields"])
+    schema = entry_schema.create_entry_json_schema(config["fields"])
 
     error_code = 0
 
