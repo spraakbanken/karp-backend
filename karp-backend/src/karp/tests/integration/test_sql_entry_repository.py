@@ -114,7 +114,7 @@ class TestSqlEntryRepoByReferencable:
         print(f"{entry_copies=}")
         assert entry_copies[0].id == entry.id
 
-        entry.update_body({"a": "b", "c": "d"}, user="user")
+        entry.update_body({"a": "b", "c": "d"}, user="user", version=1)
         entry_repo.save(entry)
 
         entry_copies = entry_repo.by_referenceable(filters={"a": "b"})
