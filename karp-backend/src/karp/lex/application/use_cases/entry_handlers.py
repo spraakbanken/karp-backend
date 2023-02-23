@@ -137,7 +137,6 @@ class AddingEntries(BaseEntryHandler, CommandHandler[commands.AddEntries]):
             resource.entry_repository_id
         ) as uw:
             for i, entry_raw in enumerate(command.entries):
-
                 entry, events = resource.create_entry_from_dict(
                     entry_raw,
                     user=command.user,
@@ -191,7 +190,6 @@ class ImportingEntries(  # noqa: D101
             resource.entry_repository_id
         ) as uw:
             for i, entry_raw in enumerate(command.entries):
-
                 entry, events = resource.create_entry_from_dict(
                     entry_raw["entry"],
                     user=entry_raw.get("user") or command.user,

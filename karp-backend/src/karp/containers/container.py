@@ -27,7 +27,7 @@ def create_field_getter(  # noqa: D103
     return getter
 
 
-def dict_get(d: dict[str, Any], field_name: str): # noqa: ANN201
+def dict_get(d: dict[str, Any], field_name: str):  # noqa: ANN201
     """Return field_name from given dict.
 
     If field_name includes periods, the dict is decended.

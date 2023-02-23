@@ -133,8 +133,8 @@ class TestDeleteResource:
         assert resource_uow.was_committed  # type: ignore [attr-defined]
 
         resource = resource_uow.resources.by_id(cmd.id)
-        assert resource.id == cmd.id 
-        assert resource.resource_id == cmd.resource_id 
+        assert resource.id == cmd.id
+        assert resource.resource_id == cmd.resource_id
         # assert len(resource.domain_events) == 1
 
 
