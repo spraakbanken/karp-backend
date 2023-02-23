@@ -47,7 +47,12 @@ def test_update_entry_to_entry_repo(entry_repo):  # noqa: ANN201
     entry = factories.EntryFactory()
     entry_repo.save(entry)
 
-    entry.update_body({"body": "changed"}, user="kristoff@example.com", message="hi")
+    entry.update_body(
+        {"body": "changed"},
+        user="kristoff@example.com",
+        message="hi",
+        version=1,
+    )
     entry_repo.save(entry)
 
     assert entry_repo.by_id(entry.id).version == entry.version
@@ -61,6 +66,7 @@ def test_discard_entry_and_insert_new(entry_repo):  # noqa: ANN201
     entry.discard(
         user="kristoff@example.com",
         message="hi",
+        version=1,
     )
     assert entry.discarded
     entry_repo.save(entry)
