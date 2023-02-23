@@ -1,39 +1,18 @@
-.PHONY: test-log pytest build-dev clean clean-pyc help lint lint-syntax-errors
 .DEFAULT: test
 
-PYTHON = python3
 PLATFORM := ${shell uname -o}
-# INVENV_PATH = ${shell which invenv}
-
 
 
 ifeq (${VIRTUAL_ENV},)
-  VENV_NAME = .venv
   INVENV = poetry run
-#   ${info invenv: ${INVENV_PATH}}
-#   ifeq (${INVENV_PATH},)
-#     INVENV = export VIRTUAL_ENV="${VENV_NAME}"; export PATH="${VENV_BIN}:${PATH}"; unset PYTHON_HOME;
-#   else
-#     INVENV = invenv -C ${VENV_NAME}
-#   endif
 else
-  VENV_NAME = ${VIRTUAL_ENV}
   INVENV =
 endif
 
 ${info Platform: ${PLATFORM}}
-${info Using virtual environment: ${VENV_NAME}}
-
-VENV_BIN = ${VENV_NAME}/bin
 
 
-
-ifeq (${PLATFORM}, Android)
-  FLAKE8_FLAGS = --jobs=1
-else
-  FLAKE8_FLAGS = --jobs=auto
-endif
-
+.PHONY: help
 help:
 	@echo "usage:"
 	@echo ""
@@ -62,10 +41,10 @@ help:
 	@echo "   run formatter on all code"
 
 install:
-	poetry install --no-dev -E mysql
+	poetry install --only-main -E mysql
 
 dev: install-dev
-install-dev: components/karp/search/domain/query_dsl/karp_query_v6_parser.py components/karp/search/domain/query_dsl/karp_query_v6_model.py
+install-dev:
 	poetry install -E mysql
 
 install-wo-mysql:
@@ -89,10 +68,13 @@ install-dev-elasticsearch7:
 init-db:
 	${INVENV} alembic upgrade head
 
-components/karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
+# build parser
+build-parser: karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_parser.py karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_model.py
+
+karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
 	${INVENV} tatsu $< > $@
 
-components/karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
+karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
 	${INVENV} tatsu --object-model $< > $@
 
 .PHONY: serve
@@ -103,28 +85,38 @@ serve: install-dev
 serve-w-reload: install-dev
 	${INVENV} uvicorn --reload --factory karp.karp_v6_api.main:create_app
 
-check-security-issues: install-dev
-	${INVENV} bandit -r -ll karp
+unit_test_dirs := karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests
+e2e_test_dirs := karp-backend/src/karp/tests/e2e
+all_test_dirs := karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests
+
+default_cov := "--cov=karp-backend/src/karp --cov=karp-lex-core/src/karp"
+cov_report := "term-missing"
+cov := ${default_cov}
+
+tests := ${unit_test_dirs}
 
 .PHONY: test
-test: unit-tests
+test:
+	${INVENV} pytest -vv ${tests}
+
 .PHONY: all-tests
-all-tests: unit-tests integration-tests e2e-tests
+all-tests: clean-pyc unit-tests integration-tests e2e-tests
+
 .PHONY: all-tests-w-coverage
 all-tests-w-coverage:
-	${INVENV} pytest -vv --cov=karp --cov-report=xml components/karp/tests
+	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${all_test_dirs}
 
 .PHONY: unit-tests
 unit-tests:
-	${INVENV} pytest -vv components/karp/tests/unit bases/karp/lex_core/tests
+	${INVENV} pytest -vv ${unit_test_dirs}
 
 .PHONY: e2e-tests
 e2e-tests: clean-pyc
-	${INVENV} pytest -vv karp/tests/e2e
+	${INVENV} pytest -vv ${e2e_test_dirs}
 
-.PHONY: run-e2e-tests-w-coverage
+.PHONY: e2e-tests-w-coverage
 e2e-tests-w-coverage: clean-pyc
-	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/e2e
+	${INVENV} pytest -vv --cov=karp --cov-report=${cov_report} ${e2e_test_dirs}
 
 .PHONY: integration-tests
 integration-tests: clean-pyc
@@ -132,58 +124,29 @@ integration-tests: clean-pyc
 
 .PHONY: unit-tests-w-coverage
 unit-tests-w-coverage: clean-pyc
-	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/unit karp/tests/foundation/unit
+	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${unit_test_dirs}
 
 .PHONY: integration-tests-w-coverage
 integration-tests-w-coverage: clean-pyc
 	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/integration
 
-test-log: clean-pyc lint-syntax-errors
-	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests > pytest.log
-
-tox:
-	tox
-
-tox-to-log:
-	tox > tox.log
-
+.PHONY: lint
 lint:
-	${INVENV} pylint --rcfile=pylintrc karp/auth karp/lex karp/cliapp karp/karp_v6_api
-
-lint-no-fail:
-	${INVENV} pylint --rcfile=pylintrc --exit-zero karp
-
-check-pylint:
-	${INVENV} pylint --rcfile=pylintrc  karp
-
-check-mypy: type-check
+	${INVENV} ruff ${flags} karp-backend karp-lex-core
 
 .PHONY: serve-docs
 serve-docs:
 	cd docs/karp-backend-v6 && ${INVENV} mkdocs serve && cd -
 
-.PHONY: lint-refactorings
-lint-refactorings: check-pylint-refactorings
-check-pylint-refactorings:
-	${INVENV} pylint --disable=C,W,E --enable=R karp
-
 .PHONY: type-check
 type-check:
-	${INVENV} mypy karp
-
-bumpversion:
-	${INVENV} bump2version patch
-
-bumpversion-minor:
-	${INVENV} bump2version minor
-
-bumpversion-major:
-	${INVENV} bump2version major
+	${INVENV} mypy --config-file mypy.ini -p karp
 
 .PHONY: publish
 publish:
 	git push origin main --tags
 
+.PHONY: clean clean-pyc
 clean: clean-pyc
 clean-pyc:
 	find . -name '*.pyc' -exec rm -f {} +
@@ -194,3 +157,17 @@ clean-pyc:
 .PHONY: fmt
 fmt:
 	${INVENV} black .
+
+# test if code is formatted
+.PHONY: check-fmt
+check-fmt:
+	{{INVENV}} black . --check
+
+part := "patch"
+project := "PLEASE, GIVE ME A PROJECT"
+
+bumpversion:
+	cd ${project} && make part=${part} bumpversion
+
+build:
+	cd ${project} && make build

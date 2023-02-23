@@ -3,19 +3,15 @@ default: unit-tests
 
 PLATFORM := `uname -o`
 
-VENV_NAME := env_var_or_default('VIRTUAL_ENV', '.venv')
 INVENV := if env_var_or_default('VIRTUAL_ENV', "") == "" { "poetry run" } else { "" }
 
 info:
 	@echo "Platform: {{PLATFORM}}"
-	@echo "Venv: {{VENV_NAME}}"
 	@echo "INVENV: '{{INVENV}}'"
 
 cov-report := "term-missing"
 
 alias dev := install-dev
-
-
 
 # setup production environment
 install:
@@ -60,10 +56,6 @@ serve: install-dev
 
 serve-w-reload: install-dev
 	{{INVENV}} uvicorn --reload --factory karp.karp_v6_api.main:create_app
-
-check-security-issues: install-dev
-	{{INVENV}} bandit -r -ll karp
-
 
 # run all tests
 all-tests: clean-pyc unit-tests integration-tests e2e-tests
@@ -125,7 +117,7 @@ serve-docs:
 
 # type-check code
 type-check:
-	{{INVENV}} mypy -p karp
+	{{INVENV}} mypy --config-file mypy.ini -p karp
 
 # type-check code for project
 type-check-project project:
@@ -134,7 +126,7 @@ type-check-project project:
 
 # bump given part of version
 bumpversion project part="patch":
-	cd {{project}} && just bumpversion {{part}}
+	@echo "use 'just {{project}}/bumpversion {{part}}' instead"
 
 # bump minor part of version
 bumpversion-minor project: (bumpversion project "minor")
@@ -142,7 +134,7 @@ bumpversion-minor project: (bumpversion project "minor")
 # bump major part of version
 bumpversion-major project: (bumpversion project "major")
 
-# push tags to github, where a workflow upload distrivbutionto PyPi
+# push tags to github, where a workflow upload the distribution to PyPi
 publish:
 	git push origin main --tags
 
@@ -163,5 +155,4 @@ check-fmt:
 
 # build given project
 build-project project:
-	@echo "Building {{project}} ..."
-	cd projects/{{project}} && just build
+	@echo "use 'just {{project}}/build' instead"
