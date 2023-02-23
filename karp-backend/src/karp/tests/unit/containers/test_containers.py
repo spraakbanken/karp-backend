@@ -1,10 +1,10 @@
 from typing import Any
 
 import pytest
-from karp.containers import container_get
+from karp.containers import dict_get
 
 
-class TestContainerGet:
+class TestDictGet:
     @pytest.mark.parametrize(
         "d, field, expected",
         [
@@ -14,8 +14,8 @@ class TestContainerGet:
             ({"a": {"b": "hi"}}, "a.b", "hi"),
         ],
     )
-    def test_getting_expected(self, d: dict, field: str, expected: Any) -> None:
-        assert container_get(d, field) == expected
+    def test_getting_expected(self, d: dict[str, Any], field: str, expected) -> None:
+        assert dict_get(d, field) == expected
 
     @pytest.mark.parametrize(
         "d, field",
@@ -29,4 +29,4 @@ class TestContainerGet:
         field: str,
     ) -> None:
         with pytest.raises(ValueError):
-            container_get(d, field)
+            dict_get(d, field)

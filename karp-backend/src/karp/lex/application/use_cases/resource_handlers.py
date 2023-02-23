@@ -166,7 +166,10 @@ class DeletingResource(  # noqa: D101
     def execute(self, command: commands.DeleteResource):  # noqa: ANN201, D102
         logger.info("deleting resource", extra={"resource_id": command.resource_id})
         with self.resource_uow as uow:
-            resource = uow.repo.by_resource_id(command.resource_id)
+            if command.id:
+                resource = uow.repo.by_id(command.id)
+            else:
+                resource = uow.repo.by_resource_id(command.resource_id)
             if not resource:
                 raise errors.ResourceNotFound(command.resource_id)
             events = resource.discard(

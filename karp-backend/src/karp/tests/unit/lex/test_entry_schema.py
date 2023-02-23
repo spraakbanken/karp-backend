@@ -1,7 +1,8 @@
-from karp.lex.domain.value_objects.entry_schema import EntrySchema  # noqa: I001
 import pytest
-
-from karp.utility.json_schema import create_entry_json_schema
+from karp.lex.domain.value_objects.entry_schema import (
+    EntrySchema,
+    create_entry_json_schema,
+)
 
 CONFIG_PLACES = """{
   "resource_id": "places",

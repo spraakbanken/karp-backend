@@ -15,6 +15,9 @@ from karp.lex.application.repositories import (
     EntryRepositoryUnitOfWorkFactory,
     EntryUnitOfWork,
 )
+from karp.lex.application.repositories.mem import (
+    InMemoryGeneratorUnitOfWork,
+)
 from karp.lex.domain import entities as lex_entities
 from karp.lex.domain import events
 from karp.lex_core.value_objects import UniqueId, UniqueIdType
@@ -327,7 +330,12 @@ class InMemoryLexInfrastructure(injector.Module):
 
     @injector.provider
     @injector.singleton
-    def resource_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:
+    def resource_uow(self, event_bus: EventBus) -> lex_repositories.GeneratorUnitOfWork:
+        return InMemoryGeneratorUnitOfWork(event_bus=event_bus)
+
+    @injector.provider
+    @injector.singleton
+    def generator_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:
         return InMemoryResourceUnitOfWork(event_bus=event_bus)
 
     @injector.provider
@@ -341,18 +349,3 @@ class InMemoryLexInfrastructure(injector.Module):
         )
 
 
-# def bootstrap_test_app(
-#     resource_uow: lex_repositories.ResourceUnitOfWork = None,
-#     entry_uows: lex_repositories.EntriesUnitOfWork = None,
-#     entry_uow_factory: lex_repositories.EntryUowFactory = None,
-#     search_service_uow: SearchServiceUnitOfWork = None,
-#     entry_repo_repo_uow: lex_repositories.EntryRepositoryRepositoryUnitOfWork = None,
-# ):
-#     return bootstrap_message_bus(
-#         resource_uow=resource_uow or InMemoryResourceUnitOfWork(),
-#         entry_repo_repo_uow=entry_repo_repo_uow or InMemoryEntryRepositoryRepositoryUnitOfWork(),
-#         entry_uows=entry_uows or lex_repositories.EntriesUnitOfWork(),
-#         entry_uow_factory=entry_uow_factory or InMemoryEntryUowFactory(),
-#         search_service_uow=search_service_uow or InMemorySearchServiceUnitOfWork(),
-#         raise_on_all_errors=True
-#     )

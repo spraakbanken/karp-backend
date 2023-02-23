@@ -1,11 +1,13 @@
-from .entries import EntryRepository, EntryUnitOfWork  # noqa: I001
+from karp.lex.application.repositories.generators import GeneratorUnitOfWork
+
+from .entries import EntryRepository, EntryUnitOfWork
 from .entry_repositories import (
+    EntryRepositoryUnitOfWorkFactory,
+    EntryUnitOfWork,  # noqa: F811
+    EntryUnitOfWorkCreator,
     EntryUowRepository,
     EntryUowRepositoryUnitOfWork,
-    EntryRepositoryUnitOfWorkFactory,
     InjectorEntryUnitOfWorkRepoFactory,
-    EntryUnitOfWorkCreator,
-    EntryUnitOfWork,  # noqa: F811
 )
 from .resources import ResourceRepository, ResourceUnitOfWork
 
@@ -16,6 +18,7 @@ __all__ = [
     "EntryUnitOfWorkCreator",
     "EntryUowRepository",
     "EntryUowRepositoryUnitOfWork",
+    "GeneratorUnitOfWork",
     "ResourceRepository",
     "ResourceUnitOfWork",
 ]

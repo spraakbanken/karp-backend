@@ -36,6 +36,7 @@ def test_discarded_entry_has_event():  # noqa: ANN201
         user="alice@example.org",
         message="bad",
         timestamp=123.45,
+        version=1,
     )
     assert entry.discarded
     assert domain_events[-1] == events.EntryDeleted(

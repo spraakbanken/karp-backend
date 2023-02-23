@@ -19,7 +19,7 @@ class TestCreateResource:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        cmd = factories.CreateResourceFactory()
+        cmd = factories.CreateResourceFactory.build()
         with pytest.raises(errors.NoSuchEntryRepository):
             lex_ctx.command_bus.dispatch(cmd)
 
@@ -27,13 +27,13 @@ class TestCreateResource:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        cmd = factories.CreateEntryRepositoryFactory()
+        cmd = factories.CreateEntryRepositoryFactory.build()
         lex_ctx.command_bus.dispatch(cmd)
 
         cmd = factories.CreateResourceFactory.build(entryRepoId=cmd.id)  # type: ignore [attr-defined]
         lex_ctx.command_bus.dispatch(cmd)
 
-        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [misc]
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [type-abstract]
         assert resource_uow.was_committed  # type: ignore [attr-defined]
         assert resource_uow.resources.num_entities() == 1
 
@@ -46,13 +46,13 @@ class TestCreateResource:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        cmd = factories.CreateEntryRepositoryFactory()
+        cmd = factories.CreateEntryRepositoryFactory.build()
         lex_ctx.command_bus.dispatch(cmd)
 
         cmd = factories.CreateResourceFactory.build(entryRepoId=cmd.id)  # type: ignore [attr-defined]
         lex_ctx.command_bus.dispatch(cmd)
 
-        read_repo = lex_ctx.container.get(ReadOnlyResourceRepository)  # type: ignore [misc]
+        read_repo = lex_ctx.container.get(ReadOnlyResourceRepository)  # type: ignore [type-abstract]
 
         resource = read_repo.get_by_resource_id(cmd.resource_id)  # type: ignore [attr-defined]
 
@@ -70,19 +70,19 @@ class TestCreateResource:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        cmd1 = factories.CreateEntryRepositoryFactory()
+        cmd1 = factories.CreateEntryRepositoryFactory.build()
         lex_ctx.command_bus.dispatch(cmd1)
-        cmd2 = factories.CreateResourceFactory(entryRepoId=cmd1.id)  # type: ignore [attr-defined]
+        cmd2 = factories.CreateResourceFactory.build(entryRepoId=cmd1.id)  # type: ignore [attr-defined]
         lex_ctx.command_bus.dispatch(cmd2)
 
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
-                factories.CreateResourceFactory(
+                factories.CreateResourceFactory.build(
                     resourceId=cmd2.resource_id, entryRepoId=cmd1.id  # type: ignore [attr-defined]
                 )
             )
 
-        resource_uow = lex_ctx.container.get(repositories.ResourceUnitOfWork)  # type: ignore [misc]
+        resource_uow = lex_ctx.container.get(repositories.ResourceUnitOfWork)  # type: ignore [type-abstract]
 
         assert resource_uow.was_rolled_back  # type: ignore [attr-defined]
 
@@ -90,15 +90,52 @@ class TestCreateResource:
         self,
         lex_ctx: adapters.UnitTestContext,
     ):
-        cmd = factories.CreateEntryRepositoryFactory()
+        cmd = factories.CreateEntryRepositoryFactory.build()
         lex_ctx.command_bus.dispatch(cmd)
         with pytest.raises(errors.InvalidResourceId):
             lex_ctx.command_bus.dispatch(
-                factories.CreateResourceFactory(
-                    entryRepoId=cmd.id,  # type: ignore [attr-defined]
+                factories.CreateResourceFactory.build(
+                    entryRepoId=cmd.id,
                     resourceId="with space",
                 )
             )
+
+
+class TestDeleteResource:
+    def test_non_existent_raises(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ) -> None:
+        with pytest.raises(errors.ResourceNotFound):
+            lex_ctx.command_bus.dispatch(
+                factories.DeleteResourceFactory.build(
+                    resourceId="non-existent",
+                    version=1,
+                )
+            )
+
+    def test_delete_resource(
+        self,
+        lex_ctx: adapters.UnitTestContext,
+    ) -> None:
+        cmd = factories.CreateEntryRepositoryFactory.build()
+        lex_ctx.command_bus.dispatch(cmd)
+
+        cmd = factories.CreateResourceFactory.build(entryRepoId=cmd.id)
+        lex_ctx.command_bus.dispatch(cmd)
+        lex_ctx.command_bus.dispatch(
+            factories.DeleteResourceFactory.build(
+                id=cmd.id,
+                version=1,
+            )
+        )
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [type-abstract]
+        assert resource_uow.was_committed  # type: ignore [attr-defined]
+
+        resource = resource_uow.resources.by_id(cmd.id)
+        assert resource.id == cmd.id 
+        assert resource.resource_id == cmd.resource_id 
+        # assert len(resource.domain_events) == 1
 
 
 class TestUpdateResource:
@@ -114,7 +151,7 @@ class TestUpdateResource:
         changed_config = copy.deepcopy(cmd2.config)
         changed_config["fields"]["b"] = {"type": "integer"}
         lex_ctx.command_bus.dispatch(
-            factories.UpdateResourceFactory(
+            factories.UpdateResourceFactory.build(
                 resourceId=cmd2.resource_id,  # type: ignore [attr-defined]
                 version=1,
                 name="R1",
@@ -124,7 +161,7 @@ class TestUpdateResource:
             ),
         )
 
-        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [misc]
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [type-abstract]
         assert resource_uow.was_committed  # type: ignore
 
         resource = resource_uow.resources.by_resource_id(cmd2.resource_id)  # type: ignore [attr-defined]
@@ -157,7 +194,7 @@ class TestPublishResource:
             )
         )
 
-        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [misc]
+        resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [type-abstract]
         assert resource_uow.was_committed  # type: ignore [attr-defined]
 
         resource = resource_uow.resources.by_id(cmd2.id)  # type: ignore [arg-type,attr-defined]

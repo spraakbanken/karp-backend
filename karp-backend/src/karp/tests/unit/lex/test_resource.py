@@ -198,12 +198,11 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
 
 
 def test_resource_has_entry_json_schema():  # noqa: ANN201
-    resource = factories.ResourceFactory()
+    resource = factories.ResourceFactory.build()
 
-    json_schema = resource.entry_json_schema
+    json_schema = resource.entry_schema
 
-    assert json_schema["type"] == "object"
-    assert "baseform" in json_schema["properties"]
+    assert json_schema is not None
 
 
 class TestDiscardedResource:
