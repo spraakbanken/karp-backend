@@ -9,7 +9,6 @@ info:
 	@echo "Platform: {{PLATFORM}}"
 	@echo "INVENV: '{{INVENV}}'"
 
-cov-report := "term-missing"
 
 alias dev := install-dev
 
@@ -57,12 +56,16 @@ serve: install-dev
 serve-w-reload: install-dev
 	{{INVENV}} uvicorn --reload --factory karp.karp_v6_api.main:create_app
 
+cov-report := "term-missing"
+all-test-dirs := "karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests"
+default-cov := "--cov=karp-backend/src/karp --cov=karp-lex-core/src/karp"
+unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
+cov := default-cov
 # run all tests
 all-tests: clean-pyc unit-tests integration-tests e2e-tests
 
 # run all tests with code coverage
-all-tests-w-coverage cov=default-cov:
-	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests
+alias all-tests-w-coverage := test-w-coverage
 
 # run all tests for karp-lex-core
 test-lex-core: (test 'karp-lex-core/src/karp/lex_core/tests')
@@ -74,17 +77,12 @@ test-lex-core-w-coverage: (test-w-coverage "--cov=karp.lex_core" "karp-lex-core/
 unit-tests: test
 
 # run unit tests with code coverage
-unit-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=karp --cov-report={{cov-report}} karp-backend/src/karp/tests/unit karp-backend/src/karp/tests/foundation/unit
-
-all-test-dirs := "karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests"
-default-cov := "--cov=karp-backend/src/karp --cov=karp-lex-core/src/karp"
+unit-tests-w-coverage cov=default-cov: clean-pyc
+	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests
 
 # run tests with code coverage
-test-w-coverage cov=default-cov +tests=all-test-dirs: clean-pyc
+test-w-coverage +tests=all-test-dirs: clean-pyc
 	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} {{tests}}
-
-unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
 
 # run given test(s)
 test *tests=unit-test-dirs:
@@ -105,12 +103,11 @@ integration-tests-w-coverage: clean-pyc (test-w-coverage default-cov "karp-backe
 
 # lint code
 lint flags="":
-	{{INVENV}} ruff {{flags}} karp-backend karp-lex-core
+	{{INVENV}} ruff {{flags}} .
 
 # lint specific project
 lint-project project:
-	@echo "Linting {{project}}"
-	cd projects/{{project}} && just lint
+	@echo "use 'just {{project}}/lint' instead"
 
 serve-docs:
 	cd docs/karp-backend-v6 && {{INVENV}} mkdocs serve && cd -
@@ -121,8 +118,7 @@ type-check:
 
 # type-check code for project
 type-check-project project:
-	@echo "Type-checking {{project}} ..."
-	cd projects/{{project}} && just type-check
+	@echo "use 'just {{project}}/type-check' instead"
 
 # bump given part of version
 bumpversion project part="patch":

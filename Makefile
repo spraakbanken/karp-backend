@@ -94,6 +94,7 @@ cov_report := "term-missing"
 cov := ${default_cov}
 
 tests := ${unit_test_dirs}
+all_tests := ${all_test_dirs}
 
 .PHONY: test
 test:
@@ -104,8 +105,11 @@ all-tests: clean-pyc unit-tests integration-tests e2e-tests
 
 .PHONY: all-tests-w-coverage
 all-tests-w-coverage:
-	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${all_test_dirs}
+	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${all_tests}
 
+.PHONY: test-w-coverage
+test-w-coverage:
+	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${all_tests}
 .PHONY: unit-tests
 unit-tests:
 	${INVENV} pytest -vv ${unit_test_dirs}
@@ -116,11 +120,11 @@ e2e-tests: clean-pyc
 
 .PHONY: e2e-tests-w-coverage
 e2e-tests-w-coverage: clean-pyc
-	${INVENV} pytest -vv --cov=karp --cov-report=${cov_report} ${e2e_test_dirs}
+	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${e2e_test_dirs}
 
 .PHONY: integration-tests
 integration-tests: clean-pyc
-	${INVENV} pytest -vv karp/tests/integration
+	${INVENV} pytest -vv karp-backend/src/karp/tests/integration
 
 .PHONY: unit-tests-w-coverage
 unit-tests-w-coverage: clean-pyc
@@ -128,7 +132,7 @@ unit-tests-w-coverage: clean-pyc
 
 .PHONY: integration-tests-w-coverage
 integration-tests-w-coverage: clean-pyc
-	${INVENV} pytest -vv --cov=karp --cov-report=xml karp/tests/integration
+	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} karp-backend/src/karp/tests/integration
 
 .PHONY: lint
 lint:
