@@ -1,6 +1,5 @@
 import abc  # noqa: D100, I001
-import ulid
-from typing import Generic, TypeVar, Optional, Type, Union
+from typing import Generic, TypeVar, Optional, Type
 
 from karp.lex_core.value_objects import UniqueId, unique_id
 from .errors import NotFoundError

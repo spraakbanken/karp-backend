@@ -4,7 +4,6 @@ import typing
 from typing import Any, Dict, Optional, Tuple
 
 from karp import timings
-from karp.containers import dict_get
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
 from karp.foundation.value_objects import PermissionLevel
 from karp.lex.domain import constraints, errors, events
