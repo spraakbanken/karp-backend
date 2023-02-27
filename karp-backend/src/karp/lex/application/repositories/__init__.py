@@ -18,4 +18,5 @@ __all__ = [
     "EntryUowRepositoryUnitOfWork",
     "ResourceRepository",
     "ResourceUnitOfWork",
+    "InjectorEntryUnitOfWorkRepoFactory",
 ]

@@ -19,8 +19,19 @@ from .resource_handlers import (
 
 
 __all__ = [
+    # entry use cases
     "AddingEntries",
     "AddingEntry",
     "DeletingEntry",
     "ImportingEntries",
+    "UpdatingEntry",
+    # entry-repo use cases
+    "CreatingEntryRepo",
+    "DeletingEntryRepository",
+    # resource use cases
+    "CreatingResource",
+    "DeletingResource",
+    "PublishingResource",
+    "SettingEntryRepoId",
+    "UpdatingResource",
 ]
