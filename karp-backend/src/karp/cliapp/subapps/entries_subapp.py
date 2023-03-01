@@ -47,7 +47,7 @@ def add_entries_to_resource(  # noqa: ANN201, D103
     entries = tqdm(json_streams.load_from_file(data), desc="Adding", unit=" entries")
     if chunked:
         cmd = lex.AddEntriesInChunks(
-            resource_id=resource_id,
+            resourceId=resource_id,
             chunk_size=chunk_size,
             entries=entries,
             user=user,
@@ -55,7 +55,7 @@ def add_entries_to_resource(  # noqa: ANN201, D103
         )
     else:
         cmd = lex.AddEntries(
-            resource_id=resource_id,
+            resourceId=resource_id,
             entries=entries,
             user=user,
             message=message,
@@ -83,7 +83,7 @@ def import_entries_to_resource(  # noqa: ANN201, D103
     entries = tqdm(json_streams.load_from_file(data), desc="Adding", unit=" entries")
     if chunked:
         cmd = lex.ImportEntriesInChunks(
-            resource_id=resource_id,
+            resourceId=resource_id,
             chunk_size=chunk_size,
             entries=entries,
             user=user,
@@ -91,7 +91,7 @@ def import_entries_to_resource(  # noqa: ANN201, D103
         )
     else:
         cmd = lex.ImportEntries(
-            resource_id=resource_id,
+            resourceId=resource_id,
             entries=entries,
             user=user,
             message=message,
