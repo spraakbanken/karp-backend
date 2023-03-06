@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Cleaning up & documenting. PR [#226](https://github.com/spraakbanken/karp-backend/pull/226) by [@kod-kristoff](https://github.com/kod-kristoff).
 * changed: use camelCase in all api interactions. PR [#225](https://github.com/spraakbanken/karp-backend/pull/225) by [@kod-kristoff](https://github.com/kod-kristoff).
 * Added: Generic Commands. PR [#224](https://github.com/spraakbanken/karp-backend/pull/224) by [@kod-kristoff](https://github.com/kod-kristoff).
 * added: cmdtype tags. PR [#223](https://github.com/spraakbanken/karp-backend/pull/223) by [@kod-kristoff](https://github.com/kod-kristoff).
