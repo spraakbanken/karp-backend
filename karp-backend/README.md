@@ -111,5 +111,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Latest Changes
 
+* Cleaning up & documenting. PR [#226](https://github.com/spraakbanken/karp-backend/pull/226) by [@kod-kristoff](https://github.com/kod-kristoff).
 * changed: use camelCase in all api interactions. PR [#225](https://github.com/spraakbanken/karp-backend/pull/225) by [@kod-kristoff](https://github.com/kod-kristoff).
 * fix: enable cli resource update again. PR [#222](https://github.com/spraakbanken/karp-backend/pull/222) by [@kod-kristoff](https://github.com/kod-kristoff).
