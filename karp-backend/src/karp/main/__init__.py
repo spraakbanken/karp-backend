@@ -183,38 +183,6 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
     )
 
 
-# def bootstrap(
-#    resource_uow: unit_of_work.ResourceUnitOfWork = None,
-#    entry_uows: unit_of_work.EntriesUnitOfWork = None,
-#    authservice: auth_service.AuthService = None,
-#    index_uow: unit_of_work.IndexUnitOfWork = None,
-#    entry_uow_factory: unit_of_work.EntryUowFactory = None,
-#    raise_on_all_errors: bool = False,
-# ) -> messagebus.MessageBus:
-#    setup_logging()
-#    load_infrastructure()
-#    if authservice is None:
-#        authservice = auth_service.AuthService.create(config.AUTH_CONTEXT)
-#    if resource_uow is None:
-#        resource_uow = sql_unit_of_work.SqlResourceUnitOfWork()
-#    if entry_uows is None:
-#        entry_uows = unit_of_work.EntriesUnitOfWork()
-#    if entry_uow_factory is None:
-#        entry_uow_factory = unit_of_work.DefaultEntryUowFactory()
-#    if index_uow is None:
-#        index_uow = unit_of_work.IndexUnitOfWork.create(config.SEARCH_CONTEXT)
-#    bus = messagebus.MessageBus(
-#        resource_uow=resource_uow,
-#        entry_uows=entry_uows,
-#        # auth_service=authservice,
-#        search_service_uow=index_uow,
-#        entry_uow_factory=entry_uow_factory,
-#        raise_on_all_errors=raise_on_all_errors,
-#    )
-#    bus.handle(events.AppStarted())  # needed? ?
-#    return bus
-
-
 def setup_logging():  # noqa: ANN201, D103
     # Clear Gunicorn access log to remove duplicate requests logging
     # logging.getLogger("gunicorn.access").handlers.clear()
