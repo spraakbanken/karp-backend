@@ -249,7 +249,9 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
         elif to_date is not None:
             query = query.filter(self.history_model.last_modified <= to_date)
 
-        paged_query = query.limit(limit).offset(offset)
+        paged_query = query.order_by(self.history_model.last_modified.desc())
+        paged_query = paged_query.limit(limit).offset(offset)
+
         total = query.count()
         return [self._history_row_to_entry(row) for row in paged_query.all()], total
 
