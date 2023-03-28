@@ -48,9 +48,8 @@ def get_history_for_entry(  # noqa: ANN201, D103
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
     logger.info(
         "getting history for entry",
@@ -84,9 +83,8 @@ def add_entry(  # noqa: ANN201, D103
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
     logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
@@ -130,9 +128,8 @@ def preview_entry(  # noqa: ANN201, D103
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="lexica:read"'},
         )
     try:
         input_dto = search.PreviewEntryInputDto(
@@ -167,9 +164,8 @@ def update_entry(  # noqa: ANN201, D103
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="write"'},
         )
 
     logger.info(
@@ -239,9 +235,8 @@ def delete_entry(  # noqa: ANN201
     """Delete a entry from a resource."""
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="lexica:write"'},
         )
     try:
         command_bus.dispatch(

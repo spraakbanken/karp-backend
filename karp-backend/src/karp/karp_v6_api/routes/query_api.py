@@ -42,9 +42,8 @@ def get_entries_by_id(  # noqa: ANN201, D103
     logger.debug("karp_v6_api.views.get_entries_by_id")
     if not auth_service.authorize(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
     return search_service.search_ids(resource_id, entry_ids)
 
@@ -89,9 +88,8 @@ def query_split(  # noqa: ANN201, D103
     resource_list = resources.split(",")
     if not auth_service.authorize(auth.PermissionLevel.read, user, resource_list):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
     query_request = QueryRequest(
         resource_ids=resource_list,
@@ -174,9 +172,8 @@ def query(  # noqa: ANN201
     resource_list = resources.split(",")
     if not auth_service.authorize(auth.PermissionLevel.read, user, resource_list):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
     query_request = QueryRequest(
         resource_ids=resource_list,

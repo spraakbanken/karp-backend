@@ -34,9 +34,8 @@ def get_field_values(  # noqa: ANN201, D103
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="read"'},
         )
     print(f"calling statistics ... from {search_service=}")
     return search_service.statistics(resource_id, field)

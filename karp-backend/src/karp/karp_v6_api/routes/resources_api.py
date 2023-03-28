@@ -52,9 +52,8 @@ def create_new_resource(  # noqa: D103
         auth.PermissionLevel.admin, user, [new_resource.resource_id]
     ):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
     try:
         if new_resource.entry_repo_id is None:
@@ -99,9 +98,8 @@ def publishing_resource(  # noqa: ANN201, D103
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="lexica:admin"'},
         )
     logger.info(
         "publishing resource",

@@ -279,6 +279,8 @@ def fixture_init_search_service():  # noqa: ANN201
     # Stop any running instances of ES to avoid data loss and clusters forming
     # run `elasticsearch -Ehttp.port=9202`
     # replace the exception in this function with "yield"
+    # NOTE: after each test run the indices in ES must be removed manually :(
+    #      `curl -XDELETE localhost:9202/*` or remove the data folder and restart
     raise Exception("You must manually start Elasticsearch, see karp-backend/src/karp/tests/e2e/conftest.py")
 
     # this is how it should be done, but for some reason it does not work and it also forms a cluster

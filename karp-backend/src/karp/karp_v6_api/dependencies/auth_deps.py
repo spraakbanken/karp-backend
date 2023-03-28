@@ -12,6 +12,7 @@ from karp import auth, lex
 
 # from karp.auth.auth import auth
 from karp.main.errors import ClientErrorCodes, KarpError  # noqa: F401
+from karp.auth.domain.errors import ExpiredToken, TokenError, InvalidTokenPayload
 from karp.auth.domain.auth_service import AuthService  # noqa: F401
 from karp.auth_infrastructure import (
     JWTAuthService,
@@ -44,10 +45,6 @@ def get_resource_permissions(  # noqa: D103
     return LexGetResourcePermissions(query)
 
 
-# def get_resource_permissions(conn: Connection = Depends(database.get_connection)) -> GetResourcePermissions:
-#     return
-
-
 def get_is_resource_protected(  # noqa: D103
     repo: lex.ReadOnlyResourceRepository = Depends(lex_deps.get_resources_read_repo),
 ) -> auth.IsResourceProtected:
@@ -64,35 +61,17 @@ def get_auth_service(  # noqa: D103
     )
 
 
-def get_current_user(  # noqa: D103
+# TODO this one uses "bearer_scheme"
+# get_user uses "auth_scheme"
+# can this one call get_user with same creds?
+def get_user_optional(  # noqa: D103
     security_scopes: SecurityScopes,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     auth_service: auth.AuthService = Depends(get_auth_service),
 ) -> Optional[auth.User]:
     if not credentials:
         return None
-    if security_scopes.scopes:
-        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
-    else:
-        authenticate_value = "Bearer"
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": authenticate_value},
-        # code=ClientErrorCodes.NOT_PERMITTED,
-    )
-    try:
-        logger.debug(
-            "Calling auth_service",
-            extra={"credentials": credentials},
-        )
-        return auth_service.authenticate(credentials.scheme, credentials.credentials)
-    except KarpError:
-        logger.exception("error authenticating")
-        raise credentials_exception
-
-
-get_user_optional = get_current_user
+    return get_user(security_scopes, credentials, auth_service)
 
 
 def get_user(  # noqa: D103
@@ -108,7 +87,6 @@ def get_user(  # noqa: D103
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": authenticate_value},
-        # code=ClientErrorCodes.NOT_PERMITTED,
     )
     if not credentials:
         raise credentials_exception
@@ -120,3 +98,6 @@ def get_user(  # noqa: D103
         return auth_service.authenticate(credentials.scheme, credentials.credentials)
     except KarpError:
         raise credentials_exception
+    except TokenError:
+        raise credentials_exception
+

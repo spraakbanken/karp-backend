@@ -42,9 +42,8 @@ def get_diff(  # noqa: ANN201, D103
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="admin"'},
         )
 
     diff_request = EntryDiffRequest(
@@ -79,9 +78,8 @@ def get_history(  # noqa: ANN201, D103
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
-            headers={"WWW-Authenticate": 'Bearer scope="admin"'},
         )
     history_request = EntryHistoryRequest(
         resourceId=resource_id,

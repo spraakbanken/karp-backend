@@ -678,7 +678,7 @@ class TestGetEntry:
         response = fa_data_client.get(f"/entries/places/{entry_places_214_id}")
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
-    def test_get_entry_w_lower_auth_returns_401(  # noqa: ANN201
+    def test_get_entry_w_lower_auth_returns_403(  # noqa: ANN201
         self,
         fa_data_client,
         write_token: auth.AccessToken,
@@ -688,7 +688,7 @@ class TestGetEntry:
             f"/entries/places/{entry_places_214_id}",
             headers=write_token.as_header(),
         )
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_entry_by_entry_id(  # noqa: ANN201
         self,
