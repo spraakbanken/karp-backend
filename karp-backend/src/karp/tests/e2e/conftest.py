@@ -275,19 +275,19 @@ def write_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 @pytest.fixture(name="init_search_service", scope="session")
 def fixture_init_search_service():  # noqa: ANN201
-    print("fixture: use_main_index")
-    if not config("TEST_ELASTICSEARCH_ENABLED"):
-        print("don't use elasticsearch")
-        # pytest.skip()
-        yield
-    else:
-        if not config("TEST_ES_HOME"):
-            raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
-        es_port = int(os.environ.get("TEST_ELASTICSEARCH_PORT", "9202"))
-        with elasticsearch_test.ElasticsearchTest(
-            port=es_port, es_path=config("TEST_ES_HOME")
-        ):
-            yield
+    # TODO this does not work right know, to test the e2e tests
+    # Stop any running instances of ES to avoid data loss and clusters forming
+    # run `elasticsearch -Ehttp.port=9202`
+    # replace the exception in this function with "yield"
+    raise Exception("You must manually start Elasticsearch, see karp-backend/src/karp/tests/e2e/conftest.py")
+
+    # this is how it should be done, but for some reason it does not work and it also forms a cluster
+    # with any running node when starting
+    # if not config("TEST_ES_HOME"):
+    #     raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
+    # es_port = int(os.environ.get("TEST_ELASTICSEARCH_PORT", "9202"))
+    # with elasticsearch_test.ElasticsearchTest(port=es_port, es_path=config("TEST_ES_HOME")):
+    #     yield
 
 
 @pytest.fixture
