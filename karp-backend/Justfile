@@ -11,20 +11,6 @@ install-dev:
 install-ci: install-dev
 	poetry install --only ci --extras mysql
 
-default-cov := "--cov=src/karp"
-cov-report := "term-missing"
-cov := default-cov
-
-# run tests with code coverage
-test-w-coverage +tests="src/karp/tests": clean-pyc
-	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} {{tests}}
-
-unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
-
-# run given test(s)
-test *tests="src/karp/tests/unit":
-	{{INVENV}} pytest -vv {{tests}}
-
 # lint the code
 lint *flags="":
     {{INVENV}} ruff {{flags}} src

@@ -45,9 +45,9 @@ serve-w-reload: install-dev
 	{{INVENV}} uvicorn --reload --factory karp.karp_v6_api.main:create_app
 
 cov-report := "term-missing"
-all-test-dirs := "karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests"
+all-test-dirs := "tests"
 default-cov := "--cov=karp-backend/src/karp --cov=karp-lex-core/src/karp"
-unit-test-dirs := "karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests"
+unit-test-dirs := "tests/unit"
 cov := default-cov
 # run all tests
 all-tests: clean-pyc unit-tests integration-tests e2e-tests
@@ -66,7 +66,7 @@ unit-tests: test
 
 # run unit tests with code coverage
 unit-tests-w-coverage cov=default-cov: clean-pyc
-	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests
+	{{INVENV}} pytest -vv {{cov}} --cov-report={{cov-report}} tests/unit
 
 # run tests with code coverage
 test-w-coverage +tests=all-test-dirs: clean-pyc
@@ -77,17 +77,17 @@ test *tests=unit-test-dirs:
 	{{INVENV}} pytest -vv {{tests}}
 
 # run end-to-end tests
-e2e-tests: clean-pyc (test "karp-backend/src/karp/tests/e2e")
+e2e-tests: clean-pyc (test "tests/e2e")
 
 # run end-to-end tests with code coverage
 e2e-tests-w-coverage: clean-pyc
-	{{INVENV}} pytest -vv --cov=karp --cov-report=xml karp-backend/src/karp/tests/e2e
+	{{INVENV}} pytest -vv --cov=karp --cov-report=xml tests/e2e
 
 # run integration tests
-integration-tests: clean-pyc (test "karp-backend/src/karp/tests/integration")
+integration-tests: clean-pyc (test "tests/integration")
 
 # run integration tests with code coverage
-integration-tests-w-coverage: clean-pyc (test-w-coverage default-cov "karp-backend/src/karp/tests/integration")
+integration-tests-w-coverage: clean-pyc (test-w-coverage default-cov "tests/integration")
 
 # lint code
 lint flags="":

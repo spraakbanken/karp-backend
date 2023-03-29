@@ -2,7 +2,7 @@ import pytest  # noqa: I001
 
 from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
 
-from karp.tests.unit.lex import factories
+from tests.unit.lex import factories
 from karp.timings import utc_now
 
 

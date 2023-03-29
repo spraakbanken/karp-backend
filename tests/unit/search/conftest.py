@@ -8,7 +8,7 @@ from karp.lex_infrastructure import GenericLexInfrastructure
 from karp.main.modules import CommandBusMod, EventBusMod
 from karp.search import Search
 from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure
-from karp.tests.unit.lex.adapters import InMemoryLexInfrastructure
+from tests.unit.lex.adapters import InMemoryLexInfrastructure
 
 from . import adapters
 

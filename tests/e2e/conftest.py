@@ -2,7 +2,7 @@
 
 # pylint: disable=wrong-import-position,missing-function-docstring
 from karp.main import AppContext  # noqa: I001
-from karp.tests.integration.auth.adapters import create_bearer_token
+from tests.integration.auth.adapters import create_bearer_token
 from karp import auth
 import os
 import json
@@ -26,7 +26,7 @@ from starlette.testclient import TestClient
 # environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
 # print("importing karp stuf ...")
-from karp.tests import common_data, utils  # nopep8
+from tests import common_data, utils  # nopep8
 from karp.db_infrastructure.db import metadata  # nopep8
 from karp.main.config import config
 
@@ -281,7 +281,7 @@ def fixture_init_search_service():  # noqa: ANN201
     # replace the exception in this function with "yield"
     # NOTE: after each test run the indices in ES must be removed manually :(
     #      `curl -XDELETE localhost:9202/*` or remove the data folder and restart
-    raise Exception("You must manually start Elasticsearch, see karp-backend/src/karp/tests/e2e/conftest.py")
+    raise Exception("You must manually start Elasticsearch, see tests/e2e/conftest.py")
 
     # this is how it should be done, but for some reason it does not work and it also forms a cluster
     # with any running node when starting

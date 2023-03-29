@@ -4,8 +4,8 @@ import pytest  # pyre-ignore
 from fastapi import status
 from karp import auth
 from karp.lex.application.queries import EntryViews
-from karp.tests.common_data import MUNICIPALITIES, PLACES  # noqa: F401
-from karp.tests.utils import add_entries, get_json  # noqa: F401
+from tests.common_data import MUNICIPALITIES, PLACES  # noqa: F401
+from tests.utils import add_entries, get_json  # noqa: F401
 
 
 def extract_names(entries):  # noqa: ANN201

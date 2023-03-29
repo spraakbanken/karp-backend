@@ -18,16 +18,6 @@ default_cov := "--cov=src/karp"
 cov_report := "term-missing"
 cov := ${default_cov}
 
-# run tests with code coverage
-.PHONY: test-w-coverage
-test-w-coverage: clean-pyc
-	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${tests}
-
-# run given test(s)
-.PHONY: test
-test:
-	${INVENV} pytest -vv ${tests}
-
 # lint the code
 .PHONY: lint
 lint:

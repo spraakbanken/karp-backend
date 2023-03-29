@@ -73,9 +73,9 @@ serve: install-dev
 serve-w-reload: install-dev
 	${INVENV} uvicorn --reload --factory karp.karp_v6_api.main:create_app
 
-unit_test_dirs := karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests
-e2e_test_dirs := karp-backend/src/karp/tests/e2e
-all_test_dirs := karp-backend/src/karp/tests karp-lex-core/src/karp/lex_core/tests
+unit_test_dirs := tests/unit
+e2e_test_dirs := tests/e2e
+all_test_dirs := tests
 
 default_cov := "--cov=karp-backend/src/karp --cov=karp-lex-core/src/karp"
 cov_report := "term-missing"
@@ -112,7 +112,7 @@ e2e-tests-w-coverage: clean-pyc
 
 .PHONY: integration-tests
 integration-tests: clean-pyc
-	${INVENV} pytest -vv karp-backend/src/karp/tests/integration
+	${INVENV} pytest -vv tests/integration
 
 .PHONY: unit-tests-w-coverage
 unit-tests-w-coverage: clean-pyc
@@ -120,7 +120,7 @@ unit-tests-w-coverage: clean-pyc
 
 .PHONY: integration-tests-w-coverage
 integration-tests-w-coverage: clean-pyc
-	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} karp-backend/src/karp/tests/integration
+	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} tests/integration
 
 .PHONY: lint
 lint:

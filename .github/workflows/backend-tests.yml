@@ -7,12 +7,14 @@ on:
     paths:
       - 'karp-backend/**/*.py'
       - 'karp-backend/pyproject.toml'
+      - 'karp-lex-core/**/*-py'
   pull_request:
     branches:
       - "**/*"
     paths:
       - 'karp-backend/**/*.py'
       - 'karp-backend/pyproject.toml'
+      - 'karp-lex-core/**/*-py'
 
 env:
   POETRY_VERSION: 1.3.1
@@ -79,7 +81,7 @@ jobs:
         id: cached-poetry-dependencies
         uses: actions/cache@v3
         with:
-          path: karp-backend/.venv
+          path: .venv
           key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ env.POETRY_VERSION }}-${{ hashFiles('**/pyproject.toml') }}-${{ hashFiles('.github/workflows/backend-tests.yml') }}
 
       #----------------------------------------------
@@ -87,7 +89,7 @@ jobs:
       #----------------------------------------------
       - name: Install dependencies
         if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-        run: just karp-backend/install-dev
+        run: just install-dev
 
       #----------------------------------------------
       # install your root project, if required
@@ -96,30 +98,7 @@ jobs:
       #   run: poetry install --no-interaction
 
       - name: Setup up environment
-        run: cp -v .env.ci karp-backend/.env
-
-      - name: Install Elasticsearch 6
-        if: startsWith( matrix.es-version, '6')
-        run: |
-          wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}.tar.gz
-          tar -xzf elasticsearch-${{ matrix.es-version }}.tar.gz
-          ./elasticsearch-${{ matrix.es-version }}/bin/elasticsearch-plugin install analysis-icu
-          echo "TEST_ELASTICSEARCH_ENABLED=True" >> karp-backend/.env
-          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> karp-backend/.env
-          echo "SEARCH_CONTEXT=es6_search_service" >> karp-backend/.env
-          cat karp-backend/.env
-          # make install-dev-elasticsearch6
-          # pip install -e .[elasticsearch6]
-
-      - name: Install Elasticsearch 7
-        if: startsWith( matrix.es-version, '7')
-        run: |
-          wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
-          tar -xzf elasticsearch-${{ matrix.es-version }}-linux-x86_64.tar.gz
-          echo "TEST_ELASTICSEARCH_ENABLED=True" >> karp-backend/.env
-          echo "TEST_ES_HOME=`realpath elasticsearch-${{ matrix.es-version }}`" >> karp-backend/.env
-          cat karp-backend/.env
-          pip install -e .[elasticsearch7]
+        run: cp -v .env.ci .env
 
       - name: Write node info
         run: |
@@ -127,7 +106,9 @@ jobs:
           echo "mariadb.ports = ${{ job.services.mariadb.ports['3306'] }}"
 
       - name: Run all tests for coverage report
-        run: just cov-report=xml karp-backend/test-w-coverage
+        run: | 
+           just cov-report=xml unit-tests-w-coverage
+           just cov-report=xml integration-tests-w-coverage
         env:
           DB_TEST_DATABASE: karp
           DB_USER: karp
@@ -140,4 +121,3 @@ jobs:
         with:
           fail_ci_if_error: false
           verbose: true
-          flags: karp-backend

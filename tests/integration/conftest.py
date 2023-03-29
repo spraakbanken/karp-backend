@@ -9,7 +9,7 @@ from sqlalchemy.orm import session, sessionmaker
 
 from alembic.config import main as alembic_main  # noqa: F401
 
-from karp.tests.unit.lex.adapters import InMemoryLexInfrastructure
+from tests.unit.lex.adapters import InMemoryLexInfrastructure
 from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure
 from karp.search import Search
 from karp.main.modules import CommandBusMod, EventBusMod
@@ -23,8 +23,8 @@ from karp.command_bus import CommandBus
 # environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
 from karp.db_infrastructure.db import metadata  # nopep8
-from karp.tests.unit.search import adapters as search_adapters
-from karp.tests.integration import adapters
+from tests.unit.search import adapters as search_adapters
+from tests.integration import adapters
 
 
 @pytest.fixture(name="in_memory_sqlite_db")

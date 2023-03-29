@@ -18,8 +18,8 @@ from karp.auth_infrastructure.services.jwt_auth_service import (
     JWTPayload,  # noqa: F401
 )
 from karp.main.config import AUTH_JWT_AUDIENCE
-from karp.tests.integration.auth.adapters import create_access_token
-from karp.tests.unit.auth import adapters
+from tests.integration.auth.adapters import create_access_token
+from tests.unit.auth import adapters
 
 # Generate our key
 

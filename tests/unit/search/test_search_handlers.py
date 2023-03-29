@@ -5,7 +5,7 @@ import pytest
 from karp.lex.domain.events import ResourceCreated
 
 from karp.search.application.repositories import IndexUnitOfWork
-from karp.tests.unit.lex import factories as lex_factories
+from tests.unit.lex import factories as lex_factories
 from . import adapters, factories
 
 

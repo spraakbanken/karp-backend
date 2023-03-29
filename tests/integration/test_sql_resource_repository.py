@@ -5,7 +5,7 @@ import pytest  # noqa: I001
 from karp.lex.domain.errors import IntegrityError  # noqa: F401
 from karp.lex.domain.entities.resource import Resource, ResourceOp
 from karp.lex_infrastructure.repositories.sql_resources import SqlResourceRepository
-from karp.tests.unit.lex import factories
+from tests.unit.lex import factories
 
 
 @pytest.fixture(name="resource_repo")  # , scope="module")

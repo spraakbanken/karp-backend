@@ -7,7 +7,7 @@ environ["TESTING"] = "True"
 environ["ELASTICSEARCH_HOST"] = "localhost:9202"
 environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
-from karp.tests import common_data, utils  # nopep8  # noqa: E402, F401
+from . import common_data, utils  # nopep8  # noqa: E402, F401
 
 
 @pytest.fixture

@@ -7,7 +7,7 @@ from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
 from karp.timings import utc_now
 from karp.search.application.repositories import IndexUnitOfWork, Index, IndexEntry
-from karp.tests.foundation.adapters import InMemoryUnitOfWork
+from tests.foundation.adapters import InMemoryUnitOfWork
 
 
 @dataclasses.dataclass

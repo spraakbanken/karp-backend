@@ -6,7 +6,7 @@ from karp.lex_core.value_objects.unique_id import make_unique_id
 from karp.lex.application.queries import EntryDto
 from karp.search import EntryTransformer
 
-from karp.tests.unit.lex import factories as lex_factories
+from tests.unit.lex import factories as lex_factories
 
 
 class TestGenericEntryTransformer:

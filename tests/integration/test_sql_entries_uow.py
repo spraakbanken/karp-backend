@@ -9,7 +9,7 @@ from karp.lex_infrastructure.repositories import (
     SqlEntryUowV1Creator,
     SqlEntryUowV2Creator,
 )
-from karp.tests.unit.lex import factories
+from tests.unit.lex import factories
 
 
 @pytest.fixture

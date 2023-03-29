@@ -19,7 +19,7 @@ from karp.lex.domain import entities as lex_entities
 from karp.lex.domain import events
 from karp.lex_core.value_objects import UniqueId, UniqueIdType
 from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
-from karp.tests.foundation.adapters import InMemoryUnitOfWork
+from tests.foundation.adapters import InMemoryUnitOfWork
 
 
 @dataclasses.dataclass

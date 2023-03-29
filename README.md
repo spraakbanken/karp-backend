@@ -108,8 +108,6 @@ Both [`Justfile`](Justfile) and [`Makefile`](Makefile) are provided, for `just` 
 
 The tests are organized in unit, integration and end-to-end tests.
 
-`karp-lex-core` currently only has unit tests.
-
 #### Unit tests
 
 These test should have no infrastructure dependencies and should run fast.
@@ -119,16 +117,9 @@ Run them by:
 - From repo root:
   - `just/make test` (or `just/make unit-tests`)
   - `just unit-tests-w-coverage` or `just cov-report=xml unit-tests-w-coverage`
-  - `just test-w-coverage karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests`
+  - `just test-w-coverage tests/unit`
   - `make unit-tests-w-coverage` or `make cov_report=xml unit-tests-w-coverage`
-  - `make all_tests="karp-backend/src/karp/tests/unit karp-lex-core/src/karp/lex_core/tests" test-w-coverage`
-- From `karp-backend` root:
-  - `just/make test`
-  - `just test-w-coverage src/karp/tests/unit`
-  - `make all_tests=src/karp/tests/unit test-w-coverage`
-- From `karp-lex-core` root:
-  - `just/make test`
-  - `just/make test-w-coverage`
+  - `make all_tests="tests/unit" test-w-coverage`
 
 #### Integration tests
 
@@ -139,13 +130,9 @@ Run them by:
 - From repo root:
   - `just/make integration-tests`
   - `just integration-tests-w-coverage` or `just cov-report=xml integration-tests-w-coverage`
-  - `just test-w-coverage karp-backend/src/karp/tests/integration`
+  - `just test-w-coverage tests/integration`
   - `make integration-tests-w-coverage` or `make cov_report=xml integration-tests-w-coverage`
-  - `make all_tests=karp-backend/src/karp/tests/integration test-w-coverage`
-- From `karp-backend` root:
-  - `just/make test`
-  - `just test-w-coverage src/karp/tests/integration`
-  - `make all_tests=src/karp/tests/integration test-w-coverage`
+  - `make all_tests=tests/integration test-w-coverage`
 
 #### End-to-end tests
 
@@ -156,13 +143,9 @@ Run them by:
 - From repo root:
   - `just/make e2e-tests`
   - `just e2e-tests-w-coverage` or `just cov-report=xml e2e-tests-w-coverage`
-  - `just test-w-coverage karp-backend/src/karp/tests/e2e`
+  - `just test-w-coverage tests/e2e`
   - `make e2e-tests-w-coverage` or `make cov_report=xml e2e-tests-w-coverage`
-  - `make all_tests=karp-backend/src/karp/tests/e2e test-w-coverage`
-- From `karp-backend` root:
-  - `just/make test`
-  - `just test-w-coverage src/karp/tests/e2e`
-  - `make all_tests=src/karp/tests/e2e test-w-coverage`
+  - `make all_tests=tests/e2e test-w-coverage`
 
 #### All tests
 
@@ -176,15 +159,6 @@ Run them by:
   - `just all-tests-w-coverage`
   - `make test-w-coverage` or `make cov_report=xml test-w-coverage`
   - `make all-tests-w-coverage`
-- From `karp-backend` root:
-  - `just test src/karp/tests`
-  - `make tests=src/karp/tests test`
-  - `just test-w-coverage`
-  - `make test-w-coverage`
-- From `karp-lex-core` root:
-  - `just/make test`
-  - `just test-w-coverage`
-  - `make test-w-coverage`
 
 ### Linting
 
