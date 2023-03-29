@@ -22,7 +22,9 @@ from . import lex_deps
 from .fastapi_injector import inject_from_req
 
 
-auth_scheme = HTTPBearer()
+# auto_error false is needed so that FastAPI does not
+# give back a faulty 403 when credentials are missing
+auth_scheme = HTTPBearer(auto_error=False)
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +110,8 @@ def get_user(  # noqa: D103
         headers={"WWW-Authenticate": authenticate_value},
         # code=ClientErrorCodes.NOT_PERMITTED,
     )
+    if not credentials:
+        raise credentials_exception
     try:
         logger.debug(
             "Calling auth_service",

@@ -59,7 +59,7 @@ class TestGetResourcePermissions:
 class TestCreateResource:
     def test_missing_auth_header_returns_403(self, fa_client):  # noqa: ANN201
         response = fa_client.post("/resources/", json={})
-        assert response.status_code == status.HTTP_403_FORBIDDEN
+        assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     def test_invalid_data_returns_422(  # noqa: ANN201
         self, fa_client, admin_token: auth.AccessToken
