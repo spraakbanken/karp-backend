@@ -148,10 +148,10 @@ class TestGetHistory:
         history = GetHistoryDto(**response_data)
         assert len(history.history) == 4
         print(f"{history=}")
-        assert history.history[0].op == EntryOp.ADDED
-        assert history.history[1].op == EntryOp.ADDED
-        assert history.history[2].op == EntryOp.UPDATED
-        assert history.history[3].op == EntryOp.UPDATED
+        assert history.history[3].op == EntryOp.ADDED
+        assert history.history[2].op == EntryOp.ADDED
+        assert history.history[1].op == EntryOp.UPDATED
+        assert history.history[0].op == EntryOp.UPDATED
         assert re.match(r"^\d{10}\.\d{3,6}$", str(history.history[3].timestamp))
         for history_entry in history.history:
             assert history_entry.user_id == "user2"
