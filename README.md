@@ -20,7 +20,7 @@ This project uses [poetry](https://python-poetry.org).
 
 The metadata and source-code to each project lives in `<project-name>`.
 
-Provided are both a Makefile and a Justfile. They should behave the same.
+A Makefile is provided to simplify tasks.
 
 ### Getting started
 
@@ -28,8 +28,7 @@ Provided are both a Makefile and a Justfile. They should behave the same.
 
 2. Install dependencies:
 
-   1. `just dev` (or `just install-dev`)
-   2. `make dev` (or `make install-dev`)
+  `make dev` (or `make install-dev`)
 
 3. Install MariaDB and create a database
 
@@ -43,7 +42,7 @@ Provided are both a Makefile and a Justfile. They should behave the same.
    ```
 5. Activate the virtual environment by running: `poetry shell`
 6. Run `karp-cli db up` to initialize database
-7. Run `make/just serve` or `make/just serve-w-reload` to start development server
+7. Run `make serve` or `make serve-w-reload` to start development server
 
    or `poetry shell` and then `uvicorn --factory karp.karp_v6_api.main:create_app`
 
@@ -100,10 +99,6 @@ machine 1 to preprocess and use result on machine 2.
 - MariaDB
 - Elasticsearch
 
-## Development
-
-Both [`Justfile`](Justfile) and [`Makefile`](Makefile) are provided, for `just` you can run `just --list` to list all recipes defined in the Justfile.
-
 ### Testing
 
 The tests are organized in unit, integration and end-to-end tests.
@@ -115,9 +110,9 @@ These test should have no infrastructure dependencies and should run fast.
 Run them by:
 
 - From repo root:
-  - `just/make test` (or `just/make unit-tests`)
-  - `just unit-tests-w-coverage` or `just cov-report=xml unit-tests-w-coverage`
-  - `just test-w-coverage tests/unit`
+  - `make test` (or `make unit-tests`)
+  - `make unit-tests-w-coverage` or `make cov-report=xml unit-tests-w-coverage`
+  - `make test-w-coverage tests/unit`
   - `make unit-tests-w-coverage` or `make cov_report=xml unit-tests-w-coverage`
   - `make all_tests="tests/unit" test-w-coverage`
 
@@ -128,9 +123,9 @@ These test have some infrastructure dependencies and should run slower.
 Run them by:
 
 - From repo root:
-  - `just/make integration-tests`
-  - `just integration-tests-w-coverage` or `just cov-report=xml integration-tests-w-coverage`
-  - `just test-w-coverage tests/integration`
+  - `make integration-tests`
+  - `make integration-tests-w-coverage` or `make cov-report=xml integration-tests-w-coverage`
+  - `make test-w-coverage tests/integration`
   - `make integration-tests-w-coverage` or `make cov_report=xml integration-tests-w-coverage`
   - `make all_tests=tests/integration test-w-coverage`
 
@@ -141,9 +136,9 @@ These test have all infrastructure dependencies and should run slowest.
 Run them by:
 
 - From repo root:
-  - `just/make e2e-tests`
-  - `just e2e-tests-w-coverage` or `just cov-report=xml e2e-tests-w-coverage`
-  - `just test-w-coverage tests/e2e`
+  - `make e2e-tests`
+  - `make e2e-tests-w-coverage` or `make cov-report=xml e2e-tests-w-coverage`
+  - `make test-w-coverage tests/e2e`
   - `make e2e-tests-w-coverage` or `make cov_report=xml e2e-tests-w-coverage`
   - `make all_tests=tests/e2e test-w-coverage`
 
@@ -154,9 +149,9 @@ These test have all infrastructure dependencies and should run slowest.
 Run them by:
 
 - From repo root:
-  - `just/make all-tests`
-  - `just test-w-coverage` or `just cov-report=xml test-w-coverage`
-  - `just all-tests-w-coverage`
+  - `make all-tests`
+  - `make test-w-coverage` or `make cov-report=xml test-w-coverage`
+  - `make all-tests-w-coverage`
   - `make test-w-coverage` or `make cov_report=xml test-w-coverage`
   - `make all-tests-w-coverage`
 
@@ -164,9 +159,7 @@ Run them by:
 
 Linting is done by [`ruff`](https://beta.ruff.rs/docs/).
 
-Run with `just lint` or `make lint`. This can also be run in project folders.
-
-Each project has different settings in `ruff.toml` [here](karp-backend/ruff.toml) and [here](karp-lex-core/ruff.toml).
+Run with `make lint`. Settings are in `ruff.toml`.
 
 Usual commands for `ruff` is:
 
@@ -177,7 +170,7 @@ Usual commands for `ruff` is:
 
 Formatting is done by `black`.
 
-Run formatter with `just/make fmt`, check if formatting is needed `just/make check-fmt`.
+Run formatter with `make fmt`, check if formatting is needed `make check-fmt`.
 
 ### Type checking
 
@@ -196,10 +189,6 @@ This projects uses Github Actions to test and check the code.
   - All code is checked if it is formatted.
   - All code is type-checked and for `karp-lex-core` it is expected to pass.
 - All above also apply to Pull Requests.
-- When a pull request is closed and merged the Pull Request title and body is written in each projects README.md.
-- When a tag named `karp-lex-core-v*` is pushed a distribution for `karp-lex-core` is created and uploaded to [PyPi](https://pypi.org).
-- When a tag named `karp-backend-v*` is pushed a distribution for `karp-backend` is created and uploaded to [PyPi](https://pypi.org).
-- When anything is pushed the docs are built and published to [spraakbanken.github.io/karp-backend](https://spraakbanken.github.io/karp-backend).
 
 ### Version handling
 
@@ -209,34 +198,26 @@ Usage for:
 
 - Increase patch number `a.b.X => a.b.(X+1)`:
   - From repo root for project `<project>`
-    - `just <project>/bumpversion`
     - `make project=<project> bumpversion`
   - From project root
-    - `just bumpverision`
     - `make bumpversion`
     - `bump2version patch`
 - Increase minor number `a.X.c => a.(X+1).0`:
   - From repo root for project `<project>`
-    - `just <project>/bumpversion minor`
     - `make project=<project> part=minor bumpversion`
   - From project root
-    - `just bumpverision minor`
     - `make part=minor bumpversion`
     - `bump2version minor`
 - Increase major number `X.b.c => (X+1).0.0`:
   - From repo root for project `<project>`
-    - `just <project>/bumpversion major`
     - `make project=<project> part=major bumpversion`
   - From project root
-    - `just bumpverision major`
     - `make part=major bumpversion`
     - `bump2version major`
 - To custom version `a.b.c => X.Y.Z`:
   - From repo root for project `<project>`
-    - `just <project>/bumpversion "--new-version X.Y.Z"`
     - `make project=<project> part="--new-version X.Y.Z" bumpversion`
   - From project root
-    - `just bumpverision "--new-version X.Y.Z"`
     - `make part="--new-version X.Y.Z" bumpversion`
     - `bumpversion --new-version X.Y.Z`
 
@@ -246,6 +227,5 @@ Usage for:
 
 For releasing a new version:
 
-- `just publish`
 - `make publish`
 - `git push origin main --tags`

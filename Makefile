@@ -47,6 +47,10 @@ dev: install-dev
 install-dev:
 	poetry install -E mysql
 
+# setup CI environment
+install-ci: install-dev
+	poetry install --only ci
+
 install-wo-mysql:
 	poetry install --no-dev
 
@@ -153,7 +157,7 @@ fmt:
 # test if code is formatted
 .PHONY: check-fmt
 check-fmt:
-	{{INVENV}} black . --check
+	${INVENV} black . --check
 
 part := "patch"
 project := "PLEASE, GIVE ME A PROJECT"

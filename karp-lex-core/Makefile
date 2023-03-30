@@ -10,10 +10,6 @@ dev: install-dev
 install-dev:
 	poetry install
 
-# setup CI environment
-install-ci: install-dev
-	poetry install --only ci
-
 default_cov := "--cov=src/karp"
 cov_report := "term-missing"
 cov := ${default_cov}
