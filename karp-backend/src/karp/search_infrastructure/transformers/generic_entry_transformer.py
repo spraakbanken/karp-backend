@@ -130,9 +130,7 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                 if field_name in _src_entry:
                     field_content = _src_entry[field_name]
 
-            self.index_uow.repo.assign_field(
-                    _index_entry, field_name, field_content
-                )
+            self.index_uow.repo.assign_field(_index_entry, field_name, field_content)
 
             # Handle ref
             if field_conf.get("ref") and field_name in _src_entry:

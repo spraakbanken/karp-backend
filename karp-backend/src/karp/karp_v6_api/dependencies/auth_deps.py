@@ -100,4 +100,3 @@ def get_user(  # noqa: D103
         raise credentials_exception
     except TokenError:
         raise credentials_exception
-

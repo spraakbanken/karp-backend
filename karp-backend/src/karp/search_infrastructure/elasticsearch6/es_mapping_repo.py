@@ -206,7 +206,7 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
         """Translate sort field to ES sort fields.
 
         Arguments:
-            resources: 
+            resources:
             sort_values: {List[str]} -- values to sort by
 
         Returns:
