@@ -130,7 +130,6 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                 if field_name in _src_entry:
                     field_content = _src_entry[field_name]
 
-            
             self.index_uow.repo.assign_field(
                     _index_entry, field_name, field_content
                 )
@@ -144,7 +143,7 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                         _index_entry, f"v_{field_name}", res
                     )
 
-    def _resolve_ref(  # noqa: C901
+    def _resolve_ref(
         self,
         resource: ResourceDto,
         src_entry: dict,

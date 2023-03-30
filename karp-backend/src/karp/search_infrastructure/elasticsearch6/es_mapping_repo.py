@@ -206,11 +206,12 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
         """Translate sort field to ES sort fields.
 
         Arguments:
-            sort_values {List[str]} -- values to sort by
+            resources: 
+            sort_values: {List[str]} -- values to sort by
 
         Returns:
             List[str] -- values that ES can sort by.
-        """  # noqa: D406, D407
+        """  # noqa: D407
         translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None

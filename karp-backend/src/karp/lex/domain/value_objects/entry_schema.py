@@ -54,7 +54,7 @@ def create_entry_json_schema(fields: dict[str, dict[str, Any]]) -> dict[str, Any
     Returns:
         Dict[str]: The json_schema to use.
 
-    """  # noqa: D406, D407
+    """  # noqa: D407
     json_schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",

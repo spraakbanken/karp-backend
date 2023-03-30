@@ -99,7 +99,7 @@ tags_metadata = [
 logger = logging.getLogger(__name__)
 
 
-def create_app() -> FastAPI:  # noqa: D103, C901
+def create_app() -> FastAPI:  # noqa: D103
     app_context = main.bootstrap_app()
 
     app = FastAPI(

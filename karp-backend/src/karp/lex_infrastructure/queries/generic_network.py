@@ -30,7 +30,7 @@ class GenericGetReferencedEntries(GetReferencedEntries):  # noqa: D101
         self.resource_repo = resource_repo
         self.entry_repo_uow = entry_repo_uow
 
-    def query(  # noqa: D102
+    def query(  # noqa: D102, C901
         self,
         resource_id: str,
         # version: typing.Optional[int],

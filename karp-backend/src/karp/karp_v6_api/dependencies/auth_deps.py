@@ -12,7 +12,7 @@ from karp import auth, lex
 
 # from karp.auth.auth import auth
 from karp.main.errors import ClientErrorCodes, KarpError  # noqa: F401
-from karp.auth.domain.errors import ExpiredToken, TokenError, InvalidTokenPayload
+from karp.auth.domain.errors import TokenError
 from karp.auth.domain.auth_service import AuthService  # noqa: F401
 from karp.auth_infrastructure import (
     JWTAuthService,
