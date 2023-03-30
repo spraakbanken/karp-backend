@@ -51,7 +51,7 @@ def create_entry_json_schema(fields: dict[str, dict[str, Any]]) -> dict[str, Any
     Args:
         fields (Dict[str, Any]): the fields config to process
 
-    Returns:
+    Returns
         Dict[str]: The json_schema to use.
 
     """  # noqa: D407
