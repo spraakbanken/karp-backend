@@ -115,7 +115,7 @@ def test_entry_repo_command(data: dict, expected_cls: Type) -> None:
         (
             {
                 "id": "01GSAHD0K063FBMFE19BFDM4E9",
-                "version": 4,
+           #     "version": 4,
                 # "resourceId": "abc",
                 "cmdtype": "delete_resource",
                 "user": "user1",

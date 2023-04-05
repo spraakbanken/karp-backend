@@ -280,14 +280,14 @@ def export():  # noqa: ANN201, D103
 def delete(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
-    version: int,
+#    version: int,
     user: Optional[str] = typer.Option(None),
     message: Optional[str] = typer.Option(None),
 ):
     bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
     cmd = lex_commands.DeleteResource(
         resourceId=resource_id,
-        version=version,
+ #       version=version,
         user=user or "local admin",
         message=message or "resource deleted",
     )

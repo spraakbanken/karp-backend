@@ -59,7 +59,7 @@ class TestAddEntry:
         lex_ctx.command_bus.dispatch(
             factories.DeleteResourceFactory.build(
                 resourceId=cmd2.resource_id,
-                version=1,
+              #  version=1,
             )
         )
 
@@ -174,7 +174,7 @@ class TestUpdateEntry:
         lex_ctx.command_bus.dispatch(
             factories.DeleteResourceFactory.build(
                 resourceId=cmd2.resource_id,
-                version=1,
+           #     version=1,
             )
         )
         with pytest.raises(errors.DiscardedEntityError):
@@ -398,7 +398,7 @@ class TestDeleteEntry:
         lex_ctx.command_bus.dispatch(
             factories.DeleteResourceFactory.build(
                 resourceId=cmd2.resource_id,
-                version=1,
+           #     version=1,
             )
         )
         with pytest.raises(errors.DiscardedEntityError):
