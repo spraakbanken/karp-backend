@@ -281,15 +281,14 @@ def fixture_init_search_service():  # noqa: ANN201
     # replace the exception in this function with "yield"
     # NOTE: after each test run the indices in ES must be removed manually :(
     #      `curl -XDELETE localhost:9202/*` or remove the data folder and restart
-    raise Exception("You must manually start Elasticsearch, see tests/e2e/conftest.py")
-
+    # raise Exception("You must manually start Elasticsearch, see tests/e2e/conftest.py")
     # this is how it should be done, but for some reason it does not work and it also forms a cluster
     # with any running node when starting
     # if not config("TEST_ES_HOME"):
     #     raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
     # es_port = int(os.environ.get("TEST_ELASTICSEARCH_PORT", "9202"))
     # with elasticsearch_test.ElasticsearchTest(port=es_port, es_path=config("TEST_ES_HOME")):
-    #     yield
+    yield
 
 
 @pytest.fixture
