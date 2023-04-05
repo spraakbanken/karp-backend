@@ -37,7 +37,6 @@ from karp.search_infrastructure.transformers import (
     GenericPreProcessor,
 )
 from karp.search_infrastructure.repositories import (
-    # SqlIndexUnitOfWork,
     NoOpIndexUnitOfWork,
     Es6IndexUnitOfWork,
 )
