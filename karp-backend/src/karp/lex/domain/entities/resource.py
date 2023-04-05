@@ -249,8 +249,8 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
 
     def discard(  # noqa: D102
         self, *, user: str, message: str, timestamp: float = None
-    ) -> list[events.Event]:
-        self._check_not_discarded()
+    ) -> list[events.Event]:  
+      #  self._check_not_discarded()
         self._op = ResourceOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = True

@@ -285,7 +285,7 @@ def delete(  # noqa: ANN201, D103
 ):
     bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
     cmd = lex_commands.DeleteResource(
-        resource_id=resource_id,
+        resourceId=resource_id,
         user=user or "local admin",
         message=message or "resource deleted",
     )
