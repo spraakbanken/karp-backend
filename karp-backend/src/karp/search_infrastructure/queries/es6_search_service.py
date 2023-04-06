@@ -286,10 +286,8 @@ class Es6SearchService(search.SearchService):  # noqa: D101
         alias_name = self.mapping_repo.get_alias_name(resource_id)
         s = es_dsl.Search(using=self.es, index=alias_name)
         s = s[:0]
-        aliasname = self.mapping_repo.get_alias_name(resource_id)
-        if field in self.mapping_repo.analyzed_fields[aliasname]:
+        if field in self.mapping_repo.analyzed_fields[alias_name]:
             field += ".raw"
-
         logger.debug("Statistics: analyzed fields are:")
         logger.debug(json.dumps(self.mapping_repo.analyzed_fields, indent=4))
         logger.debug(
