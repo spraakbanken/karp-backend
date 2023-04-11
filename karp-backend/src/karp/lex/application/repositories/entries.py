@@ -15,13 +15,6 @@ class EntryRepository(repository.Repository[entities.Entry]):  # noqa: D101
     def from_dict(cls, settings: Dict):  # noqa: ANN206, D102
         raise NotImplementedError()
 
-    @classmethod
-    @abc.abstractmethod
-    def _create_repository_settings(  # noqa: ANN206
-        cls, resource_id: str, resource_config: typing.Dict
-    ):
-        raise NotImplementedError()
-
     def __init__(self):  # noqa: D107, ANN204
         super().__init__()
         self.settings = {}
@@ -97,7 +90,6 @@ class EntryUnitOfWork(  # noqa: D101
     entity.TimestampedEntity,
     unit_of_work.UnitOfWork[EntryRepository],
 ):
-    repository_type: str
 
     def __init__(  # noqa: D107, ANN204
         self,
@@ -141,5 +133,4 @@ class EntryUnitOfWork(  # noqa: D101
         self._discarded = True
         self._last_modified = self._ensure_timestamp(timestamp)
         self._last_modified_by = user
-        # return entity.TimestampedEntity.discard(self, user=user, timestamp=timestamp)
         return []

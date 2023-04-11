@@ -8,7 +8,6 @@ class TestCreateEntryRepository:
                 "resource_id": "abc",
                 "resource_name": "Abc",
             },
-            # entry_repo_id="01GSAHD0K063FBMFE19BFDM4E9",
             user="user1",
         )
         assert cmd.cmdtype == "create_entry_repository"

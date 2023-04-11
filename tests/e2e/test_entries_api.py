@@ -32,8 +32,8 @@ def init(
 ) -> list[str]:
     result = []
     for entry in entries:
-        response = client.post(
-            "/entries/places/add",
+        response = client.put(
+            "/entries/places",
             json={"entry": entry},
             headers=access_token.as_header(),
         )
@@ -74,16 +74,10 @@ def fixture_entry_places_209_id(  # noqa: ANN201
 
 class TestEntriesRoutes:
     def test_routes_exist(self, fa_data_client):  # noqa: ANN201
-        response = fa_data_client.post("/entries/places/add")
-        assert response.status_code != status.HTTP_404_NOT_FOUND
-
-        response = fa_data_client.post("/entries/places/update")
+        response = fa_data_client.post("/entries/places")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
         response = fa_data_client.put("/entries/places")
-        assert response.status_code != status.HTTP_404_NOT_FOUND
-
-        response = fa_data_client.post("/entries/places/preview")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
@@ -105,8 +99,8 @@ class TestAddEntry:
         invalid_data: Dict,
         write_token: auth.AccessToken,
     ):
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json=invalid_data,
             headers=write_token.as_header(),
         )
@@ -185,8 +179,8 @@ class TestAddEntry:
     ):
         entry_id = 204
         entry_name = f"add{entry_id}"
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={
                 "entry": {
                     "code": entry_id,
@@ -203,8 +197,8 @@ class TestAddEntry:
 
         assert response.status_code == 201
 
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={
                 "entry": {
                     "code": entry_id,
@@ -233,8 +227,8 @@ class TestAddEntry:
         fa_data_client,
         write_token: auth.AccessToken,
     ):
-        response = fa_data_client.post(
-            "/entries/places/add", json={"entry": {}}, headers=write_token.as_header()
+        response = fa_data_client.put(
+            "/entries/places", json={"entry": {}}, headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -254,8 +248,8 @@ class TestDeleteEntry:
     ):
         entry_id = 205
         entry_name = f"delete{entry_id}"
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={
                 "entry": {
                     "code": entry_id,
@@ -271,7 +265,7 @@ class TestDeleteEntry:
 
         entity_id = response.json()["newID"]
         response = fa_data_client.delete(
-            f"/entries/places/{entity_id}/1/delete", headers=write_token.as_header()
+            f"/entries/places/{entity_id}/1", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -291,7 +285,7 @@ class TestDeleteEntry:
         entry_id = make_unique_id()
 
         response = fa_data_client.delete(
-            f"/entries/places/{entry_id}/3/delete", headers=write_token.as_header()
+            f"/entries/places/{entry_id}/3", headers=write_token.as_header()
         )
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -374,7 +368,7 @@ class TestUpdateEntry:
     ):
         entry_id = make_unique_id()
         response = fa_data_client.post(
-            f"/entries/places/{entry_id}/update",
+            f"/entries/places/{entry_id}",
             json={
                 "entry": {
                     "code": 3,
@@ -405,8 +399,8 @@ class TestUpdateEntry:
     ):
         entry_id = 206
         entry_name = f"update{entry_id}"
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={
                 "entry": {
                     "code": entry_id,
@@ -424,7 +418,7 @@ class TestUpdateEntry:
         assert response.status_code == status.HTTP_201_CREATED
 
         response = fa_data_client.post(
-            f"/entries/places/{entity_id}/update",
+            f"/entries/places/{entity_id}",
             json={
                 "entry": {
                     "code": entry_id,
@@ -447,8 +441,8 @@ class TestUpdateEntry:
         write_token: auth.AccessToken,
     ):
         entry_id = 207
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={
                 "entry": {
                     "code": entry_id,
@@ -467,7 +461,7 @@ class TestUpdateEntry:
         assert response.status_code == 201
 
         response = fa_data_client.post(
-            f"/entries/places/{entity_id}/update",
+            f"/entries/places/{entity_id}",
             json={
                 "entry": {
                     "code": entry_id,
@@ -502,8 +496,8 @@ class TestUpdateEntry:
     ):
         entry_id = 208
         entry_name = f"update{entry_id}"
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={
                 "entry": {
                     "code": entry_id,
@@ -522,7 +516,7 @@ class TestUpdateEntry:
         assert response.status_code == status.HTTP_201_CREATED
 
         response = fa_data_client.post(
-            f"/entries/places/{entity_id}/update",
+            f"/entries/places/{entity_id}",
             json={
                 "entry": {
                     "code": entry_id,
@@ -560,7 +554,7 @@ class TestUpdateEntry:
 
         for i in range(2, 10):
             response = fa_data_client.post(
-                f"/entries/places/{entity_id}/update",
+                f"/entries/places/{entity_id}",
                 json={
                     "entry": {"code": entry_id, "name": "a" * i, "municipality": [1]},
                     "message": "changes",
@@ -578,8 +572,8 @@ class TestUpdateEntry:
         write_token: auth.AccessToken,
     ):
         entry_id = 210
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={
                 "entry": {
                     "code": entry_id,
@@ -595,7 +589,7 @@ class TestUpdateEntry:
         assert response.status_code == 201
 
         response = fa_data_client.post(
-            f"places/{entry_id}/update",
+            f"places/{entry_id}",
             json={
                 "entry": {
                     "code": entry_id + 1,
@@ -650,7 +644,7 @@ class TestUpdateEntry:
             assert entry.last_modified < after_add
 
         fa_data_client.post(
-            f"/entries/places/{entity_id}/update",
+            f"/entries/places/{entity_id}",
             json={
                 "entry": {
                     "code": entry_id,
@@ -721,90 +715,6 @@ class TestGetEntry:
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_209_id
         assert entry.version == 5
-
-
-class TestPreviewEntry:
-    def test_preview_fails_with_422_on_invalid_data(  # noqa: ANN201
-        self, fa_data_client, read_token: auth.AccessToken
-    ):
-        response = fa_data_client.post(
-            "/entries/places/preview", json={}, headers=read_token.as_header()
-        )
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    def test_preview_returns_200_on_valid_data(  # noqa: ANN201
-        self, fa_data_client, read_token: auth.AccessToken
-    ):
-        response = fa_data_client.post(
-            "/entries/places/preview",
-            json={
-                "entry": {
-                    "code": 3,
-                    "name": "update3",
-                    "population": 4,
-                    "area": 50000,
-                    "density": 5,
-                    "municipality": [2, 3],
-                },
-                "message": "test",
-            },
-            headers=read_token.as_header(),
-        )
-        print(f"{response.json()=}")
-        assert response.status_code == status.HTTP_200_OK
-        assert unique_id.parse(response.json()["entry"]["id"])
-
-
-@pytest.mark.skip()
-def test_update_wrong_id(fa_data_client, write_token: auth.AccessToken):  # noqa: ANN201
-    response = fa_data_client.post(
-        "/entries/places/add",
-        json={
-            "entry": {
-                "code": 3,
-                "name": "update3",
-                "population": 4,
-                "area": 50000,
-                "density": 5,
-                "municipality": [2, 3],
-            }
-        },
-        headers=write_token.as_header(),
-    )
-    print(f"response = {response.json()}")
-
-    assert response.status_code == 201
-    entry_id = response.json()["newID"]
-
-    with unit_of_work(using=ctx.resource_repo) as uw:  # noqa: F821
-        resource = uw.get_active_resource("places")
-
-    with unit_of_work(using=resource.entry_repository) as uw:  # noqa: F821
-        entries = uw.entry_ids()
-        assert len(entries) == 1
-        assert entries[0] == "3"
-
-    response = fa_data_client.post(
-        f"places/{entry_id}/update",
-        json={
-            "entry": {
-                "code": 4,
-                "name": "update3",
-                "population": 4,
-                "area": 50000,
-                "density": 5,
-                "municipality": [2, 3],
-            },
-            "message": "changes",
-            "version": 1,
-        },
-        headers=write_token.as_header(),
-    )
-    assert response.status_code == 400
-    response_data = response.json()
-    assert response_data["errorCode"] == ClientErrorCodes.ENTRY_ID_MISMATCH
-
-    assert response_data["error"] == "entry_id '4' does not equal '3'"
 
 
 @pytest.mark.skip()
@@ -883,8 +793,8 @@ def test_external_refs(fa_data_client):  # noqa: ANN201
         ],
     )
 
-    client.post(
-        "municipalities/add",
+    client.put(
+        "municipalities",
         data=json.dumps(  # noqa: F821
             {
                 "entry": {
@@ -898,8 +808,8 @@ def test_external_refs(fa_data_client):  # noqa: ANN201
         content_type="application/json",
     )
 
-    client.post(
-        "municipalities/add",
+    client.put(
+        "municipalities",
         data=json.dumps(  # noqa: F821
             {
                 "entry": {
@@ -979,7 +889,7 @@ def test_update_refs(fa_data_client):  # noqa: ANN201
             assert "v_smaller_places" in entry
             assert entry["v_smaller_places"][0]["code"] == 6
 
-    client.delete("/places/6/delete")
+    client.delete("/places/6")
 
     entries = get_json(client, "places/query")  # noqa: F821
     assert len(entries["hits"]) == 1
@@ -996,7 +906,7 @@ def test_update_refs2(fa_data_client):  # noqa: ANN201
     )
 
     client.post(
-        "places/3/update",
+        "places/3",
         data=json.dumps(  # noqa: F821
             {
                 "entry": {"code": 3, "name": "test3", "municipality": [2]},

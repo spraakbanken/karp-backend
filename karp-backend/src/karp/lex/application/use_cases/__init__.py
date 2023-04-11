@@ -7,7 +7,6 @@ from .entry_handlers import (  # noqa: I001
 )
 from .entry_repo_handlers import (
     CreatingEntryRepo,
-    DeletingEntryRepository,
 )
 from .resource_handlers import (
     CreatingResource,
@@ -27,7 +26,6 @@ __all__ = [
     "UpdatingEntry",
     # entry-repo use cases
     "CreatingEntryRepo",
-    "DeletingEntryRepository",
     # resource use cases
     "CreatingResource",
     "DeletingResource",

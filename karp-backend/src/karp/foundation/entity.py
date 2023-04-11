@@ -54,12 +54,6 @@ class Entity(events.EventMixin):  # noqa: D101
                 f"Attempt to use {self!r}, entity_id = {self.entity_id}"
             )
 
-    def _validate_event_applicability(self, event):  # noqa: ANN202
-        if event.entity_id != self.id:
-            raise ConsistencyError(
-                f"Event entity id mismatch: {event.entity_id} != {self.id}"
-            )
-
 
 class VersionedEntity(Entity):  # noqa: D101
     def __init__(  # noqa: D107

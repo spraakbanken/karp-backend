@@ -62,9 +62,6 @@ class Index(repository.Repository[IndexEntry]):  # noqa: D101
     def _by_id(self, id) -> None:  # noqa: A002
         return None
 
-    def num_entities(self) -> int:  # noqa: D102
-        raise NotImplementedError("num_entities is not used for indicies")
-
 
 class IndexUnitOfWork(unit_of_work.UnitOfWork[Index]):  # noqa: D101
     pass

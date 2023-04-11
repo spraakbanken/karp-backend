@@ -11,22 +11,15 @@ from tatsu import exceptions as tatsu_exc
 
 from karp import search
 
-# from karp import query_dsl
 from karp.search.application.queries import (
     QueryRequest,
 )
 from karp.search.domain import errors
-from karp.search.domain.errors import (
-    UnsupportedField,  # noqa: F401
-)  # IncompleteQuery,; UnsupportedQuery,
 from karp.lex.domain.entities.entry import Entry  # noqa: F401
 from karp.lex.domain.entities.resource import Resource  # noqa: F401
 from karp.search.domain import query_dsl
-from karp.search_infrastructure.elasticsearch6 import es_config  # noqa: F401
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 from .es_query import EsQuery
-
-# from karp.query_dsl import basic_ast as ast, op, is_a
 
 
 logger = logging.getLogger(__name__)
@@ -50,14 +43,6 @@ class EsQueryBuilder(query_dsl.NodeWalker):  # noqa: D101
 
     def walk__endswith(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}"})
-
-    # def walk__equals(self, node):
-    #     return es_dsl.Q(
-    #         "match",
-    #         **{
-    #             self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}
-    #         },
-    #     )
 
     def walk__equals(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
@@ -127,11 +112,6 @@ class Es6SearchService(search.SearchService):  # noqa: D101
         self.parser = query_dsl.KarpQueryV6Parser(
             semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
         )
-
-    def build_query(self, args, resource_str: str) -> EsQuery:  # noqa: D102
-        query = EsQuery()
-        # query.parse_arguments(args, resource_str)
-        return query
 
     def _format_result(self, resource_ids, response):  # noqa: ANN202
         logger.debug("_format_result called", extra={"resource_ids": resource_ids})

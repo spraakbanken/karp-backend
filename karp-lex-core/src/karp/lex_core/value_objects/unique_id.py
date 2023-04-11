@@ -39,7 +39,6 @@ class UniqueId(ulid.ULID):  # noqa: D101
 
 
 UniqueIdType = (ulid.ULID, UniqueId)
-typing_UniqueId = typing.Union[ulid.ULID, UniqueId]
 
 
 def make_unique_id(
@@ -82,10 +81,3 @@ class UniqueIdStr(str):  # noqa: D101
 
     def __repr__(self) -> str:  # noqa: D105
         return f"UniqueIdStr({super().__repr__()})"
-
-
-def make_unique_id_str(
-    t: typing.Optional[ulid.codec.TimestampPrimitive] = None,
-) -> UniqueIdStr:
-    """Generate an UniqueIdStr that are sortable."""
-    return UniqueIdStr(make_unique_id(t))

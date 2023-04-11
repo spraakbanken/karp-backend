@@ -35,7 +35,6 @@ class TestCreateResource:
 
         resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [type-abstract]
         assert resource_uow.was_committed  # type: ignore [attr-defined]
-        assert resource_uow.resources.num_entities() == 1
 
         resource = resource_uow.resources.by_id(cmd.id)  # type: ignore [attr-defined]
         assert resource.id == cmd.id  # type: ignore [attr-defined]

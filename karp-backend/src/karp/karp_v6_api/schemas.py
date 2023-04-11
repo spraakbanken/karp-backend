@@ -21,38 +21,10 @@ class BaseModel(pydantic.BaseModel):
         return self.dict(by_alias=True)
 
 
-class SystemResponse(BaseModel):  # noqa: D101
-    message: str = "ok"
-
-    def __bool__(self):  # noqa: ANN204, D105
-        return True
-
-
-class SystemOk(SystemResponse):  # noqa: D101
-    pass
-
-
-class SystemNotOk(SystemResponse):  # noqa: D101
-    def __bool__(self):  # noqa: ANN204, D105
-        return False
-
-
-class SystemMonitorResponse(BaseModel):  # noqa: D101
-    database: str
-
-
 class PermissionLevel(str, Enum):  # noqa: D101
     write = "write"
     read = "read"
     admin = "admin"
-
-
-class EntryFormat(str, Enum):  # noqa: D101
-    json = "json"
-    csv = "csv"
-    xml = "xml"
-    lmf = "lmf?"
-    tsb = "tsb"
 
 
 class Entry(BaseModel):  # noqa: D101
@@ -77,10 +49,6 @@ class EntryUpdate(EntryBase):  # noqa: D101
     version: int
 
 
-class IdMixin(BaseModel):  # noqa: D101
-    id: unique_id.UniqueIdStr  # noqa: A003
-
-
 class EntryAddResponse(BaseModel):  # noqa: D101
     newID: unique_id.UniqueIdStr
 
@@ -97,7 +65,8 @@ class ResourceCreate(ResourceBase):  # noqa: D101
     pass
 
 
-class ResourcePublic(IdMixin, ResourceBase):  # noqa: D101
+class ResourcePublic(ResourceBase):  # noqa: D101
+    id: unique_id.UniqueIdStr  # noqa: A003
     last_modified: float
     is_published: Optional[bool] = None
     version: Optional[int] = None

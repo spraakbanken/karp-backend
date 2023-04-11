@@ -45,8 +45,8 @@ def fixture_history_entity_ids(
 ) -> list[str]:
     entity_ids = []
     for entry in places[:2]:
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={"entry": entry, "message": "Add it"},
             headers=user1_token.as_header(),
         )
@@ -56,8 +56,8 @@ def fixture_history_entity_ids(
         time.sleep(1)
 
     for entry in places[2:]:
-        response = fa_data_client.post(
-            "/entries/places/add",
+        response = fa_data_client.put(
+            "/entries/places",
             json={"entry": entry, "message": "Add it"},
             headers=user2_token.as_header(),
         )
@@ -69,7 +69,7 @@ def fixture_history_entity_ids(
         changed_entry = entry.copy()
         changed_entry["name"] = entry["name"] + entry["name"]
         fa_data_client.post(
-            f"/entries/places/{entity_ids[i]}/update",
+            f"/entries/places/{entity_ids[i]}",
             json={"entry": changed_entry, "message": "change it", "version": 1},
             headers=user2_token.as_header(),
         )
@@ -79,7 +79,7 @@ def fixture_history_entity_ids(
         changed_entry = entry.copy()
         changed_entry["name"] = entry["name"] + entry["name"]
         fa_data_client.post(
-            f"/entries/places/{entity_ids[i]}/update",
+            f"/entries/places/{entity_ids[i]}",
             json={"entry": changed_entry, "message": "change it", "version": 1},
             headers=user1_token.as_header(),
         )
@@ -90,7 +90,7 @@ def fixture_history_entity_ids(
         changed_entry = places[0].copy()
         changed_entry["name"] = places[0]["name"] * i
         response = fa_data_client.post(
-            f"/entries/places/{diff_entry_id}/update",
+            f"/entries/places/{diff_entry_id}",
             json={"entry": changed_entry, "message": "changes", "version": i - 1},
             headers=user4_token.as_header(),
         )

@@ -17,7 +17,6 @@ from karp.auth_infrastructure.services.jwt_auth_service import (
     JWTMeta,  # noqa: F401
     JWTPayload,  # noqa: F401
 )
-from karp.main.config import AUTH_JWT_AUDIENCE
 from tests.integration.auth.adapters import create_access_token
 from tests.unit.auth import adapters
 
@@ -27,6 +26,8 @@ other_key = rsa.generate_private_key(
     public_exponent=65537,
     key_size=2048,
 )
+
+AUTH_JWT_AUDIENCE = "spraakbanken:auth"
 
 
 @pytest.fixture

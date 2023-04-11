@@ -1,4 +1,3 @@
-import logging  # noqa: D100, I001
 from os import stat  # noqa: F401
 import traceback  # noqa: F401
 import sys  # noqa: F401
@@ -93,7 +92,6 @@ tags_metadata = [
     {"name": "Statistics"},
     {"name": "History"},
     {"name": "Resources"},
-    {"name": "Health"},
 ]
 
 logger = logging.getLogger(__name__)

@@ -16,10 +16,6 @@ class ResourceRepository(repository.Repository[entities.Resource]):  # noqa: D10
     EntityNotFound = errors.ResourceNotFound
 
     @abc.abstractmethod
-    def check_status(self):  # noqa: ANN201, D102
-        pass
-
-    @abc.abstractmethod
     def resource_ids(self) -> typing.Iterable[str]:  # noqa: D102
         raise NotImplementedError()
 
@@ -52,18 +48,6 @@ class ResourceRepository(repository.Repository[entities.Resource]):  # noqa: D10
         resource_id: str,
     ) -> Optional[entities.Resource]:
         raise NotImplementedError()
-
-    # @abc.abstractmethod
-    # def resources_with_id(self, resource_id: str):
-    #     raise NotImplementedError()
-
-    # @abc.abstractmethod
-    # def resource_with_id_and_version(self, resource_id: str, version: int):
-    #     raise NotImplementedError()
-
-    # @abc.abstractmethod
-    # def get_active_resource(self, resource_id: str) -> Optional[Resource]:
-    #     raise NotImplementedError()
 
     def get_published_resources(self) -> typing.List[entities.Resource]:  # noqa: D102
         return list(self._get_published_resources())

@@ -1,8 +1,6 @@
 import logging  # noqa: D100, I001
 from typing import Optional
 
-import sqlalchemy as sa
-from sqlalchemy import sql
 from sqlalchemy import orm as sa_orm
 
 from karp.foundation.events import EventBus
@@ -42,13 +40,11 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
 
     def _by_id(
         self,
-        id: UniqueId,  # noqa: A002
+        id: UniqueId,
         *,
         version: Optional[int] = None,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ) -> Optional[EntryUnitOfWork]:
-        # stmt = sql.select(EntryUowModel).where(EntryUowModel.id == id_)
-        # row = self._session.execute(stmt).first()
         stmt = (
             self._session.query(EntryUowModel)
             .filter_by(entity_id=id)
@@ -56,30 +52,8 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
         )
         return self._row_to_entity(row) if (row := stmt.first()) else None
 
-    def num_entities(self) -> int:  # noqa: D102
-        self._check_has_session()
-        subq = (
-            self._session.query(
-                EntryUowModel.entity_id,
-                sa.func.max(EntryUowModel.last_modified).label("maxdate"),
-            )
-            .group_by(EntryUowModel.entity_id)
-            .subquery("t2")
-        )
-        query = self._session.query(EntryUowModel).join(
-            subq,
-            sql.and_(
-                EntryUowModel.entity_id == subq.c.entity_id,
-                EntryUowModel.last_modified == subq.c.maxdate,
-                EntryUowModel.discarded == False,  # noqa: E712
-            ),
-        )
-
-        return query.count()
-
     def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:
         uow, _events = self.entry_uow_factory.create(
-            repository_type=row_proxy.type,
             id=row_proxy.entity_id,
             name=row_proxy.name,
             config=row_proxy.config,
@@ -112,19 +86,6 @@ class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
         if self._session_is_created_here and self.session_factory is None:
             raise ValueError("Must provide one of session and session_factory")
         self._repo = None
-
-    # def __enter__(self):
-    #     logger.debug('called __enter__')
-    #     if self._session_is_created_here:
-    #         self._session = self.session_factory()
-    #         logger.debug('created session=%s', self._session)
-    #     if self._repo is None:
-    #         logger.debug('creating repo')
-    #         self._repo = SqlEntryUowRepository(
-    #             entry_uow_factory=self.factory,
-    #             session=self._session,
-    #         )
-    #     return super().__enter__()
 
     def _begin(self):  # noqa: ANN202
         logger.debug("called _begin")

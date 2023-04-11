@@ -1,5 +1,4 @@
 import json  # noqa: D100, I001
-from typing import Optional
 
 from tabulate import tabulate
 import typer
@@ -38,31 +37,15 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):  # noqa: ANN201, D
 
 
 @subapp.command()
-def delete(  # noqa: ANN201, D103
-    entity_id: str,  # TODO: use UniqueIdStr when supported,
-    ctx: typer.Context,
-    user: Optional[str] = typer.Option(None),
-):
-    # bus = inject_from_ctx(CommandBus, ctx)
-
-    # delete_entry_repo = DeleteEntryRepo(
-    #     entity_id=entity_id,
-    #     user=user or "local admin"
-    # )
-    # typer.echo(f"Entry repository with id '{entity_id}' deleted.")
-    typer.echo("not yet supported")
-
-
-@subapp.command()
 def list(ctx: typer.Context):  # noqa: ANN201, D103, A001
     query = inject_from_ctx(ListEntryRepos, ctx)  # type: ignore [misc]
     typer.echo(
         tabulate(
             [
-                [entry_repo.name, entry_repo.entity_id, entry_repo.repository_type]
+                [entry_repo.name, entry_repo.entity_id]
                 for entry_repo in query.query()
             ],
-            headers=["name", "id", "repository_type"],
+            headers=["name", "id"],
         )
     )
 

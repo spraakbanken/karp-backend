@@ -3,11 +3,7 @@ import logging
 import typing  # noqa: F401
 from typing import Dict, Optional  # noqa: F401
 
-import regex
 from sqlalchemy.orm import Session
-
-
-DUPLICATE_PROG = regex.compile(r"Duplicate entry '(.+)' for key '(\w+)'")
 
 
 logger = logging.getLogger(__name__)
@@ -31,44 +27,14 @@ class SqlUnitOfWork:  # noqa: D101
         self._session_is_created_here = self._session is None
         self._state = SqlUnitOfWork.State.initialized
 
-    # def __enter__(self):
-    #     self.begin()
-    #     return self
-
-    # def __exit__(self, exc_type, exc_val, exc_tb):
-    #     if exc_type is None:
-    #         # self.commit()
-    #         if self._session_is_created_here:
-    #             self.close()
-    #         return False
-    #     self.abort()
-    #     if self._session_is_created_here:
-    #         self.close()
-    #     return False  # re-raise
-
     def begin(self):  # noqa: ANN201, D102
-        self._check_state(expected_state=SqlUnitOfWork.State.initialized)
         self._state = SqlUnitOfWork.State.begun
         return self._begin()
 
     def _begin(self):  # noqa: ANN202
         return self
 
-    def _check_state(self, expected_state):  # noqa: ANN202
-        if self._state != expected_state:
-            pass
-            # logger.warning(
-            #     "State conflict. repositories is in state '%s' and not '%s'",
-            #     self._state,
-            #     expected_state,
-            # )
-            # raise RuntimeError(
-            #     f"State conflict. repositories is in state '{self._state!s}' and not '{expected_state!s}'"
-            # )
-
     def _commit(self):  # noqa: ANN202
-        self._check_state(expected_state=SqlUnitOfWork.State.begun)
-        # try:
         logger.info(
             "About to commit",
             extra={
@@ -85,32 +51,12 @@ class SqlUnitOfWork:  # noqa: D101
             },
         )
 
-        # self._state = SqlUnitOfWork.State.initialized
-        # except db.exc.IntegrityError as err:
-        #     logger.exception(err)
-        #     str_err = str(err)
-        #     print(f"str(err) = {str_err}")
-        #     if "Duplicate entry" in str_err:
-        #         match = DUPLICATE_PROG.search(str_err)
-        #         if match:
-        #             value = match.group(1)
-        #             key = match.group(2)
-        #             if key == "PRIMARY":
-        #                 key = self.primary_key()
-        #         else:
-        #             value = "UNKNOWN"
-        #             key = "UNKNOWN"
-        #         raise errors.IntegrityError(key=key, value=value) from err
-        #     raise errors.IntegrityError("Unknown integrity error") from err
-
     def abort(self):  # noqa: ANN201, D102
-        self._check_state(expected_state=SqlUnitOfWork.State.begun)
         self._session.rollback()
         self._state = SqlUnitOfWork.State.initialized
 
     def rollback(self):  # noqa: ANN201, D102
         logger.debug("rollback called")
-        self._check_state(expected_state=SqlUnitOfWork.State.begun)
         self._session.rollback()
         self._state = SqlUnitOfWork.State.initialized
 

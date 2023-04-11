@@ -11,7 +11,6 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, st
 from karp import auth, search
 from karp.main import errors as karp_errors
 from karp.search.application.queries import SearchService, QueryRequest
-from karp.karp_v6_api import schemas
 
 from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
@@ -64,22 +63,7 @@ def query_split(  # noqa: ANN201, D103
         0, alias="from", description="Specify which entry should be the first returned."
     ),
     size: int = Query(25, description="Number of entries in page."),
-    sort: str = Query(
-        None,
-        description="The `field` to sort by. If missing, default order for each resource will be used.",
-        regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
-    ),
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
-    include_fields: Optional[List[str]] = Query(
-        None, description="Comma-separated list of which fields to return"
-    ),
-    exclude_fields: Optional[List[str]] = Query(
-        None, description="Comma-separated list of which fields to remove from result"
-    ),
-    format: schemas.EntryFormat = Query(  # noqa: A002
-        schemas.EntryFormat.json,
-        description="Will return the result in the specified format.",
-    ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
@@ -152,11 +136,6 @@ def query(  # noqa: ANN201
     exclude_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to remove from result"
     ),
-    format_: schemas.EntryFormat = Query(
-        schemas.EntryFormat.json,
-        alias="format",
-        description="Will return the result in the specified format.",
-    ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
     search_service: SearchService = Depends(inject_from_req(SearchService)),
@@ -183,7 +162,6 @@ def query(  # noqa: ANN201
         sort=sort,
         include_fields=include_fields,
         exclude_fields=exclude_fields,
-        format_=format_,
         lexicon_stats=lexicon_stats,
     )
     try:

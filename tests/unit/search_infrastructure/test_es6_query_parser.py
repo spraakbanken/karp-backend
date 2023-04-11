@@ -57,14 +57,6 @@ def parser() -> KarpQueryV6Parser:
             | es_dsl.Q("match", pos={"query": "nn", "operator": "and"})
             | es_dsl.Q("regexp", pos="n.*"),
         ),
-        # (
-        #     "regexp|or(pos||form)|k.+l",
-        #     es_dsl.Q("regexp", pos="k.+l") | es_dsl.Q("regexp", form="k.+l")
-        # ),
-        # (
-        #     "count(baseform)|gt|1",
-        #     None,
-        # )
     ],
 )
 def test_es_query(parser, q, expected):  # noqa: ANN201
@@ -120,10 +112,6 @@ def test_es_query(parser, q, expected):  # noqa: ANN201
                 ],
             ),
         ),
-        #     (
-        #         "exists|or(pos||vb)",
-        #         es_dsl
-        #         )
     ],
 )
 def test_combined_es_query(parser, q, expected):  # noqa: ANN201

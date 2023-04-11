@@ -14,14 +14,6 @@ class LexDomainError(Exception):
         self.extras = kwargs or {}
 
 
-class ConsistencyError(LexDomainError):  # noqa: D101
-    pass
-
-
-class ConstraintsError(LexDomainError):  # noqa: D101
-    pass
-
-
 class DiscardedEntityError(LexDomainError):  # noqa: D101
     pass
 
@@ -65,31 +57,8 @@ class RepositoryError(LexDomainError):  # noqa: D101
     pass
 
 
-class RepositoryStatusError(LexDomainError):  # noqa: D101
-    pass
-
-
-class NonExistingField(RepositoryError):
-    """Raised when a field doesn't exist in a repo."""
-
-    def __init__(self, field: str, **kwargs):  # noqa: ANN003, ANN204, D107
-        # if "code" not in kwargs:
-        #     kwargs["code"] = errors.ClientErrorCodes.DB_GENERAL_ERROR
-        super().__init__(f"Field '{field}' doesn't exist.", **kwargs)
-
-
 class InvalidEntry(LexDomainError):  # noqa: D101
     pass
-
-
-class MissingIdField(InvalidEntry):  # noqa: D101
-    def __init__(self, resource_id: str, entry: Dict) -> None:  # noqa: D107
-        super().__init__(f"Missing ID field for resource '{resource_id}' in '{entry}'")
-        self.error_obj = {
-            "loc": {"resource_id": resource_id},
-            "data": {"entry": entry},
-            "error": {"message": str(self), "code": "missing id field"},
-        }
 
 
 class UpdateConflict(LexDomainError):  # noqa: D101
@@ -108,11 +77,7 @@ class InvalidResourceId(LexValueError):  # noqa: D101
     pass
 
 
-class LogicError(LexDomainError):  # noqa: D101
-    pass
-
-
-class InvalidEntrySchema(ValueError, LogicError):  # noqa: D101
+class InvalidEntrySchema(ValueError, LexDomainError):  # noqa: D101
     pass
 
 

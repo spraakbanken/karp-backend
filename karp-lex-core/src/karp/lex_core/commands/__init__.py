@@ -1,9 +1,4 @@
 """Commands top-level module."""
-
-from typing import Union
-
-from pydantic import BaseModel, Field
-
 from .entry_commands import (
     AddEntries,
     AddEntriesInChunks,
@@ -15,7 +10,7 @@ from .entry_commands import (
     ImportEntriesInChunks,
     UpdateEntry,
 )
-from .entry_repo_commands import CreateEntryRepository, DeleteEntryRepository
+from .entry_repo_commands import CreateEntryRepository
 from .resource_commands import (
     CreateResource,
     DeleteResource,
@@ -39,7 +34,6 @@ __all__ = [
     "UpdateEntry",
     # EntryRepo commands
     "CreateEntryRepository",
-    "DeleteEntryRepository",
     # Resource commands
     "CreateResource",
     "DeleteResource",
@@ -49,30 +43,3 @@ __all__ = [
     "SetEntryRepoId",
     "UpdateResource",
 ]
-
-
-EntryCommandType = Union[AddEntry, DeleteEntry, UpdateEntry]
-
-
-EntryRepoCommandType = Union[CreateEntryRepository, DeleteEntryRepository]
-ResourceCommandType = Union[
-    CreateResource, DeleteResource, PublishResource, SetEntryRepoId, UpdateResource
-]
-
-
-class LexCommand(BaseModel):  # noqa: D101
-    command: Union[EntryCommandType, EntryRepoCommandType, ResourceCommandType] = Field(
-        ..., discriminator="cmdtype"
-    )
-
-
-class EntryCommand(BaseModel):  # noqa: D101
-    command: EntryCommandType = Field(..., discriminator="cmdtype")
-
-
-class EntryRepoCommand(BaseModel):  # noqa: D101
-    command: EntryRepoCommandType = Field(..., discriminator="cmdtype")
-
-
-class ResourceCommand(BaseModel):  # noqa: D101
-    command: ResourceCommandType = Field(..., discriminator="cmdtype")

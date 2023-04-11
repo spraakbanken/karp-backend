@@ -9,19 +9,17 @@ from karp.lex.application import repositories
 logger = logging.getLogger(__name__)
 
 
-class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):  # noqa: D101
-    def __init__(  # noqa: D107, ANN204
+class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
+    def __init__(
         self,
         entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
-        **kwargs,  # noqa: ANN003
     ):
         self._entry_repo_uow = entry_repo_uow
 
-    def execute(  # noqa: D102
+    def execute(
         self, command: commands.CreateEntryRepository
     ) -> EntryUnitOfWork:
         entry_repo, events = self._entry_repo_uow.factory.create(
-            repository_type=command.repository_type,
             id=command.id,
             name=command.name,
             config=command.config,
@@ -38,22 +36,3 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):  # noqa
             uow.post_on_commit(events)
             uow.commit()
         return entry_repo
-
-
-class DeletingEntryRepository(  # noqa: D101
-    CommandHandler[commands.DeleteEntryRepository]
-):
-    def __init__(  # noqa: D107, ANN204
-        self,
-        entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
-        **kwargs,  # noqa: ANN003
-    ):
-        self._entry_repo_uow = entry_repo_uow
-
-    def execute(self, command: commands.DeleteEntryRepository) -> None:  # noqa: D102
-        with self._entry_repo_uow as uow:
-            entry_repo = uow.repo.get_by_id(command.id)
-            events = entry_repo.discard(user=command.user, timestamp=command.timestamp)
-            uow.repo.save(entry_repo)
-            uow.post_on_commit(events)
-            uow.commit()

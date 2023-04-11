@@ -36,8 +36,8 @@ def add_entries(  # noqa: ANN201
 ):
     for resource, _entries in entries.items():
         for entry in _entries:
-            response = client.post(
-                f"/entries/{resource}/add",
+            response = client.put(
+                f"/entries/{resource}",
                 json={"entry": entry},
                 headers=access_token.as_header(),
             )

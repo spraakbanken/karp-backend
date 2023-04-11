@@ -112,26 +112,6 @@ class EntryViews(abc.ABC):  # noqa: D101
     ) -> typing.Optional[EntryDto]:
         pass
 
-    # @abc.abstractmethod
-    # def get_by_entry_id(
-    #     self,
-    #     resource_id: str,
-    #     entry_id: str,
-    # ) -> EntryDto:
-    #     pass
-
-    # @abc.abstractmethod
-    # def get_by_entry_id_optional(
-    #     self,
-    #     resource_id: str,
-    #     entry_id: str,
-    # ) -> typing.Optional[EntryDto]:
-    #     pass
-
-    @abc.abstractmethod
-    def get_total(self, resource_id: str) -> int:  # noqa: D102
-        pass
-
     @abc.abstractmethod
     def get_by_referenceable(  # noqa: D102
         self, resource_id: str, filters

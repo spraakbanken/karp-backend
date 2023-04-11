@@ -20,19 +20,8 @@ from karp.command_bus import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
 from karp.auth_infrastructure import (
     AuthInfrastructure,
-    TestAuthInfrastructure,
     JwtAuthInfrastructure,
 )
-
-
-# from foundation.events import EventBus, InjectorEventBus, RunAsyncHandler
-# from foundation.locks import Lock, LockFactory
-#
-# from customer_relationship import CustomerRelationshipConfig
-# from main.async_handler_task import async_handler_generic_task
-# from main.redis import RedisLock
-# from payments import PaymentsConfig
-
 
 logger = logging.getLogger(__name__)
 
@@ -97,17 +86,14 @@ class Db(injector.Module):  # noqa: D101
     def __init__(self, engine: Engine) -> None:  # noqa: D107
         self._engine = engine
 
-    # @request
     @injector.provider
     def connection(self) -> Connection:  # noqa: D102
         return self._engine.connect()
 
-    # @request
     @injector.provider
     def session(self, connection: Connection) -> Session:  # noqa: D102
         return Session(bind=connection)
 
-    # @request
     @injector.provider
     def session_factory(self) -> sessionmaker:  # noqa: D102
         return sessionmaker(bind=self._engine)
@@ -124,21 +110,13 @@ class ElasticSearchMod(injector.Module):  # noqa: D101
         return elasticsearch.Elasticsearch(self._url)
 
 
-TEST_AUTH_SERVICE = "DUMMY_AUTH"
-
-
 def install_auth_service(  # noqa: ANN201, D103
     container: injector.Injector, settings: Dict[str, str]
 ):
-    auth_service_name = settings.get("auth.name", "")
     container.binder.install(AuthInfrastructure())
-
-    if auth_service_name.upper() == TEST_AUTH_SERVICE:
-        container.binder.install(TestAuthInfrastructure())
-    else:
-        container.binder.install(
-            JwtAuthInfrastructure(Path(settings["auth.jwt.pubkey.path"]))
-        )
+    container.binder.install(
+        JwtAuthInfrastructure(Path(settings["auth.jwt.pubkey.path"]))
+    )
 
 
 def request_configuration(conn: Connection, session: Session):  # noqa: ANN201, D103

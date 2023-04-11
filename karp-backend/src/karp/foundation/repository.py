@@ -64,10 +64,6 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
     ) -> Optional[EntityType]:
         raise NotImplementedError()
 
-    @abc.abstractmethod
-    def num_entities(self) -> int:  # noqa: D102
-        ...
-
     def create_entity_not_found(self, msg: str) -> Exception:
         """Create EntityNotFound.
 

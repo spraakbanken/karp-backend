@@ -26,6 +26,7 @@ from karp.auth import User
 from karp.foundation.value_objects import PermissionLevel
 from karp.auth import AuthService
 from karp.karp_v6_api import schemas, dependencies as deps
+from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 from karp.command_bus import CommandBus
 
 
@@ -62,12 +63,6 @@ def get_history_for_entry(  # noqa: ANN201, D103
     return get_entry_history.query(resource_id, entry_id, version=version)
 
 
-@router.post(
-    "/{resource_id}/add",
-    status_code=status.HTTP_201_CREATED,
-    tags=["Editing"],
-    response_model=schemas.EntryAddResponse,
-)
 @router.put(
     "/{resource_id}",
     status_code=status.HTTP_201_CREATED,
@@ -79,7 +74,7 @@ def add_entry(  # noqa: ANN201, D103
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
+    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -116,39 +111,6 @@ def add_entry(  # noqa: ANN201, D103
     return {"newID": new_entry.id}
 
 
-@router.post("/{resource_id}/preview")
-def preview_entry(  # noqa: ANN201, D103
-    resource_id: str,
-    data: schemas.EntryAdd,
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    preview_entry: search.PreviewEntry = Depends(
-        deps.inject_from_req(search.PreviewEntry)
-    ),
-):
-    if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    try:
-        input_dto = search.PreviewEntryInputDto(
-            resourceId=resource_id, entry=data.entry, user=user.identifier
-        )
-    except pydantic.ValidationError as err:
-        logger.exception("data is not valid")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail={"error": str(err)}
-        ) from err
-    else:
-        return preview_entry.query(input_dto)
-
-
-@router.post(
-    "/{resource_id}/{entry_id}/update",
-    tags=["Editing"],
-    response_model=schemas.EntryAddResponse,
-)
 @router.post(
     "/{resource_id}/{entry_id}",
     tags=["Editing"],
@@ -160,7 +122,7 @@ def update_entry(  # noqa: ANN201, D103
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
+    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -215,11 +177,6 @@ def update_entry(  # noqa: ANN201, D103
 
 
 @router.delete(
-    "/{resource_id}/{entry_id}/{version}/delete",
-    tags=["Editing"],
-    status_code=status.HTTP_204_NO_CONTENT,
-)
-@router.delete(
     "/{resource_id}/{entry_id}/{version}",
     tags=["Editing"],
     status_code=status.HTTP_204_NO_CONTENT,
@@ -230,7 +187,7 @@ def delete_entry(  # noqa: ANN201
     version: int,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
+    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     """Delete a entry from a resource."""
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):

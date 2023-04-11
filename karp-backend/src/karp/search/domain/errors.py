@@ -6,10 +6,6 @@ class UnsupportedField(DomainError):  # noqa: D101
     pass
 
 
-class UnsupportedQuery(DomainError):  # noqa: D101
-    pass
-
-
 class IncompleteQuery(DomainError):  # noqa: D101
     def __init__(  # noqa: D107
         self, failing_query: str, error_description: str, *args: object

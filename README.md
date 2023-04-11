@@ -52,7 +52,6 @@ A Makefile is provided to simplify tasks.
 ```
 export ES_ENABLED=true
 export ELASTICSEARCH_HOST=localhost:9200
-export SEARCH_CONTEXT=es6_search_service
 ```
 
 ## Create test resources
@@ -64,23 +63,6 @@ export SEARCH_CONTEXT=es6_search_service
 5. Do the same for `municipalities`
 6. `karp-cli resource publish places 1`
 7. `karp-cli resource publish municipalities 1`
-
-## Pre-processing data before publishing
-
-** TODO: review this **
-Can be used to have less downtime, because sometimes the preprocessing may
-be faster on another machine than the machine that talks to Elasticsearch.
-Do `create` and `import` on both machines, with the same data. Use
-machine 1 to preprocess and use result on machine 2.
-
-1. Create resource and import data as usual.
-2. Run `karp-cli preprocess --resource_id places --version 2 --filename places_preprocessed`
-
-   `places_preprocessed` will contain a pickled dataset containing everything that is needed
-
-3. Run `karp-cli publish_preprocessed --resource_id places --version 2 --data places_preprocessed`
-4. Alternatively run `karp-cli reindex_preprocessed --resource_id places --data places_preprocessed`
-   , if the resource was already published.
 
 ## Technologies
 

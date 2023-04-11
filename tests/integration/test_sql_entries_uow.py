@@ -6,7 +6,6 @@ import ulid
 from karp.foundation.events import EventBus
 from karp import lex
 from karp.lex_infrastructure.repositories import (
-    SqlEntryUowV1Creator,
     SqlEntryUowV2Creator,
 )
 from tests.unit.lex import factories
@@ -15,16 +14,6 @@ from tests.unit.lex import factories
 @pytest.fixture
 def example_uow() -> lex.CreateEntryRepository:
     return factories.CreateEntryRepositoryFactory()  # type: ignore [arg-type]
-
-
-@pytest.fixture
-def sql_entry_uow_v1_creator(
-    sqlite_session_factory,
-) -> SqlEntryUowV1Creator:
-    return SqlEntryUowV1Creator(
-        event_bus=mock.Mock(spec=EventBus),
-        session_factory=sqlite_session_factory,
-    )
 
 
 @pytest.fixture
@@ -37,51 +26,7 @@ def sql_entry_uow_v2_creator(
     )
 
 
-class TestSqlEntryUowV1:
-    def test_creator_repository_type(
-        self,
-        sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
-    ) -> None:
-        assert sql_entry_uow_v1_creator.repository_type == "sql_entries_v1"
-
-    def test_uow_repository_type(  # noqa: ANN201
-        self,
-        sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
-        example_uow: lex.CreateEntryRepository,
-    ):
-        entry_uow, _ = sql_entry_uow_v1_creator(
-            **example_uow.dict(exclude={"repository_type", "cmdtype"})
-        )
-        assert entry_uow.repository_type == "sql_entries_v1"
-
-    def test_repo_table_name(  # noqa: ANN201
-        self,
-        sql_entry_uow_v1_creator: SqlEntryUowV1Creator,
-        example_uow: lex.CreateEntryRepository,
-    ):
-        entry_uow, _ = sql_entry_uow_v1_creator(
-            **example_uow.dict(exclude={"repository_type", "cmdtype"})
-        )
-        with entry_uow as uw:
-            assert uw.repo.history_model.__tablename__ == example_uow.name
-
-
 class TestSqlEntryUowV2:
-    def test_creator_repository_type(  # noqa: ANN201
-        self,
-        sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
-    ):
-        assert sql_entry_uow_v2_creator.repository_type == "sql_entries_v2"
-
-    def test_uow_repository_type(  # noqa: ANN201
-        self,
-        sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
-        example_uow: lex.CreateEntryRepository,
-    ):
-        entry_uow, _ = sql_entry_uow_v2_creator(
-            **example_uow.dict(exclude={"repository_type", "cmdtype"})
-        )
-        assert entry_uow.repository_type == "sql_entries_v2"
 
     def test_repo_table_name(  # noqa: ANN201
         self,
@@ -89,7 +34,7 @@ class TestSqlEntryUowV2:
         example_uow: lex.CreateEntryRepository,
     ):
         entry_uow, _ = sql_entry_uow_v2_creator(
-            **example_uow.dict(exclude={"repository_type", "cmdtype"})
+            **example_uow.dict(exclude={"cmdtype"})
         )
         random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str
         with entry_uow as uw:

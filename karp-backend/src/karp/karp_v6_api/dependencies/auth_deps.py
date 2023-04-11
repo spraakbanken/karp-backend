@@ -1,4 +1,3 @@
-import logging  # noqa: D100, I001
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -7,10 +6,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityS
 from fastapi.security import utils as security_utils
 import logging  # noqa: F811
 
-# from karp import bootstrap, services
 from karp import auth, lex
 
-# from karp.auth.auth import auth
 from karp.main.errors import ClientErrorCodes, KarpError  # noqa: F401
 from karp.auth.domain.errors import TokenError
 from karp.auth.domain.auth_service import AuthService  # noqa: F401

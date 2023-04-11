@@ -3,7 +3,6 @@ from karp.lex_core.value_objects.unique_id import (  # noqa: D104
     UniqueIdStr,
     UniqueIdType,
     make_unique_id,
-    make_unique_id_str,
 )
 
 __all__ = [
@@ -11,5 +10,4 @@ __all__ = [
     "UniqueIdStr",
     "UniqueIdType",
     "make_unique_id",
-    "make_unique_id_str",
 ]

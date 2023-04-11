@@ -44,35 +44,18 @@ class TestCliResourceLifetime:
         resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)  # type: ignore [misc]
         assert resource_repo.get_by_resource_id("lexlex") is not None
 
-    @pytest.mark.xfail(reason="not ready")
-    def test_update_entry_repo(  # noqa: ANN201
+    def test_delete_resource(  # noqa: ANN201
         self,
         runner: CliRunner,
         cliapp: Typer,
         app_context: AppContext,
     ):
         result = runner.invoke(
-            cliapp, ["entry-repo", "create", "assets/testing/config/lexlex.json"]
-        )
-        print(f"{result.stdout=}")
-        assert result.exit_code == 0
-
-        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepository)  # type: ignore [misc]
-        entry_repo = entry_repo_repo.get_by_name("lexlex")
-        assert entry_repo is not None
-
-        result = runner.invoke(
             cliapp,
-            [
-                "resource",
-                "set-entry-repo",
-                "lexlex",
-                str(entry_repo.entity_id),
-            ],
+            ["resource", "delete", "lexlex", "1"],
         )
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)  # type: ignore [misc]
-        resource_lexlex = resource_repo.get_by_resource_id("lexlex")
-        assert resource_lexlex.entry_repository_id == entry_repo.entity_id
+        resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)
+        assert resource_repo.get_by_resource_id("lexlex") is not None

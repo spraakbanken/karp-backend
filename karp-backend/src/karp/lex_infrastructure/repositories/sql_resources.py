@@ -7,13 +7,16 @@ from karp.lex_core.value_objects import UniqueId
 import sqlalchemy as sa
 from sqlalchemy import sql
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import (
+    and_,
+    func,
+)
 
 from karp.foundation.events import EventBus
-from karp.lex.domain import errors, entities
+from karp.lex.domain import entities
 from karp.lex.application import repositories
 from karp.lex.domain.entities.resource import Resource
 
-from karp.db_infrastructure import db
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.db_infrastructure.sql_repository import SqlRepository
@@ -24,21 +27,9 @@ logger = logging.getLogger(__name__)
 class SqlResourceRepository(  # noqa: D101
     SqlRepository, repositories.ResourceRepository
 ):
-    def __init__(self, session: db.Session):  # noqa: D107, ANN204
+    def __init__(self, session: Session):  # noqa: D107, ANN204
         repositories.ResourceRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
-
-    def check_status(self):  # noqa: ANN201, D102
-        self._check_has_session()
-        try:
-            self._session.execute("SELECT 1")
-        except db.SQLAlchemyError as err:
-            logger.exception(str(err))
-            raise errors.RepositoryStatusError("Database error") from err
-
-    @classmethod
-    def primary_key(cls):  # noqa: ANN206, D102
-        return "resource_id"
 
     def _save(self, resource: Resource):  # noqa: ANN202
         self._check_has_session()
@@ -65,8 +56,6 @@ class SqlResourceRepository(  # noqa: D101
             ),
         )
         return self._session.execute(stmt).scalars().all()
-        # query = self._session.query(ResourceModel)
-        # return [row.resource_id for row in query.group_by(ResourceModel.resource_id).all()]
 
     def _by_id(
         self,
@@ -112,49 +101,19 @@ class SqlResourceRepository(  # noqa: D101
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
-    def get_active_resource(self, resource_id: str) -> Optional[Resource]:  # noqa: D102
-        self._check_has_session()
-        query = self._session.query(ResourceModel)
-        resource_dto = query.filter_by(
-            resource_id=resource_id, is_published=True
-        ).one_or_none()
-        return resource_dto.to_entity() if resource_dto else None
-
-    def get_latest_version(self, resource_id: str) -> int:  # noqa: D102
-        self._check_has_session()
-        row = (
-            self._session.query(ResourceModel)
-            .order_by(ResourceModel.version.desc())
-            .filter_by(resource_id=resource_id)
-            .first()
-        )
-        return 0 if row is None else row.version
-
-    def history_by_resource_id(  # noqa: D102
-        self, resource_id: str
-    ) -> typing.List[entities.Resource]:
-        self._check_has_session()
-        query = self._session.query(ResourceModel)
-        return [
-            resource_dto.to_entity()
-            for resource_dto in query.filter_by(resource_id=resource_id)
-            .order_by(ResourceModel.version.desc())
-            .all()
-        ]
-
     def _get_published_resources(self) -> typing.List[entities.Resource]:
         self._check_has_session()
         subq = (
             self._session.query(
                 ResourceModel.resource_id,
-                db.func.max(ResourceModel.last_modified).label("maxdate"),
+                func.max(ResourceModel.last_modified).label("maxdate"),
             )
             .group_by(ResourceModel.resource_id)
             .subquery("t2")
         )
         query = self._session.query(ResourceModel).join(
             subq,
-            db.and_(
+            and_(
                 ResourceModel.resource_id == subq.c.resource_id,
                 ResourceModel.last_modified == subq.c.maxdate,
                 ResourceModel.is_published == True,  # noqa: E712
@@ -172,14 +131,14 @@ class SqlResourceRepository(  # noqa: D101
         subq = (
             self._session.query(
                 ResourceModel.resource_id,
-                db.func.max(ResourceModel.last_modified).label("maxdate"),
+                func.max(ResourceModel.last_modified).label("maxdate"),
             )
             .group_by(ResourceModel.resource_id)
             .subquery("t2")
         )
         query = self._session.query(ResourceModel).join(
             subq,
-            db.and_(
+            and_(
                 ResourceModel.resource_id == subq.c.resource_id,
                 ResourceModel.last_modified == subq.c.maxdate,
             ),
@@ -190,43 +149,6 @@ class SqlResourceRepository(  # noqa: D101
             for resource_dto in query
             if resource_dto is not None
         ]
-
-    def num_entities(self) -> int:  # noqa: D102
-        self._check_has_session()
-        subq = (
-            self._session.query(
-                ResourceModel.entity_id,
-                sa.func.max(ResourceModel.last_modified).label("maxdate"),
-            )
-            .group_by(ResourceModel.entity_id)
-            .subquery("t2")
-        )
-        query = self._session.query(ResourceModel).join(
-            subq,
-            db.and_(
-                ResourceModel.entity_id == subq.c.entity_id,
-                ResourceModel.last_modified == subq.c.maxdate,
-                ResourceModel.discarded == False,  # noqa: E712
-            ),
-        )
-
-        return query.count()
-
-    def _resource_to_dict(self, resource: Resource) -> typing.Dict:
-        return {
-            "history_id": None,
-            "id": resource.id,
-            "resource_id": resource.resource_id,
-            "version": resource.version,
-            "name": resource.name,
-            "config": resource.config,
-            "is_published": resource.is_published,
-            "last_modified": resource.last_modified,
-            "last_modified_by": resource.last_modified_by,
-            "message": resource.message,
-            "op": resource.op,
-            "discarded": resource.discarded,
-        }
 
 
 class SqlResourceUnitOfWork(  # noqa: D101
@@ -258,58 +180,3 @@ class SqlResourceUnitOfWork(  # noqa: D101
         if self._resources is None:
             raise RuntimeError("No resources")
         return self._resources
-
-    # def _resource_to_row(
-    #     self, resource: Resource
-    # ) -> Tuple[
-    #     None,
-    #     UUID,
-    #     str,
-    #     int,
-    #     str,
-    #     Dict,
-    #     Optional[bool],
-    #     float,
-    #     str,
-    #     str,
-    #     ResourceOp,
-    #     bool,
-    # ]:
-    #     # config = resource.config
-    #     resource.config["entry_repository_type"] = resource.entry_repository_type
-    #     resource.config[
-    #         "entry_repository_settings"
-    #     ] = resource.entry_repository_settings
-    #     return (
-    #         None,
-    #         resource.id,
-    #         resource.resource_id,
-    #         resource.version,
-    #         resource.name,
-    #         resource.config,
-    #         resource.is_published,
-    #         resource.last_modified,
-    #         resource.last_modified_by,
-    #         resource.message,
-    #         resource.op,
-    #         resource.discarded,
-    #     )
-
-    # def _row_to_resource(self, row) -> Resource:
-    #     entry_repository_type = row.config.pop("entry_repository_type")
-    #     entry_respsitory_settings = row.config.pop("entry_repository_settings")
-    #     return Resource(
-    #         entity_id=row.id,
-    #         resource_id=row.resource_id,
-    #         version=row.version,
-    #         name=row.name,
-    #         config=row.config,
-    #         message=row.message,
-    #         op=row.op,
-    #         is_published=row.is_published,
-    #         last_modified=row.last_modified,
-    #         last_modified_by=row.last_modified_by,
-    #         discarded=row.discarded,
-    #         entry_repository_type=entry_repository_type,
-    #         entry_repository_settings=entry_respsitory_settings,
-    #     )

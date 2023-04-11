@@ -17,7 +17,6 @@ def _row_to_dto(row_proxy) -> EntryRepoDto:
     return EntryRepoDto(
         name=row_proxy.name,
         entity_id=row_proxy.entity_id,
-        repository_type=row_proxy.type,
     )
 
 

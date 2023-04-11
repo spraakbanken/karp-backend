@@ -1,7 +1,4 @@
-import json  # noqa: I001
 from logging.config import dictConfig
-import logging
-import os
 import typing
 from dataclasses import dataclass
 
@@ -12,19 +9,16 @@ except ImportError:
     from importlib_metadata import entry_points  # type: ignore
 
 import injector  # noqa: I001
-from json_streams import jsonlib
 from sqlalchemy import pool
-from sqlalchemy.engine import Engine, create_engine, url as sa_url
+from sqlalchemy.engine import Engine, create_engine
 import logging  # noqa: F811
 import asgi_correlation_id
 
-from karp.foundation.environs_sqlalchemyurl import sqlalchemy_url
 from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import (
     GenericSearchInfrastructure,
     Es6SearchIndexMod,
-    GenericSearchIndexMod,
     SearchInfrastructure,
 )
 from karp.main import config, modules
@@ -39,12 +33,12 @@ from karp.search import Search
 
 
 @dataclass
-class AppContext:  # noqa: D101
+class AppContext:
     container: injector.Injector
     settings: typing.Dict
 
 
-def bootstrap_app(container=None) -> AppContext:  # noqa: D103
+def bootstrap_app() -> AppContext:
     env = config.load_env()
     db_url = config.parse_database_url(env)
     es_enabled = env.bool("ELASTICSEARCH_ENABLED", False)
@@ -60,21 +54,11 @@ def bootstrap_app(container=None) -> AppContext:  # noqa: D103
         "tracking.matomo.token": env("TRACKING_MATOMO_TOKEN", None),
         "es.index_prefix": env("ES_INDEX_PREFIX", None),
     }
-    # if n ot container:
-    # container = AppContainer()
-    # container.config.core.logging.from_value(_logging_config())
-    # container.config.db.url.from_value(config.DB_URL)
-    # container.config.search_service.type.from_env(
-    # "SEARCH_CONTEXT", "sql_search_service"
-    # )
-    # bus = container.bus()
-    # bus.handle(events.AppStarted())  # needed? ?
+
     configure_logging(settings=settings)
-    # logging.config.dictConfig(_logging_config())  # type: ignore
-    search_service = env("SEARCH_CONTEXT", "sql_search_service")
     engine = _create_db_engine(db_url)
     dependency_injector = _setup_dependency_injection(engine, es_url=es_url)
-    _setup_search_context(dependency_injector, search_service, settings=settings)
+    _setup_search_context(dependency_injector, settings=settings)
     return AppContext(dependency_injector, settings)
 
 
@@ -103,21 +87,15 @@ def _setup_dependency_injection(
             Search(),
             GenericSearchInfrastructure(),
             SearchInfrastructure(),
-            # SearchServiceMod(search_service),
         ],
         auto_bind=False,
     )
 
 
-def _setup_search_context(
-    container: injector.Injector, search_service: str, settings: dict
-) -> None:
-    if search_service.lower() == "es6_search_service":
-        container.binder.install(
-            Es6SearchIndexMod(index_prefix=settings.get("es.index_prefix"))
-        )
-    else:
-        container.binder.install(GenericSearchIndexMod())
+def _setup_search_context(container: injector.Injector, settings: dict) -> None:
+    container.binder.install(
+        Es6SearchIndexMod(index_prefix=settings.get("es.index_prefix"))
+    )
 
 
 def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
@@ -134,12 +112,10 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
             "formatters": {
                 "console": {
                     "class": "logging.Formatter",
-                    # 'datefmt':  '%H:%M:%S',
                     "format": "%(levelname)s:\t\b%(asctime)s %(name)s:%(lineno)d [%(correlation_id)s] %(message)s",
                 },
                 "json": {
                     "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
-                    # 'format': '%(message)s',
                     "format": "%(asctime)s %(levelname)s %(name)s %(process)d %(funcName)s %(lineno)d %(message)s",
                 },
                 "standard": {
@@ -151,7 +127,6 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
                     "class": "logging.StreamHandler",
                     "filters": ["correlation_id"],
                     "formatter": "console",
-                    # "level": 'DEBUG',
                     "stream": "ext://sys.stderr",
                 },
                 "json": {
@@ -159,20 +134,11 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
                     "filters": ["correlation_id"],
                     "formatter": "json",
                 },
-                # "email": {
-                #     "class": "logging.handlers.SMTPHandler",
-                #     "mailhost": "localhost",
-                #     "formatter": "standard",
-                #     "level": "WARNING",
-                #     "fromaddr": config.LOG_MAIL_FROM,
-                #     "toaddrs": config.LOG_MAIL_TOS,
-                #     "subject": "Error in Karp backend!",
-                # },
             },
             "loggers": {
                 "karp": {
-                    "handlers": ["json"],  # ["console", "email"],
-                    "level": "DEBUG",  # config.CONSOLE_LOG_LEVEL,
+                    "handlers": ["json"],
+                    "level": "DEBUG",
                     "propagate": True,
                 },
                 # third-party package loggers
@@ -185,7 +151,6 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
 
 def setup_logging():  # noqa: ANN201, D103
     # Clear Gunicorn access log to remove duplicate requests logging
-    # logging.getLogger("gunicorn.access").handlers.clear()
     logging.basicConfig(
         format="%(asctime)s %(message)s",
         datefmt="%Y-%m-%dT%H:%M:%S%z",
@@ -193,34 +158,5 @@ def setup_logging():  # noqa: ANN201, D103
     )
     logger = logging.getLogger("karp")
     logger.setLevel(logging.INFO)
-    # structlog.configure(
-    #     processors=[
-    #         structlog.stdlib.add_log_level,
-    #         structlog.threadlocal.merge_threadlocal,
-    #         structlog.processors.TimeStamper(fmt="iso"),
-    #         structlog.processors.JSONRenderer(
-    #             serializer=json.dumps, sort_keys=True),
-    #     ],
-    #     wrapper_class=structlog.stdlib.BoundLogger,
-    #     context_class=dict,
-    #     cache_logger_on_first_use=True,
-    #     logger_factory=structlog.stdlib.LoggerFactory(),
-    # )
     logger = logging.getLogger(__name__)
-    # if app.config.get("LOG_TO_SLACK"):
-    #     slack_handler = slack_logging.get_slack_logging_handler(
-    #         app.config.get("SLACK_SECRET")
-    #     )
-    #     logger.addHandler(slack_handler)
-    # console_handler = logging.StreamHandler()
-    # formatter = logging.Formatter(
-    #     "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    # )
-    # console_handler.setFormatter(formatter)
-    # logger.setLevel(logging.DEBUG)
-    # logger.addHandler(console_handler)
     return logger
-
-
-def load_infrastructure():  # noqa: ANN201, D103
-    modules.load_modules("karp.infrastructure")

@@ -10,11 +10,6 @@ from elasticsearch import exceptions as es_exceptions
 from karp.foundation.events import EventBus  # noqa: F401
 
 from karp.lex.domain.entities import Entry  # noqa: F401
-from karp.search.application.repositories import (
-    Index,  # noqa: F401
-    IndexEntry,  # noqa: F401
-    IndexUnitOfWork,  # noqa: F401
-)
 from karp.search.domain.errors import UnsupportedField
 
 
@@ -148,17 +143,10 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
 
         field_mapping: Dict[str, List[str]] = {}
         sortable_fields = {}
-        # Doesn't work for tests, can't find resource_definition
-        # for resource in resourcemgr.get_available_resources():
-        #     mapping = self.es.indices.get_mapping(index=resource.resource_id)
-        #     field_mapping[resource.resource_id] = parse_mapping(
-        #         next(iter(mapping.values()))['mappings']['entry']['properties']
-        #     )
         aliases = self._get_all_aliases()
         mapping: Dict[
             str, Dict[str, Dict[str, Dict[str, Dict]]]
         ] = self.es.indices.get_mapping()
-        # print(f"mapping = {mapping}")
         for alias, index in aliases:
             if (
                 "mappings" in mapping[index]
@@ -301,9 +289,5 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
 
         for prop_name, prop_value in properties.items():
             parse_prop_value(sortable_map, prop_name, prop_name, prop_value)
-            # if prop_value["type"] in ["boolean", "date", "double", "keyword", "long", "ip"]:
-            #     sortable_map[prop_name] = prop_name
-            # if prop_value["type"] == "text":
-            #     if "fields" in prop_value:
 
         return sortable_map

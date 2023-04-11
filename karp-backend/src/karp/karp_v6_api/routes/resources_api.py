@@ -8,6 +8,7 @@ from karp.auth.application.queries import GetResourcePermissions, ResourcePermis
 
 from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic, ResourceProtected
 from karp.karp_v6_api import dependencies as deps, schemas
+from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 
 from karp.command_bus import CommandBus
 from karp.lex import ResourceDto
@@ -32,7 +33,7 @@ def list_resource_permissions(  # noqa: ANN201, D103
     response_model=list[ResourceProtected],
 )
 def get_all_resources(  # noqa: D103
-    get_resources: lex.GetResources = Depends(deps.inject_from_req(lex.GetResources)),
+    get_resources: lex.GetResources = Depends(inject_from_req(lex.GetResources)),
 ) -> typing.Iterable[lex.ResourceDto]:
     return get_resources.query()
 
@@ -42,7 +43,7 @@ def create_new_resource(  # noqa: D103
     new_resource: ResourceCreate = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
+    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ) -> ResourceDto:
     logger.info(
         "creating new resource",
@@ -59,7 +60,6 @@ def create_new_resource(  # noqa: D103
         if new_resource.entry_repo_id is None:
             entry_repo = command_bus.dispatch(
                 commands.CreateEntryRepository(
-                    repositoryType="default",
                     name=new_resource.resource_id,
                     config=new_resource.config,
                     user=user.identifier,
@@ -94,7 +94,7 @@ def publishing_resource(  # noqa: ANN201, D103
     resource_publish: schemas.ResourcePublish = Body(...),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(deps.inject_from_req(CommandBus)),
+    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(

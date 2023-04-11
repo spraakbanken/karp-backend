@@ -57,24 +57,9 @@ class InMemoryIndex(Index):
             entry_id = str(entry_id)
         del self.indicies[resource_id].entries[entry_id]
 
-    #    def search_ids(self, resource_id: str, entry_ids: str):
-    #        return {}
-    #
-    #    def query(self, request: search_service.QueryRequest):
-    #        return {}
-    #
-    #    def query_split(self, request: search_service.QueryRequest):
-    #        return {}
-    #
-    #    def statistics(self, resource_id: str, field: str):
-    #        return {}
-    def num_entities(self) -> int:
-        return sum(len(index.entries) for index in self.indicies.values())
-
 
 class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, IndexUnitOfWork):
     def __init__(self, event_bus: EventBus):  # noqa: ANN204
-        # super().__init__()
         IndexUnitOfWork.__init__(self, event_bus=event_bus)  # type:ignore [arg-type]
         self._index = InMemoryIndex()
 

@@ -16,7 +16,6 @@ from karp.lex.application.queries import (
     ListEntryRepos,
     GetResources,
 )
-from karp.main.errors import ResourceAlreadyPublished
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
@@ -54,7 +53,7 @@ def create(  # noqa: ANN201, D103
             query = inject_from_ctx(ListEntryRepos, ctx)  # type: ignore [misc]
             entry_repos = list(query.query())
             entry_repo = choose_from(
-                entry_repos, lambda x: f"{x.name} {x.repository_type}"
+                entry_repos, lambda x: f"{x.name}"
             )
             entry_repo_uuid = entry_repo.entity_id
         else:
@@ -69,10 +68,6 @@ def create(  # noqa: ANN201, D103
 
     elif config.is_dir():
         typer.Abort("not supported yetls")
-        # new_resources = resources.create_new_resource_from_dir(config)
-
-        # for resource_id in new_resources:
-        #     typer.echo(f"Created resource {resource_id}")
 
 
 @subapp.command()
@@ -137,18 +132,14 @@ def update(  # noqa: ANN201
 @cli_timer
 def publish(ctx: typer.Context, resource_id: str, version: int):  # noqa: ANN201, D103
     bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
-    try:
-        cmd = lex_commands.PublishResource(
-            resourceId=resource_id,
-            message=f"Publish '{resource_id}",
-            user="local admin",
-            version=version,
-        )
-        bus.dispatch(cmd)
-    except ResourceAlreadyPublished:
-        typer.echo("Resource already published.")
-    else:
-        typer.echo(f"Resource '{resource_id}' is published ")
+    cmd = lex_commands.PublishResource(
+        resourceId=resource_id,
+        message=f"Publish '{resource_id}",
+        user="local admin",
+        version=version,
+    )
+    bus.dispatch(cmd)
+    typer.echo(f"Resource '{resource_id}' is published ")
 
 
 @subapp.command()
@@ -160,49 +151,6 @@ def reindex(ctx: typer.Context, resource_id: str):  # noqa: ANN201, D103
     bus.dispatch(cmd)
 
     typer.echo(f"Successfully reindexed all data in {resource_id}")
-
-
-# @cli.command("pre_process")
-# @click.option("--resource_id", required=True)
-# @click.option("--version", required=True)
-# @click.option("--filename", required=True)
-# @cli_error_handler
-# @cli_timer
-# def pre_process_resource(resource_id, version, filename):
-#     resource = resourcemgr.get_resource(resource_id, version=version)
-#     with open(filename, "wb") as fp:
-#         processed = indexmgr.pre_process_resource(resource)
-#         pickle.dump(processed, fp)
-
-
-# @cli.command("publish_preprocessed")
-# @click.option("--resource_id", required=True)
-# @click.option("--version", required=True)
-# @click.option("--data", required=True)
-# @cli_error_handler
-# @cli_timer
-# def index_processed(resource_id, version, data):
-#     with open(data, "rb") as fp:
-#         try:
-#             loaded_data = pickle.load(fp)
-#             resourcemgr.publish_resource(resource_id, version)
-#             indexmgr.reindex(resource_id, version=version, search_entries=loaded_data)
-#         except EOFError:
-#             click.echo("Something wrong with file")
-
-
-# @cli.command("reindex_preprocessed")
-# @click.option("--resource_id", required=True)
-# @click.option("--data", required=True)
-# @cli_error_handler
-# @cli_timer
-# def reindex_preprocessed(resource_id, data):
-#     with open(data, "rb") as fp:
-#         try:
-#             loaded_data = pickle.load(fp)
-#             indexmgr.reindex(resource_id, search_entries=loaded_data)
-#         except EOFError:
-#             click.echo("Something wrong with file")
 
 
 @subapp.command("list")
@@ -235,10 +183,6 @@ def show(  # noqa: ANN201, D103
 ):
     repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx)  # type: ignore [misc]
     resource = repo.get_by_resource_id(resource_id, version=version)
-    #     if version:
-    #         resource = database.get_resource_definition(resource_id, version)
-    #     else:
-    #         resource = database.get_active_or_latest_resource_definition(resource_id)
     if not resource:
         version_str = version or "latest"
         typer.echo(
@@ -247,31 +191,6 @@ def show(  # noqa: ANN201, D103
         raise typer.Exit(3)
 
     typer.echo(tabulate(((key, value) for key, value in resource.dict().items())))
-
-
-@subapp.command()
-@cli_error_handler
-@cli_timer
-def set_permissions(  # noqa: ANN201, D103
-    ctx: typer.Context,
-    resource_id: str,
-    version: int,
-    level: str,
-):
-    _bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
-
-
-#     # TODO use level
-#     permissions = {"write": True, "read": True}
-#     resourcemgr.set_permissions(resource_id, version, permissions)
-#     click.echo("updated permissions")
-
-
-@subapp.command()
-@cli_error_handler
-@cli_timer
-def export():  # noqa: ANN201, D103
-    raise NotImplementedError()
 
 
 @subapp.command()

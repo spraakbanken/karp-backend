@@ -34,9 +34,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
-        # entry_repository_type: typing.Optional[str] = None,
-        # entry_repository_settings: typing.Optional[typing.Dict] = None,
-        # entry_repository: EntryRepository = None,
         **kwargs,  # noqa: ANN003
     ):
         super().__init__(id=unique_id.UniqueId.validate(id), version=version, **kwargs)
@@ -225,24 +222,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._op = ResourceOp.UPDATED
         self._increment_version()
 
-    def add_new_release(  # noqa: ANN201, D102
-        self, *, name: str, user: str, description: str
-    ):
-        self._check_not_discarded()
-        raise NotImplementedError()
-        # event = Resource.NewReleaseAdded(
-        #     id=self.id,
-        #     entity_version=self.version,
-        #     entity_last_modified=self.last_modified,
-        #     release_id=unique_id.make_unique_id(),
-        #     release_name=constraints.length_gt_zero("name", name),
-        #     user=user,
-        #     release_description=description,
-        # )
-        # event.mutate(self)
-
-        # return self.release_with_name(name)
-
     def release_with_name(self, name: str):  # noqa: ANN201, D102
         self._check_not_discarded()
         raise NotImplementedError()
@@ -250,7 +229,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     def discard(  # noqa: D102
         self, *, user: str, message: str, timestamp: float = None
     ) -> list[events.Event]:
-        #  self._check_not_discarded()
         self._op = ResourceOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = True
@@ -276,10 +254,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         if self._entry_schema is None:
             self._entry_schema = EntrySchema.from_resource_config(self.config)
         return self._entry_schema
-
-    # @property
-    # def id_getter(self) -> Callable[[Dict], str]:
-    #     return create_field_getter(self.config["id"], str)
 
     def serialize(self) -> dict[str, Any]:
         """Serialize resource to camelCased dict."""
@@ -314,8 +288,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     ) -> Tuple[Entry, list[events.Event]]:
         """Create an entry for this resource."""
         self._check_not_discarded()
-        # if "generators" in self.config:
-        #     self._use_generators(entry_raw)
 
         return create_entry(
             self._validate_entry(entry_raw),
@@ -338,8 +310,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     ) -> list[events.Event]:
         """Create an entry for this resource."""
         self._check_not_discarded()
-        # if "generators" in self.config:
-        #     self._use_generators(entry_raw)
 
         return entry.update_body(
             self._validate_entry(body),
@@ -360,8 +330,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     ) -> list[events.Event]:
         """Create an entry for this resource."""
         self._check_not_discarded()
-        # if "generators" in self.config:
-        #     self._use_generators(entry_raw)
 
         return entry.discard(
             version=version,

@@ -68,8 +68,6 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
         "resource_name": name,
         "sort": ["baseform"],
         "fields": {"baseform": {"type": "string", "required": True}},
-        "entry_repository_type": None,
-        "entry_repository_settings": {},
     }
 
     resource = factories.ResourceFactory(
@@ -97,104 +95,6 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
         message=resource.message,
         version=resource.version,
     )
-
-
-# def test_resource_add_new_release_creates_release():
-#     resource = factories.ResourceFactory()
-
-#     previous_last_modified = resource.last_modified
-
-#     resource.add_new_release(name="v1.0.0", user="Admin", description="")
-
-#     assert len(resource.releases) == 1
-#     assert resource.releases[0].name == "v1.0.0"
-#     assert resource.releases[0].publication_date == resource.last_modified
-#     assert resource.releases[0].description == ""
-#     assert resource.releases[0].root.id == resource.id
-#     assert resource.last_modified > previous_last_modified
-#     assert resource.last_modified_by == "Admin"
-#     assert resource.message == "Release 'v1.0.0' created."
-#     assert resource.version == 2
-
-
-# def test_resource_release_with_name_on_discarded_raises_discarded_entity_error():
-#     resource = factories.ResourceFactory()
-
-#     resource.discard(user="Test", message="Discard")
-
-#     assert resource.discarded
-
-#     with pytest.raises(DiscardedEntityError):
-#         resource.release_with_name("test")
-
-
-# def test_resource_add_new_release_on_discarded_raises_discarded_entity_error():
-#     resource = factories.ResourceFactory()
-
-#     resource.discard(user="Test", message="Discard")
-
-#     assert resource.discarded
-
-#     with pytest.raises(DiscardedEntityError):
-#         resource.add_new_release(name="test", user="TEST", description="")
-
-
-# @pytest.mark.skip()
-# def test_resource_add_new_release_with_invalid_name_raises_constraints_error():
-#     resource = factories.ResourceFactory()
-
-#     with pytest.raises(ConstraintsError):
-#         resource.add_new_release(name="", user="Test", description="")
-
-
-# @pytest.mark.skip()
-# def test_resource_new_release_added_with_wrong_version_raises_consistency_error():
-#     resource = factories.ResourceFactory()
-#     event = Resource.NewReleaseAdded(
-#         id=resource.id,
-#         entity_version=12,
-#     )
-#     with pytest.raises(ConsistencyError):
-#         event.mutate(resource)
-
-
-# @pytest.mark.skip()
-# def test_resource_new_release_added_with_wrong_last_modified_raises_consistency_error():
-#     resource = factories.ResourceFactory()
-#     event = Resource.NewReleaseAdded(
-#         id=resource.id, entity_version=resource.version, entity_last_modified=2
-#     )
-#     with pytest.raises(ConsistencyError):
-#         event.mutate(resource)
-
-
-# def test_release_created_has_id():
-#     release = Release(
-#         id="e", name="e-name", publication_date=12345.0, description="ee"
-#     )
-
-#     assert release.id == "e"
-#     assert release.name == "e-name"
-#     assert release.publication_date == 12345.0
-#     assert release.description == "ee"
-#     assert release.root.id == release.id
-
-
-# def test_release_created_w_resource_has_id():
-#     resource = factories.ResourceFactory()
-#     release = Release(
-#         id="e",
-#         name="e-name",
-#         publication_date=12345.0,
-#         description="ee",
-#         aggregate_root=resource,
-#     )
-
-#     assert release.id == "e"
-#     assert release.name == "e-name"
-#     assert release.publication_date == 12345.0
-#     assert release.description == "ee"
-#     assert release.root.id == resource.id
 
 
 def test_resource_has_entry_json_schema():  # noqa: ANN201

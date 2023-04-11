@@ -10,27 +10,13 @@ from karp.search.domain.query import Query  # noqa: F401
 logger = logging.getLogger(__name__)
 
 
-class EntryDto(pydantic.BaseModel):  # noqa: D101
-    id: str  # noqa: A003
-    version: int
-    last_modified: float
-    last_modified_by: str
-    resource: str
-    entry: typing.Dict
-
-
-class QueryResponseBase(pydantic.BaseModel):  # noqa: D101
-    hits: list[EntryDto]
-    total: int
-    distribution: typing.Optional[dict[str, int]]
-
-
-class QueryResponse(QueryResponseBase):  # noqa: D101
-    pass
-
-
-class QuerySplitResponse(QueryResponseBase):  # noqa: D101
-    distribution: dict[str, int]
+# class EntryDto(pydantic.BaseModel):  # noqa: D101
+#     id: str  # noqa: A003
+#     version: int
+#     last_modified: float
+#     last_modified_by: str
+#     resource: str
+#     entry: typing.Dict
 
 
 class StatisticsDto(pydantic.BaseModel):  # noqa: D101
@@ -55,19 +41,6 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member  # noqa: D1
 
 
 class SearchService(abc.ABC):  # noqa: D101
-    # def build_query(self, args, resource_str: str) -> Query:
-    #     query = Query()
-    #     query.parse_arguments(args, resource_str)
-    #     return query
-
-    # def build_query_parsed(self, args, resource_str: str) -> Query:
-    #     query = Query()
-    #     query.parse_arguments(args, resource_str)
-    #     return query
-
-    # def search_with_query(self, query: Query):
-    #     raise NotImplementedError()
-
     @abc.abstractmethod
     def search_ids(self, resource_id: str, entry_ids: str):  # noqa: ANN201, D102
         raise NotImplementedError()

@@ -1,13 +1,11 @@
 """Factories used in tests."""
 import typing  # noqa: I001
 
-import factory
 import factory.fuzzy
 from faker.providers import BaseProvider
 
 from karp.lex import commands
 from karp.lex.domain import entities, events
-from karp.foundation.value_objects import MachineName
 from karp.lex_core.value_objects import make_unique_id
 from karp.timings import utc_now
 
@@ -24,12 +22,6 @@ class ResourceConfigProvider(BaseProvider):
         }
 
 
-class MachineNameProvider(BaseProvider):
-    def machine_name(self) -> MachineName:
-        return MachineName(name=factory.fuzzy.FuzzyText(length=6, prefix="resource_"))
-
-
-factory.Faker.add_provider(MachineNameProvider)
 factory.Faker.add_provider(ResourceConfigProvider)
 
 
@@ -118,29 +110,10 @@ class CreateEntryRepositoryFactory(factory.Factory):
     class Meta:
         model = commands.CreateEntryRepository
 
-    # id = factory.LazyFunction(make_unique_id)
     name = factory.Faker("word")
-    repositoryType = "fake"
     config = factory.Faker("resource_config")
     message = "entry repository created"
     user = factory.Faker("email")
-
-
-class DeleteEntryRepositoryFactory(factory.Factory):
-    class Meta:
-        model = commands.DeleteEntryRepository
-
-    id = factory.LazyFunction(make_unique_id)  # noqa: A003
-    message = "entry repository deleted"
-    user = factory.Faker("email")
-    version = 2
-
-
-class MachineNameFactory(factory.Factory):
-    class Meta:
-        model = MachineName
-
-    name = factory.Faker("word")
 
 
 class CreateResourceFactory(factory.Factory):

@@ -14,15 +14,15 @@ def connect_to_db(db_url: Union[str, DatabaseUrl]) -> Database:  # noqa: D103
     try:
         return Database(db_url)
     except Exception as e:  # noqa: BLE001
-        logger.warn("--- DB CONNECTION ERROR ---")
-        logger.warn(e)
-        logger.warn("--- DB CONNECTION ERROR ---")
+        logger.warning("--- DB CONNECTION ERROR ---")
+        logger.warning(e)
+        logger.warning("--- DB CONNECTION ERROR ---")
 
 
 def close_db_connection(database: Database) -> None:  # noqa: D103
     try:
         database.disconnect()
     except Exception as e:  # noqa: BLE001
-        logger.warn("--- DB DISCONNECT ERROR ---")
-        logger.warn(e)
-        logger.warn("--- DB DISCONNECT ERROR ---")
+        logger.warning("--- DB DISCONNECT ERROR ---")
+        logger.warning(e)
+        logger.warning("--- DB DISCONNECT ERROR ---")

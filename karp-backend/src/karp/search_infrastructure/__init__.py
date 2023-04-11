@@ -1,19 +1,12 @@
 from typing import Optional  # noqa: I001
 import elasticsearch
 import injector
-from sqlalchemy.orm import sessionmaker
 import logging
 
 from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
     GetReferencedEntries,
-    GetEntryRepositoryId,
-    ReadOnlyResourceRepository,
     EntryViews,
-)
-from karp.lex.application.repositories import (
-    ResourceUnitOfWork,
-    EntryUowRepositoryUnitOfWork,
 )
 from karp import lex, search
 from karp.search.application.queries import (
@@ -27,9 +20,7 @@ from karp.search.application.transformers import (
     PreProcessor,
 )
 from karp.search_infrastructure.queries import (
-    GenericPreviewEntry,
     GenericResourceViews,
-    GenericSearchService,
     Es6SearchService,
 )
 from karp.search_infrastructure.transformers import (
@@ -37,7 +28,6 @@ from karp.search_infrastructure.transformers import (
     GenericPreProcessor,
 )
 from karp.search_infrastructure.repositories import (
-    NoOpIndexUnitOfWork,
     Es6IndexUnitOfWork,
 )
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
@@ -73,17 +63,6 @@ class SearchInfrastructure(injector.Module):  # noqa: D101
             entry_views=entry_views,
         )
 
-    @injector.provider
-    def preview_entry(  # noqa: D102
-        self,
-        entry_transformer: EntryTransformer,
-        resource_uow: lex.ResourceUnitOfWork,
-    ) -> search.PreviewEntry:
-        return GenericPreviewEntry(
-            entry_transformer=entry_transformer,
-            resource_uow=resource_uow,
-        )
-
 
 class GenericSearchInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
@@ -91,25 +70,6 @@ class GenericSearchInfrastructure(injector.Module):  # noqa: D101
         self, resource_uow: lex.ResourceUnitOfWork
     ) -> ResourceViews:
         return GenericResourceViews(resource_uow=resource_uow)
-
-
-class GenericSearchIndexMod(injector.Module):  # noqa: D101
-    @injector.provider
-    def generic_search_service(  # noqa: D102
-        self,
-        get_entry_repo_id: GetEntryRepositoryId,
-        entry_uow_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> SearchService:
-        return GenericSearchService(
-            get_entry_repo_id=get_entry_repo_id,
-            entry_uow_repo_uow=entry_uow_repo_uow,
-        )
-
-    @injector.provider
-    def noop_index_uow(  # noqa: D102
-        self,
-    ) -> IndexUnitOfWork:
-        return NoOpIndexUnitOfWork()
 
 
 class Es6SearchIndexMod(injector.Module):  # noqa: D101

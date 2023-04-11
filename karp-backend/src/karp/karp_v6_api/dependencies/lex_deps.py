@@ -30,13 +30,6 @@ from karp.lex_infrastructure import (
     SqlResourceUnitOfWork,
     SqlReadOnlyResourceRepository,
 )
-from karp.lex_infrastructure.repositories import SqlResourceRepository
-
-
-def get_resource_repository(  # noqa: D103
-    db_session: Session = Depends(get_session),
-) -> SqlResourceRepository:
-    return SqlResourceRepository(db_session)
 
 
 def get_resource_unit_of_work(  # noqa: D103
@@ -61,19 +54,6 @@ def get_entry_repo_uow(  # noqa: D103
         entry_uow_factory=entry_uow_factory,
         session=db_session,
     )
-
-
-def get_lex_uc(Use_case_type: Type) -> Callable:  # noqa: D103
-    def factory(
-        resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
-        entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
-    ) -> Use_case_type:
-        return Use_case_type(
-            resource_uow=resource_uow,
-            entry_repo_uow=entry_repo_uow,
-        )
-
-    return factory
 
 
 def get_resources_read_repo(  # noqa: D103

@@ -1,15 +1,6 @@
-import typing  # noqa: D100
-from enum import Enum
+import typing
 
 import pydantic
-
-
-class Format(str, Enum):  # noqa: D101
-    json = "json"
-    csv = "csv"
-    xml = "xml"
-    lmf = "lmf?"
-    tsb = "tsb"
 
 
 class Query(pydantic.BaseModel):  # noqa: D101
@@ -22,8 +13,6 @@ class Query(pydantic.BaseModel):  # noqa: D101
     lexicon_stats: bool = True
     include_fields: typing.Optional[list[str]] = None
     exclude_fields: typing.Optional[list[str]] = None
-    format_: typing.Optional[Format] = pydantic.Field(None, alias="format")
-    format_query: typing.Optional[Format] = None
     q: typing.Optional[str] = None
     sort_dict: typing.Optional[dict[str, list[str]]] = pydantic.Field(
         default_factory=dict

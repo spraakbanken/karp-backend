@@ -12,7 +12,6 @@ from karp.auth_infrastructure.queries import (
     LexIsResourceProtected,
 )
 from karp.auth_infrastructure.services import (
-    DummyAuthService,
     JWTAuthService,
     JWTAuthServiceConfig,
 )
@@ -34,12 +33,6 @@ class AuthInfrastructure(injector.Module):  # noqa: D101
         self, resource_repo: ReadOnlyResourceRepository
     ) -> IsResourceProtected:
         return LexIsResourceProtected(resource_repo)
-
-
-class TestAuthInfrastructure(injector.Module):  # noqa: D101
-    @injector.provider
-    def dummy_auth_service(self) -> AuthService:  # noqa: D102
-        return DummyAuthService()
 
 
 class JwtAuthInfrastructure(injector.Module):  # noqa: D101

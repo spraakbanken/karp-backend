@@ -8,8 +8,15 @@ import injector
 import regex
 import sqlalchemy as sa
 from sqlalchemy import func as sa_func
-from sqlalchemy import sql
-from sqlalchemy.orm import sessionmaker
+
+from sqlalchemy import (
+    sql,
+    exc,
+)
+from sqlalchemy.orm.session import Session, sessionmaker
+from sqlalchemy.sql import insert
+
+
 import ulid
 
 from karp.lex_core.value_objects import UniqueId
@@ -18,22 +25,16 @@ from karp.lex.domain import errors
 from karp.lex.application import repositories
 from karp.lex.domain.events import Event
 
-# from karp.domain.errors import NonExistingField, RepositoryError
-from karp.lex.domain.entities.entry import (  # EntryRepositorySettings,; EntryRepository,; create_entry_repository,
+from karp.lex.domain.entities.entry import (
     Entry,
     EntryOp,  # noqa: F401
     EntryStatus,  # noqa: F401
 )
-from karp.db_infrastructure import db
 from karp.lex_infrastructure.sql import sql_models
 from karp.db_infrastructure.sql_repository import SqlRepository
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 
 logger = logging.getLogger(__name__)
-
-DUPLICATE_PATTERN = r"Duplicate entry '(.+)' for key '(\w+)'"
-DUPLICATE_PROG = regex.compile(DUPLICATE_PATTERN)
-NO_PROPERTY_PATTERN = regex.compile(r"has no property '(\w+)'")
 
 
 class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: D101
@@ -42,7 +43,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
         history_model,
         resource_config: Dict,
         *,
-        session: db.Session,
+        session: Session,
     ):
         if not session:
             raise TypeError("session can't be None")
@@ -57,7 +58,7 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
         name: str,
         resource_config: typing.Dict,
         *,
-        session: db.Session,
+        session: Session,
     ):
         if not session:
             raise TypeError("session can't be None")
@@ -77,15 +78,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
             session=session,
         )
 
-    @classmethod
-    def _create_repository_settings(
-        cls, resource_id: str, resource_config: typing.Dict
-    ) -> typing.Dict:
-        return {
-            "table_name": resource_id,
-            "resource_id": resource_id,
-        }
-
     def _save(self, entry: Entry):  # noqa: ANN202
         self._check_has_session()
 
@@ -94,12 +86,12 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
     def _insert_history(self, entry: Entry):  # noqa: ANN202
         self._check_has_session()
         try:
-            ins_stmt = db.insert(self.history_model)
+            ins_stmt = insert(self.history_model)
             history_dict = self._entry_to_history_dict(entry)
             ins_stmt = ins_stmt.values(**history_dict)
             result = self._session.execute(ins_stmt)
             return result.lastrowid or result.returned_defaults["history_id"]  # type: ignore [attr-defined]
-        except db.exc.DBAPIError as exc:
+        except exc.DBAPIError as exc:
             raise errors.RepositoryError("db failure") from exc
 
     def entity_ids(self) -> List[str]:  # noqa: D102
@@ -174,21 +166,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
             .group_by(self.history_model.entity_id)
             .subquery("t2")
         )
-
-    def num_entities(self) -> int:  # noqa: D102
-        self._check_has_session()
-
-        subq = self._subq_for_latest()
-
-        stmt = sql.select(sa_func.count(self.history_model.entity_id)).join(
-            subq,
-            sa.and_(
-                self.history_model.entity_id == subq.c.entity_id,
-                self.history_model.last_modified == subq.c.maxdate,
-                self.history_model.discarded == False,  # noqa: E712
-            ),
-        )
-        return self._session.execute(stmt).scalar()  # type: ignore [return-value]
 
     def by_referenceable(  # noqa: D102
         self, filters: Optional[Dict] = None, **kwargs  # noqa: ANN003
@@ -291,7 +268,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
     SqlUnitOfWork,
     repositories.EntryUnitOfWork,
 ):
-    repository_type: str = "sql_entries_base"
 
     def __init__(  # noqa: D107, ANN204
         self,
@@ -337,12 +313,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
         return super().collect_new_events() if self._entries else []
 
 
-class SqlEntryUnitOfWorkV1(SqlEntryUnitOfWork):  # noqa: D101
-    repository_type: str = "sql_entries_v1"
-
-
 class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):  # noqa: D101
-    repository_type: str = "sql_entries_v2"
 
     def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003, D107
         super().__init__(*args, **kwargs)
@@ -358,7 +329,6 @@ SqlEntryUowType = TypeVar("SqlEntryUowType", bound=SqlEntryUnitOfWork)
 
 
 class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
-    repository_type: str = "repository_type"
 
     @injector.inject
     def __init__(  # noqa: D107, ANN204
@@ -383,20 +353,6 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
         message: str,
         timestamp: float,
     ) -> Tuple[SqlEntryUowType, list[Event]]:
-        # return (
-        #     self._create_uow(
-        #         id=id,
-        #         name=name,
-        #         config=config,
-        #         connection_str=connection_str,
-        #         last_modified_by=user,
-        #         message=message,
-        #         last_modified=timestamp,
-        #         session_factory=self._session_factory,
-        #         event_bus=self.event_bus,
-        #     ),
-        #     [],
-        # )
         if id not in self.cache:
             self.cache[id] = self._create_uow(
                 id=id,
@@ -412,15 +368,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
         return self.cache[id], []
 
 
-class SqlEntryUowV1Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV1]):  # noqa: D101
-    repository_type: str = "sql_entries_v1"
-
-    def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV1:  # noqa: ANN003
-        return SqlEntryUnitOfWorkV1(**kwargs)
-
-
 class SqlEntryUowV2Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV2]):  # noqa: D101
-    repository_type: str = "sql_entries_v2"
 
     def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV2:  # noqa: ANN003
         return SqlEntryUnitOfWorkV2(**kwargs)

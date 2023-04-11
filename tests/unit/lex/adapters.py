@@ -33,17 +33,9 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
         super().__init__()
         self.resources = {}
 
-    def check_status(self):  # noqa: ANN201
-        pass
-
     def _save(self, resource: lex_entities.Resource) -> None:
         resource_id = self._ensure_correct_id_type(resource.id)
         self.resources[resource_id] = resource
-
-    # def _update(self, resource):
-    #     r = self._by_id(resource.id)
-    #     self.resources.discard(r)
-    #     self.resources.add(resource)
 
     def _by_id(self, id_, *, version=None):  # noqa: ANN202
         if resource := self.resources.get(id_):
@@ -67,9 +59,6 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
 
     def resource_ids(self) -> typing.Iterable[str]:
         return (res.resource_id for res in self.resources)
-
-    def num_entities(self) -> int:
-        return sum(not res.discarded for res in self.resources.values())
 
 
 class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
@@ -133,18 +122,12 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
     def __len__(self):  # noqa: ANN204
         return len(self.entries)
 
-    def _create_repository_settings(self, *args):  # noqa: ANN002, ANN202
-        pass
-
     @classmethod
     def from_dict(cls, _):  # noqa: ANN206
         return cls()
 
     def all_entries(self) -> typing.Iterable[lex_entities.Entry]:
         yield from self.entries.values()
-
-    def num_entities(self) -> int:
-        return sum(not e.discarded for e in self.entries.values())
 
     def by_referenceable(
         self, filters: Optional[Dict] = None, **kwargs  # noqa: ANN003
@@ -251,9 +234,6 @@ class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
     def __len__(self):  # noqa: ANN204
         return len(self._storage)
 
-    def num_entities(self) -> int:
-        return sum(not er.discarded for er in self._storage.values())
-
 
 class InMemoryEntryUowRepositoryUnitOfWork(
     InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork
@@ -289,14 +269,11 @@ class InMemoryLexInfrastructure(injector.Module):
             entry_uow_factory=entry_uow_factory,
         )
 
-    # @injector.provider
-    # def entry_uow_factory(self) -> lex_repositories.EntryRepositoryUnitOfWorkFactory:
-    #     return InMemoryEntryRepositoryUnitOfWorkFactory()
     @injector.multiprovider
     def entry_uow_creator_map(
         self,
     ) -> Dict[str, lex_repositories.EntryUnitOfWorkCreator]:
-        return {"fake": InMemoryEntryUnitOfWorkCreator}
+        return {"default": InMemoryEntryUnitOfWorkCreator}
 
     @injector.provider
     @injector.singleton

@@ -58,13 +58,6 @@ class GenericEntryViews(EntryViews):  # noqa: D101
                 return self._entry_to_entry_dto(entry, resource_id)
         return None
 
-    def get_total(self, resource_id: str) -> int:  # noqa: D102
-        entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_repo_uow as uw:
-            entry_uow = uw.repo.get_by_id(entry_repo_id)
-        with entry_uow as uw:
-            return uw.repo.num_entities()
-
     def get_by_referenceable(self, resource_id: str, filters):  # noqa: ANN201, D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:
@@ -197,11 +190,6 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):  # noqa: D101
         ) as uw:
             db_entry = uw.repo.by_id(request.id)
 
-            #     src = resource_obj.model.query.filter_by(entry_id=entry_id).first()
-            #
-            #     query = resource_obj.history_model.query.filter_by(entry_id=src.id)
-            #     timestamp_field = resource_obj.history_model.timestamp
-            #
             if request.from_version:
                 obj1 = uw.repo.by_id(db_entry.id, version=request.from_version)
             elif request.from_date is not None:
@@ -224,37 +212,9 @@ class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):  # noqa: D101
                 obj2 = db_entry
                 obj2_body = db_entry.body
 
-        #     elif from_date is not None:
-        #         obj1_query = query.filter(timestamp_field >= from_date).order_by(
-        #             timestamp_field
-        #         )
-        #     else:
-        #         obj1_query = query.order_by(timestamp_field)
-        #     if to_version:
-        #         obj2_query = query.filter_by(version=to_version)
-        #     elif to_date is not None:
-        #         obj2_query = query.filter(timestamp_field <= to_date).order_by(
-        #             timestamp_field.desc()
-        #         )
-        #     else:
-        #         obj2_query = None
-        #
-        #     obj1 = obj1_query.first()
-        #     obj1_body = json.loads(obj1.body) if obj1 else None
-        #
-        #     if obj2_query:
-        #         obj2 = obj2_query.first()
-        #         obj2_body = json.loads(obj2.body) if obj2 else None
-        #     elif entry is not None:
-        #         obj2 = None
-        #         obj2_body = entry
-        #     else:
-        #         obj2 = query.order_by(timestamp_field.desc()).first()
-        #         obj2_body = json.loads(obj2.body) if obj2 else None
-        #
         if not obj1_body or not obj2_body:
             raise errors.DiffImposible("diff impossible!")
-        #
+
         return EntryDiffDto(
             diff=jsondiff.compare(obj1_body, obj2_body),
             fromVersion=obj1.version,

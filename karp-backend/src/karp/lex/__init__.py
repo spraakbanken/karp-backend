@@ -13,7 +13,6 @@ from karp.lex_core.commands import (
     AddEntry,
     CreateEntryRepository,
     CreateResource,
-    DeleteEntryRepository,
     ImportEntries,
     ImportEntriesInChunks,
     SetEntryRepoId,
@@ -26,7 +25,6 @@ from karp.lex.application.use_cases import (
     CreatingEntryRepo,
     CreatingResource,
     DeletingEntry,
-    DeletingEntryRepository,
     DeletingResource,
     ImportingEntries,
     PublishingResource,
@@ -94,15 +92,6 @@ class Lex(injector.Module):  # noqa: D101
         uow: EntryUowRepositoryUnitOfWork,
     ) -> CommandHandler[CreateEntryRepository]:
         return CreatingEntryRepo(
-            entry_repo_uow=uow,
-        )
-
-    @injector.provider
-    def deleting_entry_repository(  # noqa: D102
-        self,
-        uow: EntryUowRepositoryUnitOfWork,
-    ) -> CommandHandler[DeleteEntryRepository]:
-        return DeletingEntryRepository(
             entry_repo_uow=uow,
         )
 

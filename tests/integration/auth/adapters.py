@@ -10,8 +10,8 @@ import pathlib
 from karp.timings import utc_now
 
 from karp.auth import AccessToken
-from karp.main.config import AUTH_JWT_AUDIENCE
 
+AUTH_JWT_AUDIENCE = "spraakbanken:auth"
 
 PRIVATE_KEY_PATH = os.environ.get(
     "TEST_AUTH_JWT_PRIVATE_KEY_PATH", "assets/testing/private_key.pem"

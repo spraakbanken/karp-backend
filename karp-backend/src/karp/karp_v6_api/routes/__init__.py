@@ -2,7 +2,6 @@ from fastapi import APIRouter  # noqa: I001
 
 from karp.karp_v6_api.routes import (
     entries_api,
-    health_api,
     history_api,
     query_api,
     resources_api,
@@ -18,7 +17,7 @@ router.include_router(
     prefix="/entries",
     tags=["Entries"],
 )
-router.include_router(health_api.router, prefix="/healthz")
+
 router.include_router(
     history_api.router,
     prefix="/history",

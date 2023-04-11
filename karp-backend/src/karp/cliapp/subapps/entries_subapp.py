@@ -10,14 +10,11 @@ import json_streams.jsonlib
 from sb_json_tools import jt_val
 import typer
 
-# from tabulate import tabulate
 from tqdm import tqdm
 
 from karp.command_bus import CommandBus
 from karp import lex
 from karp.lex.domain.value_objects import entry_schema
-
-# from karp.lex.domain.errors import ResourceAlreadyPublished
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
@@ -34,7 +31,6 @@ subapp = typer.Typer()
 def add_entries_to_resource(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
-    # version: Optional[int],
     data: Path,
     chunked: bool = False,
     chunk_size: int = 1000,
@@ -70,7 +66,6 @@ def add_entries_to_resource(  # noqa: ANN201, D103
 def import_entries_to_resource(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
-    # version: Optional[int],
     data: Path,
     chunked: bool = False,
     chunk_size: int = 1000,
@@ -195,7 +190,6 @@ def validate_entries(  # noqa: ANN201, D103
         output, use_stdout_as_default=True
     ) as correct_sink:
         error_counter = Counter(error_sink)
-        # error_counter.send(None)
         jt_val.processing_validate(
             schema,
             tqdm(

@@ -11,7 +11,6 @@ from karp.search.application.repositories import (
     IndexEntry,
     IndexUnitOfWork,
 )
-from karp.search.domain.errors import UnsupportedField  # noqa: F401
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 
 logger = logging.getLogger(__name__)
@@ -253,10 +252,6 @@ class Es6IndexUnitOfWork(IndexUnitOfWork):  # noqa: D101
             es=es,
             mapping_repo=mapping_repo,
         )
-
-    # @classmethod
-    # def from_dict(cls, **kwargs):
-    #     return cls()
 
     def _commit(self):  # noqa: ANN202
         logger.debug("Calling _commit in Es6IndexUnitOfWork")

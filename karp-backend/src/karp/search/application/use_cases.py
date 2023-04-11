@@ -114,8 +114,6 @@ class EntryAddedHandler(  # noqa: D101
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 entry = EntryDto(
                     id=event.id,
-                    # entry_id=event.entry_id,
-                    # repository_id=event.repo_id,
                     resource=resource_id,
                     entry=event.body,
                     message=event.message,
@@ -126,7 +124,6 @@ class EntryAddedHandler(  # noqa: D101
                 uw.repo.add_entries(
                     resource_id, [self.entry_transformer.transform(resource_id, entry)]
                 )
-                # self.entry_transformer.update_references(resource_id, [event.entry_id])
             uw.commit()
 
 
@@ -166,8 +163,6 @@ class EntryUpdatedHandler(  # noqa: D101
                 )
                 self.entry_transformer.update_references(resource_id, [event.id])
             uw.commit()
-            # add_entries(event.resource_id, [entry], ctx)
-            # ctx.index_uow.commit()
 
 
 class EntryDeletedHandler(  # noqa: D101
@@ -186,7 +181,6 @@ class EntryDeletedHandler(  # noqa: D101
     def __call__(self, event: events.EntryDeleted):  # noqa: D102, ANN204
         with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
-                # uw.repo.delete_entry(resource_id, entry_id=event.entry_id)
                 uw.repo.delete_entry(resource_id, entry_id=event.id)
                 self.entry_transformer.update_references(resource_id, [event.id])
             uw.commit()

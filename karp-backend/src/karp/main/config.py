@@ -8,7 +8,6 @@ from starlette.datastructures import Secret  # noqa: F401
 PROJECT_NAME = "Karp"
 VERSION = "6.2.0"
 API_PREFIX = "/"
-# SECRET_KEY = config("SECRET_KEY", cast=Secret, default="CHANGEME")
 
 
 def load_env() -> environs.Env:  # noqa: D103
@@ -66,17 +65,3 @@ config = load_env()
 DATABASE_URL = parse_database_url(config)
 DATABASE_URL_WO_DB = parse_database_url_wo_db(config)
 DATABASE_NAME = parse_database_name(config)
-
-AUTH_JWT_AUDIENCE = "spraakbanken:auth"
-
-
-def parse_sqlalchemy_url_wo_db(env: environs.Env) -> DatabaseUrl:  # noqa: D103
-    return DatabaseUrl.create(
-        drivername=env("DB_DRIVER", "mysql+pymysql"),
-        username=env("DB_USER", None),
-        password=env("DB_PASSWORD", None),
-        host=env("DB_HOST", None),
-        port=env.int("DB_PORT", None),
-        database="",
-        query={"charset": "utf8mb4"},
-    )

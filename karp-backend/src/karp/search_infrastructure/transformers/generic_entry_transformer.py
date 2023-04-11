@@ -182,32 +182,6 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                                 self.index_uow.repo.add_to_list_field(
                                     res, ref_index_entry
                                 )
-                    # ref_objs = []
-                    # if ref_resource:
-                    #     for ref_id in _src_entry[field_name]:
-                    #         ref_entry_body = self.entry_views.get_by_entry_id_optional(
-                    #             ref_field['resource_id'], str(ref_id))
-                    #         if ref_entry_body:
-                    #             ref_entry = {
-                    #                 field_name: ref_entry_body.entry}
-                    #             ref_index_entry = (
-                    #                 self.index_uow.repo.create_empty_object()
-                    #             )
-                    #             list_of_sub_fields = (
-                    #                 (field_name, ref_field["field"]),)
-                    #             self._transform_to_index_entry(
-                    #                 resource,
-                    #                 # resource_repo,
-                    #                 # indexer,
-                    #                 ref_entry,
-                    #                 ref_index_entry,
-                    #                 list_of_sub_fields,
-                    #             )
-                    #             ref_objs.append(
-                    #                 ref_index_entry.entry[field_name])
-                    # self.index_uow.repo.assign_field(
-                    #     _index_entry, "v_" + field_name, ref_objs
-                    # )
             elif ref := self.entry_views.get_by_id_optional(
                 ref_resource.resource_id, str(src_entry[field_name])
             ):
@@ -229,25 +203,8 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                 extra={"exc": exc, "resource": resource},
             )
 
-        # if field_conf["type"] == "object":
-        #     logger.debug("found field with type 'object'")
-        #     field_content = self.index_uow.repo.create_empty_object()
-        #     if field_name in _src_entry:
-        #         self._transform_to_index_entry(
-        #             resource,
-        #             # resource_repo,
-        #             # indexer,
-        #             _src_entry[field_name],
-        #             field_content,
-        #             field_conf["fields"].items(),
-        #         )
-        # else:
-        #     field_content = _src_entry.get(field_name)
-
     def _evaluate_function(  # noqa: ANN202
         self,
-        # resource_repo: ResourceRepository,
-        # indexer: SearchService,
         function_conf: typing.Dict,
         src_entry: typing.Dict,
         src_resource: ResourceDto,
@@ -290,9 +247,6 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                             filters[target_field] = src_entry[arg["self"]]
                         else:
                             raise NotImplementedError()
-                    # target_entries = entryread.get_entries_by_column(
-                    #     target_resource, filters
-                    # )
                     target_entries = self.entry_views.get_by_referenceable(
                         target_resource.resource_id, filters
                     )
@@ -307,20 +261,11 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                 list_of_sub_fields = (("tmp", function_conf["result"]),)
                 self._transform_to_index_entry(
                     target_resource,
-                    # resource_repo,
-                    # indexer,
                     {"tmp": entry.entry},
                     index_entry,
                     list_of_sub_fields,
                 )
                 self.index_uow.repo.add_to_list_field(res, index_entry.entry["tmp"])
-        elif "plugin" in function_conf:
-            plugin_id = function_conf["plugin"]
-            import karp.pluginmanager as plugins
-
-            res = plugins.plugins[plugin_id].apply_plugin_function(
-                src_resource.entity_id, src_resource.version, src_entry
-            )
         else:
             raise NotImplementedError()
         return res
@@ -328,9 +273,6 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
     def update_references(  # noqa: D102
         self,
         resource_id: str,
-        # resource_repo: ResourceRepository,
-        # indexer: SearchService,
-        # resource: entities.Resource,
         entry_ids: typing.Iterable[str],
     ) -> None:
         add = collections.defaultdict(list)
@@ -342,13 +284,9 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                 )
                 if ref_resource:
                     ref_index_entry = self.transform(
-                        # resource_repo,
-                        # indexer,
                         ref_resource.resource_id,  # TODO use resource directly
                         field_ref.entry,
-                        # ref_resource.config["fields"].items(),
                     )
-                    # metadata = resourcemgr.get_metadata(ref_resource, field_ref["id"])
                     add[field_ref.resource_id].append(ref_index_entry)
 
         for ref_resource_id, ref_entries in add.items():

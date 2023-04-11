@@ -13,7 +13,6 @@ class EntryRepositoryUnitOfWorkFactory:  # noqa: D101
     @abc.abstractmethod
     def create(  # noqa: D102
         self,
-        repository_type: str,
         id: UniqueId,  # noqa: A002
         name: str,
         config: dict,
@@ -47,7 +46,6 @@ class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
 
     def create(  # noqa: D102
         self,
-        repository_type: str,
         id: UniqueId,  # noqa: A002
         name: str,
         config: dict,
@@ -57,7 +55,7 @@ class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
         timestamp: float,
     ) -> Tuple[EntryUnitOfWork, list[events.Event]]:
         uow_factory_cls = self._container.get(Dict[str, EntryUnitOfWorkCreator])[
-            repository_type
+            "default"
         ]
 
         uow_factory: EntryUnitOfWorkCreator = self._container.create_object(

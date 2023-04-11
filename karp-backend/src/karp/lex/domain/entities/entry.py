@@ -33,21 +33,17 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         id: UniqueId,  # noqa: A002
         body: Dict,
         message: str,
-        # resource_id: str,
         repository_id: unique_id.UniqueId,
         # IN-PROGRESS, IN-REVIEW, OK, PUBLISHED
         status: EntryStatus = EntryStatus.IN_PROGRESS,
         op: EntryOp = EntryOp.ADDED,
         version: int = 1,
         **kwargs,  # noqa: ANN003
-        # version: int = 0
     ):
         super().__init__(id=UniqueId.validate(id), version=version, **kwargs)
-        # self._entry_id = entry_id
         self._body = body
         self._op = op
         self._message = "Entry added." if message is None else message
-        # self.resource_id = resource_id
         self._status = status
         self._repo_id = repository_id
 
@@ -160,9 +156,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         return f"Entry(id={self._id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"
 
 
-# === Factories ===
 def create_entry(  # noqa: D103
-    # entry_id: str,
     body: Dict,
     *,
     id: unique_id.UniqueId,  # noqa: A002
@@ -171,8 +165,6 @@ def create_entry(  # noqa: D103
     message: Optional[str] = None,
     last_modified: typing.Optional[float] = None,
 ) -> Tuple[Entry, list[events.Event]]:
-    # if not isinstance(entry_id, str):
-    #     entry_id = str(entry_id)
     entry = Entry(
         body=body,
         message="Entry added." if not message else message,
@@ -195,17 +187,3 @@ def create_entry(  # noqa: D103
     )
 
     return entry, [event]
-
-
-# === Repository ===
-
-
-# class EntryRepositorySettings:
-#     """Settings for an EntryRepository."""
-#
-#     pass
-#
-#
-# @singledispatch
-# def create_entry_repository(settings: EntryRepositorySettings) -> EntryRepository:
-#     raise RuntimeError(f"Don't know how to handle {settings!r}")

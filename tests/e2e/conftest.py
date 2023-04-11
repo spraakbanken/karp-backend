@@ -96,15 +96,6 @@ def fixture_client(app: FastAPI) -> Generator[TestClient, None, None]:
         yield client
 
 
-#     async with LifespanManager(app):
-#         async with AsyncClient(
-#             app=app,
-#             base_url="http://testserver",
-#             headers={"Content-Type": "application/json"}
-#         ) as client:
-#             yield client
-
-
 def create_and_publish_resource(
     client: TestClient,
     *,
@@ -289,21 +280,3 @@ def fixture_init_search_service():  # noqa: ANN201
     # es_port = int(os.environ.get("TEST_ELASTICSEARCH_PORT", "9202"))
     # with elasticsearch_test.ElasticsearchTest(port=es_port, es_path=config("TEST_ES_HOME")):
     yield
-
-
-@pytest.fixture
-def json_schema_config():  # noqa: ANN201
-    return common_data.CONFIG_PLACES
-
-
-# #
-# #
-# # @pytest.fixture(scope="session")
-# # def client_with_entries_scope_session(es, client_with_data_f_scope_session):
-# #     client_with_data = init(
-# #         client_with_data_f_scope_session,
-# #         es,
-# #         {"places": PLACES, "municipalities": MUNICIPALITIES},
-# #     )
-# #     time.sleep(5)
-# #     return client_with_data

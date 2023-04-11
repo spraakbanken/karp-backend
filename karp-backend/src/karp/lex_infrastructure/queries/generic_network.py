@@ -49,12 +49,8 @@ class GenericGetReferencedEntries(GetReferencedEntries):  # noqa: D101
             entry_uow = self.entry_repo_uow.repo.get_by_id(resource.entry_repository_id)
         with entry_uow as uw:
             src_entry = uw.repo.by_id(
-                entry_id,  # version=version
+                entry_id,
             )
-            # if not src_entry:
-            #     raise EntryNotFoundError(
-            #         resource.resource_id, entry_id, resource_version=resource.version
-            #     )
 
         for (
             ref_resource_id,
@@ -138,9 +134,6 @@ class GenericGetReferencedEntries(GetReferencedEntries):  # noqa: D101
                     resource_backrefs[resource_id][version][ref_field] = None
 
         for other_resource in all_other_resources:
-            # other_resource = get_resource(
-            #     resource_def.resource_id, version=resource_def.version
-            # )
             for field_name, field in other_resource.config["fields"].items():
                 ref = field.get("ref")
                 if (
