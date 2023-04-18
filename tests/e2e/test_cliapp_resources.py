@@ -52,7 +52,7 @@ class TestCliResourceLifetime:
     ):
         result = runner.invoke(
             cliapp,
-            ["resource", "delete", "lexlex", "1"],
+            ["resource", "delete", "lexlex"],
         )
         print(f"{result.stdout=}")
         assert result.exit_code == 0
