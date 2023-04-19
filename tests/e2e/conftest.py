@@ -1,7 +1,7 @@
 """Pytest entry point."""
-
-# pylint: disable=wrong-import-position,missing-function-docstring
-from karp.main import AppContext  # noqa: I001
+from karp.command_bus import CommandBus
+from karp.lex import commands
+from karp.main import AppContext
 from tests.integration.auth.adapters import create_bearer_token
 from karp import auth
 import os
@@ -13,22 +13,13 @@ from fastapi import FastAPI
 from typer import Typer
 from typer.testing import CliRunner
 
-import elasticsearch_test  # pyre-ignore
-
-import pytest  # pyre-ignore
+import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import session, sessionmaker
 from starlette.testclient import TestClient
 
-
-# environ["TESTING"] = "True"
-# environ["ELASTICSEARCH_HOST"] = "localhost:9202"
-# environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
-
-# print("importing karp stuf ...")
-from tests import common_data, utils  # nopep8
-from karp.db_infrastructure.db import metadata  # nopep8
-from karp.main.config import config
+from tests import common_data, utils
+from karp.db_infrastructure.db import metadata
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
@@ -100,47 +91,42 @@ def create_and_publish_resource(
     client: TestClient,
     *,
     path_to_config: str,
-    access_token: auth.AccessToken,
 ) -> Tuple[bool, Optional[dict[str, Any]]]:
-    from karp.karp_v6_api.schemas import ResourceCreate
 
     with open(path_to_config) as fp:
         resource_config = json.load(fp)
 
     resource_id = resource_config.pop("resource_id")
-    resource = ResourceCreate(
+
+    command_bus = client.app.state.app_context.container.get(CommandBus)
+
+    entry_repo = command_bus.dispatch(
+            commands.CreateEntryRepository(
+                name=resource_id,
+                config=resource_config,
+                user="",
+                message="",
+            )
+    )
+
+    create_resource = commands.CreateResource(
         resourceId=resource_id,
+        user="",
         name=resource_config.pop("resource_name"),
         config=resource_config,
         message=f"{resource_id} added",
+        entryRepoId=entry_repo.entity_id
     )
-    response = client.post(
-        "/resources/",
-        json=resource.serialize(),
-        headers=access_token.as_header(),
-    )
-    if response.status_code != 201:
-        print(f"{response.json()=}")
-        return False, {
-            "error": f"Failed create resource: unexpected status_code: {response.status_code} != 201 ",
-            "response.json": response.json(),
-        }
 
-    response = client.post(
-        f"/resources/{resource_id}/publish",
-        json={
-            "message": f"{resource_id} published",
-            "version": 1,
-        },
-        headers=access_token.as_header(),
-    )
-    if response.status_code != 200:
-        return False, {
-            "error": f"Failed publish resource: unexpected status_code: {response.status_code} != 200 ",
-            "response.json": response.json(),
-        }
+    command_bus.dispatch(create_resource)
 
-    return True, None
+    publish_resource = commands.PublishResource(
+        user="",
+        resourceId=resource_id,
+        version=1
+    )
+
+    command_bus.dispatch(publish_resource)
 
 
 @pytest.fixture(scope="session", name="fa_data_client")
@@ -148,18 +134,14 @@ def fixture_fa_data_client(  # noqa: ANN201
     fa_client,
     admin_token: auth.AccessToken,
 ):
-    ok, msg = create_and_publish_resource(
+    create_and_publish_resource(
         fa_client,
         path_to_config="assets/testing/config/places.json",
-        access_token=admin_token,
     )
-    assert ok, msg
-    ok, msg = create_and_publish_resource(
+    create_and_publish_resource(
         fa_client,
         path_to_config="assets/testing/config/municipalities.json",
-        access_token=admin_token,
     )
-    assert ok, msg
     utils.add_entries(
         fa_client,
         {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
