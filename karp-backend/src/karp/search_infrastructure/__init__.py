@@ -5,7 +5,6 @@ import logging
 
 from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
-    GetReferencedEntries,
     EntryViews,
 )
 from karp import lex, search
@@ -43,13 +42,11 @@ class SearchInfrastructure(injector.Module):  # noqa: D101
         index_uow: IndexUnitOfWork,
         resource_repo: lex.ReadOnlyResourceRepository,
         entry_views: EntryViews,
-        get_referenced_entries: GetReferencedEntries,
     ) -> EntryTransformer:
         return GenericEntryTransformer(
             index_uow=index_uow,
             resource_repo=resource_repo,
             entry_views=entry_views,
-            get_referenced_entries=get_referenced_entries,
         )
 
     @injector.provider

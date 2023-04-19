@@ -55,18 +55,10 @@ class EntryRepository(repository.Repository[entities.Entry]):  # noqa: D101
     def entity_ids(self) -> List[str]:  # noqa: D102
         raise NotImplementedError()
 
-    # @abc.abstractmethod
     def teardown(self):  # noqa: ANN201
         """Use for testing purpose."""
         return
 
-    @abc.abstractmethod
-    def by_referenceable(  # noqa: D102
-        self, filters: Optional[Dict] = None, **kwargs  # noqa: ANN003
-    ) -> list[entities.Entry]:
-        raise NotImplementedError()
-
-    # @abc.abstractmethod
     def get_history(  # noqa: D102
         self,
         user_id: Optional[str] = None,

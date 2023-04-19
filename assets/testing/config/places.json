@@ -9,70 +9,10 @@
     "municipality": {
       "collection": true,
       "type": "integer",
-      "ref": {
-        "resource_id": "municipalities",
-        "resource_version": 1,
-        "field": {
-          "collection": true,
-          "type": "object",
-          "fields": {
-            "code": {
-              "type": "integer"
-            },
-            "name": {
-              "type": "string"
-            },
-            "state": {
-              "type": "string"
-            }
-          }
-        }
-      },
       "required": true
     },
     "larger_place": {
-      "type": "integer",
-      "ref": {
-        "field": {
-          "type": "object",
-          "fields": {
-            "code": {
-              "type": "integer"
-            },
-            "name": {
-              "type": "string"
-            }
-          }
-        }
-      }
-    },
-    "smaller_places": {
-      "virtual": true,
-      "type": "object",
-      "collection": true,
-      "function": {
-        "multi_ref": {
-          "field": "larger_place",
-          "result": {
-            "type": "object",
-            "fields": {
-              "code": {
-                "type": "integer"
-              },
-              "name": {
-                "type": "string"
-              }
-            }
-          },
-          "test": {
-            "equals": [
-              {
-                "self": "code"
-              }
-            ]
-          }
-        }
-      }
+      "type": "integer"
     },
     "population": {
       "type": "integer"
@@ -88,10 +28,6 @@
       "required": true
     }
   },
-  "referenceable": ["code", "larger_place", "municipality"],
   "sort": "name",
-  "id": "code",
-  "field_mapping": {
-    "state": ["v_municipality.state"]
-  }
+  "id": "code"
 }

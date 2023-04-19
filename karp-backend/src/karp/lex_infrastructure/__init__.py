@@ -13,14 +13,12 @@ from karp.lex.application.queries import (
     ResourceDto,
     ListEntryRepos,
     EntryRepoDto,
-    GetReferencedEntries,
     GetEntryRepositoryId,
     EntryViews,
     GetEntryDiff,
     GetEntryHistory,
     GetHistory,
 )
-from karp.lex.application.queries.resources import ReadOnlyResourceRepository
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
@@ -31,7 +29,6 @@ from karp.lex_infrastructure.queries import (
     SqlGetPublishedResources,
     SqlGetResources,
     SqlListEntryRepos,
-    GenericGetReferencedEntries,
     GenericGetEntryRepositoryId,
     GenericEntryViews,
     GenericGetEntryDiff,
@@ -112,17 +109,6 @@ class LexInfrastructure(injector.Module):  # noqa: D101
 
 
 class GenericLexInfrastructure(injector.Module):  # noqa: D101
-    @injector.provider
-    def get_referenced_entries(  # noqa: D102
-        self,
-        resources_repo: ReadOnlyResourceRepository,
-        entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> GetReferencedEntries:
-        return GenericGetReferencedEntries(
-            resource_repo=resources_repo,
-            entry_repo_uow=entry_repo_uow,
-        )
-
     @injector.provider
     def gey_entry_diff(  # noqa: D102
         self,

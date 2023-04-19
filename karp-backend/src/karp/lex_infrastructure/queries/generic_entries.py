@@ -58,16 +58,6 @@ class GenericEntryViews(EntryViews):  # noqa: D101
                 return self._entry_to_entry_dto(entry, resource_id)
         return None
 
-    def get_by_referenceable(self, resource_id: str, filters):  # noqa: ANN201, D102
-        entry_repo_id = self.get_entry_repo_id.query(resource_id)
-        with self.entry_repo_uow as uw:
-            entry_uow = uw.repo.get_by_id(entry_repo_id)
-        with entry_uow as uw:
-            return (
-                self._entry_to_entry_dto(entry, resource_id)
-                for entry in uw.repo.by_referenceable(filters)
-            )
-
     def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:  # noqa: D102
         entry_repo_id = self.get_entry_repo_id.query(resource_id)
         with self.entry_repo_uow as uw:

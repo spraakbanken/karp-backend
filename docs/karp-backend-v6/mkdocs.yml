@@ -2,7 +2,6 @@ site_name: Karp Backend
 theme: material
 nav:
   - Home: index.md
-  - Reference: reference.md
   - Tutorials:
       - "Tutorials": tutorials.md
       - "Add Resource": tutorials/add-resource.md

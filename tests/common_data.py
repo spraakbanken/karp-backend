@@ -11,7 +11,6 @@ CONFIG_PLACES = {
     },
     "sort": "name",
     "id": "code",
-    "referenceable": ["name", "municipality", "code"],
 }
 
 
@@ -24,7 +23,6 @@ PLACES = [
         "density": 6312,
         "municipality": [1],
         "larger_place": 7  # Alhamn
-        # "smaller_places": 9 "Bjurvik2"
     },
     {
         "code": 2,
@@ -42,7 +40,6 @@ PLACES = [
         "density": 7,
         "municipality": [2, 3],
         "larger_place": 8  # "Bjurvik"
-        # "smaller_places": 4 "Hambo"
     },
     {
         "code": 4,
@@ -51,7 +48,6 @@ PLACES = [
         "area": 50000,
         "municipality": [2, 3],
         "larger_place": 3  # Botten test
-        # "smaller_places": 7 "Alhamn"
     },
     {"code": 5, "name": "Rutvik", "area": 50000, "municipality": [2, 3]},
     {
@@ -81,7 +77,6 @@ PLACES = [
         "density": 12,
         "municipality": [2, 3],
         "larger_place": 6  # Alvik
-        # "smaller_places": 1  "Botten test"
     },
     {
         "code": 9,

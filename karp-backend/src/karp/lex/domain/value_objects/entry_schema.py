@@ -66,8 +66,6 @@ def create_entry_json_schema(fields: dict[str, dict[str, Any]]) -> dict[str, Any
         parent_field_name: str,
         parent_field_def: dict[str, Any],
     ) -> None:
-        if parent_field_def.get("virtual", False):
-            return
 
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid

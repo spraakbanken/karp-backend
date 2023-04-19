@@ -161,7 +161,6 @@ class EntryUpdatedHandler(  # noqa: D101
                 uw.repo.add_entries(
                     resource_id, [self.entry_transformer.transform(resource_id, entry)]
                 )
-                self.entry_transformer.update_references(resource_id, [event.id])
             uw.commit()
 
 
@@ -182,5 +181,4 @@ class EntryDeletedHandler(  # noqa: D101
         with self.index_uow as uw:
             for resource_id in self.resource_views.get_resource_ids(event.repo_id):
                 uw.repo.delete_entry(resource_id, entry_id=event.id)
-                self.entry_transformer.update_references(resource_id, [event.id])
             uw.commit()

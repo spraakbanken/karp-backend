@@ -167,39 +167,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
             .subquery("t2")
         )
 
-    def by_referenceable(  # noqa: D102
-        self, filters: Optional[Dict] = None, **kwargs  # noqa: ANN003
-    ) -> List[Entry]:
-        self._check_has_session()
-
-        if filters is None:
-            if not kwargs:
-                raise ValueError("Must give 'filters' or kwargs")
-            else:
-                filters = kwargs
-
-        subq = self._subq_for_latest()
-        query_and = sa.and_(
-            self.history_model.entity_id == subq.c.entity_id,
-            self.history_model.last_modified == subq.c.maxdate,
-            self.history_model.discarded == False,  # noqa: E712
-        )
-
-        for filter_key, filter_value in filters.items():
-            query_and = query_and & (
-                sa_func.json_extract(self.history_model.body, f"$.{filter_key}")
-                == filter_value
-            )
-        stmt = sql.select(self.history_model).join(
-            subq,
-            query_and,
-        )
-
-        return [
-            self._history_row_to_entry(row)
-            for row in self._session.execute(stmt).scalars().all()
-        ]
-
     def get_history(  # noqa: ANN201, D102
         self,
         user_id: Optional[str] = None,

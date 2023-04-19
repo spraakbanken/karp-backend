@@ -237,49 +237,6 @@ def get_or_create_entry_runtime_model(  # noqa: D103, C901
     }
     child_tables = {}
 
-    for field_name in config.get("referenceable", ()):
-        field = config["fields"][field_name]
-
-        if not field.get("collection"):
-            if field["type"] == "integer":
-                column_type = Integer()
-            elif field["type"] == "number":
-                column_type = Float()
-            elif field["type"] == "boolean":
-                column_type = Boolean()
-            elif field["type"] == "string":
-                column_type = Text(32000)
-            elif field["type"] == "long_string":
-                column_type = Text(16000000)
-            else:
-                raise NotImplementedError()
-            attributes[field_name] = Column(column_type)
-        else:
-            child_table_name = f"{table_name}_{field_name}"
-            attributes[field_name] = relationship(
-                child_table_name,
-                backref=table_name,
-                cascade="save-update,merge,delete,delete-orphan",
-            )
-            child_attributes = {
-                "__tablename__": child_table_name,
-                "__table_args__": (PrimaryKeyConstraint("entry_id", field_name),),
-                "entry_id": Column(String(100), ForeignKey(f"{table_name}.entry_id")),
-            }
-            if field["type"] == "object":
-                raise ValueError("not possible to reference lists of objects")
-            if field["type"] == "integer":
-                child_db_column_type = Integer()
-            elif field["type"] == "number":
-                child_db_column_type = Float()
-            elif field["type"] == "string":
-                child_db_column_type = String(100)
-            else:
-                raise NotImplementedError()
-            child_attributes[field_name] = Column(child_db_column_type)
-            child_class = type(child_table_name, (db.Base,), child_attributes)
-            child_tables[field_name] = child_class
-
     sqlalchemy_class = type(
         table_name,
         (db.Base, BaseRuntimeEntry),

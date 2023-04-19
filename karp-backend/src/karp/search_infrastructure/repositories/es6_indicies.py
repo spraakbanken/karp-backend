@@ -140,23 +140,6 @@ def _create_es_mapping(config):  # noqa: C901, ANN202
     def recursive_field(  # noqa: ANN202, C901
         parent_schema, parent_field_name, parent_field_def
     ):
-        if parent_field_def.get("virtual", False):
-            fun = parent_field_def["function"]
-            if list(fun.keys())[0] == "multi_ref":
-                res_object = fun["multi_ref"]["result"]
-                recursive_field(parent_schema, f"v_{parent_field_name}", res_object)
-            if "result" in fun:
-                res_object = fun["result"]
-                recursive_field(parent_schema, f"v_{parent_field_name}", res_object)
-            return
-        if parent_field_def.get("ref"):
-            if "field" in parent_field_def["ref"]:
-                res_object = parent_field_def["ref"]["field"]
-            else:
-                res_object = {}
-                res_object.update(parent_field_def)
-                del res_object["ref"]
-            recursive_field(parent_schema, f"v_{parent_field_name}", res_object)
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.

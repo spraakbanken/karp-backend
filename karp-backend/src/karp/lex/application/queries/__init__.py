@@ -18,7 +18,6 @@ from .resources import (
     GetEntryRepositoryId,
     ReadOnlyResourceRepository,
 )
-from .network import GetReferencedEntries, ReferenceDto
 
 
 __all__ = [
@@ -40,6 +39,4 @@ __all__ = [
     "GetResources",
     "GetEntryRepositoryId",
     "ReadOnlyResourceRepository",
-    "GetReferencedEntries",
-    "ReferenceDto",
 ]

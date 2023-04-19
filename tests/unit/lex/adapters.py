@@ -129,11 +129,6 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
     def all_entries(self) -> typing.Iterable[lex_entities.Entry]:
         yield from self.entries.values()
 
-    def by_referenceable(
-        self, filters: Optional[Dict] = None, **kwargs  # noqa: ANN003
-    ) -> list[lex_entities.Entry]:
-        return []
-
 
 class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWork):
     def __init__(  # noqa: ANN204
