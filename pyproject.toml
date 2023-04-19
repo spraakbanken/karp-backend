@@ -21,7 +21,6 @@ classifiers = [
 	"Topic :: Utilities",
 ]
 packages = [
-	{ include = "development" },
 	{ include = "karp", from = "karp-backend/src" },
 	{ include = "karp", from = "karp-lex-core/src" },
 ]
