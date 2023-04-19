@@ -8,6 +8,7 @@ import elasticsearch
 import elasticsearch.helpers  # pyre-ignore
 import elasticsearch_dsl as es_dsl  # pyre-ignore
 from tatsu import exceptions as tatsu_exc
+from tatsu.walkers import NodeWalker
 
 from karp import search
 
@@ -17,7 +18,8 @@ from karp.search.application.queries import (
 from karp.search.domain import errors
 from karp.lex.domain.entities.entry import Entry  # noqa: F401
 from karp.lex.domain.entities.resource import Resource  # noqa: F401
-from karp.search.domain import query_dsl
+from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
+from karp.search.domain.query_dsl.karp_query_v6_model import KarpQueryV6ModelBuilderSemantics
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 from .es_query import EsQuery
 
@@ -25,7 +27,7 @@ from .es_query import EsQuery
 logger = logging.getLogger(__name__)
 
 
-class EsQueryBuilder(query_dsl.NodeWalker):  # noqa: D101
+class EsQueryBuilder(NodeWalker):  # noqa: D101
     def walk_object(self, node):  # noqa: ANN201, D102
         return node
 
@@ -109,8 +111,8 @@ class Es6SearchService(search.SearchService):  # noqa: D101
         self.es: elasticsearch.Elasticsearch = es
         self.mapping_repo = mapping_repo
         self.query_builder = EsQueryBuilder()
-        self.parser = query_dsl.KarpQueryV6Parser(
-            semantics=query_dsl.KarpQueryV6ModelBuilderSemantics()
+        self.parser = KarpQueryV6Parser(
+            semantics=KarpQueryV6ModelBuilderSemantics()
         )
 
     def _format_result(self, resource_ids, response):  # noqa: ANN202

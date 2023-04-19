@@ -2,10 +2,8 @@ import pytest  # noqa: I001
 
 import elasticsearch_dsl as es_dsl
 
-from karp.search.domain.query_dsl import (
-    KarpQueryV6Parser,
-    KarpQueryV6ModelBuilderSemantics,
-)
+from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
+from karp.search.domain.query_dsl.karp_query_v6_model import KarpQueryV6ModelBuilderSemantics
 from karp.search_infrastructure.queries.es6_search_service import EsQueryBuilder
 
 
