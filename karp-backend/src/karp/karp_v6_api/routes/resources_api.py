@@ -1,19 +1,15 @@
 import logging  # noqa: D100, I001
 import typing
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Security, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from karp import auth, lex
+from karp import lex
 from karp.auth.application.queries import GetResourcePermissions, ResourcePermissionDto
 
-from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic, ResourceProtected
-from karp.karp_v6_api import dependencies as deps, schemas
+from karp.karp_v6_api.schemas import ResourcePublic, ResourceProtected
+from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 
-from karp.command_bus import CommandBus
-from karp.lex import ResourceDto
-
-from karp.lex_core import commands
 from karp.lex.application.queries import ReadOnlyResourceRepository
 
 
@@ -36,93 +32,6 @@ def get_all_resources(  # noqa: D103
     get_resources: lex.GetResources = Depends(inject_from_req(lex.GetResources)),
 ) -> typing.Iterable[lex.ResourceDto]:
     return get_resources.query()
-
-
-@router.post("/", response_model=ResourceDto, status_code=status.HTTP_201_CREATED)
-def create_new_resource(  # noqa: D103
-    new_resource: ResourceCreate = Body(...),
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
-) -> ResourceDto:
-    logger.info(
-        "creating new resource",
-        extra={"user": user.identifier, "resource": new_resource},
-    )
-    if not auth_service.authorize(
-        auth.PermissionLevel.admin, user, [new_resource.resource_id]
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    try:
-        if new_resource.entry_repo_id is None:
-            entry_repo = command_bus.dispatch(
-                commands.CreateEntryRepository(
-                    name=new_resource.resource_id,
-                    config=new_resource.config,
-                    user=user.identifier,
-                    message=new_resource.message or "Entry repository created",
-                )
-            )
-            new_resource.entry_repo_id = entry_repo.entity_id
-        create_resource = commands.CreateResource(
-            user=user.identifier,
-            **new_resource.serialize(),
-        )
-        resource = command_bus.dispatch(create_resource)
-        logger.info("resource created", extra={"resource": resource})
-        return resource
-    except Exception as err:
-        logger.exception(
-            "error occured", extra={"user": user.identifier, "resource": new_resource}
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{err=}",
-        ) from err
-
-
-@router.post(
-    "/{resource_id}/publish",
-    # response_model=ResourceDto,
-    status_code=status.HTTP_200_OK,
-)
-def publishing_resource(  # noqa: ANN201, D103
-    resource_id: str,
-    resource_publish: schemas.ResourcePublish = Body(...),
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
-):
-    if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    logger.info(
-        "publishing resource",
-        extra={"resource_id": resource_id, "user": user.identifier},
-    )
-    try:
-        resource_publish.resource_id = resource_id
-        publish_resource = commands.PublishResource(
-            user=user.identifier,
-            **resource_publish.serialize(),
-        )
-        command_bus.dispatch(publish_resource)
-        logger.info("resource published", extra={"resource_id": resource_id})
-        return
-    except Exception as err:
-        logger.exception(
-            "error occured when publishing",
-            extra={"resource_id": resource_id, "user": user.identifier},
-        )
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"{err=}",
-        ) from err
 
 
 @router.get(

@@ -1,22 +1,6 @@
-import pytest  # noqa: I001
 from starlette import status
 
-from karp import auth
-from karp.lex_core.value_objects import unique_id  # noqa: F401
-from karp.karp_v6_api.schemas import ResourceCreate, ResourcePublic
-
-
-@pytest.fixture
-def new_resource() -> ResourceCreate:
-    return ResourceCreate(
-        resourceId="test_resource",
-        name="Test resource",
-        message="test",
-        config={
-            "fields": {"foo": {"type": "string"}},
-            "id": "foo",
-        },
-    )
+from karp.karp_v6_api.schemas import ResourcePublic
 
 
 class TestResourcesRoutes:
@@ -56,53 +40,14 @@ class TestGetResourcePermissions:
         }
 
 
-class TestCreateResource:
-    def test_missing_auth_header_returns_403(self, fa_client):  # noqa: ANN201
-        response = fa_client.post("/resources/", json={})
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
-
-    def test_invalid_data_returns_422(  # noqa: ANN201
-        self, fa_client, admin_token: auth.AccessToken
-    ):
-        response = fa_client.post(
-            "/resources/",
-            json={},
-            headers=admin_token.as_header(),
-        )
-        print(f"{response.json()=}")
-        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-    def test_valid_input_creates_resource(  # noqa: ANN201
-        self,
-        fa_client,
-        new_resource: ResourceCreate,
-        admin_token: auth.AccessToken,
-    ):
-        response = fa_client.post(
-            "/resources/",
-            json=new_resource.serialize(),
-            headers=admin_token.as_header(),
-        )
-        print(f"{response.json()=}")
-        assert response.status_code == status.HTTP_201_CREATED
-
-        created_resource = ResourceCreate(
-            **response.json(),
-        )
-        expected_resource = new_resource
-        # expected_resource.version = 1
-        # expected_resource.is_published = False
-        assert created_resource == expected_resource
-
-
 class TestGetResource:
-    def test_get_resource_by_resource_id(self, fa_client):  # noqa: ANN201
-        response = fa_client.get("/resources/test_resource")
+    def test_get_resource_by_resource_id(self, fa_data_client):  # noqa: ANN201
+        response = fa_data_client.get("/resources/places")
         print(f"{response.json()=}")
         assert response.status_code == status.HTTP_200_OK
 
         resource = ResourcePublic(**response.json())
-        assert resource.resource_id == "test_resource"
+        assert resource.resource_id == "places"
 
 
 class TestGetResources:

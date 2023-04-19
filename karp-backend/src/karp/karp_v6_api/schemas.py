@@ -61,10 +61,6 @@ class ResourceBase(BaseModel):  # noqa: D101
     entry_repo_id: Optional[unique_id.UniqueIdStr] = None
 
 
-class ResourceCreate(ResourceBase):  # noqa: D101
-    pass
-
-
 class ResourcePublic(ResourceBase):  # noqa: D101
     id: unique_id.UniqueIdStr  # noqa: A003
     last_modified: float
@@ -76,9 +72,3 @@ class ResourceProtected(ResourcePublic):  # noqa: D101
     last_modified_by: str
     is_published: Optional[bool] = None
     version: Optional[int] = None
-
-
-class ResourcePublish(BaseModel):  # noqa: D101
-    message: str
-    version: int
-    resource_id: Optional[str]
