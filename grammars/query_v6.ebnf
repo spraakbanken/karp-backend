@@ -52,7 +52,7 @@ endswith::Endswith
 
 equals::Equals
     =
-    'equals' '|' field:identifier '|' arg:argument
+    'equals' '|' field:identifier '|' arg:any_value
     ;
 
 exists::Exists
@@ -83,22 +83,22 @@ freetext_string::FreetextString
 
 gt::Gt
     =
-    op:'gt' '|' field:identifier '|' arg:argument
+    op:'gt' '|' field:identifier '|' arg:any_value
     ;
 
 gte::Gte
     =
-    op:'gte' '|' field:identifier '|' arg:argument
+    op:'gte' '|' field:identifier '|' arg:any_value
     ;
 
 lt::Lt
     =
-    op:'lt' '|' field:identifier '|' arg:argument
+    op:'lt' '|' field:identifier '|' arg:any_value
     ;
 
 lte::Lte
     =
-    op:'lte' '|' field:identifier '|' arg:argument
+    op:'lte' '|' field:identifier '|' arg:any_value
     ;
 
 missing::Missing
@@ -126,7 +126,7 @@ startswith::Startswith
     'startswith' '|' field:identifier '|' arg:string
     ;
 
-argument
+any_value
     =
     | integer
     | string
