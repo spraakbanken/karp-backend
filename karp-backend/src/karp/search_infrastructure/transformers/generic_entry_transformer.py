@@ -91,6 +91,10 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                             self.index_uow.repo.add_to_list_field(
                                 field_content, subfield
                             )
+                    self.index_uow.repo.assign_field(
+                        _index_entry, field_name, field_content
+                    )
+
             elif field_conf["type"] == "object":
                 field_content = self.index_uow.repo.create_empty_object()
                 if field_name in _src_entry:
@@ -100,6 +104,10 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
                         field_content,
                         field_conf["fields"].items(),
                     )
+                    self.index_uow.repo.assign_field(
+                        _index_entry, field_name, field_content
+                    )
+
             elif field_conf["type"] in (
                 "integer",
                 "string",
@@ -109,5 +117,6 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
             ):
                 if field_name in _src_entry:
                     field_content = _src_entry[field_name]
-
-            self.index_uow.repo.assign_field(_index_entry, field_name, field_content)
+                    self.index_uow.repo.assign_field(
+                        _index_entry, field_name, field_content
+                    )
