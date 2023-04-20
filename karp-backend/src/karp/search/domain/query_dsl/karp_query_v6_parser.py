@@ -162,7 +162,7 @@ class KarpQueryV6Parser(Parser):
         self._token('contains')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._string_()
@@ -178,7 +178,7 @@ class KarpQueryV6Parser(Parser):
         self._token('endswith')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._string_()
@@ -194,7 +194,7 @@ class KarpQueryV6Parser(Parser):
         self._token('equals')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._argument_()
@@ -210,7 +210,7 @@ class KarpQueryV6Parser(Parser):
         self._token('exists')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
 
         self._define(
@@ -275,7 +275,7 @@ class KarpQueryV6Parser(Parser):
         self._token('gt')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._argument_()
@@ -291,7 +291,7 @@ class KarpQueryV6Parser(Parser):
         self._token('gte')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._argument_()
@@ -307,7 +307,7 @@ class KarpQueryV6Parser(Parser):
         self._token('lt')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._argument_()
@@ -323,7 +323,7 @@ class KarpQueryV6Parser(Parser):
         self._token('lte')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._argument_()
@@ -339,7 +339,7 @@ class KarpQueryV6Parser(Parser):
         self._token('missing')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
 
         self._define(
@@ -402,7 +402,7 @@ class KarpQueryV6Parser(Parser):
         self._token('regexp')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._string_()
@@ -418,7 +418,7 @@ class KarpQueryV6Parser(Parser):
         self._token('startswith')
         self.name_last_node('op')
         self._token('|')
-        self._string_()
+        self._identifier_()
         self.name_last_node('field')
         self._token('|')
         self._string_()
@@ -448,6 +448,10 @@ class KarpQueryV6Parser(Parser):
     @tatsumasu()
     def _string_(self):  # noqa
         self._pattern('[^|()]+')
+
+    @tatsumasu()
+    def _identifier_(self):  # noqa
+        self._pattern('[^.|)(]+')
 
     @tatsumasu('int')
     def _integer_(self):  # noqa
@@ -528,6 +532,9 @@ class KarpQueryV6Semantics:
         return ast
 
     def string(self, ast):  # noqa
+        return ast
+
+    def identifier(self, ast):  # noqa
         return ast
 
     def integer(self, ast):  # noqa

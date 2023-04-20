@@ -42,22 +42,22 @@ and::And
 
 contains::Contains
     =
-    op:'contains' '|' field:string '|' arg:string
+    op:'contains' '|' field:identifier '|' arg:string
     ;
 
 endswith::Endswith
     =
-    op:'endswith' '|' field:string '|' arg:string
+    op:'endswith' '|' field:identifier '|' arg:string
     ;
 
 equals::Equals
     =
-    op:'equals' '|' field:string '|' arg:argument
+    op:'equals' '|' field:identifier '|' arg:argument
     ;
 
 exists::Exists
     =
-    op:'exists' '|' field:string
+    op:'exists' '|' field:identifier
     ;
 
 freergxp::Freergxp
@@ -83,27 +83,27 @@ freetext_string::FreetextString
 
 gt::Gt
     =
-    op:'gt' '|' field:string '|' arg:argument
+    op:'gt' '|' field:identifier '|' arg:argument
     ;
 
 gte::Gte
     =
-    op:'gte' '|' field:string '|' arg:argument
+    op:'gte' '|' field:identifier '|' arg:argument
     ;
 
 lt::Lt
     =
-    op:'lt' '|' field:string '|' arg:argument
+    op:'lt' '|' field:identifier '|' arg:argument
     ;
 
 lte::Lte
     =
-    op:'lte' '|' field:string '|' arg:argument
+    op:'lte' '|' field:identifier '|' arg:argument
     ;
 
 missing::Missing
     =
-    op:'missing' '|' field:string
+    op:'missing' '|' field:identifier
     ;
 
 not::Not
@@ -118,12 +118,12 @@ or::Or
 
 regexp::Regexp
     =
-    op:'regexp' '|' field:string '|' arg:string
+    op:'regexp' '|' field:identifier '|' arg:string
     ;
 
 startswith::Startswith
     =
-    op:'startswith' '|' field:string '|' arg:string
+    op:'startswith' '|' field:identifier '|' arg:string
     ;
 
 argument
@@ -141,6 +141,9 @@ string
     =
     /[^|()]+/
     ;
+
+# for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to namea  field "myfield|"
+identifier = /[^.|)(]+/ ;
 
 integer::int
     =
