@@ -65,18 +65,7 @@ freergxp::Freergxp
     'freergxp' '|' arg:string
     ;
 
-freetext
-    =
-    | freetext_any
-    | freetext_string
-    ;
-
-freetext_any::FreetextAnyButString
-    =
-    'freetext' '|' arg:any_but_string
-    ;
-
-freetext_string::FreetextString
+freetext::Freetext
     =
     'freetext' '|' arg:string
     ;
@@ -130,11 +119,6 @@ any_value
     =
     | integer
     | string
-    ;
-
-any_but_string
-    =
-    integer
     ;
 
 string

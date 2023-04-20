@@ -112,10 +112,8 @@ class KarpQueryV6Parser(Parser):
             self._error(
                 'expecting one of: '
                 "'contains' 'endswith' 'equals' 'exists'"
-                "'freergxp' 'gt' 'gte' 'lt' 'lte'"
-                "'missing' 'regexp' 'startswith'"
-                '<freetext> <freetext_any>'
-                '<freetext_string>'
+                "'freergxp' 'freetext' 'gt' 'gte' 'lt'"
+                "'lte' 'missing' 'regexp' 'startswith'"
             )
 
     @tatsumasu()
@@ -193,7 +191,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._argument_()
+        self._any_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -225,33 +223,8 @@ class KarpQueryV6Parser(Parser):
             []
         )
 
-    @tatsumasu()
+    @tatsumasu('Freetext')
     def _freetext_(self):  # noqa
-        with self._choice():
-            with self._option():
-                self._freetext_any_()
-            with self._option():
-                self._freetext_string_()
-            self._error(
-                'expecting one of: '
-                "'freetext' <freetext_any>"
-                '<freetext_string>'
-            )
-
-    @tatsumasu('FreetextAnyButString')
-    def _freetext_any_(self):  # noqa
-        self._token('freetext')
-        self._token('|')
-        self._any_but_string_()
-        self.name_last_node('arg')
-
-        self._define(
-            ['arg'],
-            []
-        )
-
-    @tatsumasu('FreetextString')
-    def _freetext_string_(self):  # noqa
         self._token('freetext')
         self._token('|')
         self._string_()
@@ -270,7 +243,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._argument_()
+        self._any_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -286,7 +259,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._argument_()
+        self._any_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -302,7 +275,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._argument_()
+        self._any_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -318,7 +291,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._argument_()
+        self._any_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -417,7 +390,7 @@ class KarpQueryV6Parser(Parser):
         )
 
     @tatsumasu()
-    def _argument_(self):  # noqa
+    def _any_value_(self):  # noqa
         with self._choice():
             with self._option():
                 self._integer_()
@@ -427,10 +400,6 @@ class KarpQueryV6Parser(Parser):
                 'expecting one of: '
                 '<integer> <string> [^|()]+ \\d+'
             )
-
-    @tatsumasu()
-    def _any_but_string_(self):  # noqa
-        self._integer_()
 
     @tatsumasu()
     def _string_(self):  # noqa
@@ -479,12 +448,6 @@ class KarpQueryV6Semantics:
     def freetext(self, ast):  # noqa
         return ast
 
-    def freetext_any(self, ast):  # noqa
-        return ast
-
-    def freetext_string(self, ast):  # noqa
-        return ast
-
     def gt(self, ast):  # noqa
         return ast
 
@@ -512,10 +475,7 @@ class KarpQueryV6Semantics:
     def startswith(self, ast):  # noqa
         return ast
 
-    def argument(self, ast):  # noqa
-        return ast
-
-    def any_but_string(self, ast):  # noqa
+    def any_value(self, ast):  # noqa
         return ast
 
     def string(self, ast):  # noqa

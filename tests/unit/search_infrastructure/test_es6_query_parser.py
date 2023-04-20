@@ -17,7 +17,6 @@ def parser() -> KarpQueryV6Parser:
     [
         ("exists|test", es_dsl.Q("exists", field="test")),
         ("freetext|hej", es_dsl.Q("multi_match", query="hej", fuzziness=1)),
-        ("freetext|12", es_dsl.Q("multi_match", query=12)),
         (
             "freergxp|1i.*2",
             es_dsl.Q("query_string", query="/1i.*2/", default_field="*"),

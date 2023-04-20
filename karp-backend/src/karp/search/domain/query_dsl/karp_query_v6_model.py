@@ -66,12 +66,7 @@ class Freergxp(ModelBase):
 
 
 @dataclass(eq=False)
-class FreetextAnyButString(ModelBase):
-    arg: Any = None
-
-
-@dataclass(eq=False)
-class FreetextString(ModelBase):
+class Freetext(ModelBase):
     arg: Any = None
 
 

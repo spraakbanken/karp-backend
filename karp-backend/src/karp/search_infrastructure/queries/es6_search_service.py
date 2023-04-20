@@ -62,11 +62,8 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
             "query_string", query=f"/{self.walk(node.arg)}/", default_field="*"
         )
 
-    def walk__freetext_string(self, node):  # noqa: ANN201, D102
+    def walk__freetext(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("multi_match", query=self.walk(node.arg), fuzziness=1)
-
-    def walk__freetext_any_but_string(self, node):  # noqa: ANN201, D102
-        return es_dsl.Q("multi_match", query=self.walk(node.arg))
 
     def walk_range(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
