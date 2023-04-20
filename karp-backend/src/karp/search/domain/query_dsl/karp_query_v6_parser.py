@@ -427,7 +427,7 @@ class KarpQueryV6Parser(Parser):
 
     @tatsumasu()
     def _identifier_(self):  # noqa
-        self._pattern('[^.|)(]+')
+        self._pattern('[^|)(]+')
 
 
 class KarpQueryV6Semantics:
