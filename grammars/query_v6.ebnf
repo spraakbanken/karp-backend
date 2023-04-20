@@ -37,32 +37,32 @@ logical_expression
 
 and::And
     =
-    op:'and' '(' exps+:expression {'||' exps+:expression}* ')'
+    'and' '(' exps+:expression {'||' exps+:expression}* ')'
     ;
 
 contains::Contains
     =
-    op:'contains' '|' field:identifier '|' arg:string
+    'contains' '|' field:identifier '|' arg:string
     ;
 
 endswith::Endswith
     =
-    op:'endswith' '|' field:identifier '|' arg:string
+    'endswith' '|' field:identifier '|' arg:string
     ;
 
 equals::Equals
     =
-    op:'equals' '|' field:identifier '|' arg:argument
+    'equals' '|' field:identifier '|' arg:argument
     ;
 
 exists::Exists
     =
-    op:'exists' '|' field:identifier
+    'exists' '|' field:identifier
     ;
 
 freergxp::Freergxp
     =
-    op:'freergxp' '|' arg:string
+    'freergxp' '|' arg:string
     ;
 
 freetext
@@ -73,12 +73,12 @@ freetext
 
 freetext_any::FreetextAnyButString
     =
-    op:'freetext' '|' arg:any_but_string
+    'freetext' '|' arg:any_but_string
     ;
 
 freetext_string::FreetextString
     =
-    op:'freetext' '|' arg:string
+    'freetext' '|' arg:string
     ;
 
 gt::Gt
@@ -103,27 +103,27 @@ lte::Lte
 
 missing::Missing
     =
-    op:'missing' '|' field:identifier
+    'missing' '|' field:identifier
     ;
 
 not::Not
     =
-    op:'not' '(' exps+:expression {'||' exps+:expression}* ')'
+    'not' '(' exps+:expression {'||' exps+:expression}* ')'
     ;
 
 or::Or
     =
-    op:'or' '(' exps+:expression {'||' exps+:expression}* ')'
+    'or' '(' exps+:expression {'||' exps+:expression}* ')'
     ;
 
 regexp::Regexp
     =
-    op:'regexp' '|' field:identifier '|' arg:string
+    'regexp' '|' field:identifier '|' arg:string
     ;
 
 startswith::Startswith
     =
-    op:'startswith' '|' field:identifier '|' arg:string
+    'startswith' '|' field:identifier '|' arg:string
     ;
 
 argument

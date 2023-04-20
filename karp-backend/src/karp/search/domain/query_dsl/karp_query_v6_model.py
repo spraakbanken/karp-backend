@@ -35,52 +35,44 @@ class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):
 @dataclass(eq=False)
 class And(ModelBase):
     exps: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Contains(ModelBase):
     arg: Any = None
     field: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Endswith(ModelBase):
     arg: Any = None
     field: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Equals(ModelBase):
     arg: Any = None
     field: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Exists(ModelBase):
     field: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Freergxp(ModelBase):
     arg: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class FreetextAnyButString(ModelBase):
     arg: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class FreetextString(ModelBase):
     arg: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
@@ -114,31 +106,26 @@ class Lte(ModelBase):
 @dataclass(eq=False)
 class Missing(ModelBase):
     field: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Not(ModelBase):
     exps: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Or(ModelBase):
     exps: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Regexp(ModelBase):
     arg: Any = None
     field: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
 class Startswith(ModelBase):
     arg: Any = None
     field: Any = None
-    op: Any = None
 

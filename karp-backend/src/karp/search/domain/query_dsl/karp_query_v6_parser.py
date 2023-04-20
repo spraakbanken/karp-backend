@@ -135,12 +135,11 @@ class KarpQueryV6Parser(Parser):
     @tatsumasu('And')
     def _and_(self):  # noqa
         self._token('and')
-        self.name_last_node('op')
         self._token('(')
         self._expression_()
         self.add_last_node_to_name('exps')
 
-        def block2():
+        def block1():
             self._token('||')
             self._expression_()
             self.add_last_node_to_name('exps')
@@ -149,18 +148,17 @@ class KarpQueryV6Parser(Parser):
                 [],
                 ['exps']
             )
-        self._closure(block2)
+        self._closure(block1)
         self._token(')')
 
         self._define(
-            ['op'],
+            [],
             ['exps']
         )
 
     @tatsumasu('Contains')
     def _contains_(self):  # noqa
         self._token('contains')
-        self.name_last_node('op')
         self._token('|')
         self._identifier_()
         self.name_last_node('field')
@@ -169,14 +167,13 @@ class KarpQueryV6Parser(Parser):
         self.name_last_node('arg')
 
         self._define(
-            ['arg', 'field', 'op'],
+            ['arg', 'field'],
             []
         )
 
     @tatsumasu('Endswith')
     def _endswith_(self):  # noqa
         self._token('endswith')
-        self.name_last_node('op')
         self._token('|')
         self._identifier_()
         self.name_last_node('field')
@@ -185,14 +182,13 @@ class KarpQueryV6Parser(Parser):
         self.name_last_node('arg')
 
         self._define(
-            ['arg', 'field', 'op'],
+            ['arg', 'field'],
             []
         )
 
     @tatsumasu('Equals')
     def _equals_(self):  # noqa
         self._token('equals')
-        self.name_last_node('op')
         self._token('|')
         self._identifier_()
         self.name_last_node('field')
@@ -201,33 +197,31 @@ class KarpQueryV6Parser(Parser):
         self.name_last_node('arg')
 
         self._define(
-            ['arg', 'field', 'op'],
+            ['arg', 'field'],
             []
         )
 
     @tatsumasu('Exists')
     def _exists_(self):  # noqa
         self._token('exists')
-        self.name_last_node('op')
         self._token('|')
         self._identifier_()
         self.name_last_node('field')
 
         self._define(
-            ['field', 'op'],
+            ['field'],
             []
         )
 
     @tatsumasu('Freergxp')
     def _freergxp_(self):  # noqa
         self._token('freergxp')
-        self.name_last_node('op')
         self._token('|')
         self._string_()
         self.name_last_node('arg')
 
         self._define(
-            ['arg', 'op'],
+            ['arg'],
             []
         )
 
@@ -247,26 +241,24 @@ class KarpQueryV6Parser(Parser):
     @tatsumasu('FreetextAnyButString')
     def _freetext_any_(self):  # noqa
         self._token('freetext')
-        self.name_last_node('op')
         self._token('|')
         self._any_but_string_()
         self.name_last_node('arg')
 
         self._define(
-            ['arg', 'op'],
+            ['arg'],
             []
         )
 
     @tatsumasu('FreetextString')
     def _freetext_string_(self):  # noqa
         self._token('freetext')
-        self.name_last_node('op')
         self._token('|')
         self._string_()
         self.name_last_node('arg')
 
         self._define(
-            ['arg', 'op'],
+            ['arg'],
             []
         )
 
@@ -337,25 +329,23 @@ class KarpQueryV6Parser(Parser):
     @tatsumasu('Missing')
     def _missing_(self):  # noqa
         self._token('missing')
-        self.name_last_node('op')
         self._token('|')
         self._identifier_()
         self.name_last_node('field')
 
         self._define(
-            ['field', 'op'],
+            ['field'],
             []
         )
 
     @tatsumasu('Not')
     def _not_(self):  # noqa
         self._token('not')
-        self.name_last_node('op')
         self._token('(')
         self._expression_()
         self.add_last_node_to_name('exps')
 
-        def block2():
+        def block1():
             self._token('||')
             self._expression_()
             self.add_last_node_to_name('exps')
@@ -364,23 +354,22 @@ class KarpQueryV6Parser(Parser):
                 [],
                 ['exps']
             )
-        self._closure(block2)
+        self._closure(block1)
         self._token(')')
 
         self._define(
-            ['op'],
+            [],
             ['exps']
         )
 
     @tatsumasu('Or')
     def _or_(self):  # noqa
         self._token('or')
-        self.name_last_node('op')
         self._token('(')
         self._expression_()
         self.add_last_node_to_name('exps')
 
-        def block2():
+        def block1():
             self._token('||')
             self._expression_()
             self.add_last_node_to_name('exps')
@@ -389,18 +378,17 @@ class KarpQueryV6Parser(Parser):
                 [],
                 ['exps']
             )
-        self._closure(block2)
+        self._closure(block1)
         self._token(')')
 
         self._define(
-            ['op'],
+            [],
             ['exps']
         )
 
     @tatsumasu('Regexp')
     def _regexp_(self):  # noqa
         self._token('regexp')
-        self.name_last_node('op')
         self._token('|')
         self._identifier_()
         self.name_last_node('field')
@@ -409,14 +397,13 @@ class KarpQueryV6Parser(Parser):
         self.name_last_node('arg')
 
         self._define(
-            ['arg', 'field', 'op'],
+            ['arg', 'field'],
             []
         )
 
     @tatsumasu('Startswith')
     def _startswith_(self):  # noqa
         self._token('startswith')
-        self.name_last_node('op')
         self._token('|')
         self._identifier_()
         self.name_last_node('field')
@@ -425,7 +412,7 @@ class KarpQueryV6Parser(Parser):
         self.name_last_node('arg')
 
         self._define(
-            ['arg', 'field', 'op'],
+            ['arg', 'field'],
             []
         )
 
