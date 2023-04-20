@@ -1,4 +1,4 @@
-#!/usr/bin/env python  # noqa: D100
+#!/usr/bin/env python
 
 # CAVEAT UTILITOR
 #
@@ -9,25 +9,23 @@
 # Any changes you make to it will be overwritten the next time
 # the file is generated.
 
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
 import sys
 
 from tatsu.buffering import Buffer
 from tatsu.parsing import Parser
 from tatsu.parsing import tatsumasu
-from tatsu.parsing import leftrec, nomemo, isname  # noqa: F401
+from tatsu.parsing import leftrec, nomemo, isname # noqa
 from tatsu.infos import ParserConfig
-from tatsu.util import re, generic_main  # noqa: F401
+from tatsu.util import re, generic_main  # noqa
 
 
 KEYWORDS = {}  # type: ignore
 
 
-class KarpQueryV6Buffer(Buffer):  # noqa: D101
-    def __init__(  # noqa: D107
-        self, text, /, config: ParserConfig = None, **settings  # noqa: ANN003
-    ) -> None:
+class KarpQueryV6Buffer(Buffer):
+    def __init__(self, text, /, config: ParserConfig = None, **settings):
         config = ParserConfig.new(
             config,
             owner=self,
@@ -36,17 +34,15 @@ class KarpQueryV6Buffer(Buffer):  # noqa: D101
             comments_re=None,
             eol_comments_re=None,
             ignorecase=False,
-            namechars="",
+            namechars='',
             parseinfo=False,
         )
         config = config.replace(**settings)
         super().__init__(text, config=config)
 
 
-class KarpQueryV6Parser(Parser):  # noqa: D101
-    def __init__(  # noqa: D107
-        self, /, config: ParserConfig = None, **settings  # noqa: ANN003
-    ) -> None:
+class KarpQueryV6Parser(Parser):
+    def __init__(self, /, config: ParserConfig = None, **settings):
         config = ParserConfig.new(
             config,
             owner=self,
@@ -55,37 +51,37 @@ class KarpQueryV6Parser(Parser):  # noqa: D101
             comments_re=None,
             eol_comments_re=None,
             ignorecase=False,
-            namechars="",
+            namechars='',
             parseinfo=False,
             keywords=KEYWORDS,
-            start="start",
+            start='start',
         )
         config = config.replace(**settings)
         super().__init__(config=config)
 
     @tatsumasu()
-    def _start_(self):  # noqa: ANN202
+    def _start_(self):  # noqa
         self._expression_()
         self._check_eof()
 
     @tatsumasu()
-    def _expression_(self):  # noqa: ANN202
+    def _expression_(self):  # noqa
         with self._choice():
             with self._option():
                 self._logical_expression_()
             with self._option():
                 self._query_expression_()
             self._error(
-                "expecting one of: "
-                "<and> <contains> <endswith> <equals>"
-                "<exists> <freergxp> <freetext> <gt>"
-                "<gte> <logical_expression> <lt> <lte>"
-                "<missing> <not> <or> <query_expression>"
-                "<regexp> <startswith>"
+                'expecting one of: '
+                '<and> <contains> <endswith> <equals>'
+                '<exists> <freergxp> <freetext> <gt>'
+                '<gte> <logical_expression> <lt> <lte>'
+                '<missing> <not> <or> <query_expression>'
+                '<regexp> <startswith>'
             )
 
     @tatsumasu()
-    def _query_expression_(self):  # noqa: ANN202
+    def _query_expression_(self):  # noqa
         with self._choice():
             with self._option():
                 self._contains_()
@@ -114,16 +110,14 @@ class KarpQueryV6Parser(Parser):  # noqa: D101
             with self._option():
                 self._startswith_()
             self._error(
-                "expecting one of: "
+                'expecting one of: '
                 "'contains' 'endswith' 'equals' 'exists'"
-                "'freergxp' 'gt' 'gte' 'lt' 'lte'"
-                "'missing' 'regexp' 'startswith'"
-                "<freetext> <freetext_any>"
-                "<freetext_string>"
+                "'freergxp' 'freetext' 'gt' 'gte' 'lt'"
+                "'lte' 'missing' 'regexp' 'startswith'"
             )
 
     @tatsumasu()
-    def _logical_expression_(self):  # noqa: ANN202
+    def _logical_expression_(self):  # noqa
         with self._choice():
             with self._option():
                 self._and_()
@@ -131,362 +125,404 @@ class KarpQueryV6Parser(Parser):  # noqa: D101
                 self._or_()
             with self._option():
                 self._not_()
-            self._error("expecting one of: " "'and' 'not' 'or'")
-
-    @tatsumasu("And")
-    def _and_(self):  # noqa: ANN202
-        self._token("and")
-        self.name_last_node("op")
-        self._token("(")
-        self._expression_()
-        self.add_last_node_to_name("exps")
-
-        def block2():  # noqa: ANN202
-            self._token("||")
-            self._expression_()
-            self.add_last_node_to_name("exps")
-
-            self._define([], ["exps"])
-
-        self._closure(block2)
-        self._token(")")
-
-        self._define(["op"], ["exps"])
-
-    @tatsumasu("Contains")
-    def _contains_(self):  # noqa: ANN202
-        self._token("contains")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._string_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Endswith")
-    def _endswith_(self):  # noqa: ANN202
-        self._token("endswith")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._string_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Equals")
-    def _equals_(self):  # noqa: ANN202
-        self._token("equals")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._argument_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Exists")
-    def _exists_(self):  # noqa: ANN202
-        self._token("exists")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-
-        self._define(["field", "op"], [])
-
-    @tatsumasu("Freergxp")
-    def _freergxp_(self):  # noqa: ANN202
-        self._token("freergxp")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "op"], [])
-
-    @tatsumasu()
-    def _freetext_(self):  # noqa: ANN202
-        with self._choice():
-            with self._option():
-                self._freetext_any_()
-            with self._option():
-                self._freetext_string_()
             self._error(
-                "expecting one of: " "'freetext' <freetext_any>" "<freetext_string>"
+                'expecting one of: '
+                "'and' 'not' 'or'"
             )
 
-    @tatsumasu("FreetextAnyButString")
-    def _freetext_any_(self):  # noqa: ANN202
-        self._token("freetext")
-        self.name_last_node("op")
-        self._token("|")
-        self._any_but_string_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "op"], [])
-
-    @tatsumasu("FreetextString")
-    def _freetext_string_(self):  # noqa: ANN202
-        self._token("freetext")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "op"], [])
-
-    @tatsumasu("Gt")
-    def _gt_(self):  # noqa: ANN202
-        self._token("gt")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._argument_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Gte")
-    def _gte_(self):  # noqa: ANN202
-        self._token("gte")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._argument_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Lt")
-    def _lt_(self):  # noqa: ANN202
-        self._token("lt")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._argument_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Lte")
-    def _lte_(self):  # noqa: ANN202
-        self._token("lte")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._argument_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Missing")
-    def _missing_(self):  # noqa: ANN202
-        self._token("missing")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-
-        self._define(["field", "op"], [])
-
-    @tatsumasu("Not")
-    def _not_(self):  # noqa: ANN202
-        self._token("not")
-        self.name_last_node("op")
-        self._token("(")
+    @tatsumasu('And')
+    def _and_(self):  # noqa
+        self._token('and')
+        self._token('(')
         self._expression_()
-        self.add_last_node_to_name("exps")
+        self.add_last_node_to_name('exps')
 
-        def block2():  # noqa: ANN202
-            self._token("||")
+        def block1():
+            self._token('||')
             self._expression_()
-            self.add_last_node_to_name("exps")
+            self.add_last_node_to_name('exps')
 
-            self._define([], ["exps"])
+            self._define(
+                [],
+                ['exps']
+            )
+        self._closure(block1)
+        self._token(')')
 
-        self._closure(block2)
-        self._token(")")
+        self._define(
+            [],
+            ['exps']
+        )
 
-        self._define(["op"], ["exps"])
+    @tatsumasu('Contains')
+    def _contains_(self):  # noqa
+        self._token('contains')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._string_value_()
+        self.name_last_node('arg')
 
-    @tatsumasu("Or")
-    def _or_(self):  # noqa: ANN202
-        self._token("or")
-        self.name_last_node("op")
-        self._token("(")
+        self._define(
+            ['arg', 'field'],
+            []
+        )
+
+    @tatsumasu('Endswith')
+    def _endswith_(self):  # noqa
+        self._token('endswith')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._string_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field'],
+            []
+        )
+
+    @tatsumasu('Equals')
+    def _equals_(self):  # noqa
+        self._token('equals')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._any_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field'],
+            []
+        )
+
+    @tatsumasu('Exists')
+    def _exists_(self):  # noqa
+        self._token('exists')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+
+        self._define(
+            ['field'],
+            []
+        )
+
+    @tatsumasu('Freergxp')
+    def _freergxp_(self):  # noqa
+        self._token('freergxp')
+        self._token('|')
+        self._string_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg'],
+            []
+        )
+
+    @tatsumasu('Freetext')
+    def _freetext_(self):  # noqa
+        self._token('freetext')
+        self._token('|')
+        self._string_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg'],
+            []
+        )
+
+    @tatsumasu('Gt')
+    def _gt_(self):  # noqa
+        self._token('gt')
+        self.name_last_node('op')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._any_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field', 'op'],
+            []
+        )
+
+    @tatsumasu('Gte')
+    def _gte_(self):  # noqa
+        self._token('gte')
+        self.name_last_node('op')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._any_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field', 'op'],
+            []
+        )
+
+    @tatsumasu('Lt')
+    def _lt_(self):  # noqa
+        self._token('lt')
+        self.name_last_node('op')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._any_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field', 'op'],
+            []
+        )
+
+    @tatsumasu('Lte')
+    def _lte_(self):  # noqa
+        self._token('lte')
+        self.name_last_node('op')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._any_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field', 'op'],
+            []
+        )
+
+    @tatsumasu('Missing')
+    def _missing_(self):  # noqa
+        self._token('missing')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+
+        self._define(
+            ['field'],
+            []
+        )
+
+    @tatsumasu('Not')
+    def _not_(self):  # noqa
+        self._token('not')
+        self._token('(')
         self._expression_()
-        self.add_last_node_to_name("exps")
+        self.add_last_node_to_name('exps')
 
-        def block2():  # noqa: ANN202
-            self._token("||")
+        def block1():
+            self._token('||')
             self._expression_()
-            self.add_last_node_to_name("exps")
+            self.add_last_node_to_name('exps')
 
-            self._define([], ["exps"])
+            self._define(
+                [],
+                ['exps']
+            )
+        self._closure(block1)
+        self._token(')')
 
-        self._closure(block2)
-        self._token(")")
+        self._define(
+            [],
+            ['exps']
+        )
 
-        self._define(["op"], ["exps"])
+    @tatsumasu('Or')
+    def _or_(self):  # noqa
+        self._token('or')
+        self._token('(')
+        self._expression_()
+        self.add_last_node_to_name('exps')
 
-    @tatsumasu("Regexp")
-    def _regexp_(self):  # noqa: ANN202
-        self._token("regexp")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._string_()
-        self.name_last_node("arg")
+        def block1():
+            self._token('||')
+            self._expression_()
+            self.add_last_node_to_name('exps')
 
-        self._define(["arg", "field", "op"], [])
+            self._define(
+                [],
+                ['exps']
+            )
+        self._closure(block1)
+        self._token(')')
 
-    @tatsumasu("Startswith")
-    def _startswith_(self):  # noqa: ANN202
-        self._token("startswith")
-        self.name_last_node("op")
-        self._token("|")
-        self._string_()
-        self.name_last_node("field")
-        self._token("|")
-        self._string_()
-        self.name_last_node("arg")
+        self._define(
+            [],
+            ['exps']
+        )
 
-        self._define(["arg", "field", "op"], [])
+    @tatsumasu('Regexp')
+    def _regexp_(self):  # noqa
+        self._token('regexp')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._string_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field'],
+            []
+        )
+
+    @tatsumasu('Startswith')
+    def _startswith_(self):  # noqa
+        self._token('startswith')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._string_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field'],
+            []
+        )
 
     @tatsumasu()
-    def _argument_(self):  # noqa: ANN202
+    def _any_value_(self):  # noqa
         with self._choice():
             with self._option():
-                self._integer_()
+                self._integer_value_()
             with self._option():
-                self._string_()
-            self._error("expecting one of: " "<integer> <string> [^|()]+ \\d+")
+                self._string_value_()
+            self._error(
+                'expecting one of: '
+                '\'"\' <integer_value> <string_value> \\d+'
+            )
+
+    @tatsumasu('StringValue')
+    def _string_value_(self):  # noqa
+        self._token('"')
+
+        def block1():
+            with self._choice():
+                with self._option():
+                    self._pattern('(?s)\\s+')
+                with self._option():
+                    self._token('\\"')
+                with self._option():
+                    self._pattern('[^"]')
+                self._error(
+                    'expecting one of: '
+                    '\'\\\\"\' (?s)\\s+ [^"]'
+                )
+        self._closure(block1)
+        self.name_last_node('@')
+        self._token('"')
+
+    @tatsumasu('int')
+    def _integer_value_(self):  # noqa
+        self._pattern('\\d+')
 
     @tatsumasu()
-    def _any_but_string_(self):  # noqa: ANN202
-        self._integer_()
-
-    @tatsumasu()
-    def _string_(self):  # noqa: ANN202
-        self._pattern("[^|()]+")
-
-    @tatsumasu("int")
-    def _integer_(self):  # noqa: ANN202
-        self._pattern("\\d+")
+    def _identifier_(self):  # noqa
+        self._pattern('[^|)(]+')
 
 
-class KarpQueryV6Semantics:  # noqa: D101
-    def start(self, ast):  # noqa: ANN201, D102
+class KarpQueryV6Semantics:
+    def start(self, ast):  # noqa
         return ast
 
-    def expression(self, ast):  # noqa: ANN201, D102
+    def expression(self, ast):  # noqa
         return ast
 
-    def query_expression(self, ast):  # noqa: ANN201, D102
+    def query_expression(self, ast):  # noqa
         return ast
 
-    def logical_expression(self, ast):  # noqa: ANN201, D102
+    def logical_expression(self, ast):  # noqa
         return ast
 
-    def and_(self, ast):  # noqa: ANN201, D102
+    def and_(self, ast):  # noqa
         return ast
 
-    def contains(self, ast):  # noqa: ANN201, D102
+    def contains(self, ast):  # noqa
         return ast
 
-    def endswith(self, ast):  # noqa: ANN201, D102
+    def endswith(self, ast):  # noqa
         return ast
 
-    def equals(self, ast):  # noqa: ANN201, D102
+    def equals(self, ast):  # noqa
         return ast
 
-    def exists(self, ast):  # noqa: ANN201, D102
+    def exists(self, ast):  # noqa
         return ast
 
-    def freergxp(self, ast):  # noqa: ANN201, D102
+    def freergxp(self, ast):  # noqa
         return ast
 
-    def freetext(self, ast):  # noqa: ANN201, D102
+    def freetext(self, ast):  # noqa
         return ast
 
-    def freetext_any(self, ast):  # noqa: ANN201, D102
+    def gt(self, ast):  # noqa
         return ast
 
-    def freetext_string(self, ast):  # noqa: ANN201, D102
+    def gte(self, ast):  # noqa
         return ast
 
-    def gt(self, ast):  # noqa: ANN201, D102
+    def lt(self, ast):  # noqa
         return ast
 
-    def gte(self, ast):  # noqa: ANN201, D102
+    def lte(self, ast):  # noqa
         return ast
 
-    def lt(self, ast):  # noqa: ANN201, D102
+    def missing(self, ast):  # noqa
         return ast
 
-    def lte(self, ast):  # noqa: ANN201, D102
+    def not_(self, ast):  # noqa
         return ast
 
-    def missing(self, ast):  # noqa: ANN201, D102
+    def or_(self, ast):  # noqa
         return ast
 
-    def not_(self, ast):  # noqa: ANN201, D102
+    def regexp(self, ast):  # noqa
         return ast
 
-    def or_(self, ast):  # noqa: ANN201, D102
+    def startswith(self, ast):  # noqa
         return ast
 
-    def regexp(self, ast):  # noqa: ANN201, D102
+    def any_value(self, ast):  # noqa
         return ast
 
-    def startswith(self, ast):  # noqa: ANN201, D102
+    def string_value(self, ast):  # noqa
         return ast
 
-    def argument(self, ast):  # noqa: ANN201, D102
+    def integer_value(self, ast):  # noqa
         return ast
 
-    def any_but_string(self, ast):  # noqa: ANN201, D102
-        return ast
-
-    def string(self, ast):  # noqa: ANN201, D102
-        return ast
-
-    def integer(self, ast):  # noqa: ANN201, D102
+    def identifier(self, ast):  # noqa
         return ast
 
 
-def main(filename, **kwargs):  # noqa: ANN201, ANN003, D103
-    if not filename or filename == "-":
+def main(filename, **kwargs):
+    if not filename or filename == '-':
         text = sys.stdin.read()
     else:
         with open(filename) as f:
             text = f.read()
     parser = KarpQueryV6Parser()
-    return parser.parse(text, filename=filename, **kwargs)
+    return parser.parse(
+        text,
+        filename=filename,
+        **kwargs
+    )
 
 
-if __name__ == "__main__":
-    import json  # noqa: I001
+if __name__ == '__main__':
+    import json
     from tatsu.util import asjson
 
-    ast = generic_main(main, KarpQueryV6Parser, name="KarpQueryV6")
+    ast = generic_main(main, KarpQueryV6Parser, name='KarpQueryV6')
     data = asjson(ast)
     print(json.dumps(data, indent=2))
+

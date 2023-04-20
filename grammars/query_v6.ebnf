@@ -37,112 +37,100 @@ logical_expression
 
 and::And
     =
-    op:'and' '(' exps+:expression {'||' exps+:expression}* ')'
+    'and' '(' exps+:expression {'||' exps+:expression}* ')'
     ;
 
 contains::Contains
     =
-    op:'contains' '|' field:string '|' arg:string
+    'contains' '|' field:identifier '|' arg:string_value
     ;
 
 endswith::Endswith
     =
-    op:'endswith' '|' field:string '|' arg:string
+    'endswith' '|' field:identifier '|' arg:string_value
     ;
 
 equals::Equals
     =
-    op:'equals' '|' field:string '|' arg:argument
+    'equals' '|' field:identifier '|' arg:any_value
     ;
 
 exists::Exists
     =
-    op:'exists' '|' field:string
+    'exists' '|' field:identifier
     ;
 
 freergxp::Freergxp
     =
-    op:'freergxp' '|' arg:string
+    'freergxp' '|' arg:string_value
     ;
 
-freetext
+freetext::Freetext
     =
-    | freetext_any
-    | freetext_string
-    ;
-
-freetext_any::FreetextAnyButString
-    =
-    op:'freetext' '|' arg:any_but_string
-    ;
-
-freetext_string::FreetextString
-    =
-    op:'freetext' '|' arg:string
+    'freetext' '|' arg:string_value
     ;
 
 gt::Gt
     =
-    op:'gt' '|' field:string '|' arg:argument
+    op:'gt' '|' field:identifier '|' arg:any_value
     ;
 
 gte::Gte
     =
-    op:'gte' '|' field:string '|' arg:argument
+    op:'gte' '|' field:identifier '|' arg:any_value
     ;
 
 lt::Lt
     =
-    op:'lt' '|' field:string '|' arg:argument
+    op:'lt' '|' field:identifier '|' arg:any_value
     ;
 
 lte::Lte
     =
-    op:'lte' '|' field:string '|' arg:argument
+    op:'lte' '|' field:identifier '|' arg:any_value
     ;
 
 missing::Missing
     =
-    op:'missing' '|' field:string
+    'missing' '|' field:identifier
     ;
 
 not::Not
     =
-    op:'not' '(' exps+:expression {'||' exps+:expression}* ')'
+    'not' '(' exps+:expression {'||' exps+:expression}* ')'
     ;
 
 or::Or
     =
-    op:'or' '(' exps+:expression {'||' exps+:expression}* ')'
+    'or' '(' exps+:expression {'||' exps+:expression}* ')'
     ;
 
 regexp::Regexp
     =
-    op:'regexp' '|' field:string '|' arg:string
+    'regexp' '|' field:identifier '|' arg:string_value
     ;
 
 startswith::Startswith
     =
-    op:'startswith' '|' field:string '|' arg:string
+    'startswith' '|' field:identifier '|' arg:string_value
     ;
 
-argument
+any_value
     =
-    | integer
-    | string
+    | integer_value
+    | string_value
     ;
 
-any_but_string
+# any character should be allowed in strings, but " must be escaped
+string_value::StringValue
     =
-    integer
+    '"' @: { /(?s)\s+/ | '\\"' | /[^"]/  } '"'
     ;
 
-string
-    =
-    /[^|()]+/
-    ;
-
-integer::int
+integer_value::int
     =
     /\d+/
     ;
+
+# for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to name  field "myfield|"
+identifier = /[^|)(]+/ ;

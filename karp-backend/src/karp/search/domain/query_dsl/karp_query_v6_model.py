@@ -1,4 +1,4 @@
-#!/usr/bin/env python  # noqa: D100
+#!/usr/bin/env python
 
 # CAVEAT UTILITOR
 #
@@ -9,7 +9,7 @@
 # Any changes you make to it will be overwritten the next time
 # the file is generated.
 
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
 from typing import Any
 from dataclasses import dataclass
@@ -19,126 +19,113 @@ from tatsu.semantics import ModelBuilderSemantics
 
 
 @dataclass(eq=False)
-class ModelBase(Node):  # noqa: D101
+class ModelBase(Node):
     pass
 
 
-class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):  # noqa: D101
-    def __init__(self, context=None, types=None):  # noqa: D107, ANN204
+class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):
+    def __init__(self, context=None, types=None):
         types = [
-            t
-            for t in globals().values()
+            t for t in globals().values()
             if type(t) is type and issubclass(t, ModelBase)
         ] + (types or [])
         super().__init__(context=context, types=types)
 
 
 @dataclass(eq=False)
-class And(ModelBase):  # noqa: D101
+class And(ModelBase):
     exps: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
-class Contains(ModelBase):  # noqa: D101
+class Contains(ModelBase):
+    arg: Any = None
+    field: Any = None
+
+
+@dataclass(eq=False)
+class Endswith(ModelBase):
+    arg: Any = None
+    field: Any = None
+
+
+@dataclass(eq=False)
+class Equals(ModelBase):
+    arg: Any = None
+    field: Any = None
+
+
+@dataclass(eq=False)
+class Exists(ModelBase):
+    field: Any = None
+
+
+@dataclass(eq=False)
+class Freergxp(ModelBase):
+    arg: Any = None
+
+
+@dataclass(eq=False)
+class Freetext(ModelBase):
+    arg: Any = None
+
+
+@dataclass(eq=False)
+class Gt(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
 @dataclass(eq=False)
-class Endswith(ModelBase):  # noqa: D101
+class Gte(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
 @dataclass(eq=False)
-class Equals(ModelBase):  # noqa: D101
+class Lt(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
 @dataclass(eq=False)
-class Exists(ModelBase):  # noqa: D101
-    field: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Freergxp(ModelBase):  # noqa: D101
-    arg: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class FreetextAnyButString(ModelBase):  # noqa: D101
-    arg: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class FreetextString(ModelBase):  # noqa: D101
-    arg: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Gt(ModelBase):  # noqa: D101
+class Lte(ModelBase):
     arg: Any = None
     field: Any = None
     op: Any = None
 
 
 @dataclass(eq=False)
-class Gte(ModelBase):  # noqa: D101
-    arg: Any = None
+class Missing(ModelBase):
     field: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
-class Lt(ModelBase):  # noqa: D101
-    arg: Any = None
-    field: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Lte(ModelBase):  # noqa: D101
-    arg: Any = None
-    field: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Missing(ModelBase):  # noqa: D101
-    field: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Not(ModelBase):  # noqa: D101
+class Not(ModelBase):
     exps: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
-class Or(ModelBase):  # noqa: D101
+class Or(ModelBase):
     exps: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
-class Regexp(ModelBase):  # noqa: D101
+class Regexp(ModelBase):
     arg: Any = None
     field: Any = None
-    op: Any = None
 
 
 @dataclass(eq=False)
-class Startswith(ModelBase):  # noqa: D101
+class Startswith(ModelBase):
     arg: Any = None
     field: Any = None
-    op: Any = None
+
+
+@dataclass(eq=False)
+class StringValue(ModelBase):
+    pass
+
