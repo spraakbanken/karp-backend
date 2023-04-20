@@ -121,9 +121,10 @@ any_value
     | string_value
     ;
 
-string_value
+# any character should be allowed in strings, but " must be escaped
+string_value::StringValue
     =
-    /[^|()]+/
+    '"' @: { /(?s)\s+/ | '\\"' | /[^"]/  } '"'
     ;
 
 integer_value::int
@@ -131,5 +132,5 @@ integer_value::int
     /\d+/
     ;
 
-# for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to namea  field "myfield|"
+# for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to name  field "myfield|"
 identifier = /[^.|)(]+/ ;

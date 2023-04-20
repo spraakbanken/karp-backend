@@ -124,3 +124,8 @@ class Startswith(ModelBase):
     arg: Any = None
     field: Any = None
 
+
+@dataclass(eq=False)
+class StringValue(ModelBase):
+    pass
+

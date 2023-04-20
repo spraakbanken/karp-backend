@@ -398,13 +398,28 @@ class KarpQueryV6Parser(Parser):
                 self._string_value_()
             self._error(
                 'expecting one of: '
-                '<integer_value> <string_value> [^|()]+'
-                '\\d+'
+                '\'"\' <integer_value> <string_value> \\d+'
             )
 
-    @tatsumasu()
+    @tatsumasu('StringValue')
     def _string_value_(self):  # noqa
-        self._pattern('[^|()]+')
+        self._token('"')
+
+        def block1():
+            with self._choice():
+                with self._option():
+                    self._pattern('(?s)\\s+')
+                with self._option():
+                    self._token('\\"')
+                with self._option():
+                    self._pattern('[^"]')
+                self._error(
+                    'expecting one of: '
+                    '\'\\\\"\' (?s)\\s+ [^"]'
+                )
+        self._closure(block1)
+        self.name_last_node('@')
+        self._token('"')
 
     @tatsumasu('int')
     def _integer_value_(self):  # noqa
