@@ -26,7 +26,8 @@ class ModelBase(Node):
 class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):
     def __init__(self, context=None, types=None):
         types = [
-            t for t in globals().values()
+            t
+            for t in globals().values()
             if type(t) is type and issubclass(t, ModelBase)
         ] + (types or [])
         super().__init__(context=context, types=types)
@@ -128,4 +129,3 @@ class Startswith(ModelBase):
 @dataclass(eq=False)
 class StringValue(ModelBase):
     pass
-

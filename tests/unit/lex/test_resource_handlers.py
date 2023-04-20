@@ -109,7 +109,7 @@ class TestDeleteResource:
             lex_ctx.command_bus.dispatch(
                 factories.DeleteResourceFactory.build(
                     resourceId="non-existent",
-                #    version=1,
+                    #    version=1,
                 )
             )
 
@@ -125,7 +125,7 @@ class TestDeleteResource:
         lex_ctx.command_bus.dispatch(
             factories.DeleteResourceFactory.build(
                 id=cmd.id,
-        #        version=1,
+                #        version=1,
             )
         )
         resource_uow = lex_ctx.container.get(ResourceUnitOfWork)  # type: ignore [type-abstract]

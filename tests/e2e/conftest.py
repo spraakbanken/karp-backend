@@ -101,12 +101,12 @@ def create_and_publish_resource(
     command_bus = client.app.state.app_context.container.get(CommandBus)
 
     entry_repo = command_bus.dispatch(
-            commands.CreateEntryRepository(
-                name=resource_id,
-                config=resource_config,
-                user="",
-                message="",
-            )
+        commands.CreateEntryRepository(
+            name=resource_id,
+            config=resource_config,
+            user="",
+            message="",
+        )
     )
 
     create_resource = commands.CreateResource(
@@ -115,15 +115,13 @@ def create_and_publish_resource(
         name=resource_config.pop("resource_name"),
         config=resource_config,
         message=f"{resource_id} added",
-        entryRepoId=entry_repo.entity_id
+        entryRepoId=entry_repo.entity_id,
     )
 
     command_bus.dispatch(create_resource)
 
     publish_resource = commands.PublishResource(
-        user="",
-        resourceId=resource_id,
-        version=1
+        user="", resourceId=resource_id, version=1
     )
 
     command_bus.dispatch(publish_resource)

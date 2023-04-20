@@ -3,7 +3,9 @@ import pytest  # noqa: I001
 import elasticsearch_dsl as es_dsl
 
 from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
-from karp.search.domain.query_dsl.karp_query_v6_model import KarpQueryV6ModelBuilderSemantics
+from karp.search.domain.query_dsl.karp_query_v6_model import (
+    KarpQueryV6ModelBuilderSemantics,
+)
 from karp.search_infrastructure.queries.es6_search_service import EsQueryBuilder
 
 
@@ -13,7 +15,7 @@ def parser() -> KarpQueryV6Parser:
 
 
 def test_my_test(parser):
-    result = parser.parse('exists|test')
+    result = parser.parse("exists|test")
     EsQueryBuilder().walk(result)
     assert True
 
@@ -21,7 +23,7 @@ def test_my_test(parser):
 @pytest.mark.parametrize(
     "q,expected",
     [
-        ('exists|test', es_dsl.Q("exists", field="test")),
+        ("exists|test", es_dsl.Q("exists", field="test")),
         ('freetext|"hej"', es_dsl.Q("multi_match", query="hej", fuzziness=1)),
         (
             'freergxp|"1i.*2"',
@@ -32,7 +34,7 @@ def test_my_test(parser):
         ('endswith|pos|"nn"', es_dsl.Q("regexp", pos=".*nn")),
         ('contains|pos|"nn"', es_dsl.Q("regexp", pos=".*nn.*")),
         ('gt|val|"lok"', es_dsl.Q("range", val={"gt": "lok"})),
-        ('gte|val|2', es_dsl.Q("range", val={"gte": 2})),
+        ("gte|val|2", es_dsl.Q("range", val={"gte": 2})),
         ('lt|val|"lok"', es_dsl.Q("range", val={"lt": "lok"})),
         ('lte|val|"lok"', es_dsl.Q("range", val={"lte": "lok"})),
         ('equals|pos|"vb"', es_dsl.Q("match", pos={"query": "vb", "operator": "and"})),
@@ -62,26 +64,39 @@ def test_my_test(parser):
         ),
         (
             'equals|baseform|"t|est"',
-            es_dsl.Q("match", baseform={"query": "t|est", "operator": "and"})),
+            es_dsl.Q("match", baseform={"query": "t|est", "operator": "and"}),
+        ),
         (
-                'equals|baseform|"|test"',
-                es_dsl.Q("match", baseform={"query": "|test", "operator": "and"})),
+            'equals|baseform|"|test"',
+            es_dsl.Q("match", baseform={"query": "|test", "operator": "and"}),
+        ),
         (
-                'equals|baseform|"test|"',
-                es_dsl.Q("match", baseform={"query": "test|", "operator": "and"})),
+            'equals|baseform|"test|"',
+            es_dsl.Q("match", baseform={"query": "test|", "operator": "and"}),
+        ),
         (
             'and(equals|ortografi|"ständigt förknippad")',
-            es_dsl.Q("match", ortografi={"query": "ständigt förknippad", "operator": "and"})),
+            es_dsl.Q(
+                "match", ortografi={"query": "ständigt förknippad", "operator": "and"}
+            ),
+        ),
         (
             'and(equals|ortografi|"(ständigt) förknippad")',
-            es_dsl.Q("match", ortografi={"query": "(ständigt) förknippad", "operator": "and"})),
+            es_dsl.Q(
+                "match", ortografi={"query": "(ständigt) förknippad", "operator": "and"}
+            ),
+        ),
         (
             'and(equals|ortografi|"(ständigt förknippad")',
-            es_dsl.Q("match", ortografi={"query": "(ständigt förknippad", "operator": "and"})),
+            es_dsl.Q(
+                "match", ortografi={"query": "(ständigt förknippad", "operator": "and"}
+            ),
+        ),
         # escaped quotes
         (
             'and(equals|baseform|"att \\"vara\\"")',
-            es_dsl.Q("match", baseform={"query": 'att "vara"', "operator": "and"})),
+            es_dsl.Q("match", baseform={"query": 'att "vara"', "operator": "and"}),
+        ),
     ],
 )
 def test_es_query(parser, q, expected):  # noqa: ANN201

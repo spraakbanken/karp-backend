@@ -235,7 +235,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
     SqlUnitOfWork,
     repositories.EntryUnitOfWork,
 ):
-
     def __init__(  # noqa: D107, ANN204
         self,
         session_factory: sessionmaker,
@@ -281,7 +280,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
 
 
 class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):  # noqa: D101
-
     def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003, D107
         super().__init__(*args, **kwargs)
         assert hasattr(self, "__enter__")  # noqa: S101
@@ -296,7 +294,6 @@ SqlEntryUowType = TypeVar("SqlEntryUowType", bound=SqlEntryUnitOfWork)
 
 
 class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
-
     @injector.inject
     def __init__(  # noqa: D107, ANN204
         self,
@@ -336,6 +333,5 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
 
 
 class SqlEntryUowV2Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV2]):  # noqa: D101
-
     def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV2:  # noqa: ANN003
         return SqlEntryUnitOfWorkV2(**kwargs)

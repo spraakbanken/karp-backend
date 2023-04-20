@@ -96,7 +96,7 @@ class PublishResource(EntityOrResourceIdMixin, Command):  # noqa: D101
 
 
 class DeleteResource(EntityOrResourceIdMixin, Command):  # noqa: D101
-#    version: int
+    #    version: int
     cmdtype: Literal["delete_resource"] = "delete_resource"
 
 

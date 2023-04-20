@@ -19,7 +19,9 @@ from karp.search.domain import errors
 from karp.lex.domain.entities.entry import Entry  # noqa: F401
 from karp.lex.domain.entities.resource import Resource  # noqa: F401
 from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
-from karp.search.domain.query_dsl.karp_query_v6_model import KarpQueryV6ModelBuilderSemantics
+from karp.search.domain.query_dsl.karp_query_v6_model import (
+    KarpQueryV6ModelBuilderSemantics,
+)
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 from .es_query import EsQuery
 
@@ -111,9 +113,7 @@ class Es6SearchService(search.SearchService):  # noqa: D101
         self.es: elasticsearch.Elasticsearch = es
         self.mapping_repo = mapping_repo
         self.query_builder = EsQueryBuilder()
-        self.parser = KarpQueryV6Parser(
-            semantics=KarpQueryV6ModelBuilderSemantics()
-        )
+        self.parser = KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
 
     def _format_result(self, resource_ids, response):  # noqa: ANN202
         logger.debug("_format_result called", extra={"resource_ids": resource_ids})

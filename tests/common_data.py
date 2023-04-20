@@ -22,7 +22,7 @@ PLACES = [
         "area": 6312,
         "density": 6312,
         "municipality": [1],
-        "larger_place": 7  # Alhamn
+        "larger_place": 7,  # Alhamn
     },
     {
         "code": 2,
@@ -39,7 +39,7 @@ PLACES = [
         "area": 50000,
         "density": 7,
         "municipality": [2, 3],
-        "larger_place": 8  # "Bjurvik"
+        "larger_place": 8,  # "Bjurvik"
     },
     {
         "code": 4,
@@ -47,7 +47,7 @@ PLACES = [
         "population": 4132,
         "area": 50000,
         "municipality": [2, 3],
-        "larger_place": 3  # Botten test
+        "larger_place": 3,  # Botten test
     },
     {"code": 5, "name": "Rutvik", "area": 50000, "municipality": [2, 3]},
     {
@@ -76,7 +76,7 @@ PLACES = [
         "population": 6212,
         "density": 12,
         "municipality": [2, 3],
-        "larger_place": 6  # Alvik
+        "larger_place": 6,  # Alvik
     },
     {
         "code": 9,

@@ -16,9 +16,7 @@ class CreatingEntryRepo(CommandHandler[commands.CreateEntryRepository]):
     ):
         self._entry_repo_uow = entry_repo_uow
 
-    def execute(
-        self, command: commands.CreateEntryRepository
-    ) -> EntryUnitOfWork:
+    def execute(self, command: commands.CreateEntryRepository) -> EntryUnitOfWork:
         entry_repo, events = self._entry_repo_uow.factory.create(
             id=command.id,
             name=command.name,

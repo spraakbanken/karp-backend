@@ -27,15 +27,12 @@ def sql_entry_uow_v2_creator(
 
 
 class TestSqlEntryUowV2:
-
     def test_repo_table_name(  # noqa: ANN201
         self,
         sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
         example_uow: lex.CreateEntryRepository,
     ):
-        entry_uow, _ = sql_entry_uow_v2_creator(
-            **example_uow.dict(exclude={"cmdtype"})
-        )
+        entry_uow, _ = sql_entry_uow_v2_creator(**example_uow.dict(exclude={"cmdtype"}))
         random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str
         with entry_uow as uw:
             assert (

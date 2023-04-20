@@ -200,7 +200,7 @@ def test_contains(  # noqa: ANN201
     value,
     app_context,
 ):
-    query = f"/query/places?q=contains|{field}|\"{value}\""
+    query = f'/query/places?q=contains|{field}|"{value}"'
     entry_views = app_context.container.get(EntryViews)  # type: ignore [misc]
     expected_result = []
     real_field = field.split(".raw")[0]

@@ -52,9 +52,7 @@ def create(  # noqa: ANN201, D103
         if not entry_repo_id:
             query = inject_from_ctx(ListEntryRepos, ctx)  # type: ignore [misc]
             entry_repos = list(query.query())
-            entry_repo = choose_from(
-                entry_repos, lambda x: f"{x.name}"
-            )
+            entry_repo = choose_from(entry_repos, lambda x: f"{x.name}")
             entry_repo_uuid = entry_repo.entity_id
         else:
             entry_repo_uuid = UniqueIdStr.validate(entry_repo_id)
@@ -199,14 +197,14 @@ def show(  # noqa: ANN201, D103
 def delete(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
-#    version: int,
+    #    version: int,
     user: Optional[str] = typer.Option(None),
     message: Optional[str] = typer.Option(None),
 ):
     bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
     cmd = lex_commands.DeleteResource(
         resourceId=resource_id,
- #       version=version,
+        #       version=version,
         user=user or "local admin",
         message=message or "resource deleted",
     )

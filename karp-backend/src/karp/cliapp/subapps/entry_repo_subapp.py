@@ -41,10 +41,7 @@ def list(ctx: typer.Context):  # noqa: ANN201, D103, A001
     query = inject_from_ctx(ListEntryRepos, ctx)  # type: ignore [misc]
     typer.echo(
         tabulate(
-            [
-                [entry_repo.name, entry_repo.entity_id]
-                for entry_repo in query.query()
-            ],
+            [[entry_repo.name, entry_repo.entity_id] for entry_repo in query.query()],
             headers=["name", "id"],
         )
     )
