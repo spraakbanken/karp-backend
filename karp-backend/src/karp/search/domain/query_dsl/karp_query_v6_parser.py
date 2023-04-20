@@ -161,7 +161,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._string_()
+        self._string_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -176,7 +176,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._string_()
+        self._string_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -215,7 +215,7 @@ class KarpQueryV6Parser(Parser):
     def _freergxp_(self):  # noqa
         self._token('freergxp')
         self._token('|')
-        self._string_()
+        self._string_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -227,7 +227,7 @@ class KarpQueryV6Parser(Parser):
     def _freetext_(self):  # noqa
         self._token('freetext')
         self._token('|')
-        self._string_()
+        self._string_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -366,7 +366,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._string_()
+        self._string_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -381,7 +381,7 @@ class KarpQueryV6Parser(Parser):
         self._identifier_()
         self.name_last_node('field')
         self._token('|')
-        self._string_()
+        self._string_value_()
         self.name_last_node('arg')
 
         self._define(
@@ -393,25 +393,26 @@ class KarpQueryV6Parser(Parser):
     def _any_value_(self):  # noqa
         with self._choice():
             with self._option():
-                self._integer_()
+                self._integer_value_()
             with self._option():
-                self._string_()
+                self._string_value_()
             self._error(
                 'expecting one of: '
-                '<integer> <string> [^|()]+ \\d+'
+                '<integer_value> <string_value> [^|()]+'
+                '\\d+'
             )
 
     @tatsumasu()
-    def _string_(self):  # noqa
+    def _string_value_(self):  # noqa
         self._pattern('[^|()]+')
+
+    @tatsumasu('int')
+    def _integer_value_(self):  # noqa
+        self._pattern('\\d+')
 
     @tatsumasu()
     def _identifier_(self):  # noqa
         self._pattern('[^.|)(]+')
-
-    @tatsumasu('int')
-    def _integer_(self):  # noqa
-        self._pattern('\\d+')
 
 
 class KarpQueryV6Semantics:
@@ -478,13 +479,13 @@ class KarpQueryV6Semantics:
     def any_value(self, ast):  # noqa
         return ast
 
-    def string(self, ast):  # noqa
+    def string_value(self, ast):  # noqa
+        return ast
+
+    def integer_value(self, ast):  # noqa
         return ast
 
     def identifier(self, ast):  # noqa
-        return ast
-
-    def integer(self, ast):  # noqa
         return ast
 
 

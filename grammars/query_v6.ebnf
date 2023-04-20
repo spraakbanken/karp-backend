@@ -42,12 +42,12 @@ and::And
 
 contains::Contains
     =
-    'contains' '|' field:identifier '|' arg:string
+    'contains' '|' field:identifier '|' arg:string_value
     ;
 
 endswith::Endswith
     =
-    'endswith' '|' field:identifier '|' arg:string
+    'endswith' '|' field:identifier '|' arg:string_value
     ;
 
 equals::Equals
@@ -62,12 +62,12 @@ exists::Exists
 
 freergxp::Freergxp
     =
-    'freergxp' '|' arg:string
+    'freergxp' '|' arg:string_value
     ;
 
 freetext::Freetext
     =
-    'freetext' '|' arg:string
+    'freetext' '|' arg:string_value
     ;
 
 gt::Gt
@@ -107,29 +107,29 @@ or::Or
 
 regexp::Regexp
     =
-    'regexp' '|' field:identifier '|' arg:string
+    'regexp' '|' field:identifier '|' arg:string_value
     ;
 
 startswith::Startswith
     =
-    'startswith' '|' field:identifier '|' arg:string
+    'startswith' '|' field:identifier '|' arg:string_value
     ;
 
 any_value
     =
-    | integer
-    | string
+    | integer_value
+    | string_value
     ;
 
-string
+string_value
     =
     /[^|()]+/
     ;
 
-# for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to namea  field "myfield|"
-identifier = /[^.|)(]+/ ;
-
-integer::int
+integer_value::int
     =
     /\d+/
     ;
+
+# for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to namea  field "myfield|"
+identifier = /[^.|)(]+/ ;
