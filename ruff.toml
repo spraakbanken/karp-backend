@@ -1,10 +1,8 @@
 select = [
   "A",
-  "ANN",
   "B",
   "BLE",
   "C4",
-  "D",
   "E",
   "I",
   "RUF",
@@ -18,6 +16,10 @@ line-length = 97
 
 # Avoid trying to fix flake8-bugbear (`B`) violations.
 unfixable = ["B"]
+
+exclude = [
+  "query_dsl",
+]
 
 # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
 [per-file-ignores]
