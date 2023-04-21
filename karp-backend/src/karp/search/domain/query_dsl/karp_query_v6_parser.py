@@ -403,7 +403,7 @@ class KarpQueryV6Parser(Parser):
                 '\\d+'
             )
 
-    @tatsumasu()
+    @tatsumasu('StringValue')
     def _string_value_(self):  # noqa
         with self._choice():
             with self._option():
@@ -421,7 +421,7 @@ class KarpQueryV6Parser(Parser):
         self._pattern('[^|)("]+')
         self.name_last_node('@')
 
-    @tatsumasu('StringValue')
+    @tatsumasu('QuotedStringValue')
     def _quoted_string_value_(self):  # noqa
         self._token('"')
 

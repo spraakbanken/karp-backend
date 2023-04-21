@@ -129,3 +129,8 @@ class Startswith(ModelBase):
 class StringValue(ModelBase):
     pass
 
+
+@dataclass(eq=False)
+class QuotedStringValue(ModelBase):
+    pass
+

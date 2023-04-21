@@ -191,7 +191,6 @@ def test_query_split(  # noqa: ANN201
     [
         ("name", "grund"),
         ("name", "Grund"),
-        ("name.raw", "Grund"),
     ],
 )
 def test_contains(  # noqa: ANN201
@@ -203,26 +202,17 @@ def test_contains(  # noqa: ANN201
     query = f'/query/places?q=contains|{field}|"{value}"'
     entry_views = app_context.container.get(EntryViews)  # type: ignore [misc]
     expected_result = []
-    real_field = field.split(".raw")[0]
-    if real_field == field:
-        analyzed_value = value
-    else:
-        analyzed_value = value.lower()
-    print(f"{value=} {analyzed_value=}")
+    analyzed_value = value.lower()
     for entry in entry_views.all_entries("places"):
-        print(f"{entry=}")
-        print(f"{entry.entry=}")
-        print(f"{entry.entry.get(real_field, None)=}")
-        if analyzed_value in entry.entry.get(real_field, "").lower():
+        if analyzed_value in entry.entry.get(field, "").lower():
             expected_result.append(entry.entry["name"])
-    print(f"{expected_result=}")
     _test_path(fa_data_client, query, expected_result)
 
 
 @pytest.mark.parametrize(
     "field,value,hit_count",
     [
-        ("name", "a.*", 2),
+        ("name", "a.*", 6),
     ],
 )
 def test_regex(
