@@ -57,7 +57,7 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
         )
 
     def walk__string_value(self, node):
-        return "".join([part.replace("\\", "") for part in node.ast])
+        return "".join([part.replace('\\"', '"') for part in node.ast])
 
     def walk__exists(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("exists", field=self.walk(node.field))

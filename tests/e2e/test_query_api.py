@@ -217,3 +217,24 @@ def test_contains(  # noqa: ANN201
             expected_result.append(entry.entry["name"])
     print(f"{expected_result=}")
     _test_path(fa_data_client, query, expected_result)
+
+
+@pytest.mark.parametrize(
+    "field,value,hit_count",
+    [
+        ("name", "a.*", 2),
+    ],
+)
+def test_regex(
+    fa_data_client,
+    field: str,
+    value,
+    hit_count,
+    app_context,
+):
+    query = f'/query/places?q=regexp|{field}|"{value}"'
+    response = fa_data_client.get(query)
+    response_data = response.json()
+    assert len(response_data["hits"]) == hit_count
+    for hit in response_data["hits"]:
+        print(hit["entry"]["name"])
