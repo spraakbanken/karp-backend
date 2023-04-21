@@ -121,8 +121,15 @@ any_value
     | string_value
     ;
 
+string_value =
+    | unquoted_string_value
+    | quoted_string_value
+    ;
+
+unquoted_string_value = @: /[^|)("]+/ ;
+
 # any character should be allowed in strings, but " must be escaped
-string_value::StringValue
+quoted_string_value::StringValue
     =
     '"' @: { /(?s)\s+/ | '\\"' | /[^"]/  } '"'
     ;

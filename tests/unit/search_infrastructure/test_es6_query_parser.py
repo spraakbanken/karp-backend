@@ -14,12 +14,6 @@ def parser() -> KarpQueryV6Parser:
     return KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
 
 
-def test_my_test(parser):
-    result = parser.parse("exists|test")
-    EsQueryBuilder().walk(result)
-    assert True
-
-
 @pytest.mark.parametrize(
     "q,expected",
     [
@@ -96,6 +90,11 @@ def test_my_test(parser):
         (
             'and(equals|baseform|"att \\"vara\\"")',
             es_dsl.Q("match", baseform={"query": 'att "vara"', "operator": "and"}),
+        ),
+        # no quotes work
+        (
+            'and(equals|baseform|noquotes)',
+            es_dsl.Q("match", baseform={"query": "noquotes", "operator": "and"}),
         ),
     ],
 )
