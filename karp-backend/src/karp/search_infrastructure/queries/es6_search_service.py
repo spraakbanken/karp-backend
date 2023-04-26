@@ -72,7 +72,7 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
         )
 
     def walk__freetext(self, node):  # noqa: ANN201, D102
-        return es_dsl.Q("multi_match", query=self.walk(node.arg), fuzziness=1)
+        return es_dsl.Q("multi_match", query=self.walk(node.arg))
 
     def walk_range(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
