@@ -1,0 +1,49 @@
+{
+    "resource_id": "hellqvist",
+    "resource_name": "hellqvist",
+    "fields": {
+        "etymology": {
+            "type": "object",
+            "fields": {
+                "language": {
+                    "type": "string"
+                },
+                "form": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "collection": true
+        },
+        "lemgram": {
+            "type": "string",
+            "required": true
+        },
+        "baseform": {
+            "type": "string",
+            "required": true,
+            "collection": true
+        },
+        "partOfSpeech": {
+            "type": "string",
+            "collection": true
+        },
+        "definition": {
+            "type": "string"
+        },
+        "compare": {
+            "type": "string",
+            "collection": true
+        },
+        "facsimileID": {
+            "type": "string"
+        }
+    },
+    "sort": "lemgram",
+    "protected": {
+        "read": false
+    },
+    "id": "lemgram"
+}

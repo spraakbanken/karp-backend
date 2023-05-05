@@ -1,0 +1,42 @@
+{
+    "resource_id": "stunda",
+    "resource_name": "Stunda",
+    "fields": {
+        "eng": {
+            "type": "object",
+            "fields": {
+                "lemma": {
+                    "type": "string"	
+                },
+                "inflection": {
+                    "type": "string",
+					"collection" : true
+                }
+            }
+        },
+		
+        "swe": {
+            "type": "object",
+            "fields": {
+                "lemma": {
+                    "type": "string"
+                },
+                "inflection": {
+                    "type": "string",
+					"collection" : true
+                }
+            }
+           
+        },
+		
+		"pos" : {"type" : "string"},
+		"status" : {"type" : "string"},
+		"src" : {"type" : "string"},
+		"row" : {"type" : "string"},
+		"comment" : {"type" : "string"},
+		"synonyms" : {
+			"type" : "string",
+			"collection" : true},
+		"definition" : {"type" : "string"}
+	}
+}	

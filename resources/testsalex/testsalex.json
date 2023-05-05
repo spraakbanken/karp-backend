@@ -1,0 +1,768 @@
+{
+    "resource_id": "testsalex",
+    "resource_name": "Svenska Akademiens lexikaliska databas",
+    "fields": {
+        "id": {
+            "type": "string"
+        },
+        "ortografi": {
+            "type": "string",
+            "required": true
+        },
+        "ordklass": {
+            "type": "string"
+        },
+        "böjningsklass": {
+            "type": "string"
+        },
+        "kommentar": {
+            "type": "string"
+        },
+        "SOLemman": {
+            "type": "object",
+            "collection": true,
+            "fields": {
+                "ortografi": {
+                    "type": "string",
+                    "required": true
+                },
+                "homografNr": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "visas": {
+                    "type": "boolean"
+                },
+                "l_nr": {
+                    "type": "string"
+                },
+                "lemmatyp": {
+                    "type": "string"
+                },
+                "stam": {
+                    "type": "string"
+                },
+                "böjning": {
+                    "type": "string"
+                },
+                "ordbildning": {
+                    "type": "string"
+                },
+                "analys": {
+                    "type": "string"
+                },
+                "sorteringsform": {
+                    "type": "string"
+                },
+                "kommentar": {
+                    "type": "string"
+                },
+                "tagg": {
+                    "type": "string"
+                },
+                "ursprung": {
+                    "type": "string"
+                },
+                "uttal": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "visas": {
+                            "type": "boolean"
+                        },
+                        "typ": {
+                            "type": "string"
+                        },
+                        "lemmaMedTryckangivelse": {
+                            "type": "string"
+                        },
+                        "fonetikparentes": {
+                            "type": "string"
+                        },
+                        "fonetikkommentar": {
+                            "type": "string"
+                        },
+                        "filnamnInlästUttal": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "s_nr": {
+                    "type": "string"
+                },
+                "lexem": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "kc_nr": {
+                            "type": "string"
+                        },
+                        "huvudkommentar": {
+                            "type": "string"
+                        },
+                        "formkommentar": {
+                            "type": "string"
+                        },
+                        "definition": {
+                            "type": "string"
+                        },
+                        "definitionstillägg": {
+                            "type": "string"
+                        },
+                        "slutkommentar": {
+                            "type": "string"
+                        },
+                        "ämnesområden": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "ämne": {
+                                    "type": "string"
+                                },
+                                "specifikt": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "hänvisningar": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "kc_nr": {
+                                    "type": "string"
+                                },
+                                "l_nr": {
+                                    "type": "string"
+                                },
+                                "typ": {
+                                    "type": "string"
+                                },
+                                "hänvisning": {
+                                    "type": "string"
+                                },
+                                "kommentar": {
+                                    "type": "string"
+                                },
+                                "visas": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
+                        "morfex": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "ortografi": {
+                                    "type": "string"
+                                },
+                                "hänvisning": {
+                                    "type": "string"
+                                },
+                                "kommentar": {
+                                    "type": "string"
+                                },
+                                "visas": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
+                        "syntex": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "typ": {
+                                    "type": "string"
+                                },
+                                "text": {
+                                    "type": "string"
+                                },
+                                "visas": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
+                        "valenser": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "vl_nr": {
+                                    "type": "string"
+                                },
+                                "typ": {
+                                    "type": "string"
+                                },
+                                "prevalensDef": {
+                                    "type": "string"
+                                },
+                                "valens": {
+                                    "type": "string"
+                                },
+                                "valensDef": {
+                                    "type": "string"
+                                },
+                                "kommentar": {
+                                    "type": "string"
+                                },
+                                "visas": {
+                                    "type": "boolean"
+                                }
+                            }
+                        },
+                        "visas": {
+                            "type": "boolean"
+                        },
+                        "x_nr": {
+                            "type": "string"
+                        },
+                        "etymologier": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "förstaBelägg": {
+                                    "type": "string"
+                                },
+                                "källa": {
+                                    "type": "string"
+                                },
+                                "beskrivning": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "integer"
+                                },
+                                "kommentar": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "cykler": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "kc_nr": {
+                                    "type": "string"
+                                },
+                                "huvudkommentar": {
+                                    "type": "string"
+                                },
+                                "formkommentar": {
+                                    "type": "string"
+                                },
+                                "definition": {
+                                    "type": "string"
+                                },
+                                "definitionstillägg": {
+                                    "type": "string"
+                                },
+                                "slutkommentar": {
+                                    "type": "string"
+                                },
+                                "ämnesområden": {
+                                    "type": "object",
+                                    "collection": true,
+                                    "fields": {
+                                        "ämne": {
+                                            "type": "string"
+                                        },
+                                        "specifikt": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "hänvisningar": {
+                                    "type": "object",
+                                    "collection": true,
+                                    "fields": {
+                                        "kc_nr": {
+                                            "type": "string"
+                                        },
+                                        "l_nr": {
+                                            "type": "string"
+                                        },
+                                        "typ": {
+                                            "type": "string"
+                                        },
+                                        "hänvisning": {
+                                            "type": "string"
+                                        },
+                                        "kommentar": {
+                                            "type": "string"
+                                        },
+                                        "visas": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                },
+                                "morfex": {
+                                    "type": "object",
+                                    "collection": true,
+                                    "fields": {
+                                        "ortografi": {
+                                            "type": "string"
+                                        },
+                                        "hänvisning": {
+                                            "type": "string"
+                                        },
+                                        "kommentar": {
+                                            "type": "string"
+                                        },
+                                        "visas": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                },
+                                "syntex": {
+                                    "type": "object",
+                                    "collection": true,
+                                    "fields": {
+                                        "typ": {
+                                            "type": "string"
+                                        },
+                                        "text": {
+                                            "type": "string"
+                                        },
+                                        "visas": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                },
+                                "valenser": {
+                                    "type": "object",
+                                    "collection": true,
+                                    "fields": {
+                                        "vl_nr": {
+                                            "type": "string"
+                                        },
+                                        "typ": {
+                                            "type": "string"
+                                        },
+                                        "prevalensDef": {
+                                            "type": "string"
+                                        },
+                                        "valens": {
+                                            "type": "string"
+                                        },
+                                        "valensDef": {
+                                            "type": "string"
+                                        },
+                                        "kommentar": {
+                                            "type": "string"
+                                        },
+                                        "visas": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                },
+                                "visas": {
+                                    "type": "boolean"
+                                },
+                                "typ": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "idiom": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "i_nr": {
+                                    "type": "string"
+                                },
+                                "hänvisning": {
+                                    "type": "string"
+                                },
+                                "idiom": {
+                                    "type": "string"
+                                },
+                                "formkommentar": {
+                                    "type": "string"
+                                },
+                                "alternativinledare": {
+                                    "type": "string"
+                                },
+                                "alternativform": {
+                                    "type": "string"
+                                },
+                                "idiombetydelser": {
+                                    "type": "object",
+                                    "collection": true,
+                                    "fields": {
+                                        "ix_nr": {
+                                            "type": "string"
+                                        },
+                                        "definitionsinledare": {
+                                            "type": "string"
+                                        },
+                                        "huvudkommentar": {
+                                            "type": "string"
+                                        },
+                                        "definition": {
+                                            "type": "string"
+                                        },
+                                        "definitionstillägg": {
+                                            "type": "string"
+                                        },
+                                        "exempel": {
+                                            "type": "string"
+                                        },
+                                        "visas": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                },
+                                "visas": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                },
+                "sentenserOchStilrutor": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "typ": {
+                            "type": "string"
+                        },
+                        "text": {
+                            "type": "string"
+                        },
+                        "origid": {
+                            "type": "string"
+                        },
+                        "origOrd": {
+                            "type": "string"
+                        },
+                        "visas": {
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "lemmaReferenser": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "ortografi": {
+                            "type": "string",
+                            "required": true
+                        },
+                        "homografNr": {
+                            "type": "integer"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "visas": {
+                            "type": "boolean"
+                        },
+                        "l_nr": {
+                            "type": "string"
+                        },
+                        "lemmatyp": {
+                            "type": "string"
+                        },
+                        "lemmaundertyp": {
+                            "type": "string"
+                        },
+                        "stam": {
+                            "type": "string"
+                        },
+                        "böjning": {
+                            "type": "string"
+                        },
+                        "ordbildning": {
+                            "type": "string"
+                        },
+                        "analys": {
+                            "type": "string"
+                        },
+                        "sorteringsform": {
+                            "type": "string"
+                        },
+                        "kommentar": {
+                            "type": "string"
+                        },
+                        "tagg": {
+                            "type": "string"
+                        },
+                        "ursprung": {
+                            "type": "string"
+                        },
+                        "relationer": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "l_nr": {
+                                    "type": "string"
+                                },
+                                "id_add": {
+                                    "type": "integer"
+                                },
+                                "typ": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "uttal": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "visas": {
+                                    "type": "boolean"
+                                },
+                                "typ": {
+                                    "type": "string"
+                                },
+                                "lemmaMedTryckangivelse": {
+                                    "type": "string"
+                                },
+                                "fonetikparentes": {
+                                    "type": "string"
+                                },
+                                "fonetikkommentar": {
+                                    "type": "string"
+                                },
+                                "filnamnInlästUttal": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "relationer": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "l_nr": {
+                            "type": "string"
+                        },
+                        "id_add": {
+                            "type": "integer"
+                        },
+                        "typ": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "artikelkommentar": {
+                    "type": "string"
+                }
+            }
+        },
+        "SAOLLemman": {
+            "type": "object",
+            "collection": true,
+            "fields": {
+                "ortografi": {
+                    "type": "string",
+                    "required": true
+                },
+                "homografNr": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "visas": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lemmatyp": {
+                    "type": "string"
+                },
+                "hänvisningar": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "typ": {
+                            "type": "string"
+                        },
+                        "tillId": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "ursprung": {
+                    "type": "string"
+                },
+                "saolKlass": {
+                    "type": "string"
+                },
+                "analys": {
+                    "type": "string"
+                },
+                "böjning": {
+                    "type": "string"
+                },
+                "fonetik": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "form": {
+                            "type": "string"
+                        },
+                        "kommentar": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "alt": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "grundform": {
+                            "type": "string"
+                        },
+                        "homografNr": {
+                            "type": "integer"
+                        },
+                        "analys": {
+                            "type": "string"
+                        },
+                        "typ": {
+                            "type": "string"
+                        },
+                        "fonetik": {
+                            "type": "string"
+                        },
+                        "böjning": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "fack": {
+                    "type": "string",
+                    "collection": true
+                },
+                "lexem": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "id": {
+                            "type": "string"
+                        },
+                        "definition": {
+                            "type": "string"
+                        },
+                        "exempel": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "text": {
+                                    "type": "string"
+                                },
+                                "parafras": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "huvudkommentar": {
+                            "type": "string"
+                        },
+                        "formkommentar": {
+                            "type": "string",
+							"collection": true  
+                        },
+                        "hänvisningar": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "typ": {
+                                    "type": "string"
+                                },
+                                "tillId": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "relation": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "typ": {
+                            "type": "string"
+                        },
+                        "tillId": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "kommentar": {
+                    "type": "string"
+                },
+                "ptv": {
+                    "type": "boolean"
+                },
+                "smdbN": {
+                    "type": "string"
+                },
+                "lemmaReferenser": {
+                    "type": "object",
+                    "collection": true,
+                    "fields": {
+                        "ortografi": {
+                            "type": "string",
+                            "required": true
+                        },
+                        "homografNr": {
+                            "type": "integer"
+                        },
+                        "status": {
+                            "type": "string"
+                        },
+                        "visas": {
+                            "type": "boolean"
+                        },
+                        "id": {
+                            "type": "string"
+                        },
+                        "lemmatyp": {
+                            "type": "string"
+                        },
+                        "hänvisningar": {
+                            "type": "object",
+                            "collection": true,
+                            "fields": {
+                                "typ": {
+                                    "type": "string"
+                                },
+                                "tillId": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "ursprung": {
+                            "type": "string"
+                        },
+                        "saolKlass": {
+                            "type": "string"
+                        },
+                        "analys": {
+                            "type": "string"
+                        },
+                        "böjning": {
+                            "type": "string"
+                        },
+                        "ordklass": {
+                            "type": "string"
+                        },
+                        "böjningsklass": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "sort": "ortografi",
+    "protected": {
+        "read": true
+    },
+    "id": "id"
+}
