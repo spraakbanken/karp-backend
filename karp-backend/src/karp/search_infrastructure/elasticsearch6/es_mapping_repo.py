@@ -92,6 +92,23 @@ class Es6MappingRepository(MappingRepository):  # noqa: D101
         )
         return names
 
+    def delete_from_config(self, resource_id: str) -> None:
+        try:
+            self.es.delete(
+                index=self._config_index,
+                doc_type="configs",
+                id=resource_id,
+                refresh=True,
+            )
+        except elasticsearch.exceptions.ElasticsearchException:
+            logger.exception(
+                "Error deleting from config",
+                extra={
+                    "resource_id": resource_id,
+                    "index_name": self._config_index,
+                },
+            )
+
     def get_index_name(self, resource_id: str) -> str:  # noqa: D102
         try:
             res = self.es.get(

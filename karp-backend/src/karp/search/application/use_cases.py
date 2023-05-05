@@ -88,7 +88,11 @@ class DeletingIndex(  # noqa: D101
     def __call__(  # noqa: D102, ANN204
         self, event: events.ResourceDiscarded, *args, **kwargs  # noqa: ANN002, ANN003
     ):
-        pass
+        print(f"{event.resource_id=}")
+
+        with self.index_uow as uw:
+            uw.repo.delete_index(event.resource_id)
+            uw.commit()
 
 
 class EntryAddedHandler(  # noqa: D101

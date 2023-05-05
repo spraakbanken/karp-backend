@@ -110,8 +110,9 @@ class Lex(injector.Module):  # noqa: D101
     def deleting_resource(  # noqa: D102
         self,
         resource_uow: ResourceUnitOfWork,
+        entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> CommandHandler[commands.DeleteResource]:
-        return DeletingResource(resource_uow)
+        return DeletingResource(resource_uow, entry_repo_uow)
 
     @injector.provider
     def setting_entry_repo_id(  # noqa: D102
