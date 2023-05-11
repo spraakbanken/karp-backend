@@ -37,7 +37,7 @@ def add_entries_to_resource(  # noqa: ANN201, D103
     user: Optional[str] = typer.Option(None),
     message: Optional[str] = typer.Option(None),
 ):
-    bus = inject_from_ctx(CommandBus, ctx)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore[type-abstract]
     user = user or "local admin"
     message = message or "imported through cli"
     entries = tqdm(json_streams.load_from_file(data), desc="Adding", unit=" entries")
@@ -50,7 +50,7 @@ def add_entries_to_resource(  # noqa: ANN201, D103
             message=message,
         )
     else:
-        cmd = lex.AddEntries(
+        cmd = lex.AddEntries(  # type: ignore[assignment]
             resourceId=resource_id,
             entries=entries,
             user=user,
@@ -72,10 +72,10 @@ def import_entries_to_resource(  # noqa: ANN201, D103
     user: Optional[str] = typer.Option(None),
     message: Optional[str] = typer.Option(None),
 ):
-    bus = inject_from_ctx(CommandBus, ctx)
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore[type-abstract]
     user = user or "local admin"
     message = message or "imported through cli"
-    entries = tqdm(json_streams.load_from_file(data), desc="Adding", unit=" entries")
+    entries = tqdm(json_streams.load_from_file(data), desc="Importing", unit=" entries")
     if chunked:
         cmd = lex.ImportEntriesInChunks(
             resourceId=resource_id,
@@ -85,7 +85,7 @@ def import_entries_to_resource(  # noqa: ANN201, D103
             message=message,
         )
     else:
-        cmd = lex.ImportEntries(
+        cmd = lex.ImportEntries(  # type: ignore[assignment]
             resourceId=resource_id,
             entries=entries,
             user=user,
@@ -110,7 +110,7 @@ def export_entries(  # noqa: ANN201, D103
     resource_id: str,
     output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
 ):
-    entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)
+    entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)  # type: ignore[type-abstract]
     all_entries = entry_views.all_entries(resource_id=resource_id)
     logger.debug(
         "exporting entries",
