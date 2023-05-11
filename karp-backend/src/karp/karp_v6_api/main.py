@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 import logging  # noqa: F811
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
+from asgi_matomo import MatomoMiddleware
 
 from karp import main
 from karp.foundation import errors as foundation_errors
@@ -31,7 +32,6 @@ from karp.main.errors import ClientErrorCodes
 from karp.main import modules, config
 from karp.karp_v6_api.routes import router as api_router
 from karp.karp_v6_api import tasks
-from karp.karp_v6_api.contrib import MatomoMiddleware
 
 
 querying_description = """
