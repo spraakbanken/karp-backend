@@ -159,9 +159,11 @@ class DeletingResource(  # noqa: D101
     def __init__(  # noqa: D107
         self,
         resource_uow: repositories.ResourceUnitOfWork,
+        entry_repo_uow: repositories.EntryUowRepositoryUnitOfWork,
         **kwargs,  # noqa: ANN003
     ) -> None:
         super().__init__(resource_uow=resource_uow)
+        self.entry_repo_uow = entry_repo_uow
 
     def execute(self, command: commands.DeleteResource):  # noqa: ANN201, D102
         logger.info("deleting resource", extra={"resource_id": command.resource_id})
@@ -172,9 +174,21 @@ class DeletingResource(  # noqa: D101
                 resource = uow.repo.by_resource_id(command.resource_id)
             if not resource:
                 raise errors.ResourceNotFound(command.resource_id)
+
+            # sends a ResourceDiscarded-event, which via the deleting_index method in the injector.multiprovider
+            #  is instantiated to a DeletingIndex-event with a IndexUnitOfWork attribute (magically instantiated by the provider).
+            # The DeletingIndex event calls delete_index on the IndexUnitOfWork, which deletes the elastic search index of the given resource and also
+            # deletes its corresponding row from the elastic search config.
             events = resource.discard(
                 user=command.user, message=command.message, timestamp=command.timestamp
             )
             uow.repo.save(resource)
+            uow.post_on_commit(events)
+            uow.commit()
+
+        with self.entry_repo_uow as uow:
+            entry_repo = uow.repo.get_by_id(resource.entry_repository_id)
+            events = entry_repo.discard(user=command.user, timestamp=command.timestamp)
+            uow.repo.save(entry_repo)
             uow.post_on_commit(events)
             uow.commit()

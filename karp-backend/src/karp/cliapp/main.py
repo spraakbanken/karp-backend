@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def create_app():  # noqa: ANN201, D103
-    app = typer.Typer(help="Karp CLI")
+    app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown")
     app_context = bootstrap_app()
 
     @app.callback()

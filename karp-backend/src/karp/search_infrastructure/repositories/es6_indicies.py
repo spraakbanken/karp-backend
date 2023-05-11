@@ -63,6 +63,12 @@ class Es6Index(Index):  # noqa: D101
         logger.info("index created")
         return index_alias_name
 
+    def delete_index(self, resource_id: str):
+        index_name = self.mapping_repo.get_index_name(resource_id)
+        alias_name = self.mapping_repo.get_alias_name(resource_id)
+        self.es.indices.delete(index=index_name)
+        self.mapping_repo.delete_from_config(resource_id)
+
     def publish_index(self, resource_id: str):  # noqa: ANN201, D102
         alias_name = self.mapping_repo.get_alias_name(resource_id)
         if self.es.indices.exists_alias(name=alias_name):

@@ -25,3 +25,4 @@ exclude = [
 [per-file-ignores]
 "__init__.py" = ["E402"]
 "bases/karp/karp_v6_api/routes/resources_api.py" = ["B008"]
+"tests/*" = ["S101"]

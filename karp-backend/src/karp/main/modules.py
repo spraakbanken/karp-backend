@@ -98,6 +98,10 @@ class Db(injector.Module):  # noqa: D101
     def session_factory(self) -> sessionmaker:  # noqa: D102
         return sessionmaker(bind=self._engine)
 
+    @injector.provider
+    def engine(self) -> Engine:
+        return self._engine
+
 
 class ElasticSearchMod(injector.Module):  # noqa: D101
     def __init__(self, es_url: str) -> None:  # noqa: D107

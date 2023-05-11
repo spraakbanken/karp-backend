@@ -1,7 +1,8 @@
 """Handling of entry commands."""
 import logging
+from typing import Any
 
-from karp.command_bus import CommandHandler
+from karp.command_bus import CommandBus, CommandHandler
 from karp.lex.application import repositories
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain import errors
@@ -230,3 +231,14 @@ class DeletingEntry(BaseEntryHandler, CommandHandler[commands.DeleteEntry]):
             uw.repo.save(entry)
             uw.post_on_commit(events)
             uw.commit()
+
+
+class ExecutingBatchOfEntryCommands(
+    CommandHandler[commands.ExecuteBatchOfEntryCommands]
+):
+    def __init__(self, command_bus: CommandBus) -> None:
+        self.command_bus = command_bus
+
+    def execute(self, command: commands.ExecuteBatchOfEntryCommands) -> Any:
+        for cmd in command.commands:
+            self.command_bus.dispatch(cmd.cmd)
