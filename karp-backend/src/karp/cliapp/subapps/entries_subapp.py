@@ -122,6 +122,36 @@ def export_entries(  # noqa: ANN201, D103
     )
 
 
+@subapp.command("batch")
+@cli_error_handler
+@cli_timer
+def batch_entries(
+    ctx: typer.Context,
+    data: Path,
+):
+    """Run entry-commands in batch.
+
+    This command expects a list with dicts with the key `cmd` that is a serialized
+    command that defines `cmdtype`.
+
+    > Example:
+
+    > `[{"cmd": {"cmdtype": "add_entry","resourceId": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
+
+
+    """
+    logger.info("run entries command in batch")
+    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore[type-abstract]
+    entry_commands = tqdm(
+        (lex.EntryCommand(**cmd) for cmd in json_streams.load_from_file(data)),
+        desc="Loading",
+        unit=" commands",
+    )
+    cmd = lex.ExecuteBatchOfEntryCommands(commands=entry_commands)
+
+    bus.dispatch(cmd)
+
+
 class Counter(collections.abc.Generator):  # noqa: D101
     def __init__(self, sink) -> None:  # noqa: D107
         self._counter: int = 0

@@ -4,6 +4,7 @@ from .entry_handlers import (  # noqa: I001
     DeletingEntry,
     ImportingEntries,
     UpdatingEntry,
+    ExecutingBatchOfEntryCommands,
 )
 from .entry_repo_handlers import (
     CreatingEntryRepo,
@@ -24,6 +25,7 @@ __all__ = [
     "DeletingEntry",
     "ImportingEntries",
     "UpdatingEntry",
+    "ExecutingBatchOfEntryCommands",
     # entry-repo use cases
     "CreatingEntryRepo",
     # resource use cases

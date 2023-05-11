@@ -77,3 +77,7 @@ EntryCommandType = Annotated[
 
 class EntryCommand(pydantic.BaseModel):
     cmd: EntryCommandType
+
+
+class ExecuteBatchOfEntryCommands(pydantic.BaseModel):
+    commands: Iterable[EntryCommand]
