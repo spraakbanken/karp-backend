@@ -69,6 +69,7 @@ tqdm = "^4.64.1"
 typer = "^0.7.0"
 ulid-py = "^1.1.0"
 urllib3 = "^1.26.13"
+rich = "^13.3.5"
 
 [tool.poetry.extras]
 mysql = ["mysqlclient", "PyMySQL", "aiomysql"]
