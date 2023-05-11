@@ -4,6 +4,7 @@ from .entry_commands import (
     AddEntriesInChunks,
     AddEntry,
     DeleteEntry,
+    EntryCommand,
     GenericAddEntry,
     GenericUpdateEntry,
     ImportEntries,
@@ -32,6 +33,7 @@ __all__ = [
     "ImportEntries",
     "ImportEntriesInChunks",
     "UpdateEntry",
+    "EntryCommand",
     # EntryRepo commands
     "CreateEntryRepository",
     # Resource commands

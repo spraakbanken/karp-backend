@@ -1,4 +1,12 @@
-from typing import Generic, Iterable, Literal, Optional, TypeVar  # noqa: D100
+from typing import (
+    Annotated,
+    Generic,
+    Iterable,
+    Literal,
+    Optional,
+    TypeVar,
+    Union,
+)  # noqa: D100
 
 import pydantic
 from karp.lex_core.value_objects import UniqueId, make_unique_id
@@ -60,3 +68,12 @@ class GenericUpdateEntry(GenericModel, Generic[T], Command):  # noqa: D101
 
 class UpdateEntry(GenericUpdateEntry[dict]):  # noqa: D101
     ...
+
+
+EntryCommandType = Annotated[
+    Union[AddEntry, DeleteEntry, UpdateEntry], pydantic.Field(discriminator="cmdtype")
+]
+
+
+class EntryCommand(pydantic.BaseModel):
+    cmd: EntryCommandType
