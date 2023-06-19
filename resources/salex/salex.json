@@ -15,6 +15,9 @@
         "böjningsklass": {
             "type": "string"
         },
+	"sorteringsform" : {
+		"type": "string"
+	},
         "kommentar": {
             "type": "string"
         },
@@ -51,9 +54,6 @@
                     "type": "string"
                 },
                 "analys": {
-                    "type": "string"
-                },
-                "sorteringsform": {
                     "type": "string"
                 },
                 "kommentar": {
