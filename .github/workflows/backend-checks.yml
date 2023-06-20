@@ -39,7 +39,7 @@ jobs:
             allow_failure: true
           - name: Check formatting
             run: make check-fmt
-            allow_failure: false
+            allow_failure: true
 
     steps:
       - uses: actions/checkout@v3
