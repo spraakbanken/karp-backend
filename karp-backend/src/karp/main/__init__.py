@@ -102,7 +102,7 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
     dictConfig(
         {
             "version": 1,
-            "disable_existing_loggers": False,
+            "disable_existing_loggers": True,
             "filters": {
                 "correlation_id": {
                     "()": asgi_correlation_id.CorrelationIdFilter,
@@ -143,7 +143,7 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
                 },
                 # third-party package loggers
                 "sqlalchemy": {"handlers": ["json"], "level": "WARNING"},
-                "uvicorn.access": {"handlers": ["json"], "level": "INFO"},
+                "uvicorn": {"handlers": ["json"], "level": "INFO"},
             },
         }
     )

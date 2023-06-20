@@ -57,7 +57,7 @@ paradigmextract = "^0.1.1"
 pydantic = "^1.10.2"
 pyjwt = { version = "^2.6.0", extras = ["crypto"] }
 python-dotenv = "^0.19.0"
-python-json-logger = "^2.0.4"
+python-json-logger = "^2.0.7"
 regex = "^2022.8.17"
 sb-json-tools = "^0.9.1"
 sqlalchemy = "^1.4.44"
@@ -69,7 +69,7 @@ tqdm = "^4.64.1"
 typer = "^0.7.0"
 ulid-py = "^1.1.0"
 urllib3 = "^1.26.13"
-asgi-matomo = "^0.1.0"
+asgi-matomo = "^0.4.1"
 rich = "^13.3.5"
 
 [tool.poetry.extras]

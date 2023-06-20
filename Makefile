@@ -41,7 +41,7 @@ help:
 	@echo "   run formatter on all code"
 
 install:
-	poetry install --only-main -E mysql
+	poetry install --only=main -E mysql
 
 dev: install-dev
 install-dev:
