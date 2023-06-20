@@ -36,14 +36,14 @@ class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
         logger.debug("using session=%s", self._session)
         self._check_has_session()
         self._session.add(EntryUowModel.from_entity(entry_uow))
-        if entry_uow.discarded : 
+        if entry_uow.discarded:
             # If resource was discarded, drop the table containing all data entries
-            self._session.execute('DROP table ' + entry_uow.table_name())
+            self._session.execute("DROP table " + entry_uow.table_name())
         logger.debug("session=%s, session.new=%s", self._session, self._session.new)
 
     def _by_id(
         self,
-        id: UniqueId,
+        id: UniqueId,  # noqa: A002
         *,
         version: Optional[int] = None,
         **kwargs,

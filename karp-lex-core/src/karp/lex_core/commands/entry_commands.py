@@ -6,7 +6,7 @@ from typing import (
     Optional,
     TypeVar,
     Union,
-)  # noqa: D100
+)
 
 import pydantic
 from karp.lex_core.value_objects import UniqueId, make_unique_id

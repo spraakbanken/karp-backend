@@ -7,7 +7,7 @@ from .base import Command
 
 
 class CreateEntryRepository(Command):
-    id: UniqueId = pydantic.Field(default_factory=make_unique_id)
+    id: UniqueId = pydantic.Field(default_factory=make_unique_id)  # noqa: A003
     name: str
     connection_str: Optional[str] = None
     config: dict

@@ -1,18 +1,14 @@
+import logging
 import typing
 
-import logging
-
-from karp.lex.application.queries.resources import ResourceDto
-
-from karp.lex.domain import errors as lex_errors
 from karp.lex.application.queries import (
-    ReadOnlyResourceRepository,
-    EntryViews,
     EntryDto,
+    EntryViews,
+    ReadOnlyResourceRepository,
 )
-from karp.search import EntryTransformer
-from karp.search import IndexUnitOfWork, IndexEntry
-
+from karp.lex.application.queries.resources import ResourceDto
+from karp.lex.domain import errors as lex_errors
+from karp.search import EntryTransformer, IndexEntry, IndexUnitOfWork
 
 logger = logging.getLogger(__name__)
 

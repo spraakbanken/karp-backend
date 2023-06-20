@@ -1,24 +1,21 @@
+import logging  # noqa: F811
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.param_functions import Header
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityScopes
 from fastapi.security import utils as security_utils
-import logging  # noqa: F811
-
 from karp import auth, lex
-
-from karp.main.errors import ClientErrorCodes, KarpError  # noqa: F401
 from karp.auth.domain.errors import TokenError
-from karp.auth.domain.auth_service import AuthService  # noqa: F401
 from karp.auth_infrastructure import (
     JWTAuthService,
     LexGetResourcePermissions,
     LexIsResourceProtected,
 )
+from karp.main.errors import KarpError  # noqa: F401
+
 from . import lex_deps
 from .fastapi_injector import inject_from_req
-
 
 # auto_error false is needed so that FastAPI does not
 # give back a faulty 403 when credentials are missing

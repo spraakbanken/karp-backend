@@ -1,7 +1,6 @@
-from logging.config import dictConfig
 import typing
 from dataclasses import dataclass
-
+from logging.config import dictConfig
 
 try:
     from importlib.metadata import entry_points
