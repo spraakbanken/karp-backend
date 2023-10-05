@@ -2,7 +2,7 @@ import collections.abc  # noqa: D100, I001
 import logging
 from pathlib import Path
 import sys  # noqa: F401
-from typing import Optional
+from typing import Iterable, Optional
 
 
 import json_streams
@@ -182,10 +182,19 @@ def validate_entries(  # noqa: ANN201, D103
         help="resource config",
     ),
     resource_id_raw: Optional[str] = typer.Option(None, "--resource_id"),
+    as_import: bool = typer.Option(False, "--as-import"),
     output: Optional[Path] = typer.Option(
         None, "--output", "-o", help="file to write to"
     ),
 ):
+    """Validate entries without adding or importing them.
+
+    You can either read the configuration from the database by specifing `--resource_id=<RESOURCE ID>`
+    or supply an external config with `--config=<PATH>`.
+
+    By default, this command supposes that the entries are in raw mode (like `add` works),
+    to use the format the `import` uses please add the `--as-import` flag.
+    """
     typer.echo(f"reading from {path or 'stdin'} ...", err=True)
 
     if not output and path:
@@ -214,6 +223,11 @@ def validate_entries(  # noqa: ANN201, D103
 
     error_code = 0
 
+    entries: Iterable[dict] = json_streams.load_from_file(
+        path, use_stdin_as_default=True
+    )
+    if as_import:
+        entries = (import_entry["entry"] for import_entry in entries)
     with json_streams.sink_from_file(
         err_output, use_stderr_as_default=True
     ) as error_sink, json_streams.sink_from_file(
@@ -223,7 +237,7 @@ def validate_entries(  # noqa: ANN201, D103
         jt_val.processing_validate(
             schema,
             tqdm(
-                json_streams.load_from_file(path, use_stdin_as_default=True),
+                entries,
                 desc="Validating",
                 unit=" entries",
             ),
