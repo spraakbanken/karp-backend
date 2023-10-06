@@ -93,12 +93,12 @@ def problem_config() -> dict:
 
 
 def test_error(problem_config: dict):  # noqa: ANN201
-    json_schema = create_entry_json_schema(problem_config["fields"])
+    json_schema = create_entry_json_schema(problem_config["fields"], True)
     _entry_schema = EntrySchema(json_schema)
 
 
 def test_create_json_schema(json_schema_config):  # noqa: ANN201
-    json_schema = create_entry_json_schema(json_schema_config["fields"])
+    json_schema = create_entry_json_schema(json_schema_config["fields"], True)
     assert json_schema["type"] == "object"
 
 
@@ -439,12 +439,12 @@ def test_create_complex_json_schema():  # noqa: ANN201
             },
         }
     }
-    _json_schema = create_entry_json_schema(config["fields"])
+    _json_schema = create_entry_json_schema(config["fields"], True)
 
 
 class TestCreateJsonSchema:
     @pytest.mark.parametrize("field_type", ["long_string"])
     def test_create_with_type(self, field_type: str):  # noqa: ANN201
         resource_config = {"field_name": {"type": field_type}}
-        json_schema = create_entry_json_schema(resource_config)
+        json_schema = create_entry_json_schema(resource_config, True)
         _entry_schema = EntrySchema(json_schema)
