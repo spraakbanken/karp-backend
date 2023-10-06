@@ -35,7 +35,7 @@ class EntrySchema:  # noqa: D101
         if isinstance(resource_config, dict):
             if "fields" not in resource_config:
                 raise ValueError("missing 'fields' in config")
-            return cls(json_schema=create_entry_json_schema(resource_config["fields"]))
+            return cls(json_schema=create_entry_json_schema(resource_config["fields"],resource_config["additionalProperties"]))
         msg = f"Expecting 'dict' not '{type(resource_config)}'"
         raise TypeError(msg)
 
@@ -45,7 +45,7 @@ def json_schema_type(in_type: str) -> str:
     return "string" if in_type == "long_string" else in_type
 
 
-def create_entry_json_schema(fields: dict[str, dict[str, Any]]) -> dict[str, Any]:
+def create_entry_json_schema(fields: dict[str, dict[str, Any]],additionalProperties : bool) -> dict[str, Any]:
     """Create json_schema from fields definition.
 
     Args:
@@ -89,5 +89,5 @@ def create_entry_json_schema(fields: dict[str, dict[str, Any]]) -> dict[str, Any
 
     for field_name, field_def in fields.items():
         recursive_field(json_schema, field_name, field_def)
-
+    json_schema['additionalProperties'] = additionalProperties
     return json_schema
