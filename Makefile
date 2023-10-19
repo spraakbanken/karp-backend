@@ -132,7 +132,11 @@ lint:
 
 .PHONY: serve-docs
 serve-docs:
-	cd docs/karp-backend-v6 && ${INVENV} mkdocs serve && cd -
+	cd docs/karp-backend && ${INVENV} mkdocs serve && cd -
+
+.PHONY: serve-docs
+serve-c4-docs:
+	structurizr-site-generatr serve -w docs/c4-docs/workspace.dsl
 
 .PHONY: type-check
 type-check:
