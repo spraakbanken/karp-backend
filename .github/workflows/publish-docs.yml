@@ -1,0 +1,29 @@
+name: Publish docs via GitHub Pages
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Deploy docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+    
+      - name: Generare structurizr site
+        run: |
+            docker run --user root -t --rm -v ${{ github.workspace }}/docs/karp-backend/docs/system-overview:/var/model ghcr.io/avisi-cloud-structurizr-site-generatr generate-site -w docs/c4-docs/workspace.dsl
+            tree docs/karp-backend
+
+      - name: Deploy docs
+        uses: mhausenblas/mkdocs-deploy-gh-pages@e55ecab6718b449a90ebd4313f1320f9327f1386
+        # Or use mhausenblas/mkdocs-deploy-gh-pages@nomaterial to build without the mkdocs-material theme
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # CUSTOM_DOMAIN: optionaldomain.com
+          CONFIG_FILE: docs/karp-backend/mkdocs.yml
+          EXTRA_PACKAGES: build-base
+          # GITHUB_DOMAIN: github.myenterprise.com
+          REQUIREMENTS: docs/karp-backend/requirements.txt
