@@ -14,6 +14,7 @@ jobs:
     
       - name: Generare structurizr site
         run: |
+            docker pull ghcr.io/avisi-cloud/structurizr-site-generatr
             docker run --user root -t --rm -v ${{ github.workspace }}/docs/karp-backend/docs/system-overview:/var/model ghcr.io/avisi-cloud-structurizr-site-generatr generate-site -w docs/c4-docs/workspace.dsl
             tree docs/karp-backend
 
