@@ -7,14 +7,14 @@ on:
     paths:
       - 'karp-backend/**/*.py'
       - 'karp-backend/pyproject.toml'
-      - 'karp-lex-core/**/*-py'
+      - 'karp-lex-core/**/*.py'
   pull_request:
     branches:
       - "**/*"
     paths:
       - 'karp-backend/**/*.py'
       - 'karp-backend/pyproject.toml'
-      - 'karp-lex-core/**/*-py'
+      - 'karp-lex-core/**/*.py'
   workflow_dispatch:
 
 env:

@@ -1,8 +1,11 @@
 # Development
 
+See also: [**System overview**](./system-overview/index.html)
+
 `karp` is implemented according to Clean Architecture/Domain-Driven-Design.
 
 The repo defines two apps:
+
 - `karp.karp_v6_api`: the backend
 - `karp.cliapp`: the `karp-cli` tool to manage the backend
 
