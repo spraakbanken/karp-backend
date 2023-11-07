@@ -1,0 +1,21 @@
+@startuml
+set separator none
+title karp-lex-core - Containers
+
+top to bottom direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+skinparam svgDimensionStyle false
+skinparam preserveAspectRatio meet
+System_Boundary("karplexcore_boundary", "karp-lex-core", $tags="") {
+  Container(karplexcore.karplex_corecommands, "karp.lex_core.commands", $techn="", $descr="", $tags="", $link="../component/")
+  Container(karplexcore.karplex_corevalue_objects, "karp.lex_core.value_objects", $techn="", $descr="", $tags="", $link="")
+  Container(karplexcore.karplex_coredtos, "karp.lex_core.dtos", $techn="", $descr="Data Transfer Objects", $tags="", $link="")
+}
+
+
+SHOW_LEGEND(true)
+@enduml

@@ -129,4 +129,4 @@ sketch/
 /data/
 /logs/
 
-/docs/karp-backend*/docs/system-overview/
+# /docs/karp-backend*/docs/system-overview/

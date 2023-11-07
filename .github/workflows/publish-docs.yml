@@ -12,11 +12,11 @@ jobs:
       - name: Checkout main
         uses: actions/checkout@v4
     
-      - name: Generare structurizr site
-        run: |
-            docker pull ghcr.io/avisi-cloud/structurizr-site-generatr
-            docker run --user root -t --rm -v ${{ github.workspace }}/docs/karp-backend/docs/system-overview:/var/model ghcr.io/avisi-cloud-structurizr-site-generatr generate-site -w docs/c4-docs/workspace.dsl
-            tree docs/karp-backend
+      # - name: Generare structurizr site
+      #   run: |
+      #       docker pull ghcr.io/avisi-cloud/structurizr-site-generatr
+      #       docker run --user root -t --rm -v ${{ github.workspace }}/docs/karp-backend/docs/system-overview:/var/model ghcr.io/avisi-cloud-structurizr-site-generatr generate-site -w docs/c4-docs/workspace.dsl
+      #       tree docs/karp-backend
 
       - name: Deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@e55ecab6718b449a90ebd4313f1320f9327f1386
