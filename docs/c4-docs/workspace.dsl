@@ -1,5 +1,5 @@
 workspace "Karp Backend" {
-    !docs docs
+    !docs workspace-docs
     
     model {
         sbAuth = softwareSystem "sb-auth" "Språkbanken's Auth service"
@@ -9,21 +9,23 @@ workspace "Karp Backend" {
         machine = person "Machine" "machine"
 
         backend = softwareSystem "karp-backend" {
-            webApp = container "Web API"
-            cliApp = container "karp-cli"
+            !docs karp-backend/docs
+
+            webApp = container "Web API" "Provides lexical and search functionality via a JSON API" "Python and FastAPI"
+            cliApp = container "karp-cli" "Provides admin tools for lexical resources via CLI" "Python and Typer"
 
             group "application" {
-                auth = container "karp.auth"
-                lex = container "karp.lex"
-                search = container "karp.search"
+                auth = container "karp.auth" "Business logic around authentication"
+                lex = container "karp.lex" "Business logic around lexical resources and entries"
+                search = container "karp.search" "Business logic around searching"
             }
-            main = container "karp.main"
+            main = container "karp.main" "Kernel connecting the generic business rules and the concrete implementations in infrastructure"
 
             group "infrastructure" {
 
-                auth_infrastructure = container "karp.auth_infrastructure"
-                lex_infrastructure = container "karp.lex_infrastructure"
-                search_infrastructure = container "karp.search_infrastructure
+                auth_infrastructure = container "karp.auth_infrastructure" "Concrete implementation of karp.auth business logic" "Python and sb-auth"
+                lex_infrastructure = container "karp.lex_infrastructure" "Concrete implementation of karp.lex business logic" "Python and relational database"
+                search_infrastructure = container "karp.search_infrastructure" "Concrete implementation of karp.search business logic" "Python and database"
 
                 lex_database = container "MariaDB" "" "Relational database schema" "Database"
                 search_database = container "ElasticSearch" "" "Document database schema" "Database"
@@ -31,7 +33,9 @@ workspace "Karp Backend" {
         }
 
 
-        lexCore = softwareSystem "karp-lex-core" {
+        lexCore = softwareSystem "karp-lex-core" "Public commands, value objects and data transfer objects for karp.lex" {
+            !docs karp-lex-core/docs
+            
             commands = container "karp.lex_core.commands" {
                 entry_commands = component "Entry Commands"
                 resource_commands = component "Resource Commands"
@@ -77,6 +81,11 @@ workspace "Karp Backend" {
         }
 
         container backend {
+            include *
+            autoLayout
+        }
+
+        component lex {
             include *
             autoLayout
         }

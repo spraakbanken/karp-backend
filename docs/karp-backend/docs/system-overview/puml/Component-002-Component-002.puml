@@ -1,21 +1,14 @@
 @startuml
 set separator none
-title karp-lex-core - karp.lex_core.commands - Components
+title karp-backend - karp.lex_infrastructure - Components
 
 top to bottom direction
 
 !include <C4/C4>
 !include <C4/C4_Context>
-!include <C4/C4_Component>
 
 skinparam svgDimensionStyle false
 skinparam preserveAspectRatio meet
-Container_Boundary("karplexcore.karplex_corecommands_boundary", "karp.lex_core.commands", $tags="") {
-  Component(karplexcore.karplex_corecommands.EntryCommands, "Entry Commands", $techn="", $descr="", $tags="", $link="")
-  Component(karplexcore.karplex_corecommands.ResourceCommands, "Resource Commands", $techn="", $descr="", $tags="", $link="")
-  Component(karplexcore.karplex_corecommands.EntryRepositoryCommands, "Entry Repository Commands", $techn="", $descr="", $tags="", $link="")
-}
-
 
 SHOW_LEGEND(true)
 @enduml

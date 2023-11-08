@@ -135,7 +135,7 @@ build-c4-docs:
 	structurizr-site-generatr generate-site -w docs/c4-docs/workspace.dsl -o docs/karp-backend/docs/system-overview
 
 .PHONY: serve-docs
-serve-docs:
+serve-docs: build-c4-docs
 	cd docs/karp-backend && ${INVENV} mkdocs serve && cd -
 
 .PHONY: serve-docs
