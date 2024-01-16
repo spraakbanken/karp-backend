@@ -28,7 +28,12 @@ This project uses [poetry](https://python-poetry.org) and
 
    or `poetry shell` and then `uvicorn asgi:app`
 
-7. To setup Elasticsearch, download Elasticsearch 6.x and start it
+7. To setup Elasticsearch, download Elasticsearch 6.x and run the following commands from the Elasticsearch directory:
+   ```
+   bin/elasticsearch-plugin install analysis-phonetic
+   bin/elasticsearch-plugin install analysis-icu
+   ```
+   Then start Elasticsearch with `bin/elasticsearch`
 8. Install elasticsearch python libs for the right version
    1. If you use Elasticsearch 6.x, run `source <VENV_NAME>/bin/activate` and `pip install -e .[elasticsearch6]`
 9. Add environment variables
