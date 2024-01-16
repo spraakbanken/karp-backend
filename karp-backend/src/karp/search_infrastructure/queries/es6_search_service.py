@@ -107,6 +107,17 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
     def walk__startswith(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("regexp", **{self.walk(node.field): f"{self.walk(node.arg)}.*"})
 
+class EsFieldNameCollector(NodeWalker):
+    # Return a set of all field names occurring in the given query
+    def walk_Node(self, node):
+        result = set().union(*(self.walk(child) for child in node.children()))
+        # TODO maybe a bit too automagic?
+        if hasattr(node, 'field'):
+            result.add(node.field)
+        return result
+
+    def walk_object(self, _obj):
+        return set()
 
 class Es6SearchService(search.SearchService):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
@@ -117,6 +128,7 @@ class Es6SearchService(search.SearchService):  # noqa: D101
         self.es: elasticsearch.Elasticsearch = es
         self.mapping_repo = mapping_repo
         self.query_builder = EsQueryBuilder()
+        self.field_name_collector = EsFieldNameCollector()
         self.parser = KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
 
     def _format_result(self, resource_ids, response):  # noqa: ANN202
@@ -164,10 +176,12 @@ class Es6SearchService(search.SearchService):  # noqa: D101
     def search_with_query(self, query: EsQuery):  # noqa: ANN201, D102, C901
         logger.info("search_with_query called", extra={"query": query})
         es_query = None
+        field_names = set()
         if query.q:
             try:
                 model = self.parser.parse(query.q)
                 es_query = self.query_builder.walk(model)
+                field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
                 logger.debug("Parse error", extra={"err": err})
                 raise errors.IncompleteQuery(
@@ -179,6 +193,7 @@ class Es6SearchService(search.SearchService):  # noqa: D101
             for resource in query.resources:
                 alias_name = self.mapping_repo.get_alias_name(resource)
                 s = es_dsl.Search(index=alias_name)
+                s = self.add_runtime_mappings(s, field_names)
 
                 if es_query is not None:
                     s = s.query(es_query)
@@ -207,16 +222,17 @@ class Es6SearchService(search.SearchService):  # noqa: D101
                         result["distribution"] = {}
                     result["distribution"][query.resources[i]] = response.hits.total
         else:
-            result = self._extracted_from_search_with_query_47(query, es_query)
+            result = self._extracted_from_search_with_query_47(query, es_query, field_names)
 
         return result
 
     # TODO Rename this here and in `search_with_query`
-    def _extracted_from_search_with_query_47(self, query, es_query):  # noqa: ANN202
+    def _extracted_from_search_with_query_47(self, query, es_query, field_names):  # noqa: ANN202
         alias_names = [
             self.mapping_repo.get_alias_name(resource) for resource in query.resources
         ]
         s = es_dsl.Search(using=self.es, index=alias_names, doc_type="entry")
+        s = self.add_runtime_mappings(s, field_names)
         if es_query is not None:
             s = s.query(es_query)
 
@@ -252,6 +268,22 @@ class Es6SearchService(search.SearchService):  # noqa: D101
                 result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
 
         return result
+
+    def add_runtime_mappings(self, s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
+        # When a query uses a field of the form "f.length", add a
+        # runtime_mapping so it gets interpreted as "the length of the field f".
+        mappings = {}
+        for field in field_names:
+            if field.endswith(".length"):
+                base_field = field.removesuffix(".length")
+                mappings[field] = \
+                  {"type": "long",
+                   "script": {"source": f"emit(doc['{base_field}'].length)"}}
+
+        # elasticsearch_dsl doesn't know about runtime_mappings so we have to add them 'by hand'
+        if mappings:
+            s.update_from_dict({"runtime_mappings": mappings})
+        return s
 
     def search_ids(self, resource_id: str, entry_ids: str):  # noqa: ANN201, D102
         logger.info(
