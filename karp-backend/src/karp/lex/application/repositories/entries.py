@@ -80,7 +80,7 @@ class EntryRepository(repository.Repository[entities.Entry]):  # noqa: D101
 
 class EntryUnitOfWork(  # noqa: D101
     entity.TimestampedEntity,
-    unit_of_work.UnitOfWork[EntryRepository],
+    unit_of_work.UnitOfWork,
 ):
     def __init__(  # noqa: D107, ANN204
         self,

@@ -1,18 +1,14 @@
 import abc  # noqa: D100, I001
 import logging
-import typing
 from karp.foundation import events
 
 from karp.foundation.events import EventBus
 
 
-RepositoryType = typing.TypeVar("RepositoryType")
-
-
 logger = logging.getLogger(__name__)
 
 
-class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):  # noqa: D101
+class UnitOfWork(abc.ABC):  # noqa: D101
     def __init__(self, event_bus: EventBus) -> None:  # noqa: D107
         self.event_bus = event_bus
         self._event_queue: list[events.Event] = []
@@ -53,7 +49,7 @@ class UnitOfWork(typing.Generic[RepositoryType], abc.ABC):  # noqa: D101
 
     @property
     @abc.abstractmethod
-    def repo(self) -> RepositoryType:  # noqa: D102
+    def repo(self):  # noqa: D102
         pass
 
     @abc.abstractmethod

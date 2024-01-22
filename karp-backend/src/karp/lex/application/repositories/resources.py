@@ -64,7 +64,7 @@ class ResourceRepository(repository.Repository[entities.Resource]):  # noqa: D10
         raise NotImplementedError()
 
 
-class ResourceUnitOfWork(unit_of_work.UnitOfWork[ResourceRepository]):  # noqa: D101
+class ResourceUnitOfWork(unit_of_work.UnitOfWork):  # noqa: D101
     def __init__(self, event_bus: events.EventBus):  # noqa: D107, ANN204
         unit_of_work.UnitOfWork.__init__(self, event_bus=event_bus)
 

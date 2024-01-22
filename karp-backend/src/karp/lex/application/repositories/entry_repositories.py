@@ -77,9 +77,7 @@ class EntryUowRepository(repository.Repository[EntryUnitOfWork]):  # noqa: D101
     pass
 
 
-class EntryUowRepositoryUnitOfWork(  # noqa: D101
-    unit_of_work.UnitOfWork[EntryUowRepository]
-):
+class EntryUowRepositoryUnitOfWork(unit_of_work.UnitOfWork):
     def __init__(  # noqa: D107, ANN204
         self,
         *,

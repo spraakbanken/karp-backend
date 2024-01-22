@@ -63,5 +63,5 @@ class Index(repository.Repository[IndexEntry]):  # noqa: D101
         return None
 
 
-class IndexUnitOfWork(unit_of_work.UnitOfWork[Index]):  # noqa: D101
+class IndexUnitOfWork(unit_of_work.UnitOfWork):  # noqa: D101
     pass
