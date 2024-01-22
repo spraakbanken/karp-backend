@@ -16,10 +16,11 @@ import pydantic
 from starlette import responses
 from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
+from karp.lex_infrastructure import GenericGetEntryHistory
 
 from karp.main import errors as karp_errors
 from karp import auth, search
-from karp.lex.application.queries import EntryDto, GetEntryHistory
+from karp.lex.application.queries import EntryDto
 from karp.lex import commands
 from karp.lex.domain import errors
 from karp.auth import User
@@ -45,7 +46,7 @@ def get_history_for_entry(  # noqa: ANN201, D103
     version: Optional[int] = Query(None),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    get_entry_history: GetEntryHistory = Depends(deps.get_entry_history),
+    get_entry_history: GenericGetEntryHistory = Depends(deps.get_entry_history),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(

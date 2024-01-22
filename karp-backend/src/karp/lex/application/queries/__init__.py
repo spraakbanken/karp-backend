@@ -1,6 +1,5 @@
 from .entries import (  # noqa: I001
     GetEntryDiff,
-    GetEntryHistory,
     GetHistory,
     GetHistoryDto,
     EntryDiffDto,
@@ -22,7 +21,6 @@ from .resources import (
 
 __all__ = [
     "GetEntryDiff",
-    "GetEntryHistory",
     "GetHistory",
     "GetHistoryDto",
     "EntryDiffDto",

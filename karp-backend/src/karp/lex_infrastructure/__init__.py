@@ -16,7 +16,6 @@ from karp.lex.application.queries import (
     GetEntryRepositoryId,
     EntryViews,
     GetEntryDiff,
-    GetEntryHistory,
     GetHistory,
 )
 from karp.lex.application.repositories import (
@@ -156,7 +155,7 @@ class GenericLexInfrastructure(injector.Module):  # noqa: D101
         self,
         resources_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> GetEntryHistory:
+    ) -> GenericGetEntryHistory:
         return GenericGetEntryHistory(
             resource_uow=resources_uow,
             entry_repo_uow=entry_repo_uow,

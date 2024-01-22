@@ -72,18 +72,6 @@ class GetEntryDiff(abc.ABC):  # noqa: D101
         pass
 
 
-class GetEntryHistory(abc.ABC):  # noqa: D101
-    @abc.abstractmethod
-    def query(  # noqa: D102
-        self,
-        resource_id: str,
-        entity_id: unique_id.UniqueIdStr,
-        # entry_id: str,
-        version: typing.Optional[int],
-    ) -> EntryDto:
-        pass
-
-
 class GetHistoryDto(BaseModel):  # noqa: D101
     history: list[HistoryDto]
     total: int

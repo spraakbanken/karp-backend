@@ -13,7 +13,6 @@ from karp.lex.application.queries import (
     EntryDto,
     EntryDiffDto,
     GetEntryDiff,
-    GetEntryHistory,
     GetHistory,
     EntryHistoryRequest,
     EntryDiffRequest,
@@ -94,7 +93,7 @@ class GenericEntryQuery:  # noqa: D101
             return uw.repo.by_resource_id(resource_id).entry_repository_id
 
 
-class GenericGetEntryHistory(GenericEntryQuery, GetEntryHistory):  # noqa: D101
+class GenericGetEntryHistory(GenericEntryQuery):  # noqa: D101
     def query(  # noqa: D102
         self,
         resource_id: str,

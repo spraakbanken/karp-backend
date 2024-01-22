@@ -81,7 +81,7 @@ def get_entry_diff(  # noqa: D103
 def get_entry_history(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
     entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
-) -> lex.GetEntryHistory:
+) -> GenericGetEntryHistory:
     return GenericGetEntryHistory(
         resource_uow=resource_uow,
         entry_repo_uow=entry_repo_uow,

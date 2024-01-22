@@ -39,7 +39,6 @@ from karp.lex.application.queries import (
     EntryDto,
     EntryViews,
     GetEntryDiff,
-    GetEntryHistory,
     GetHistory,
     GetHistoryDto,
     GetPublishedResources,

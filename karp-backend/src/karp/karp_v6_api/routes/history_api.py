@@ -14,7 +14,6 @@ from karp.lex.application.queries import (
     EntryHistoryRequest,
     GetEntryDiff,
     GetHistory,
-    GetEntryHistory,  # noqa: F401
 )
 from karp.karp_v6_api import schemas  # noqa: F401
 
