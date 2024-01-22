@@ -16,10 +16,7 @@ from karp.search.application.use_cases import (
     ReindexingResource,
     ResourcePublishedHandler,
 )
-from karp.search.application.queries import (
-    ResourceViews,
-    QueryRequest,
-)
+from karp.search.application.queries import QueryRequest
 from karp.search.application.repositories import (
     IndexUnitOfWork,
     IndexEntry,
@@ -34,8 +31,9 @@ __all__ = [
     "IndexUnitOfWork",
     "IndexEntry",
     "PreProcessor",
-    "ResourceViews",
 ]
+
+from karp.search.generic_resources import GenericResourceViews
 
 
 class Search(injector.Module):  # noqa: D101
@@ -44,7 +42,7 @@ class Search(injector.Module):  # noqa: D101
         self,
         index_uow: IndexUnitOfWork,
         pre_processor: PreProcessor,
-        resource_views: ResourceViews,
+        resource_views: GenericResourceViews,
     ) -> CommandHandler[commands.ReindexResource]:
         return ReindexingResource(
             index_uow=index_uow,
@@ -76,7 +74,7 @@ class Search(injector.Module):  # noqa: D101
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
-        resource_views: ResourceViews,
+        resource_views: GenericResourceViews,
     ) -> List[EventHandler[lex_events.EntryAdded]]:
         return [
             EntryAddedHandler(
@@ -91,7 +89,7 @@ class Search(injector.Module):  # noqa: D101
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
-        resource_views: ResourceViews,
+        resource_views: GenericResourceViews,
     ) -> List[EventHandler[lex_events.EntryUpdated]]:
         return [
             EntryUpdatedHandler(
@@ -106,7 +104,7 @@ class Search(injector.Module):  # noqa: D101
         self,
         index_uow: IndexUnitOfWork,
         entry_transformer: EntryTransformer,
-        resource_views: ResourceViews,
+        resource_views: GenericResourceViews,
     ) -> List[EventHandler[lex_events.EntryDeleted]]:
         return [
             EntryDeletedHandler(

@@ -7,10 +7,7 @@ from karp.foundation.events import EventBus
 from karp.lex.application.queries import (
     EntryViews,
 )
-from karp import lex, search
-from karp.search.application.queries import (
-    ResourceViews,
-)
+from karp import lex
 from karp.search.application.repositories import IndexUnitOfWork
 
 from karp.search.application.transformers import (
@@ -18,7 +15,6 @@ from karp.search.application.transformers import (
     PreProcessor,
 )
 from karp.search_infrastructure.queries import (
-    GenericResourceViews,
     Es6SearchService,
 )
 from karp.search_infrastructure.transformers import (
@@ -29,6 +25,7 @@ from karp.search_infrastructure.repositories import (
     Es6IndexUnitOfWork,
 )
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
+from karp.search.generic_resources import GenericResourceViews
 
 
 logger = logging.getLogger(__name__)
@@ -64,7 +61,7 @@ class GenericSearchInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def get_resource_config(  # noqa: D102
         self, resource_uow: lex.ResourceUnitOfWork
-    ) -> ResourceViews:
+    ) -> GenericResourceViews:
         return GenericResourceViews(resource_uow=resource_uow)
 
 

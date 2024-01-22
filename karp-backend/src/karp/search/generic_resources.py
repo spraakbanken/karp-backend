@@ -1,10 +1,9 @@
 import typing  # noqa: D100, I001
 from karp.lex_core.value_objects import unique_id
 from karp.lex.application.repositories import ResourceUnitOfWork
-from karp.search.application.queries import ResourceViews
 
 
-class GenericResourceViews(ResourceViews):  # noqa: D101
+class GenericResourceViews:
     def __init__(self, resource_uow: ResourceUnitOfWork) -> None:  # noqa: D107
         super().__init__()
         self._resource_uow = resource_uow
