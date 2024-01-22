@@ -54,9 +54,7 @@ class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
         message: str,
         timestamp: float,
     ) -> Tuple[EntryUnitOfWork, list[events.Event]]:
-        uow_factory_cls = self._container.get(Dict[str, EntryUnitOfWorkCreator])[
-            "default"
-        ]
+        uow_factory_cls = self._container.get(EntryUnitOfWorkCreator)
 
         uow_factory: EntryUnitOfWorkCreator = self._container.create_object(
             uow_factory_cls  # type: ignore[arg-type]

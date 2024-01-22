@@ -6,7 +6,7 @@ import ulid
 from karp.foundation.events import EventBus
 from karp import lex
 from karp.lex_infrastructure.repositories import (
-    SqlEntryUowV2Creator,
+    SqlEntryUowCreator,
 )
 from tests.unit.lex import factories
 
@@ -17,22 +17,22 @@ def example_uow() -> lex.CreateEntryRepository:
 
 
 @pytest.fixture
-def sql_entry_uow_v2_creator(
+def sql_entry_uow_creator(
     sqlite_session_factory,
-) -> SqlEntryUowV2Creator:
-    return SqlEntryUowV2Creator(
+) -> SqlEntryUowCreator:
+    return SqlEntryUowCreator(
         event_bus=mock.Mock(spec=EventBus),
         session_factory=sqlite_session_factory,
     )
 
 
-class TestSqlEntryUowV2:
+class TestSqlEntryUow:
     def test_repo_table_name(  # noqa: ANN201
         self,
-        sql_entry_uow_v2_creator: SqlEntryUowV2Creator,
+        sql_entry_uow_creator: SqlEntryUowCreator,
         example_uow: lex.CreateEntryRepository,
     ):
-        entry_uow, _ = sql_entry_uow_v2_creator(**example_uow.dict(exclude={"cmdtype"}))
+        entry_uow, _ = sql_entry_uow_creator(**example_uow.dict(exclude={"cmdtype"}))
         random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str
         with entry_uow as uw:
             assert (

@@ -75,7 +75,7 @@ class TestSqlEntryUnitOfWork:
             uow.entries.save(entry)
 
         new_session = sqlite_session_factory()
-        rows = list(new_session.execute('SELECT * FROM "test"'))
+        rows = list(new_session.execute(f'SELECT * FROM "{uow.table_name()}"'))
         assert not rows
 
     def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201
@@ -97,7 +97,7 @@ class TestSqlEntryUnitOfWork:
                 do_something_that_fails()
 
         new_session = sqlite_session_factory()
-        rows = list(new_session.execute('SELECT * FROM "test"'))
+        rows = list(new_session.execute(f'SELECT * FROM "{uow.table_name()}"'))
         assert not rows
 
 

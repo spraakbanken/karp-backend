@@ -281,7 +281,9 @@ class SqlEntryUnitOfWork(  # noqa: D101
         return self
 
     def table_name(self) -> str:  # noqa: D102
-        return self.name
+        u = ulid.from_uuid(self.entity_id)
+        random_part = u.randomness().str
+        return f"{self.name}_{random_part}"
 
     @property
     def repo(self) -> SqlEntryRepository:  # noqa: D102
@@ -299,17 +301,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
         return super().collect_new_events() if self._entries else []
 
 
-class SqlEntryUnitOfWorkV2(SqlEntryUnitOfWork):  # noqa: D101
-    def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003, D107
-        super().__init__(*args, **kwargs)
-        assert hasattr(self, "__enter__")  # noqa: S101
-
-    def table_name(self) -> str:  # noqa: D102
-        u = ulid.from_uuid(self.entity_id)
-        random_part = u.randomness().str
-        return f"{self.name}_{random_part}"
-
-
 SqlEntryUowType = TypeVar("SqlEntryUowType", bound=SqlEntryUnitOfWork)
 
 
@@ -324,9 +315,6 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
         self.event_bus = event_bus
         self.cache: dict[UniqueId, SqlEntryUowType] = {}
 
-    def _create_uow(self, **kwargs) -> SqlEntryUowType:  # noqa: ANN003
-        raise NotImplementedError(f"please implement this for {self}")
-
     def __call__(  # noqa: D102
         self,
         id: UniqueId,  # noqa: A002
@@ -338,7 +326,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
         timestamp: float,
     ) -> Tuple[SqlEntryUowType, list[Event]]:
         if id not in self.cache:
-            self.cache[id] = self._create_uow(
+            self.cache[id] = SqlEntryUnitOfWork(
                 id=id,
                 name=name,
                 config=config,
@@ -352,6 +340,3 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
         return self.cache[id], []
 
 
-class SqlEntryUowV2Creator(SqlEntryUowCreator[SqlEntryUnitOfWorkV2]):  # noqa: D101
-    def _create_uow(self, **kwargs) -> SqlEntryUnitOfWorkV2:  # noqa: ANN003
-        return SqlEntryUnitOfWorkV2(**kwargs)

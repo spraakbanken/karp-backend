@@ -295,11 +295,11 @@ class InMemoryLexInfrastructure(injector.Module):
             entry_uow_factory=entry_uow_factory,
         )
 
-    @injector.multiprovider
+    @injector.provider
     def entry_uow_creator_map(
         self,
-    ) -> Dict[str, lex_repositories.EntryUnitOfWorkCreator]:
-        return {"default": InMemoryEntryUnitOfWorkCreator}
+    ) -> lex_repositories.EntryUnitOfWorkCreator:
+        return InMemoryEntryUnitOfWorkCreator
 
     @injector.provider
     @injector.singleton

@@ -39,7 +39,7 @@ from karp.lex_infrastructure.queries import (
 )
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
-    SqlEntryUowV2Creator,
+    SqlEntryUowCreator,
     SqlResourceUnitOfWork,
 )
 
@@ -100,11 +100,9 @@ class LexInfrastructure(injector.Module):  # noqa: D101
             event_bus=event_bus,
         )
 
-    @injector.multiprovider
-    def entry_uow_creator_map(self) -> Dict[str, EntryUnitOfWorkCreator]:  # noqa: D102
-        return {
-            "default": SqlEntryUowV2Creator,
-        }
+    @injector.provider
+    def entry_uow_creator(self) -> EntryUnitOfWorkCreator:  # noqa: D102
+        return SqlEntryUowCreator
 
 
 class GenericLexInfrastructure(injector.Module):  # noqa: D101
