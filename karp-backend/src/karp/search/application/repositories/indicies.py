@@ -1,7 +1,6 @@
 import typing
 
 import pydantic
-
 from karp.foundation import unit_of_work
 
 
