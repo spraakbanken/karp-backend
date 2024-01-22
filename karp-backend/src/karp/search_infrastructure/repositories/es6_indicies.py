@@ -1,13 +1,14 @@
 import logging  # noqa: D100
 import re  # noqa: F401
+import typing
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union  # noqa: F401
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions  # noqa: F401
+
 from karp.foundation.events import EventBus
 from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
-    Index,
     IndexEntry,
     IndexUnitOfWork,
 )
@@ -16,8 +17,8 @@ from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 logger = logging.getLogger(__name__)
 
 
-class Es6Index(Index):  # noqa: D101
-    def __init__(  # noqa: D107, ANN204
+class Es6Index:
+    def __init__(
         self,
         es: elasticsearch.Elasticsearch,
         mapping_repo: Es6MappingRepository,
@@ -136,6 +137,21 @@ class Es6Index(Index):  # noqa: D101
                     "index_name": index_name,
                 },
             )
+
+    def create_empty_object(self) -> IndexEntry:  # noqa: D102
+        return IndexEntry(id="", entry={})
+
+    def assign_field(  # noqa: ANN201, D102
+        self, _index_entry: IndexEntry, field_name: str, part
+    ):
+        if isinstance(part, IndexEntry):
+            part = part.entry
+        _index_entry.entry[field_name] = part
+
+    def add_to_list_field(self, elems: typing.List, elem):  # noqa: ANN201, D102
+        if isinstance(elem, IndexEntry):
+            elem = elem.entry
+        elems.append(elem)
 
 
 def _create_es_mapping(config):  # noqa: C901, ANN202

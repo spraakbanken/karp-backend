@@ -69,7 +69,7 @@ class GenericEntryTransformer(EntryTransformer):  # noqa: D101
             field_content = None
 
             if field_conf.get("collection"):
-                field_content = self.index_uow.repo.create_empty_list()
+                field_content = []
                 if field_name in _src_entry:
                     for subfield in _src_entry[field_name]:
                         if field_conf["type"] == "object":

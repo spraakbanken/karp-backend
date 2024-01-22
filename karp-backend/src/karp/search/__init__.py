@@ -22,7 +22,6 @@ from karp.search.application.queries import (
 )
 from karp.search.application.repositories import (
     IndexUnitOfWork,
-    Index,
     IndexEntry,
 )
 from karp.search.application.transformers import (

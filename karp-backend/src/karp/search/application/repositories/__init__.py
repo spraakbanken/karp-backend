@@ -1,3 +1,3 @@
-from .indicies import IndexUnitOfWork, Index, IndexEntry  # noqa: I001
+from .indicies import IndexUnitOfWork, IndexEntry  # noqa: I001
 
-__all__ = ["IndexUnitOfWork", "Index", "IndexEntry"]
+__all__ = ["IndexUnitOfWork", "IndexEntry"]
