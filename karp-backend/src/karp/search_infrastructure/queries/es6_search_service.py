@@ -10,8 +10,6 @@ import elasticsearch_dsl as es_dsl  # pyre-ignore
 from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
-from karp import search
-
 from karp.search.application.queries import (
     QueryRequest,
 )
@@ -119,7 +117,7 @@ class EsFieldNameCollector(NodeWalker):
     def walk_object(self, _obj):
         return set()
 
-class Es6SearchService(search.SearchService):  # noqa: D101
+class Es6SearchService:
     def __init__(  # noqa: D107, ANN204
         self,
         es: elasticsearch.Elasticsearch,

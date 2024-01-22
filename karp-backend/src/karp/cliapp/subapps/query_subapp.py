@@ -6,6 +6,7 @@ import typer
 
 from karp import search
 from karp.cliapp.typer_injector import inject_from_ctx
+from karp.search_infrastructure.queries import Es6SearchService
 
 
 subapp = typer.Typer()
@@ -19,7 +20,7 @@ def resource(  # noqa: ANN201, D103
         None, help="Path to write to. Defaults to stdout."
     ),
 ):
-    search_service = inject_from_ctx(search.SearchService, ctx)
+    search_service = inject_from_ctx(Es6SearchService, ctx)
     query_request = search.QueryRequest(resource_ids=[resource_id])
     json_streams.dump_to_file(
         search_service.query(query_request),

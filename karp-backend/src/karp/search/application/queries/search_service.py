@@ -38,23 +38,3 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member  # noqa: D1
         if isinstance(v, str):
             return v.split(",")
         return v
-
-
-class SearchService(abc.ABC):  # noqa: D101
-    @abc.abstractmethod
-    def search_ids(self, resource_id: str, entry_ids: str):  # noqa: ANN201, D102
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def query(self, request: QueryRequest):  # noqa: ANN201, D102
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def query_split(self, request: QueryRequest):  # noqa: ANN201, D102
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def statistics(  # noqa: D102
-        self, resource_id: str, field: str
-    ) -> typing.Iterable[StatisticsDto]:
-        raise NotImplementedError()

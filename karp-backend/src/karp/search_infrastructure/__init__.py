@@ -10,7 +10,6 @@ from karp.lex.application.queries import (
 from karp import lex, search
 from karp.search.application.queries import (
     ResourceViews,
-    SearchService,
 )
 from karp.search.application.repositories import IndexUnitOfWork
 
@@ -86,7 +85,7 @@ class Es6SearchIndexMod(injector.Module):  # noqa: D101
         self,
         es: elasticsearch.Elasticsearch,
         mapping_repo: Es6MappingRepository,
-    ) -> SearchService:
+    ) -> Es6SearchService:
         return Es6SearchService(
             es=es,
             mapping_repo=mapping_repo,

@@ -10,10 +10,11 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, st
 
 from karp import auth, search
 from karp.main import errors as karp_errors
-from karp.search.application.queries import SearchService, QueryRequest
+from karp.search.application.queries import QueryRequest
 
 from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
+from karp.search_infrastructure.queries import Es6SearchService
 
 
 logger = logging.getLogger(__name__)
@@ -36,7 +37,7 @@ def get_entries_by_id(  # noqa: ANN201, D103
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    search_service: SearchService = Depends(inject_from_req(SearchService)),
+    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
     if not auth_service.authorize(auth.PermissionLevel.read, user, [resource_id]):
@@ -66,7 +67,7 @@ def query_split(  # noqa: ANN201, D103
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    search_service: SearchService = Depends(inject_from_req(SearchService)),
+    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     logger.debug("/query/split called", extra={"resources": resources})
     resource_list = resources.split(",")
@@ -138,7 +139,7 @@ def query(  # noqa: ANN201
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     auth_service: auth.AuthService = Depends(deps.get_auth_service),
-    search_service: SearchService = Depends(inject_from_req(SearchService)),
+    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.
