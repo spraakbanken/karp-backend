@@ -17,10 +17,6 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
     def _save(self, entity: EntityType):  # noqa: ANN202
         raise NotImplementedError()
 
-    def _check_id_has_correct_type(self, id_) -> None:
-        if not isinstance(id_, unique_id.UniqueId):
-            raise ValueError(f"expected UniqueId, got '{id_}' (type: `{type(id_)}')")
-
     def _ensure_correct_id_type(self, v) -> unique_id.UniqueId:
         try:
             return unique_id.UniqueId.validate(v)
