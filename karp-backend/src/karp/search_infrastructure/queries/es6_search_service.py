@@ -276,7 +276,7 @@ class Es6SearchService:
                 base_field = field.removesuffix(".length")
                 mappings[field] = \
                   {"type": "long",
-                   "script": {"source": f"emit(doc['{base_field}'].length)"}}
+                   "script": {"source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"}}
 
         # elasticsearch_dsl doesn't know about runtime_mappings so we have to add them 'by hand'
         if mappings:
