@@ -315,7 +315,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
         self.event_bus = event_bus
         self.cache: dict[UniqueId, SqlEntryUowType] = {}
 
-    def __call__(  # noqa: D102
+    def create(  # noqa: D102
         self,
         id: UniqueId,  # noqa: A002
         name: str,

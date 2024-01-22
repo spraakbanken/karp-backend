@@ -32,7 +32,7 @@ class TestSqlEntryUow:
         sql_entry_uow_creator: SqlEntryUowCreator,
         example_uow: lex.CreateEntryRepository,
     ):
-        entry_uow, _ = sql_entry_uow_creator(**example_uow.dict(exclude={"cmdtype"}))
+        entry_uow, _ = sql_entry_uow_creator.create(**example_uow.dict(exclude={"cmdtype"}))
         random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str
         with entry_uow as uw:
             assert (

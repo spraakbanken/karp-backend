@@ -13,7 +13,7 @@ from karp.lex.application.queries import (
     ResourceDto,
 )
 from karp.lex.application.repositories import (
-    EntryRepositoryUnitOfWorkFactory,
+    EntryUnitOfWorkCreator,
     EntryUnitOfWork,
 )
 from karp.lex.domain import entities as lex_entities
@@ -211,7 +211,7 @@ class InMemoryEntryUnitOfWorkCreator:
         self.event_bus = event_bus
         self._cache: dict[UniqueId, InMemoryEntryUnitOfWork] = {}
 
-    def __call__(
+    def create(
         self,
         id: UniqueId,  # noqa: A002
         name: str,
@@ -267,7 +267,7 @@ class InMemoryEntryUowRepositoryUnitOfWork(
     def __init__(
         self,
         event_bus: EventBus,
-        entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+        entry_uow_factory: EntryUnitOfWorkCreator,
     ) -> None:
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUowRepositoryUnitOfWork.__init__(
@@ -288,7 +288,7 @@ class InMemoryLexInfrastructure(injector.Module):
     def entry_uow_repo_uow(
         self,
         event_bus: EventBus,
-        entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+        entry_uow_factory: EntryUnitOfWorkCreator,
     ) -> lex_repositories.EntryUowRepositoryUnitOfWork:
         return InMemoryEntryUowRepositoryUnitOfWork(
             event_bus=event_bus,
@@ -298,8 +298,9 @@ class InMemoryLexInfrastructure(injector.Module):
     @injector.provider
     def entry_uow_creator_map(
         self,
+        event_bus: EventBus,
     ) -> lex_repositories.EntryUnitOfWorkCreator:
-        return InMemoryEntryUnitOfWorkCreator
+        return InMemoryEntryUnitOfWorkCreator(event_bus=event_bus)
 
     @injector.provider
     @injector.singleton

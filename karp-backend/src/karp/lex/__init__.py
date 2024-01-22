@@ -3,8 +3,6 @@ import injector  # noqa: I001
 from karp.command_bus import CommandBus, CommandHandler
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
-    EntryRepositoryUnitOfWorkFactory,
-    InjectorEntryUnitOfWorkRepoFactory,
     ResourceUnitOfWork,
 )
 from karp.lex_core.commands import (
@@ -83,12 +81,6 @@ __all__ = [
 
 
 class Lex(injector.Module):  # noqa: D101
-    @injector.provider
-    def entry_uow_factory(  # noqa: D102
-        self, container: injector.Injector
-    ) -> EntryRepositoryUnitOfWorkFactory:
-        return InjectorEntryUnitOfWorkRepoFactory(container)
-
     @injector.provider
     def create_entry_repository(  # noqa: D102
         self,

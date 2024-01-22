@@ -7,7 +7,6 @@ from starlette.requests import Request  # noqa: F401
 from karp import lex
 from karp.foundation.events import EventBus
 from karp.lex import (
-    EntryRepositoryUnitOfWorkFactory,
     EntryUowRepositoryUnitOfWork,
     ResourceUnitOfWork,
 )
@@ -31,6 +30,7 @@ from karp.lex_infrastructure import (
     SqlReadOnlyResourceRepository,
 )
 
+from karp.lex.application.repositories import EntryUnitOfWorkCreator
 
 def get_resource_unit_of_work(  # noqa: D103
     db_session: Session = Depends(get_session),
@@ -44,8 +44,8 @@ def get_resource_unit_of_work(  # noqa: D103
 
 def get_entry_repo_uow(  # noqa: D103
     db_session: Session = Depends(get_session),
-    entry_uow_factory: EntryRepositoryUnitOfWorkFactory = Depends(
-        inject_from_req(EntryRepositoryUnitOfWorkFactory)
+    entry_uow_factory: EntryUnitOfWorkCreator = Depends(
+        inject_from_req(EntryUnitOfWorkCreator)
     ),
     event_bus: EventBus = Depends(event_deps.get_eventbus),
 ) -> EntryUowRepositoryUnitOfWork:

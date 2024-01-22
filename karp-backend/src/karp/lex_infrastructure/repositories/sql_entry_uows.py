@@ -8,8 +8,8 @@ from karp.foundation.repository import Repository
 from karp.lex_core.value_objects import UniqueId
 from karp.lex.application.repositories import (
     EntryUnitOfWork,
+    EntryUnitOfWorkCreator,
     EntryUowRepositoryUnitOfWork,
-    EntryRepositoryUnitOfWorkFactory,
 )
 
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 class SqlEntryUowRepository(SqlRepository, Repository):  # noqa: D101
     def __init__(  # noqa: D107
         self,
-        entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+        entry_uow_factory: EntryUnitOfWorkCreator,
         session: sa_orm.Session,
     ) -> None:
         logger.debug("create repo with session=%s", session)
@@ -74,7 +74,7 @@ class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
         self,
         *,
         event_bus: EventBus,
-        entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+        entry_uow_factory: EntryUnitOfWorkCreator,
         session_factory: Optional[sa_orm.sessionmaker] = None,
         session: Optional[sa_orm.Session] = None,
     ):

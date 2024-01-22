@@ -3,7 +3,7 @@ from typing import Dict
 
 import injector
 from sqlalchemy.engine import Connection
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
 from karp import lex
 from karp.foundation.events import EventBus
@@ -20,7 +20,6 @@ from karp.lex.application.queries import (
 )
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
-    EntryRepositoryUnitOfWorkFactory,
     EntryUnitOfWorkCreator,
     ResourceUnitOfWork,
 )
@@ -79,7 +78,7 @@ class LexInfrastructure(injector.Module):  # noqa: D101
     def entry_uow_repo(  # noqa: D102
         self,
         session: Session,
-        entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
+        entry_uow_factory: EntryUnitOfWorkCreator,
         event_bus: EventBus,
     ) -> EntryUowRepositoryUnitOfWork:
         logger.debug("creating entry_repo_uow", extra={"session": session})
@@ -101,9 +100,12 @@ class LexInfrastructure(injector.Module):  # noqa: D101
         )
 
     @injector.provider
-    def entry_uow_creator(self) -> EntryUnitOfWorkCreator:  # noqa: D102
-        return SqlEntryUowCreator
-
+    def entry_uow_creator(  # noqa: D102
+        self,
+        session_factory: sessionmaker,
+        event_bus: EventBus
+    ) -> EntryUnitOfWorkCreator:  # noqa: D102
+        return SqlEntryUowCreator(session_factory = session_factory, event_bus = event_bus)
 
 class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
