@@ -6,6 +6,7 @@ from typing import Dict, Iterable, Optional, Tuple
 import injector
 from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
+from karp.foundation.repository import Repository
 from karp.lex.application import repositories as lex_repositories
 from karp.lex.application.queries import (
     ReadOnlyResourceRepository,
@@ -207,7 +208,7 @@ class InMemoryEntryUnitOfWorkCreator:
         return self._cache[entity_id], []
 
 
-class InMemoryEntryUowRepository(lex_repositories.EntryUowRepository):
+class InMemoryEntryUowRepository(Repository):
     def __init__(self) -> None:
         super().__init__()
         self._storage: dict[UniqueId, EntryUnitOfWork] = {}
@@ -247,7 +248,7 @@ class InMemoryEntryUowRepositoryUnitOfWork(
         self._repo = InMemoryEntryUowRepository()
 
     @property
-    def repo(self) -> lex_repositories.EntryUowRepository:
+    def repo(self):
         return self._repo
 
 

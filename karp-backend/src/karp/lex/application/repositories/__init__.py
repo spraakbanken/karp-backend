@@ -3,7 +3,6 @@ from .entry_repositories import (
     EntryRepositoryUnitOfWorkFactory,
     EntryUnitOfWork,  # noqa: F811
     EntryUnitOfWorkCreator,
-    EntryUowRepository,
     EntryUowRepositoryUnitOfWork,
     InjectorEntryUnitOfWorkRepoFactory,
 )
@@ -14,7 +13,6 @@ __all__ = [
     "EntryRepositoryUnitOfWorkFactory",
     "EntryUnitOfWork",
     "EntryUnitOfWorkCreator",
-    "EntryUowRepository",
     "EntryUowRepositoryUnitOfWork",
     "ResourceRepository",
     "ResourceUnitOfWork",

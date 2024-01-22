@@ -72,10 +72,6 @@ class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
         )
 
 
-class EntryUowRepository(repository.Repository):  # noqa: D101
-    EntityNotFound = errors.EntryRepoNotFound
-    pass
-
 
 class EntryUowRepositoryUnitOfWork(unit_of_work.UnitOfWork):
     def __init__(  # noqa: D107, ANN204

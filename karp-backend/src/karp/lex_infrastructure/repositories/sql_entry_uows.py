@@ -4,12 +4,12 @@ from typing import Optional
 from sqlalchemy import orm as sa_orm
 
 from karp.foundation.events import EventBus
+from karp.foundation.repository import Repository
 from karp.lex_core.value_objects import UniqueId
 from karp.lex.application.repositories import (
     EntryUnitOfWork,
     EntryUowRepositoryUnitOfWork,
     EntryRepositoryUnitOfWorkFactory,
-    EntryUowRepository,
 )
 
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
@@ -20,14 +20,13 @@ from karp.lex_infrastructure.sql.sql_models import EntryUowModel
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryUowRepository(SqlRepository, EntryUowRepository):  # noqa: D101
+class SqlEntryUowRepository(SqlRepository, Repository):  # noqa: D101
     def __init__(  # noqa: D107
         self,
         entry_uow_factory: EntryRepositoryUnitOfWorkFactory,
         session: sa_orm.Session,
     ) -> None:
         logger.debug("create repo with session=%s", session)
-        EntryUowRepository.__init__(self)  # type: ignore [arg-type]
         SqlRepository.__init__(self, session)
         self.entry_uow_factory = entry_uow_factory
 
