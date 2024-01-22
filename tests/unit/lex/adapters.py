@@ -18,7 +18,7 @@ from karp.lex.application.repositories import (
 )
 from karp.lex.domain import entities as lex_entities
 from karp.lex.domain import events
-from karp.lex_core.value_objects import UniqueId, UniqueIdType
+from karp.lex_core.value_objects import UniqueId, UniqueIdType, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
 from karp.lex.domain import errors
 from tests.foundation.adapters import InMemoryUnitOfWork
@@ -30,13 +30,22 @@ class UnitTestContext:
     command_bus: CommandBus
 
 
+def ensure_correct_id_type(v) -> unique_id.UniqueId:
+    try:
+        return unique_id.UniqueId.validate(v)
+    except ValueError as exc:
+        raise ValueError(
+            f"expected valid UniqueId, got '{v}' (type: `{type(v)}')"
+        ) from exc
+
+
 class InMemoryResourceRepository(lex_repositories.ResourceRepository):
     def __init__(self):  # noqa: ANN204
         super().__init__()
         self.resources = {}
 
     def _save(self, resource: lex_entities.Resource) -> None:
-        resource_id = self._ensure_correct_id_type(resource.id)
+        resource_id = ensure_correct_id_type(resource.id)
         self.resources[resource_id] = resource
 
     def _by_id(self, id_, *, version=None):  # noqa: ANN202
@@ -103,7 +112,7 @@ class InMemoryEntryRepository(Repository):
         pass
 
     def _save(self, entry):  # noqa: ANN202
-        entry_id = self._ensure_correct_id_type(entry.id)
+        entry_id = ensure_correct_id_type(entry.id)
         self.entries[entry_id] = copy.deepcopy(entry)
 
     def by_id(  # noqa: D102
@@ -135,7 +144,7 @@ class InMemoryEntryRepository(Repository):
         before_date=None,
         oldest_first=False,
     ):
-        entry_id = self._ensure_correct_id_type(id)
+        entry_id = ensure_correct_id_type(id)
         if entry := self.entries.get(entry_id):
             return copy.deepcopy(entry)
         print(f"{self.entries=}")
@@ -235,7 +244,7 @@ class InMemoryEntryUowRepository(Repository):
         self._storage: dict[UniqueId, EntryUnitOfWork] = {}
 
     def _save(self, entry_repo: EntryUnitOfWork) -> None:
-        entry_repo_id = self._ensure_correct_id_type(entry_repo.id)
+        entry_repo_id = ensure_correct_id_type(entry_repo.id)
         self._storage[entry_repo_id] = entry_repo
 
     def _by_id(
@@ -245,7 +254,7 @@ class InMemoryEntryUowRepository(Repository):
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
     ) -> EntryUnitOfWork | None:
-        entry_repo_id = self._ensure_correct_id_type(id)
+        entry_repo_id = ensure_correct_id_type(id)
         return self._storage.get(entry_repo_id)
 
     def __len__(self):  # noqa: ANN204
