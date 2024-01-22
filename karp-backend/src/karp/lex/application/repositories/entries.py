@@ -1,81 +1,7 @@
-import abc  # noqa: D100
-import typing
 from typing import Dict, List, Optional, Tuple
 
-from karp.foundation import entity, events, repository, unit_of_work
-from karp.lex.domain import entities, errors
+from karp.foundation import entity, events, unit_of_work
 from karp.lex_core.value_objects import UniqueId
-
-
-class EntryRepository(repository.Repository):  # noqa: D101
-    EntityNotFound = errors.EntryNotFound
-
-    @classmethod
-    @abc.abstractmethod
-    def from_dict(cls, settings: Dict):  # noqa: ANN206, D102
-        raise NotImplementedError()
-
-    def __init__(self):  # noqa: D107, ANN204
-        super().__init__()
-        self.settings = {}
-
-    def by_id(  # noqa: D102
-        self,
-        id_: UniqueId,
-        *,
-        version: Optional[int] = None,
-        after_date: Optional[float] = None,
-        before_date: Optional[float] = None,
-        oldest_first: bool = False,
-        **kwargs,  # noqa: ANN003
-    ):
-        if entry := self._by_id(
-            id_,
-            version=version,
-            after_date=after_date,
-            before_date=before_date,
-            oldest_first=oldest_first,
-        ):
-            return entry
-        raise errors.EntryNotFound(id_=id_)
-
-    @abc.abstractmethod
-    def _by_id(
-        self,
-        id: UniqueId,  # noqa: A002
-        *,
-        version: Optional[int] = None,
-        after_date: Optional[float] = None,
-        before_date: Optional[float] = None,
-        oldest_first: bool = False,
-        **kwargs,  # noqa: ANN003
-    ) -> typing.Optional:
-        raise NotImplementedError()
-
-    def entity_ids(self) -> List[str]:  # noqa: D102
-        raise NotImplementedError()
-
-    def teardown(self):  # noqa: ANN201
-        """Use for testing purpose."""
-        return
-
-    def get_history(  # noqa: D102
-        self,
-        user_id: Optional[str] = None,
-        entry_id: Optional[str] = None,
-        from_date: Optional[float] = None,
-        to_date: Optional[float] = None,
-        from_version: Optional[int] = None,
-        to_version: Optional[int] = None,
-        offset: int = 0,
-        limit: int = 100,
-    ) -> Tuple[List[entities.Entry], int]:
-        return [], 0
-
-    @abc.abstractmethod
-    def all_entries(self) -> typing.Iterable[entities.Entry]:
-        """Return all entries."""
-        return []
 
 
 class EntryUnitOfWork(  # noqa: D101
@@ -101,7 +27,7 @@ class EntryUnitOfWork(  # noqa: D101
         self._message = message
 
     @property
-    def entries(self) -> EntryRepository:  # noqa: D102
+    def entries(self):
         return self.repo
 
     @property

@@ -1,4 +1,4 @@
-from .entries import EntryRepository, EntryUnitOfWork
+from .entries import EntryUnitOfWork
 from .entry_repositories import (
     EntryRepositoryUnitOfWorkFactory,
     EntryUnitOfWork,  # noqa: F811
@@ -9,7 +9,6 @@ from .entry_repositories import (
 from .resources import ResourceRepository, ResourceUnitOfWork
 
 __all__ = [
-    "EntryRepository",
     "EntryRepositoryUnitOfWorkFactory",
     "EntryUnitOfWork",
     "EntryUnitOfWorkCreator",

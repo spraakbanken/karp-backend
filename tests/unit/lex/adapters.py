@@ -20,6 +20,7 @@ from karp.lex.domain import entities as lex_entities
 from karp.lex.domain import events
 from karp.lex_core.value_objects import UniqueId, UniqueIdType
 from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
+from karp.lex.domain import errors
 from tests.foundation.adapters import InMemoryUnitOfWork
 
 
@@ -93,7 +94,7 @@ class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
         )
 
 
-class InMemoryEntryRepository(lex_repositories.EntryRepository):
+class InMemoryEntryRepository(Repository):
     def __init__(self):  # noqa: ANN204
         super().__init__()
         self.entries = {}
@@ -104,6 +105,26 @@ class InMemoryEntryRepository(lex_repositories.EntryRepository):
     def _save(self, entry):  # noqa: ANN202
         entry_id = self._ensure_correct_id_type(entry.id)
         self.entries[entry_id] = copy.deepcopy(entry)
+
+    def by_id(  # noqa: D102
+        self,
+        id_: UniqueId,
+        *,
+        version: Optional[int] = None,
+        after_date: Optional[float] = None,
+        before_date: Optional[float] = None,
+        oldest_first: bool = False,
+        **kwargs,  # noqa: ANN003
+    ):
+        if entry := self._by_id(
+            id_,
+            version=version,
+            after_date=after_date,
+            before_date=before_date,
+            oldest_first=oldest_first,
+        ):
+            return entry
+        raise errors.EntryNotFound(id_=id_)
 
     def _by_id(  # noqa: ANN202
         self,
@@ -158,7 +179,7 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
         # self.config = config
 
     @property
-    def repo(self) -> lex_repositories.EntryRepository:
+    def repo(self):
         return self._entries
 
 

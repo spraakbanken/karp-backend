@@ -19,6 +19,7 @@ from sqlalchemy.sql import insert
 
 import ulid
 
+from karp.foundation.repository import Repository
 from karp.lex_core.value_objects import UniqueId
 from karp.foundation.events import EventBus
 from karp.lex.domain import errors
@@ -37,7 +38,7 @@ from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: D101
+class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
         history_model,
@@ -47,7 +48,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
     ):
         if not session:
             raise TypeError("session can't be None")
-        repositories.EntryRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
         self.history_model = history_model
         self.resource_config = resource_config
@@ -100,6 +100,26 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
         query = self._session.execute(stmt).scalars()
         # query = self._session.query(self.history_model).filter_by(discarded=False)
         return [row.entity_id for row in query.all()]
+
+    def by_id(  # noqa: D102
+        self,
+        id_: UniqueId,
+        *,
+        version: Optional[int] = None,
+        after_date: Optional[float] = None,
+        before_date: Optional[float] = None,
+        oldest_first: bool = False,
+        **kwargs,  # noqa: ANN003
+    ):
+        if entry := self._by_id(
+            id_,
+            version=version,
+            after_date=after_date,
+            before_date=before_date,
+            oldest_first=oldest_first,
+        ):
+            return entry
+        raise errors.EntryNotFound(id_=id_)
 
     def _by_id(
         self,
