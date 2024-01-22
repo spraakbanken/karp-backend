@@ -32,10 +32,7 @@ class Repository(abc.ABC):  # noqa: D101
     ):
         if entity := self._by_id(id, version=version):
             return entity
-        entity_not_found = self.create_entity_not_found(
-            f"Entity with id={id} is not found"
-        )
-        raise entity_not_found
+        raise self.EntityNotFound(f"Entity with id={id} is not found")
 
     get_by_id = by_id
 
@@ -57,10 +54,3 @@ class Repository(abc.ABC):  # noqa: D101
         **kwargs,  # noqa: ANN003
     ) -> Optional:
         raise NotImplementedError()
-
-    def create_entity_not_found(self, msg: str) -> Exception:
-        """Create EntityNotFound.
-
-        Override this to get preciser traceback.
-        """
-        return self.EntityNotFound(msg)
