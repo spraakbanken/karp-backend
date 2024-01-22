@@ -72,7 +72,7 @@ class InjectorEntryUnitOfWorkRepoFactory(  # noqa: D101
         )
 
 
-class EntryUowRepository(repository.Repository[EntryUnitOfWork]):  # noqa: D101
+class EntryUowRepository(repository.Repository):  # noqa: D101
     EntityNotFound = errors.EntryRepoNotFound
     pass
 

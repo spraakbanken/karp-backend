@@ -14,7 +14,7 @@ class IndexEntry(pydantic.BaseModel):  # noqa: D101
         return bool(self.entry)
 
 
-class Index(repository.Repository[IndexEntry]):  # noqa: D101
+class Index(repository.Repository):  # noqa: D101
     @abc.abstractmethod
     def create_index(self, resource_id: str, config: typing.Dict):  # noqa: ANN201, D102
         pass

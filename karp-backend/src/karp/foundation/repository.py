@@ -4,17 +4,15 @@ from typing import Generic, TypeVar, Optional, Type
 from karp.lex_core.value_objects import UniqueId, unique_id
 from .errors import NotFoundError
 
-EntityType = TypeVar("EntityType")
 
-
-class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
+class Repository(abc.ABC):  # noqa: D101
     EntityNotFound: Type[NotFoundError] = NotFoundError
 
-    def save(self, entity: EntityType):  # noqa: ANN201, D102
+    def save(self, entity):  # noqa: ANN201, D102
         self._save(entity)
 
     @abc.abstractmethod
-    def _save(self, entity: EntityType):  # noqa: ANN202
+    def _save(self, entity):  # noqa: ANN202
         raise NotImplementedError()
 
     def _ensure_correct_id_type(self, v) -> unique_id.UniqueId:
@@ -31,7 +29,7 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
         *,
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
-    ) -> EntityType:
+    ):
         if entity := self._by_id(id, version=version):
             return entity
         entity_not_found = self.create_entity_not_found(
@@ -47,7 +45,7 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
         *,
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
-    ) -> Optional[EntityType]:
+    ) -> Optional:
         return self._by_id(id, version=version)
 
     @abc.abstractmethod
@@ -57,7 +55,7 @@ class Repository(Generic[EntityType], abc.ABC):  # noqa: D101
         *,
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
-    ) -> Optional[EntityType]:
+    ) -> Optional:
         raise NotImplementedError()
 
     def create_entity_not_found(self, msg: str) -> Exception:

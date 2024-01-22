@@ -12,7 +12,7 @@ from karp.lex.domain import errors
 logger = logging.getLogger("karp")
 
 
-class ResourceRepository(repository.Repository[entities.Resource]):  # noqa: D101
+class ResourceRepository(repository.Repository):  # noqa: D101
     EntityNotFound = errors.ResourceNotFound
 
     @abc.abstractmethod

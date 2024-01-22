@@ -7,7 +7,7 @@ from karp.lex.domain import entities, errors
 from karp.lex_core.value_objects import UniqueId
 
 
-class EntryRepository(repository.Repository[entities.Entry]):  # noqa: D101
+class EntryRepository(repository.Repository):  # noqa: D101
     EntityNotFound = errors.EntryNotFound
 
     @classmethod
@@ -28,7 +28,7 @@ class EntryRepository(repository.Repository[entities.Entry]):  # noqa: D101
         before_date: Optional[float] = None,
         oldest_first: bool = False,
         **kwargs,  # noqa: ANN003
-    ) -> entities.Entry:
+    ):
         if entry := self._by_id(
             id_,
             version=version,
@@ -49,7 +49,7 @@ class EntryRepository(repository.Repository[entities.Entry]):  # noqa: D101
         before_date: Optional[float] = None,
         oldest_first: bool = False,
         **kwargs,  # noqa: ANN003
-    ) -> typing.Optional[entities.Entry]:
+    ) -> typing.Optional:
         raise NotImplementedError()
 
     def entity_ids(self) -> List[str]:  # noqa: D102
