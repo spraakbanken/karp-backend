@@ -1,5 +1,6 @@
 import typing  # noqa: D100, I001
 
+import pydantic
 from fastapi import (
     APIRouter,
     Depends,
@@ -11,7 +12,6 @@ from fastapi import (
 
 from karp import auth
 from karp.foundation.value_objects import PermissionLevel
-from karp.search.application.queries import StatisticsDto
 from karp.search_infrastructure.queries import Es6SearchService
 from karp.karp_v6_api import schemas  # noqa: F401
 
@@ -20,6 +20,11 @@ from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 
 
 router = APIRouter()
+
+
+class StatisticsDto(pydantic.BaseModel):  # noqa: D101
+    value: str
+    count: int
 
 
 @router.get(

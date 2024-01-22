@@ -19,7 +19,6 @@ from karp.search.application.use_cases import (
 from karp.search.application.queries import (
     ResourceViews,
     QueryRequest,
-    StatisticsDto,
 )
 from karp.search.application.repositories import (
     IndexUnitOfWork,
