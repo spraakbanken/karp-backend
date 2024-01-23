@@ -9,14 +9,15 @@ from karp import auth, lex
 from karp.auth.domain.errors import TokenError
 from karp.auth_infrastructure import (
     JWTAuthService,
+    JWTAuthServiceConfig,
     LexGetResourcePermissions,
-    LexIsResourceProtected, JWTAuthServiceConfig,
+    LexIsResourceProtected,
 )
 from karp.main.errors import KarpError  # noqa: F401
 
+from ...lex_infrastructure import SqlGetPublishedResources, SqlReadOnlyResourceRepository
 from . import lex_deps
 from .fastapi_injector import inject_from_req
-from ...lex_infrastructure import SqlReadOnlyResourceRepository, SqlGetPublishedResources
 
 # auto_error false is needed so that FastAPI does not
 # give back a faulty 403 when credentials are missing

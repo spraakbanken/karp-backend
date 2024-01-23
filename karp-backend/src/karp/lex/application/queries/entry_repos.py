@@ -1,5 +1,4 @@
 import pydantic
-
 from karp.lex_core.value_objects import UniqueIdStr
 
 

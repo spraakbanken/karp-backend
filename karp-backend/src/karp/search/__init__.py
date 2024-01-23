@@ -28,7 +28,9 @@ __all__ = [
 ]
 
 from karp.search.generic_resources import GenericResourceViews
-from karp.search_infrastructure.transformers.generic_entry_transformer import GenericEntryTransformer
+from karp.search_infrastructure.transformers.generic_entry_transformer import (
+    GenericEntryTransformer,
+)
 from karp.search_infrastructure.transformers.generic_pre_processor import GenericPreProcessor
 
 

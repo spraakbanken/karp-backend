@@ -7,8 +7,7 @@ from karp.lex.application.queries import (
 )
 from karp.lex.domain import errors as lex_errors
 from karp.lex_infrastructure import GenericEntryViews, SqlReadOnlyResourceRepository
-from karp.search.application.repositories.indicies import IndexUnitOfWork
-from karp.search.application.repositories.indicies import IndexEntry
+from karp.search.application.repositories.indicies import IndexEntry, IndexUnitOfWork
 
 logger = logging.getLogger(__name__)
 

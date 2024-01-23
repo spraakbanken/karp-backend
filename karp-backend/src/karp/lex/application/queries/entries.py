@@ -1,11 +1,9 @@
 import typing
 
 import pydantic
-
+from karp.lex.domain.entities.entry import EntryOp
 from karp.lex_core import alias_generators
 from karp.lex_core.value_objects import unique_id
-
-from karp.lex.domain.entities.entry import EntryOp
 
 
 class BaseModel(pydantic.BaseModel):  # noqa: D101
