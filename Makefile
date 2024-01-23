@@ -93,7 +93,8 @@ test:
 	${INVENV} pytest -vv ${tests}
 
 .PHONY: all-tests
-all-tests: clean-pyc unit-tests integration-tests e2e-tests
+all-tests: clean-pyc
+	${INVENV} pytest -vv ${all_test_dirs}
 
 .PHONY: all-tests-w-coverage
 all-tests-w-coverage:
