@@ -23,7 +23,7 @@ class TestSqlResourceUnitOfWork:
         self, sqlite_session_factory
     ):
         uow = SqlResourceUnitOfWork(
-            session_factory=sqlite_session_factory, event_bus=InMemoryEventBus()
+            session=sqlite_session_factory(), event_bus=InMemoryEventBus()
         )
         with uow:
             resource = factories.ResourceFactory()
@@ -38,7 +38,7 @@ class TestSqlResourceUnitOfWork:
             print(resource.to_string())
 
         uow = SqlResourceUnitOfWork(
-            session_factory=sqlite_session_factory, event_bus=InMemoryEventBus()
+            session=sqlite_session_factory(), event_bus=InMemoryEventBus()
         )
         with pytest.raises(AttributeError):
             with uow:
@@ -62,7 +62,7 @@ class TestSqlEntryUnitOfWork:
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},
-            sqlite_session_factory,
+            session = sqlite_session_factory(),
             event_bus=InMemoryEventBus(),
             name="test",
             config={},
@@ -82,7 +82,7 @@ class TestSqlEntryUnitOfWork:
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},
-            sqlite_session_factory,
+            session = sqlite_session_factory(),
             event_bus=InMemoryEventBus(),
             name="test",
             config={},

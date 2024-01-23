@@ -257,7 +257,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
 ):
     def __init__(  # noqa: D107, ANN204
         self,
-        session_factory: sessionmaker,
+        session: Session,
         event_bus: EventBus,
         **kwargs,  # noqa: ANN003
     ):
@@ -265,13 +265,10 @@ class SqlEntryUnitOfWork(  # noqa: D101
         if not hasattr(self, "__enter__"):
             raise RuntimeError(f"No __enter__ detected in {self=}")
         repositories.EntryUnitOfWork.__init__(self, event_bus=event_bus, **kwargs)
-        self.session_factory = session_factory
         self._entries = None
-        self._session = None
+        self._session = session
 
     def _begin(self):  # noqa: ANN202
-        if self._session is None:
-            self._session = self.session_factory()
         if self._entries is None:
             self._entries = SqlEntryRepository.from_dict(
                 name=self.table_name(),
@@ -308,10 +305,10 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
     @injector.inject
     def __init__(  # noqa: D107, ANN204
         self,
-        session_factory: sessionmaker,
+        session: Session,
         event_bus: EventBus,
     ):
-        self._session_factory = session_factory
+        self._session = session
         self.event_bus = event_bus
         self.cache: dict[UniqueId, SqlEntryUowType] = {}
 
@@ -334,7 +331,7 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
                 last_modified_by=user,
                 message=message,
                 last_modified=timestamp,
-                session_factory=self._session_factory,
+                session=self._session,
                 event_bus=self.event_bus,
             )
         return self.cache[id], []

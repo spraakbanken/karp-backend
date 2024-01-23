@@ -93,7 +93,7 @@ class LexInfrastructure(injector.Module):  # noqa: D101
         session_factory: sessionmaker,
         event_bus: EventBus
     ) -> EntryUnitOfWorkCreator:  # noqa: D102
-        return SqlEntryUowCreator(session_factory = session_factory, event_bus = event_bus)
+        return SqlEntryUowCreator(session = session_factory(), event_bus = event_bus)
 
 
 class GenericLexInfrastructure(injector.Module):  # noqa: D101

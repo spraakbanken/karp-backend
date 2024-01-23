@@ -158,19 +158,13 @@ class SqlResourceUnitOfWork(  # noqa: D101
         self,
         event_bus: EventBus,
         *,
-        session_factory: Optional[sessionmaker] = None,
-        session: Optional[Session] = None,
+        session: Session,
     ):
-        if not session and not session_factory:
-            raise ValueError("Both session and session_factory cannot be None")
         SqlUnitOfWork.__init__(self, session=session)
         repositories.ResourceUnitOfWork.__init__(self, event_bus)
-        self.session_factory = session_factory
         self._resources = None
 
     def _begin(self):  # noqa: ANN202
-        if self._session_is_created_here:
-            self._session = self.session_factory()  # type: ignore
         logger.info("using session", extra={"session": self._session})
         self._resources = SqlResourceRepository(self._session)
         return self

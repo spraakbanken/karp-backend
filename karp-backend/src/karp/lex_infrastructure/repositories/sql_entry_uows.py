@@ -75,8 +75,7 @@ class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
         *,
         event_bus: EventBus,
         entry_uow_factory: EntryUnitOfWorkCreator,
-        session_factory: Optional[sa_orm.sessionmaker] = None,
-        session: Optional[sa_orm.Session] = None,
+        session: sa_orm.Session,
     ):
         SqlUnitOfWork.__init__(self, session=session)
         EntryUowRepositoryUnitOfWork.__init__(
@@ -84,16 +83,10 @@ class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
             event_bus=event_bus,
             entry_uow_factory=entry_uow_factory,
         )
-        self.session_factory = session_factory
-        if self._session_is_created_here and self.session_factory is None:
-            raise ValueError("Must provide one of session and session_factory")
         self._repo = None
 
     def _begin(self):  # noqa: ANN202
         logger.debug("called _begin")
-        if self._session_is_created_here:
-            self._session = self.session_factory()  # type: ignore
-            logger.debug("created session=%s", self._session)
         if self._repo is None:
             self._repo = SqlEntryUowRepository(
                 entry_uow_factory=self.factory,

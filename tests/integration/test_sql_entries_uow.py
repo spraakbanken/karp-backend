@@ -22,7 +22,7 @@ def sql_entry_uow_creator(
 ) -> SqlEntryUowCreator:
     return SqlEntryUowCreator(
         event_bus=mock.Mock(spec=EventBus),
-        session_factory=sqlite_session_factory,
+        session=sqlite_session_factory(),
     )
 
 
