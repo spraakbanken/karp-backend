@@ -1,0 +1,18 @@
+@startuml
+set separator none
+title karp-lex-core - System Context
+
+top to bottom direction
+
+!include <C4/C4>
+!include <C4/C4_Context>
+
+skinparam svgDimensionStyle false
+skinparam preserveAspectRatio meet
+System(karplexcore, "karp-lex-core", $descr="", $tags="", $link="../container/")
+System(karpbackend, "karp-backend", $descr="", $tags="", $link="../../karp-backend/context/")
+
+Rel_D(karpbackend, karplexcore, "", $techn="", $tags="", $link="")
+
+SHOW_LEGEND(true)
+@enduml
