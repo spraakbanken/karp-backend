@@ -1,37 +1,24 @@
 import injector  # noqa: I001
 
-from karp.command_bus import CommandBus, CommandHandler
+from karp.command_bus import CommandHandler
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     ResourceUnitOfWork,
 )
 from karp.lex_core.commands import (
-    AddEntries,
-    AddEntriesInChunks,
-    AddEntry,
     CreateEntryRepository,
     CreateResource,
-    ImportEntries,
-    ImportEntriesInChunks,
     SetEntryRepoId,
-    EntryCommand,
-    ExecuteBatchOfEntryCommands,
 )
 from karp.lex_core import commands
 from karp.lex.domain.value_objects import EntrySchema
 from karp.lex.application.use_cases import (
-    AddingEntries,
-    AddingEntry,
     CreatingEntryRepo,
     CreatingResource,
-    DeletingEntry,
     DeletingResource,
-    ImportingEntries,
     PublishingResource,
     SettingEntryRepoId,
-    UpdatingEntry,
     UpdatingResource,
-    ExecutingBatchOfEntryCommands,
 )
 from karp.lex.application.queries import (
     EntryDto,
@@ -45,18 +32,10 @@ __all__ = [
     # modules
     "commands",
     # commands
-    "AddEntries",
-    "AddEntriesInChunks",
-    "AddEntry",
-    "ImportEntries",
-    "ImportEntriesInChunks",
     "CreateEntryRepository",
-    "EntryCommand",
-    "ExecuteBatchOfEntryCommands",
     # use cases
     "CreatingEntryRepo",
     "CreatingResource",
-    "ImportingEntries",
     # dtos
     "EntryDto",
     "GetHistoryDto",
@@ -121,74 +100,3 @@ class Lex(injector.Module):  # noqa: D101
         resource_uow: ResourceUnitOfWork,
     ) -> CommandHandler[commands.PublishResource]:
         return PublishingResource(resource_uow)
-
-    @injector.provider
-    def add_entry(  # noqa: D102
-        self,
-        resource_uow: ResourceUnitOfWork,
-        entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> CommandHandler[commands.AddEntry]:
-        return AddingEntry(
-            resource_uow=resource_uow,
-            entry_repo_uow=entry_repo_uow,
-        )
-
-    @injector.provider
-    def add_entries(  # noqa: D102
-        self,
-        resource_uow: ResourceUnitOfWork,
-        entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> CommandHandler[commands.AddEntries]:
-        return AddingEntries(resource_uow=resource_uow, entry_repo_uow=entry_repo_uow)
-
-    @injector.provider
-    def adding_entries_in_chunks(  # noqa: D102
-        self,
-        resource_uow: ResourceUnitOfWork,
-        entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> CommandHandler[AddEntriesInChunks]:
-        return AddingEntries(resource_uow=resource_uow, entry_repo_uow=entry_repo_uow)  # type: ignore[return-value]
-
-    @injector.provider
-    def import_entries(  # noqa: D102
-        self,
-        resource_uow: ResourceUnitOfWork,
-        entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> CommandHandler[commands.ImportEntries]:
-        return ImportingEntries(resource_uow=resource_uow, entry_repo_uow=entry_repo_uow)
-
-    @injector.provider
-    def importing_entries_in_chunks(  # noqa: D102
-        self,
-        resource_uow: ResourceUnitOfWork,
-        entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> CommandHandler[ImportEntriesInChunks]:
-        return ImportingEntries(  # type: ignore[return-value]
-            resource_uow=resource_uow, entry_repo_uow=entry_repo_uow
-        )
-
-    @injector.provider
-    def update_entry(  # noqa: D102
-        self,
-        resource_uow: ResourceUnitOfWork,
-        entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> CommandHandler[commands.UpdateEntry]:
-        return UpdatingEntry(
-            resource_uow=resource_uow,
-            entry_repo_uow=entry_repo_uow,
-        )
-
-    @injector.provider
-    def delete_entry(  # noqa: D102
-        self,
-        resource_uow: ResourceUnitOfWork,
-        entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> CommandHandler[commands.DeleteEntry]:
-        return DeletingEntry(resource_uow=resource_uow, entry_repo_uow=entry_repo_uow)
-
-    @injector.provider
-    def batch_of_entry_commands(
-        self,
-        command_bus: CommandBus,
-    ) -> CommandHandler[commands.ExecuteBatchOfEntryCommands]:
-        return ExecutingBatchOfEntryCommands(command_bus=command_bus)

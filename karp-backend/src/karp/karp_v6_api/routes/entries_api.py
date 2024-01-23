@@ -12,25 +12,22 @@ from fastapi import (
     Path,  # noqa: F401
     Query,
 )
-import pydantic
 from starlette import responses
 
 from karp.auth_infrastructure import JWTAuthService
+from karp.entry_commands import EntryCommands
 from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
 from karp.lex_infrastructure import GenericGetEntryHistory
 
 from karp.main import errors as karp_errors
-from karp import auth, search
+from karp import auth
 from karp.lex.application.queries import EntryDto
-from karp.lex import commands
 from karp.lex.domain import errors
 from karp.auth import User
 from karp.foundation.value_objects import PermissionLevel
 from karp.karp_v6_api import schemas, dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
-from karp.command_bus import CommandBus
-
 
 router = APIRouter()
 
@@ -74,7 +71,7 @@ def add_entry(  # noqa: ANN201, D103
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: JWTAuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
+    entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -83,13 +80,11 @@ def add_entry(  # noqa: ANN201, D103
         )
     logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
-        new_entry = command_bus.dispatch(
-            commands.AddEntry(
-                resourceId=resource_id,
-                user=user.identifier,
-                message=data.message,
-                entry=data.entry,
-            )
+        new_entry = entry_commands.add_entry(
+            resource_id=resource_id,
+            user=user.identifier,
+            message=data.message,
+            entry=data.entry,
         )
     except errors.IntegrityError as exc:
         return responses.JSONResponse(
@@ -122,7 +117,7 @@ def update_entry(  # noqa: ANN201, D103
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: JWTAuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
+    entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -140,15 +135,13 @@ def update_entry(  # noqa: ANN201, D103
         },
     )
     try:
-        entry = command_bus.dispatch(
-            commands.UpdateEntry(
-                resourceId=resource_id,
-                id=unique_id.parse(entry_id),
-                version=data.version,
-                user=user.identifier,
-                message=data.message,
-                entry=data.entry,
-            )
+        entry = entry_commands.update_entry(
+            resource_id=resource_id,
+            _id=unique_id.parse(entry_id),
+            version=data.version,
+            user=user.identifier,
+            message=data.message,
+            entry=data.entry,
         )
 
         return schemas.EntryAddResponse(newID=entry.entity_id)
@@ -187,7 +180,7 @@ def delete_entry(  # noqa: ANN201
     version: int,
     user: User = Security(deps.get_user, scopes=["write"]),
     auth_service: JWTAuthService = Depends(deps.get_auth_service),
-    command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
+    entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
 ):
     """Delete a entry from a resource."""
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -196,13 +189,11 @@ def delete_entry(  # noqa: ANN201
             detail="Not enough permissions",
         )
     try:
-        command_bus.dispatch(
-            commands.DeleteEntry(
-                resourceId=resource_id,
-                id=unique_id.parse(entry_id),
-                user=user.identifier,
-                version=version,
-            )
+        entry_commands.delete_entry(
+            resource_id=resource_id,
+            _id=unique_id.parse(entry_id),
+            user=user.identifier,
+            version=version,
         )
     except errors.EntryNotFound:
         return responses.JSONResponse(

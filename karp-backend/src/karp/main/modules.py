@@ -4,6 +4,9 @@ import threading
 from typing import Dict, Type
 import sys
 
+from karp.entry_commands import EntryCommands
+from karp.lex import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
+
 try:
     from importlib.metadata import entry_points
 except ImportError:
@@ -74,6 +77,12 @@ class CommandBusMod(injector.Module):  # noqa: D101
     @injector.provider
     def command_bus(self, inj: injector.Injector) -> CommandBus:  # noqa: D102
         return InjectorCommandBus(inj)
+
+    @injector.provider
+    def entry_commands(
+        self, resource_uow: ResourceUnitOfWork, entry_repo_uow: EntryUowRepositoryUnitOfWork
+    ) -> EntryCommands:
+        return EntryCommands(entry_repo_uow=entry_repo_uow, resource_uow=resource_uow)
 
 
 class EventBusMod(injector.Module):  # noqa: D101

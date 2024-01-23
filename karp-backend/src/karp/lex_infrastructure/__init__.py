@@ -1,5 +1,4 @@
 import logging  # noqa: I001
-from typing import Dict
 
 import injector
 from sqlalchemy.engine import Connection
@@ -27,7 +26,6 @@ from karp.lex_infrastructure.repositories import (
     SqlResourceUnitOfWork,
 )
 from karp.lex_infrastructure.queries.generic_resources import GenericGetEntryRepositoryId
-
 
 logger = logging.getLogger(__name__)
 

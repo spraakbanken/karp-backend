@@ -14,11 +14,12 @@ from tqdm import tqdm
 
 from karp.command_bus import CommandBus
 from karp import lex
+from karp.entry_commands import EntryCommands
 from karp.lex.domain.value_objects import entry_schema
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
-from karp.lex_infrastructure import SqlReadOnlyResourceRepository
+from karp.lex_infrastructure import SqlReadOnlyResourceRepository, GenericEntryViews
 
 logger = logging.getLogger(__name__)
 
@@ -38,26 +39,25 @@ def add_entries_to_resource(  # noqa: ANN201, D103
     user: Optional[str] = typer.Option(None),
     message: Optional[str] = typer.Option(None),
 ):
-    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore[type-abstract]
+    entry_commands = inject_from_ctx(EntryCommands, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
     entries = tqdm(json_streams.load_from_file(data), desc="Adding", unit=" entries")
     if chunked:
-        cmd = lex.AddEntriesInChunks(
-            resourceId=resource_id,
+        entry_commands.add_entries_in_chunks(
+            resource_id=resource_id,
             chunk_size=chunk_size,
             entries=entries,
             user=user,
             message=message,
         )
     else:
-        cmd = lex.AddEntries(  # type: ignore[assignment]
-            resourceId=resource_id,
+        entry_commands.add_entries(
+            resource_id=resource_id,
             entries=entries,
             user=user,
             message=message,
         )
-    bus.dispatch(cmd)
     typer.echo(f"Successfully added entries to {resource_id}")
 
 
@@ -73,26 +73,25 @@ def import_entries_to_resource(  # noqa: ANN201, D103
     user: Optional[str] = typer.Option(None),
     message: Optional[str] = typer.Option(None),
 ):
-    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore[type-abstract]
+    entry_commands = inject_from_ctx(EntryCommands, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
     entries = tqdm(json_streams.load_from_file(data), desc="Importing", unit=" entries")
     if chunked:
-        cmd = lex.ImportEntriesInChunks(
-            resourceId=resource_id,
+        entry_commands.import_entries_in_chunks(
+            resource_id=resource_id,
             chunk_size=chunk_size,
             entries=entries,
             user=user,
             message=message,
         )
     else:
-        cmd = lex.ImportEntries(  # type: ignore[assignment]
-            resourceId=resource_id,
+        entry_commands.import_entries(
+            resource_id=resource_id,
             entries=entries,
             user=user,
             message=message,
         )
-    bus.dispatch(cmd)
     typer.echo(f"Successfully imported entries to {resource_id}")
 
 
@@ -111,7 +110,7 @@ def export_entries(  # noqa: ANN201, D103
     resource_id: str,
     output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
 ):
-    entry_views = inject_from_ctx(lex.EntryViews, ctx=ctx)  # type: ignore[type-abstract]
+    entry_views = inject_from_ctx(GenericEntryViews, ctx=ctx)
     all_entries = entry_views.all_entries(resource_id=resource_id)
     logger.debug(
         "exporting entries",
@@ -138,19 +137,22 @@ def batch_entries(
     > Example:
 
     > `[{"cmd": {"cmdtype": "add_entry","resourceId": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
-
-
     """
     logger.info("run entries command in batch")
-    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore[type-abstract]
-    entry_commands = tqdm(
-        (lex.EntryCommand(**cmd) for cmd in json_streams.load_from_file(data)),
-        desc="Loading",
-        unit=" commands",
-    )
-    cmd = lex.ExecuteBatchOfEntryCommands(commands=entry_commands)
-
-    bus.dispatch(cmd)
+    entry_commands = inject_from_ctx(EntryCommands, ctx)  # type: ignore[type-abstract]
+    for cmd_outer in json_streams.load_from_file(data):
+        cmd = cmd_outer["cmd"]
+        command_type = cmd["cmdtype"]
+        del cmd["cmdtype"]
+        if "id" in cmd:
+            cmd["_id"] = cmd["id"]
+            del cmd["id"]
+        if command_type == "add_entry":
+            entry_commands.add_entry(**cmd)
+        elif command_type == "update_entry":
+            entry_commands.update_entry(**cmd)
+        elif command_type == "delete_entry":
+            entry_commands.delete_entry(**cmd)
 
 
 class Counter(collections.abc.Generator):  # noqa: D101

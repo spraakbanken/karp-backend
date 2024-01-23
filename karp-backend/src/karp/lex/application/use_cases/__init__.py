@@ -1,11 +1,3 @@
-from .entry_handlers import (  # noqa: I001
-    AddingEntry,
-    AddingEntries,
-    DeletingEntry,
-    ImportingEntries,
-    UpdatingEntry,
-    ExecutingBatchOfEntryCommands,
-)
 from .entry_repo_handlers import (
     CreatingEntryRepo,
 )
@@ -17,15 +9,7 @@ from .resource_handlers import (
     UpdatingResource,
 )
 
-
 __all__ = [
-    # entry use cases
-    "AddingEntries",
-    "AddingEntry",
-    "DeletingEntry",
-    "ImportingEntries",
-    "UpdatingEntry",
-    "ExecutingBatchOfEntryCommands",
     # entry-repo use cases
     "CreatingEntryRepo",
     # resource use cases
