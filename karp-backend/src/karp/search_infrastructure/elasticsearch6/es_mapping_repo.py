@@ -19,17 +19,7 @@ KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
 
-class MappingRepository(abc.ABC):  # noqa: D101
-    @abc.abstractmethod
-    def get_index_name(self, resource_id: str) -> str:  # noqa: D102
-        ...
-
-    @abc.abstractmethod
-    def get_alias_name(self, resource_id: str) -> str:  # noqa: D102
-        ...
-
-
-class Es6MappingRepository(MappingRepository):  # noqa: D101
+class Es6MappingRepository:  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
         es: elasticsearch.Elasticsearch,

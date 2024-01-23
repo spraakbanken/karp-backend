@@ -7,12 +7,13 @@ from karp import command_bus
 from karp.lex.domain import events as lex_events
 from karp.lex.application.queries import EntryDto
 from karp.search.application.repositories import IndexUnitOfWork
-from karp.search.application.transformers import EntryTransformer, PreProcessor
 
 from karp.lex.domain import events
 
 from karp.search.domain import commands
 from karp.search.generic_resources import GenericResourceViews
+from karp.search_infrastructure.transformers.generic_pre_processor import GenericPreProcessor
+from karp.search_infrastructure.transformers.generic_entry_transformer import GenericEntryTransformer
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class ReindexingResource(  # noqa: D101
         self,
         index_uow: IndexUnitOfWork,
         resource_views: GenericResourceViews,
-        pre_processor: PreProcessor,
+        pre_processor: GenericPreProcessor,
     ) -> None:
         super().__init__()
         self.index_uow = index_uow
@@ -101,7 +102,7 @@ class EntryAddedHandler(  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,
-        entry_transformer: EntryTransformer,
+        entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ):
         self.index_uow = index_uow
@@ -137,7 +138,7 @@ class EntryUpdatedHandler(  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,
-        entry_transformer: EntryTransformer,
+        entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ):
         self.index_uow = index_uow
@@ -174,7 +175,7 @@ class EntryDeletedHandler(  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
         index_uow: IndexUnitOfWork,
-        entry_transformer: EntryTransformer,
+        entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ):
         self.index_uow = index_uow

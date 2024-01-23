@@ -1,10 +1,9 @@
 """Resource queries."""
-from karp.lex.application.queries import GetEntryRepositoryId
 from karp.lex.application.repositories import ResourceUnitOfWork
 from karp.lex_core.value_objects import UniqueId
 
 
-class GenericGetEntryRepositoryId(GetEntryRepositoryId):  # noqa: D101
+class GenericGetEntryRepositoryId:  # noqa: D101
     def __init__(self, resource_uow: ResourceUnitOfWork) -> None:  # noqa: D107
         super().__init__()
         self._resource_uow = resource_uow

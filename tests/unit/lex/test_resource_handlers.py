@@ -6,8 +6,8 @@ from karp.lex.domain import errors
 
 from karp.lex.application import repositories
 from karp.lex.application.repositories import ResourceUnitOfWork
-from karp.lex.application.queries import ReadOnlyResourceRepository
 from karp.lex import commands
+from karp.lex_infrastructure import SqlReadOnlyResourceRepository
 
 from . import adapters, factories
 
@@ -51,7 +51,7 @@ class TestCreateResource:
         cmd = factories.CreateResourceFactory.build(entryRepoId=cmd.id)  # type: ignore [attr-defined]
         lex_ctx.command_bus.dispatch(cmd)
 
-        read_repo = lex_ctx.container.get(ReadOnlyResourceRepository)  # type: ignore [type-abstract]
+        read_repo = lex_ctx.container.get(SqlReadOnlyResourceRepository)  # type: ignore [type-abstract]
 
         resource = read_repo.get_by_resource_id(cmd.resource_id)  # type: ignore [attr-defined]
 

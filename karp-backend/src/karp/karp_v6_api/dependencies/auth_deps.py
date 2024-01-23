@@ -10,12 +10,13 @@ from karp.auth.domain.errors import TokenError
 from karp.auth_infrastructure import (
     JWTAuthService,
     LexGetResourcePermissions,
-    LexIsResourceProtected,
+    LexIsResourceProtected, JWTAuthServiceConfig,
 )
 from karp.main.errors import KarpError  # noqa: F401
 
 from . import lex_deps
 from .fastapi_injector import inject_from_req
+from ...lex_infrastructure import SqlReadOnlyResourceRepository, SqlGetPublishedResources
 
 # auto_error false is needed so that FastAPI does not
 # give back a faulty 403 when credentials are missing
@@ -34,21 +35,21 @@ def bearer_scheme(authorization=Header(None)):  # noqa: ANN201, D103
 
 
 def get_resource_permissions(  # noqa: D103
-    query: lex.GetPublishedResources = Depends(lex_deps.get_published_resources),
-) -> auth.GetResourcePermissions:
+    query: SqlGetPublishedResources = Depends(lex_deps.get_published_resources),
+) -> LexGetResourcePermissions:
     return LexGetResourcePermissions(query)
 
 
 def get_is_resource_protected(  # noqa: D103
-    repo: lex.ReadOnlyResourceRepository = Depends(lex_deps.get_resources_read_repo),
-) -> auth.IsResourceProtected:
+    repo: SqlReadOnlyResourceRepository = Depends(lex_deps.get_resources_read_repo),
+) -> LexIsResourceProtected:
     return LexIsResourceProtected(repo)
 
 
 def get_auth_service(  # noqa: D103
-    config: auth.AuthServiceConfig = Depends(inject_from_req(auth.AuthServiceConfig)),
-    query: auth.IsResourceProtected = Depends(get_is_resource_protected),
-) -> auth.AuthService:
+    config: JWTAuthServiceConfig = Depends(inject_from_req(JWTAuthServiceConfig)),
+    query: LexIsResourceProtected = Depends(get_is_resource_protected),
+) -> JWTAuthService:
     return JWTAuthService(
         pubkey_path=config.pubkey_path,
         is_resource_protected=query,
@@ -61,7 +62,7 @@ def get_auth_service(  # noqa: D103
 def get_user_optional(  # noqa: D103
     security_scopes: SecurityScopes,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
-    auth_service: auth.AuthService = Depends(get_auth_service),
+    auth_service: JWTAuthService = Depends(get_auth_service),
 ) -> Optional[auth.User]:
     if not credentials:
         return None
@@ -71,7 +72,7 @@ def get_user_optional(  # noqa: D103
 def get_user(  # noqa: D103
     security_scopes: SecurityScopes,
     credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
-    auth_service: auth.AuthService = Depends(get_auth_service),
+    auth_service: JWTAuthService = Depends(get_auth_service),
 ) -> auth.User:
     if security_scopes.scopes:
         authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'

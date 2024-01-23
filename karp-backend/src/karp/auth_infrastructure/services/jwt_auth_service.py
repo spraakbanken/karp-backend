@@ -7,12 +7,10 @@ import jwt.exceptions as jwte  # pyre-ignore
 import pydantic
 import logging
 
-
+from karp.auth_infrastructure import LexIsResourceProtected
 from karp.foundation import value_objects
-from karp.auth.application.queries import IsResourceProtected
 from karp.auth.domain.errors import ExpiredToken, TokenError, InvalidTokenPayload
 from karp.auth.domain.entities.user import User
-from karp.auth import AuthService, AuthServiceConfig
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +38,7 @@ def load_jwt_key(path: Path) -> str:  # noqa: D103
         return fp.read()
 
 
-class JWTAuthServiceConfig(AuthServiceConfig):  # noqa: D101
+class JWTAuthServiceConfig:
     def __init__(self, pubkey_path: str):  # noqa: D107, ANN204
         self._pubkey_path = Path(pubkey_path)
 
@@ -49,9 +47,9 @@ class JWTAuthServiceConfig(AuthServiceConfig):  # noqa: D101
         return self._pubkey_path
 
 
-class JWTAuthService(AuthService):  # noqa: D101
+class JWTAuthService:
     def __init__(  # noqa: D107
-        self, pubkey_path: Path, is_resource_protected: IsResourceProtected
+        self, pubkey_path: Path, is_resource_protected: LexIsResourceProtected
     ) -> None:
         self._jwt_key = load_jwt_key(pubkey_path)
         self.is_resource_protected = is_resource_protected

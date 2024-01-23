@@ -14,6 +14,8 @@ from fastapi import (
 )
 import pydantic
 from starlette import responses
+
+from karp.auth_infrastructure import JWTAuthService
 from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
 from karp.lex_infrastructure import GenericGetEntryHistory
@@ -25,7 +27,6 @@ from karp.lex import commands
 from karp.lex.domain import errors
 from karp.auth import User
 from karp.foundation.value_objects import PermissionLevel
-from karp.auth import AuthService
 from karp.karp_v6_api import schemas, dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 from karp.command_bus import CommandBus
@@ -45,7 +46,7 @@ def get_history_for_entry(  # noqa: ANN201, D103
     entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    auth_service: JWTAuthService = Depends(deps.get_auth_service),
     get_entry_history: GenericGetEntryHistory = Depends(deps.get_entry_history),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
@@ -74,7 +75,7 @@ def add_entry(  # noqa: ANN201, D103
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(deps.get_auth_service),
+    auth_service: JWTAuthService = Depends(deps.get_auth_service),
     command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -122,7 +123,7 @@ def update_entry(  # noqa: ANN201, D103
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(deps.get_auth_service),
+    auth_service: JWTAuthService = Depends(deps.get_auth_service),
     command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
@@ -187,7 +188,7 @@ def delete_entry(  # noqa: ANN201
     entry_id: UniqueId,
     version: int,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: AuthService = Depends(deps.get_auth_service),
+    auth_service: JWTAuthService = Depends(deps.get_auth_service),
     command_bus: CommandBus = Depends(inject_from_req(CommandBus)),
 ):
     """Delete a entry from a resource."""

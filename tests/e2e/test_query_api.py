@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 import pytest  # pyre-ignore
 from fastapi import status
 from karp import auth
-from karp.lex.application.queries import EntryViews
+from karp.lex_infrastructure import GenericEntryViews
 from tests.common_data import MUNICIPALITIES, PLACES  # noqa: F401
 from tests.utils import add_entries, get_json  # noqa: F401
 
@@ -200,7 +200,7 @@ def test_contains(  # noqa: ANN201
     app_context,
 ):
     query = f'/query/places?q=contains|{field}|"{value}"'
-    entry_views = app_context.container.get(EntryViews)  # type: ignore [misc]
+    entry_views = app_context.container.get(GenericEntryViews)  # type: ignore [misc]
     expected_result = []
     analyzed_value = value.lower()
     for entry in entry_views.all_entries("places"):

@@ -4,7 +4,6 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 from starlette.requests import Request  # noqa: F401
 
-from karp import lex
 from karp.foundation.events import EventBus
 from karp.lex import (
     EntryUowRepositoryUnitOfWork,
@@ -58,20 +57,20 @@ def get_entry_repo_uow(  # noqa: D103
 
 def get_resources_read_repo(  # noqa: D103
     conn: Connection = Depends(db_deps.get_connection),
-) -> lex.ReadOnlyResourceRepository:
+) -> SqlReadOnlyResourceRepository:
     return SqlReadOnlyResourceRepository(conn)
 
 
 def get_published_resources(  # noqa: D103
     conn: Connection = Depends(db_deps.get_connection),
-) -> lex.GetPublishedResources:
+) -> SqlGetPublishedResources:
     return SqlGetPublishedResources(conn)
 
 
 def get_entry_diff(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
     entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
-) -> lex.GetEntryDiff:
+) -> GenericGetEntryDiff:
     return GenericGetEntryDiff(
         resource_uow=resource_uow,
         entry_repo_uow=entry_repo_uow,
@@ -91,7 +90,7 @@ def get_entry_history(  # noqa: D103
 def get_history(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
     entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
-) -> lex.GetHistory:
+) -> GenericGetHistory:
     return GenericGetHistory(
         resource_uow=resource_uow,
         entry_repo_uow=entry_repo_uow,

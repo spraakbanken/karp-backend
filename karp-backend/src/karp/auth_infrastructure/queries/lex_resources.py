@@ -1,22 +1,15 @@
 import typing  # noqa: D100, I001
 
+from karp.auth.application.queries.resources import ResourcePermissionDto
 from karp.auth.domain import errors
-from karp.auth.application.queries import (
-    GetResourcePermissions,
-    ResourcePermissionDto,
-    IsResourceProtected,
-)
 from karp.foundation.value_objects.permission_level import PermissionLevel
-from karp.lex.application.queries import (
-    GetPublishedResources,
-    ReadOnlyResourceRepository,
-)
+from karp.lex_infrastructure import SqlGetPublishedResources, SqlReadOnlyResourceRepository
 
 
-class LexGetResourcePermissions(GetResourcePermissions):  # noqa: D101
+class LexGetResourcePermissions:
     def __init__(  # noqa: D107, ANN204
         self,
-        get_published_resources: GetPublishedResources,
+        get_published_resources: SqlGetPublishedResources,
     ):
         self.get_published_resources = get_published_resources
 
@@ -42,8 +35,8 @@ class LexGetResourcePermissions(GetResourcePermissions):  # noqa: D101
         return resource_permissions
 
 
-class LexIsResourceProtected(IsResourceProtected):  # noqa: D101
-    def __init__(self, resource_repo: ReadOnlyResourceRepository) -> None:  # noqa: D107
+class LexIsResourceProtected:
+    def __init__(self, resource_repo: SqlReadOnlyResourceRepository) -> None:  # noqa: D107
         super().__init__()
         self.resource_repo = resource_repo
 

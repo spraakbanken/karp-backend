@@ -7,17 +7,6 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from karp import lex
 from karp.foundation.events import EventBus
-from karp.lex.application.queries import (
-    GetPublishedResources,
-    GetResources,
-    ResourceDto,
-    ListEntryRepos,
-    EntryRepoDto,
-    GetEntryRepositoryId,
-    EntryViews,
-    GetEntryDiff,
-    GetHistory,
-)
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
     EntryUnitOfWorkCreator,
@@ -27,10 +16,8 @@ from karp.lex_infrastructure.queries import (
     SqlGetPublishedResources,
     SqlGetResources,
     SqlListEntryRepos,
-    GenericGetEntryRepositoryId,
     GenericEntryViews,
     GenericGetEntryDiff,
-    GenericEntryQuery,
     GenericGetEntryHistory,
     GenericGetHistory,
     SqlReadOnlyEntryRepoRepository,
@@ -41,6 +28,7 @@ from karp.lex_infrastructure.repositories import (
     SqlEntryUowCreator,
     SqlResourceUnitOfWork,
 )
+from karp.lex_infrastructure.queries.generic_resources import GenericGetEntryRepositoryId
 
 
 logger = logging.getLogger(__name__)
@@ -50,27 +38,27 @@ class LexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def get_published_resources(  # noqa: D102
         self, conn: Connection
-    ) -> lex.GetPublishedResources:
+    ) -> SqlGetPublishedResources:
         return SqlGetPublishedResources(conn)
 
     @injector.provider
-    def get_resources(self, conn: Connection) -> lex.GetResources:  # noqa: D102
+    def get_resources(self, conn: Connection) -> SqlGetResources:  # noqa: D102
         return SqlGetResources(conn)
 
     @injector.provider
     def read_only_resource_repo(  # noqa: D102
         self, conn: Connection
-    ) -> lex.ReadOnlyResourceRepository:
+    ) -> SqlReadOnlyResourceRepository:
         return SqlReadOnlyResourceRepository(conn)
 
     @injector.provider
-    def list_entry_repos(self, conn: Connection) -> lex.ListEntryRepos:  # noqa: D102
+    def list_entry_repos(self, conn: Connection) -> SqlListEntryRepos:  # noqa: D102
         return SqlListEntryRepos(conn)
 
     @injector.provider
     def read_only_entry_repo_repo(  # noqa: D102
         self, conn: Connection
-    ) -> lex.ReadOnlyEntryRepoRepository:
+    ) -> SqlReadOnlyEntryRepoRepository:
         return SqlReadOnlyEntryRepoRepository(conn)
 
     @injector.provider
@@ -107,13 +95,14 @@ class LexInfrastructure(injector.Module):  # noqa: D101
     ) -> EntryUnitOfWorkCreator:  # noqa: D102
         return SqlEntryUowCreator(session_factory = session_factory, event_bus = event_bus)
 
+
 class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def gey_entry_diff(  # noqa: D102
         self,
         resources_uow: lex.ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> GetEntryDiff:
+    ) -> GenericGetEntryDiff:
         return GenericGetEntryDiff(
             resource_uow=resources_uow,
             entry_repo_uow=entry_repo_uow,
@@ -123,7 +112,7 @@ class GenericLexInfrastructure(injector.Module):  # noqa: D101
     def get_entry_repo_id(  # noqa: D102
         self,
         resources_uow: ResourceUnitOfWork,
-    ) -> GetEntryRepositoryId:
+    ) -> GenericGetEntryRepositoryId:
         return GenericGetEntryRepositoryId(
             resource_uow=resources_uow,
         )
@@ -131,9 +120,9 @@ class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def entry_views(  # noqa: D102
         self,
-        get_entry_repo_id: GetEntryRepositoryId,
+        get_entry_repo_id: GenericGetEntryRepositoryId,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> EntryViews:
+    ) -> GenericEntryViews:
         return GenericEntryViews(
             get_entry_repo_id=get_entry_repo_id,
             entry_repo_uow=entry_repo_uow,
@@ -144,7 +133,7 @@ class GenericLexInfrastructure(injector.Module):  # noqa: D101
         self,
         resources_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
-    ) -> GetHistory:
+    ) -> GenericGetHistory:
         return GenericGetHistory(
             resource_uow=resources_uow,
             entry_repo_uow=entry_repo_uow,

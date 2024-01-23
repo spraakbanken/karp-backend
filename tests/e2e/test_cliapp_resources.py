@@ -3,6 +3,7 @@ import pytest  # noqa: I001
 from typer import Typer
 from typer.testing import CliRunner
 from karp import lex
+from karp.lex_infrastructure import SqlReadOnlyResourceRepository, SqlReadOnlyEntryRepoRepository
 
 from karp.main import AppContext
 
@@ -24,7 +25,7 @@ class TestCliResourceLifetime:
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        entry_repo_repo = app_context.container.get(lex.ReadOnlyEntryRepoRepository)  # type: ignore [misc]
+        entry_repo_repo = app_context.container.get(SqlReadOnlyEntryRepoRepository)  # type: ignore [misc]
         entry_repo = entry_repo_repo.get_by_name("lexlex")
         assert entry_repo is not None
 
@@ -41,5 +42,5 @@ class TestCliResourceLifetime:
         print(f"{result.stdout=}")
         assert result.exit_code == 0
 
-        resource_repo = app_context.container.get(lex.ReadOnlyResourceRepository)  # type: ignore [misc]
+        resource_repo = app_context.container.get(SqlReadOnlyResourceRepository)  # type: ignore [misc]
         assert resource_repo.get_by_resource_id("lexlex") is not None

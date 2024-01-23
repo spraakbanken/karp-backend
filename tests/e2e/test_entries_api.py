@@ -4,8 +4,8 @@ import pytest
 from fastapi import status
 
 from karp import auth
+from karp.lex_infrastructure import GenericGetEntryRepositoryId
 from karp.main.errors import ClientErrorCodes
-from karp.lex.application.queries.resources import GetEntryRepositoryId
 from karp.lex.application.repositories.entry_repositories import (
     EntryUowRepositoryUnitOfWork,
 )
@@ -18,7 +18,7 @@ from karp.lex.application.queries import EntryDto
 
 
 def get_entry_uow(container, resource_id: str):  # noqa: ANN201
-    get_entry_repository_id = container.get(GetEntryRepositoryId)  # type: ignore [misc]
+    get_entry_repository_id = container.get(GenericGetEntryRepositoryId)  # type: ignore [misc]
     entry_repo_id = get_entry_repository_id.query("places")
     entry_uow_repo_uow = container.get(EntryUowRepositoryUnitOfWork)  # type: ignore [misc]
     with entry_uow_repo_uow as uw:

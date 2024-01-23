@@ -2,19 +2,15 @@ from typing import Iterable, Optional  # noqa: D100, I001
 
 import sqlalchemy as sa
 from sqlalchemy import sql
+
+from karp.lex.application.dtos import ResourceDto
 from karp.lex_core.value_objects.unique_id import UniqueId
 
-from karp.lex.application.queries import (
-    GetPublishedResources,
-    ResourceDto,
-    GetResources,
-)
-from karp.lex.application.queries.resources import ReadOnlyResourceRepository
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.lex_infrastructure.queries.base import SqlQuery
 
 
-class SqlGetPublishedResources(GetPublishedResources, SqlQuery):  # noqa: D101
+class SqlGetPublishedResources(SqlQuery):  # noqa: D101
     def query(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
@@ -36,7 +32,7 @@ class SqlGetPublishedResources(GetPublishedResources, SqlQuery):  # noqa: D101
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
 
 
-class SqlGetResources(GetResources, SqlQuery):  # noqa: D101
+class SqlGetResources(SqlQuery):  # noqa: D101
     def query(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
             sql.select(
@@ -57,7 +53,19 @@ class SqlGetResources(GetResources, SqlQuery):  # noqa: D101
         return [_row_to_dto(row) for row in self._conn.execute(stmt)]
 
 
-class SqlReadOnlyResourceRepository(ReadOnlyResourceRepository, SqlQuery):  # noqa: D101
+class SqlReadOnlyResourceRepository(SqlQuery):
+
+    def get_by_resource_id(  # noqa: D102
+        self, resource_id: str, version: Optional[int] = None
+    ) -> Optional[ResourceDto]:
+        resource = self._get_by_resource_id(resource_id)
+        if not resource:
+            return None
+
+        if version is not None:
+            resource = self.get_by_id(resource.id, version=version)
+        return resource
+
     def get_by_id(  # noqa: D102
         self, entity_id: UniqueId, version: Optional[int] = None
     ) -> Optional[ResourceDto]:

@@ -4,7 +4,7 @@ import pytest
 from karp.lex_core.value_objects.unique_id import make_unique_id
 
 from karp.lex.application.queries import EntryDto
-from karp.search import EntryTransformer
+from karp.search_infrastructure import GenericEntryTransformer
 
 from tests.unit.lex import factories as lex_factories
 
@@ -38,7 +38,7 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
+        transformer = search_unit_ctx.container.get(GenericEntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
             id=make_unique_id(),
@@ -97,7 +97,7 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
+        transformer = search_unit_ctx.container.get(GenericEntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
             id=make_unique_id(),
@@ -158,7 +158,7 @@ class TestGenericEntryTransformer:
             },
         )
         search_unit_ctx.command_bus.dispatch(create_resource)
-        transformer = search_unit_ctx.container.get(EntryTransformer)  # type: ignore [misc]
+        transformer = search_unit_ctx.container.get(GenericEntryTransformer)  # type: ignore [misc]
         entry_id = "entry..1"
         src_entry = EntryDto(
             id=make_unique_id(),

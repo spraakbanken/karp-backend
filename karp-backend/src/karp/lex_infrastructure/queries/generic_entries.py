@@ -9,26 +9,34 @@ from karp.lex.domain import errors
 
 from karp.lex.domain.entities import Entry
 from karp.lex.application.queries import (
-    EntryViews,
     EntryDto,
     EntryDiffDto,
-    GetEntryDiff,
-    GetHistory,
     EntryHistoryRequest,
     EntryDiffRequest,
-    GetEntryRepositoryId,
 )
 from karp.lex_core.value_objects import UniqueId, UniqueIdStr, unique_id
 from karp.lex.application.repositories import EntryUowRepositoryUnitOfWork
-
+from karp.lex_infrastructure.queries.generic_resources import GenericGetEntryRepositoryId
 
 logger = logging.getLogger(__name__)
 
 
-class GenericEntryViews(EntryViews):  # noqa: D101
+def _entry_to_entry_dto(entry: Entry, resource_id: str) -> EntryDto:
+    return EntryDto(
+        id=entry.id,
+        resource=resource_id,
+        version=entry.version,
+        entry=entry.body,
+        lastModified=entry.last_modified,
+        lastModifiedBy=entry.last_modified_by,
+        message=entry.message,
+    )
+
+
+class GenericEntryViews:
     def __init__(  # noqa: D107
         self,
-        get_entry_repo_id: GetEntryRepositoryId,
+        get_entry_repo_id: GenericGetEntryRepositoryId,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> None:
         super().__init__()
@@ -54,7 +62,7 @@ class GenericEntryViews(EntryViews):  # noqa: D101
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             if entry := uw.repo.get_by_id_optional(UniqueId.validate(id)):
-                return self._entry_to_entry_dto(entry, resource_id)
+                return _entry_to_entry_dto(entry, resource_id)
         return None
 
     def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:  # noqa: D102
@@ -63,20 +71,9 @@ class GenericEntryViews(EntryViews):  # noqa: D101
             entry_uow = uw.repo.get_by_id(entry_repo_id)
         with entry_uow as uw:
             return (
-                self._entry_to_entry_dto(entry, resource_id)
+                _entry_to_entry_dto(entry, resource_id)
                 for entry in uw.repo.all_entries()
             )
-
-    def _entry_to_entry_dto(self, entry: Entry, resource_id: str) -> EntryDto:
-        return EntryDto(
-            id=entry.id,
-            resource=resource_id,
-            version=entry.version,
-            entry=entry.body,
-            lastModified=entry.last_modified,
-            lastModifiedBy=entry.last_modified_by,
-            message=entry.message,
-        )
 
 
 class GenericEntryQuery:  # noqa: D101
@@ -117,7 +114,7 @@ class GenericGetEntryHistory(GenericEntryQuery):  # noqa: D101
         )
 
 
-class GenericGetHistory(GenericEntryQuery, GetHistory):  # noqa: D101
+class GenericGetHistory(GenericEntryQuery):  # noqa: D101
     def query(  # noqa: D102
         self,
         request: EntryHistoryRequest,
@@ -168,7 +165,7 @@ class GenericGetHistory(GenericEntryQuery, GetHistory):  # noqa: D101
         return GetHistoryDto(history=result, total=total)
 
 
-class GenericGetEntryDiff(GenericEntryQuery, GetEntryDiff):  # noqa: D101
+class GenericGetEntryDiff(GenericEntryQuery):
     def query(  # noqa: D102
         self,
         request: EntryDiffRequest,

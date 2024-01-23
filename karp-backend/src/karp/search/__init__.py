@@ -21,19 +21,15 @@ from karp.search.application.repositories import (
     IndexUnitOfWork,
     IndexEntry,
 )
-from karp.search.application.transformers import (
-    EntryTransformer,
-    PreProcessor,
-)
 
 __all__ = [
-    "EntryTransformer",
     "IndexUnitOfWork",
     "IndexEntry",
-    "PreProcessor",
 ]
 
 from karp.search.generic_resources import GenericResourceViews
+from karp.search_infrastructure.transformers.generic_entry_transformer import GenericEntryTransformer
+from karp.search_infrastructure.transformers.generic_pre_processor import GenericPreProcessor
 
 
 class Search(injector.Module):  # noqa: D101
@@ -41,7 +37,7 @@ class Search(injector.Module):  # noqa: D101
     def reindex_resource(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
-        pre_processor: PreProcessor,
+        pre_processor: GenericPreProcessor,
         resource_views: GenericResourceViews,
     ) -> CommandHandler[commands.ReindexResource]:
         return ReindexingResource(
@@ -73,7 +69,7 @@ class Search(injector.Module):  # noqa: D101
     def add_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
-        entry_transformer: EntryTransformer,
+        entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ) -> List[EventHandler[lex_events.EntryAdded]]:
         return [
@@ -88,7 +84,7 @@ class Search(injector.Module):  # noqa: D101
     def update_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
-        entry_transformer: EntryTransformer,
+        entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ) -> List[EventHandler[lex_events.EntryUpdated]]:
         return [
@@ -103,7 +99,7 @@ class Search(injector.Module):  # noqa: D101
     def delete_entry(  # noqa: D102
         self,
         index_uow: IndexUnitOfWork,
-        entry_transformer: EntryTransformer,
+        entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ) -> List[EventHandler[lex_events.EntryDeleted]]:
         return [

@@ -18,6 +18,7 @@ from karp.lex.domain.value_objects import entry_schema
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
+from karp.lex_infrastructure import SqlReadOnlyResourceRepository
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +210,7 @@ def validate_entries(  # noqa: ANN201, D103
     if config_path:
         config = json_streams.jsonlib.load_from_file(config_path)
     elif resource_id_raw:
-        repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx=ctx)
+        repo = inject_from_ctx(SqlReadOnlyResourceRepository, ctx=ctx)
         if resource := repo.get_by_resource_id(resource_id_raw):
             config = resource.config
         else:

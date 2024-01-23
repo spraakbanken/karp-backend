@@ -1,4 +1,3 @@
-import abc  # noqa: D100, I001
 import typing
 
 import pydantic
@@ -66,40 +65,6 @@ class HistoryDto(IdMixin, BaseModel):  # noqa: D101
     diff: list[dict]
 
 
-class GetEntryDiff(abc.ABC):  # noqa: D101
-    @abc.abstractmethod
-    def query(self, request: EntryDiffRequest) -> EntryDiffDto:  # noqa: D102
-        pass
-
-
 class GetHistoryDto(BaseModel):  # noqa: D101
     history: list[HistoryDto]
     total: int
-
-
-class GetHistory(abc.ABC):  # noqa: D101
-    @abc.abstractmethod
-    def query(self, request: EntryHistoryRequest) -> GetHistoryDto:  # noqa: D102
-        pass
-
-
-class EntryViews(abc.ABC):  # noqa: D101
-    @abc.abstractmethod
-    def get_by_id(  # noqa: D102
-        self,
-        resource_id: str,
-        entity_id: unique_id.UniqueIdStr,
-    ) -> EntryDto:
-        pass
-
-    @abc.abstractmethod
-    def get_by_id_optional(  # noqa: D102
-        self,
-        resource_id: str,
-        entity_id: unique_id.UniqueIdStr,
-    ) -> typing.Optional[EntryDto]:
-        pass
-
-    @abc.abstractmethod
-    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:  # noqa: D102
-        pass

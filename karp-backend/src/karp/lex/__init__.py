@@ -35,18 +35,9 @@ from karp.lex.application.use_cases import (
 )
 from karp.lex.application.queries import (
     EntryDto,
-    EntryViews,
-    GetEntryDiff,
-    GetHistory,
     GetHistoryDto,
-    GetPublishedResources,
-    GetResources,
     HistoryDto,
-    ResourceDto,
-    ReadOnlyResourceRepository,
     EntryRepoDto,
-    ReadOnlyEntryRepoRepository,
-    ListEntryRepos,
 )
 
 
@@ -69,10 +60,7 @@ __all__ = [
     # dtos
     "EntryDto",
     "GetHistoryDto",
-    "ResourceDto",
     "HistoryDto",
-    # queries
-    "GetResources",
     # repositories
     "ResourceUnitOfWork",
     # value objects

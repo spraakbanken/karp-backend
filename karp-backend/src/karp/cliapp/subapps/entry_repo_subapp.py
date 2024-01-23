@@ -7,10 +7,9 @@ from karp import lex
 from karp.lex_core.value_objects import UniqueId  # noqa: F401
 from karp.command_bus import CommandBus
 from karp.lex_core.value_objects.unique_id import UniqueIdStr  # noqa: F401
-from karp.lex.application.queries import ListEntryRepos
 from karp.lex_core.commands import CreateEntryRepository
 from karp.cliapp.typer_injector import inject_from_ctx
-
+from karp.lex_infrastructure import SqlListEntryRepos, SqlReadOnlyEntryRepoRepository
 
 subapp = typer.Typer()
 
@@ -38,7 +37,7 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):  # noqa: ANN201, D
 
 @subapp.command()
 def list(ctx: typer.Context):  # noqa: ANN201, D103, A001
-    query = inject_from_ctx(ListEntryRepos, ctx)  # type: ignore [misc]
+    query = inject_from_ctx(SqlListEntryRepos, ctx)  # type: ignore [misc]
     typer.echo(
         tabulate(
             [[entry_repo.name, entry_repo.entity_id] for entry_repo in query.query()],
@@ -49,7 +48,7 @@ def list(ctx: typer.Context):  # noqa: ANN201, D103, A001
 
 @subapp.command()
 def show(ctx: typer.Context, name: str):  # noqa: ANN201, D103
-    repo = inject_from_ctx(lex.ReadOnlyEntryRepoRepository, ctx)  # type: ignore [misc]
+    repo = inject_from_ctx(SqlReadOnlyEntryRepoRepository, ctx)  # type: ignore [misc]
     if entry_repo := repo.get_by_name(name):
         typer.echo(tabulate(((key, value) for key, value in entry_repo.dict().items())))
     else:

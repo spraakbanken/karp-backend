@@ -8,10 +8,7 @@ from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
 from karp.foundation.repository import Repository
 from karp.lex.application import repositories as lex_repositories
-from karp.lex.application.queries import (
-    ReadOnlyResourceRepository,
-    ResourceDto,
-)
+from karp.lex.application.dtos import ResourceDto
 from karp.lex.application.repositories import (
     EntryUnitOfWorkCreator,
     EntryUnitOfWork,
@@ -21,6 +18,7 @@ from karp.lex.domain import events
 from karp.lex_core.value_objects import UniqueId, UniqueIdType, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
 from karp.lex.domain import errors
+from karp.lex_infrastructure import SqlReadOnlyResourceRepository
 from tests.foundation.adapters import InMemoryUnitOfWork
 
 
@@ -72,7 +70,7 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
         return (res.resource_id for res in self.resources)
 
 
-class InMemoryReadResourceRepository(ReadOnlyResourceRepository):
+class InMemoryReadResourceRepository(SqlReadOnlyResourceRepository):
     def __init__(self, resources: Dict):  # noqa: ANN204
         self.resources = resources
 
@@ -312,7 +310,7 @@ class InMemoryLexInfrastructure(injector.Module):
     def resource_repo(
         self,
         resource_uow: lex_repositories.ResourceUnitOfWork,
-    ) -> ReadOnlyResourceRepository:
+    ) -> SqlReadOnlyResourceRepository:
         return InMemoryReadResourceRepository(
             resources=resource_uow.repo.resources,  # type: ignore
         )

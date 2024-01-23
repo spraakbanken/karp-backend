@@ -1,19 +1,18 @@
 import logging  # noqa: D100, I001
 import typing
 
-from karp.lex.application.queries import EntryViews
+from karp.lex_infrastructure import GenericEntryViews
 from karp.search.application.repositories import IndexEntry
-from karp.search.application.transformers import PreProcessor, EntryTransformer
-
+from karp.search_infrastructure.transformers.generic_entry_transformer import GenericEntryTransformer
 
 logger = logging.getLogger(__name__)
 
 
-class GenericPreProcessor(PreProcessor):  # noqa: D101
+class GenericPreProcessor:
     def __init__(  # noqa: D107, ANN204
         self,
-        entry_transformer: EntryTransformer,
-        entry_views: EntryViews,
+        entry_transformer: GenericEntryTransformer,
+        entry_views: GenericEntryViews,
     ):
         super().__init__()
         self.entry_transformer = entry_transformer

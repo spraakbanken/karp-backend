@@ -6,16 +6,12 @@ import typer
 from json_streams import jsonlib
 from tabulate import tabulate
 
-from karp import lex
 from karp.command_bus import CommandBus
 from karp.lex_core.value_objects import UniqueIdStr, unique_id
 from karp.lex_core import commands as lex_commands
+from karp.lex_infrastructure import SqlGetPublishedResources, SqlGetResources, SqlReadOnlyResourceRepository, \
+    SqlListEntryRepos
 from karp.search import commands as search_commands
-from karp.lex.application.queries import (
-    GetPublishedResources,
-    ListEntryRepos,
-    GetResources,
-)
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
@@ -50,7 +46,7 @@ def create(  # noqa: ANN201, D103
     if config.is_file():
         data = jsonlib.load_from_file(config)
         if not entry_repo_id:
-            query = inject_from_ctx(ListEntryRepos, ctx)  # type: ignore [misc]
+            query = inject_from_ctx(SqlListEntryRepos, ctx)  # type: ignore [misc]
             entry_repos = list(query.query())
             entry_repo = choose_from(entry_repos, lambda x: f"{x.name}")
             entry_repo_uuid = entry_repo.entity_id
@@ -159,9 +155,9 @@ def list_resources(  # noqa: ANN201, D103
     show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),
 ):
     if show_published:
-        query = inject_from_ctx(GetPublishedResources, ctx)  # type: ignore [misc]
+        query = inject_from_ctx(SqlGetPublishedResources, ctx)  # type: ignore [misc]
     else:
-        query = inject_from_ctx(GetResources, ctx)  # type: ignore [misc,assignment]
+        query = inject_from_ctx(SqlGetResources, ctx)  # type: ignore [misc,assignment]
     typer.echo(
         tabulate(
             [
@@ -179,7 +175,7 @@ def list_resources(  # noqa: ANN201, D103
 def show(  # noqa: ANN201, D103
     ctx: typer.Context, resource_id: str, version: Optional[int] = None
 ):
-    repo = inject_from_ctx(lex.ReadOnlyResourceRepository, ctx)  # type: ignore [misc]
+    repo = inject_from_ctx(SqlReadOnlyResourceRepository, ctx)  # type: ignore [misc]
     resource = repo.get_by_resource_id(resource_id, version=version)
     if not resource:
         version_str = version or "latest"

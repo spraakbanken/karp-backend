@@ -11,6 +11,7 @@ from fastapi import (
 )
 
 from karp import auth
+from karp.auth_infrastructure import JWTAuthService
 from karp.foundation.value_objects import PermissionLevel
 from karp.search_infrastructure.queries import Es6SearchService
 from karp.karp_v6_api import schemas  # noqa: F401
@@ -35,7 +36,7 @@ def get_field_values(  # noqa: ANN201, D103
     resource_id: str,
     field: str,
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    auth_service: JWTAuthService = Depends(deps.get_auth_service),
     search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     if not auth_service.authorize(PermissionLevel.read, user, [resource_id]):

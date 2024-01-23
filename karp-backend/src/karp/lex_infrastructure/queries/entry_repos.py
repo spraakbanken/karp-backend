@@ -2,12 +2,12 @@ from typing import Iterable, Optional  # noqa: D100, I001
 
 from sqlalchemy.sql import select
 
-from karp.lex import ListEntryRepos, EntryRepoDto, ReadOnlyEntryRepoRepository
+from karp.lex import EntryRepoDto
 from karp.lex_infrastructure.queries.base import SqlQuery
 from karp.lex_infrastructure.sql.sql_models import EntryUowModel
 
 
-class SqlListEntryRepos(ListEntryRepos, SqlQuery):  # noqa: D101
+class SqlListEntryRepos(SqlQuery):  # noqa: D101
     def query(self) -> Iterable[EntryRepoDto]:  # noqa: D102
         stmt = select(EntryUowModel)
         return (_row_to_dto(row) for row in self._conn.execute(stmt))
@@ -20,9 +20,7 @@ def _row_to_dto(row_proxy) -> EntryRepoDto:
     )
 
 
-class SqlReadOnlyEntryRepoRepository(  # noqa: D101
-    SqlQuery, ReadOnlyEntryRepoRepository
-):
+class SqlReadOnlyEntryRepoRepository(SqlQuery):
     def get_by_name(self, name: str) -> Optional[EntryRepoDto]:  # noqa: D102
         stmt = select(EntryUowModel).filter_by(name=name)
 

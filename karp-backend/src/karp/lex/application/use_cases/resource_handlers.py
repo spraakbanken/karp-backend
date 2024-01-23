@@ -1,9 +1,8 @@
 import logging  # noqa: D100, I001
 
-
+from karp.lex.application.dtos import ResourceDto
 from karp.lex.domain import errors, entities
 from karp.command_bus import CommandHandler
-from karp.lex.application.queries import ResourceDto
 from karp.lex.application import repositories as lex_repositories
 from karp.lex_core import commands
 from karp.lex.application import repositories

@@ -9,6 +9,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
 
 from karp import auth, search
+from karp.auth_infrastructure import JWTAuthService
 from karp.main import errors as karp_errors
 from karp.search.application.queries import QueryRequest
 
@@ -36,7 +37,7 @@ def get_entries_by_id(  # noqa: ANN201, D103
         regex=r"^\w(,\w)*",
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    auth_service: JWTAuthService = Depends(deps.get_auth_service),
     search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
@@ -66,7 +67,7 @@ def query_split(  # noqa: ANN201, D103
     size: int = Query(25, description="Number of entries in page."),
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    auth_service: JWTAuthService = Depends(deps.get_auth_service),
     search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     logger.debug("/query/split called", extra={"resources": resources})
@@ -138,7 +139,7 @@ def query(  # noqa: ANN201
         None, description="Comma-separated list of which fields to remove from result"
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: auth.AuthService = Depends(deps.get_auth_service),
+    auth_service: JWTAuthService = Depends(deps.get_auth_service),
     search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     """

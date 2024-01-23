@@ -1,24 +1,24 @@
 import logging
 import typing
 
+from karp.lex.application.dtos import ResourceDto
 from karp.lex.application.queries import (
     EntryDto,
-    EntryViews,
-    ReadOnlyResourceRepository,
 )
-from karp.lex.application.queries.resources import ResourceDto
 from karp.lex.domain import errors as lex_errors
-from karp.search import EntryTransformer, IndexEntry, IndexUnitOfWork
+from karp.lex_infrastructure import GenericEntryViews, SqlReadOnlyResourceRepository
+from karp.search.application.repositories.indicies import IndexUnitOfWork
+from karp.search.application.repositories.indicies import IndexEntry
 
 logger = logging.getLogger(__name__)
 
 
-class GenericEntryTransformer(EntryTransformer):  # noqa: D101
+class GenericEntryTransformer:
     def __init__(  # noqa: D107
         self,
         index_uow: IndexUnitOfWork,
-        resource_repo: ReadOnlyResourceRepository,
-        entry_views: EntryViews,
+        resource_repo: SqlReadOnlyResourceRepository,
+        entry_views: GenericEntryViews,
     ) -> None:
         super().__init__()
         self.index_uow = index_uow
