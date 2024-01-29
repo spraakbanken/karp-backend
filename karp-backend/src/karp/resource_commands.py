@@ -4,6 +4,7 @@ from karp.lex import EntryUowRepositoryUnitOfWork, ResourceUnitOfWork
 from karp.lex.application.dtos import ResourceDto
 from karp.lex.domain import entities
 from karp.lex.domain.errors import IntegrityError, NoSuchEntryRepository, ResourceNotFound
+from karp.lex_core.value_objects import make_unique_id
 from karp.timings import utc_now
 
 logger = logging.getLogger(__name__)
@@ -115,3 +116,24 @@ class ResourceCommands:
             uow.repo.save(entry_repo)
             uow.post_on_commit(events)
             uow.commit()
+
+
+    def create_entry_repository(self, name, config, user, message, connection_str=None):
+
+        entry_repo, events = self.entry_repo_uow.create(
+            id=make_unique_id(),
+            name=name,
+            config=config,
+            connection_str=connection_str,
+            user=user,
+            timestamp=utc_now(),
+            message=message,
+        )
+
+        logger.debug("Created entry repo", extra={"entry_repo": entry_repo})
+        with self.entry_repo_uow as uow:
+            logger.debug("Saving...")
+            uow.repo.save(entry_repo)
+            uow.post_on_commit(events)
+            uow.commit()
+        return entry_repo

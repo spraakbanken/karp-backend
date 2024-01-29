@@ -3,13 +3,11 @@ import json  # noqa: D100, I001
 from tabulate import tabulate
 import typer
 
-from karp import lex
 from karp.lex_core.value_objects import UniqueId  # noqa: F401
-from karp.command_bus import CommandBus
 from karp.lex_core.value_objects.unique_id import UniqueIdStr  # noqa: F401
-from karp.lex_core.commands import CreateEntryRepository
 from karp.cliapp.typer_injector import inject_from_ctx
 from karp.lex_infrastructure import SqlListEntryRepos, SqlReadOnlyEntryRepoRepository
+from karp.resource_commands import ResourceCommands
 
 subapp = typer.Typer()
 
@@ -21,18 +19,18 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):  # noqa: ANN201, D
     except Exception as err:  # noqa: BLE001
         typer.echo(f"Error reading file '{infile.name}': {err!s}")
         raise typer.Exit(123) from err
-    create_entry_repo = CreateEntryRepository.from_dict(
-        data,
+
+    resource_commands = inject_from_ctx(ResourceCommands, ctx)
+    name = data.pop("resource_id")
+    entry_repo = resource_commands.create_entry_repository(
+        name=name,
+        connection_str=data.pop("connection_str", None),
+        config=data,
         user="local admin",
+        message="Entry repository created",
     )
 
-    bus = inject_from_ctx(CommandBus, ctx)  # type: ignore [misc]
-
-    bus.dispatch(create_entry_repo)
-
-    print(
-        f"Entry repository '{create_entry_repo.name}' with id '{create_entry_repo.id}' created."
-    )
+    print(f"Entry repository '{name}' with id '{entry_repo.entity_id}' created.")
 
 
 @subapp.command()

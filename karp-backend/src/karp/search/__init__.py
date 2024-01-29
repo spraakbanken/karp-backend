@@ -2,7 +2,6 @@ from typing import List  # noqa: I001
 
 import injector
 
-from karp.command_bus import CommandHandler
 from karp.foundation.events import EventHandler
 from karp.lex.domain import events as lex_events
 from karp.search.domain import commands
@@ -30,7 +29,6 @@ from karp.search.generic_resources import GenericResourceViews
 from karp.search_infrastructure.transformers.generic_entry_transformer import (
     GenericEntryTransformer,
 )
-from karp.search_infrastructure.transformers.generic_pre_processor import GenericPreProcessor
 
 
 class Search(injector.Module):  # noqa: D101

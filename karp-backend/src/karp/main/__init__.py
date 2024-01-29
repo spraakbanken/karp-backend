@@ -13,7 +13,6 @@ from sqlalchemy.engine import Engine, create_engine
 import logging  # noqa: F811
 import asgi_correlation_id
 
-from karp.lex import Lex
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import (
     GenericSearchInfrastructure,
@@ -22,7 +21,7 @@ from karp.search_infrastructure import (
 )
 from karp.main import config, modules
 from karp.main.modules import (
-    CommandBusMod,
+    CommandsMod,
     Db,
     EventBusMod,
     ElasticSearchMod,
@@ -77,10 +76,9 @@ def _setup_dependency_injection(
     return injector.Injector(
         [
             Db(engine),
-            CommandBusMod(),
+            CommandsMod(),
             EventBusMod(),
             ElasticSearchMod(es_url),
-            Lex(),
             LexInfrastructure(),
             GenericLexInfrastructure(),
             Search(),

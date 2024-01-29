@@ -1,7 +1,5 @@
 """Pytest entry point."""
 import elasticsearch_test
-from karp.command_bus import CommandBus
-from karp.lex import commands
 from karp.main import AppContext
 from karp.resource_commands import ResourceCommands
 from tests.integration.auth.adapters import create_bearer_token
@@ -50,9 +48,7 @@ def setup_environment() -> None:
 def apply_migrations(setup_environment: None):  # noqa: ANN201
     from karp.main.migrations import use_cases
 
-    print("running alembic upgrade ...")
-    uc = use_cases.RunningMigrationsUp()
-    uc.execute(use_cases.RunMigrationsUp())
+    use_cases.run_migrations_up()
     yield
 
 
@@ -100,17 +96,15 @@ def create_and_publish_resource(
 
     resource_id = resource_config.pop("resource_id")
 
-    command_bus = client.app.state.app_context.container.get(CommandBus)
     resource_commands = client.app.state.app_context.container.get(ResourceCommands)
 
-    entry_repo = command_bus.dispatch(
-        commands.CreateEntryRepository(
-            name=resource_id,
-            config=resource_config,
-            user="",
-            message="",
-        )
+    entry_repo = resource_commands.create_entry_repository(
+        name=resource_id,
+        config=resource_config,
+        user="",
+        message="",
     )
+
     resource_commands.create_resource(
         resource_id, resource_id, resource_config, "", entry_repo.entity_id
     )

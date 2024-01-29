@@ -4,7 +4,6 @@ import typing
 from typing import Dict, Iterable, Optional, Tuple
 
 import injector
-from karp.command_bus import CommandBus
 from karp.foundation.events import EventBus
 from karp.foundation.repository import Repository
 from karp.lex.application import repositories as lex_repositories
@@ -24,7 +23,6 @@ from tests.foundation.adapters import InMemoryUnitOfWork
 @dataclasses.dataclass
 class UnitTestContext:
     container: injector.Injector
-    command_bus: CommandBus
 
 
 def ensure_correct_id_type(v) -> unique_id.UniqueId:

@@ -13,11 +13,9 @@ from karp.resource_commands import ResourceCommands
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
 from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure
 from karp.search import Search
-from karp.main.modules import CommandBusMod, EventBusMod
+from karp.main.modules import CommandsMod, EventBusMod
 from karp.lex_infrastructure import GenericLexInfrastructure
-from karp.lex import Lex
 from karp.foundation.events import EventBus
-from karp.command_bus import CommandBus
 
 # environ["TESTING"] = "True"
 # environ["ELASTICSEARCH_HOST"] = "localhost:9202"
@@ -46,11 +44,10 @@ def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201
 def integration_ctx() -> adapters.IntegrationTestContext:
     container = injector.Injector(
         [
-            CommandBusMod(),
+            CommandsMod(),
             EventBusMod(),
             Search(),
             SearchInfrastructure(),
-            Lex(),
             GenericLexInfrastructure(),
             InMemoryLexInfrastructure(),
             GenericSearchInfrastructure(),
@@ -60,6 +57,5 @@ def integration_ctx() -> adapters.IntegrationTestContext:
     )
     return adapters.IntegrationTestContext(
         container=container,
-        command_bus=container.get(CommandBus),  # type: ignore
         event_bus=container.get(EventBus),  # type: ignore
     )

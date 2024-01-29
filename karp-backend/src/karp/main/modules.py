@@ -23,7 +23,6 @@ from injector import Provider, T
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import Session
 
-from karp.command_bus import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
 from karp.auth_infrastructure import (
     AuthInfrastructure,
@@ -77,11 +76,7 @@ class RequestScope(injector.Scope):  # noqa: D101
 request = injector.ScopeDecorator(RequestScope)
 
 
-class CommandBusMod(injector.Module):  # noqa: D101
-    @injector.provider
-    def command_bus(self, inj: injector.Injector) -> CommandBus:  # noqa: D102
-        return InjectorCommandBus(inj)
-
+class CommandsMod(injector.Module):  # noqa: D101
     @injector.provider
     def entry_commands(
         self, resource_uow: ResourceUnitOfWork, entry_repo_uow: EntryUowRepositoryUnitOfWork

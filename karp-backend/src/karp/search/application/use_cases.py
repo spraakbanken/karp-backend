@@ -3,7 +3,6 @@ import logging  # noqa: D100, I001
 
 from karp.foundation import events as foundation_events
 
-from karp import command_bus
 from karp.lex.domain import events as lex_events
 from karp.lex.application.queries import EntryDto
 from karp.search.application.repositories import IndexUnitOfWork

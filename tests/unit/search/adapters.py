@@ -4,7 +4,6 @@ from typing import Dict, Iterable, Optional
 
 import injector
 
-from karp.command_bus import CommandBus
 from karp.foundation import repository
 from karp.foundation.events import EventBus
 from karp.timings import utc_now
@@ -15,7 +14,6 @@ from tests.foundation.adapters import InMemoryUnitOfWork
 @dataclasses.dataclass
 class SearchUnitTestContext:
     container: injector.Injector
-    command_bus: CommandBus
     event_bus: EventBus
 
 
