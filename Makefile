@@ -161,7 +161,7 @@ clean-pyc:
 
 .PHONY: fmt
 fmt:
-	${INVENV} black .
+	${INVENV} ruff format .
 
 # test if code is formatted
 .PHONY: check-fmt
