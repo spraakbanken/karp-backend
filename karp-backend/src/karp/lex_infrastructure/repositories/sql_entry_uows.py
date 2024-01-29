@@ -1,34 +1,33 @@
 import logging  # noqa: D100, I001
-from typing import Optional
+from typing import Optional, Tuple
 
 from sqlalchemy import orm as sa_orm, text
 
-from karp.foundation.events import EventBus
+from karp.foundation.events import EventBus, Event
 from karp.foundation.repository import Repository
 from karp.lex_core.value_objects import UniqueId
 from karp.lex.application.repositories import (
     EntryUnitOfWork,
-    EntryUnitOfWorkCreator,
     EntryUowRepositoryUnitOfWork,
 )
 
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 from karp.db_infrastructure.sql_repository import SqlRepository
 from karp.lex_infrastructure.sql.sql_models import EntryUowModel
+from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
 
 
 logger = logging.getLogger(__name__)
 
-
 class SqlEntryUowRepository(SqlRepository, Repository):  # noqa: D101
     def __init__(  # noqa: D107
         self,
-        entry_uow_factory: EntryUnitOfWorkCreator,
         session: sa_orm.Session,
+        event_bus: EventBus,
     ) -> None:
         logger.debug("create repo with session=%s", session)
         SqlRepository.__init__(self, session)
-        self.entry_uow_factory = entry_uow_factory
+        self.event_bus = event_bus
 
     def _save(self, entry_uow: EntryUnitOfWork):  # noqa: ANN202
         logger.debug("saving entry_uow=%s", entry_uow)
@@ -55,7 +54,9 @@ class SqlEntryUowRepository(SqlRepository, Repository):  # noqa: D101
         return self._row_to_entity(row) if (row := stmt.first()) else None
 
     def _row_to_entity(self, row_proxy) -> EntryUnitOfWork:
-        uow, _events = self.entry_uow_factory.create(
+        return SqlEntryUnitOfWork.create(
+            session=self._session,
+            event_bus=self.event_bus,
             id=row_proxy.entity_id,
             name=row_proxy.name,
             config=row_proxy.config,
@@ -64,7 +65,6 @@ class SqlEntryUowRepository(SqlRepository, Repository):  # noqa: D101
             message=row_proxy.message,
             timestamp=row_proxy.last_modified,
         )
-        return uow
 
 
 class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
@@ -74,14 +74,12 @@ class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
         self,
         *,
         event_bus: EventBus,
-        entry_uow_factory: EntryUnitOfWorkCreator,
         session: sa_orm.Session,
     ):
         SqlUnitOfWork.__init__(self, session=session)
         EntryUowRepositoryUnitOfWork.__init__(
             self,
             event_bus=event_bus,
-            entry_uow_factory=entry_uow_factory,
         )
         self._repo = None
 
@@ -89,8 +87,8 @@ class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
         logger.debug("called _begin")
         if self._repo is None:
             self._repo = SqlEntryUowRepository(
-                entry_uow_factory=self.factory,
                 session=self._session,
+                event_bus=self.event_bus,
             )
         return self
 
@@ -99,3 +97,10 @@ class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
         if self._repo is None:
             raise RuntimeError("No entry_uow_repository")
         return self._repo
+
+    def create(self, *args, **kwargs) -> Tuple[EntryUnitOfWork, list[Event]]:
+        return SqlEntryUnitOfWork.create(
+            *args, **kwargs,
+            session=self._session,
+            event_bus=self.event_bus
+        ), []

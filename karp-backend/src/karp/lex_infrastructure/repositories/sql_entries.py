@@ -69,7 +69,7 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
 
         if session:
             history_model.__table__.create(  # type:ignore [attr-defined]
-                bind=session.bind, checkfirst=True
+                bind=session.connection(), checkfirst=True
             )
 
         return cls(
@@ -155,7 +155,7 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
         logger.info("starting teardown")
 
         logger.info("droping history_model ...")
-        self.history_model.__table__.drop(bind=self._session.bind)
+        self.history_model.__table__.drop(bind=self._session.connection())
         logger.info("dropped history_model")
 
     def all_entries(self) -> typing.Iterable[Entry]:  # noqa: D102
@@ -266,6 +266,33 @@ class SqlEntryUnitOfWork(  # noqa: D101
         self._entries = None
         self._session = session
 
+    # A constructor-ish class method that changes the parameters slightly (e.g.
+    # see the line last_modified_by=user below).
+    @classmethod
+    def create(
+        cls,
+        session: Session,
+        event_bus: EventBus,
+        id: UniqueId,  # noqa: A002
+        name: str,
+        config: Dict,
+        connection_str: Optional[str],
+        user: str,
+        message: str,
+        timestamp: float
+    ) -> 'SqlEntryUnitOfWork':
+        return cls(
+            id=id,
+            name=name,
+            config=config,
+            connection_str=connection_str,
+            last_modified_by=user,
+            message=message,
+            last_modified=timestamp,
+            session=session,
+            event_bus=event_bus,
+        )
+
     def _begin(self):  # noqa: ANN202
         if self._entries is None:
             self._entries = SqlEntryRepository.from_dict(
@@ -297,42 +324,3 @@ class SqlEntryUnitOfWork(  # noqa: D101
 
     def collect_new_events(self) -> typing.Iterable:  # noqa: D102
         return super().collect_new_events() if self._entries else []
-
-
-SqlEntryUowType = TypeVar("SqlEntryUowType", bound=SqlEntryUnitOfWork)
-
-
-class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
-    @injector.inject
-    def __init__(  # noqa: D107, ANN204
-        self,
-        session: Session,
-        event_bus: EventBus,
-    ):
-        self._session = session
-        self.event_bus = event_bus
-        self.cache: dict[UniqueId, SqlEntryUowType] = {}
-
-    def create(  # noqa: D102
-        self,
-        id: UniqueId,  # noqa: A002
-        name: str,
-        config: Dict,
-        connection_str: Optional[str],
-        user: str,
-        message: str,
-        timestamp: float,
-    ) -> Tuple[SqlEntryUowType, list[Event]]:
-        if id not in self.cache:
-            self.cache[id] = SqlEntryUnitOfWork(
-                id=id,
-                name=name,
-                config=config,
-                connection_str=connection_str,
-                last_modified_by=user,
-                message=message,
-                last_modified=timestamp,
-                session=self._session,
-                event_bus=self.event_bus,
-            )
-        return self.cache[id], []

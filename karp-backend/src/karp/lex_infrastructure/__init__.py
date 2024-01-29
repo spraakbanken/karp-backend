@@ -9,7 +9,6 @@ from karp import lex
 from karp.foundation.events import EventBus
 from karp.lex.application.repositories import (
     EntryUowRepositoryUnitOfWork,
-    EntryUnitOfWorkCreator,
     ResourceUnitOfWork,
 )
 from karp.lex_infrastructure.queries import (
@@ -25,7 +24,6 @@ from karp.lex_infrastructure.queries import (
 )
 from karp.lex_infrastructure.repositories import (
     SqlEntryUowRepositoryUnitOfWork,
-    SqlEntryUowCreator,
     SqlResourceUnitOfWork,
 )
 from karp.lex_infrastructure.queries.generic_resources import GenericGetEntryRepositoryId
@@ -66,13 +64,11 @@ class LexInfrastructure(injector.Module):  # noqa: D101
     def entry_uow_repo(  # noqa: D102
         self,
         session: Session,
-        entry_uow_factory: EntryUnitOfWorkCreator,
         event_bus: EventBus,
     ) -> EntryUowRepositoryUnitOfWork:
         logger.debug("creating entry_repo_uow", extra={"session": session})
         return SqlEntryUowRepositoryUnitOfWork(
             session=session,
-            entry_uow_factory=entry_uow_factory,
             event_bus=event_bus,
         )
 
@@ -86,13 +82,6 @@ class LexInfrastructure(injector.Module):  # noqa: D101
             session=session,
             event_bus=event_bus,
         )
-
-    @injector.provider
-    def entry_uow_creator(  # noqa: D102
-        self, session_factory: sessionmaker, event_bus: EventBus
-    ) -> EntryUnitOfWorkCreator:  # noqa: D102
-        return SqlEntryUowCreator(session=session_factory(), event_bus=event_bus)
-
 
 class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider

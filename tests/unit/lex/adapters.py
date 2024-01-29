@@ -10,7 +10,6 @@ from karp.foundation.repository import Repository
 from karp.lex.application import repositories as lex_repositories
 from karp.lex.application.dtos import ResourceDto
 from karp.lex.application.repositories import (
-    EntryUnitOfWorkCreator,
     EntryUnitOfWork,
 )
 from karp.lex.domain import entities as lex_entities
@@ -199,11 +198,48 @@ class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUn
         return self._resources
 
 
-class InMemoryEntryUnitOfWorkCreator:
+class InMemoryEntryUowRepository(Repository):
+    def __init__(self) -> None:
+        super().__init__()
+        self._storage: dict[UniqueId, EntryUnitOfWork] = {}
+
+    def _save(self, entry_repo: EntryUnitOfWork) -> None:
+        entry_repo_id = ensure_correct_id_type(entry_repo.id)
+        self._storage[entry_repo_id] = entry_repo
+
+    def _by_id(
+        self,
+        id: UniqueId,  # noqa: A002
+        *,
+        version: Optional[int] = None,
+        **kwargs,  # noqa: ANN003
+    ) -> EntryUnitOfWork | None:
+        entry_repo_id = ensure_correct_id_type(id)
+        return self._storage.get(entry_repo_id)
+
+    def __len__(self):  # noqa: ANN204
+        return len(self._storage)
+
+
+class InMemoryEntryUowRepositoryUnitOfWork(
+    InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork
+):
     @injector.inject
-    def __init__(self, event_bus: EventBus) -> None:
-        self.event_bus = event_bus
+    def __init__(
+        self,
+        event_bus: EventBus,
+    ) -> None:
+        InMemoryUnitOfWork.__init__(self)
+        lex_repositories.EntryUowRepositoryUnitOfWork.__init__(
+            self,
+            event_bus=event_bus,
+        )
+        self._repo = InMemoryEntryUowRepository()
         self._cache: dict[UniqueId, InMemoryEntryUnitOfWork] = {}
+
+    @property
+    def repo(self):
+        return self._repo
 
     def create(
         self,
@@ -232,49 +268,6 @@ class InMemoryEntryUnitOfWorkCreator:
         return self._cache[entity_id], []
 
 
-class InMemoryEntryUowRepository(Repository):
-    def __init__(self) -> None:
-        super().__init__()
-        self._storage: dict[UniqueId, EntryUnitOfWork] = {}
-
-    def _save(self, entry_repo: EntryUnitOfWork) -> None:
-        entry_repo_id = ensure_correct_id_type(entry_repo.id)
-        self._storage[entry_repo_id] = entry_repo
-
-    def _by_id(
-        self,
-        id: UniqueId,  # noqa: A002
-        *,
-        version: Optional[int] = None,
-        **kwargs,  # noqa: ANN003
-    ) -> EntryUnitOfWork | None:
-        entry_repo_id = ensure_correct_id_type(id)
-        return self._storage.get(entry_repo_id)
-
-    def __len__(self):  # noqa: ANN204
-        return len(self._storage)
-
-
-class InMemoryEntryUowRepositoryUnitOfWork(
-    InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork
-):
-    def __init__(
-        self,
-        event_bus: EventBus,
-        entry_uow_factory: EntryUnitOfWorkCreator,
-    ) -> None:
-        InMemoryUnitOfWork.__init__(self)
-        lex_repositories.EntryUowRepositoryUnitOfWork.__init__(
-            self,
-            event_bus=event_bus,
-            entry_uow_factory=entry_uow_factory,
-        )
-        self._repo = InMemoryEntryUowRepository()
-
-    @property
-    def repo(self):
-        return self._repo
-
 
 class InMemoryLexInfrastructure(injector.Module):
     @injector.provider
@@ -282,19 +275,10 @@ class InMemoryLexInfrastructure(injector.Module):
     def entry_uow_repo_uow(
         self,
         event_bus: EventBus,
-        entry_uow_factory: EntryUnitOfWorkCreator,
     ) -> lex_repositories.EntryUowRepositoryUnitOfWork:
         return InMemoryEntryUowRepositoryUnitOfWork(
             event_bus=event_bus,
-            entry_uow_factory=entry_uow_factory,
         )
-
-    @injector.provider
-    def entry_uow_creator_map(
-        self,
-        event_bus: EventBus,
-    ) -> lex_repositories.EntryUnitOfWorkCreator:
-        return InMemoryEntryUnitOfWorkCreator(event_bus=event_bus)
 
     @injector.provider
     @injector.singleton
