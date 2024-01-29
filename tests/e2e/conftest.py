@@ -3,6 +3,7 @@ import elasticsearch_test
 from karp.command_bus import CommandBus
 from karp.lex import commands
 from karp.main import AppContext
+from karp.resource_commands import ResourceCommands
 from tests.integration.auth.adapters import create_bearer_token
 from karp import auth
 from karp.main.config import config
@@ -100,6 +101,7 @@ def create_and_publish_resource(
     resource_id = resource_config.pop("resource_id")
 
     command_bus = client.app.state.app_context.container.get(CommandBus)
+    resource_commands = client.app.state.app_context.container.get(ResourceCommands)
 
     entry_repo = command_bus.dispatch(
         commands.CreateEntryRepository(
@@ -109,21 +111,11 @@ def create_and_publish_resource(
             message="",
         )
     )
-
-    create_resource = commands.CreateResource(
-        resourceId=resource_id,
-        user="",
-        name=resource_config.pop("resource_name"),
-        config=resource_config,
-        message=f"{resource_id} added",
-        entryRepoId=entry_repo.entity_id,
+    resource_commands.create_resource(
+        resource_id, resource_id, resource_config, "", entry_repo.entity_id
     )
 
-    command_bus.dispatch(create_resource)
-
-    publish_resource = commands.PublishResource(user="", resourceId=resource_id, version=1)
-
-    command_bus.dispatch(publish_resource)
+    resource_commands.publish_resource(user="", resource_id=resource_id, version=1, message="")
 
 
 @pytest.fixture(scope="session", name="fa_data_client")

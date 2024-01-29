@@ -4,7 +4,7 @@ import pytest
 from karp.command_bus import CommandBus
 from karp.lex import Lex
 from karp.main.modules import CommandBusMod, EventBusMod
-from . import adapters, factories  # noqa: F401
+from . import adapters
 
 
 @pytest.fixture()

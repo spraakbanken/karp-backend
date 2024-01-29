@@ -39,8 +39,11 @@ class TestCliResourceLifetime:
                 str(entry_repo.entity_id),
             ],
         )
-        print(f"{result.stdout=}")
-        assert result.exit_code == 0
+        # print(f"{result.stdout=}")
+        if isinstance(result.exception, Exception):
+            raise result.exception
+        else:
+            assert result.exit_code == 0
 
         resource_repo = app_context.container.get(SqlReadOnlyResourceRepository)  # type: ignore [misc]
         assert resource_repo.get_by_resource_id("lexlex") is not None

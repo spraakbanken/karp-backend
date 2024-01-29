@@ -10,41 +10,12 @@ from karp.search.application.repositories import IndexUnitOfWork
 
 from karp.lex.domain import events
 
-from karp.search.domain import commands
 from karp.search.generic_resources import GenericResourceViews
-from karp.search_infrastructure.transformers.generic_pre_processor import GenericPreProcessor
 from karp.search_infrastructure.transformers.generic_entry_transformer import (
     GenericEntryTransformer,
 )
 
 logger = logging.getLogger(__name__)
-
-
-class ReindexingResource(  # noqa: D101
-    command_bus.CommandHandler[commands.ReindexResource]
-):
-    def __init__(  # noqa: D107
-        self,
-        index_uow: IndexUnitOfWork,
-        resource_views: GenericResourceViews,
-        pre_processor: GenericPreProcessor,
-    ) -> None:
-        super().__init__()
-        self.index_uow = index_uow
-        self.resource_views = resource_views
-        self.pre_processor = pre_processor
-
-    def execute(self, command: commands.ReindexResource) -> None:  # noqa: D102
-        logger.debug("Reindexing resource '%s'", command.resource_id)
-        with self.index_uow as uw:
-            uw.repo.create_index(
-                command.resource_id,
-                self.resource_views.get_resource_config(command.resource_id),
-            )
-            uw.repo.add_entries(
-                command.resource_id, self.pre_processor.process(command.resource_id)
-            )
-            uw.commit()
 
 
 class ResourcePublishedHandler(  # noqa: D101

@@ -1,3 +1,4 @@
+from karp.lex import ResourceUnitOfWork
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
@@ -7,7 +8,7 @@ from karp.timings import utc_now
 class EntryCommands:
     def __init__(self, entry_repo_uow, resource_uow):
         self.entry_repo_uow = entry_repo_uow
-        self.resource_uow = resource_uow
+        self.resource_uow: ResourceUnitOfWork = resource_uow
 
     def _get_entry_uow(self, entry_repo_id: unique_id.UniqueId) -> EntryUnitOfWork:
         with self.entry_repo_uow as uw:

@@ -6,6 +6,10 @@ import sys
 
 from karp.entry_commands import EntryCommands
 from karp.lex import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
+from karp.resource_commands import ResourceCommands
+from karp.search import IndexUnitOfWork, GenericResourceViews
+from karp.search_commands import SearchCommands
+from karp.search_infrastructure import GenericPreProcessor
 
 try:
     from importlib.metadata import entry_points
@@ -83,6 +87,23 @@ class CommandBusMod(injector.Module):  # noqa: D101
         self, resource_uow: ResourceUnitOfWork, entry_repo_uow: EntryUowRepositoryUnitOfWork
     ) -> EntryCommands:
         return EntryCommands(entry_repo_uow=entry_repo_uow, resource_uow=resource_uow)
+
+    @injector.provider
+    def resource_commands(
+        self, resource_uow: ResourceUnitOfWork, entry_repo_uow: EntryUowRepositoryUnitOfWork
+    ) -> ResourceCommands:
+        return ResourceCommands(entry_repo_uow=entry_repo_uow, resource_uow=resource_uow)
+
+    @injector.provider
+    def search_commands(
+        self,
+        index_uow: IndexUnitOfWork,
+        resource_views: GenericResourceViews,
+        pre_processor: GenericPreProcessor,
+    ) -> SearchCommands:
+        return SearchCommands(
+            index_uow=index_uow, resource_views=resource_views, pre_processor=pre_processor
+        )
 
 
 class EventBusMod(injector.Module):  # noqa: D101

@@ -13,7 +13,6 @@ from karp.search.application.use_cases import (
     EntryAddedHandler,
     EntryDeletedHandler,
     EntryUpdatedHandler,
-    ReindexingResource,
     ResourcePublishedHandler,
 )
 from karp.search.application.queries import QueryRequest
@@ -35,19 +34,6 @@ from karp.search_infrastructure.transformers.generic_pre_processor import Generi
 
 
 class Search(injector.Module):  # noqa: D101
-    @injector.provider
-    def reindex_resource(  # noqa: D102
-        self,
-        index_uow: IndexUnitOfWork,
-        pre_processor: GenericPreProcessor,
-        resource_views: GenericResourceViews,
-    ) -> CommandHandler[commands.ReindexResource]:
-        return ReindexingResource(
-            index_uow=index_uow,
-            pre_processor=pre_processor,
-            resource_views=resource_views,
-        )
-
     @injector.multiprovider
     def create_index(  # noqa: D102
         self, index_uow: IndexUnitOfWork
