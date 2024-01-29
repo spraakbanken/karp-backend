@@ -14,13 +14,9 @@ class Query(pydantic.BaseModel):  # noqa: D101
     include_fields: typing.Optional[list[str]] = None
     exclude_fields: typing.Optional[list[str]] = None
     q: typing.Optional[str] = None
-    sort_dict: typing.Optional[dict[str, list[str]]] = pydantic.Field(
-        default_factory=dict
-    )
+    sort_dict: typing.Optional[dict[str, list[str]]] = pydantic.Field(default_factory=dict)
 
-    @pydantic.validator(
-        "resources", "include_fields", "exclude_fields", "sort", pre=True
-    )
+    @pydantic.validator("resources", "include_fields", "exclude_fields", "sort", pre=True)
     def split_str(cls, v):  # noqa: ANN206, D102
         return v.split(",") if isinstance(v, str) else v
 

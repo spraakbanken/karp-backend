@@ -184,9 +184,7 @@ def validate_entries(  # noqa: ANN201, D103
     ),
     resource_id_raw: Optional[str] = typer.Option(None, "--resource_id"),
     as_import: bool = typer.Option(False, "--as-import"),
-    output: Optional[Path] = typer.Option(
-        None, "--output", "-o", help="file to write to"
-    ),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="file to write to"),
 ):
     """Validate entries without adding or importing them.
 
@@ -221,13 +219,11 @@ def validate_entries(  # noqa: ANN201, D103
         raise typer.Exit(code=300)
 
     allow_additional_properties = config.get("additionalProperties", True)
-    schema = entry_schema.create_entry_json_schema(config["fields"],allow_additional_properties)
+    schema = entry_schema.create_entry_json_schema(config["fields"], allow_additional_properties)
 
     error_code = 0
 
-    entries: Iterable[dict] = json_streams.load_from_file(
-        path, use_stdin_as_default=True
-    )
+    entries: Iterable[dict] = json_streams.load_from_file(path, use_stdin_as_default=True)
     if as_import:
         entries = (import_entry["entry"] for import_entry in entries)
     with json_streams.sink_from_file(

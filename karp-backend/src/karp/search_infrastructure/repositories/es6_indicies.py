@@ -50,9 +50,7 @@ class Es6Index:
         }
 
         index_alias_name = self.mapping_repo.create_index_and_alias_name(resource_id)
-        logger.info(
-            "creating index", extra={"index_alias_name": index_alias_name, "body": body}
-        )
+        logger.info("creating index", extra={"index_alias_name": index_alias_name, "body": body})
         result = self.es.indices.create(index=index_alias_name["index_name"], body=body)
         if "error" in result:
             logger.error(
@@ -116,9 +114,7 @@ class Es6Index:
             raise ValueError("Must give either 'entry' or 'entry_id'.")
         if entry:
             entry_id = entry.entry_id
-        logger.info(
-            "deleting entry", extra={"entry_id": entry_id, "resource_id": resource_id}
-        )
+        logger.info("deleting entry", extra={"entry_id": entry_id, "resource_id": resource_id})
         index_name = self.mapping_repo.get_index_name(resource_id)
         try:
             self.es.delete(

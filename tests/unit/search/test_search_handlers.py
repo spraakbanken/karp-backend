@@ -43,9 +43,7 @@ def test_index_reacts_on_entry_added_event(  # noqa: ANN201
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
     search_unit_ctx.command_bus.dispatch(create_entry_repo)  # type: ignore [arg-type]
-    create_resource = lex_factories.CreateResourceFactory(
-        entryRepoId=create_entry_repo.id
-    )
+    create_resource = lex_factories.CreateResourceFactory(entryRepoId=create_entry_repo.id)
     search_unit_ctx.command_bus.dispatch(create_resource)  # type: ignore [arg-type]
     create_entry = lex_factories.AddEntryFactory(
         resourceId=create_resource.resource_id,
@@ -70,9 +68,7 @@ def test_index_reacts_on_entry_updated_event(  # noqa: ANN201
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
     search_unit_ctx.command_bus.dispatch(create_entry_repo)  # type: ignore [arg-type]
-    create_resource = lex_factories.CreateResourceFactory(
-        entryRepoId=create_entry_repo.id
-    )
+    create_resource = lex_factories.CreateResourceFactory(entryRepoId=create_entry_repo.id)
     search_unit_ctx.command_bus.dispatch(create_resource)  # type: ignore [arg-type]
     create_entry = lex_factories.AddEntryFactory(
         resourceId=create_resource.resource_id,
@@ -103,9 +99,7 @@ def test_index_reacts_on_entry_deleted_event(  # noqa: ANN201
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
     search_unit_ctx.command_bus.dispatch(create_entry_repo)  # type: ignore [arg-type]
-    create_resource = lex_factories.CreateResourceFactory(
-        entryRepoId=create_entry_repo.id
-    )
+    create_resource = lex_factories.CreateResourceFactory(entryRepoId=create_entry_repo.id)
     search_unit_ctx.command_bus.dispatch(create_resource)  # type: ignore [arg-type]
     create_entry = lex_factories.AddEntryFactory(
         resourceId=create_resource.resource_id,
@@ -134,9 +128,7 @@ def test_reindex_resource_command(  # noqa: ANN201
 ):
     create_entry_repo = lex_factories.CreateEntryRepositoryFactory()
     search_unit_ctx.command_bus.dispatch(create_entry_repo)  # type: ignore [arg-type]
-    create_resource = lex_factories.CreateResourceFactory(
-        entryRepoId=create_entry_repo.id
-    )
+    create_resource = lex_factories.CreateResourceFactory(entryRepoId=create_entry_repo.id)
     search_unit_ctx.command_bus.dispatch(create_resource)  # type: ignore [arg-type]
     create_entry = lex_factories.AddEntryFactory(
         resourceId=create_resource.resource_id,

@@ -14,7 +14,7 @@ class BaseModel(pydantic.BaseModel):
 
     class Config:  # noqa: D106
         alias_generator = alias_generators.to_lower_camel
-        json_encoders = {ulid.ULID: lambda u: u.str}
+        json_encoders: typing.ClassVar = {ulid.ULID: lambda u: u.str}
 
     def serialize(self) -> dict:
         """Serialize model to dict."""

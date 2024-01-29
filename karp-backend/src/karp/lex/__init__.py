@@ -155,9 +155,7 @@ class Lex(injector.Module):  # noqa: D101
         resource_uow: ResourceUnitOfWork,
         entry_repo_uow: EntryUowRepositoryUnitOfWork,
     ) -> CommandHandler[commands.ImportEntries]:
-        return ImportingEntries(
-            resource_uow=resource_uow, entry_repo_uow=entry_repo_uow
-        )
+        return ImportingEntries(resource_uow=resource_uow, entry_repo_uow=entry_repo_uow)
 
     @injector.provider
     def importing_entries_in_chunks(  # noqa: D102

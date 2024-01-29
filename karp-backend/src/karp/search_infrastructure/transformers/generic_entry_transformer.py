@@ -31,12 +31,8 @@ class GenericEntryTransformer:
         )
         index_entry = self.index_uow.repo.create_empty_object()
         index_entry.id = str(src_entry.id)
-        self.index_uow.repo.assign_field(
-            index_entry, "_entry_version", src_entry.version
-        )
-        self.index_uow.repo.assign_field(
-            index_entry, "_last_modified", src_entry.last_modified
-        )
+        self.index_uow.repo.assign_field(index_entry, "_entry_version", src_entry.version)
+        self.index_uow.repo.assign_field(index_entry, "_last_modified", src_entry.last_modified)
         self.index_uow.repo.assign_field(
             index_entry, "_last_modified_by", src_entry.last_modified_by
         )
@@ -51,9 +47,7 @@ class GenericEntryTransformer:
             index_entry,
             resource.config["fields"].items(),
         )
-        logger.debug(
-            "transformed entry", extra={"entry": src_entry, "index_entry": index_entry}
-        )
+        logger.debug("transformed entry", extra={"entry": src_entry, "index_entry": index_entry})
         return index_entry
 
     def _transform_to_index_entry(  # noqa: ANN202, C901
@@ -83,12 +77,8 @@ class GenericEntryTransformer:
                                 field_content, subfield_content.entry
                             )
                         else:
-                            self.index_uow.repo.add_to_list_field(
-                                field_content, subfield
-                            )
-                    self.index_uow.repo.assign_field(
-                        _index_entry, field_name, field_content
-                    )
+                            self.index_uow.repo.add_to_list_field(field_content, subfield)
+                    self.index_uow.repo.assign_field(_index_entry, field_name, field_content)
 
             elif field_conf["type"] == "object":
                 field_content = self.index_uow.repo.create_empty_object()
@@ -99,9 +89,7 @@ class GenericEntryTransformer:
                         field_content,
                         field_conf["fields"].items(),
                     )
-                    self.index_uow.repo.assign_field(
-                        _index_entry, field_name, field_content
-                    )
+                    self.index_uow.repo.assign_field(_index_entry, field_name, field_content)
 
             elif field_conf["type"] in (
                 "integer",
@@ -112,6 +100,4 @@ class GenericEntryTransformer:
             ):
                 if field_name in _src_entry:
                     field_content = _src_entry[field_name]
-                    self.index_uow.repo.assign_field(
-                        _index_entry, field_name, field_content
-                    )
+                    self.index_uow.repo.assign_field(_index_entry, field_name, field_content)

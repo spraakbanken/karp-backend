@@ -118,9 +118,7 @@ def install_auth_service(  # noqa: ANN201, D103
     container: injector.Injector, settings: Dict[str, str]
 ):
     container.binder.install(AuthInfrastructure())
-    container.binder.install(
-        JwtAuthInfrastructure(Path(settings["auth.jwt.pubkey.path"]))
-    )
+    container.binder.install(JwtAuthInfrastructure(Path(settings["auth.jwt.pubkey.path"])))
 
 
 def request_configuration(conn: Connection, session: Session):  # noqa: ANN201, D103

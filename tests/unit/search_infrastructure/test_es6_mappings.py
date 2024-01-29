@@ -84,9 +84,7 @@ class TestCreateEs6Mapping:
 
         expected = {
             "dynamic": False,
-            "properties": {
-                "name": {"type": "text", "fields": {"raw": {"type": "keyword"}}}
-            },
+            "properties": {"name": {"type": "text", "fields": {"raw": {"type": "keyword"}}}},
             "settings": {
                 "analysis": {
                     "analyzer": {
@@ -143,9 +141,7 @@ class TestCreateEs6Mapping:
         mapping = create_es6_mapping(data)
 
         expected = {
-            "properties": {
-                "name": {"type": "text", "fields": {"raw": {"type": "keyword"}}}
-            },
+            "properties": {"name": {"type": "text", "fields": {"raw": {"type": "keyword"}}}},
             "settings": {
                 "analysis": {
                     "analyzer": {

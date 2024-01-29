@@ -16,9 +16,7 @@ subapp = typer.Typer()
 def resource(  # noqa: ANN201, D103
     ctx: typer.Context,
     resource_id: str,
-    output: Optional[Path] = typer.Option(
-        None, help="Path to write to. Defaults to stdout."
-    ),
+    output: Optional[Path] = typer.Option(None, help="Path to write to. Defaults to stdout."),
 ):
     search_service = inject_from_ctx(Es6SearchService, ctx)
     query_request = search.QueryRequest(resource_ids=[resource_id])

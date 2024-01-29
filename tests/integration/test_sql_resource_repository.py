@@ -59,9 +59,7 @@ def test_sql_resource_repo_update_resource(resource_repo):  # noqa: ANN201
     assert resource_repo.by_resource_id(resource.resource_id).version == 2
 
     assert resource_repo.get_by_id(resource.entity_id, version=1).version == 1
-    assert (
-        resource_repo.get_by_resource_id(resource.resource_id, version=1).version == 1
-    )
+    assert resource_repo.get_by_resource_id(resource.resource_id, version=1).version == 1
 
     lex = resource_repo.by_resource_id(resource.resource_id)
     assert lex is not None

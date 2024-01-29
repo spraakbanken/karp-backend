@@ -39,7 +39,7 @@ class JwtAuthInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def jwt_auth_service(  # noqa: D102
         self, is_resource_protected: LexIsResourceProtected
-        ) -> JWTAuthService:
+    ) -> JWTAuthService:
         return JWTAuthService(
             pubkey_path=self.pubkey_path, is_resource_protected=is_resource_protected
         )

@@ -56,7 +56,7 @@ PLACES = [
         "area": 6312,
         "population": 6312,
         "density": 12,
-        "municipality": [3]
+        "municipality": [3],
         # "smaller_places": 7  "Bjurvik"
     },
     {
@@ -66,7 +66,7 @@ PLACES = [
         "population": 3812,
         "density": 12,
         "municipality": [2, 3],
-        "larger_place": 4  # Hambo
+        "larger_place": 4,  # Hambo
         # "smaller_places": 1  "Grund test"
     },
     {

@@ -23,9 +23,7 @@ class EntrySchema:  # noqa: D101
         try:
             self._compiled_schema(json_obj)
         except fastjsonschema.JsonSchemaException as e:
-            logger.warning(
-                "Entry not valid", extra={"entry": json_obj, "error_message": str(e)}
-            )
+            logger.warning("Entry not valid", extra={"entry": json_obj, "error_message": str(e)})
             raise errors.InvalidEntry() from e
         return json_obj
 
@@ -74,7 +72,6 @@ def create_entry_json_schema(
         parent_field_name: str,
         parent_field_def: dict[str, Any],
     ) -> None:
-
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             schema_type = json_schema_type(parent_field_def["type"])

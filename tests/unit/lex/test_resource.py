@@ -70,16 +70,12 @@ def test_resource_update_changes_last_modified_and_version():  # noqa: ANN201
         "fields": {"baseform": {"type": "string", "required": True}},
     }
 
-    resource = factories.ResourceFactory(
-        name=copy.deepcopy(name), config=copy.deepcopy(conf)
-    )
+    resource = factories.ResourceFactory(name=copy.deepcopy(name), config=copy.deepcopy(conf))
     previous_last_modified = resource.last_modified
     previous_version = resource.version
 
     conf["fields"]["new"] = {"type": "string"}
-    domain_events = resource.update(
-        name="new name", config=conf, user="Test", version=1
-    )
+    domain_events = resource.update(name="new name", config=conf, user="Test", version=1)
 
     assert resource.last_modified > previous_last_modified
     assert resource.last_modified_by == "Test"

@@ -70,21 +70,15 @@ def parser() -> KarpQueryV6Parser:
         ),
         (
             'and(equals|ortografi|"ständigt förknippad")',
-            es_dsl.Q(
-                "match", ortografi={"query": "ständigt förknippad", "operator": "and"}
-            ),
+            es_dsl.Q("match", ortografi={"query": "ständigt förknippad", "operator": "and"}),
         ),
         (
             'and(equals|ortografi|"(ständigt) förknippad")',
-            es_dsl.Q(
-                "match", ortografi={"query": "(ständigt) förknippad", "operator": "and"}
-            ),
+            es_dsl.Q("match", ortografi={"query": "(ständigt) förknippad", "operator": "and"}),
         ),
         (
             'and(equals|ortografi|"(ständigt förknippad")',
-            es_dsl.Q(
-                "match", ortografi={"query": "(ständigt förknippad", "operator": "and"}
-            ),
+            es_dsl.Q("match", ortografi={"query": "(ständigt förknippad", "operator": "and"}),
         ),
         # escaped quotes
         (
@@ -148,9 +142,7 @@ def test_es_query(parser, q, expected):  # noqa: ANN201
             es_dsl.Q(
                 "bool",
                 must_not=[
-                    es_dsl.Q(
-                        "match", ordklass={"query": "substantiv", "operator": "and"}
-                    ),
+                    es_dsl.Q("match", ordklass={"query": "substantiv", "operator": "and"}),
                     es_dsl.Q("match", ordklass={"query": "verb", "operator": "and"}),
                 ],
             ),

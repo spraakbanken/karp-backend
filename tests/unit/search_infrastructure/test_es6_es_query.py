@@ -23,12 +23,8 @@ def request_size() -> int:
 
 
 @pytest.fixture()
-def query_request(
-    resource_ids: List[str], request_from: int, request_size: int
-) -> QueryRequest:
-    return QueryRequest(
-        resource_ids=resource_ids, from_=request_from, size=request_size
-    )
+def query_request(resource_ids: List[str], request_from: int, request_size: int) -> QueryRequest:
+    return QueryRequest(resource_ids=resource_ids, from_=request_from, size=request_size)
 
 
 def test_create_EsQuery_from_QueryRequest(query_request: QueryRequest) -> None:

@@ -233,9 +233,7 @@ class DeletingEntry(BaseEntryHandler, CommandHandler[commands.DeleteEntry]):
             uw.commit()
 
 
-class ExecutingBatchOfEntryCommands(
-    CommandHandler[commands.ExecuteBatchOfEntryCommands]
-):
+class ExecutingBatchOfEntryCommands(CommandHandler[commands.ExecuteBatchOfEntryCommands]):
     def __init__(self, command_bus: CommandBus) -> None:
         self.command_bus = command_bus
 

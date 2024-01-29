@@ -39,9 +39,7 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
         return result
 
     def walk__contains(self, node):  # noqa: ANN201, D102
-        return es_dsl.Q(
-            "regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}.*"}
-        )
+        return es_dsl.Q("regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}.*"})
 
     def walk__endswith(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}"})
@@ -49,9 +47,7 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
     def walk__equals(self, node):  # noqa: ANN201, D102
         return es_dsl.Q(
             "match",
-            **{
-                self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}
-            },
+            **{self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}},
         )
 
     def walk__string_value(self, node):
@@ -65,9 +61,7 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
         return es_dsl.Q("exists", field=self.walk(node.field))
 
     def walk__freergxp(self, node):  # noqa: ANN201, D102
-        return es_dsl.Q(
-            "query_string", query=f"/{self.walk(node.arg)}/", default_field="*"
-        )
+        return es_dsl.Q("query_string", query=f"/{self.walk(node.arg)}/", default_field="*")
 
     def walk__freetext(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("multi_match", query=self.walk(node.arg))
@@ -84,9 +78,7 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
     walk__lte = walk_range
 
     def walk__missing(self, node):  # noqa: ANN201, D102
-        return es_dsl.Q(
-            "bool", must_not=es_dsl.Q("exists", field=self.walk(node.field))
-        )
+        return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=self.walk(node.field)))
 
     def walk__not(self, node):  # noqa: ANN201, D102
         must_nots = [self.walk(expr) for expr in node.exps]
@@ -105,17 +97,19 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
     def walk__startswith(self, node):  # noqa: ANN201, D102
         return es_dsl.Q("regexp", **{self.walk(node.field): f"{self.walk(node.arg)}.*"})
 
+
 class EsFieldNameCollector(NodeWalker):
     # Return a set of all field names occurring in the given query
     def walk_Node(self, node):
         result = set().union(*(self.walk(child) for child in node.children()))
         # TODO maybe a bit too automagic?
-        if hasattr(node, 'field'):
+        if hasattr(node, "field"):
             result.add(node.field)
         return result
 
     def walk_object(self, _obj):
         return set()
+
 
 class Es6SearchService:
     def __init__(  # noqa: D107, ANN204
@@ -197,14 +191,10 @@ class Es6SearchService:
                     s = s.query(es_query)
                 s = s[query.from_ : query.from_ + query.size]
                 if query.sort:
-                    s = s.sort(
-                        *self.mapping_repo.translate_sort_fields([resource], query.sort)
-                    )
+                    s = s.sort(*self.mapping_repo.translate_sort_fields([resource], query.sort))
                 elif query.sort_dict and resource in query.sort_dict:
                     s = s.sort(
-                        *self.translate_sort_fields(
-                            [resource], query.sort_dict[resource]
-                        )
+                        *self.translate_sort_fields([resource], query.sort_dict[resource])
                     )
                 ms = ms.add(s)
 
@@ -237,19 +227,13 @@ class Es6SearchService:
         s = s[query.from_ : query.from_ + query.size]
 
         if query.lexicon_stats:
-            s.aggs.bucket(
-                "distribution", "terms", field="_index", size=len(query.resources)
-            )
+            s.aggs.bucket("distribution", "terms", field="_index", size=len(query.resources))
         if query.sort:
-            s = s.sort(
-                *self.mapping_repo.translate_sort_fields(query.resources, query.sort)
-            )
+            s = s.sort(*self.mapping_repo.translate_sort_fields(query.resources, query.sort))
         elif query.sort_dict:
             sort_fields = []
             for resource, sort in query.sort_dict.items():
-                sort_fields.extend(
-                    self.mapping_repo.translate_sort_fields([resource], sort)
-                )
+                sort_fields.extend(self.mapping_repo.translate_sort_fields([resource], sort))
             s = s.sort(*sort_fields)
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         response = s.execute()
@@ -274,9 +258,12 @@ class Es6SearchService:
         for field in field_names:
             if field.endswith(".length"):
                 base_field = field.removesuffix(".length")
-                mappings[field] = \
-                  {"type": "long",
-                   "script": {"source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"}}
+                mappings[field] = {
+                    "type": "long",
+                    "script": {
+                        "source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"
+                    },
+                }
 
         # elasticsearch_dsl doesn't know about runtime_mappings so we have to add them 'by hand'
         if mappings:

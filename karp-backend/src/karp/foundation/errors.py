@@ -4,7 +4,10 @@ class NotFoundError(Exception):  # noqa: D100
     entity_name: str = "Generic entity"
 
     def __init__(  # noqa: D107
-        self, entity_id, *args, msg: str | None = None  # noqa: ANN002
+        self,
+        entity_id,
+        *args,
+        msg: str | None = None,  # noqa: ANN002
     ) -> None:
         msg = msg or f"{self.entity_name} not found. Id: {entity_id}"
         super().__init__(msg, *args)

@@ -3,7 +3,6 @@ from karp.auth_infrastructure import LexIsResourceProtected
 
 
 class InMemoryIsResourceProtected(LexIsResourceProtected):
-
     def __init__(self):
         pass
 

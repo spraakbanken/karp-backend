@@ -92,9 +92,7 @@ def _setup_dependency_injection(
 
 
 def _setup_search_context(container: injector.Injector, settings: dict) -> None:
-    container.binder.install(
-        Es6SearchIndexMod(index_prefix=settings.get("es.index_prefix"))
-    )
+    container.binder.install(Es6SearchIndexMod(index_prefix=settings.get("es.index_prefix")))
 
 
 def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103

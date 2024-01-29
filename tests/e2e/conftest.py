@@ -94,7 +94,6 @@ def create_and_publish_resource(
     *,
     path_to_config: str,
 ) -> Tuple[bool, Optional[dict[str, Any]]]:
-
     with open(path_to_config) as fp:
         resource_config = json.load(fp)
 
@@ -122,9 +121,7 @@ def create_and_publish_resource(
 
     command_bus.dispatch(create_resource)
 
-    publish_resource = commands.PublishResource(
-        user="", resourceId=resource_id, version=1
-    )
+    publish_resource = commands.PublishResource(user="", resourceId=resource_id, version=1)
 
     command_bus.dispatch(publish_resource)
 

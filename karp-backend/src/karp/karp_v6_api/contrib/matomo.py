@@ -98,9 +98,7 @@ class MatomoMiddleware(BaseHTTPMiddleware):  # noqa: D101
         try:
             logger.debug("Making tracking call", extra={"url": tracking_url})
             r = http.request("GET", tracking_url)
-            logger.debug(
-                "tracking call", extra={"status_code": r.status, "data": r.data}
-            )
+            logger.debug("tracking call", extra={"status_code": r.status, "data": r.data})
         except urllib3.exceptions.HTTPError:
             logger.exception("Error tracking view")
         return response

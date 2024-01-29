@@ -62,7 +62,7 @@ class TestSqlEntryUnitOfWork:
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},
-            session = sqlite_session_factory(),
+            session=sqlite_session_factory(),
             event_bus=InMemoryEventBus(),
             name="test",
             config={},
@@ -82,7 +82,7 @@ class TestSqlEntryUnitOfWork:
         uow = SqlEntryUnitOfWork(
             # {"resource_id": "abc", "table_name": "abc"},
             # resource_config={"resource_id": "abc", "config": {}},
-            session = sqlite_session_factory(),
+            session=sqlite_session_factory(),
             event_bus=InMemoryEventBus(),
             name="test",
             config={},

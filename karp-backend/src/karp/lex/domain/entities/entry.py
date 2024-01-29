@@ -161,7 +161,7 @@ def create_entry(  # noqa: D103
     *,
     id: unique_id.UniqueId,  # noqa: A002
     repo_id: unique_id.UniqueId,
-    last_modified_by: str = None,
+    last_modified_by: Optional[str] = None,
     message: Optional[str] = None,
     last_modified: typing.Optional[float] = None,
 ) -> Tuple[Entry, list[events.Event]]:

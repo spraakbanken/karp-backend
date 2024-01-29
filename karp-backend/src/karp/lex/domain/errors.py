@@ -22,7 +22,10 @@ class EntryNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "Entry"
 
     def __init__(  # noqa: D107
-        self, *args, entity_id=None, **kwargs  # noqa: ANN002, ANN003
+        self,
+        *args,
+        entity_id=None,
+        **kwargs,  # noqa: ANN002, ANN003
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, **kwargs)
@@ -33,7 +36,10 @@ class EntryRepoNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "EntryRepository"
 
     def __init__(  # noqa: D107
-        self, entity_id, *args, **kwargs  # noqa: ANN002, ANN003
+        self,
+        entity_id,
+        *args,
+        **kwargs,  # noqa: ANN002, ANN003
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, entity_id, *args, **kwargs)
@@ -43,7 +49,10 @@ class ResourceNotFound(NotFoundError, LexDomainError):  # noqa: D101
     entity_name = "Resource"
 
     def __init__(  # noqa: D107
-        self, entity_id, *args, **kwargs  # noqa: ANN002, ANN003
+        self,
+        entity_id,
+        *args,
+        **kwargs,  # noqa: ANN002, ANN003
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, entity_id, *args, **kwargs)

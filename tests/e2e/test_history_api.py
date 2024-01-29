@@ -111,9 +111,7 @@ class TestGetHistory:
         admin_token: auth.AccessToken,
         history_entity_ids: list[str],
     ):
-        response_data = get_helper(
-            fa_data_client, "/history/places?user_id=user3", admin_token
-        )
+        response_data = get_helper(fa_data_client, "/history/places?user_id=user3", admin_token)
         assert len(response_data["history"]) == 0
         assert response_data["total"] == 0
 

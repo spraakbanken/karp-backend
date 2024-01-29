@@ -136,13 +136,13 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
         if version:
             query = query.filter_by(version=version)
         elif after_date is not None:
-            query = query.filter(
-                self.history_model.last_modified >= after_date
-            ).order_by(self.history_model.last_modified)
+            query = query.filter(self.history_model.last_modified >= after_date).order_by(
+                self.history_model.last_modified
+            )
         elif before_date:
-            query = query.filter(
-                self.history_model.last_modified <= before_date
-            ).order_by(self.history_model.last_modified.desc())
+            query = query.filter(self.history_model.last_modified <= before_date).order_by(
+                self.history_model.last_modified.desc()
+            )
         elif oldest_first:
             query = query.order_by(self.history_model.last_modified)
         else:
@@ -219,9 +219,7 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
         total = query.count()
         return [self._history_row_to_entry(row) for row in paged_query.all()], total
 
-    def _entry_to_history_dict(
-        self, entry: Entry, history_id: Optional[int] = None
-    ) -> Dict:
+    def _entry_to_history_dict(self, entry: Entry, history_id: Optional[int] = None) -> Dict:
         return {
             "history_id": history_id,
             "entity_id": entry.id,
@@ -290,7 +288,10 @@ class SqlEntryUnitOfWork(  # noqa: D101
 
     @classmethod
     def from_dict(  # noqa: ANN206, D102
-        cls, settings: typing.Dict, resource_config, **kwargs  # noqa: ANN003
+        cls,
+        settings: typing.Dict,
+        resource_config,
+        **kwargs,  # noqa: ANN003
     ):
         return cls(repo_settings=settings, resource_config=resource_config, **kwargs)
 
@@ -335,5 +336,3 @@ class SqlEntryUowCreator(Generic[SqlEntryUowType]):  # noqa: D101
                 event_bus=self.event_bus,
             )
         return self.cache[id], []
-
-

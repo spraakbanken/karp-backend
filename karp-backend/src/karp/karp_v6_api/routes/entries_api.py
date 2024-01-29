@@ -37,9 +37,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get(
-    "/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"]
-)
+@router.get("/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"])
 @router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
 def get_history_for_entry(  # noqa: ANN201, D103
     resource_id: str,

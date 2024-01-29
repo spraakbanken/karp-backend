@@ -217,10 +217,7 @@ class TestAddEntry:
         assert "error" in response_data
         assert "errorCode" in response_data
         assert ClientErrorCodes.DB_INTEGRITY_ERROR == response_data["errorCode"]
-        assert (
-            response_data["error"]
-            == f"An entry with entry_id '{entry_id}' already exists."
-        )
+        assert response_data["error"] == f"An entry with entry_id '{entry_id}' already exists."
 
     def test_add_fails_with_invalid_entry(  # noqa: ANN201
         self,

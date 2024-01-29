@@ -75,9 +75,7 @@ class VersionedEntity(Entity):  # noqa: D101
 
     def _validate_version(self, version: int) -> None:
         if version != self.version:
-            raise ConsistencyError(
-                f"Entity version mismatch: {version} != {self.version}"
-            )
+            raise ConsistencyError(f"Entity version mismatch: {version} != {self.version}")
 
 
 class TimestampedEntity(Entity):  # noqa: D101
@@ -90,9 +88,7 @@ class TimestampedEntity(Entity):  # noqa: D101
     ) -> None:
         super().__init__(id=id, discarded=discarded)
         self._last_modified = self._ensure_timestamp(last_modified)
-        self._last_modified_by = (
-            "Unknown user" if last_modified_by is None else last_modified_by
-        )
+        self._last_modified_by = "Unknown user" if last_modified_by is None else last_modified_by
 
     @property
     def last_modified(self):  # noqa: ANN201

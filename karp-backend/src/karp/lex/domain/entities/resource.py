@@ -83,7 +83,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         user: str,
         message: str,
         version: int,
-        timestamp: float = None,
+        timestamp: Optional[float] = None,
     ) -> list[events.Event]:
         self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
@@ -137,9 +137,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
     ) -> list[events.Event]:
-        self._update_metadata(
-            timestamp, user, message or "setting resource_id", version
-        )
+        self._update_metadata(timestamp, user, message or "setting resource_id", version)
         self._resource_id = resource_id
         return [
             events.ResourceUpdated(
@@ -227,7 +225,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         raise NotImplementedError()
 
     def discard(  # noqa: D102
-        self, *, user: str, message: str, timestamp: float = None
+        self, *, user: str, message: str, timestamp: Optional[float] = None
     ) -> list[events.Event]:
         self._op = ResourceOp.DELETED
         self._message = message or "Entry deleted."
@@ -382,9 +380,9 @@ class Release(Entity):  # noqa: D101
 def create_resource(  # noqa: D103
     config: dict[str, Any],
     entry_repo_id: unique_id.UniqueId,
-    created_by: str = None,
-    user: str = None,
-    created_at: float = None,
+    created_by: Optional[str] = None,
+    user: Optional[str] = None,
+    created_at: Optional[float] = None,
     id: unique_id.UniqueId = None,  # noqa: A002
     resource_id: typing.Optional[str] = None,
     message: typing.Optional[str] = None,

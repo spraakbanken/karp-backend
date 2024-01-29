@@ -35,9 +35,7 @@ def create_resources():  # noqa: ANN201, D103
         sa.Column("op", sa.Enum("ADDED", "UPDATED", "DELETED"), nullable=False),
         sa.Column("discarded", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("history_id"),
-        sa.UniqueConstraint(
-            "entity_id", "version", name="entity_id_version_unique_constraint"
-        ),
+        sa.UniqueConstraint("entity_id", "version", name="entity_id_version_unique_constraint"),
     )
 
 

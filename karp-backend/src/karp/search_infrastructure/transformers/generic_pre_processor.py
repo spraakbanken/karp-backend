@@ -3,7 +3,9 @@ import typing
 
 from karp.lex_infrastructure import GenericEntryViews
 from karp.search.application.repositories import IndexEntry
-from karp.search_infrastructure.transformers.generic_entry_transformer import GenericEntryTransformer
+from karp.search_infrastructure.transformers.generic_entry_transformer import (
+    GenericEntryTransformer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,12 +24,8 @@ class GenericPreProcessor:
         self,
         resource_id: str,
     ) -> typing.Iterable[IndexEntry]:
-        logger.debug(
-            "processing entries for resource", extra={"resource_id": resource_id}
-        )
+        logger.debug("processing entries for resource", extra={"resource_id": resource_id})
 
         for entry in self.entry_views.all_entries(resource_id):
-            logger.debug(
-                "processing entry", extra={"entry": entry, "resource_id": resource_id}
-            )
+            logger.debug("processing entry", extra={"entry": entry, "resource_id": resource_id})
             yield self.entry_transformer.transform(resource_id, entry)

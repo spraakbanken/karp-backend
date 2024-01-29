@@ -25,9 +25,7 @@ class ResourceRepository(repository.Repository):  # noqa: D101
         if resource := self.get_by_resource_id_optional(resource_id, version=version):
             return resource
         else:
-            raise self.EntityNotFound(
-                f"Entity with resource_id='{resource_id}' can't be found."
-            )
+            raise self.EntityNotFound(f"Entity with resource_id='{resource_id}' can't be found.")
 
     def get_by_resource_id_optional(  # noqa: D102
         self, resource_id: str, *, version: Optional[int] = None

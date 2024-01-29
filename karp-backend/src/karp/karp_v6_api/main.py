@@ -230,9 +230,7 @@ def create_app() -> FastAPI:  # noqa: D103
             access_token=app_context.settings["tracking.matomo.token"],
         )
     else:
-        logger.warning(
-            "Tracking to Matomo is not enabled, please set TRACKING_MATOMO_URL."
-        )
+        logger.warning("Tracking to Matomo is not enabled, please set TRACKING_MATOMO_URL.")
     app.add_middleware(CorrelationIdMiddleware)
 
     return app

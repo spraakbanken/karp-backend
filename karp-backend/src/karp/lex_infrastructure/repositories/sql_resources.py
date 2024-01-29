@@ -120,11 +120,7 @@ class SqlResourceRepository(  # noqa: D101
             ),
         )
 
-        return [
-            resource_dto.to_entity()
-            for resource_dto in query
-            if resource_dto is not None
-        ]
+        return [resource_dto.to_entity() for resource_dto in query if resource_dto is not None]
 
     def _get_all_resources(self) -> typing.List[entities.Resource]:
         self._check_has_session()
@@ -144,11 +140,7 @@ class SqlResourceRepository(  # noqa: D101
             ),
         )
 
-        return [
-            resource_dto.to_entity()
-            for resource_dto in query
-            if resource_dto is not None
-        ]
+        return [resource_dto.to_entity() for resource_dto in query if resource_dto is not None]
 
 
 class SqlResourceUnitOfWork(  # noqa: D101

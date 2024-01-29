@@ -31,6 +31,7 @@ from karp.lex_infrastructure import (
 
 from karp.lex.application.repositories import EntryUnitOfWorkCreator
 
+
 def get_resource_unit_of_work(  # noqa: D103
     db_session: Session = Depends(get_session),
     event_bus: EventBus = Depends(event_deps.get_eventbus),
@@ -43,9 +44,7 @@ def get_resource_unit_of_work(  # noqa: D103
 
 def get_entry_repo_uow(  # noqa: D103
     db_session: Session = Depends(get_session),
-    entry_uow_factory: EntryUnitOfWorkCreator = Depends(
-        inject_from_req(EntryUnitOfWorkCreator)
-    ),
+    entry_uow_factory: EntryUnitOfWorkCreator = Depends(inject_from_req(EntryUnitOfWorkCreator)),
     event_bus: EventBus = Depends(event_deps.get_eventbus),
 ) -> EntryUowRepositoryUnitOfWork:
     return SqlEntryUowRepositoryUnitOfWork(

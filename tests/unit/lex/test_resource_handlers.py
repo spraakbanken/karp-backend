@@ -77,7 +77,8 @@ class TestCreateResource:
         with pytest.raises(errors.IntegrityError):
             lex_ctx.command_bus.dispatch(
                 factories.CreateResourceFactory.build(
-                    resourceId=cmd2.resource_id, entryRepoId=cmd1.id  # type: ignore [attr-defined]
+                    resourceId=cmd2.resource_id,
+                    entryRepoId=cmd1.id,  # type: ignore [attr-defined]
                 )
             )
 

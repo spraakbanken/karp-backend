@@ -46,9 +46,7 @@ class ResourceModel(db.Base):  # noqa: D101
     op = Column(Enum(ResourceOp), nullable=False)
     discarded = Column(Boolean, default=False)
     __table_args__ = (
-        UniqueConstraint(
-            "entity_id", "version", name="entity_id_version_unique_constraint"
-        ),
+        UniqueConstraint("entity_id", "version", name="entity_id_version_unique_constraint"),
         # TODO only one resource can be active, but several can be inactive
         #    here is how to do it in MariaDB, unclear whether this is possible using SQLAlchemy
         #    `virtual_column` char(0) as (if(active,'', NULL)) persistent
@@ -175,9 +173,7 @@ class BaseHistoryEntry:  # noqa: D101
     @classmethod
     @declared_attr
     def __table_args__(cls):  # noqa: ANN206, D105
-        return UniqueConstraint(
-            "entity_id", "version", name="id_version_unique_constraint"
-        )
+        return UniqueConstraint("entity_id", "version", name="id_version_unique_constraint")
 
     @classmethod
     def from_entity(cls, entry: entities.Entry):  # noqa: ANN206, D102

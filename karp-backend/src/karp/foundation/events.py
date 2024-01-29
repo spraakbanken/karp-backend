@@ -74,7 +74,5 @@ class InjectorEventBus(EventBus):  # noqa: D101
                 try:
                     evt_handler(event)
                 except Exception as err:  # noqa: F841
-                    logger.exception(
-                        "Exception handling event", extra={"karp_event": event}
-                    )
+                    logger.exception("Exception handling event", extra={"karp_event": event})
                     raise

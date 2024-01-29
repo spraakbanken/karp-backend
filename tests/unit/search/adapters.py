@@ -33,9 +33,7 @@ class InMemoryIndex(repository.Repository):
         self.indicies: dict[str, InMemoryIndex.Index] = {}
 
     def create_index(self, resource_id: str, config: Dict):  # noqa: ANN201
-        self.indicies[resource_id] = InMemoryIndex.Index(
-            config=config, created_at=utc_now()
-        )
+        self.indicies[resource_id] = InMemoryIndex.Index(config=config, created_at=utc_now())
 
     def publish_index(self, alias_name: str, index_name: str = None):  # noqa: ANN201
         self.indicies[alias_name].published = True
@@ -79,7 +77,6 @@ class InMemoryIndex(repository.Repository):
 
     def _by_id(self, id) -> None:  # noqa: A002
         return None
-
 
 
 class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, IndexUnitOfWork):

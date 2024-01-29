@@ -9,8 +9,12 @@ from tabulate import tabulate
 from karp.command_bus import CommandBus
 from karp.lex_core.value_objects import UniqueIdStr, unique_id
 from karp.lex_core import commands as lex_commands
-from karp.lex_infrastructure import SqlGetPublishedResources, SqlGetResources, SqlReadOnlyResourceRepository, \
-    SqlListEntryRepos
+from karp.lex_infrastructure import (
+    SqlGetPublishedResources,
+    SqlGetResources,
+    SqlReadOnlyResourceRepository,
+    SqlListEntryRepos,
+)
 from karp.search import commands as search_commands
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
@@ -179,9 +183,7 @@ def show(  # noqa: ANN201, D103
     resource = repo.get_by_resource_id(resource_id, version=version)
     if not resource:
         version_str = version or "latest"
-        typer.echo(
-            f"Can't find resource '{resource_id}', version '{version_str}'", err=True
-        )
+        typer.echo(f"Can't find resource '{resource_id}', version '{version_str}'", err=True)
         raise typer.Exit(3)
 
     typer.echo(tabulate(((key, value) for key, value in resource.dict().items())))

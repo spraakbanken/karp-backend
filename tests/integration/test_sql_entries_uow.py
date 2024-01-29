@@ -35,7 +35,4 @@ class TestSqlEntryUow:
         entry_uow, _ = sql_entry_uow_creator.create(**example_uow.dict(exclude={"cmdtype"}))
         random_part = ulid.from_uuid(entry_uow.entity_id).randomness().str
         with entry_uow as uw:
-            assert (
-                uw.repo.history_model.__tablename__
-                == f"{example_uow.name}_{random_part}"
-            )
+            assert uw.repo.history_model.__tablename__ == f"{example_uow.name}_{random_part}"

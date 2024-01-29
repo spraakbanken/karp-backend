@@ -54,7 +54,6 @@ class SqlGetResources(SqlQuery):  # noqa: D101
 
 
 class SqlReadOnlyResourceRepository(SqlQuery):
-
     def get_by_resource_id(  # noqa: D102
         self, resource_id: str, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
@@ -77,7 +76,7 @@ class SqlReadOnlyResourceRepository(SqlQuery):
             .filter_by(**filters)
             .order_by(ResourceModel.last_modified.desc())
         )
-        print(f"stmt={str(stmt)}")
+        print(f"stmt={stmt!s}")
         row = self._conn.execute(stmt).first()
 
         return _row_to_dto(row) if row else None

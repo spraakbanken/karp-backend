@@ -105,9 +105,7 @@ class Es6MappingRepository:  # noqa: D101
                 index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
             )
         except es_exceptions.NotFoundError as err:
-            logger.info(
-                "didn't find index_name for resource '%s' details: %s", resource_id, err
-            )
+            logger.info("didn't find index_name for resource '%s' details: %s", resource_id, err)
             return self._update_config(resource_id)["index_name"]
         return res["_source"]["index_name"]
 
@@ -117,15 +115,13 @@ class Es6MappingRepository:  # noqa: D101
                 index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
             )
         except es_exceptions.NotFoundError as err:
-            logger.info(
-                "didn't find alias_name for resource '%s' details: %s", resource_id, err
-            )
+            logger.info("didn't find alias_name for resource '%s' details: %s", resource_id, err)
             return self._update_config(resource_id)["alias_name"]
         return res["_source"]["alias_name"]
 
     @staticmethod
     def get_analyzed_fields_from_mapping(  # noqa: D102
-        properties: Dict[str, Dict[str, Dict[str, Any]]]
+        properties: Dict[str, Dict[str, Dict[str, Any]]],
     ) -> List[str]:
         analyzed_fields = []
 
@@ -151,23 +147,17 @@ class Es6MappingRepository:  # noqa: D101
         field_mapping: Dict[str, List[str]] = {}
         sortable_fields = {}
         aliases = self._get_all_aliases()
-        mapping: Dict[
-            str, Dict[str, Dict[str, Dict[str, Dict]]]
-        ] = self.es.indices.get_mapping()
+        mapping: Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]] = self.es.indices.get_mapping()
         for alias, index in aliases:
             if (
                 "mappings" in mapping[index]
                 and "entry" in mapping[index]["mappings"]
                 and "properties" in mapping[index]["mappings"]["entry"]
             ):
-                field_mapping[
-                    alias
-                ] = Es6MappingRepository.get_analyzed_fields_from_mapping(
+                field_mapping[alias] = Es6MappingRepository.get_analyzed_fields_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
-                sortable_fields[
-                    alias
-                ] = Es6MappingRepository.create_sortable_map_from_mapping(
+                sortable_fields[alias] = Es6MappingRepository.create_sortable_map_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
         return field_mapping, sortable_fields
@@ -217,14 +207,10 @@ class Es6MappingRepository:  # noqa: D101
                     translated_sort_fields.extend(
                         (
                             {field: {"order": sort_order}}
-                            for field in self.translate_sort_field(
-                                resource_id, sort_value
-                            )
+                            for field in self.translate_sort_field(resource_id, sort_value)
                         )
                     )
-                translated_sort_fields.extend(
-                    self.translate_sort_field(resource_id, sort_value)
-                )
+                translated_sort_fields.extend(self.translate_sort_field(resource_id, sort_value))
 
         return translated_sort_fields
 

@@ -19,7 +19,7 @@ def create(infile: typer.FileBinaryRead, ctx: typer.Context):  # noqa: ANN201, D
     try:
         data = json.load(infile)
     except Exception as err:  # noqa: BLE001
-        typer.echo(f"Error reading file '{infile.name}': {str(err)}")
+        typer.echo(f"Error reading file '{infile.name}': {err!s}")
         raise typer.Exit(123) from err
     create_entry_repo = CreateEntryRepository.from_dict(
         data,

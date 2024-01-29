@@ -46,14 +46,10 @@ def run_migrations_online():  # noqa: ANN201
             # drop testing db if it exists and create a fresh one
             with default_engine.connect() as default_conn:
                 logger.warning("dropping database: %s", karp_config.DATABASE_NAME)
-                default_conn.execute(
-                    f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}"
-                )
+                default_conn.execute(f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}")
                 logger.warning("creating database: %s", karp_config.DATABASE_NAME)
 
-                result = default_conn.execute(
-                    f"CREATE DATABASE {karp_config.DATABASE_NAME}"
-                )
+                result = default_conn.execute(f"CREATE DATABASE {karp_config.DATABASE_NAME}")
                 logger.warning("db response: %s", result)
 
     logger.info("migrating url: %s", karp_config.DATABASE_URL)
@@ -84,9 +80,7 @@ def run_migrations_offline() -> None:
     """  # noqa: D202, D200, D212
 
     if os.environ.get("TESTING"):
-        raise RuntimeError(
-            "Running testing migrations offline currently not permitted."
-        )
+        raise RuntimeError("Running testing migrations offline currently not permitted.")
 
     alembic.context.configure(url=str(karp_config.DATABASE_URL))
     with alembic.context.begin_transaction():

@@ -32,9 +32,7 @@ def ensure_correct_id_type(v) -> unique_id.UniqueId:
     try:
         return unique_id.UniqueId.validate(v)
     except ValueError as exc:
-        raise ValueError(
-            f"expected valid UniqueId, got '{v}' (type: `{type(v)}')"
-        ) from exc
+        raise ValueError(f"expected valid UniqueId, got '{v}' (type: `{type(v)}')") from exc
 
 
 class InMemoryResourceRepository(lex_repositories.ResourceRepository):
@@ -75,7 +73,9 @@ class InMemoryReadResourceRepository(SqlReadOnlyResourceRepository):
         self.resources = resources
 
     def get_by_id(
-        self, id: UniqueIdPrimitive, version: Optional[int] = None  # noqa: A002
+        self,
+        id: UniqueIdPrimitive,
+        version: Optional[int] = None,  # noqa: A002
     ) -> Optional[ResourceDto]:
         resource_id = UniqueId.validate(id)
         if resource := self.resources.get(resource_id):
@@ -96,9 +96,7 @@ class InMemoryReadResourceRepository(SqlReadOnlyResourceRepository):
         return ResourceDto(**res.serialize())
 
     def get_published_resources(self) -> Iterable[ResourceDto]:
-        return (
-            self._row_to_dto(res) for res in self.resources.values() if res.is_published
-        )
+        return (self._row_to_dto(res) for res in self.resources.values() if res.is_published)
 
 
 class InMemoryEntryRepository(Repository):
@@ -190,9 +188,7 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
         return self._entries
 
 
-class InMemoryResourceUnitOfWork(
-    InMemoryUnitOfWork, lex_repositories.ResourceUnitOfWork
-):
+class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUnitOfWork):
     def __init__(self, event_bus: EventBus):  # noqa: ANN204
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.ResourceUnitOfWork.__init__(self, event_bus=event_bus)

@@ -38,9 +38,7 @@ class CreatingResource(  # noqa: D101
                 )
 
         with self.resource_uow as uow:
-            existing_resource = uow.repo.get_by_resource_id_optional(
-                command.resource_id
-            )
+            existing_resource = uow.repo.get_by_resource_id_optional(command.resource_id)
             if (
                 existing_resource
                 and not existing_resource.discarded

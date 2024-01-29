@@ -15,7 +15,7 @@ class ClientErrorCodes(enum.IntEnum):  # noqa: D101
 
 class KarpError(Exception):  # noqa: D101
     def __init__(  # noqa: D107
-        self, message: str, code: int = None, http_return_code: int = 400
+        self, message: str, code: Optional[int] = None, http_return_code: int = 400
     ) -> None:
         super().__init__(message)
         self.message = message

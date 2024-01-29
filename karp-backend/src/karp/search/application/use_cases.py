@@ -13,7 +13,9 @@ from karp.lex.domain import events
 from karp.search.domain import commands
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_infrastructure.transformers.generic_pre_processor import GenericPreProcessor
-from karp.search_infrastructure.transformers.generic_entry_transformer import GenericEntryTransformer
+from karp.search_infrastructure.transformers.generic_entry_transformer import (
+    GenericEntryTransformer,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +74,10 @@ class CreateSearchServiceHandler(  # noqa: D101
         self.index_uow = index_uow
 
     def __call__(  # noqa: D102, ANN204
-        self, event: events.ResourceCreated, *args, **kwargs  # noqa: ANN002, ANN003
+        self,
+        event: events.ResourceCreated,
+        *args,
+        **kwargs,  # noqa: ANN002, ANN003
     ):
         print(f"{event.resource_id=}")
         with self.index_uow as uw:
@@ -87,7 +92,10 @@ class DeletingIndex(  # noqa: D101
         self.index_uow = index_uow
 
     def __call__(  # noqa: D102, ANN204
-        self, event: events.ResourceDiscarded, *args, **kwargs  # noqa: ANN002, ANN003
+        self,
+        event: events.ResourceDiscarded,
+        *args,
+        **kwargs,  # noqa: ANN002, ANN003
     ):
         print(f"{event.resource_id=}")
 
