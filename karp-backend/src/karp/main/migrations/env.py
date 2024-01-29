@@ -3,7 +3,7 @@ import os
 import pathlib
 
 import alembic
-from sqlalchemy import engine_from_config, pool, create_engine
+from sqlalchemy import engine_from_config, pool, create_engine, text
 from logging.config import fileConfig
 
 from karp.main import config as karp_config
@@ -46,10 +46,10 @@ def run_migrations_online():  # noqa: ANN201
             # drop testing db if it exists and create a fresh one
             with default_engine.connect() as default_conn:
                 logger.warning("dropping database: %s", karp_config.DATABASE_NAME)
-                default_conn.execute(f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}")
+                default_conn.execute(text(f"DROP DATABASE IF EXISTS {karp_config.DATABASE_NAME}"))
                 logger.warning("creating database: %s", karp_config.DATABASE_NAME)
 
-                result = default_conn.execute(f"CREATE DATABASE {karp_config.DATABASE_NAME}")
+                result = default_conn.execute(text(f"CREATE DATABASE {karp_config.DATABASE_NAME}"))
                 logger.warning("db response: %s", result)
 
     logger.info("migrating url: %s", karp_config.DATABASE_URL)

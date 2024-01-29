@@ -1,7 +1,7 @@
 import logging  # noqa: D100, I001
 from typing import Optional
 
-from sqlalchemy import orm as sa_orm
+from sqlalchemy import orm as sa_orm, text
 
 from karp.foundation.events import EventBus
 from karp.foundation.repository import Repository
@@ -37,7 +37,7 @@ class SqlEntryUowRepository(SqlRepository, Repository):  # noqa: D101
         self._session.add(EntryUowModel.from_entity(entry_uow))
         if entry_uow.discarded:
             # If resource was discarded, drop the table containing all data entries
-            self._session.execute("DROP table " + entry_uow.table_name())
+            self._session.execute(text("DROP table " + entry_uow.table_name()))
         logger.debug("session=%s, session.new=%s", self._session, self._session.new)
 
     def _by_id(

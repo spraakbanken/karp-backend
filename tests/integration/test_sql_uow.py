@@ -7,6 +7,7 @@ from karp.lex_infrastructure.repositories import SqlResourceUnitOfWork
 from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
 
 from tests.unit.lex import adapters, factories  # noqa: F401
+from sqlalchemy import text
 
 
 class InMemoryEventBus(EventBus):
@@ -30,7 +31,7 @@ class TestSqlResourceUnitOfWork:
             uow.resources.save(resource)
 
         new_session = sqlite_session_factory()
-        rows = list(new_session.execute('SELECT * FROM "resources"'))
+        rows = list(new_session.execute(text('SELECT * FROM "resources"')))
         assert not rows
 
     def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201
@@ -47,7 +48,7 @@ class TestSqlResourceUnitOfWork:
                 do_something_that_fails(resource)
 
         new_session = sqlite_session_factory()
-        rows = list(new_session.execute('SELECT * FROM "resources"'))
+        rows = list(new_session.execute(text('SELECT * FROM "resources"')))
         assert not rows
 
 
@@ -75,7 +76,7 @@ class TestSqlEntryUnitOfWork:
             uow.entries.save(entry)
 
         new_session = sqlite_session_factory()
-        rows = list(new_session.execute(f'SELECT * FROM "{uow.table_name()}"'))
+        rows = list(new_session.execute(text(f'SELECT * FROM "{uow.table_name()}"')))
         assert not rows
 
     def test_rolls_back_on_error(self, sqlite_session_factory):  # noqa: ANN201
@@ -97,7 +98,7 @@ class TestSqlEntryUnitOfWork:
                 do_something_that_fails()
 
         new_session = sqlite_session_factory()
-        rows = list(new_session.execute(f'SELECT * FROM "{uow.table_name()}"'))
+        rows = list(new_session.execute(text(f'SELECT * FROM "{uow.table_name()}"')))
         assert not rows
 
 
