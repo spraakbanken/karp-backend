@@ -220,10 +220,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._op = ResourceOp.UPDATED
         self._increment_version()
 
-    def release_with_name(self, name: str):  # noqa: ANN201, D102
-        self._check_not_discarded()
-        raise NotImplementedError()
-
     def discard(  # noqa: D102
         self, *, user: str, message: str, timestamp: Optional[float] = None
     ) -> list[events.Event]:

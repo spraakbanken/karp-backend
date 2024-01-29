@@ -12,8 +12,6 @@ import typer
 
 from tqdm import tqdm
 
-from karp.command_bus import CommandBus
-from karp import lex
 from karp.entry_commands import EntryCommands
 from karp.lex.domain.value_objects import entry_schema
 
