@@ -290,8 +290,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
 
     @property
     def repo(self) -> SqlEntryRepository:  # noqa: D102
-        if self._entries is None:
-            raise RuntimeError("No entries")
+        self._begin()
         return self._entries
 
     def collect_new_events(self) -> typing.Iterable:  # noqa: D102

@@ -158,14 +158,14 @@ class SqlResourceUnitOfWork(  # noqa: D101
         self._resources = None
 
     def _begin(self):  # noqa: ANN202
-        logger.info("using session", extra={"session": self._session})
-        self._resources = SqlResourceRepository(self._session)
+        if self._resources is None:
+            logger.info("using session", extra={"session": self._session})
+            self._resources = SqlResourceRepository(self._session)
         return self
 
     @property
     def repo(self) -> SqlResourceRepository:  # noqa: D102
-        if self._resources is None:
-            raise RuntimeError("No resources")
+        self._begin()
         return self._resources
 
     def resource_to_entry_uow(self, resource: Resource) -> SqlEntryUnitOfWork:
