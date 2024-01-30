@@ -178,5 +178,4 @@ class SqlResourceUnitOfWork(  # noqa: D101
             message=resource.message,
             last_modified_by=resource.last_modified_by,
             last_modified=resource.last_modified,
-            connection_str=None,
         )

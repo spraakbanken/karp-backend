@@ -12,7 +12,6 @@ class EntryUnitOfWork(  # noqa: D101
         self,
         name: str,
         config: Dict,
-        connection_str: Optional[str],
         message: str,
         event_bus: events.EventBus,
         id: UniqueId,  # noqa: A002
@@ -22,7 +21,6 @@ class EntryUnitOfWork(  # noqa: D101
         unit_of_work.UnitOfWork.__init__(self, event_bus)
         entity.TimestampedEntity.__init__(self, *args, id=id, **kwargs)
         self._name = name
-        self._connection_str = connection_str
         self._config = config
         self._message = message
 
@@ -33,10 +31,6 @@ class EntryUnitOfWork(  # noqa: D101
     @property
     def name(self) -> str:  # noqa: D102
         return self._name
-
-    @property
-    def connection_str(self) -> Optional[str]:  # noqa: D102
-        return self._connection_str
 
     @property
     def config(self) -> Dict:  # noqa: D102

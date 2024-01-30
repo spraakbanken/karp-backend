@@ -160,7 +160,6 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
         id: UniqueId,  # noqa: A002
         name: str,
         config: typing.Dict,
-        connection_str: typing.Optional[str],
         message: str,
         user: str,
         event_bus: EventBus,
@@ -171,7 +170,6 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
             id=id,
             name=name,
             config=config,
-            connection_str=connection_str,
             message=message,
             event_bus=event_bus,
         )

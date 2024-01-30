@@ -276,7 +276,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
         entry_repo_id: UniqueId,  # noqa: A002
         name: str,
         config: Dict,
-        connection_str: Optional[str],
         user: str,
         message: str,
         timestamp: float,
@@ -285,7 +284,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
             id=entry_repo_id,
             name=name,
             config=config,
-            connection_str=connection_str,
             last_modified_by=user,
             message=message,
             last_modified=timestamp,

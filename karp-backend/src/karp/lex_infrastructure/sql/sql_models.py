@@ -122,7 +122,6 @@ class EntryUowModel(db.Base):  # noqa: D101
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
     type = Column(String(64), nullable=False)  # noqa: A003
-    connection_str = Column(String(128))
     name = Column(String(64), nullable=False)
     config = Column(NestedMutableJson, nullable=False)
     last_modified = Column(Float(precision=53), nullable=False)
@@ -137,7 +136,6 @@ class EntryUowModel(db.Base):  # noqa: D101
             entity_id=entry_uow.entity_id,
             # TODO legacy field, can be removed from database when migrations are figured out
             type="sql_entries_v2",
-            connection_str=entry_uow.connection_str,
             name=entry_uow.name,
             config=entry_uow.config,
             last_modified=entry_uow.last_modified,
