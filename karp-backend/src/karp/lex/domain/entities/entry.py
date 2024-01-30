@@ -5,7 +5,7 @@ import typing
 from typing import Dict, Optional, Any, Tuple
 
 
-from karp.lex.domain import errors, events
+from karp.lex.domain import errors
 from karp.foundation.entity import TimestampedVersionedEntity
 from karp.lex_core.value_objects import UniqueId, unique_id
 
@@ -64,7 +64,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         user: str,
         message: Optional[str] = None,
         timestamp: Optional[float] = None,
-    ) -> list[events.Event]:
+    ):
         self._check_not_discarded()
         if self._body == body:
             return []
@@ -72,17 +72,6 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         self._body = self._update_field(body, user, timestamp)
         self._message = message or "Entry updated"
         self._op = EntryOp.UPDATED
-        return [
-            events.EntryUpdated(
-                id=self.id,
-                timestamp=self.last_modified,
-                user=self.last_modified_by,
-                version=self.version,
-                body=self.body,
-                repoId=self.repo_id,
-                message=self.message,
-            )
-        ]
 
     @property
     def op(self):  # noqa: ANN201
@@ -118,7 +107,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         user: str,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ) -> list[events.Event]:
+    ):
         if self._discarded:
             return []
         self._check_not_discarded()
@@ -126,17 +115,6 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         self._op = EntryOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = self._update_field(True, user, timestamp)
-        return [
-            events.EntryDeleted(
-                id=self.id,
-                # entry_id=self.entry_id,
-                timestamp=self.last_modified,
-                user=user,
-                message=self._message,
-                version=self.version,
-                repoId=self.repo_id,
-            )
-        ]
 
     def _check_version(self, version: int) -> None:
         if self.version != version:
@@ -164,8 +142,8 @@ def create_entry(  # noqa: D103
     last_modified_by: Optional[str] = None,
     message: Optional[str] = None,
     last_modified: typing.Optional[float] = None,
-) -> Tuple[Entry, list[events.Event]]:
-    entry = Entry(
+) -> Entry:
+    return Entry(
         body=body,
         message="Entry added." if not message else message,
         status=EntryStatus.IN_PROGRESS,
@@ -177,13 +155,3 @@ def create_entry(  # noqa: D103
         id=id,
         last_modified=last_modified,
     )
-    event = events.EntryAdded(
-        repoId=repo_id,
-        id=entry.id,
-        body=entry.body,
-        message=entry.message or "",
-        user=entry.last_modified_by,
-        timestamp=entry.last_modified,
-    )
-
-    return entry, [event]

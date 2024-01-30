@@ -1,14 +1,26 @@
-from karp.lex import ResourceUnitOfWork
+from karp.lex import EntryDto, ResourceUnitOfWork
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
+from karp.search import IndexUnitOfWork
+from karp.search.generic_resources import GenericResourceViews
+from karp.search_infrastructure import GenericEntryTransformer
 from karp.timings import utc_now
 
 
 class EntryCommands:
-    def __init__(self, resource_uow):
+    def __init__(
+        self,
+        resource_uow,
+        index_uow: IndexUnitOfWork,
+        entry_transformer: GenericEntryTransformer,
+        resource_views: GenericResourceViews,
+    ):
         self.resource_uow: ResourceUnitOfWork = resource_uow
+        self.index_uow = index_uow
+        self.entry_transformer = entry_transformer
+        self.resource_views = resource_views
 
     def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
         if not isinstance(resource_id, str):
@@ -17,13 +29,13 @@ class EntryCommands:
         with self.resource_uow as uw:
             result = uw.repo.by_resource_id(resource_id)
         if not result:
-            raise errors.ResourceNotFound(resource_id)
+            raise ResourceNotFound(resource_id)
         return result
 
     def _get_entry_uow(self, resource_id: unique_id.UniqueId) -> EntryUnitOfWork:
         result = self.resource_uow.entry_uow_by_resource_id(resource_id)
         if not result:
-            raise errors.ResourceNotFound(resource_id)
+            raise ResourceNotFound(resource_id)
         return result
 
     def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message):
@@ -46,9 +58,10 @@ class EntryCommands:
 
         created_db_entries = []
         resource = self._get_resource(resource_id)
+
         with self._get_entry_uow(resource_id) as uw:
             for i, entry_raw in enumerate(entries):
-                entry, events = resource.create_entry_from_dict(
+                entry = resource.create_entry_from_dict(
                     entry_raw,
                     user=user,
                     message=message,
@@ -57,10 +70,11 @@ class EntryCommands:
                 uw.repo.save(entry)
                 created_db_entries.append(entry)
 
-                uw.post_on_commit(events)
                 if chunk_size > 0 and i % chunk_size == 0:
                     uw.commit()
             uw.commit()
+        for entry in created_db_entries:
+            self._entry_added_handler(entry)
 
         return created_db_entries
 
@@ -90,9 +104,10 @@ class EntryCommands:
 
         created_db_entries = []
         resource = self._get_resource(resource_id)
+
         with self._get_entry_uow(resource_id) as uw:
             for i, entry_raw in enumerate(entries):
-                entry, events = resource.create_entry_from_dict(
+                entry = resource.create_entry_from_dict(
                     entry_raw["entry"],
                     user=entry_raw.get("user") or user,
                     message=entry_raw.get("message") or message,
@@ -100,19 +115,21 @@ class EntryCommands:
                     timestamp=entry_raw.get("last_modified"),
                 )
                 uw.entries.save(entry)
-                uw.post_on_commit(events)
+
                 created_db_entries.append(entry)
 
                 if chunk_size > 0 and i % chunk_size == 0:
                     uw.commit()
             uw.commit()
+        for entry in created_db_entries:
+            self._entry_added_handler(entry)
 
         return created_db_entries
 
     def add_entry(self, resource_id, user, message, entry):
         resource = self._get_resource(resource_id)
         with self._get_entry_uow(resource_id) as uw:
-            entry, events = resource.create_entry_from_dict(
+            entry = resource.create_entry_from_dict(
                 entry,
                 user=user,
                 message=message,
@@ -120,8 +137,8 @@ class EntryCommands:
                 timestamp=utc_now(),
             )
             uw.entries.save(entry)
-            uw.post_on_commit(events)
             uw.commit()
+            self._entry_added_handler(entry)
         return entry
 
     def update_entry(self, resource_id, _id, version, user, message, entry):
@@ -135,7 +152,7 @@ class EntryCommands:
                     id=_id,
                 ) from err
 
-            events = resource.update_entry(
+            resource.update_entry(
                 entry=current_db_entry,
                 body=entry,
                 version=version,
@@ -144,8 +161,8 @@ class EntryCommands:
                 timestamp=utc_now(),
             )
             uw.repo.save(current_db_entry)
-            uw.post_on_commit(events)
             uw.commit()
+            self._entry_updated_handler(current_db_entry)
 
         return current_db_entry
 
@@ -154,7 +171,7 @@ class EntryCommands:
         with self._get_entry_uow(resource_id) as uw:
             entry = uw.repo.by_id(_id)
 
-            events = resource.discard_entry(
+            resource.discard_entry(
                 entry=entry,
                 version=version,
                 user=user,
@@ -162,5 +179,45 @@ class EntryCommands:
                 timestamp=utc_now(),
             )
             uw.repo.save(entry)
-            uw.post_on_commit(events)
+            uw.commit()
+            self._entry_deleted_handler(entry)
+
+    def _entry_added_handler(self, entry):
+        with self.index_uow as uw:
+            for resource_id in self.resource_views.get_resource_ids(entry.repo_id):
+                entry = EntryDto(
+                    id=entry.id,
+                    resource=resource_id,
+                    entry=entry.body,
+                    message=entry.message or "",
+                    lastModified=entry.last_modified,
+                    lastModifiedBy=entry.last_modified_by,
+                    version=1,
+                )
+                uw.repo.add_entries(
+                    resource_id, [self.entry_transformer.transform(resource_id, entry)]
+                )
+            uw.commit()
+
+    def _entry_updated_handler(self, entry):
+        with self.index_uow as uw:
+            for resource_id in self.resource_views.get_resource_ids(entry.repo_id):
+                entry = EntryDto(
+                    id=entry.id,
+                    resource=resource_id,
+                    entry=entry.body,
+                    message=entry.message,
+                    lastModified=entry.last_modified,
+                    lastModifiedBy=entry.last_modified_by,
+                    version=entry.version,
+                )
+                uw.repo.add_entries(
+                    resource_id, [self.entry_transformer.transform(resource_id, entry)]
+                )
+            uw.commit()
+
+    def _entry_deleted_handler(self, entry):
+        with self.index_uow as uw:
+            for resource_id in self.resource_views.get_resource_ids(entry.repo_id):
+                uw.repo.delete_entry(resource_id, entry_id=entry.id)
             uw.commit()

@@ -24,7 +24,6 @@ from karp.lex_core.value_objects import UniqueId
 from karp.foundation.events import EventBus
 from karp.lex.domain import errors
 from karp.lex.application import repositories
-from karp.lex.domain.events import Event
 from karp.lex.domain.entities import Resource
 
 from karp.lex.domain.entities.entry import (

@@ -6,10 +6,11 @@ import sys
 
 from karp.entry_commands import EntryCommands
 from karp.resource_commands import ResourceCommands
-from karp.search import IndexUnitOfWork, GenericResourceViews
+from karp.search import IndexUnitOfWork
+from karp.search.generic_resources import GenericResourceViews
 from karp.search_commands import SearchCommands
-from karp.search_infrastructure import GenericPreProcessor
 from karp.lex.application.repositories import ResourceUnitOfWork
+from karp.search_infrastructure import GenericPreProcessor, GenericEntryTransformer
 
 try:
     from importlib.metadata import entry_points
@@ -78,12 +79,25 @@ request = injector.ScopeDecorator(RequestScope)
 
 class CommandsMod(injector.Module):  # noqa: D101
     @injector.provider
-    def entry_commands(self, resource_uow: ResourceUnitOfWork) -> EntryCommands:
-        return EntryCommands(resource_uow=resource_uow)
+    def entry_commands(
+        self,
+        resource_uow: ResourceUnitOfWork,
+        index_uow: IndexUnitOfWork,
+        entry_transformer: GenericEntryTransformer,
+        resource_views: GenericResourceViews,
+    ) -> EntryCommands:
+        return EntryCommands(
+            resource_uow=resource_uow,
+            index_uow=index_uow,
+            entry_transformer=entry_transformer,
+            resource_views=resource_views,
+        )
 
     @injector.provider
-    def resource_commands(self, resource_uow: ResourceUnitOfWork) -> ResourceCommands:
-        return ResourceCommands(resource_uow=resource_uow)
+    def resource_commands(
+        self, resource_uow: ResourceUnitOfWork, index_uow: IndexUnitOfWork
+    ) -> ResourceCommands:
+        return ResourceCommands(resource_uow=resource_uow, index_uow=index_uow)
 
     @injector.provider
     def search_commands(
