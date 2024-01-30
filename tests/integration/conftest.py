@@ -12,7 +12,6 @@ from alembic.config import main as alembic_main  # noqa: F401
 from karp.resource_commands import ResourceCommands
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
 from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure
-from karp.search import Search
 from karp.main.modules import CommandsMod, EventBusMod
 from karp.lex_infrastructure import GenericLexInfrastructure
 from karp.foundation.events import EventBus
@@ -46,7 +45,6 @@ def integration_ctx() -> adapters.IntegrationTestContext:
         [
             CommandsMod(),
             EventBusMod(),
-            Search(),
             SearchInfrastructure(),
             GenericLexInfrastructure(),
             InMemoryLexInfrastructure(),

@@ -27,7 +27,6 @@ from karp.main.modules import (
     ElasticSearchMod,
     install_auth_service,
 )
-from karp.search import Search
 
 
 @dataclass
@@ -81,7 +80,6 @@ def _setup_dependency_injection(
             ElasticSearchMod(es_url),
             LexInfrastructure(),
             GenericLexInfrastructure(),
-            Search(),
             GenericSearchInfrastructure(),
             SearchInfrastructure(),
         ],

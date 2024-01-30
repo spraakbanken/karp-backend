@@ -12,7 +12,6 @@ from karp.lex.application.repositories import (
     EntryUnitOfWork,
 )
 from karp.lex.domain import entities as lex_entities
-from karp.lex.domain import events
 from karp.lex_core.value_objects import UniqueId, UniqueIdType, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
 from karp.lex.domain import errors

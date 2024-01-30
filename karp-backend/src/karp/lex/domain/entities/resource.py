@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional, Tuple
 from karp import timings
 from karp.foundation.entity import Entity, TimestampedVersionedEntity
 from karp.foundation.value_objects import PermissionLevel
-from karp.lex.domain import constraints, errors, events
+from karp.lex.domain import constraints, errors
 from karp.lex.domain.entities import Entry, create_entry
 from karp.lex.domain.value_objects import EntrySchema
 from karp.lex_core.value_objects import unique_id
@@ -80,22 +80,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         message: str,
         version: int,
         timestamp: Optional[float] = None,
-    ) -> list[events.Event]:
+    ):
         self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
-        return [
-            events.ResourcePublished(
-                id=self.id,
-                resourceId=self.resource_id,
-                entryRepoId=self.entry_repo_id,
-                timestamp=self.last_modified,
-                user=self.last_modified_by,
-                version=self.version,
-                name=self.name,
-                config=self.config,
-                message=self.message,
-            )
-        ]
 
     def set_entry_repo_id(  # noqa: ANN201, D102
         self,
@@ -110,19 +97,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             timestamp, user, message or "entry repo id updated", version=version
         )
         self.entry_repo_id = entry_repo_id
-        return [
-            events.ResourceUpdated(
-                id=self.id,
-                resourceId=self.resource_id,
-                entryRepoId=self.entry_repo_id,
-                timestamp=self.last_modified,
-                user=self.last_modified_by,
-                version=self.version,
-                name=self.name,
-                config=self.config,
-                message=self.message,
-            )
-        ]
 
     def set_resource_id(  # noqa: D102
         self,
@@ -132,22 +106,9 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         version: int,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ) -> list[events.Event]:
+    ):
         self._update_metadata(timestamp, user, message or "setting resource_id", version)
         self._resource_id = resource_id
-        return [
-            events.ResourceUpdated(
-                id=self.id,
-                resourceId=self.resource_id,
-                entryRepoId=self.entry_repo_id,
-                timestamp=self.last_modified,
-                user=self.last_modified_by,
-                version=self.version,
-                name=self.name,
-                config=self.config,
-                message=self.message,
-            )
-        ]
 
     def update(  # noqa: D102
         self,
@@ -158,25 +119,13 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         version: int,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ) -> list[events.Event]:
+    ) -> bool:
         if self.name == name and self.config == config:
-            return []
+            return False
         self._update_metadata(timestamp, user, message or "updating", version)
         self._name = name
         self.config = config
-        return [
-            events.ResourceUpdated(
-                id=self.id,
-                resourceId=self.resource_id,
-                entryRepoId=self.entry_repo_id,
-                timestamp=self.last_modified,
-                user=self.last_modified_by,
-                version=self.version,
-                name=self.name,
-                config=self.config,
-                message=self.message,
-            )
-        ]
+        return True
 
     def set_config(  # noqa: D102
         self,
@@ -186,24 +135,11 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         version: int,
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
-    ) -> list[events.Event]:
+    ):
         if self.config == config:
             return []
         self._update_metadata(timestamp, user, message or "setting config", version)
         self.config = config
-        return [
-            events.ResourceUpdated(
-                id=self.id,
-                resourceId=self.resource_id,
-                entryRepoId=self.entry_repo_id,
-                timestamp=self.last_modified,
-                user=self.last_modified_by,
-                version=self.version,
-                name=self.name,
-                config=self.config,
-                message=self.message,
-            )
-        ]
 
     def _update_metadata(  # noqa: ANN202
         self, timestamp: Optional[float], user: str, message: str, version: int
@@ -218,25 +154,13 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
 
     def discard(  # noqa: D102
         self, *, user: str, message: str, timestamp: Optional[float] = None
-    ) -> list[events.Event]:
+    ):
         self._op = ResourceOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = True
         self._last_modified_by = user
         self._last_modified = timestamp or timings.utc_now()
         self._version += 1
-        return [
-            events.ResourceDiscarded(
-                id=self.id,
-                version=self.version,
-                timestamp=self.last_modified,
-                user=self.last_modified_by,
-                message=self.message,
-                resourceId=self.resource_id,
-                name=self.name,
-                config=self.config,
-            )
-        ]
 
     @property
     def entry_schema(self) -> EntrySchema:
@@ -275,7 +199,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         id: unique_id.UniqueId,  # noqa: A002
         message: Optional[str] = None,
         timestamp: Optional[float] = None,
-    ) -> Tuple[Entry, list[events.Event]]:
+    ) -> Entry:
         """Create an entry for this resource."""
         self._check_not_discarded()
 
@@ -297,11 +221,10 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         user: str,
         message: Optional[str] = None,
         timestamp: Optional[float] = None,
-    ) -> list[events.Event]:
+    ):
         """Create an entry for this resource."""
         self._check_not_discarded()
-
-        return entry.update_body(
+        entry.update_body(
             self._validate_entry(body),
             version=version,
             user=user,
@@ -317,11 +240,11 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         user: str,
         message: Optional[str] = None,
         timestamp: Optional[float] = None,
-    ) -> list[events.Event]:
+    ):
         """Create an entry for this resource."""
         self._check_not_discarded()
 
-        return entry.discard(
+        entry.discard(
             version=version,
             user=user,
             message=message,
@@ -379,7 +302,7 @@ def create_resource(  # noqa: D103
     resource_id: typing.Optional[str] = None,
     message: typing.Optional[str] = None,
     name: typing.Optional[str] = None,
-) -> Tuple[Resource, list[events.Event]]:
+) -> Resource:
     resource_id_in_config: Optional[str] = config.pop("resource_id", None)
     resource_id_resolved = resource_id or resource_id_in_config
     if resource_id_resolved is None:
@@ -400,17 +323,7 @@ def create_resource(  # noqa: D103
         last_modified=created_at or timings.utc_now(),
         last_modified_by=user or created_by or "unknown",
     )
-    event = events.ResourceCreated(
-        id=resource.id,
-        resourceId=resource.resource_id,
-        entryRepoId=resource.entry_repo_id,
-        name=resource.name,
-        config=resource.config,
-        timestamp=resource.last_modified,
-        user=resource.last_modified_by,
-        message=resource.message,
-    )
-    return resource, [event]
+    return resource
 
 
 # ===== Repository =====
