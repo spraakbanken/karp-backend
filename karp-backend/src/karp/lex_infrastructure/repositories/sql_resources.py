@@ -7,11 +7,7 @@ from karp.lex_core.value_objects import UniqueId
 import sqlalchemy as sa
 from sqlalchemy import sql
 from sqlalchemy.orm import Session
-from sqlalchemy import (
-    and_,
-    func,
-    text
-)
+from sqlalchemy import and_, func, text
 
 from karp.foundation.events import EventBus
 from karp.lex.domain import entities
@@ -174,7 +170,5 @@ class SqlResourceUnitOfWork(  # noqa: D101
 
     def resource_to_entry_uow(self, resource: Resource) -> SqlEntryUnitOfWork:
         return SqlEntryUnitOfWork(
-            session=self._session,
-            event_bus=self.event_bus,
-            resource=resource
+            session=self._session, event_bus=self.event_bus, resource=resource
         )

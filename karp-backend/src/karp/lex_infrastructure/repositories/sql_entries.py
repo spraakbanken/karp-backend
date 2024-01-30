@@ -272,7 +272,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
             message=resource.message,
             last_modified_by=resource.last_modified_by,
             last_modified=resource.last_modified,
-            discarded=resource.discarded
+            discarded=resource.discarded,
         )
 
         self._entries = None
@@ -296,6 +296,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
 
     def collect_new_events(self) -> typing.Iterable:  # noqa: D102
         return super().collect_new_events() if self._entries else []
+
 
 def table_name(resource: Resource) -> str:  # noqa: D102
     u = ulid.from_uuid(resource.entry_repo_id)
