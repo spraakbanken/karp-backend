@@ -130,7 +130,6 @@ class BaseRuntimeEntry:  # noqa: D101
 class BaseHistoryEntry:  # noqa: D101
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
-    repo_id = Column(ULIDType, nullable=False)
     version = Column(Integer, nullable=False)
     last_modified = Column(Float(53), nullable=False)
     last_modified_by = Column(String(100), nullable=False)
@@ -159,7 +158,6 @@ class BaseHistoryEntry:  # noqa: D101
             message=entry.message,
             op=entry.op,
             discarded=entry.discarded,
-            repo_id=entry.repo_id,
         )
 
 

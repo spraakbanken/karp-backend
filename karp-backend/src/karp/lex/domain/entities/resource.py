@@ -281,7 +281,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
 
         return create_entry(
             self._validate_entry(entry_raw),
-            repo_id=self.entry_repo_id,
+            resource_id=self.resource_id,
             last_modified_by=user,
             message=message,
             id=id,
@@ -386,7 +386,7 @@ def create_resource(  # noqa: D103
         raise ValueError("resource_id is missing")
     constraints.valid_resource_id(resource_id_resolved)
     name_in_config: str = config.pop("resource_name", None)
-    resource_name: str = name or name_in_config or resource_id  # type: ignore [assignment]
+    resource_name: str = name or name_in_config or resource_id_resolved  # type: ignore [assignment]
 
     resource = Resource(
         id=id or unique_id.make_unique_id(),

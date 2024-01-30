@@ -42,49 +42,19 @@ logger = logging.getLogger(__name__)
 class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
-        history_model,
-        resource_config: Dict,
-        *,
         session: Session,
+        resource: Resource
     ):
         if not session:
             raise TypeError("session can't be None")
         SqlRepository.__init__(self, session=session)
-        self.history_model = history_model
-        self.resource_config = resource_config
-
-    @classmethod
-    def from_dict(  # noqa: ANN206, D102
-        cls,
-        name: str,
-        resource_config: typing.Dict,
-        *,
-        session: Session,
-    ):
-        if not session:
-            raise TypeError("session can't be None")
-        table_name = name
-
-        logger.info({"table_name": table_name})
-        history_model = sql_models.get_or_create_entry_history_model(table_name)
-
-        if session:
-            history_model.__table__.create(  # type:ignore [attr-defined]
-                bind=session.connection(), checkfirst=True
-            )
-
-        return cls(
-            history_model=history_model,
-            resource_config=resource_config,
-            session=session,
+        self.resource = resource
+        self.history_model = sql_models.get_or_create_entry_history_model(table_name(resource))
+        self.history_model.__table__.create(  # type:ignore [attr-defined]
+            bind=session.connection(), checkfirst=True
         )
 
     def _save(self, entry: Entry):  # noqa: ANN202
-        self._check_has_session()
-
-        return self._insert_history(entry)
-
-    def _insert_history(self, entry: Entry):  # noqa: ANN202
         self._check_has_session()
         try:
             ins_stmt = insert(self.history_model)
@@ -232,7 +202,6 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
             "message": entry.message,
             "op": entry.op,
             "discarded": entry.discarded,
-            "repo_id": entry.repo_id,
         }
 
     def _history_row_to_entry(self, row) -> Entry:
@@ -246,7 +215,7 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
             last_modified_by=row.last_modified_by,
             discarded=row.discarded,
             version=row.version,
-            repository_id=row.repo_id,
+            resource_id=self.resource.resource_id,
         )
 
 
@@ -266,7 +235,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
         repositories.EntryUnitOfWork.__init__(
             self,
             event_bus=event_bus,
-            id=resource.entry_repo_id,
+            id=resource.entity_id,
             name=resource.resource_id,
             config=resource.config,
             message=resource.message,
@@ -281,10 +250,9 @@ class SqlEntryUnitOfWork(  # noqa: D101
 
     def _begin(self):  # noqa: ANN202
         if self._entries is None:
-            self._entries = SqlEntryRepository.from_dict(
-                name=table_name(self.resource),
-                resource_config=self.resource.config,
+            self._entries = SqlEntryRepository(
                 session=self._session,
+                resource=self.resource,
             )
         return self
 

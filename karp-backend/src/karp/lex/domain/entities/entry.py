@@ -33,7 +33,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         id: UniqueId,  # noqa: A002
         body: Dict,
         message: str,
-        repository_id: unique_id.UniqueId,
+        resource_id: str,
         # IN-PROGRESS, IN-REVIEW, OK, PUBLISHED
         status: EntryStatus = EntryStatus.IN_PROGRESS,
         op: EntryOp = EntryOp.ADDED,
@@ -45,11 +45,11 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         self._op = op
         self._message = "Entry added." if message is None else message
         self._status = status
-        self._repo_id = repository_id
+        self._resource_id = resource_id
 
     @property
-    def repo_id(self) -> unique_id.UniqueId:  # noqa: D102
-        return self._repo_id
+    def resource_id(self) -> str:  # noqa: D102
+        return self._resource_id
 
     @property
     def body(self):  # noqa: ANN201
@@ -79,7 +79,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
                 user=self.last_modified_by,
                 version=self.version,
                 body=self.body,
-                repoId=self.repo_id,
+                resourceId=self.resource_id,
                 message=self.message,
             )
         ]
@@ -134,7 +134,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
                 user=user,
                 message=self._message,
                 version=self.version,
-                repoId=self.repo_id,
+                resourceId=self.resource_id,
             )
         ]
 
@@ -160,7 +160,7 @@ def create_entry(  # noqa: D103
     body: Dict,
     *,
     id: unique_id.UniqueId,  # noqa: A002
-    repo_id: unique_id.UniqueId,
+    resource_id: str,
     last_modified_by: Optional[str] = None,
     message: Optional[str] = None,
     last_modified: typing.Optional[float] = None,
@@ -173,12 +173,12 @@ def create_entry(  # noqa: D103
         # id=unique_id.make_unique_id(),
         version=1,
         last_modified_by="Unknown user" if not last_modified_by else last_modified_by,
-        repository_id=repo_id,
+        resource_id=resource_id,
         id=id,
         last_modified=last_modified,
     )
     event = events.EntryAdded(
-        repoId=repo_id,
+        resourceId=resource_id,
         id=entry.id,
         body=entry.body,
         message=entry.message or "",

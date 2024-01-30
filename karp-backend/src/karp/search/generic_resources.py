@@ -11,13 +11,3 @@ class GenericResourceViews:
     def get_resource_config(self, resource_id: str) -> typing.Dict:  # noqa: D102
         with self._resource_uow as uw:
             return uw.repo.by_resource_id(resource_id).config
-
-    def get_resource_ids(  # noqa: D102
-        self, repo_id: unique_id.UniqueId
-    ) -> typing.List[str]:
-        with self._resource_uow as uw:
-            return [
-                resource.resource_id
-                for resource in uw.repo.get_all_resources()
-                if resource.entry_repo_id == repo_id
-            ]

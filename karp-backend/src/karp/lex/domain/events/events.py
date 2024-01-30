@@ -75,14 +75,14 @@ class ResourceUpdated(IdMixin, Event):  # noqa: D101
 
 
 class EntryAdded(IdMixin, Event):  # noqa: D101
-    repo_id: unique_id.UniqueIdStr
+    resource_id: str
     body: dict
     message: str
     user: str
 
 
 class EntryUpdated(IdMixin, Event):  # noqa: D101
-    repo_id: unique_id.UniqueIdStr
+    resource_id: str
     body: dict
     message: str
     user: str
@@ -90,7 +90,7 @@ class EntryUpdated(IdMixin, Event):  # noqa: D101
 
 
 class EntryDeleted(IdMixin, Event):  # noqa: D101
-    repo_id: unique_id.UniqueIdStr
+    resource_id: str
     version: int
     message: str
     user: str

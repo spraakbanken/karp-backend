@@ -9,7 +9,7 @@ def random_entry(
 ) -> Tuple[entities.Entry, list[events.Event]]:
     return entities.create_entry(
         id=unique_id.make_unique_id(),
-        repo_id=unique_id.make_unique_id(),
+        resource_id=str(unique_id.make_unique_id()),
         # entry_id=entry_id or "a",
         body=body or {},
         message="add",
@@ -22,7 +22,7 @@ def test_new_entry_has_event():  # noqa: ANN201
     entry, domain_events = random_entry()
     assert domain_events[-1] == events.EntryAdded(
         id=entry.id,
-        repoId=entry.repo_id,
+        resourceId=entry.resource_id,
         body=entry.body,
         user=entry.last_modified_by,
         timestamp=entry.last_modified,
@@ -42,7 +42,7 @@ def test_discarded_entry_has_event():  # noqa: ANN201
     assert domain_events[-1] == events.EntryDeleted(
         id=entry.id,
         # entry_id=entry.entry_id,
-        repoId=entry.repo_id,
+        resourceId=entry.resource_id,
         user=entry.last_modified_by,
         timestamp=entry.last_modified,
         message=entry.message,
@@ -79,7 +79,7 @@ def test_discarded_entry_has_event():  # noqa: ANN201
 #     assert entry.domain_events[-1] == events.EntryUpdated(
 #         id=entry.id,
 #         entry_id=entry.entry_id,
-#         repoId=entry.repo_id,
+#         resourceId=entry.resource_id,
 #         user=entry.last_modified_by,
 #         timestamp=entry.last_modified,
 #         message=entry.message,
