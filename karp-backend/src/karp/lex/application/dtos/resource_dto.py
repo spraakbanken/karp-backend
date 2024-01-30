@@ -18,5 +18,4 @@ class ResourceDto(pydantic.BaseModel):  # noqa: D101
     message: str
     last_modified: float
     config: dict
-    entry_repo_id: UniqueIdStr
     discarded: bool

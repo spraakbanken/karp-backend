@@ -46,7 +46,7 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
             raise TypeError("session can't be None")
         SqlRepository.__init__(self, session=session)
         self.resource = resource
-        self.history_model = sql_models.get_or_create_entry_history_model(table_name(resource))
+        self.history_model = sql_models.get_or_create_entry_history_model(resource.table_name)
         self.history_model.__table__.create(  # type:ignore [attr-defined]
             bind=session.connection(), checkfirst=True
         )
@@ -260,9 +260,3 @@ class SqlEntryUnitOfWork(  # noqa: D101
 
     def collect_new_events(self) -> typing.Iterable:  # noqa: D102
         return super().collect_new_events() if self._entries else []
-
-
-def table_name(resource: Resource) -> str:  # noqa: D102
-    u = ulid.from_uuid(resource.entry_repo_id)
-    random_part = u.randomness().str
-    return f"{resource.resource_id}_{random_part}"

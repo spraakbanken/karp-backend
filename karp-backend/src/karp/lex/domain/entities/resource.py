@@ -30,7 +30,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         name: str,
         config: Dict[str, Any],
         message: str,
-        entry_repo_id: unique_id.UniqueId,
+        table_name: str,
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
@@ -45,7 +45,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._op = op
         self._releases = []
         self._entry_schema = None
-        self.entry_repo_id = unique_id.UniqueId.validate(entry_repo_id)
+        self.table_name = table_name
 
     @property
     def resource_id(self) -> str:  # noqa: D102
@@ -83,20 +83,6 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
     ):
         self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
-
-    def set_entry_repo_id(  # noqa: ANN201, D102
-        self,
-        *,
-        entry_repo_id: unique_id.UniqueId,
-        user: str,
-        version: int,
-        message: str | None = None,
-        timestamp: Optional[float] = None,
-    ):
-        self._update_metadata(
-            timestamp, user, message or "entry repo id updated", version=version
-        )
-        self.entry_repo_id = entry_repo_id
 
     def set_resource_id(  # noqa: D102
         self,
@@ -180,7 +166,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             "lastModifiedBy": self.last_modified_by,
             "op": self.op,
             "message": self.message,
-            "entryRepoId": self.entry_repo_id,
+            "tableName": self.table_name,
             "isPublished": self.is_published,
             "discarded": self.discarded,
             "resource_type": self.resource_type,
@@ -294,7 +280,7 @@ class Release(Entity):  # noqa: D101
 
 def create_resource(  # noqa: D103
     config: dict[str, Any],
-    entry_repo_id: unique_id.UniqueId,
+    table_name: str,
     created_by: Optional[str] = None,
     user: Optional[str] = None,
     created_at: Optional[float] = None,
@@ -316,7 +302,7 @@ def create_resource(  # noqa: D103
         resource_id=resource_id_resolved,
         name=resource_name,
         config=config,
-        entry_repo_id=entry_repo_id,
+        table_name=table_name,
         message=message or "Resource added.",
         op=ResourceOp.ADDED,
         version=1,

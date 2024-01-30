@@ -58,7 +58,6 @@ class ResourceBase(BaseModel):  # noqa: D101
     name: str
     config: typing.Dict
     message: Optional[str] = None
-    entry_repo_id: Optional[unique_id.UniqueIdStr] = None
 
 
 class ResourcePublic(ResourceBase):  # noqa: D101

@@ -193,7 +193,7 @@ class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUn
         return self._resources
 
     def resource_to_entry_uow(self, resource: lex_entities.Resource) -> EntryUnitOfWork:
-        return self._storage.get(resource.entry_repo_id)
+        return self._storage.get(resource.table_name)
 
 
 class InMemoryLexInfrastructure(injector.Module):

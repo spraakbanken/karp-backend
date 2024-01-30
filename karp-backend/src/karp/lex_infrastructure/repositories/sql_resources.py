@@ -17,7 +17,7 @@ from karp.lex.domain.entities.resource import Resource
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.db_infrastructure.sql_repository import SqlRepository
-from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork, table_name
+from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class SqlResourceRepository(  # noqa: D101
         self._session.add(resource_dto)
         if resource.discarded:
             # If resource was discarded, drop the table containing all data entries
-            self._session.execute(text("DROP table " + table_name(resource)))
+            self._session.execute(text("DROP table " + resource.table_name))
 
     def resource_ids(self) -> List[str]:  # noqa: D102
         self._check_has_session()

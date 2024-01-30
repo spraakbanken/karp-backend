@@ -12,7 +12,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship
-from sqlalchemy.types import Boolean, Float
+from sqlalchemy.types import Boolean, Float, Text
 from sqlalchemy_json import NestedMutableJson
 
 from sqlalchemy.schema import (
@@ -37,7 +37,7 @@ class ResourceModel(db.Base):  # noqa: D101
     resource_type = Column(String(32), nullable=False)
     version = Column(Integer, nullable=False)
     name = Column(String(64), nullable=False)
-    entry_repo_id = Column(ULIDType, nullable=False)
+    table_name = Column(Text, nullable=False)
     config = Column(NestedMutableJson, nullable=False)
     is_published = Column(Boolean, index=True, nullable=True, default=None)
     last_modified = Column(Float(precision=53), nullable=False)
@@ -47,6 +47,7 @@ class ResourceModel(db.Base):  # noqa: D101
     discarded = Column(Boolean, default=False)
     __table_args__ = (
         UniqueConstraint("entity_id", "version", name="entity_id_version_unique_constraint"),
+        UniqueConstraint("table_name", "version", name="table_name_version_unique_constraint"),
         # TODO only one resource can be active, but several can be inactive
         #    here is how to do it in MariaDB, unclear whether this is possible using SQLAlchemy
         #    `virtual_column` char(0) as (if(active,'', NULL)) persistent
@@ -63,7 +64,7 @@ class ResourceModel(db.Base):  # noqa: D101
                     version={},
                     name={},
                     config={},
-                    entry_repo_id={},
+                    table_name={},
                     is_published={},
                     last_modified={},
                     last_modified_by={},
@@ -75,7 +76,7 @@ class ResourceModel(db.Base):  # noqa: D101
             self.version,
             self.name,
             self.config,
-            self.entry_repo_id,
+            self.table_name,
             self.is_published,
             self.last_modified,
             self.last_modified_by,
@@ -89,7 +90,7 @@ class ResourceModel(db.Base):  # noqa: D101
             version=self.version,
             name=self.name,
             config=self.config,
-            entry_repo_id=self.entry_repo_id,
+            table_name=self.table_name,
             is_published=self.is_published,
             last_modified=self.last_modified,
             last_modified_by=self.last_modified_by,
@@ -107,7 +108,7 @@ class ResourceModel(db.Base):  # noqa: D101
             version=resource.version,
             name=resource.name,
             config=resource.config,
-            entry_repo_id=resource.entry_repo_id,
+            table_name=resource.table_name,
             is_published=resource.is_published,
             last_modified=resource.last_modified,
             last_modified_by=resource.last_modified_by,
