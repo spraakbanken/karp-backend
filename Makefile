@@ -131,6 +131,10 @@ integration-tests-w-coverage: clean-pyc
 lint:
 	${INVENV} ruff ${flags} karp-backend karp-lex-core
 
+.PHONY: lint-fix
+lint-fix:
+	${INVENV} ruff ${flags} karp-backend karp-lex-core --fix
+
 .PHONY: build-c4-docs
 build-c4-docs:
 	structurizr-site-generatr generate-site -w docs/c4-docs/workspace.dsl -o docs/karp-backend/docs/system-overview
