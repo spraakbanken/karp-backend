@@ -180,8 +180,3 @@ class SqlResourceUnitOfWork(  # noqa: D101
             last_modified=resource.last_modified,
             connection_str=None,
         )
-
-    def create(self, entry_repo_id, **kwargs) -> SqlEntryUnitOfWork:
-        return SqlEntryUnitOfWork.create(
-            session=self._session, event_bus=self.event_bus, id=entry_repo_id, **kwargs
-        )

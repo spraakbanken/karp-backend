@@ -190,7 +190,6 @@ class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUn
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.ResourceUnitOfWork.__init__(self, event_bus=event_bus)
         self._resources = InMemoryResourceRepository()
-        self._cache: dict[UniqueId, InMemoryEntryUnitOfWork] = {}
 
     @property
     def repo(self) -> lex_repositories.ResourceRepository:
@@ -198,32 +197,6 @@ class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUn
 
     def resource_to_entry_uow(self, resource: lex_entities.Resource) -> EntryUnitOfWork:
         return self._storage.get(resource.entry_repo_id)
-
-    def create(
-        self,
-        id: UniqueId,  # noqa: A002
-        name: str,
-        config: Dict,
-        connection_str: Optional[str],
-        user: str,
-        message: str,
-        timestamp: float,
-    ) -> Tuple[lex_repositories.EntryUnitOfWork, list[events.Event]]:
-        if not isinstance(id, UniqueIdType):
-            entity_id = UniqueId.validate(id)
-        else:
-            entity_id = id
-        if entity_id not in self._cache:
-            self._cache[entity_id] = InMemoryEntryUnitOfWork(
-                id=entity_id,
-                name=name,
-                config=config,
-                connection_str=connection_str,
-                message=message,
-                user=user,
-                event_bus=self.event_bus,
-            )
-        return self._cache[entity_id], []
 
 
 class InMemoryLexInfrastructure(injector.Module):

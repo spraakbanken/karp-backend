@@ -85,16 +85,3 @@ class ResourceUnitOfWork(unit_of_work.UnitOfWork):  # noqa: D101
     @abc.abstractmethod
     def resource_to_entry_uow(self, resource: entities.Resource) -> EntryUnitOfWork:
         raise NotImplementedError
-
-    @abc.abstractmethod
-    def create(
-        self,
-        id: UniqueId,  # noqa: A002
-        name: str,
-        config: dict,
-        connection_str: Optional[str],
-        user: str,
-        message: str,
-        timestamp: float,
-    ) -> Tuple[EntryUnitOfWork, list[events.Event]]:
-        raise NotImplementedError
