@@ -25,6 +25,7 @@ from karp.foundation.events import EventBus
 from karp.lex.domain import errors
 from karp.lex.application import repositories
 from karp.lex.domain.events import Event
+from karp.lex.domain.entities import Resource
 
 from karp.lex.domain.entities.entry import (
     Entry,
@@ -257,28 +258,35 @@ class SqlEntryUnitOfWork(  # noqa: D101
         self,
         session: Session,
         event_bus: EventBus,
-        **kwargs,  # noqa: ANN003
+        resource: Resource,
     ):
         SqlUnitOfWork.__init__(self)
         if not hasattr(self, "__enter__"):
             raise RuntimeError(f"No __enter__ detected in {self=}")
-        repositories.EntryUnitOfWork.__init__(self, event_bus=event_bus, **kwargs)
+        repositories.EntryUnitOfWork.__init__(
+            self,
+            event_bus=event_bus,
+            id=resource.entry_repo_id,
+            name=resource.resource_id,
+            config=resource.config,
+            message=resource.message,
+            last_modified_by=resource.last_modified_by,
+            last_modified=resource.last_modified,
+            discarded=resource.discarded
+        )
+
         self._entries = None
         self._session = session
+        self.resource = resource
 
     def _begin(self):  # noqa: ANN202
         if self._entries is None:
             self._entries = SqlEntryRepository.from_dict(
-                name=self.table_name(),
-                resource_config=self.config,
+                name=table_name(self.resource),
+                resource_config=self.resource.config,
                 session=self._session,
             )
         return self
-
-    def table_name(self) -> str:  # noqa: D102
-        u = ulid.from_uuid(self.entity_id)
-        random_part = u.randomness().str
-        return f"{self.name}_{random_part}"
 
     @property
     def repo(self) -> SqlEntryRepository:  # noqa: D102
@@ -286,14 +294,10 @@ class SqlEntryUnitOfWork(  # noqa: D101
             raise RuntimeError("No entries")
         return self._entries
 
-    @classmethod
-    def from_dict(  # noqa: ANN206, D102
-        cls,
-        settings: typing.Dict,
-        resource_config,
-        **kwargs,  # noqa: ANN003
-    ):
-        return cls(repo_settings=settings, resource_config=resource_config, **kwargs)
-
     def collect_new_events(self) -> typing.Iterable:  # noqa: D102
         return super().collect_new_events() if self._entries else []
+
+def table_name(resource: Resource) -> str:  # noqa: D102
+    u = ulid.from_uuid(resource.entry_repo_id)
+    random_part = u.randomness().str
+    return f"{resource.resource_id}_{random_part}"

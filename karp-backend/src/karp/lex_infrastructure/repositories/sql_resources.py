@@ -172,10 +172,5 @@ class SqlResourceUnitOfWork(  # noqa: D101
         return SqlEntryUnitOfWork(
             session=self._session,
             event_bus=self.event_bus,
-            id=resource.entry_repo_id,
-            name=resource.resource_id,
-            config=resource.config,
-            message=resource.message,
-            last_modified_by=resource.last_modified_by,
-            last_modified=resource.last_modified,
+            resource=resource
         )
