@@ -72,9 +72,9 @@ class ResourceUnitOfWork(unit_of_work.UnitOfWork):  # noqa: D101
     def resources(self) -> ResourceRepository:  # noqa: D102
         return self.repo
 
-    def entry_uow_by_id(self, id: Union[UniqueId, str]) -> Optional[EntryUnitOfWork]:
+    def entry_uow_by_id(self, entity_id: Union[UniqueId, str]) -> Optional[EntryUnitOfWork]:
         with self as uw:
-            resource = self.repo.by_id(id)
+            resource = self.repo.by_id(entity_id)
             return self.resource_to_entry_uow(resource) if resource else None
 
     def entry_uow_by_resource_id(self, resource_id: str) -> Optional[EntryUnitOfWork]:

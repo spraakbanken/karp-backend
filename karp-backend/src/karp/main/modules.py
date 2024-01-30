@@ -78,15 +78,11 @@ request = injector.ScopeDecorator(RequestScope)
 
 class CommandsMod(injector.Module):  # noqa: D101
     @injector.provider
-    def entry_commands(
-        self, resource_uow: ResourceUnitOfWork
-    ) -> EntryCommands:
+    def entry_commands(self, resource_uow: ResourceUnitOfWork) -> EntryCommands:
         return EntryCommands(resource_uow=resource_uow)
 
     @injector.provider
-    def resource_commands(
-        self, resource_uow: ResourceUnitOfWork
-    ) -> ResourceCommands:
+    def resource_commands(self, resource_uow: ResourceUnitOfWork) -> ResourceCommands:
         return ResourceCommands(resource_uow=resource_uow)
 
     @injector.provider

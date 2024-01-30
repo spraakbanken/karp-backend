@@ -12,9 +12,7 @@ class EntryCommands:
 
     def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
         if not isinstance(resource_id, str):
-            raise ValueError(
-                f"'resource_id' must be of type 'str', were '{type(resource_id)}'"
-            )
+            raise ValueError(f"'resource_id' must be of type 'str', were '{type(resource_id)}'")
 
         with self.resource_uow as uw:
             result = uw.repo.by_resource_id(resource_id)
@@ -24,7 +22,8 @@ class EntryCommands:
 
     def _get_entry_uow(self, resource_id: unique_id.UniqueId) -> EntryUnitOfWork:
         result = self.resource_uow.entry_uow_by_resource_id(resource_id)
-        if not result: raise errors.ResourceNotFound(resource_id)
+        if not result:
+            raise errors.ResourceNotFound(resource_id)
         return result
 
     def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message):
