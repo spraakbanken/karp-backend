@@ -184,40 +184,37 @@ class EntryCommands:
 
     def _entry_added_handler(self, entry):
         with self.index_uow as uw:
-            for resource_id in self.resource_views.get_resource_ids(entry.repo_id):
-                entry = EntryDto(
-                    id=entry.id,
-                    resource=resource_id,
-                    entry=entry.body,
-                    message=entry.message or "",
-                    lastModified=entry.last_modified,
-                    lastModifiedBy=entry.last_modified_by,
-                    version=1,
-                )
-                uw.repo.add_entries(
-                    resource_id, [self.entry_transformer.transform(resource_id, entry)]
-                )
+            entry_dto = EntryDto(
+                id=entry.id,
+                resource=entry.resource_id,
+                entry=entry.body,
+                message=entry.message or "",
+                lastModified=entry.last_modified,
+                lastModifiedBy=entry.last_modified_by,
+                version=1,
+            )
+            uw.repo.add_entries(
+                entry.resource_id, [self.entry_transformer.transform(entry.resource_id, entry_dto)]
+            )
             uw.commit()
 
     def _entry_updated_handler(self, entry):
         with self.index_uow as uw:
-            for resource_id in self.resource_views.get_resource_ids(entry.repo_id):
-                entry = EntryDto(
-                    id=entry.id,
-                    resource=resource_id,
-                    entry=entry.body,
-                    message=entry.message,
-                    lastModified=entry.last_modified,
-                    lastModifiedBy=entry.last_modified_by,
-                    version=entry.version,
-                )
-                uw.repo.add_entries(
-                    resource_id, [self.entry_transformer.transform(resource_id, entry)]
-                )
+            entry_dto = EntryDto(
+                id=entry.id,
+                resource=entry.resource_id,
+                entry=entry.body,
+                message=entry.message,
+                lastModified=entry.last_modified,
+                lastModifiedBy=entry.last_modified_by,
+                version=entry.version,
+            )
+            uw.repo.add_entries(
+                entry.resource_id, [self.entry_transformer.transform(entry.resource_id, entry_dto)]
+            )
             uw.commit()
 
     def _entry_deleted_handler(self, entry):
         with self.index_uow as uw:
-            for resource_id in self.resource_views.get_resource_ids(entry.repo_id):
-                uw.repo.delete_entry(resource_id, entry_id=entry.id)
+            uw.repo.delete_entry(entry.resource_id, entry_id=entry.id)
             uw.commit()
