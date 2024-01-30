@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import (
     and_,
     func,
+    text
 )
 
 from karp.foundation.events import EventBus
@@ -20,7 +21,7 @@ from karp.lex.domain.entities.resource import Resource
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.db_infrastructure.sql_repository import SqlRepository
-from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
+from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork, table_name
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,9 @@ class SqlResourceRepository(  # noqa: D101
         self._check_has_session()
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
+        if resource.discarded:
+            # If resource was discarded, drop the table containing all data entries
+            self._session.execute(text("DROP table " + table_name(resource)))
 
     def resource_ids(self) -> List[str]:  # noqa: D102
         self._check_has_session()
