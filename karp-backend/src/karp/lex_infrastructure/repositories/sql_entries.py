@@ -279,8 +279,8 @@ class SqlEntryUnitOfWork(  # noqa: D101
         connection_str: Optional[str],
         user: str,
         message: str,
-        timestamp: float
-    ) -> 'SqlEntryUnitOfWork':
+        timestamp: float,
+    ) -> "SqlEntryUnitOfWork":
         return cls(
             id=id,
             name=name,

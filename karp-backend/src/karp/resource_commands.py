@@ -117,9 +117,7 @@ class ResourceCommands:
             uow.post_on_commit(events)
             uow.commit()
 
-
     def create_entry_repository(self, name, config, user, message, connection_str=None):
-
         entry_repo, events = self.entry_repo_uow.create(
             id=make_unique_id(),
             name=name,

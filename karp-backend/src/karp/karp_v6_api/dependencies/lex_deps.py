@@ -29,6 +29,7 @@ from karp.lex_infrastructure import (
     SqlReadOnlyResourceRepository,
 )
 
+
 def get_resource_unit_of_work(  # noqa: D103
     db_session: Session = Depends(get_session),
     event_bus: EventBus = Depends(event_deps.get_eventbus),

@@ -266,7 +266,6 @@ class InMemoryEntryUowRepositoryUnitOfWork(
         return self._cache[entity_id], []
 
 
-
 class InMemoryLexInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton

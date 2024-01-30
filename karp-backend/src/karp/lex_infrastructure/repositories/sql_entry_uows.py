@@ -19,6 +19,7 @@ from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
 
 logger = logging.getLogger(__name__)
 
+
 class SqlEntryUowRepository(SqlRepository, Repository):  # noqa: D101
     def __init__(  # noqa: D107
         self,
@@ -100,7 +101,5 @@ class SqlEntryUowRepositoryUnitOfWork(  # noqa: D101
 
     def create(self, *args, **kwargs) -> Tuple[EntryUnitOfWork, list[Event]]:
         return SqlEntryUnitOfWork.create(
-            *args, **kwargs,
-            session=self._session,
-            event_bus=self.event_bus
+            *args, **kwargs, session=self._session, event_bus=self.event_bus
         ), []

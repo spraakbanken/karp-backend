@@ -81,6 +81,7 @@ class LexInfrastructure(injector.Module):  # noqa: D101
             event_bus=event_bus,
         )
 
+
 class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def gey_entry_diff(  # noqa: D102
