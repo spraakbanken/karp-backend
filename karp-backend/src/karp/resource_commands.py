@@ -73,7 +73,7 @@ class ResourceCommands:
         logger.info("deleting resource", extra={"resource_id": resource_id})
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(resource_id)
-            events = resource.discard(user=user, timestamp=utc_now())
+            events = resource.discard(user=user, message=message, timestamp=utc_now())
             uow.repo.save(resource)
             uow.post_on_commit(events)
             uow.commit()
