@@ -73,14 +73,7 @@ class ResourceCommands:
         logger.info("deleting resource", extra={"resource_id": resource_id})
         with self.resource_uow as uow:
             resource = uow.repo.by_resource_id(resource_id)
-            if not resource:
-                raise ResourceNotFound(resource_id)
-
-            # sends a ResourceDiscarded-event, which via the deleting_index method in the injector.multiprovider
-            #  is instantiated to a DeletingIndex-event with a IndexUnitOfWork attribute (magically instantiated by the provider).
-            # The DeletingIndex event calls delete_index on the IndexUnitOfWork, which deletes the elastic search index of the given resource and also
-            # deletes its corresponding row from the elastic search config.
-            events = resource.discard(user=user, message=message, timestamp=utc_now())
+            events = resource.discard(user=user, timestamp=utc_now())
             uow.repo.save(resource)
             uow.post_on_commit(events)
             uow.commit()
