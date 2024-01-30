@@ -28,7 +28,7 @@ class ResourceCommands:
                 resource_id=resource_id,
                 config=config,
                 message=f"Resource '{resource_id}' created.",
-                table_name=f'{resource_id}_{make_unique_id()}',
+                table_name=f"{resource_id}_{make_unique_id()}",
                 created_at=utc_now(),
                 created_by=user,
                 name=name,
