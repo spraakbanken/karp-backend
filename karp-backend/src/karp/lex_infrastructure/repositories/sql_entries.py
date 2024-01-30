@@ -40,9 +40,7 @@ logger = logging.getLogger(__name__)
 
 class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
-        self,
-        session: Session,
-        resource: Resource
+        self, session: Session, resource: Resource
     ):
         if not session:
             raise TypeError("session can't be None")

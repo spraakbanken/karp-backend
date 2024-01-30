@@ -194,7 +194,8 @@ class EntryCommands:
                 version=1,
             )
             uw.repo.add_entries(
-                entry.resource_id, [self.entry_transformer.transform(entry.resource_id, entry_dto)]
+                entry.resource_id,
+                [self.entry_transformer.transform(entry.resource_id, entry_dto)],
             )
             uw.commit()
 
@@ -210,7 +211,8 @@ class EntryCommands:
                 version=entry.version,
             )
             uw.repo.add_entries(
-                entry.resource_id, [self.entry_transformer.transform(entry.resource_id, entry_dto)]
+                entry.resource_id,
+                [self.entry_transformer.transform(entry.resource_id, entry_dto)],
             )
             uw.commit()
 
