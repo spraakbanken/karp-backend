@@ -92,8 +92,8 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
             ins_stmt = ins_stmt.values(**history_dict)
             result = self._session.execute(ins_stmt)
             return result.lastrowid or result.returned_defaults["history_id"]  # type: ignore [attr-defined]
-        except exc.DBAPIError as exc:
-            raise errors.RepositoryError("db failure") from exc
+        except exc.DBAPIError as ex:
+            raise errors.RepositoryError("db failure") from ex
 
     def entity_ids(self) -> List[str]:  # noqa: D102
         stmt = self._stmt_latest_not_discarded()
