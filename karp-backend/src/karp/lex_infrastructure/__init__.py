@@ -3,7 +3,7 @@ from typing import Dict
 
 import injector
 from sqlalchemy.engine import Connection
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 from karp import lex
 from karp.foundation.events import EventBus

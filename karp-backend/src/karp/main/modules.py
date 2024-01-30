@@ -14,7 +14,7 @@ import elasticsearch  # noqa: I001
 import injector
 from injector import Provider, T
 from sqlalchemy.engine import Connection, Engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 
 from karp.command_bus import CommandBus, InjectorCommandBus
 from karp.foundation.events import EventBus, InjectorEventBus
@@ -93,10 +93,6 @@ class Db(injector.Module):  # noqa: D101
     @injector.provider
     def session(self, connection: Connection) -> Session:  # noqa: D102
         return Session(bind=connection)
-
-    @injector.provider
-    def session_factory(self) -> sessionmaker:  # noqa: D102
-        return sessionmaker(bind=self._engine)
 
     @injector.provider
     def engine(self) -> Engine:

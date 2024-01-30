@@ -6,7 +6,7 @@ from karp.lex_core.value_objects import UniqueId
 
 import sqlalchemy as sa
 from sqlalchemy import sql
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from sqlalchemy import (
     and_,
     func,

@@ -13,7 +13,7 @@ from sqlalchemy import (
     sql,
     exc,
 )
-from sqlalchemy.orm.session import Session, sessionmaker
+from sqlalchemy.orm.session import Session
 from sqlalchemy.sql import insert
 
 
