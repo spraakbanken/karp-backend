@@ -117,34 +117,6 @@ class ResourceModel(db.Base):  # noqa: D101
         )
 
 
-class EntryUowModel(db.Base):  # noqa: D101
-    __tablename__ = "entry_repos"
-    history_id = Column(Integer, primary_key=True)
-    entity_id = Column(ULIDType, nullable=False)
-    type = Column(String(64), nullable=False)  # noqa: A003
-    name = Column(String(64), nullable=False)
-    config = Column(NestedMutableJson, nullable=False)
-    last_modified = Column(Float(precision=53), nullable=False)
-    last_modified_by = Column(String(100), nullable=False)
-    message = Column(String(100), nullable=False)
-    discarded = Column(Boolean, default=False)
-
-    @staticmethod
-    def from_entity(entry_uow: EntryUnitOfWork) -> "EntryUowModel":  # noqa: D102
-        return EntryUowModel(
-            history_id=None,
-            entity_id=entry_uow.entity_id,
-            # TODO legacy field, can be removed from database when migrations are figured out
-            type="sql_entries_v2",
-            name=entry_uow.name,
-            config=entry_uow.config,
-            last_modified=entry_uow.last_modified,
-            last_modified_by=entry_uow.last_modified_by,
-            message=entry_uow.message,
-            discarded=entry_uow.discarded,
-        )
-
-
 class BaseRuntimeEntry:  # noqa: D101
     entry_id = Column(
         String(100),
