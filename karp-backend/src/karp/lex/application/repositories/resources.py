@@ -8,6 +8,8 @@ from karp.foundation import events, repository, unit_of_work
 from karp.lex.domain import entities
 
 from karp.lex.domain import errors
+from karp.lex_core.value_objects import UniqueId
+from karp.lex.application.repositories.entries import EntryUnitOfWork
 
 logger = logging.getLogger("karp")
 
@@ -69,3 +71,30 @@ class ResourceUnitOfWork(unit_of_work.UnitOfWork):  # noqa: D101
     @property
     def resources(self) -> ResourceRepository:  # noqa: D102
         return self.repo
+
+    def entry_uow_by_id(self, id: Union[UniqueId, str]) -> Optional[EntryUnitOfWork]:
+        with self as uw:
+            resource = self.repo.by_id(id)
+            return self.resource_to_entry_uow(resource) if resource else None
+
+    def entry_uow_by_resource_id(self, resource_id: str) -> Optional[EntryUnitOfWork]:
+        with self:
+            resource = self.repo.by_resource_id(resource_id)
+            return self.resource_to_entry_uow(resource) if resource else None
+
+    @abc.abstractmethod
+    def resource_to_entry_uow(self, resource: entities.Resource) -> EntryUnitOfWork:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def create(
+        self,
+        id: UniqueId,  # noqa: A002
+        name: str,
+        config: dict,
+        connection_str: Optional[str],
+        user: str,
+        message: str,
+        timestamp: float,
+    ) -> Tuple[EntryUnitOfWork, list[events.Event]]:
+        raise NotImplementedError

@@ -1,9 +1,9 @@
 import logging
 
-from karp.lex import EntryUowRepositoryUnitOfWork, ResourceUnitOfWork
+from karp.lex import ResourceUnitOfWork
 from karp.lex.application.dtos import ResourceDto
 from karp.lex.domain import entities
-from karp.lex.domain.errors import IntegrityError, NoSuchEntryRepository, ResourceNotFound
+from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex_core.value_objects import make_unique_id
 from karp.timings import utc_now
 
@@ -11,16 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 class ResourceCommands:
-    def __init__(self, entry_repo_uow, resource_uow):
-        self.entry_repo_uow: EntryUowRepositoryUnitOfWork = entry_repo_uow
+    def __init__(self, resource_uow):
         self.resource_uow: ResourceUnitOfWork = resource_uow
 
-    def create_resource(self, resource_id, name, config, user, entry_repo_id):
-        with self.entry_repo_uow as uow:
-            entry_repo_exists = uow.repo.get_by_id_optional(entry_repo_id)
-            if not entry_repo_exists:
-                raise NoSuchEntryRepository(f"Entry repository '{entry_repo_id}' not found")
-
+    def create_resource(self, resource_id, name, config, user):
         with self.resource_uow as uow:
             existing_resource = uow.repo.get_by_resource_id_optional(resource_id)
             if existing_resource and not existing_resource.discarded:
@@ -32,7 +26,7 @@ class ResourceCommands:
                 resource_id=resource_id,
                 config=config,
                 message=f"Resource '{resource_id}' created.",
-                entry_repo_id=entry_repo_id,
+                entry_repo_id=make_unique_id(),
                 created_at=utc_now(),
                 created_by=user,
                 name=name,
@@ -42,25 +36,6 @@ class ResourceCommands:
             uow.post_on_commit(events)
             uow.commit()
         return ResourceDto(**resource.serialize())
-
-    def set_entry_repo_id(self, resource_id, entry_repo_id, user):
-        with self.entry_repo_uow as uow:
-            entry_repo_exists = uow.repo.get_by_id_optional(entry_repo_id)
-            if not entry_repo_exists:
-                raise NoSuchEntryRepository(f"Entry repository '{entry_repo_id}' not found")
-
-        with self.resource_uow as uow:
-            resource = uow.repo.get_by_resource_id(resource_id)
-
-            events = resource.set_entry_repo_id(
-                entry_repo_id=entry_repo_id,
-                user=user,
-                timestamp=utc_now(),
-            )
-
-            uow.repo.save(resource)
-            uow.post_on_commit(events)
-            uow.commit()
 
     def update_resource(self, resource_id, name, version, config, message, user):
         with self.resource_uow as uow:
@@ -109,31 +84,3 @@ class ResourceCommands:
             uow.repo.save(resource)
             uow.post_on_commit(events)
             uow.commit()
-
-        with self.entry_repo_uow as uow:
-            entry_repo = uow.repo.get_by_id(resource.entry_repository_id)
-            events = entry_repo.discard(user=user, timestamp=utc_now())
-            uow.repo.save(entry_repo)
-            uow.post_on_commit(events)
-            uow.commit()
-
-
-    def create_entry_repository(self, name, config, user, message, connection_str=None):
-
-        entry_repo, events = self.entry_repo_uow.create(
-            id=make_unique_id(),
-            name=name,
-            config=config,
-            connection_str=connection_str,
-            user=user,
-            timestamp=utc_now(),
-            message=message,
-        )
-
-        logger.debug("Created entry repo", extra={"entry_repo": entry_repo})
-        with self.entry_repo_uow as uow:
-            logger.debug("Saving...")
-            uow.repo.save(entry_repo)
-            uow.post_on_commit(events)
-            uow.commit()
-        return entry_repo

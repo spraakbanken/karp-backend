@@ -11,7 +11,6 @@ from karp.lex_infrastructure import (
     SqlGetPublishedResources,
     SqlGetResources,
     SqlReadOnlyResourceRepository,
-    SqlListEntryRepos,
 )
 from karp.resource_commands import ResourceCommands
 
@@ -42,18 +41,10 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:  # noqa:
 def create(  # noqa: ANN201, D103
     ctx: typer.Context,
     config: Path,
-    entry_repo_id: Optional[str] = typer.Option(None, help="id for entry-repo"),
 ):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     if config.is_file():
         data = jsonlib.load_from_file(config)
-        if not entry_repo_id:
-            query = inject_from_ctx(SqlListEntryRepos, ctx)
-            entry_repos = list(query.query())
-            entry_repo = choose_from(entry_repos, lambda x: f"{x.name}")
-            entry_repo_uuid = entry_repo.entity_id
-        else:
-            entry_repo_uuid = UniqueIdStr.validate(entry_repo_id)
         try:
             resource_id = data.pop("resource_id")
         except KeyError as exc:
@@ -67,31 +58,12 @@ def create(  # noqa: ANN201, D103
             name,
             data,
             user="local admin",
-            entry_repo_id=entry_repo_uuid,
         )
 
         print(f"Created resource '{resource_id}'")
 
     elif config.is_dir():
         typer.Abort("not supported yetls")
-
-
-@subapp.command()
-@cli_error_handler
-@cli_timer
-def set_entry_repo(  # noqa: ANN201, D103
-    ctx: typer.Context,
-    resource_id: str,
-    entry_repo_id: str = typer.Argument(..., help="id for entry-repo"),
-    user: Optional[str] = typer.Option(None),
-):
-    resource_commands = inject_from_ctx(ResourceCommands, ctx)
-    entry_repo_uuid = unique_id.parse(entry_repo_id)
-    resource_commands.set_entry_repo_id(
-        resource_id=resource_id,
-        entry_repo_id=entry_repo_uuid,
-        user=user or "local admin",
-    )
 
 
 @subapp.command()

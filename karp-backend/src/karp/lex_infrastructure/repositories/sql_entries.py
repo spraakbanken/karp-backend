@@ -273,7 +273,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
         cls,
         session: Session,
         event_bus: EventBus,
-        id: UniqueId,  # noqa: A002
+        entry_repo_id: UniqueId,  # noqa: A002
         name: str,
         config: Dict,
         connection_str: Optional[str],
@@ -282,7 +282,7 @@ class SqlEntryUnitOfWork(  # noqa: D101
         timestamp: float
     ) -> 'SqlEntryUnitOfWork':
         return cls(
-            id=id,
+            id=entry_repo_id,
             name=name,
             config=config,
             connection_str=connection_str,

@@ -20,6 +20,7 @@ from karp.lex.domain.entities.resource import Resource
 from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.db_infrastructure.sql_repository import SqlRepository
+from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -166,3 +167,24 @@ class SqlResourceUnitOfWork(  # noqa: D101
         if self._resources is None:
             raise RuntimeError("No resources")
         return self._resources
+
+    def resource_to_entry_uow(self, resource: Resource) -> SqlEntryUnitOfWork:
+        return SqlEntryUnitOfWork(
+            session=self._session,
+            event_bus=self.event_bus,
+            id=resource.entry_repo_id,
+            name=resource.name,
+            config=resource.config,
+            message=resource.message,
+            last_modified_by=resource.last_modified_by,
+            last_modified=resource.last_modified,
+            connection_str=None
+        )
+
+    def create(self, entry_repo_id, **kwargs) -> SqlEntryUnitOfWork:
+        return SqlEntryUnitOfWork.create(
+            session=self._session,
+            event_bus=self.event_bus,
+            id=entry_repo_id,
+            **kwargs
+        )

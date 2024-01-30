@@ -5,11 +5,11 @@ from typing import Dict, Type
 import sys
 
 from karp.entry_commands import EntryCommands
-from karp.lex import ResourceUnitOfWork, EntryUowRepositoryUnitOfWork
 from karp.resource_commands import ResourceCommands
 from karp.search import IndexUnitOfWork, GenericResourceViews
 from karp.search_commands import SearchCommands
 from karp.search_infrastructure import GenericPreProcessor
+from karp.lex.application.repositories import ResourceUnitOfWork
 
 try:
     from importlib.metadata import entry_points
@@ -79,15 +79,15 @@ request = injector.ScopeDecorator(RequestScope)
 class CommandsMod(injector.Module):  # noqa: D101
     @injector.provider
     def entry_commands(
-        self, resource_uow: ResourceUnitOfWork, entry_repo_uow: EntryUowRepositoryUnitOfWork
+        self, resource_uow: ResourceUnitOfWork
     ) -> EntryCommands:
-        return EntryCommands(entry_repo_uow=entry_repo_uow, resource_uow=resource_uow)
+        return EntryCommands(resource_uow=resource_uow)
 
     @injector.provider
     def resource_commands(
-        self, resource_uow: ResourceUnitOfWork, entry_repo_uow: EntryUowRepositoryUnitOfWork
+        self, resource_uow: ResourceUnitOfWork
     ) -> ResourceCommands:
-        return ResourceCommands(entry_repo_uow=entry_repo_uow, resource_uow=resource_uow)
+        return ResourceCommands(resource_uow=resource_uow)
 
     @injector.provider
     def search_commands(

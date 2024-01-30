@@ -45,15 +45,11 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._op = op
         self._releases = []
         self._entry_schema = None
-        self._entry_repo_id = unique_id.UniqueId.validate(entry_repo_id)
+        self.entry_repo_id = unique_id.UniqueId.validate(entry_repo_id)
 
     @property
     def resource_id(self) -> str:  # noqa: D102
         return self._resource_id
-
-    @property
-    def entry_repository_id(self) -> unique_id.UniqueId:  # noqa: D102
-        return self._entry_repo_id
 
     @property
     def name(self):  # noqa: ANN201, D102
@@ -91,7 +87,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             events.ResourcePublished(
                 id=self.id,
                 resourceId=self.resource_id,
-                entryRepoId=self.entry_repository_id,
+                entryRepoId=self.entry_repo_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -113,12 +109,12 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._update_metadata(
             timestamp, user, message or "entry repo id updated", version=version
         )
-        self._entry_repo_id = entry_repo_id
+        self.entry_repo_id = entry_repo_id
         return [
             events.ResourceUpdated(
                 id=self.id,
                 resourceId=self.resource_id,
-                entryRepoId=self.entry_repository_id,
+                entryRepoId=self.entry_repo_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -143,7 +139,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             events.ResourceUpdated(
                 id=self.id,
                 resourceId=self.resource_id,
-                entryRepoId=self.entry_repository_id,
+                entryRepoId=self.entry_repo_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -172,7 +168,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             events.ResourceUpdated(
                 id=self.id,
                 resourceId=self.resource_id,
-                entryRepoId=self.entry_repository_id,
+                entryRepoId=self.entry_repo_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -199,7 +195,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             events.ResourceUpdated(
                 id=self.id,
                 resourceId=self.resource_id,
-                entryRepoId=self.entry_repository_id,
+                entryRepoId=self.entry_repo_id,
                 timestamp=self.last_modified,
                 user=self.last_modified_by,
                 version=self.version,
@@ -260,7 +256,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             "lastModifiedBy": self.last_modified_by,
             "op": self.op,
             "message": self.message,
-            "entryRepositoryId": self.entry_repository_id,
+            "entryRepoId": self.entry_repo_id,
             "isPublished": self.is_published,
             "discarded": self.discarded,
             "resource_type": self.resource_type,
@@ -285,7 +281,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
 
         return create_entry(
             self._validate_entry(entry_raw),
-            repo_id=self.entry_repository_id,
+            repo_id=self.entry_repo_id,
             last_modified_by=user,
             message=message,
             id=id,
@@ -407,7 +403,7 @@ def create_resource(  # noqa: D103
     event = events.ResourceCreated(
         id=resource.id,
         resourceId=resource.resource_id,
-        entryRepoId=resource.entry_repository_id,
+        entryRepoId=resource.entry_repo_id,
         name=resource.name,
         config=resource.config,
         timestamp=resource.last_modified,

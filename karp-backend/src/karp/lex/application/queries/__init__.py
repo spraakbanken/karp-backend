@@ -6,7 +6,6 @@ from .entries import (  # noqa: I001
     EntryHistoryRequest,
     HistoryDto,
 )
-from .entry_repos import EntryRepoDto
 
 
 __all__ = [
@@ -16,5 +15,4 @@ __all__ = [
     "EntryDiffRequest",
     "EntryHistoryRequest",
     "HistoryDto",
-    "EntryRepoDto",
 ]

@@ -3,7 +3,7 @@ import pytest  # noqa: I001
 from typer import Typer
 from typer.testing import CliRunner
 from karp import lex
-from karp.lex_infrastructure import SqlReadOnlyResourceRepository, SqlReadOnlyEntryRepoRepository
+from karp.lex_infrastructure import SqlReadOnlyResourceRepository
 
 from karp.main import AppContext
 
@@ -20,23 +20,11 @@ class TestCliResourceLifetime:
         app_context: AppContext,
     ):
         result = runner.invoke(
-            cliapp, ["entry-repo", "create", "assets/testing/config/lexlex.json"]
-        )
-        print(f"{result.stdout=}")
-        assert result.exit_code == 0
-
-        entry_repo_repo = app_context.container.get(SqlReadOnlyEntryRepoRepository)  # type: ignore [misc]
-        entry_repo = entry_repo_repo.get_by_name("lexlex")
-        assert entry_repo is not None
-
-        result = runner.invoke(
             cliapp,
             [
                 "resource",
                 "create",
                 "assets/testing/config/lexlex.json",
-                "--entry-repo-id",
-                str(entry_repo.entity_id),
             ],
         )
         # print(f"{result.stdout=}")

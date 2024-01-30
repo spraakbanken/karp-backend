@@ -6,7 +6,6 @@ from starlette.requests import Request  # noqa: F401
 
 from karp.foundation.events import EventBus
 from karp.lex import (
-    EntryUowRepositoryUnitOfWork,
     ResourceUnitOfWork,
 )
 from karp.karp_v6_api.dependencies import db_deps
@@ -23,7 +22,6 @@ from karp.lex_infrastructure import (
     GenericGetEntryDiff,
     GenericGetEntryHistory,
     GenericGetHistory,
-    SqlEntryUowRepositoryUnitOfWork,
     SqlGetPublishedResources,
     SqlResourceUnitOfWork,
     SqlReadOnlyResourceRepository,
@@ -34,16 +32,6 @@ def get_resource_unit_of_work(  # noqa: D103
     event_bus: EventBus = Depends(event_deps.get_eventbus),
 ) -> ResourceUnitOfWork:
     return SqlResourceUnitOfWork(
-        event_bus=event_bus,
-        session=db_session,
-    )
-
-
-def get_entry_repo_uow(  # noqa: D103
-    db_session: Session = Depends(get_session),
-    event_bus: EventBus = Depends(event_deps.get_eventbus),
-) -> EntryUowRepositoryUnitOfWork:
-    return SqlEntryUowRepositoryUnitOfWork(
         event_bus=event_bus,
         session=db_session,
     )
@@ -63,29 +51,23 @@ def get_published_resources(  # noqa: D103
 
 def get_entry_diff(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> GenericGetEntryDiff:
     return GenericGetEntryDiff(
         resource_uow=resource_uow,
-        entry_repo_uow=entry_repo_uow,
     )
 
 
 def get_entry_history(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> GenericGetEntryHistory:
     return GenericGetEntryHistory(
         resource_uow=resource_uow,
-        entry_repo_uow=entry_repo_uow,
     )
 
 
 def get_history(  # noqa: D103
     resource_uow: ResourceUnitOfWork = Depends(get_resource_unit_of_work),
-    entry_repo_uow: EntryUowRepositoryUnitOfWork = Depends(get_entry_repo_uow),
 ) -> GenericGetHistory:
     return GenericGetHistory(
         resource_uow=resource_uow,
-        entry_repo_uow=entry_repo_uow,
     )

@@ -190,54 +190,14 @@ class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUn
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.ResourceUnitOfWork.__init__(self, event_bus=event_bus)
         self._resources = InMemoryResourceRepository()
+        self._cache: dict[UniqueId, InMemoryEntryUnitOfWork] = {}
 
     @property
     def repo(self) -> lex_repositories.ResourceRepository:
         return self._resources
 
-
-class InMemoryEntryUowRepository(Repository):
-    def __init__(self) -> None:
-        super().__init__()
-        self._storage: dict[UniqueId, EntryUnitOfWork] = {}
-
-    def _save(self, entry_repo: EntryUnitOfWork) -> None:
-        entry_repo_id = ensure_correct_id_type(entry_repo.id)
-        self._storage[entry_repo_id] = entry_repo
-
-    def _by_id(
-        self,
-        id: UniqueId,  # noqa: A002
-        *,
-        version: Optional[int] = None,
-        **kwargs,  # noqa: ANN003
-    ) -> EntryUnitOfWork | None:
-        entry_repo_id = ensure_correct_id_type(id)
-        return self._storage.get(entry_repo_id)
-
-    def __len__(self):  # noqa: ANN204
-        return len(self._storage)
-
-
-class InMemoryEntryUowRepositoryUnitOfWork(
-    InMemoryUnitOfWork, lex_repositories.EntryUowRepositoryUnitOfWork
-):
-    @injector.inject
-    def __init__(
-        self,
-        event_bus: EventBus,
-    ) -> None:
-        InMemoryUnitOfWork.__init__(self)
-        lex_repositories.EntryUowRepositoryUnitOfWork.__init__(
-            self,
-            event_bus=event_bus,
-        )
-        self._repo = InMemoryEntryUowRepository()
-        self._cache: dict[UniqueId, InMemoryEntryUnitOfWork] = {}
-
-    @property
-    def repo(self):
-        return self._repo
+    def resource_to_entry_uow(self, resource: lex_entities.Resource) -> EntryUnitOfWork:
+        return self._storage.get(resource.entry_repo_id)
 
     def create(
         self,
@@ -266,18 +226,7 @@ class InMemoryEntryUowRepositoryUnitOfWork(
         return self._cache[entity_id], []
 
 
-
 class InMemoryLexInfrastructure(injector.Module):
-    @injector.provider
-    @injector.singleton
-    def entry_uow_repo_uow(
-        self,
-        event_bus: EventBus,
-    ) -> lex_repositories.EntryUowRepositoryUnitOfWork:
-        return InMemoryEntryUowRepositoryUnitOfWork(
-            event_bus=event_bus,
-        )
-
     @injector.provider
     @injector.singleton
     def resource_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:

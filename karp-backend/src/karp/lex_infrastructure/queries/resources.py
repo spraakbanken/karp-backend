@@ -151,7 +151,7 @@ def _row_to_dto(row_proxy) -> ResourceDto:
         version=row_proxy.version,
         config=row_proxy.config,
         isPublished=row_proxy.is_published,
-        entryRepositoryId=row_proxy.entry_repo_id,
+        entryRepoId=row_proxy.entry_repo_id,
         lastModified=row_proxy.last_modified,
         lastModifiedBy=row_proxy.last_modified_by,
         message=row_proxy.message,

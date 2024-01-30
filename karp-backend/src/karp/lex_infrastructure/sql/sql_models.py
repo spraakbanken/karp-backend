@@ -107,7 +107,7 @@ class ResourceModel(db.Base):  # noqa: D101
             version=resource.version,
             name=resource.name,
             config=resource.config,
-            entry_repo_id=resource.entry_repository_id,
+            entry_repo_id=resource.entry_repo_id,
             is_published=resource.is_published,
             last_modified=resource.last_modified,
             last_modified_by=resource.last_modified_by,

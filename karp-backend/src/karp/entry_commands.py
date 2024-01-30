@@ -1,18 +1,31 @@
 from karp.lex import ResourceUnitOfWork
 from karp.lex.application.repositories import EntryUnitOfWork
+from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
 from karp.timings import utc_now
 
 
 class EntryCommands:
-    def __init__(self, entry_repo_uow, resource_uow):
-        self.entry_repo_uow = entry_repo_uow
+    def __init__(self, resource_uow):
         self.resource_uow: ResourceUnitOfWork = resource_uow
 
-    def _get_entry_uow(self, entry_repo_id: unique_id.UniqueId) -> EntryUnitOfWork:
-        with self.entry_repo_uow as uw:
-            return uw.repo.get_by_id(entry_repo_id)
+    def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
+        if not isinstance(resource_id, str):
+            raise ValueError(
+                f"'resource_id' must be of type 'str', were '{type(resource_id)}'"
+            )
+
+        with self.resource_uow as uw:
+            result = uw.repo.by_resource_id(resource_id)
+        if not result:
+            raise errors.ResourceNotFound(resource_id)
+        return result
+
+    def _get_entry_uow(self, resource_id: unique_id.UniqueId) -> EntryUnitOfWork:
+        result = self.resource_uow.entry_uow_by_resource_id(resource_id)
+        if not result: raise errors.ResourceNotFound(resource_id)
+        return result
 
     def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message):
         """
@@ -31,18 +44,10 @@ class EntryCommands:
         List
             List of the id's of the created entries.
         """
-        if not isinstance(resource_id, str):
-            raise ValueError(f"'resource_id' must be of type 'str', were '{type(resource_id)}'")
-        with self.resource_uow:
-            resource = self.resource_uow.resources.by_resource_id(resource_id)
-
-        if not resource:
-            raise ResourceNotFound(resource_id)
 
         created_db_entries = []
-        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
-            resource.entry_repository_id
-        ) as uw:
+        resource = self._get_resource(resource_id)
+        with self._get_entry_uow(resource_id) as uw:
             for i, entry_raw in enumerate(entries):
                 entry, events = resource.create_entry_from_dict(
                     entry_raw,
@@ -61,10 +66,10 @@ class EntryCommands:
         return created_db_entries
 
     def add_entries(self, resource_id, entries, user, message):
-        self.add_entries_in_chunks(resource_id, 0, entries, user, message)
+        return self.add_entries_in_chunks(resource_id, 0, entries, user, message)
 
     def import_entries(self, resource_id, entries, user, message):
-        self.import_entries_in_chunks(resource_id, 0, entries, user, message)
+        return self.import_entries_in_chunks(resource_id, 0, entries, user, message)
 
     def import_entries_in_chunks(self, resource_id, chunk_size, entries, user, message):
         """
@@ -84,18 +89,9 @@ class EntryCommands:
             List of the id's of the created entries.
         """  # noqa: D202, D212
 
-        if not isinstance(resource_id, str):
-            raise ValueError(f"'resource_id' must be of type 'str', were '{type(resource_id)}'")
-        with self.resource_uow:
-            resource = self.resource_uow.resources.by_resource_id(resource_id)
-
-        if not resource:
-            raise ResourceNotFound(resource_id)
-
         created_db_entries = []
-        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
-            resource.entry_repository_id
-        ) as uw:
+        resource = self._get_resource(resource_id)
+        with self._get_entry_uow(resource_id) as uw:
             for i, entry_raw in enumerate(entries):
                 entry, events = resource.create_entry_from_dict(
                     entry_raw["entry"],
@@ -115,11 +111,8 @@ class EntryCommands:
         return created_db_entries
 
     def add_entry(self, resource_id, user, message, entry):
-        with self.resource_uow:
-            resource = self.resource_uow.repo.by_resource_id(resource_id)
-
-        entry_uow = self._get_entry_uow(resource.entry_repository_id)
-        with entry_uow as uw:
+        resource = self._get_resource(resource_id)
+        with self._get_entry_uow(resource_id) as uw:
             entry, events = resource.create_entry_from_dict(
                 entry,
                 user=user,
@@ -133,10 +126,8 @@ class EntryCommands:
         return entry
 
     def update_entry(self, resource_id, _id, version, user, message, entry):
-        with self.resource_uow:
-            resource = self.resource_uow.repo.by_resource_id(resource_id)
-
-        with self._get_entry_uow(resource.entry_repository_id) as uw:
+        resource = self._get_resource(resource_id)
+        with self._get_entry_uow(resource_id) as uw:
             try:
                 current_db_entry = uw.repo.by_id(_id)
             except EntryNotFound as err:
@@ -160,12 +151,8 @@ class EntryCommands:
         return current_db_entry
 
     def delete_entry(self, resource_id, _id, user, version, message="Entry deleted"):
-        with self.resource_uow:
-            resource = self.resource_uow.repo.by_resource_id(resource_id)
-
-        with self.entry_repo_uow, self.entry_repo_uow.repo.get_by_id(
-            resource.entry_repository_id
-        ) as uw:
+        resource = self._get_resource(resource_id)
+        with self._get_entry_uow(resource_id) as uw:
             entry = uw.repo.by_id(_id)
 
             events = resource.discard_entry(

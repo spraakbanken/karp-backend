@@ -19,5 +19,5 @@ class GenericResourceViews:
             return [
                 resource.resource_id
                 for resource in uw.repo.get_all_resources()
-                if resource.entry_repository_id == repo_id
+                if resource.entry_repo_id == repo_id
             ]

@@ -98,15 +98,8 @@ def create_and_publish_resource(
 
     resource_commands = client.app.state.app_context.container.get(ResourceCommands)
 
-    entry_repo = resource_commands.create_entry_repository(
-        name=resource_id,
-        config=resource_config,
-        user="",
-        message="",
-    )
-
     resource_commands.create_resource(
-        resource_id, resource_id, resource_config, "", entry_repo.entity_id
+        resource_id, resource_id, resource_config, ""
     )
 
     resource_commands.publish_resource(user="", resource_id=resource_id, version=1, message="")
