@@ -266,31 +266,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
         self._entries = None
         self._session = session
 
-    # A constructor-ish class method that changes the parameters slightly (e.g.
-    # see the line last_modified_by=user below).
-    @classmethod
-    def create(
-        cls,
-        session: Session,
-        event_bus: EventBus,
-        entry_repo_id: UniqueId,  # noqa: A002
-        name: str,
-        config: Dict,
-        user: str,
-        message: str,
-        timestamp: float,
-    ) -> "SqlEntryUnitOfWork":
-        return cls(
-            id=entry_repo_id,
-            name=name,
-            config=config,
-            last_modified_by=user,
-            message=message,
-            last_modified=timestamp,
-            session=session,
-            event_bus=event_bus,
-        )
-
     def _begin(self):  # noqa: ANN202
         if self._entries is None:
             self._entries = SqlEntryRepository.from_dict(
