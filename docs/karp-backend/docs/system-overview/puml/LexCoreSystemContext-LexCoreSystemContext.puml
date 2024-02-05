@@ -9,7 +9,7 @@ top to bottom direction
 
 skinparam svgDimensionStyle false
 skinparam preserveAspectRatio meet
-System(karplexcore, "karp-lex-core", $descr="", $tags="", $link="../container/")
+System(karplexcore, "karp-lex-core", $descr="Public commands, value objects and data transfer objects for karp.lex", $tags="", $link="../container/")
 System(karpbackend, "karp-backend", $descr="", $tags="", $link="../../karp-backend/context/")
 
 Rel_D(karpbackend, karplexcore, "", $techn="", $tags="", $link="")

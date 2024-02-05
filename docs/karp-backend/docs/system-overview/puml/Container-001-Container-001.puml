@@ -10,7 +10,7 @@ top to bottom direction
 
 skinparam svgDimensionStyle false
 skinparam preserveAspectRatio meet
-System(karplexcore, "karp-lex-core", $descr="", $tags="", $link="../../karp-lex-core/context/")
+System(karplexcore, "karp-lex-core", $descr="Public commands, value objects and data transfer objects for karp.lex", $tags="", $link="../../karp-lex-core/context/")
 System(sbauth, "sb-auth", $descr="Språkbanken's Auth service", $tags="", $link="../../sb-auth/context/")
 Person(User, "User", $descr="", $tags="", $link="")
 Person(Admin, "Admin", $descr="", $tags="", $link="")
@@ -19,23 +19,23 @@ Person(Machine, "Machine", $descr="machine", $tags="", $link="")
 System_Boundary("karpbackend_boundary", "karp-backend", $tags="") {
   AddBoundaryTag("application", $borderColor="#cccccc", $fontColor="#cccccc")
   Boundary(group_1, "application", $tags="application") {
-    Container(karpbackend.karpsearch, "karp.search", $techn="", $descr="", $tags="", $link="")
-    Container(karpbackend.karpauth, "karp.auth", $techn="", $descr="", $tags="", $link="")
-    Container(karpbackend.karplex, "karp.lex", $techn="", $descr="", $tags="", $link="")
+    Container(karpbackend.karpsearch, "karp.search", $techn="", $descr="Business logic around searching", $tags="", $link="")
+    Container(karpbackend.karpauth, "karp.auth", $techn="", $descr="Business logic around authentication", $tags="", $link="")
+    Container(karpbackend.karplex, "karp.lex", $techn="", $descr="Business logic around lexical resources and entries", $tags="", $link="")
   }
 
   AddBoundaryTag("infrastructure", $borderColor="#cccccc", $fontColor="#cccccc")
   Boundary(group_2, "infrastructure", $tags="infrastructure") {
-    Container(karpbackend.karpauth_infrastructure, "karp.auth_infrastructure", $techn="", $descr="", $tags="", $link="")
-    Container(karpbackend.karplex_infrastructure, "karp.lex_infrastructure", $techn="", $descr="", $tags="", $link="")
-    Container(karpbackend.karpsearch_infrastructure, "karp.search_infrastructure", $techn="", $descr="", $tags="", $link="")
+    Container(karpbackend.karpauth_infrastructure, "karp.auth_infrastructure", $techn="Python and sb-auth", $descr="Concrete implementation of karp.auth business logic", $tags="", $link="")
+    Container(karpbackend.karplex_infrastructure, "karp.lex_infrastructure", $techn="Python and relational database", $descr="Concrete implementation of karp.lex business logic", $tags="", $link="")
+    Container(karpbackend.karpsearch_infrastructure, "karp.search_infrastructure", $techn="Python and database", $descr="Concrete implementation of karp.search business logic", $tags="", $link="")
     ContainerDb(karpbackend.MariaDB, "MariaDB", $techn="Relational database schema", $descr="", $tags="", $link="")
     ContainerDb(karpbackend.ElasticSearch, "ElasticSearch", $techn="Document database schema", $descr="", $tags="", $link="")
   }
 
-  Container(karpbackend.karpmain, "karp.main", $techn="", $descr="", $tags="", $link="")
-  Container(karpbackend.WebAPI, "Web API", $techn="", $descr="", $tags="", $link="")
-  Container(karpbackend.karpcli, "karp-cli", $techn="", $descr="", $tags="", $link="")
+  Container(karpbackend.karpmain, "karp.main", $techn="", $descr="Kernel connecting the generic business rules and the concrete implementations in infrastructure", $tags="", $link="")
+  Container(karpbackend.WebAPI, "Web API", $techn="Python and FastAPI", $descr="Provides lexical and search functionality via a JSON API", $tags="", $link="")
+  Container(karpbackend.karpcli, "karp-cli", $techn="Python and Typer", $descr="Provides admin tools for lexical resources via CLI", $tags="", $link="")
 }
 
 Rel_D(User, karpbackend.WebAPI, "Uses", $techn="", $tags="", $link="")
