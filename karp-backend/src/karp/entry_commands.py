@@ -161,9 +161,10 @@ class EntryCommands:
                 message=message,
                 timestamp=utc_now(),
             )
-            uw.repo.save(current_db_entry)
-            uw.commit()
-            self._entry_updated_handler(current_db_entry)
+            if version != current_db_entry.version:
+                uw.repo.save(current_db_entry)
+                uw.commit()
+                self._entry_updated_handler(current_db_entry)
 
         return current_db_entry
 

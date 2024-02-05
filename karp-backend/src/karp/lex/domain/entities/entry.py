@@ -67,7 +67,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
     ):
         self._check_not_discarded()
         if self._body == body:
-            return []
+            return
         self._check_version(version)
         self._body = self._update_field(body, user, timestamp)
         self._message = message or "Entry updated"
