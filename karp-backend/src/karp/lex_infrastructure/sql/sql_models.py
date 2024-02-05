@@ -140,10 +140,9 @@ class BaseHistoryEntry:  # noqa: D101
     op = Column(Enum(EntryOp), nullable=False)
     discarded = Column(Boolean, default=False)
 
-    @classmethod
-    @declared_attr
-    def __table_args__(cls):  # noqa: ANN206, D105
-        return UniqueConstraint("entity_id", "version", name="id_version_unique_constraint")
+    __table_args__ = (
+        UniqueConstraint("entity_id", "version", name="id_version_unique_constraint"),
+    )
 
     @classmethod
     def from_entity(cls, entry: entities.Entry):  # noqa: ANN206, D102
@@ -175,7 +174,6 @@ def get_or_create_entry_history_model(  # noqa: D103
 
     attributes = {
         "__tablename__": history_table_name,
-        "__table_args__": None,
     }
 
     sqlalchemy_class = type(history_table_name, (db.Base, BaseHistoryEntry), attributes)
@@ -198,7 +196,7 @@ def get_or_create_entry_runtime_model(  # noqa: D103, C901
 
     attributes = {
         "__tablename__": table_name,
-        "__table_args__": (foreign_key_constraint,),
+        "__table_args__": (foreign_key_constraint,) + BaseRuntimeEntry.__table_args__,
     }
     child_tables = {}
 
