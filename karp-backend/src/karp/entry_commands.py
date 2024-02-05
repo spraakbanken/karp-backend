@@ -5,7 +5,7 @@ from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_infrastructure import GenericEntryTransformer
-from karp.search_infrastructure.repositories.es6_indicies import Es6IndexUnitOfWork
+from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.timings import utc_now
 
 
@@ -13,12 +13,12 @@ class EntryCommands:
     def __init__(
         self,
         resource_uow,
-        index_uow: Es6IndexUnitOfWork,
+        index: Es6Index,
         entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ):
         self.resource_uow: ResourceUnitOfWork = resource_uow
-        self.index_uow = index_uow
+        self.index = index
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
 
@@ -183,40 +183,34 @@ class EntryCommands:
             self._entry_deleted_handler(entry)
 
     def _entry_added_handler(self, entry):
-        with self.index_uow as uw:
-            entry_dto = EntryDto(
-                id=entry.id,
-                resource=entry.resource_id,
-                entry=entry.body,
-                message=entry.message or "",
-                lastModified=entry.last_modified,
-                lastModifiedBy=entry.last_modified_by,
-                version=1,
-            )
-            uw.repo.add_entries(
-                entry.resource_id,
-                [self.entry_transformer.transform(entry.resource_id, entry_dto)],
-            )
-            uw.commit()
+        entry_dto = EntryDto(
+            id=entry.id,
+            resource=entry.resource_id,
+            entry=entry.body,
+            message=entry.message or "",
+            lastModified=entry.last_modified,
+            lastModifiedBy=entry.last_modified_by,
+            version=1,
+        )
+        self.index.add_entries(
+            entry.resource_id,
+            [self.entry_transformer.transform(entry.resource_id, entry_dto)],
+        )
 
     def _entry_updated_handler(self, entry):
-        with self.index_uow as uw:
-            entry_dto = EntryDto(
-                id=entry.id,
-                resource=entry.resource_id,
-                entry=entry.body,
-                message=entry.message,
-                lastModified=entry.last_modified,
-                lastModifiedBy=entry.last_modified_by,
-                version=entry.version,
-            )
-            uw.repo.add_entries(
-                entry.resource_id,
-                [self.entry_transformer.transform(entry.resource_id, entry_dto)],
-            )
-            uw.commit()
+        entry_dto = EntryDto(
+            id=entry.id,
+            resource=entry.resource_id,
+            entry=entry.body,
+            message=entry.message,
+            lastModified=entry.last_modified,
+            lastModifiedBy=entry.last_modified_by,
+            version=entry.version,
+        )
+        self.index.add_entries(
+            entry.resource_id,
+            [self.entry_transformer.transform(entry.resource_id, entry_dto)],
+        )
 
     def _entry_deleted_handler(self, entry):
-        with self.index_uow as uw:
-            uw.repo.delete_entry(entry.resource_id, entry_id=entry.id)
-            uw.commit()
+        self.index.delete_entry(entry.resource_id, entry_id=entry.id)

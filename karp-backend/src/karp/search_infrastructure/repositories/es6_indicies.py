@@ -5,7 +5,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union  # noqa: F4
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions  # noqa: F401
-from karp.foundation.unit_of_work import UnitOfWork
 from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
     IndexEntry,
@@ -237,32 +236,3 @@ def create_es6_mapping(config: Dict) -> Dict:  # noqa: D103
         }
     }
     return mapping
-
-
-class Es6IndexUnitOfWork(UnitOfWork):  # noqa: D101
-    def __init__(  # noqa: D107
-        self,
-        es: elasticsearch.Elasticsearch,
-        mapping_repo: Es6MappingRepository,
-    ) -> None:
-        super().__init__()
-        self._index = Es6Index(
-            es=es,
-            mapping_repo=mapping_repo,
-        )
-
-    def _commit(self):  # noqa: ANN202
-        logger.debug("Calling _commit in Es6IndexUnitOfWork")
-
-    def rollback(self):  # noqa: ANN201, D102
-        return super().rollback()
-
-    @property
-    def repo(self) -> Es6Index:  # noqa: D102
-        return self._index
-
-    def _close(self):  # noqa: ANN202
-        pass
-
-    def begin(self):  # noqa: ANN201, D102
-        return self

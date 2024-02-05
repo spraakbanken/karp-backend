@@ -8,7 +8,7 @@ from karp.lex.application.queries import (
 from karp.lex.domain import errors as lex_errors
 from karp.lex_infrastructure import GenericEntryViews, SqlReadOnlyResourceRepository
 from karp.search.application.repositories.indicies import IndexEntry
-from karp.search_infrastructure.repositories.es6_indicies import Es6IndexUnitOfWork
+from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
 logger = logging.getLogger(__name__)
 
@@ -16,12 +16,12 @@ logger = logging.getLogger(__name__)
 class GenericEntryTransformer:
     def __init__(
         self,
-        index_uow: Es6IndexUnitOfWork,
+        index: Es6Index,
         resource_repo: SqlReadOnlyResourceRepository,
         entry_views: GenericEntryViews,
     ) -> None:
         super().__init__()
-        self.index_uow = index_uow
+        self.index = index
         self.resource_repo = resource_repo
         self.entry_views = entry_views
 
@@ -30,13 +30,11 @@ class GenericEntryTransformer:
             "transforming entry",
             extra={"entity_id": src_entry.id, "resource_id": resource_id},
         )
-        index_entry = self.index_uow.repo.create_empty_object()
+        index_entry = self.index.create_empty_object()
         index_entry.id = str(src_entry.id)
-        self.index_uow.repo.assign_field(index_entry, "_entry_version", src_entry.version)
-        self.index_uow.repo.assign_field(index_entry, "_last_modified", src_entry.last_modified)
-        self.index_uow.repo.assign_field(
-            index_entry, "_last_modified_by", src_entry.last_modified_by
-        )
+        self.index.assign_field(index_entry, "_entry_version", src_entry.version)
+        self.index.assign_field(index_entry, "_last_modified", src_entry.last_modified)
+        self.index.assign_field(index_entry, "_last_modified_by", src_entry.last_modified_by)
         resource = self.resource_repo.get_by_resource_id(resource_id)
         if not resource:
             raise lex_errors.ResourceNotFound(None, resource_id=resource_id)
@@ -67,22 +65,20 @@ class GenericEntryTransformer:
                 if field_name in _src_entry:
                     for subfield in _src_entry[field_name]:
                         if field_conf["type"] == "object":
-                            subfield_content = self.index_uow.repo.create_empty_object()
+                            subfield_content = self.index.create_empty_object()
                             self._transform_to_index_entry(
                                 resource,
                                 subfield,
                                 subfield_content,
                                 field_conf["fields"].items(),
                             )
-                            self.index_uow.repo.add_to_list_field(
-                                field_content, subfield_content.entry
-                            )
+                            self.index.add_to_list_field(field_content, subfield_content.entry)
                         else:
-                            self.index_uow.repo.add_to_list_field(field_content, subfield)
-                    self.index_uow.repo.assign_field(_index_entry, field_name, field_content)
+                            self.index.add_to_list_field(field_content, subfield)
+                    self.index.assign_field(_index_entry, field_name, field_content)
 
             elif field_conf["type"] == "object":
-                field_content = self.index_uow.repo.create_empty_object()
+                field_content = self.index.create_empty_object()
                 if field_name in _src_entry:
                     self._transform_to_index_entry(
                         resource,
@@ -90,7 +86,7 @@ class GenericEntryTransformer:
                         field_content,
                         field_conf["fields"].items(),
                     )
-                    self.index_uow.repo.assign_field(_index_entry, field_name, field_content)
+                    self.index.assign_field(_index_entry, field_name, field_content)
 
             elif field_conf["type"] in (
                 "integer",
@@ -101,4 +97,4 @@ class GenericEntryTransformer:
             ):
                 if field_name in _src_entry:
                     field_content = _src_entry[field_name]
-                    self.index_uow.repo.assign_field(_index_entry, field_name, field_content)
+                    self.index.assign_field(_index_entry, field_name, field_content)

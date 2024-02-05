@@ -4,11 +4,9 @@ from typing import Dict, Iterable, Optional
 
 import injector
 
-from karp.foundation import repository
-from karp.search_infrastructure import Es6IndexUnitOfWork
+from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.timings import utc_now
 from karp.search.application.repositories import IndexEntry
-from tests.foundation.adapters import InMemoryUnitOfWork
 
 
 @dataclasses.dataclass
@@ -16,7 +14,7 @@ class SearchUnitTestContext:
     container: injector.Injector
 
 
-class InMemoryIndex(repository.Repository):
+class InMemoryIndex(Es6Index):
     @dataclasses.dataclass
     class Index:
         config: Dict
@@ -76,18 +74,8 @@ class InMemoryIndex(repository.Repository):
         return None
 
 
-class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, Es6IndexUnitOfWork):
-    def __init__(self):
-        Es6IndexUnitOfWork.__init__(self)
-        self._index = InMemoryIndex()
-
-    @property
-    def repo(self) -> InMemoryIndex:
-        return self._index
-
-
 class InMemorySearchInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
-    def index_uow(self) -> Es6IndexUnitOfWork:
-        return InMemoryIndexUnitOfWork()
+    def index(self) -> Es6Index:
+        return InMemoryIndex()

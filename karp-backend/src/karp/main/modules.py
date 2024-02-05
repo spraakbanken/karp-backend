@@ -12,8 +12,8 @@ from karp.lex.application.repositories import ResourceUnitOfWork
 from karp.search_infrastructure import (
     GenericPreProcessor,
     GenericEntryTransformer,
-    Es6IndexUnitOfWork,
 )
+from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
 try:
     from importlib.metadata import entry_points
@@ -84,32 +84,32 @@ class CommandsMod(injector.Module):  # noqa: D101
     def entry_commands(
         self,
         resource_uow: ResourceUnitOfWork,
-        index_uow: Es6IndexUnitOfWork,
+        index: Es6Index,
         entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ) -> EntryCommands:
         return EntryCommands(
             resource_uow=resource_uow,
-            index_uow=index_uow,
+            index=index,
             entry_transformer=entry_transformer,
             resource_views=resource_views,
         )
 
     @injector.provider
     def resource_commands(
-        self, resource_uow: ResourceUnitOfWork, index_uow: Es6IndexUnitOfWork
+        self, resource_uow: ResourceUnitOfWork, index: Es6Index
     ) -> ResourceCommands:
-        return ResourceCommands(resource_uow=resource_uow, index_uow=index_uow)
+        return ResourceCommands(resource_uow=resource_uow, index=index)
 
     @injector.provider
     def search_commands(
         self,
-        index_uow: Es6IndexUnitOfWork,
+        index: Es6Index,
         resource_views: GenericResourceViews,
         pre_processor: GenericPreProcessor,
     ) -> SearchCommands:
         return SearchCommands(
-            index_uow=index_uow, resource_views=resource_views, pre_processor=pre_processor
+            index=index, resource_views=resource_views, pre_processor=pre_processor
         )
 
 

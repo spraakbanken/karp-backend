@@ -9,12 +9,10 @@ from karp.lex_infrastructure import GenericEntryViews, SqlReadOnlyResourceReposi
 from karp.search_infrastructure.queries import (
     Es6SearchService,
 )
+from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.search_infrastructure.transformers import (
     GenericEntryTransformer,
     GenericPreProcessor,
-)
-from karp.search_infrastructure.repositories import (
-    Es6IndexUnitOfWork,
 )
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 from karp.search.generic_resources import GenericResourceViews
@@ -27,12 +25,12 @@ class SearchInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def entry_transformer(  # noqa: D102
         self,
-        index_uow: Es6IndexUnitOfWork,
+        index: Es6Index,
         resource_repo: SqlReadOnlyResourceRepository,
         entry_views: GenericEntryViews,
     ) -> GenericEntryTransformer:
         return GenericEntryTransformer(
-            index_uow=index_uow,
+            index=index,
             resource_repo=resource_repo,
             entry_views=entry_views,
         )
@@ -81,12 +79,12 @@ class Es6SearchIndexMod(injector.Module):  # noqa: D101
         )
 
     @injector.provider
-    def es6_index_uow(
+    def es6_index(
         self,
         es: elasticsearch.Elasticsearch,
         mapping_repo: Es6MappingRepository,
-    ) -> Es6IndexUnitOfWork:
-        return Es6IndexUnitOfWork(
+    ) -> Es6Index:
+        return Es6Index(
             es=es,
             mapping_repo=mapping_repo,
         )

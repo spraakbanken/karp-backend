@@ -5,16 +5,16 @@ from karp.lex.application.dtos import ResourceDto
 from karp.lex.domain import entities
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex_core.value_objects import make_unique_id
-from karp.search_infrastructure.repositories.es6_indicies import Es6IndexUnitOfWork
+from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.timings import utc_now
 
 logger = logging.getLogger(__name__)
 
 
 class ResourceCommands:
-    def __init__(self, resource_uow, index_uow):
+    def __init__(self, resource_uow, index):
         self.resource_uow: ResourceUnitOfWork = resource_uow
-        self.index_uow: Es6IndexUnitOfWork = index_uow
+        self.index: Es6Index = index
 
     def create_resource(self, resource_id, name, config, user):
         with self.resource_uow as uow:
@@ -80,16 +80,10 @@ class ResourceCommands:
             self._deleting_index(resource_id)
 
     def _deleting_index(self, resource_id):
-        with self.index_uow as uw:
-            uw.repo.delete_index(resource_id)
-            uw.commit()
+        self.index.delete_index(resource_id)
 
     def _create_search_servie_handler(self, resource):
-        with self.index_uow as uw:
-            uw.repo.create_index(resource.resource_id, resource.config)
-            uw.commit()
+        self.index.create_index(resource.resource_id, resource.config)
 
     def _resource_published_handler(self, resource_id):
-        with self.index_uow as uw:
-            uw.repo.publish_index(resource_id)
-            uw.commit()
+        self.index.publish_index(resource_id)
