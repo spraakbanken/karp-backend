@@ -23,7 +23,6 @@ from karp.main import config, modules
 from karp.main.modules import (
     CommandsMod,
     Db,
-    EventBusMod,
     ElasticSearchMod,
     install_auth_service,
 )
@@ -76,7 +75,6 @@ def _setup_dependency_injection(
         [
             Db(engine),
             CommandsMod(),
-            EventBusMod(),
             ElasticSearchMod(es_url),
             LexInfrastructure(),
             GenericLexInfrastructure(),

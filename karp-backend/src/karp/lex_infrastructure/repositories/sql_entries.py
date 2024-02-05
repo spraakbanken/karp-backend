@@ -21,7 +21,6 @@ import ulid
 
 from karp.foundation.repository import Repository
 from karp.lex_core.value_objects import UniqueId
-from karp.foundation.events import EventBus
 from karp.lex.domain import errors
 from karp.lex.application import repositories
 from karp.lex.domain.entities import Resource
@@ -223,7 +222,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
         session: Session,
-        event_bus: EventBus,
         resource: Resource,
     ):
         SqlUnitOfWork.__init__(self)
@@ -231,7 +229,6 @@ class SqlEntryUnitOfWork(  # noqa: D101
             raise RuntimeError(f"No __enter__ detected in {self=}")
         repositories.EntryUnitOfWork.__init__(
             self,
-            event_bus=event_bus,
             id=resource.entity_id,
             name=resource.resource_id,
             config=resource.config,
@@ -257,6 +254,3 @@ class SqlEntryUnitOfWork(  # noqa: D101
     def repo(self) -> SqlEntryRepository:  # noqa: D102
         self._begin()
         return self._entries
-
-    def collect_new_events(self) -> typing.Iterable:  # noqa: D102
-        return super().collect_new_events() if self._entries else []

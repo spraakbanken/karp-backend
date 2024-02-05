@@ -1,17 +1,12 @@
-import abc  # noqa: D100, I001
-from datetime import datetime
 import logging
 import re
-from typing import Dict, List, Optional, Any, Tuple, Union
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions
-
-from karp.foundation.events import EventBus  # noqa: F401
-
 from karp.lex.domain.entities import Entry  # noqa: F401
 from karp.search.domain.errors import UnsupportedField
-
 
 logger = logging.getLogger("karp")
 

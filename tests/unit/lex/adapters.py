@@ -4,7 +4,6 @@ import typing
 from typing import Dict, Iterable, Optional, Tuple
 
 import injector
-from karp.foundation.events import EventBus
 from karp.foundation.repository import Repository
 from karp.lex.application import repositories as lex_repositories
 from karp.lex.application.dtos import ResourceDto
@@ -161,7 +160,6 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
         config: typing.Dict,
         message: str,
         user: str,
-        event_bus: EventBus,
     ):
         InMemoryUnitOfWork.__init__(self)
         lex_repositories.EntryUnitOfWork.__init__(
@@ -170,7 +168,6 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
             name=name,
             config=config,
             message=message,
-            event_bus=event_bus,
         )
         self._entries = InMemoryEntryRepository()
         # self.id = entity_id
@@ -183,9 +180,9 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
 
 
 class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUnitOfWork):
-    def __init__(self, event_bus: EventBus):  # noqa: ANN204
+    def __init__(self):  # noqa: ANN204
         InMemoryUnitOfWork.__init__(self)
-        lex_repositories.ResourceUnitOfWork.__init__(self, event_bus=event_bus)
+        lex_repositories.ResourceUnitOfWork.__init__(self)
         self._resources = InMemoryResourceRepository()
 
     @property
@@ -199,8 +196,8 @@ class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUn
 class InMemoryLexInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
-    def resource_uow(self, event_bus: EventBus) -> lex_repositories.ResourceUnitOfWork:
-        return InMemoryResourceUnitOfWork(event_bus=event_bus)
+    def resource_uow(self) -> lex_repositories.ResourceUnitOfWork:
+        return InMemoryResourceUnitOfWork()
 
     @injector.provider
     @injector.singleton

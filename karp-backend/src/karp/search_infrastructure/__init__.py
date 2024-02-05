@@ -3,7 +3,6 @@ import elasticsearch
 import injector
 import logging
 
-from karp.foundation.events import EventBus
 from karp import lex
 from karp.lex_infrastructure import GenericEntryViews, SqlReadOnlyResourceRepository
 from karp.search.application.repositories import IndexUnitOfWork
@@ -83,14 +82,12 @@ class Es6SearchIndexMod(injector.Module):  # noqa: D101
         )
 
     @injector.provider
-    def es6_index_uow(  # noqa: D102
+    def es6_index_uow(
         self,
         es: elasticsearch.Elasticsearch,
-        event_bus: EventBus,
         mapping_repo: Es6MappingRepository,
     ) -> IndexUnitOfWork:
         return Es6IndexUnitOfWork(
             es=es,
-            event_bus=event_bus,
             mapping_repo=mapping_repo,
         )

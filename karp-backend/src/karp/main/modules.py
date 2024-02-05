@@ -24,7 +24,6 @@ from injector import Provider, T
 from sqlalchemy.engine import Connection, Engine
 from sqlalchemy.orm import Session
 
-from karp.foundation.events import EventBus, InjectorEventBus
 from karp.auth_infrastructure import (
     AuthInfrastructure,
     JwtAuthInfrastructure,
@@ -109,12 +108,6 @@ class CommandsMod(injector.Module):  # noqa: D101
         return SearchCommands(
             index_uow=index_uow, resource_views=resource_views, pre_processor=pre_processor
         )
-
-
-class EventBusMod(injector.Module):  # noqa: D101
-    @injector.provider
-    def event_bus(self, inj: injector.Injector) -> EventBus:  # noqa: D102
-        return InjectorEventBus(inj)
 
 
 class Db(injector.Module):  # noqa: D101

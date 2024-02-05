@@ -1,17 +1,16 @@
 """Entity"""  # noqa: D400, D415
 import datetime  # noqa: I001
-from typing import Optional, Union
+from typing import Optional, Union, List, Iterable
 
 from deprecated import deprecated  # noqa: F401
 
 from karp.foundation.errors import ConsistencyError
 from karp.foundation import errors
-from karp.foundation import events
 from karp.lex_core.value_objects import UniqueId
 from karp.timings import monotonic_utc_now
 
 
-class Entity(events.EventMixin):  # noqa: D101
+class Entity:
     DiscardedEntityError = errors.DiscardedEntityError
 
     def __init__(  # noqa: D107
@@ -24,9 +23,6 @@ class Entity(events.EventMixin):  # noqa: D101
         self._id = id
         self._discarded = discarded
         self._root = aggregate_root
-
-    def queue_event(self, event):  # noqa: ANN201, D102
-        self._record_event(event)
 
     @property
     def id(self):  # noqa: A003, ANN201

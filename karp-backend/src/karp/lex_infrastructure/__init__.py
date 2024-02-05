@@ -5,7 +5,6 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
 from karp import lex
-from karp.foundation.events import EventBus
 from karp.lex.application.repositories import (
     ResourceUnitOfWork,
 )
@@ -46,11 +45,9 @@ class LexInfrastructure(injector.Module):  # noqa: D101
     def resource_uow(  # noqa: D102
         self,
         session: Session,
-        event_bus: EventBus,
     ) -> ResourceUnitOfWork:
         return SqlResourceUnitOfWork(
             session=session,
-            event_bus=event_bus,
         )
 
 

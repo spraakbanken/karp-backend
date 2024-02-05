@@ -5,7 +5,6 @@ from typing import Dict, Iterable, Optional
 import injector
 
 from karp.foundation import repository
-from karp.foundation.events import EventBus
 from karp.timings import utc_now
 from karp.search.application.repositories import IndexUnitOfWork, IndexEntry
 from tests.foundation.adapters import InMemoryUnitOfWork
@@ -14,7 +13,6 @@ from tests.foundation.adapters import InMemoryUnitOfWork
 @dataclasses.dataclass
 class SearchUnitTestContext:
     container: injector.Injector
-    event_bus: EventBus
 
 
 class InMemoryIndex(repository.Repository):
@@ -78,8 +76,8 @@ class InMemoryIndex(repository.Repository):
 
 
 class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, IndexUnitOfWork):
-    def __init__(self, event_bus: EventBus):  # noqa: ANN204
-        IndexUnitOfWork.__init__(self, event_bus=event_bus)  # type:ignore [arg-type]
+    def __init__(self):
+        IndexUnitOfWork.__init__(self)
         self._index = InMemoryIndex()
 
     @property
@@ -90,5 +88,5 @@ class InMemoryIndexUnitOfWork(InMemoryUnitOfWork, IndexUnitOfWork):
 class InMemorySearchInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
-    def index_uow(self, event_bus: EventBus) -> IndexUnitOfWork:
-        return InMemoryIndexUnitOfWork(event_bus=event_bus)
+    def index_uow(self) -> IndexUnitOfWork:
+        return InMemoryIndexUnitOfWork()

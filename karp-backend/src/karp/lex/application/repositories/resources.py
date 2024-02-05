@@ -4,7 +4,7 @@ import typing
 import uuid  # noqa: F401
 from typing import Dict, List, Optional, Tuple, Union  # noqa: F401
 
-from karp.foundation import events, repository, unit_of_work
+from karp.foundation import repository, unit_of_work
 from karp.lex.domain import entities
 
 from karp.lex.domain import errors
@@ -64,9 +64,9 @@ class ResourceRepository(repository.Repository):  # noqa: D101
         raise NotImplementedError()
 
 
-class ResourceUnitOfWork(unit_of_work.UnitOfWork):  # noqa: D101
-    def __init__(self, event_bus: events.EventBus):  # noqa: D107, ANN204
-        unit_of_work.UnitOfWork.__init__(self, event_bus=event_bus)
+class ResourceUnitOfWork(unit_of_work.UnitOfWork):
+    def __init__(self):
+        unit_of_work.UnitOfWork.__init__(self)
 
     @property
     def resources(self) -> ResourceRepository:  # noqa: D102

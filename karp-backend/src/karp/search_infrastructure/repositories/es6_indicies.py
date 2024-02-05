@@ -5,7 +5,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union  # noqa: F4
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions  # noqa: F401
-from karp.foundation.events import EventBus
 from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
     IndexEntry,
@@ -244,10 +243,9 @@ class Es6IndexUnitOfWork(IndexUnitOfWork):  # noqa: D101
     def __init__(  # noqa: D107
         self,
         es: elasticsearch.Elasticsearch,
-        event_bus: EventBus,
         mapping_repo: Es6MappingRepository,
     ) -> None:
-        super().__init__(event_bus=event_bus)
+        super().__init__()
         self._index = Es6Index(
             es=es,
             mapping_repo=mapping_repo,

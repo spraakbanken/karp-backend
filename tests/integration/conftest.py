@@ -9,12 +9,11 @@ from sqlalchemy.orm import session, sessionmaker
 
 from alembic.config import main as alembic_main  # noqa: F401
 
-from karp.resource_commands import ResourceCommands
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
 from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure
-from karp.main.modules import CommandsMod, EventBusMod
+from karp.main.modules import CommandsMod
 from karp.lex_infrastructure import GenericLexInfrastructure
-from karp.foundation.events import EventBus
+
 
 # environ["TESTING"] = "True"
 # environ["ELASTICSEARCH_HOST"] = "localhost:9202"
@@ -44,7 +43,6 @@ def integration_ctx() -> adapters.IntegrationTestContext:
     container = injector.Injector(
         [
             CommandsMod(),
-            EventBusMod(),
             SearchInfrastructure(),
             GenericLexInfrastructure(),
             InMemoryLexInfrastructure(),
@@ -55,5 +53,4 @@ def integration_ctx() -> adapters.IntegrationTestContext:
     )
     return adapters.IntegrationTestContext(
         container=container,
-        event_bus=container.get(EventBus),  # type: ignore
     )

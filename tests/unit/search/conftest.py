@@ -1,9 +1,8 @@
 import injector  # noqa: I001
 import pytest
 
-from karp.foundation.events import EventBus
 from karp.lex_infrastructure import GenericLexInfrastructure
-from karp.main.modules import CommandsMod, EventBusMod
+from karp.main.modules import CommandsMod
 from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
 
@@ -15,7 +14,6 @@ def search_unit_ctx() -> adapters.SearchUnitTestContext:
     container = injector.Injector(
         [
             CommandsMod(),
-            EventBusMod(),
             SearchInfrastructure(),
             GenericLexInfrastructure(),
             InMemoryLexInfrastructure(),
@@ -26,5 +24,4 @@ def search_unit_ctx() -> adapters.SearchUnitTestContext:
     )
     return adapters.SearchUnitTestContext(
         container=container,
-        event_bus=container.get(EventBus),  # type: ignore
     )

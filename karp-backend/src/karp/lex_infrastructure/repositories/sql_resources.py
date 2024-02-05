@@ -9,7 +9,6 @@ from sqlalchemy import sql
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, func, text
 
-from karp.foundation.events import EventBus
 from karp.lex.domain import entities
 from karp.lex.application import repositories
 from karp.lex.domain.entities.resource import Resource
@@ -149,12 +148,11 @@ class SqlResourceUnitOfWork(  # noqa: D101
 ):
     def __init__(  # noqa: D107, ANN204
         self,
-        event_bus: EventBus,
         *,
         session: Session,
     ):
         SqlUnitOfWork.__init__(self, session=session)
-        repositories.ResourceUnitOfWork.__init__(self, event_bus)
+        repositories.ResourceUnitOfWork.__init__(self)
         self._resources = None
 
     def _begin(self):  # noqa: ANN202
@@ -169,6 +167,4 @@ class SqlResourceUnitOfWork(  # noqa: D101
         return self._resources
 
     def resource_to_entry_uow(self, resource: Resource) -> SqlEntryUnitOfWork:
-        return SqlEntryUnitOfWork(
-            session=self._session, event_bus=self.event_bus, resource=resource
-        )
+        return SqlEntryUnitOfWork(session=self._session, resource=resource)

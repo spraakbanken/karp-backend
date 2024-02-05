@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Tuple
 
-from karp.foundation import entity, events, unit_of_work
+from karp.foundation import entity, unit_of_work
 from karp.lex_core.value_objects import UniqueId
 
 
@@ -13,12 +13,11 @@ class EntryUnitOfWork(  # noqa: D101
         name: str,
         config: Dict,
         message: str,
-        event_bus: events.EventBus,
         id: UniqueId,  # noqa: A002
         *args,  # noqa: ANN002
         **kwargs,  # noqa: ANN003
     ):
-        unit_of_work.UnitOfWork.__init__(self, event_bus)
+        unit_of_work.UnitOfWork.__init__(self)
         entity.TimestampedEntity.__init__(self, *args, id=id, **kwargs)
         self._name = name
         self._config = config
