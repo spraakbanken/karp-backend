@@ -6,11 +6,14 @@ import sys
 
 from karp.entry_commands import EntryCommands
 from karp.resource_commands import ResourceCommands
-from karp.search import IndexUnitOfWork
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_commands import SearchCommands
 from karp.lex.application.repositories import ResourceUnitOfWork
-from karp.search_infrastructure import GenericPreProcessor, GenericEntryTransformer
+from karp.search_infrastructure import (
+    GenericPreProcessor,
+    GenericEntryTransformer,
+    Es6IndexUnitOfWork,
+)
 
 try:
     from importlib.metadata import entry_points
@@ -81,7 +84,7 @@ class CommandsMod(injector.Module):  # noqa: D101
     def entry_commands(
         self,
         resource_uow: ResourceUnitOfWork,
-        index_uow: IndexUnitOfWork,
+        index_uow: Es6IndexUnitOfWork,
         entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ) -> EntryCommands:
@@ -94,14 +97,14 @@ class CommandsMod(injector.Module):  # noqa: D101
 
     @injector.provider
     def resource_commands(
-        self, resource_uow: ResourceUnitOfWork, index_uow: IndexUnitOfWork
+        self, resource_uow: ResourceUnitOfWork, index_uow: Es6IndexUnitOfWork
     ) -> ResourceCommands:
         return ResourceCommands(resource_uow=resource_uow, index_uow=index_uow)
 
     @injector.provider
     def search_commands(
         self,
-        index_uow: IndexUnitOfWork,
+        index_uow: Es6IndexUnitOfWork,
         resource_views: GenericResourceViews,
         pre_processor: GenericPreProcessor,
     ) -> SearchCommands:

@@ -3,9 +3,8 @@ import logging
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
-from karp.search import IndexUnitOfWork
 from karp.search.generic_resources import GenericResourceViews
-from karp.search_infrastructure import GenericPreProcessor
+from karp.search_infrastructure import Es6IndexUnitOfWork, GenericPreProcessor
 from karp.timings import utc_now
 
 logger = logging.getLogger(__name__)
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 class SearchCommands:
     def __init__(
         self,
-        index_uow: IndexUnitOfWork,
+        index_uow: Es6IndexUnitOfWork,
         resource_views: GenericResourceViews,
         pre_processor: GenericPreProcessor,
     ):

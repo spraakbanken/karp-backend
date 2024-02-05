@@ -7,15 +7,16 @@ from karp.lex.application.queries import (
 )
 from karp.lex.domain import errors as lex_errors
 from karp.lex_infrastructure import GenericEntryViews, SqlReadOnlyResourceRepository
-from karp.search.application.repositories.indicies import IndexEntry, IndexUnitOfWork
+from karp.search.application.repositories.indicies import IndexEntry
+from karp.search_infrastructure.repositories.es6_indicies import Es6IndexUnitOfWork
 
 logger = logging.getLogger(__name__)
 
 
 class GenericEntryTransformer:
-    def __init__(  # noqa: D107
+    def __init__(
         self,
-        index_uow: IndexUnitOfWork,
+        index_uow: Es6IndexUnitOfWork,
         resource_repo: SqlReadOnlyResourceRepository,
         entry_views: GenericEntryViews,
     ) -> None:

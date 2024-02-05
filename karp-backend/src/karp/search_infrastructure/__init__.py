@@ -5,7 +5,6 @@ import logging
 
 from karp import lex
 from karp.lex_infrastructure import GenericEntryViews, SqlReadOnlyResourceRepository
-from karp.search.application.repositories import IndexUnitOfWork
 
 from karp.search_infrastructure.queries import (
     Es6SearchService,
@@ -28,7 +27,7 @@ class SearchInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def entry_transformer(  # noqa: D102
         self,
-        index_uow: IndexUnitOfWork,
+        index_uow: Es6IndexUnitOfWork,
         resource_repo: SqlReadOnlyResourceRepository,
         entry_views: GenericEntryViews,
     ) -> GenericEntryTransformer:
@@ -86,7 +85,7 @@ class Es6SearchIndexMod(injector.Module):  # noqa: D101
         self,
         es: elasticsearch.Elasticsearch,
         mapping_repo: Es6MappingRepository,
-    ) -> IndexUnitOfWork:
+    ) -> Es6IndexUnitOfWork:
         return Es6IndexUnitOfWork(
             es=es,
             mapping_repo=mapping_repo,

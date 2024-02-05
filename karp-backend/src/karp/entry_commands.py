@@ -3,9 +3,9 @@ from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
-from karp.search import IndexUnitOfWork
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_infrastructure import GenericEntryTransformer
+from karp.search_infrastructure.repositories.es6_indicies import Es6IndexUnitOfWork
 from karp.timings import utc_now
 
 
@@ -13,7 +13,7 @@ class EntryCommands:
     def __init__(
         self,
         resource_uow,
-        index_uow: IndexUnitOfWork,
+        index_uow: Es6IndexUnitOfWork,
         entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ):

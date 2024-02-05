@@ -5,10 +5,10 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union  # noqa: F4
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions  # noqa: F401
+from karp.foundation.unit_of_work import UnitOfWork
 from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
     IndexEntry,
-    IndexUnitOfWork,
 )
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 
@@ -239,7 +239,7 @@ def create_es6_mapping(config: Dict) -> Dict:  # noqa: D103
     return mapping
 
 
-class Es6IndexUnitOfWork(IndexUnitOfWork):  # noqa: D101
+class Es6IndexUnitOfWork(UnitOfWork):  # noqa: D101
     def __init__(  # noqa: D107
         self,
         es: elasticsearch.Elasticsearch,
