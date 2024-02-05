@@ -13,7 +13,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
 import injector  # noqa: F401
-from sqlalchemy.engine import Connection
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 import logging  # noqa: F811
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -181,21 +181,19 @@ def create_app() -> FastAPI:  # noqa: D103
         response: Response = JSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )
-        try:
-            request.state.connection = app_context.container.get(Connection)
-            request.state.session = Session(bind=request.state.connection)
+        # Create a new session per request
+        engine = app_context.container.get(Engine)
+        print("creating a new session on engine", engine)
+        with Session(bind=engine) as session:
+            print("created a new session")
             request.state.container = app_context.container.create_child_injector(
-                modules.request_configuration(
-                    conn=request.state.connection,
-                    session=request.state.session,
-                )
+                modules.bind_session(session)
             )
+            request.state.session = session
 
             response = await call_next(request)
-        finally:
-            connection = getattr(request.state, "connection", None)
-            if connection:
-                request.state.connection.close()
+            print("done with call")
+        print("dropping the session")
 
         return response
 

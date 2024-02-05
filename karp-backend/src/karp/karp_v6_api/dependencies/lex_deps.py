@@ -11,7 +11,6 @@ from karp.lex_infrastructure import (
     SqlReadOnlyResourceRepository,
     SqlResourceUnitOfWork,
 )
-from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 from starlette.requests import Request  # noqa: F401
 
@@ -25,15 +24,15 @@ def get_resource_unit_of_work(
 
 
 def get_resources_read_repo(  # noqa: D103
-    conn: Connection = Depends(db_deps.get_connection),
+    session: Session = Depends(get_session),
 ) -> SqlReadOnlyResourceRepository:
-    return SqlReadOnlyResourceRepository(conn)
+    return SqlReadOnlyResourceRepository(session)
 
 
 def get_published_resources(  # noqa: D103
-    conn: Connection = Depends(db_deps.get_connection),
+    session: Session = Depends(get_session),
 ) -> SqlGetPublishedResources:
-    return SqlGetPublishedResources(conn)
+    return SqlGetPublishedResources(session)
 
 
 def get_entry_diff(  # noqa: D103

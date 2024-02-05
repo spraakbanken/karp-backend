@@ -2,7 +2,6 @@ import logging  # noqa: D100, I001
 from typing import Optional
 import sys  # noqa: F401
 
-from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 import typer
 
@@ -27,15 +26,7 @@ def create_app():  # noqa: ANN201, D103
             ctx.obj = {}
         else:
             ctx.obj = {}
-            ctx.obj["connection"] = app_context.container.get(Connection)
-            ctx.obj["session"] = Session(bind=ctx.obj["connection"])
-            logger.debug("create session", extra={"session": ctx.obj["session"]})
-            ctx.obj["container"] = app_context.container.create_child_injector(
-                modules.request_configuration(
-                    conn=ctx.obj["connection"],
-                    session=ctx.obj["session"],
-                )
-            )
+            ctx.obj["container"] = app_context.container
 
     subapps.add_subapps(app)
     load_commands(app)

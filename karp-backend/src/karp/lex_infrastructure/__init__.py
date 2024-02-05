@@ -1,7 +1,6 @@
 import logging  # noqa: I001
 
 import injector
-from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
 from karp.lex_infrastructure.queries import (
@@ -23,19 +22,19 @@ logger = logging.getLogger(__name__)
 class LexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def get_published_resources(  # noqa: D102
-        self, conn: Connection
+        self, session: Session
     ) -> SqlGetPublishedResources:
-        return SqlGetPublishedResources(conn)
+        return SqlGetPublishedResources(session)
 
     @injector.provider
-    def get_resources(self, conn: Connection) -> SqlGetResources:  # noqa: D102
-        return SqlGetResources(conn)
+    def get_resources(self, session: Session) -> SqlGetResources:  # noqa: D102
+        return SqlGetResources(session)
 
     @injector.provider
     def read_only_resource_repo(  # noqa: D102
-        self, conn: Connection
+        self, session: Session
     ) -> SqlReadOnlyResourceRepository:
-        return SqlReadOnlyResourceRepository(conn)
+        return SqlReadOnlyResourceRepository(session)
 
     @injector.provider
     def resource_uow(  # noqa: D102

@@ -117,15 +117,22 @@ class Db(injector.Module):  # noqa: D101
     def __init__(self, engine: Engine) -> None:  # noqa: D107
         self._engine = engine
 
-    @injector.provider
-    def connection(self) -> Connection:  # noqa: D102
-        return self._engine.connect()
+    # By default, everything shares a single session. However, bind_session can
+    # be used to replace the session, for example to have a per-request session.
+
+    # Note: we don't define a Connection provider here, because then classes
+    # using Connection and classes using Session would execute in different
+    # transactions (and hence not necessarily see each others' changes).
+    # (It doesn't work to define a Connection provider using session.connection()
+    # because that gets invalidated every time the session commits.)
 
     @injector.provider
-    def session(self, connection: Connection) -> Session:  # noqa: D102
-        return Session(bind=connection)
+    @injector.singleton
+    def session(self, engine: Engine) -> Session:
+        return Session(bind=engine)
 
     @injector.provider
+    @injector.singleton
     def engine(self) -> Engine:
         return self._engine
 
@@ -148,12 +155,11 @@ def install_auth_service(  # noqa: ANN201, D103
     container.binder.install(JwtAuthInfrastructure(Path(settings["auth.jwt.pubkey.path"])))
 
 
-def request_configuration(conn: Connection, session: Session):  # noqa: ANN201, D103
-    def configure_request_container(binder):  # noqa: ANN202
-        binder.bind(Connection, to=injector.InstanceProvider(conn))
+def bind_session(session: Session):  # noqa: ANN201, D103
+    def configure_child(binder):  # noqa: ANN202
         binder.bind(Session, to=injector.InstanceProvider(session))
 
-    return configure_request_container
+    return configure_child
 
 
 def load_modules(group_name: str, app=None):  # noqa: ANN201, D103

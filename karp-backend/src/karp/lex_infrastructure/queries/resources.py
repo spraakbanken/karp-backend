@@ -29,7 +29,7 @@ class SqlGetPublishedResources(SqlQuery):  # noqa: D101
                 ResourceModel.is_published == True,  # noqa: E712
             ),
         )
-        return (_row_to_dto(row) for row in self._conn.execute(stmt))
+        return (_row_to_dto(row) for row in self._session.connection().execute(stmt))
 
 
 class SqlGetResources(SqlQuery):  # noqa: D101
@@ -50,7 +50,7 @@ class SqlGetResources(SqlQuery):  # noqa: D101
                 ResourceModel.last_modified == subq.c.maxdate,
             ),
         )
-        return [_row_to_dto(row) for row in self._conn.execute(stmt)]
+        return [_row_to_dto(row) for row in self._session.connection().execute(stmt)]
 
 
 class SqlReadOnlyResourceRepository(SqlQuery):
@@ -77,7 +77,7 @@ class SqlReadOnlyResourceRepository(SqlQuery):
             .order_by(ResourceModel.last_modified.desc())
         )
         print(f"stmt={stmt!s}")
-        row = self._conn.execute(stmt).first()
+        row = self._session.connection().execute(stmt).first()
 
         return _row_to_dto(row) if row else None
 
@@ -100,7 +100,7 @@ class SqlReadOnlyResourceRepository(SqlQuery):
             ),
         )
         stmt = stmt.order_by(ResourceModel.last_modified.desc())
-        row = self._conn.execute(stmt).first()
+        row = self._session.connection().execute(stmt).first()
 
         return _row_to_dto(row) if row else None
 
@@ -122,7 +122,7 @@ class SqlReadOnlyResourceRepository(SqlQuery):
                 ResourceModel.is_published == True,  # noqa: E712
             ),
         )
-        return (_row_to_dto(row) for row in self._conn.execute(stmt))
+        return (_row_to_dto(row) for row in self._session.connection().execute(stmt))
 
     def get_all_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
         subq = (
@@ -141,7 +141,7 @@ class SqlReadOnlyResourceRepository(SqlQuery):
                 ResourceModel.last_modified == subq.c.maxdate,
             ),
         )
-        return (_row_to_dto(row) for row in self._conn.execute(stmt))
+        return (_row_to_dto(row) for row in self._session.connection().execute(stmt))
 
 
 def _row_to_dto(row_proxy) -> ResourceDto:

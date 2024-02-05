@@ -1,6 +1,6 @@
-from sqlalchemy.engine import Connection  # noqa: D100
+from sqlalchemy.orm import Session  # noqa: D100
 
 
 class SqlQuery:  # noqa: D101
-    def __init__(self, conn: Connection):  # noqa: D107, ANN204
-        self._conn = conn
+    def __init__(self, session: Session):  # noqa: D107, ANN204
+        self._session = session
