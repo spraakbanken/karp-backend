@@ -18,9 +18,7 @@ depends_on = None
 
 def upgrade():
     conn = op.get_bind()
-    for (table_name,) in conn.execute(
-        sa.text("select distinct table_name from resources")
-    ):
+    for (table_name,) in conn.execute(sa.text("select distinct table_name from resources")):
         op.execute(
             f"alter table {table_name} drop constraint if exists id_version_unique_constraint"
         )

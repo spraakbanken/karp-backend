@@ -196,7 +196,7 @@ def get_or_create_entry_runtime_model(  # noqa: D103, C901
 
     attributes = {
         "__tablename__": table_name,
-        "__table_args__": (foreign_key_constraint, *BaseRuntimeEntry.__table_args__)
+        "__table_args__": (foreign_key_constraint, *BaseRuntimeEntry.__table_args__),
     }
     child_tables = {}
 
