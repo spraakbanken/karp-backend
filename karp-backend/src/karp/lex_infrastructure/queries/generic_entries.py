@@ -48,7 +48,7 @@ class GenericEntryViews:
         with self.resource_uow as uw:
             entry_uow = uw.entry_uow_by_resource_id(resource_id)
         with entry_uow as uw:
-            return self._entry_to_entry_dto(uw.repo.by_id(UniqueId.validate(id)), resource_id)
+            return _entry_to_entry_dto(uw.repo.by_id(UniqueId.validate(id)), resource_id)
 
     def get_by_id_optional(  # noqa: D102
         self,
