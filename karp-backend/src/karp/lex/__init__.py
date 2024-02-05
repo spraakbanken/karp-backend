@@ -3,9 +3,6 @@ from karp.lex.application.queries import (
     GetHistoryDto,
     HistoryDto,
 )
-from karp.lex.application.repositories import (
-    ResourceUnitOfWork,
-)
 from karp.lex.domain.value_objects import EntrySchema
 
 __all__ = [
@@ -13,8 +10,6 @@ __all__ = [
     "EntryDto",
     "GetHistoryDto",
     "HistoryDto",
-    # repositories
-    "ResourceUnitOfWork",
     # value objects
     "EntrySchema",
 ]

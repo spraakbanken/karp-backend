@@ -3,7 +3,6 @@ import typing  # noqa: D100, I001
 from sb_json_tools import jsondiff
 import logging
 
-from karp import lex
 from karp.lex import GetHistoryDto, HistoryDto
 from karp.lex.domain import errors
 
@@ -14,8 +13,8 @@ from karp.lex.application.queries import (
     EntryHistoryRequest,
     EntryDiffRequest,
 )
-from karp.lex.application.repositories import ResourceUnitOfWork
-from karp.lex_core.value_objects import UniqueId, UniqueIdStr, unique_id
+from karp.lex_core.value_objects import UniqueId, UniqueIdStr
+from karp.lex_infrastructure.repositories import SqlResourceUnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ def _entry_to_entry_dto(entry: Entry, resource_id: str) -> EntryDto:
 class GenericEntryViews:
     def __init__(  # noqa: D107
         self,
-        resource_uow: ResourceUnitOfWork,
+        resource_uow: SqlResourceUnitOfWork,
     ) -> None:
         super().__init__()
         self.resource_uow = resource_uow
@@ -72,7 +71,7 @@ class GenericEntryViews:
 class GenericEntryQuery:  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self,
-        resource_uow: lex.ResourceUnitOfWork,
+        resource_uow: SqlResourceUnitOfWork,
     ):
         self.resource_uow = resource_uow
 

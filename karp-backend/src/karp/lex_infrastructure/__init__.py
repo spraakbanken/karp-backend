@@ -4,10 +4,6 @@ import injector
 from sqlalchemy.engine import Connection
 from sqlalchemy.orm import Session
 
-from karp import lex
-from karp.lex.application.repositories import (
-    ResourceUnitOfWork,
-)
 from karp.lex_infrastructure.queries import (
     SqlGetPublishedResources,
     SqlGetResources,
@@ -45,7 +41,7 @@ class LexInfrastructure(injector.Module):  # noqa: D101
     def resource_uow(  # noqa: D102
         self,
         session: Session,
-    ) -> ResourceUnitOfWork:
+    ) -> SqlResourceUnitOfWork:
         return SqlResourceUnitOfWork(
             session=session,
         )
@@ -55,7 +51,7 @@ class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def get_entry_diff(  # noqa: D102
         self,
-        resource_uow: lex.ResourceUnitOfWork,
+        resource_uow: SqlResourceUnitOfWork,
     ) -> GenericGetEntryDiff:
         return GenericGetEntryDiff(
             resource_uow=resource_uow,
@@ -64,7 +60,7 @@ class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def entry_views(  # noqa: D102
         self,
-        resource_uow: ResourceUnitOfWork,
+        resource_uow: SqlResourceUnitOfWork,
     ) -> GenericEntryViews:
         return GenericEntryViews(
             resource_uow=resource_uow,
@@ -73,7 +69,7 @@ class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def get_history(  # noqa: D102
         self,
-        resource_uow: ResourceUnitOfWork,
+        resource_uow: SqlResourceUnitOfWork,
     ) -> GenericGetHistory:
         return GenericGetHistory(
             resource_uow=resource_uow,
@@ -82,7 +78,7 @@ class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def get_entry_history(  # noqa: D102
         self,
-        resource_uow: ResourceUnitOfWork,
+        resource_uow: SqlResourceUnitOfWork,
     ) -> GenericGetEntryHistory:
         return GenericGetEntryHistory(
             resource_uow=resource_uow,

@@ -14,7 +14,7 @@ from karp.lex.domain import entities as lex_entities
 from karp.lex_core.value_objects import UniqueId, UniqueIdType, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
 from karp.lex.domain import errors
-from karp.lex_infrastructure import SqlReadOnlyResourceRepository
+from karp.lex_infrastructure import SqlReadOnlyResourceRepository, SqlResourceUnitOfWork
 from tests.foundation.adapters import InMemoryUnitOfWork
 
 
@@ -179,10 +179,10 @@ class InMemoryEntryUnitOfWork(InMemoryUnitOfWork, lex_repositories.EntryUnitOfWo
         return self._entries
 
 
-class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUnitOfWork):
+class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, SqlResourceUnitOfWork):
     def __init__(self):  # noqa: ANN204
         InMemoryUnitOfWork.__init__(self)
-        lex_repositories.ResourceUnitOfWork.__init__(self)
+        SqlResourceUnitOfWork.__init__(self)
         self._resources = InMemoryResourceRepository()
 
     @property
@@ -196,14 +196,14 @@ class InMemoryResourceUnitOfWork(InMemoryUnitOfWork, lex_repositories.ResourceUn
 class InMemoryLexInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
-    def resource_uow(self) -> lex_repositories.ResourceUnitOfWork:
+    def resource_uow(self) -> SqlResourceUnitOfWork:
         return InMemoryResourceUnitOfWork()
 
     @injector.provider
     @injector.singleton
     def resource_repo(
         self,
-        resource_uow: lex_repositories.ResourceUnitOfWork,
+        resource_uow: SqlResourceUnitOfWork,
     ) -> SqlReadOnlyResourceRepository:
         return InMemoryReadResourceRepository(
             resources=resource_uow.repo.resources,  # type: ignore

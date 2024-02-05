@@ -1,8 +1,9 @@
-from karp.lex import EntryDto, ResourceUnitOfWork
+from karp.lex import EntryDto
 from karp.lex.application.repositories import EntryUnitOfWork
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
+from karp.lex_infrastructure.repositories import SqlResourceUnitOfWork
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_infrastructure import GenericEntryTransformer
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
@@ -17,7 +18,7 @@ class EntryCommands:
         entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ):
-        self.resource_uow: ResourceUnitOfWork = resource_uow
+        self.resource_uow: SqlResourceUnitOfWork = resource_uow
         self.index = index
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views

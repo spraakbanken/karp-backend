@@ -4,6 +4,7 @@ import pytest
 from fastapi import status
 
 from karp import auth
+from karp.lex_infrastructure import SqlResourceUnitOfWork
 from karp.main.errors import ClientErrorCodes
 from karp.timings import utc_now
 from karp.lex_core.value_objects import (
@@ -11,11 +12,10 @@ from karp.lex_core.value_objects import (
     unique_id,
 )
 from karp.lex.application.queries import EntryDto
-from karp.lex.application.repositories import ResourceUnitOfWork
 
 
 def get_entry_uow(container, resource_id: str):  # noqa: ANN201
-    resource_uow = container.get(ResourceUnitOfWork)  # type: ignore [misc]
+    resource_uow = container.get(SqlResourceUnitOfWork)  # type: ignore [misc]
     return resource_uow.entry_uow_by_resource_id("places")
 
 

@@ -8,7 +8,6 @@ from karp.foundation import repository, unit_of_work
 from karp.lex.domain import entities
 
 from karp.lex.domain import errors
-from karp.lex_core.value_objects import UniqueId
 from karp.lex.application.repositories.entries import EntryUnitOfWork
 
 logger = logging.getLogger("karp")
@@ -62,26 +61,3 @@ class ResourceRepository(repository.Repository):  # noqa: D101
     @abc.abstractmethod
     def _get_all_resources(self) -> typing.Iterable[entities.Resource]:
         raise NotImplementedError()
-
-
-class ResourceUnitOfWork(unit_of_work.UnitOfWork):
-    def __init__(self):
-        unit_of_work.UnitOfWork.__init__(self)
-
-    @property
-    def resources(self) -> ResourceRepository:  # noqa: D102
-        return self.repo
-
-    def entry_uow_by_id(self, entity_id: Union[UniqueId, str]) -> Optional[EntryUnitOfWork]:
-        with self as uw:
-            resource = self.repo.by_id(entity_id)
-            return self.resource_to_entry_uow(resource) if resource else None
-
-    def entry_uow_by_resource_id(self, resource_id: str) -> Optional[EntryUnitOfWork]:
-        with self:
-            resource = self.repo.by_resource_id(resource_id)
-            return self.resource_to_entry_uow(resource) if resource else None
-
-    @abc.abstractmethod
-    def resource_to_entry_uow(self, resource: entities.Resource) -> EntryUnitOfWork:
-        raise NotImplementedError

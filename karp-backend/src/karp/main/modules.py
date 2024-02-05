@@ -5,10 +5,10 @@ from typing import Dict, Type
 import sys
 
 from karp.entry_commands import EntryCommands
+from karp.lex_infrastructure import SqlResourceUnitOfWork
 from karp.resource_commands import ResourceCommands
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_commands import SearchCommands
-from karp.lex.application.repositories import ResourceUnitOfWork
 from karp.search_infrastructure import (
     GenericPreProcessor,
     GenericEntryTransformer,
@@ -83,7 +83,7 @@ class CommandsMod(injector.Module):  # noqa: D101
     @injector.provider
     def entry_commands(
         self,
-        resource_uow: ResourceUnitOfWork,
+        resource_uow: SqlResourceUnitOfWork,
         index: Es6Index,
         entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
@@ -97,7 +97,7 @@ class CommandsMod(injector.Module):  # noqa: D101
 
     @injector.provider
     def resource_commands(
-        self, resource_uow: ResourceUnitOfWork, index: Es6Index
+        self, resource_uow: SqlResourceUnitOfWork, index: Es6Index
     ) -> ResourceCommands:
         return ResourceCommands(resource_uow=resource_uow, index=index)
 

@@ -58,7 +58,9 @@ def run_migrations_online():  # noqa: ANN201
 
     logger.info("migrating url: %s", karp_config.DATABASE_URL)
     connectable = config.attributes.get("connection", None)
-    config.set_main_option("sqlalchemy.url", karp_config.DATABASE_URL.render_as_string(hide_password=False))
+    config.set_main_option(
+        "sqlalchemy.url", karp_config.DATABASE_URL.render_as_string(hide_password=False)
+    )
 
     if connectable is None:
         connectable = engine_from_config(
