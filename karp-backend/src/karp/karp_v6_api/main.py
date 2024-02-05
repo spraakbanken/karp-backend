@@ -28,7 +28,6 @@ from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
 from karp.main import modules, config
 from karp.karp_v6_api.routes import router as api_router
-from karp.karp_v6_api import tasks
 
 
 querying_description = """
@@ -105,9 +104,6 @@ def create_app() -> FastAPI:  # noqa: D103
     )
 
     app.state.app_context = app_context
-
-    app.add_event_handler("startup", tasks.create_start_app_handler(app))
-    app.add_event_handler("shutdown", tasks.create_stop_app_handler(app))
 
     main.install_auth_service(app_context.container, app_context.settings)
 
