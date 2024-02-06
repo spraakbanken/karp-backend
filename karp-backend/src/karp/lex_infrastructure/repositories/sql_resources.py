@@ -20,6 +20,7 @@ from karp.db_infrastructure.sql_repository import SqlRepository
 from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
 
 logger = logging.getLogger(__name__)
+from karp.foundation.cache import Cache
 
 
 class SqlResourceRepository(  # noqa: D101
@@ -28,6 +29,11 @@ class SqlResourceRepository(  # noqa: D101
     def __init__(self, session: Session):  # noqa: D107, ANN204
         repositories.ResourceRepository.__init__(self)
         SqlRepository.__init__(self, session=session)
+        # caches lookups to self._by_resource_id
+        # Note: we ought to also invalidate the cache if a transaction is rolled back.
+        # It's OK right now because after rolling back we always end the session, so
+        # the SqlResourceRepository itself is no longer valid.
+        self._cache = Cache(self._by_resource_id_uncached)
 
     def _save(self, resource: Resource):  # noqa: ANN202
         self._check_has_session()
@@ -36,6 +42,7 @@ class SqlResourceRepository(  # noqa: D101
         if resource.discarded:
             # If resource was discarded, drop the table containing all data entries
             self._session.execute(text("DROP table " + resource.table_name))
+        self._cache.clear()
 
     def resource_ids(self) -> List[str]:  # noqa: D102
         self._check_has_session()
@@ -75,6 +82,12 @@ class SqlResourceRepository(  # noqa: D101
         return resource_dto.to_entity() if resource_dto else None
 
     def _by_resource_id(
+        self,
+        resource_id: str,
+    ) -> Optional[Resource]:
+        return self._cache[resource_id]
+
+    def _by_resource_id_uncached(
         self,
         resource_id: str,
     ) -> Optional[Resource]:
