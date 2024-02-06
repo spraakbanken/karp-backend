@@ -18,7 +18,7 @@ class ResourceCommands:
         self.index: Es6Index = index
 
     def create_resource(self, resource_id, name, config, user):
-        existing_resource = self.resources.get_by_resource_id_optional(resource_id)
+        existing_resource = self.resources.by_resource_id_optional(resource_id)
         if existing_resource and not existing_resource.discarded:
             raise IntegrityError(f"Resource with resource_id='{resource_id}' already exists.")
 

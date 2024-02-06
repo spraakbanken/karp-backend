@@ -19,15 +19,15 @@ class ResourceRepository(repository.Repository):  # noqa: D101
     def resource_ids(self) -> typing.Iterable[str]:  # noqa: D102
         raise NotImplementedError()
 
-    def get_by_resource_id(  # noqa: D102
+    def by_resource_id(  # noqa: D102
         self, resource_id: str, *, version: Optional[int] = None
     ) -> entities.Resource:
-        if resource := self.get_by_resource_id_optional(resource_id, version=version):
+        if resource := self.by_resource_id_optional(resource_id, version=version):
             return resource
         else:
             raise self.EntityNotFound(f"Entity with resource_id='{resource_id}' can't be found.")
 
-    def get_by_resource_id_optional(  # noqa: D102
+    def by_resource_id_optional(  # noqa: D102
         self, resource_id: str, *, version: Optional[int] = None
     ) -> typing.Optional[entities.Resource]:
         resource = self._by_resource_id(resource_id)
@@ -37,8 +37,6 @@ class ResourceRepository(repository.Repository):  # noqa: D101
         if version:
             resource = self._by_id(resource.entity_id, version=version)
         return resource
-
-    by_resource_id = get_by_resource_id
 
     @abc.abstractmethod
     def _by_resource_id(

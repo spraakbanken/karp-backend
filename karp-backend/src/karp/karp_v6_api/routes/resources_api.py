@@ -40,7 +40,7 @@ def get_resource_by_resource_id(  # noqa: D103
     resource_id: str,
     resource_repo: SqlReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
 ) -> ResourcePublic:
-    if resource := resource_repo.get_by_resource_id(resource_id):
+    if resource := resource_repo.by_resource_id(resource_id):
         return resource  # type: ignore [return-value]
     else:
         raise HTTPException(

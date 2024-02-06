@@ -67,7 +67,7 @@ class InMemoryReadResourceRepository(SqlReadOnlyResourceRepository):
     def __init__(self, resources: Dict):  # noqa: ANN204
         self.resources = resources
 
-    def get_by_id(
+    def by_id(
         self,
         id: UniqueIdPrimitive,
         version: Optional[int] = None,  # noqa: A002
@@ -77,7 +77,7 @@ class InMemoryReadResourceRepository(SqlReadOnlyResourceRepository):
             return self._row_to_dto(resource)
         return None
 
-    def _get_by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
+    def _by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
         return next(
             (
                 self._row_to_dto(res)

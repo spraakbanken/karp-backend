@@ -54,18 +54,18 @@ class SqlGetResources(SqlQuery):  # noqa: D101
 
 
 class SqlReadOnlyResourceRepository(SqlQuery):
-    def get_by_resource_id(  # noqa: D102
+    def by_resource_id(  # noqa: D102
         self, resource_id: str, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
-        resource = self._get_by_resource_id(resource_id)
+        resource = self._by_resource_id(resource_id)
         if not resource:
             return None
 
         if version is not None:
-            resource = self.get_by_id(resource.id, version=version)
+            resource = self.by_id(resource.id, version=version)
         return resource
 
-    def get_by_id(  # noqa: D102
+    def by_id(  # noqa: D102
         self, entity_id: UniqueId, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         filters: dict[str, UniqueId | str | int] = {"entity_id": entity_id}
@@ -81,7 +81,7 @@ class SqlReadOnlyResourceRepository(SqlQuery):
 
         return _row_to_dto(row) if row else None
 
-    def _get_by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
+    def _by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
         subq = (
             sql.select(
                 ResourceModel.entity_id,

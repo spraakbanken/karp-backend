@@ -209,7 +209,7 @@ def validate_entries(  # noqa: ANN201, D103
         config = json_streams.jsonlib.load_from_file(config_path)
     elif resource_id_raw:
         repo = inject_from_ctx(SqlReadOnlyResourceRepository, ctx=ctx)
-        if resource := repo.get_by_resource_id(resource_id_raw):
+        if resource := repo.by_resource_id(resource_id_raw):
             config = resource.config
         else:
             typer.echo(f"Can't find resource '{resource_id_raw}'", err=True)

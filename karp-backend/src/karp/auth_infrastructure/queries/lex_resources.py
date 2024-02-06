@@ -43,7 +43,7 @@ class LexIsResourceProtected:
     def query(self, resource_id: str, level: PermissionLevel) -> bool:  # noqa: D102
         if level in [PermissionLevel.write, PermissionLevel.admin]:
             return True
-        resource = self.resource_repo.get_by_resource_id(resource_id=resource_id)
+        resource = self.resource_repo.by_resource_id(resource_id=resource_id)
         if not resource:
             raise errors.ResourceNotFound(f"Can't find resource '{resource_id}'")
         return resource.config.get("protected", {}).get("read", False)

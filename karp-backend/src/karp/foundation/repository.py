@@ -26,9 +26,7 @@ class Repository(abc.ABC):  # noqa: D101
             return entity
         raise self.EntityNotFound(f"Entity with id={id} is not found")
 
-    get_by_id = by_id
-
-    def get_by_id_optional(  # noqa: D102
+    def by_id_optional(  # noqa: D102
         self,
         id: UniqueId,  # noqa: A002
         *,

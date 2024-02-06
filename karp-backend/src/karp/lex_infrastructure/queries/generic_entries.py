@@ -39,7 +39,7 @@ class GenericEntryViews:
         super().__init__()
         self.resources = resources
 
-    def get_by_id(  # noqa: D102
+    def by_id(  # noqa: D102
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
@@ -47,13 +47,13 @@ class GenericEntryViews:
         entries = self.resources.entries_by_resource_id(resource_id)
         return _entry_to_entry_dto(entries.by_id(UniqueId.validate(id)), resource_id)
 
-    def get_by_id_optional(  # noqa: D102
+    def by_id_optional(  # noqa: D102
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
     ) -> typing.Optional[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
-        if entry := entries.get_by_id_optional(UniqueId.validate(id)):
+        if entry := entries.by_id_optional(UniqueId.validate(id)):
             return _entry_to_entry_dto(entry, resource_id)
         return None
 

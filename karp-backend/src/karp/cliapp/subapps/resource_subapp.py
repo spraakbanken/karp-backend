@@ -154,7 +154,7 @@ def show(  # noqa: ANN201, D103
     ctx: typer.Context, resource_id: str, version: Optional[int] = None
 ):
     repo = inject_from_ctx(SqlReadOnlyResourceRepository, ctx)  # type: ignore [misc]
-    resource = repo.get_by_resource_id(resource_id, version=version)
+    resource = repo.by_resource_id(resource_id, version=version)
     if not resource:
         version_str = version or "latest"
         typer.echo(f"Can't find resource '{resource_id}', version '{version_str}'", err=True)

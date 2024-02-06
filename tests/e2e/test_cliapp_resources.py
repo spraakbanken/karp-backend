@@ -34,4 +34,4 @@ class TestCliResourceLifetime:
             assert result.exit_code == 0
 
         resource_repo = app_context.container.get(SqlReadOnlyResourceRepository)  # type: ignore [misc]
-        assert resource_repo.get_by_resource_id("lexlex") is not None
+        assert resource_repo.by_resource_id("lexlex") is not None
