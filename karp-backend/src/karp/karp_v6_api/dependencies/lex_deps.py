@@ -3,6 +3,7 @@ from karp.karp_v6_api.dependencies import db_deps
 from karp.karp_v6_api.dependencies.db_deps import (
     get_session,
 )
+from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 from karp.lex.application.repositories import ResourceRepository
 from karp.lex_infrastructure import (
     GenericGetEntryDiff,
@@ -25,9 +26,9 @@ def get_resource_repository(
 
 
 def get_resources_read_repo(  # noqa: D103
-    session: Session = Depends(get_session),
+    resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
 ) -> SqlReadOnlyResourceRepository:
-    return SqlReadOnlyResourceRepository(session)
+    return SqlReadOnlyResourceRepository(resources)
 
 
 def get_published_resources(  # noqa: D103

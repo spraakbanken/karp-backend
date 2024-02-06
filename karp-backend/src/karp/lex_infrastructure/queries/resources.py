@@ -8,6 +8,8 @@ from karp.lex_core.value_objects.unique_id import UniqueId
 
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.lex_infrastructure.queries.base import SqlQuery
+from karp.lex.application.repositories import ResourceRepository
+from karp.lex.domain.entities import Resource
 
 
 class SqlGetPublishedResources(SqlQuery):  # noqa: D101
@@ -53,96 +55,43 @@ class SqlGetResources(SqlQuery):  # noqa: D101
         return [_row_to_dto(row) for row in self._session.connection().execute(stmt)]
 
 
-class SqlReadOnlyResourceRepository(SqlQuery):
+class SqlReadOnlyResourceRepository:
+    def __init__(self, resources: ResourceRepository):
+        self._resources = resources
+
     def by_resource_id(  # noqa: D102
         self, resource_id: str, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
-        resource = self._by_resource_id(resource_id)
-        if not resource:
-            return None
-
-        if version is not None:
-            resource = self.by_id(resource.id, version=version)
-        return resource
+        result = self._resources.by_resource_id_optional(resource_id, version=version)
+        if result is not None:
+            return resource_to_dto(result)
 
     def by_id(  # noqa: D102
         self, entity_id: UniqueId, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
-        filters: dict[str, UniqueId | str | int] = {"entity_id": entity_id}
-        if version:
-            filters["version"] = version
-        stmt = (
-            sql.select(ResourceModel)
-            .filter_by(**filters)
-            .order_by(ResourceModel.last_modified.desc())
-        )
-        print(f"stmt={stmt!s}")
-        row = self._session.connection().execute(stmt).first()
-
-        return _row_to_dto(row) if row else None
-
-    def _by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
-        subq = (
-            sql.select(
-                ResourceModel.entity_id,
-                sa.func.max(ResourceModel.last_modified).label("maxdate"),
-            )
-            .group_by(ResourceModel.entity_id)
-            .subquery("t2")
-        )
-
-        stmt = sql.select(ResourceModel).join(
-            subq,
-            sa.and_(
-                ResourceModel.entity_id == subq.c.entity_id,
-                ResourceModel.last_modified == subq.c.maxdate,
-                ResourceModel.resource_id == resource_id,
-            ),
-        )
-        stmt = stmt.order_by(ResourceModel.last_modified.desc())
-        row = self._session.connection().execute(stmt).first()
-
-        return _row_to_dto(row) if row else None
+        result = self._resources.by_id_optional(entity_id, version=version)
+        if result is not None:
+            return resource_to_dto(result)
 
     def get_published_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
-        subq = (
-            sql.select(
-                ResourceModel.entity_id,
-                sa.func.max(ResourceModel.last_modified).label("maxdate"),
-            )
-            .group_by(ResourceModel.entity_id)
-            .subquery("t2")
-        )
-
-        stmt = sql.select(ResourceModel).join(
-            subq,
-            sa.and_(
-                ResourceModel.entity_id == subq.c.entity_id,
-                ResourceModel.last_modified == subq.c.maxdate,
-                ResourceModel.is_published == True,  # noqa: E712
-            ),
-        )
-        return (_row_to_dto(row) for row in self._session.connection().execute(stmt))
+        return map(resource_to_dto, self._resources.get_published_resources())
 
     def get_all_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
-        subq = (
-            sql.select(
-                ResourceModel.entity_id,
-                sa.func.max(ResourceModel.last_modified).label("maxdate"),
-            )
-            .group_by(ResourceModel.entity_id)
-            .subquery("t2")
-        )
+        return map(resource_to_dto, self._resources.get_all_resources())
 
-        stmt = sql.select(ResourceModel).join(
-            subq,
-            sa.and_(
-                ResourceModel.entity_id == subq.c.entity_id,
-                ResourceModel.last_modified == subq.c.maxdate,
-            ),
-        )
-        return (_row_to_dto(row) for row in self._session.connection().execute(stmt))
-
+def resource_to_dto(resource: Resource) -> ResourceDto:
+    return ResourceDto(
+        id=resource.id,
+        resourceId=resource.resource_id,
+        version=resource.version,
+        config=resource.config,
+        isPublished=resource.is_published,
+        lastModified=resource.last_modified,
+        lastModifiedBy=resource.last_modified_by,
+        message=resource.message,
+        name=resource.name,
+        discarded=resource.discarded,
+    )
 
 def _row_to_dto(row_proxy) -> ResourceDto:
     return ResourceDto(

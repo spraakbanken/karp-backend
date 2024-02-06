@@ -33,9 +33,9 @@ class LexInfrastructure(injector.Module):  # noqa: D101
 
     @injector.provider
     def read_only_resource_repo(  # noqa: D102
-        self, session: Session
+        self, resources: ResourceRepository
     ) -> SqlReadOnlyResourceRepository:
-        return SqlReadOnlyResourceRepository(session)
+        return SqlReadOnlyResourceRepository(resources)
 
     @injector.provider
     def resources(  # noqa: D102
