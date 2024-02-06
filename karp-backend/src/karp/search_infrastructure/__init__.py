@@ -3,34 +3,17 @@ import elasticsearch
 import injector
 import logging
 
-from karp.lex_infrastructure import (
-    GenericEntryViews,
-    ResourceQueries,
-)
 from karp.lex.application.repositories import ResourceRepository
 
 from karp.search_infrastructure.queries import (
     Es6SearchService,
 )
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
-from karp.search_infrastructure.transformers import (
-    GenericPreProcessor,
-)
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 from karp.search.generic_resources import GenericResourceViews
 
 
 logger = logging.getLogger(__name__)
-
-
-class SearchInfrastructure(injector.Module):  # noqa: D101
-    def pre_processor(  # noqa: D102
-        self,
-        entry_views: GenericEntryViews,
-    ) -> GenericPreProcessor:
-        return GenericPreProcessor(
-            entry_views=entry_views,
-        )
 
 
 class GenericSearchInfrastructure(injector.Module):  # noqa: D101

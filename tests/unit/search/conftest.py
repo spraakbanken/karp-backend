@@ -3,7 +3,7 @@ import pytest
 
 from karp.lex_infrastructure import GenericLexInfrastructure
 from karp.main.modules import CommandsMod
-from karp.search_infrastructure import SearchInfrastructure, GenericSearchInfrastructure
+from karp.search_infrastructure import GenericSearchInfrastructure
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
 
 from . import adapters
@@ -14,7 +14,6 @@ def search_unit_ctx() -> adapters.SearchUnitTestContext:
     container = injector.Injector(
         [
             CommandsMod(),
-            SearchInfrastructure(),
             GenericLexInfrastructure(),
             InMemoryLexInfrastructure(),
             GenericSearchInfrastructure(),

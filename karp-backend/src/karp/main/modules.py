@@ -6,12 +6,10 @@ import sys
 
 from karp.entry_commands import EntryCommands
 from karp.lex.application.repositories import ResourceRepository
+from karp.lex_infrastructure import ResourceQueries, GenericEntryViews
 from karp.resource_commands import ResourceCommands
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_commands import SearchCommands
-from karp.search_infrastructure import (
-    GenericPreProcessor,
-)
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
 try:
@@ -105,11 +103,11 @@ class CommandsMod(injector.Module):  # noqa: D101
     def search_commands(
         self,
         index: Es6Index,
-        resource_views: GenericResourceViews,
-        pre_processor: GenericPreProcessor,
+        resource_queries: ResourceQueries,
+        entry_views: GenericEntryViews,
     ) -> SearchCommands:
         return SearchCommands(
-            index=index, resource_views=resource_views, pre_processor=pre_processor
+            index=index, resource_queries=resource_queries, entry_views=entry_views
         )
 
 

@@ -17,7 +17,6 @@ from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import (
     GenericSearchInfrastructure,
     Es6SearchIndexMod,
-    SearchInfrastructure,
 )
 from karp.main import config, modules
 from karp.main.modules import (
@@ -79,7 +78,6 @@ def _setup_dependency_injection(
             LexInfrastructure(),
             GenericLexInfrastructure(),
             GenericSearchInfrastructure(),
-            SearchInfrastructure(),
         ],
         auto_bind=False,
     )
