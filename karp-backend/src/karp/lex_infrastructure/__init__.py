@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 class LexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def read_only_resource_repo(  # noqa: D102
+    def resource_queries(  # noqa: D102
         self, resources: ResourceRepository
     ) -> ResourceQueries:
         return ResourceQueries(resources)

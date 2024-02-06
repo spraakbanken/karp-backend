@@ -29,11 +29,11 @@ class SearchInfrastructure(injector.Module):  # noqa: D101
     def entry_transformer(  # noqa: D102
         self,
         index: Es6Index,
-        resource_repo: ResourceQueries,
+        resource_queries: ResourceQueries,
     ) -> GenericEntryTransformer:
         return GenericEntryTransformer(
             index=index,
-            resource_repo=resource_repo,
+            resource_queries=resource_queries,
         )
 
     @injector.provider

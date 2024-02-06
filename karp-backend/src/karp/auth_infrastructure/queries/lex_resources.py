@@ -33,14 +33,14 @@ class LexGetResourcePermissions:
 
 
 class LexIsResourceProtected:
-    def __init__(self, resource_repo: ResourceQueries) -> None:  # noqa: D107
+    def __init__(self, resource_queries: ResourceQueries) -> None:  # noqa: D107
         super().__init__()
-        self.resource_repo = resource_repo
+        self.resource_queries = resource_queries
 
     def query(self, resource_id: str, level: PermissionLevel) -> bool:  # noqa: D102
         if level in [PermissionLevel.write, PermissionLevel.admin]:
             return True
-        resource = self.resource_repo.by_resource_id_optional(resource_id=resource_id)
+        resource = self.resource_queries.by_resource_id_optional(resource_id=resource_id)
         if not resource:
             raise errors.ResourceNotFound(f"Can't find resource '{resource_id}'")
         return resource.config.get("protected", {}).get("read", False)

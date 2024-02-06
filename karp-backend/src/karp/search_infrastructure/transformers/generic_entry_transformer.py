@@ -17,11 +17,11 @@ class GenericEntryTransformer:
     def __init__(
         self,
         index: Es6Index,
-        resource_repo: ResourceQueries,
+        resource_queries: ResourceQueries,
     ) -> None:
         super().__init__()
         self.index = index
-        self.resource_repo = resource_repo
+        self.resource_queries = resource_queries
 
     def transform(self, resource_id: str, src_entry: EntryDto) -> IndexEntry:
         logger.debug(
@@ -33,7 +33,7 @@ class GenericEntryTransformer:
         self.index.assign_field(index_entry, "_entry_version", src_entry.version)
         self.index.assign_field(index_entry, "_last_modified", src_entry.last_modified)
         self.index.assign_field(index_entry, "_last_modified_by", src_entry.last_modified_by)
-        resource = self.resource_repo.by_resource_id_optional(resource_id)
+        resource = self.resource_queries.by_resource_id_optional(resource_id)
         if not resource:
             raise lex_errors.ResourceNotFound(None, resource_id=resource_id)
         self._transform_to_index_entry(

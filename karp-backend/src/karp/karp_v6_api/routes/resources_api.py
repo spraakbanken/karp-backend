@@ -38,9 +38,9 @@ def get_all_resources(  # noqa: D103
 )
 def get_resource_by_resource_id(  # noqa: D103
     resource_id: str,
-    resource_repo: ResourceQueries = Depends(deps.get_resources_read_repo),
+    resource_queries: ResourceQueries = Depends(deps.get_resource_queries),
 ) -> ResourcePublic:
-    if resource := resource_repo.by_resource_id_optional(resource_id):
+    if resource := resource_queries.by_resource_id_optional(resource_id):
         return resource  # type: ignore [return-value]
     else:
         raise HTTPException(

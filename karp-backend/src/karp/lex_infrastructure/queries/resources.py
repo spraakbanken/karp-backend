@@ -13,7 +13,9 @@ from karp.lex.domain.entities import Resource
 
 class ResourceQueries:
     """Implements various queries about the resource list, giving answers as DTO.
-    Used for example in resources_api.py."""
+    Used for example in resources_api.py.
+
+    For now the API is a subset of ResourceRepository, but returning DTOs."""
 
     def __init__(self, resources: ResourceRepository):
         self._resources = resources

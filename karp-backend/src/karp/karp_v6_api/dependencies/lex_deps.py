@@ -24,7 +24,7 @@ def get_resource_repository(
     )
 
 
-def get_resources_read_repo(  # noqa: D103
+def get_resource_queries(  # noqa: D103
     resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
 ) -> ResourceQueries:
     return ResourceQueries(resources)

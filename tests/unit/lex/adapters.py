@@ -63,37 +63,6 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
         return (res.resource_id for res in self.resources)
 
 
-class InMemoryReadResourceRepository(ResourceQueries):
-    def __init__(self, resources: Dict):  # noqa: ANN204
-        self.resources = resources
-
-    def by_id(
-        self,
-        id: UniqueIdPrimitive,
-        version: Optional[int] = None,  # noqa: A002
-    ) -> Optional[ResourceDto]:
-        resource_id = UniqueId.validate(id)
-        if resource := self.resources.get(resource_id):
-            return self._row_to_dto(resource)
-        return None
-
-    def _by_resource_id(self, resource_id: str) -> Optional[ResourceDto]:
-        return next(
-            (
-                self._row_to_dto(res)
-                for res in self.resources.values()
-                if res.resource_id == resource_id
-            ),
-            None,
-        )
-
-    def _row_to_dto(self, res: lex_entities.Resource) -> ResourceDto:
-        return ResourceDto(**res.serialize())
-
-    def get_published_resources(self) -> Iterable[ResourceDto]:
-        return (self._row_to_dto(res) for res in self.resources.values() if res.is_published)
-
-
 class InMemoryEntryRepository(lex_repositories.EntryRepository):
     def __init__(self):  # noqa: ANN204
         super().__init__()
@@ -160,10 +129,10 @@ class InMemoryLexInfrastructure(injector.Module):
 
     @injector.provider
     @injector.singleton
-    def resource_repo(
+    def resource_queries(
         self,
         resources: ResourceRepository,
     ) -> ResourceQueries:
-        return InMemoryReadResourceRepository(
+        return ResourceQueries(
             resources=resources.repo.resources,  # type: ignore
         )

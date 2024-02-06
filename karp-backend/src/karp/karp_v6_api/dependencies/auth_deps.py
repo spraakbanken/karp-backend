@@ -36,13 +36,13 @@ def bearer_scheme(authorization=Header(None)):  # noqa: ANN201, D103
 
 
 def get_resource_permissions(  # noqa: D103
-    resources: ResourceQueries = Depends(lex_deps.get_resources_read_repo),
+    resources: ResourceQueries = Depends(lex_deps.get_resource_queries),
 ) -> LexGetResourcePermissions:
     return LexGetResourcePermissions(resources)
 
 
 def get_is_resource_protected(  # noqa: D103
-    repo: ResourceQueries = Depends(lex_deps.get_resources_read_repo),
+    repo: ResourceQueries = Depends(lex_deps.get_resource_queries),
 ) -> LexIsResourceProtected:
     return LexIsResourceProtected(repo)
 
