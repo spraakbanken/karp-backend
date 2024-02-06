@@ -91,7 +91,7 @@ def parser() -> KarpQueryV6Parser:
             es_dsl.Q("match", baseform={"query": "noquotes", "operator": "and"}),
         ),
         (
-            'and(regexp|name|"\s")',
+            r'and(regexp|name|"\s")',
             es_dsl.Q("regexp", name="\\s"),
         ),
     ],
