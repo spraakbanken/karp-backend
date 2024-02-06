@@ -30,12 +30,10 @@ class SearchInfrastructure(injector.Module):  # noqa: D101
         self,
         index: Es6Index,
         resource_repo: ResourceQueries,
-        entry_views: GenericEntryViews,
     ) -> GenericEntryTransformer:
         return GenericEntryTransformer(
             index=index,
             resource_repo=resource_repo,
-            entry_views=entry_views,
         )
 
     @injector.provider

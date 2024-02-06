@@ -6,7 +6,7 @@ from karp.lex.application.queries import (
     EntryDto,
 )
 from karp.lex.domain import errors as lex_errors
-from karp.lex_infrastructure import GenericEntryViews, ResourceQueries
+from karp.lex_infrastructure import ResourceQueries
 from karp.search.application.repositories.indicies import IndexEntry
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
@@ -18,12 +18,10 @@ class GenericEntryTransformer:
         self,
         index: Es6Index,
         resource_repo: ResourceQueries,
-        entry_views: GenericEntryViews,
     ) -> None:
         super().__init__()
         self.index = index
         self.resource_repo = resource_repo
-        self.entry_views = entry_views
 
     def transform(self, resource_id: str, src_entry: EntryDto) -> IndexEntry:
         logger.debug(
@@ -39,9 +37,6 @@ class GenericEntryTransformer:
         if not resource:
             raise lex_errors.ResourceNotFound(None, resource_id=resource_id)
         self._transform_to_index_entry(
-            resource,
-            # resource_repo,
-            # indexer,
             src_entry.entry,
             index_entry,
             resource.config["fields"].items(),
@@ -49,9 +44,8 @@ class GenericEntryTransformer:
         logger.debug("transformed entry", extra={"entry": src_entry, "index_entry": index_entry})
         return index_entry
 
-    def _transform_to_index_entry(  # noqa: ANN202, C901
+    def _transform_to_index_entry(
         self,
-        resource: ResourceDto,
         _src_entry: typing.Dict,
         _index_entry: IndexEntry,
         fields,
@@ -67,7 +61,6 @@ class GenericEntryTransformer:
                         if field_conf["type"] == "object":
                             subfield_content = self.index.create_empty_object()
                             self._transform_to_index_entry(
-                                resource,
                                 subfield,
                                 subfield_content,
                                 field_conf["fields"].items(),
@@ -81,7 +74,6 @@ class GenericEntryTransformer:
                 field_content = self.index.create_empty_object()
                 if field_name in _src_entry:
                     self._transform_to_index_entry(
-                        resource,
                         _src_entry[field_name],
                         field_content,
                         field_conf["fields"].items(),
