@@ -1,7 +1,7 @@
 """SQL Resource Repository"""  # noqa: D400, D415
 import logging  # noqa: I001
 import typing
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Iterable
 
 from karp.lex.application.repositories import ResourceRepository, EntryRepository
 from karp.lex_core.value_objects import UniqueId
@@ -115,7 +115,7 @@ class SqlResourceRepository(  # noqa: D101
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
-    def _get_published_resources(self) -> typing.List[entities.Resource]:
+    def _get_published_resources(self) -> typing.Iterable[entities.Resource]:
         self._check_has_session()
         subq = (
             self._session.query(
@@ -134,9 +134,9 @@ class SqlResourceRepository(  # noqa: D101
             ),
         )
 
-        return [resource_dto.to_entity() for resource_dto in query if resource_dto is not None]
+        return (resource_dto.to_entity() for resource_dto in query if resource_dto is not None)
 
-    def _get_all_resources(self) -> typing.List[entities.Resource]:
+    def _get_all_resources(self) -> typing.Iterable[entities.Resource]:
         self._check_has_session()
         subq = (
             self._session.query(
@@ -154,7 +154,7 @@ class SqlResourceRepository(  # noqa: D101
             ),
         )
 
-        return [resource_dto.to_entity() for resource_dto in query if resource_dto is not None]
+        return (resource_dto.to_entity() for resource_dto in query if resource_dto is not None)
 
     def resource_to_entries(self, resource: Resource) -> SqlEntryRepository:
         return SqlEntryRepository(session=self._session, resource=resource)

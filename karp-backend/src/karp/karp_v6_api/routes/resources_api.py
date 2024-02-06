@@ -9,7 +9,7 @@ from karp.karp_v6_api.schemas import ResourcePublic, ResourceProtected
 from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 from karp.lex.application.dtos import ResourceDto
-from karp.lex_infrastructure import SqlGetResources, SqlReadOnlyResourceRepository
+from karp.lex_infrastructure import ResourceQueries
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -27,9 +27,9 @@ def list_resource_permissions(  # noqa: ANN201, D103
     response_model=list[ResourceProtected],
 )
 def get_all_resources(  # noqa: D103
-    get_resources: SqlGetResources = Depends(inject_from_req(SqlGetResources)),
-) -> typing.Iterable[ResourceDto]:
-    return get_resources.query()
+    resources: ResourceQueries = Depends(inject_from_req(ResourceQueries)),
+) -> typing.List[ResourceDto]:
+    return list(resources.get_all_resources())
 
 
 @router.get(
@@ -38,7 +38,7 @@ def get_all_resources(  # noqa: D103
 )
 def get_resource_by_resource_id(  # noqa: D103
     resource_id: str,
-    resource_repo: SqlReadOnlyResourceRepository = Depends(deps.get_resources_read_repo),
+    resource_repo: ResourceQueries = Depends(deps.get_resources_read_repo),
 ) -> ResourcePublic:
     if resource := resource_repo.by_resource_id_optional(resource_id):
         return resource  # type: ignore [return-value]

@@ -6,7 +6,7 @@ from karp.lex.application.queries import (
     EntryDto,
 )
 from karp.lex.domain import errors as lex_errors
-from karp.lex_infrastructure import GenericEntryViews, SqlReadOnlyResourceRepository
+from karp.lex_infrastructure import GenericEntryViews, ResourceQueries
 from karp.search.application.repositories.indicies import IndexEntry
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
@@ -17,7 +17,7 @@ class GenericEntryTransformer:
     def __init__(
         self,
         index: Es6Index,
-        resource_repo: SqlReadOnlyResourceRepository,
+        resource_repo: ResourceQueries,
         entry_views: GenericEntryViews,
     ) -> None:
         super().__init__()

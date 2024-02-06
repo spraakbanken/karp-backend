@@ -15,7 +15,7 @@ from karp.lex.domain import entities as lex_entities
 from karp.lex_core.value_objects import UniqueId, UniqueIdType, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
 from karp.lex.domain import errors
-from karp.lex_infrastructure import SqlReadOnlyResourceRepository
+from karp.lex_infrastructure import ResourceQueries
 
 
 @dataclasses.dataclass
@@ -63,7 +63,7 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
         return (res.resource_id for res in self.resources)
 
 
-class InMemoryReadResourceRepository(SqlReadOnlyResourceRepository):
+class InMemoryReadResourceRepository(ResourceQueries):
     def __init__(self, resources: Dict):  # noqa: ANN204
         self.resources = resources
 
@@ -163,7 +163,7 @@ class InMemoryLexInfrastructure(injector.Module):
     def resource_repo(
         self,
         resources: ResourceRepository,
-    ) -> SqlReadOnlyResourceRepository:
+    ) -> ResourceQueries:
         return InMemoryReadResourceRepository(
             resources=resources.repo.resources,  # type: ignore
         )

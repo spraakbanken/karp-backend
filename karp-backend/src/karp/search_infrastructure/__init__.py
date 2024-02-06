@@ -5,7 +5,7 @@ import logging
 
 from karp.lex_infrastructure import (
     GenericEntryViews,
-    SqlReadOnlyResourceRepository,
+    ResourceQueries,
 )
 from karp.lex.application.repositories import ResourceRepository
 
@@ -29,7 +29,7 @@ class SearchInfrastructure(injector.Module):  # noqa: D101
     def entry_transformer(  # noqa: D102
         self,
         index: Es6Index,
-        resource_repo: SqlReadOnlyResourceRepository,
+        resource_repo: ResourceQueries,
         entry_views: GenericEntryViews,
     ) -> GenericEntryTransformer:
         return GenericEntryTransformer(

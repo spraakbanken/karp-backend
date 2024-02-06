@@ -9,8 +9,7 @@ from karp.lex_infrastructure import (
     GenericGetEntryDiff,
     GenericGetEntryHistory,
     GenericGetHistory,
-    SqlGetPublishedResources,
-    SqlReadOnlyResourceRepository,
+    ResourceQueries,
     SqlResourceRepository,
 )
 from sqlalchemy.orm import Session
@@ -27,14 +26,8 @@ def get_resource_repository(
 
 def get_resources_read_repo(  # noqa: D103
     resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
-) -> SqlReadOnlyResourceRepository:
-    return SqlReadOnlyResourceRepository(resources)
-
-
-def get_published_resources(  # noqa: D103
-    session: Session = Depends(get_session),
-) -> SqlGetPublishedResources:
-    return SqlGetPublishedResources(session)
+) -> ResourceQueries:
+    return ResourceQueries(resources)
 
 
 def get_entry_diff(  # noqa: D103

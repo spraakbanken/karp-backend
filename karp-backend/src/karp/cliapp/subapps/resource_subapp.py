@@ -7,11 +7,7 @@ from json_streams import jsonlib
 from tabulate import tabulate
 
 from karp.lex_core.value_objects import UniqueIdStr, unique_id
-from karp.lex_infrastructure import (
-    SqlGetPublishedResources,
-    SqlGetResources,
-    SqlReadOnlyResourceRepository,
-)
+from karp.lex_infrastructure import ResourceQueries
 from karp.resource_commands import ResourceCommands
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
@@ -132,10 +128,11 @@ def list_resources(  # noqa: ANN201, D103
     ctx: typer.Context,
     show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),
 ):
+    resources = inject_from_ctx(ResourceQueries, ctx)
     if show_published:
-        query = inject_from_ctx(SqlGetPublishedResources, ctx)  # type: ignore [misc]
+        result = resources.get_published_resources()
     else:
-        query = inject_from_ctx(SqlGetResources, ctx)  # type: ignore [misc,assignment]
+        result = resources.get_all_resources()
     typer.echo(
         tabulate(
             [
@@ -153,7 +150,7 @@ def list_resources(  # noqa: ANN201, D103
 def show(  # noqa: ANN201, D103
     ctx: typer.Context, resource_id: str, version: Optional[int] = None
 ):
-    repo = inject_from_ctx(SqlReadOnlyResourceRepository, ctx)  # type: ignore [misc]
+    repo = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
     resource = repo.by_resource_id(resource_id, version=version)
     if not resource:
         version_str = version or "latest"

@@ -9,21 +9,21 @@ from karp.auth_infrastructure.services import (
     JWTAuthService,
     JWTAuthServiceConfig,
 )
-from karp.lex_infrastructure import SqlGetPublishedResources, SqlReadOnlyResourceRepository
+from karp.lex_infrastructure import ResourceQueries
 
 
 class AuthInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def resource_permissions(  # noqa: D102
-        self, get_published_resources: SqlGetPublishedResources
+        self, resources: ResourceQueries
     ) -> LexGetResourcePermissions:
-        return LexGetResourcePermissions(get_published_resources)
+        return LexGetResourcePermissions(resources)
 
     @injector.provider
     def is_resource_protected(  # noqa: D102
-        self, resource_repo: SqlReadOnlyResourceRepository
+        self, resources: ResourceQueries
     ) -> LexIsResourceProtected:
-        return LexIsResourceProtected(resource_repo)
+        return LexIsResourceProtected(resources)
 
 
 class JwtAuthInfrastructure(injector.Module):  # noqa: D101

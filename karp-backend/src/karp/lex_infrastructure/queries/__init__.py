@@ -5,7 +5,5 @@ from .generic_entries import (
     GenericGetHistory,
 )
 from .resources import (
-    SqlGetPublishedResources,
-    SqlGetResources,
-    SqlReadOnlyResourceRepository,
+    ResourceQueries,
 )

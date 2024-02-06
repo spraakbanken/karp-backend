@@ -15,7 +15,7 @@ from karp.auth_infrastructure import (
 )
 from karp.main.errors import KarpError  # noqa: F401
 
-from ...lex_infrastructure import SqlGetPublishedResources, SqlReadOnlyResourceRepository
+from ...lex_infrastructure import ResourceQueries
 from . import lex_deps
 from .fastapi_injector import inject_from_req
 
@@ -36,13 +36,13 @@ def bearer_scheme(authorization=Header(None)):  # noqa: ANN201, D103
 
 
 def get_resource_permissions(  # noqa: D103
-    query: SqlGetPublishedResources = Depends(lex_deps.get_published_resources),
+    resources: ResourceQueries = Depends(lex_deps.get_resources_read_repo),
 ) -> LexGetResourcePermissions:
-    return LexGetResourcePermissions(query)
+    return LexGetResourcePermissions(resources)
 
 
 def get_is_resource_protected(  # noqa: D103
-    repo: SqlReadOnlyResourceRepository = Depends(lex_deps.get_resources_read_repo),
+    repo: ResourceQueries = Depends(lex_deps.get_resources_read_repo),
 ) -> LexIsResourceProtected:
     return LexIsResourceProtected(repo)
 

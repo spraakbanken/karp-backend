@@ -4,13 +4,11 @@ import injector
 from sqlalchemy.orm import Session
 
 from karp.lex_infrastructure.queries import (
-    SqlGetPublishedResources,
-    SqlGetResources,
     GenericEntryViews,
     GenericGetEntryDiff,
     GenericGetEntryHistory,
     GenericGetHistory,
-    SqlReadOnlyResourceRepository,
+    ResourceQueries,
 )
 from karp.lex_infrastructure.repositories import (
     SqlResourceRepository,
@@ -22,20 +20,10 @@ logger = logging.getLogger(__name__)
 
 class LexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def get_published_resources(  # noqa: D102
-        self, session: Session
-    ) -> SqlGetPublishedResources:
-        return SqlGetPublishedResources(session)
-
-    @injector.provider
-    def get_resources(self, session: Session) -> SqlGetResources:  # noqa: D102
-        return SqlGetResources(session)
-
-    @injector.provider
     def read_only_resource_repo(  # noqa: D102
         self, resources: ResourceRepository
-    ) -> SqlReadOnlyResourceRepository:
-        return SqlReadOnlyResourceRepository(resources)
+    ) -> ResourceQueries:
+        return ResourceQueries(resources)
 
     @injector.provider
     def resources(  # noqa: D102
