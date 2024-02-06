@@ -79,6 +79,7 @@ class SqlReadOnlyResourceRepository:
     def get_all_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
         return map(resource_to_dto, self._resources.get_all_resources())
 
+
 def resource_to_dto(resource: Resource) -> ResourceDto:
     return ResourceDto(
         id=resource.id,
@@ -92,6 +93,7 @@ def resource_to_dto(resource: Resource) -> ResourceDto:
         name=resource.name,
         discarded=resource.discarded,
     )
+
 
 def _row_to_dto(row_proxy) -> ResourceDto:
     return ResourceDto(

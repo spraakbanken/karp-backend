@@ -18,9 +18,9 @@ from karp.lex.domain.entities.resource import Resource
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.db_infrastructure.sql_repository import SqlRepository
 from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
+from karp.foundation.cache import Cache
 
 logger = logging.getLogger(__name__)
-from karp.foundation.cache import Cache
 
 
 class SqlResourceRepository(  # noqa: D101
