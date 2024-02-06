@@ -16,13 +16,11 @@ class EntryCommands:
         resources: ResourceRepository,
         index: Es6Index,
         entry_transformer: GenericEntryTransformer,
-        resource_views: GenericResourceViews,
     ):
         self.session = session
         self.resources: ResourceRepository = resources
         self.index = index
         self.entry_transformer = entry_transformer
-        self.resource_views = resource_views
 
     def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
         if not isinstance(resource_id, str):
