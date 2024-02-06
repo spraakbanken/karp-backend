@@ -52,21 +52,6 @@ class InMemoryIndex(Es6Index):
             entry_id = str(entry_id)
         del self.indicies[resource_id].entries[entry_id]
 
-    def create_empty_object(self) -> IndexEntry:  # noqa: D102
-        return IndexEntry(id="", entry={})
-
-    def assign_field(  # noqa: ANN201, D102
-        self, _index_entry: IndexEntry, field_name: str, part
-    ):
-        if isinstance(part, IndexEntry):
-            part = part.entry
-        _index_entry.entry[field_name] = part
-
-    def add_to_list_field(self, elems: typing.List, elem):  # noqa: ANN201, D102
-        if isinstance(elem, IndexEntry):
-            elem = elem.entry
-        elems.append(elem)
-
     def _save(self, _notused):  # noqa: ANN202
         pass
 

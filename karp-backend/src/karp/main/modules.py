@@ -11,7 +11,6 @@ from karp.search.generic_resources import GenericResourceViews
 from karp.search_commands import SearchCommands
 from karp.search_infrastructure import (
     GenericPreProcessor,
-    GenericEntryTransformer,
 )
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
@@ -88,15 +87,12 @@ class CommandsMod(injector.Module):  # noqa: D101
         session: Session,
         resources: ResourceRepository,
         index: Es6Index,
-        entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ) -> EntryCommands:
         return EntryCommands(
             session=session,
             resources=resources,
             index=index,
-            entry_transformer=entry_transformer,
-            resource_views=resource_views,
         )
 
     @injector.provider

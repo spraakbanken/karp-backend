@@ -131,21 +131,6 @@ class Es6Index:
                 },
             )
 
-    def create_empty_object(self) -> IndexEntry:  # noqa: D102
-        return IndexEntry(id="", entry={})
-
-    def assign_field(  # noqa: ANN201, D102
-        self, _index_entry: IndexEntry, field_name: str, part
-    ):
-        if isinstance(part, IndexEntry):
-            part = part.entry
-        _index_entry.entry[field_name] = part
-
-    def add_to_list_field(self, elems: typing.List, elem):  # noqa: ANN201, D102
-        if isinstance(elem, IndexEntry):
-            elem = elem.entry
-        elems.append(elem)
-
 
 def _create_es_mapping(config):  # noqa: C901, ANN202
     es_mapping = {"dynamic": False, "properties": {}}

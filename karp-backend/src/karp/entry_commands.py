@@ -3,9 +3,8 @@ from karp.lex.application.repositories import EntryRepository, ResourceRepositor
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
-from karp.search.generic_resources import GenericResourceViews
-from karp.search_infrastructure import GenericEntryTransformer
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
+from karp.search_infrastructure.transformers import entry_transformer
 from karp.timings import utc_now
 
 
@@ -15,12 +14,10 @@ class EntryCommands:
         session,
         resources: ResourceRepository,
         index: Es6Index,
-        entry_transformer: GenericEntryTransformer,
     ):
         self.session = session
         self.resources: ResourceRepository = resources
         self.index = index
-        self.entry_transformer = entry_transformer
 
     def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
         if not isinstance(resource_id, str):
@@ -72,7 +69,7 @@ class EntryCommands:
             if chunk_size > 0 and i % chunk_size == 0:
                 self.session.commit()
         self.session.commit()
-        self._entry_added_handler(created_db_entries)
+        self._entry_added_handler(resource, created_db_entries)
 
         return created_db_entries
 
@@ -119,7 +116,7 @@ class EntryCommands:
             if chunk_size > 0 and i % chunk_size == 0:
                 self.session.commit()
         self.session.commit()
-        self._entry_added_handler(created_db_entries)
+        self._entry_added_handler(resource, created_db_entries)
 
         return created_db_entries
 
@@ -135,7 +132,7 @@ class EntryCommands:
         )
         entries.save(entry)
         self.session.commit()
-        self._entry_added_handler([entry])
+        self._entry_added_handler(resource, [entry])
         return entry
 
     def update_entry(self, resource_id, _id, version, user, message, entry):
@@ -160,7 +157,7 @@ class EntryCommands:
         if version != current_db_entry.version:
             entries.save(current_db_entry)
             self.session.commit()
-            self._entry_updated_handler(current_db_entry)
+            self._entry_updated_handler(resource, current_db_entry)
 
         return current_db_entry
 
@@ -180,7 +177,7 @@ class EntryCommands:
         self.session.commit()
         self._entry_deleted_handler(entry)
 
-    def _entry_added_handler(self, entries):
+    def _entry_added_handler(self, resource, entries):
         entry_dtos = []
         for entry in entries:
             entry_dto = EntryDto(
@@ -192,10 +189,10 @@ class EntryCommands:
                 lastModifiedBy=entry.last_modified_by,
                 version=1,
             )
-            entry_dtos.append(self.entry_transformer.transform(entry.resource_id, entry_dto))
+            entry_dtos.append(entry_transformer.transform(resource, entry_dto))
         self.index.add_entries(entry.resource_id, entry_dtos)
 
-    def _entry_updated_handler(self, entry):
+    def _entry_updated_handler(self, resource, entry):
         entry_dto = EntryDto(
             id=entry.id,
             resource=entry.resource_id,
@@ -207,7 +204,7 @@ class EntryCommands:
         )
         self.index.add_entries(
             entry.resource_id,
-            [self.entry_transformer.transform(entry.resource_id, entry_dto)],
+            [entry_transformer.transform(resource, entry_dto)],
         )
 
     def _entry_deleted_handler(self, entry):

@@ -14,7 +14,6 @@ from karp.search_infrastructure.queries import (
 )
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.search_infrastructure.transformers import (
-    GenericEntryTransformer,
     GenericPreProcessor,
 )
 from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
@@ -25,25 +24,11 @@ logger = logging.getLogger(__name__)
 
 
 class SearchInfrastructure(injector.Module):  # noqa: D101
-    @injector.provider
-    def entry_transformer(  # noqa: D102
-        self,
-        index: Es6Index,
-        resource_queries: ResourceQueries,
-    ) -> GenericEntryTransformer:
-        return GenericEntryTransformer(
-            index=index,
-            resource_queries=resource_queries,
-        )
-
-    @injector.provider
     def pre_processor(  # noqa: D102
         self,
-        entry_transformer: GenericEntryTransformer,
         entry_views: GenericEntryViews,
     ) -> GenericPreProcessor:
         return GenericPreProcessor(
-            entry_transformer=entry_transformer,
             entry_views=entry_views,
         )
 
