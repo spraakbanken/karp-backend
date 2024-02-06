@@ -137,7 +137,7 @@ def list_resources(  # noqa: ANN201, D103
         tabulate(
             [
                 [resource.resource_id, resource.version, resource.is_published]
-                for resource in query.query()
+                for resource in result
             ],
             headers=["resource_id", "version", "published"],
         )
