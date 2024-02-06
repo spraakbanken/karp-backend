@@ -150,7 +150,10 @@ def install_auth_service(  # noqa: ANN201, D103
 
 
 def with_new_session(container: injector.Injector):  # noqa: ANN201, D103
-    session = Session(bind=container.get(Engine))
+    session = Session(bind=container.get(Engine), close_resets_only=True)
+    # Note on close_resets_only=False: this will detect cases where we call close()
+    # while another piece of code is still using the session. If you plan to remove this,
+    # be careful about the cache in SqlResourceRepository.
 
     def configure_child(binder):  # noqa: ANN202
         binder.bind(Session, to=injector.InstanceProvider(session))
