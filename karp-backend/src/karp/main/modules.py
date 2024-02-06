@@ -5,7 +5,7 @@ from typing import Dict, Type
 import sys
 
 from karp.entry_commands import EntryCommands
-from karp.lex_infrastructure import SqlResourceUnitOfWork
+from karp.lex.application.repositories import ResourceRepository
 from karp.resource_commands import ResourceCommands
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_commands import SearchCommands
@@ -31,6 +31,8 @@ from karp.auth_infrastructure import (
     AuthInfrastructure,
     JwtAuthInfrastructure,
 )
+
+from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -83,13 +85,15 @@ class CommandsMod(injector.Module):  # noqa: D101
     @injector.provider
     def entry_commands(
         self,
-        resource_uow: SqlResourceUnitOfWork,
+        session: Session,
+        resources: ResourceRepository,
         index: Es6Index,
         entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ) -> EntryCommands:
         return EntryCommands(
-            resource_uow=resource_uow,
+            session=session,
+            resources=resources,
             index=index,
             entry_transformer=entry_transformer,
             resource_views=resource_views,
@@ -97,9 +101,9 @@ class CommandsMod(injector.Module):  # noqa: D101
 
     @injector.provider
     def resource_commands(
-        self, resource_uow: SqlResourceUnitOfWork, index: Es6Index
+        self, session: Session, resources: ResourceRepository, index: Es6Index
     ) -> ResourceCommands:
-        return ResourceCommands(resource_uow=resource_uow, index=index)
+        return ResourceCommands(session=session, resources=resources, index=index)
 
     @injector.provider
     def search_commands(
@@ -117,24 +121,14 @@ class Db(injector.Module):  # noqa: D101
     def __init__(self, engine: Engine) -> None:  # noqa: D107
         self._engine = engine
 
-    # By default, everything shares a single session. However, bind_session can
-    # be used to replace the session, for example to have a per-request session.
-
-    # Note: we don't define a Connection provider here, because then classes
-    # using Connection and classes using Session would execute in different
-    # transactions (and hence not necessarily see each others' changes).
-    # (It doesn't work to define a Connection provider using session.connection()
-    # because that gets invalidated every time the session commits.)
-
-    @injector.provider
-    @injector.singleton
-    def session(self, engine: Engine) -> Session:
-        return Session(bind=engine)
-
     @injector.provider
     @injector.singleton
     def engine(self) -> Engine:
         return self._engine
+
+    # No session is set up by default, since the lifetime of the session (i.e.
+    # who should close it) would be unclear. Instead, with_new_session or
+    # new_session can be used to create a fresh session.
 
 
 class ElasticSearchMod(injector.Module):  # noqa: D101
@@ -155,11 +149,20 @@ def install_auth_service(  # noqa: ANN201, D103
     container.binder.install(JwtAuthInfrastructure(Path(settings["auth.jwt.pubkey.path"])))
 
 
-def bind_session(session: Session):  # noqa: ANN201, D103
+def with_new_session(container: injector.Injector):  # noqa: ANN201, D103
+    session = Session(bind=container.get(Engine))
+
     def configure_child(binder):  # noqa: ANN202
         binder.bind(Session, to=injector.InstanceProvider(session))
 
-    return configure_child
+    return container.create_child_injector(configure_child)
+
+
+@contextmanager
+def new_session(container: injector.Injector):
+    container = with_new_session(container)
+    with container.get(Session) as session:
+        yield container
 
 
 def load_modules(group_name: str, app=None):  # noqa: ANN201, D103

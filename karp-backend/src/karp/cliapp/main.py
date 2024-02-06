@@ -26,7 +26,8 @@ def create_app():  # noqa: ANN201, D103
             ctx.obj = {}
         else:
             ctx.obj = {}
-            ctx.obj["container"] = app_context.container
+            # This leaks the session object but it's only 1 so never mind
+            ctx.obj["container"] = modules.with_new_session(app_context.container)
 
     subapps.add_subapps(app)
     load_commands(app)

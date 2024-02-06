@@ -25,7 +25,6 @@ from karp.db_infrastructure.types import ULIDType
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
-from karp.lex.application.repositories import EntryUnitOfWork
 from karp.db_infrastructure import db
 
 

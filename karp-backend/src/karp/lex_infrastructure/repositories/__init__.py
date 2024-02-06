@@ -1,10 +1,9 @@
 from .sql_entries import (
-    SqlEntryUnitOfWork,
+    SqlEntryRepository,
 )
-from .sql_resources import SqlResourceRepository, SqlResourceUnitOfWork
+from .sql_resources import SqlResourceRepository
 
 __all__ = [
-    "SqlEntryUnitOfWork",
+    "SqlEntryRepository",
     "SqlResourceRepository",
-    "SqlResourceUnitOfWork",
 ]

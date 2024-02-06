@@ -3,22 +3,23 @@ from karp.karp_v6_api.dependencies import db_deps
 from karp.karp_v6_api.dependencies.db_deps import (
     get_session,
 )
+from karp.lex.application.repositories import ResourceRepository
 from karp.lex_infrastructure import (
     GenericGetEntryDiff,
     GenericGetEntryHistory,
     GenericGetHistory,
     SqlGetPublishedResources,
     SqlReadOnlyResourceRepository,
-    SqlResourceUnitOfWork,
+    SqlResourceRepository,
 )
 from sqlalchemy.orm import Session
 from starlette.requests import Request  # noqa: F401
 
 
-def get_resource_unit_of_work(
+def get_resource_repository(
     db_session: Session = Depends(get_session),
-) -> SqlResourceUnitOfWork:
-    return SqlResourceUnitOfWork(
+) -> ResourceRepository:
+    return SqlResourceRepository(
         session=db_session,
     )
 
@@ -36,24 +37,24 @@ def get_published_resources(  # noqa: D103
 
 
 def get_entry_diff(  # noqa: D103
-    resource_uow: SqlResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    resources: ResourceRepository = Depends(get_resource_repository),
 ) -> GenericGetEntryDiff:
     return GenericGetEntryDiff(
-        resource_uow=resource_uow,
+        resources=resources,
     )
 
 
 def get_entry_history(  # noqa: D103
-    resource_uow: SqlResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    resources: ResourceRepository = Depends(get_resource_repository),
 ) -> GenericGetEntryHistory:
     return GenericGetEntryHistory(
-        resource_uow=resource_uow,
+        resources=resources,
     )
 
 
 def get_history(  # noqa: D103
-    resource_uow: SqlResourceUnitOfWork = Depends(get_resource_unit_of_work),
+    resources: ResourceRepository = Depends(get_resource_repository),
 ) -> GenericGetHistory:
     return GenericGetHistory(
-        resource_uow=resource_uow,
+        resources=resources,
     )

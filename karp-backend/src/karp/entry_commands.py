@@ -1,9 +1,8 @@
 from karp.lex import EntryDto
-from karp.lex.application.repositories import EntryUnitOfWork
+from karp.lex.application.repositories import EntryRepository, ResourceRepository
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
-from karp.lex_infrastructure.repositories import SqlResourceUnitOfWork
 from karp.search.generic_resources import GenericResourceViews
 from karp.search_infrastructure import GenericEntryTransformer
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
@@ -13,12 +12,14 @@ from karp.timings import utc_now
 class EntryCommands:
     def __init__(
         self,
-        resource_uow,
+        session,
+        resources: ResourceRepository,
         index: Es6Index,
         entry_transformer: GenericEntryTransformer,
         resource_views: GenericResourceViews,
     ):
-        self.resource_uow: SqlResourceUnitOfWork = resource_uow
+        self.session = session
+        self.resources: ResourceRepository = resources
         self.index = index
         self.entry_transformer = entry_transformer
         self.resource_views = resource_views
@@ -27,14 +28,13 @@ class EntryCommands:
         if not isinstance(resource_id, str):
             raise ValueError(f"'resource_id' must be of type 'str', were '{type(resource_id)}'")
 
-        with self.resource_uow as uw:
-            result = uw.repo.by_resource_id(resource_id)
+        result = self.resources.by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)
         return result
 
-    def _get_entry_uow(self, resource_id: unique_id.UniqueId) -> EntryUnitOfWork:
-        result = self.resource_uow.entry_uow_by_resource_id(resource_id)
+    def _get_entries(self, resource_id: unique_id.UniqueId) -> EntryRepository:
+        result = self.resources.entries_by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)
         return result
@@ -60,20 +60,20 @@ class EntryCommands:
         created_db_entries = []
         resource = self._get_resource(resource_id)
 
-        with self._get_entry_uow(resource_id) as uw:
-            for i, entry_raw in enumerate(entries):
-                entry = resource.create_entry_from_dict(
-                    entry_raw,
-                    user=user,
-                    message=message,
-                    id=unique_id.make_unique_id(),
-                )
-                uw.repo.save(entry)
-                created_db_entries.append(entry)
+        entry_table = self._get_entries(resource_id)
+        for i, entry_raw in enumerate(entries):
+            entry = resource.create_entry_from_dict(
+                entry_raw,
+                user=user,
+                message=message,
+                id=unique_id.make_unique_id(),
+            )
+            entry_table.save(entry)
+            created_db_entries.append(entry)
 
-                if chunk_size > 0 and i % chunk_size == 0:
-                    uw.commit()
-            uw.commit()
+            if chunk_size > 0 and i % chunk_size == 0:
+                self.session.commit()
+        self.session.commit()
         for entry in created_db_entries:
             self._entry_added_handler(entry)
 
@@ -105,23 +105,23 @@ class EntryCommands:
 
         created_db_entries = []
         resource = self._get_resource(resource_id)
+        entry_table = self._get_entries(resource_id)
 
-        with self._get_entry_uow(resource_id) as uw:
-            for i, entry_raw in enumerate(entries):
-                entry = resource.create_entry_from_dict(
-                    entry_raw["entry"],
-                    user=entry_raw.get("user") or user,
-                    message=entry_raw.get("message") or message,
-                    id=entry_raw.get("id") or unique_id.make_unique_id(),
-                    timestamp=entry_raw.get("last_modified"),
-                )
-                uw.entries.save(entry)
+        for i, entry_raw in enumerate(entries):
+            entry = resource.create_entry_from_dict(
+                entry_raw["entry"],
+                user=entry_raw.get("user") or user,
+                message=entry_raw.get("message") or message,
+                id=entry_raw.get("id") or unique_id.make_unique_id(),
+                timestamp=entry_raw.get("last_modified"),
+            )
+            entry_table.save(entry)
 
-                created_db_entries.append(entry)
+            created_db_entries.append(entry)
 
-                if chunk_size > 0 and i % chunk_size == 0:
-                    uw.commit()
-            uw.commit()
+            if chunk_size > 0 and i % chunk_size == 0:
+                self.session.commit()
+        self.session.commit()
         for entry in created_db_entries:
             self._entry_added_handler(entry)
 
@@ -129,60 +129,60 @@ class EntryCommands:
 
     def add_entry(self, resource_id, user, message, entry):
         resource = self._get_resource(resource_id)
-        with self._get_entry_uow(resource_id) as uw:
-            entry = resource.create_entry_from_dict(
-                entry,
-                user=user,
-                message=message,
-                id=unique_id.make_unique_id(),
-                timestamp=utc_now(),
-            )
-            uw.entries.save(entry)
-            uw.commit()
-            self._entry_added_handler(entry)
+        entries = self._get_entries(resource_id)
+        entry = resource.create_entry_from_dict(
+            entry,
+            user=user,
+            message=message,
+            id=unique_id.make_unique_id(),
+            timestamp=utc_now(),
+        )
+        entries.save(entry)
+        self.session.commit()
+        self._entry_added_handler(entry)
         return entry
 
     def update_entry(self, resource_id, _id, version, user, message, entry):
         resource = self._get_resource(resource_id)
-        with self._get_entry_uow(resource_id) as uw:
-            try:
-                current_db_entry = uw.repo.by_id(_id)
-            except EntryNotFound as err:
-                raise EntryNotFound(
-                    resource_id,
-                    id=_id,
-                ) from err
+        entries = self._get_entries(resource_id)
+        try:
+            current_db_entry = entries.by_id(_id)
+        except EntryNotFound as err:
+            raise EntryNotFound(
+                resource_id,
+                id=_id,
+            ) from err
 
-            resource.update_entry(
-                entry=current_db_entry,
-                body=entry,
-                version=version,
-                user=user,
-                message=message,
-                timestamp=utc_now(),
-            )
-            if version != current_db_entry.version:
-                uw.repo.save(current_db_entry)
-                uw.commit()
-                self._entry_updated_handler(current_db_entry)
+        resource.update_entry(
+            entry=current_db_entry,
+            body=entry,
+            version=version,
+            user=user,
+            message=message,
+            timestamp=utc_now(),
+        )
+        if version != current_db_entry.version:
+            entries.save(current_db_entry)
+            self.session.commit()
+            self._entry_updated_handler(current_db_entry)
 
         return current_db_entry
 
     def delete_entry(self, resource_id, _id, user, version, message="Entry deleted"):
         resource = self._get_resource(resource_id)
-        with self._get_entry_uow(resource_id) as uw:
-            entry = uw.repo.by_id(_id)
+        entries = self._get_entries(resource_id)
+        entry = entries.by_id(_id)
 
-            resource.discard_entry(
-                entry=entry,
-                version=version,
-                user=user,
-                message=message,
-                timestamp=utc_now(),
-            )
-            uw.repo.save(entry)
-            uw.commit()
-            self._entry_deleted_handler(entry)
+        resource.discard_entry(
+            entry=entry,
+            version=version,
+            user=user,
+            message=message,
+            timestamp=utc_now(),
+        )
+        entries.save(entry)
+        self.session.commit()
+        self._entry_deleted_handler(entry)
 
     def _entry_added_handler(self, entry):
         entry_dto = EntryDto(

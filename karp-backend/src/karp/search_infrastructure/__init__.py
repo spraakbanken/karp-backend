@@ -6,8 +6,8 @@ import logging
 from karp.lex_infrastructure import (
     GenericEntryViews,
     SqlReadOnlyResourceRepository,
-    SqlResourceUnitOfWork,
 )
+from karp.lex.application.repositories import ResourceRepository
 
 from karp.search_infrastructure.queries import (
     Es6SearchService,
@@ -52,8 +52,8 @@ class SearchInfrastructure(injector.Module):  # noqa: D101
 
 class GenericSearchInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def get_resource_config(self, resource_uow: SqlResourceUnitOfWork) -> GenericResourceViews:
-        return GenericResourceViews(resource_uow=resource_uow)
+    def get_resource_config(self, resources: ResourceRepository) -> GenericResourceViews:
+        return GenericResourceViews(resources=resources)
 
 
 class Es6SearchIndexMod(injector.Module):  # noqa: D101

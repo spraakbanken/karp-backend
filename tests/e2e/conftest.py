@@ -16,11 +16,13 @@ from typer.testing import CliRunner
 
 import pytest
 from sqlalchemy import create_engine
-from sqlalchemy.orm import session, sessionmaker
+from sqlalchemy.orm import session, sessionmaker, Session
 from starlette.testclient import TestClient
 
 from tests import common_data, utils
 from karp.db_infrastructure.db import metadata
+from karp.main import modules
+from dataclasses import replace
 
 
 @pytest.fixture(name="in_memory_sqlite_db")
@@ -75,9 +77,11 @@ def fixture_app(
     app = None  # noqa: F841
 
 
-@pytest.fixture(name="app_context", scope="session")
+@pytest.fixture(name="app_context", scope="function")
 def fixture_app_context(app: FastAPI) -> AppContext:
-    return app.state.app_context
+    context = app.state.app_context
+    with modules.new_session(context.container) as container:
+        return replace(context, container=container)
 
 
 @pytest.fixture(name="fa_client", scope="session")
@@ -96,11 +100,14 @@ def create_and_publish_resource(
 
     resource_id = resource_config.pop("resource_id")
 
-    resource_commands = client.app.state.app_context.container.get(ResourceCommands)
+    with modules.new_session(client.app.state.app_context.container) as container:
+        resource_commands = container.get(ResourceCommands)
 
-    resource_commands.create_resource(resource_id, resource_id, resource_config, "")
+        resource_commands.create_resource(resource_id, resource_id, resource_config, "")
 
-    resource_commands.publish_resource(user="", resource_id=resource_id, version=1, message="")
+        resource_commands.publish_resource(
+            user="", resource_id=resource_id, version=1, message=""
+        )
 
 
 @pytest.fixture(scope="session", name="fa_data_client")

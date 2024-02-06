@@ -4,11 +4,10 @@ import typing
 import uuid  # noqa: F401
 from typing import Dict, List, Optional, Tuple, Union  # noqa: F401
 
-from karp.foundation import repository, unit_of_work
+from karp.foundation import repository
 from karp.lex.domain import entities
 
 from karp.lex.domain import errors
-from karp.lex.application.repositories.entries import EntryUnitOfWork
 
 logger = logging.getLogger("karp")
 

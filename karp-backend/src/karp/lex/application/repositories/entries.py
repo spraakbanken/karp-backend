@@ -1,12 +1,12 @@
 from typing import Dict, List, Optional, Tuple
 
-from karp.foundation import entity, unit_of_work
+from karp.foundation import entity, repository
 from karp.lex_core.value_objects import UniqueId
 
 
-class EntryUnitOfWork(  # noqa: D101
+class EntryRepository(  # noqa: D101
     entity.TimestampedEntity,
-    unit_of_work.UnitOfWork,
+    repository.Repository,
 ):
     def __init__(  # noqa: D107, ANN204
         self,
@@ -17,15 +17,11 @@ class EntryUnitOfWork(  # noqa: D101
         *args,  # noqa: ANN002
         **kwargs,  # noqa: ANN003
     ):
-        unit_of_work.UnitOfWork.__init__(self)
+        repository.Repository.__init__(self)
         entity.TimestampedEntity.__init__(self, *args, id=id, **kwargs)
         self._name = name
         self._config = config
         self._message = message
-
-    @property
-    def entries(self):
-        return self.repo
 
     @property
     def name(self) -> str:  # noqa: D102

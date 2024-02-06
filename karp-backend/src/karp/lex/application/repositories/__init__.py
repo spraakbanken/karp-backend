@@ -1,7 +1,7 @@
-from .entries import EntryUnitOfWork
+from .entries import EntryRepository
 from .resources import ResourceRepository
 
 __all__ = [
-    "EntryUnitOfWork",
+    "EntryRepository",
     "ResourceRepository",
 ]

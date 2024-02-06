@@ -3,8 +3,7 @@ import logging  # noqa: I001
 import typing
 from typing import List, Optional, Union
 
-from karp.foundation.unit_of_work import UnitOfWork
-from karp.lex.application.repositories import ResourceRepository, EntryUnitOfWork
+from karp.lex.application.repositories import ResourceRepository, EntryRepository
 from karp.lex_core.value_objects import UniqueId
 
 import sqlalchemy as sa
@@ -16,10 +15,9 @@ from karp.lex.domain import entities
 from karp.lex.application import repositories
 from karp.lex.domain.entities.resource import Resource
 
-from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 from karp.db_infrastructure.sql_repository import SqlRepository
-from karp.lex_infrastructure.repositories.sql_entries import SqlEntryUnitOfWork
+from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
 
 logger = logging.getLogger(__name__)
 
@@ -145,35 +143,9 @@ class SqlResourceRepository(  # noqa: D101
 
         return [resource_dto.to_entity() for resource_dto in query if resource_dto is not None]
 
+    def resource_to_entries(self, resource: Resource) -> SqlEntryRepository:
+        return SqlEntryRepository(session=self._session, resource=resource)
 
-class SqlResourceUnitOfWork(SqlUnitOfWork, UnitOfWork):
-    def __init__(
-        self,
-        *,
-        session: Session,
-    ):
-        SqlUnitOfWork.__init__(self, session=session)
-        self._resources = None
-
-    def _begin(self):
-        if self._resources is None:
-            logger.info("using session", extra={"session": self._session})
-            self._resources = SqlResourceRepository(self._session)
-        return self
-
-    @property
-    def repo(self) -> SqlResourceRepository:
-        self._begin()
-        return self._resources
-
-    def resource_to_entry_uow(self, resource: Resource) -> SqlEntryUnitOfWork:
-        return SqlEntryUnitOfWork(session=self._session, resource=resource)
-
-    @property
-    def resources(self) -> ResourceRepository:
-        return self.repo
-
-    def entry_uow_by_resource_id(self, resource_id: str) -> Optional[EntryUnitOfWork]:
-        with self:
-            resource = self.repo.by_resource_id(resource_id)
-            return self.resource_to_entry_uow(resource) if resource else None
+    def entries_by_resource_id(self, resource_id: str) -> Optional[SqlEntryRepository]:
+        resource = self.by_resource_id(resource_id)
+        return self.resource_to_entries(resource) if resource else None

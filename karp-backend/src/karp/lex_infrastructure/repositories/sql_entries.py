@@ -32,18 +32,27 @@ from karp.lex.domain.entities.entry import (
 )
 from karp.lex_infrastructure.sql import sql_models
 from karp.db_infrastructure.sql_repository import SqlRepository
-from karp.db_infrastructure.sql_unit_of_work import SqlUnitOfWork
 
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
+class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self, session: Session, resource: Resource
     ):
         if not session:
             raise TypeError("session can't be None")
         SqlRepository.__init__(self, session=session)
+        repositories.EntryRepository.__init__(
+            self,
+            id=resource.entity_id,
+            name=resource.resource_id,
+            config=resource.config,
+            message=resource.message,
+            last_modified_by=resource.last_modified_by,
+            last_modified=resource.last_modified,
+            discarded=resource.discarded,
+        )
         self.resource = resource
         self.history_model = sql_models.get_or_create_entry_history_model(resource.table_name)
         self.history_model.__table__.create(  # type:ignore [attr-defined]
@@ -213,44 +222,3 @@ class SqlEntryRepository(SqlRepository, Repository):  # noqa: D101
             version=row.version,
             resource_id=self.resource.resource_id,
         )
-
-
-class SqlEntryUnitOfWork(  # noqa: D101
-    SqlUnitOfWork,
-    repositories.EntryUnitOfWork,
-):
-    def __init__(  # noqa: D107, ANN204
-        self,
-        session: Session,
-        resource: Resource,
-    ):
-        SqlUnitOfWork.__init__(self)
-        if not hasattr(self, "__enter__"):
-            raise RuntimeError(f"No __enter__ detected in {self=}")
-        repositories.EntryUnitOfWork.__init__(
-            self,
-            id=resource.entity_id,
-            name=resource.resource_id,
-            config=resource.config,
-            message=resource.message,
-            last_modified_by=resource.last_modified_by,
-            last_modified=resource.last_modified,
-            discarded=resource.discarded,
-        )
-
-        self._entries = None
-        self._session = session
-        self.resource = resource
-
-    def _begin(self):  # noqa: ANN202
-        if self._entries is None:
-            self._entries = SqlEntryRepository(
-                session=self._session,
-                resource=self.resource,
-            )
-        return self
-
-    @property
-    def repo(self) -> SqlEntryRepository:  # noqa: D102
-        self._begin()
-        return self._entries

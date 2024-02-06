@@ -4,7 +4,6 @@ import pytest
 from fastapi import status
 
 from karp import auth
-from karp.lex_infrastructure import SqlResourceUnitOfWork
 from karp.main.errors import ClientErrorCodes
 from karp.timings import utc_now
 from karp.lex_core.value_objects import (
@@ -12,11 +11,16 @@ from karp.lex_core.value_objects import (
     unique_id,
 )
 from karp.lex.application.queries import EntryDto
+from karp.lex.application.repositories import ResourceRepository
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session
+from karp.main import modules
 
 
-def get_entry_uow(container, resource_id: str):  # noqa: ANN201
-    resource_uow = container.get(SqlResourceUnitOfWork)  # type: ignore [misc]
-    return resource_uow.entry_uow_by_resource_id("places")
+def get_entries(container, resource_id: str):  # noqa: ANN201
+    with modules.new_session(container) as container:
+        resources = container.get(ResourceRepository)  # type: ignore [misc]
+        return resources.entries_by_resource_id("places")
 
 
 def init(
@@ -126,11 +130,10 @@ class TestAddEntry:
         assert "newID" in response_data
         new_id = unique_id.parse(response_data["newID"])
 
-        entry_uow = get_entry_uow(
+        entries = get_entries(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
-        with entry_uow as uw:
-            assert new_id in uw.repo.entity_ids()
+        assert new_id in entries.entity_ids()
 
     def test_add_with_valid_data_and_entity_id_returns_201(  # noqa: ANN201
         self,
@@ -159,11 +162,10 @@ class TestAddEntry:
         assert "newID" in response_data
         new_id = response_data["newID"]
 
-        entry_uow = get_entry_uow(
+        entries = get_entries(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
-        with entry_uow as uw:
-            assert new_id in uw.repo.entity_ids()
+        assert new_id in entries.entity_ids()
 
     @pytest.mark.skip(reason="we don't use entry_id")
     def test_adding_existing_fails_with_400(  # noqa: ANN201
@@ -261,12 +263,11 @@ class TestDeleteEntry:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        entry_uow = get_entry_uow(
+        entries = get_entries(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
-        with entry_uow as uw:
-            assert uw.repo.by_id(entity_id).discarded
-            assert entity_id not in uw.repo.entity_ids()
+        assert entries.by_id(entity_id).discarded
+        assert entity_id not in entries.entity_ids()
 
     def test_delete_non_existing_fails(  # noqa: ANN201
         self,
@@ -321,12 +322,11 @@ class TestDeleteEntryRest:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        entry_uow = get_entry_uow(
+        entries = get_entries(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
-        with entry_uow as uw:
-            assert uw.repo.by_id(entity_id).discarded
-            assert entity_id not in uw.repo.entity_ids()
+        assert entries.by_id(entity_id).discarded
+        assert entity_id not in entries.entity_ids()
 
     def test_delete_rest_non_existing_fails(  # noqa: ANN201
         self,
@@ -526,12 +526,11 @@ class TestUpdateEntry:
         response_data = response.json()
         assert response_data["newID"] == entity_id
 
-        entry_uow = get_entry_uow(
+        entries = get_entries(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
-        with entry_uow as uw:
-            assert uw.repo.by_id(entity_id).body["population"] == 5
-            assert entity_id in uw.repo.entity_ids()
+        assert entries.by_id(entity_id).body["population"] == 5
+        assert entity_id in entries.entity_ids()
 
     def test_update_several_times(  # noqa: ANN201
         self,
@@ -599,13 +598,12 @@ class TestUpdateEntry:
         print(f"{response.json()=}")
         assert str(entry_id + 1) == response_data["newID"]
 
-        entry_uow = get_entry_uow(
+        entries = get_entries(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
-        with entry_uow as uw:
-            entry_ids = uw.repo.entry_ids()
-            assert str(entry_id) not in entry_ids
-            assert str(entry_id + 1) in entry_ids
+        entry_ids = entries.entry_ids()
+        assert str(entry_id) not in entry_ids
+        assert str(entry_id + 1) in entry_ids
 
     def test_update_changes_last_modified(  # noqa: ANN201
         self,
@@ -625,14 +623,13 @@ class TestUpdateEntry:
 
         after_add = utc_now()
 
-        entry_uow = get_entry_uow(
+        entries = get_entries(
             fa_data_client.app.state.app_context.container, resource_id="places"
         )
         entity_id = ids[0]
-        with entry_uow as uw:
-            entry = uw.repo.by_id(entity_id)
-            assert entry.last_modified > before_add
-            assert entry.last_modified < after_add
+        entry = entries.by_id(entity_id)
+        assert entry.last_modified > before_add
+        assert entry.last_modified < after_add
 
         fa_data_client.post(
             f"/entries/places/{entity_id}",
@@ -650,10 +647,12 @@ class TestUpdateEntry:
 
         after_update = utc_now()
 
-        with entry_uow as uw:
-            entry = uw.repo.by_id(entity_id)
-            assert entry.last_modified > after_add
-            assert entry.last_modified < after_update
+        entries = get_entries(
+            fa_data_client.app.state.app_context.container, resource_id="places"
+        )
+        entry = entries.by_id(entity_id)
+        assert entry.last_modified > after_add
+        assert entry.last_modified < after_update
 
 
 class TestGetEntry:

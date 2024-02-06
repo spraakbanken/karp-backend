@@ -182,18 +182,11 @@ def create_app() -> FastAPI:  # noqa: D103
             status_code=500, content={"detail": "Internal server error"}
         )
         # Create a new session per request
-        engine = app_context.container.get(Engine)
-        print("creating a new session on engine", engine)
-        with Session(bind=engine) as session:
-            print("created a new session")
-            request.state.container = app_context.container.create_child_injector(
-                modules.bind_session(session)
-            )
-            request.state.session = session
+        with modules.new_session(app_context.container) as container:
+            request.state.session = container.get(Session)
+            request.state.container = container
 
             response = await call_next(request)
-            print("done with call")
-        print("dropping the session")
 
         return response
 
