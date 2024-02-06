@@ -35,7 +35,7 @@ class GenericEntryTransformer:
         self.index.assign_field(index_entry, "_entry_version", src_entry.version)
         self.index.assign_field(index_entry, "_last_modified", src_entry.last_modified)
         self.index.assign_field(index_entry, "_last_modified_by", src_entry.last_modified_by)
-        resource = self.resource_repo.by_resource_id(resource_id)
+        resource = self.resource_repo.by_resource_id_optional(resource_id)
         if not resource:
             raise lex_errors.ResourceNotFound(None, resource_id=resource_id)
         self._transform_to_index_entry(
