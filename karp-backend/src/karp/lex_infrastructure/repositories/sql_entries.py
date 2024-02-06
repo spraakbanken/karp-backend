@@ -61,14 +61,8 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
 
     def _save(self, entry: Entry):  # noqa: ANN202
         self._check_has_session()
-        try:
-            ins_stmt = insert(self.history_model)
-            history_dict = self._entry_to_history_dict(entry)
-            ins_stmt = ins_stmt.values(**history_dict)
-            result = self._session.execute(ins_stmt)
-            return result.lastrowid or result.returned_defaults["history_id"]  # type: ignore [attr-defined]
-        except exc.DBAPIError as ex:
-            raise errors.RepositoryError("db failure") from ex
+        entry_dto = self.history_model.from_entity(entry)
+        self._session.add(entry_dto)
 
     def entity_ids(self) -> List[str]:  # noqa: D102
         stmt = self._stmt_latest_not_discarded()
