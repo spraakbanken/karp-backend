@@ -15,7 +15,6 @@ import asgi_correlation_id
 
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import (
-    GenericSearchInfrastructure,
     Es6SearchIndexMod,
 )
 from karp.main import config, modules
@@ -77,7 +76,6 @@ def _setup_dependency_injection(
             ElasticSearchMod(es_url),
             LexInfrastructure(),
             GenericLexInfrastructure(),
-            GenericSearchInfrastructure(),
         ],
         auto_bind=False,
     )

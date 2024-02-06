@@ -8,7 +8,6 @@ from karp.entry_commands import EntryCommands
 from karp.lex.application.repositories import ResourceRepository
 from karp.lex_infrastructure import ResourceQueries, GenericEntryViews
 from karp.resource_commands import ResourceCommands
-from karp.search.generic_resources import GenericResourceViews
 from karp.search_commands import SearchCommands
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
@@ -85,7 +84,6 @@ class CommandsMod(injector.Module):  # noqa: D101
         session: Session,
         resources: ResourceRepository,
         index: Es6Index,
-        resource_views: GenericResourceViews,
     ) -> EntryCommands:
         return EntryCommands(
             session=session,

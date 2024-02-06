@@ -1,7 +1,6 @@
 """Pytest entry point."""
 
 
-import pytest  # noqa: I001
 import injector
 import pytest  # pyre-ignore  # noqa: F811
 from sqlalchemy import create_engine
@@ -10,7 +9,6 @@ from sqlalchemy.orm import session, sessionmaker
 from alembic.config import main as alembic_main  # noqa: F401
 
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
-from karp.search_infrastructure import GenericSearchInfrastructure
 from karp.main.modules import CommandsMod
 from karp.lex_infrastructure import GenericLexInfrastructure
 
@@ -45,7 +43,6 @@ def integration_ctx() -> adapters.IntegrationTestContext:
             CommandsMod(),
             GenericLexInfrastructure(),
             InMemoryLexInfrastructure(),
-            GenericSearchInfrastructure(),
             search_adapters.InMemorySearchInfrastructure(),
         ],
         auto_bind=False,
