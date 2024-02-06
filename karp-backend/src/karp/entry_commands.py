@@ -74,8 +74,7 @@ class EntryCommands:
             if chunk_size > 0 and i % chunk_size == 0:
                 self.session.commit()
         self.session.commit()
-        for entry in created_db_entries:
-            self._entry_added_handler(entry)
+        self._entry_added_handler(created_db_entries)
 
         return created_db_entries
 
@@ -122,8 +121,7 @@ class EntryCommands:
             if chunk_size > 0 and i % chunk_size == 0:
                 self.session.commit()
         self.session.commit()
-        for entry in created_db_entries:
-            self._entry_added_handler(entry)
+        self._entry_added_handler(created_db_entries)
 
         return created_db_entries
 
@@ -139,7 +137,7 @@ class EntryCommands:
         )
         entries.save(entry)
         self.session.commit()
-        self._entry_added_handler(entry)
+        self._entry_added_handler([entry])
         return entry
 
     def update_entry(self, resource_id, _id, version, user, message, entry):
@@ -184,20 +182,20 @@ class EntryCommands:
         self.session.commit()
         self._entry_deleted_handler(entry)
 
-    def _entry_added_handler(self, entry):
-        entry_dto = EntryDto(
-            id=entry.id,
-            resource=entry.resource_id,
-            entry=entry.body,
-            message=entry.message or "",
-            lastModified=entry.last_modified,
-            lastModifiedBy=entry.last_modified_by,
-            version=1,
-        )
-        self.index.add_entries(
-            entry.resource_id,
-            [self.entry_transformer.transform(entry.resource_id, entry_dto)],
-        )
+    def _entry_added_handler(self, entries):
+        entry_dtos = []
+        for entry in entries:
+            entry_dto = EntryDto(
+                id=entry.id,
+                resource=entry.resource_id,
+                entry=entry.body,
+                message=entry.message or "",
+                lastModified=entry.last_modified,
+                lastModifiedBy=entry.last_modified_by,
+                version=1,
+            )
+            entry_dtos.append(self.entry_transformer.transform(entry.resource_id, entry_dto))
+        self.index.add_entries(entry.resource_id, entry_dtos)
 
     def _entry_updated_handler(self, entry):
         entry_dto = EntryDto(
