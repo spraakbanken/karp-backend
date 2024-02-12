@@ -1,4 +1,4 @@
-from karp.timings import monotonic_utc_now, utc_now
+from karp.foundation.timings import monotonic_utc_now, utc_now
 
 
 def test_monotonic_utc_now_is_monotonic() -> None:

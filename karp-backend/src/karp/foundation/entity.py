@@ -7,7 +7,7 @@ from deprecated import deprecated  # noqa: F401
 from karp.foundation.errors import ConsistencyError
 from karp.foundation import errors
 from karp.lex_core.value_objects import UniqueId
-from karp.timings import monotonic_utc_now
+from karp.foundation.timings import monotonic_utc_now
 
 
 class Entity:

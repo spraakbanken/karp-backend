@@ -6,7 +6,7 @@ from karp.lex.domain import entities
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex_core.value_objects import make_unique_id
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
-from karp.timings import utc_now
+from karp.foundation.timings import utc_now
 
 logger = logging.getLogger(__name__)
 
