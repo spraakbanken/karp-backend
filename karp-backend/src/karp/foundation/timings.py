@@ -23,21 +23,6 @@ def monotonic_utc_now() -> float:
     global _previous
     result = utc_now()
     if result <= _previous:
-        result = _next_up(result)
+        result = math.nextafter(result, math.inf)
     _previous = result
     return result
-
-
-def _next_up(x: float) -> float:
-    if math.isnan(x) or (math.isinf(x) and x > 0):
-        return x
-
-    if x == 0.0:
-        x = 0.0
-
-    n = struct.unpack("<q", struct.pack("<d", x))[0]
-    if n >= 0:
-        n += 1
-    else:
-        n -= 1
-    return struct.unpack("<d", struct.pack("<q", n))[0]
