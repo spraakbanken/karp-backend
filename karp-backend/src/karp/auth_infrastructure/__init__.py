@@ -2,28 +2,20 @@ from pathlib import Path  # noqa: I001
 import injector
 
 from karp.auth_infrastructure.queries import (
-    LexGetResourcePermissions,
-    LexIsResourceProtected,
+    ResourcePermissionQueries,
 )
 from karp.auth_infrastructure.services import (
     JWTAuthService,
-    JWTAuthServiceConfig,
 )
-from karp.lex_infrastructure import ResourceQueries
+from karp.lex.application.repositories import ResourceRepository
 
 
 class AuthInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def resource_permissions(  # noqa: D102
-        self, resources: ResourceQueries
-    ) -> LexGetResourcePermissions:
-        return LexGetResourcePermissions(resources)
-
-    @injector.provider
-    def is_resource_protected(  # noqa: D102
-        self, resources: ResourceQueries
-    ) -> LexIsResourceProtected:
-        return LexIsResourceProtected(resources)
+        self, resources: ResourceRepository
+    ) -> ResourcePermissionQueries:
+        return ResourcePermissionQueries(resources)
 
 
 class JwtAuthInfrastructure(injector.Module):  # noqa: D101
@@ -32,14 +24,5 @@ class JwtAuthInfrastructure(injector.Module):  # noqa: D101
         self.pubkey_path = pubkey_path
 
     @injector.provider
-    @injector.singleton
-    def jwt_auth_service_config(self) -> JWTAuthServiceConfig:  # noqa: D102
-        return JWTAuthServiceConfig(self.pubkey_path)
-
-    @injector.provider
-    def jwt_auth_service(  # noqa: D102
-        self, is_resource_protected: LexIsResourceProtected
-    ) -> JWTAuthService:
-        return JWTAuthService(
-            pubkey_path=self.pubkey_path, is_resource_protected=is_resource_protected
-        )
+    def jwt_auth_service(self) -> JWTAuthService:
+        return JWTAuthService(pubkey_path=self.pubkey_path)

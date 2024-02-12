@@ -3,7 +3,7 @@ from typing import Dict, Optional  # noqa: D100, I001
 from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 
 from karp import auth, lex
-from karp.auth_infrastructure import JWTAuthService
+from karp.auth_infrastructure import ResourcePermissionQueries
 from karp.lex_core.value_objects import unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
 
@@ -34,10 +34,10 @@ def get_diff(  # noqa: ANN201, D103
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
-    if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
@@ -70,10 +70,10 @@ def get_history(  # noqa: ANN201, D103
     from_version: Optional[int] = Query(None),
     current_page: int = Query(0),
     page_size: int = Query(100),
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
-    if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",

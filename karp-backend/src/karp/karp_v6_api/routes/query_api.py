@@ -9,7 +9,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
 
 from karp import auth, search
-from karp.auth_infrastructure import JWTAuthService
+from karp.auth_infrastructure import ResourcePermissionQueries
 from karp.main import errors as karp_errors
 from karp.search.application.queries import QueryRequest
 
@@ -37,11 +37,11 @@ def get_entries_by_id(  # noqa: ANN201, D103
         regex=r"^\w(,\w)*",
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
-    if not auth_service.authorize(auth.PermissionLevel.read, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403,
             detail="Not enough permissions",
@@ -67,12 +67,12 @@ def query_split(  # noqa: ANN201, D103
     size: int = Query(25, description="Number of entries in page."),
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     logger.debug("/query/split called", extra={"resources": resources})
     resource_list = resources.split(",")
-    if not auth_service.authorize(auth.PermissionLevel.read, user, resource_list):
+    if not resource_permissions.has_permission(auth.PermissionLevel.read, user, resource_list):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
@@ -139,7 +139,7 @@ def query(  # noqa: ANN201
         None, description="Comma-separated list of which fields to remove from result"
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
 ):
     """
@@ -151,7 +151,7 @@ def query(  # noqa: ANN201
         extra={"resources": resources, "from": from_, "size": size},
     )
     resource_list = resources.split(",")
-    if not auth_service.authorize(auth.PermissionLevel.read, user, resource_list):
+    if not resource_permissions.has_permission(auth.PermissionLevel.read, user, resource_list):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",

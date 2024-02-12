@@ -14,7 +14,7 @@ from fastapi import (
 )
 from starlette import responses
 
-from karp.auth_infrastructure import JWTAuthService
+from karp.auth_infrastructure import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
 from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
@@ -41,10 +41,10 @@ def get_history_for_entry(  # noqa: ANN201, D103
     entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
-    if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
@@ -70,10 +70,10 @@ def add_entry(  # noqa: ANN201, D103
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
 ):
-    if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
@@ -116,10 +116,10 @@ def update_entry(  # noqa: ANN201, D103
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
 ):
-    if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403,
             detail="Not enough permissions",
@@ -179,11 +179,11 @@ def delete_entry(  # noqa: ANN201
     entry_id: UniqueId,
     version: int,
     user: User = Security(deps.get_user, scopes=["write"]),
-    auth_service: JWTAuthService = Depends(deps.get_auth_service),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
 ):
     """Delete a entry from a resource."""
-    if not auth_service.authorize(PermissionLevel.write, user, [resource_id]):
+    if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",

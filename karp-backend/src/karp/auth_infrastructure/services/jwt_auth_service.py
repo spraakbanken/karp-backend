@@ -7,7 +7,7 @@ import jwt.exceptions as jwte  # pyre-ignore
 import pydantic
 import logging
 
-from karp.auth_infrastructure import LexIsResourceProtected
+from karp.auth_infrastructure import ResourcePermissionQueries
 from karp.foundation import value_objects
 from karp.auth.domain.errors import ExpiredToken, TokenError, InvalidTokenPayload
 from karp.auth.domain.entities.user import User
@@ -49,10 +49,9 @@ class JWTAuthServiceConfig:
 
 class JWTAuthService:
     def __init__(  # noqa: D107
-        self, pubkey_path: Path, is_resource_protected: LexIsResourceProtected
+        self, pubkey_path: Path
     ) -> None:
         self._jwt_key = load_jwt_key(pubkey_path)
-        self.is_resource_protected = is_resource_protected
         logger.debug("JWTAuthenticator created")
 
     def authenticate(self, _scheme: str, credentials: str) -> User:  # noqa: D102
@@ -76,15 +75,3 @@ class JWTAuthService:
         if payload.scope and "lexica" in payload.scope:
             lexicon_permissions = payload.scope["lexica"]
         return User(payload.sub, lexicon_permissions, payload.levels)
-
-    def authorize(  # noqa: ANN201, D102
-        self,
-        level: value_objects.PermissionLevel,
-        user: User,
-        resource_ids: List[str],
-    ):
-        return not any(
-            self.is_resource_protected.query(resource_id, level)
-            and (not user or not user.has_enough_permissions(resource_id, level))
-            for resource_id in resource_ids
-        )

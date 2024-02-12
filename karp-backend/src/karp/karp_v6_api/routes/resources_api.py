@@ -4,7 +4,7 @@ import typing
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from karp.auth.application.queries.resources import ResourcePermissionDto
-from karp.auth_infrastructure import LexGetResourcePermissions
+from karp.auth_infrastructure import ResourcePermissionQueries
 from karp.karp_v6_api.schemas import ResourcePublic, ResourceProtected
 from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 
 @router.get("/permissions", response_model=list[ResourcePermissionDto])
 def list_resource_permissions(  # noqa: ANN201, D103
-    query: LexGetResourcePermissions = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
 ):
-    return query.query()
+    return resource_permissions.get_resource_permissions()
 
 
 @router.get(

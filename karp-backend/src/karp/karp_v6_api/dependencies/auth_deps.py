@@ -9,13 +9,11 @@ from karp import auth, lex
 from karp.auth.domain.errors import TokenError
 from karp.auth_infrastructure import (
     JWTAuthService,
-    JWTAuthServiceConfig,
-    LexGetResourcePermissions,
-    LexIsResourceProtected,
+    ResourcePermissionQueries,
 )
 from karp.main.errors import KarpError  # noqa: F401
 
-from ...lex_infrastructure import ResourceQueries
+from karp.lex.application.repositories import ResourceRepository
 from . import lex_deps
 from .fastapi_injector import inject_from_req
 
@@ -36,26 +34,12 @@ def bearer_scheme(authorization=Header(None)):  # noqa: ANN201, D103
 
 
 def get_resource_permissions(  # noqa: D103
-    resources: ResourceQueries = Depends(lex_deps.get_resource_queries),
-) -> LexGetResourcePermissions:
-    return LexGetResourcePermissions(resources)
+    resources: ResourceRepository = Depends(lex_deps.get_resource_repository),
+) -> ResourcePermissionQueries:
+    return ResourcePermissionQueries(resources)
 
 
-def get_is_resource_protected(  # noqa: D103
-    repo: ResourceQueries = Depends(lex_deps.get_resource_queries),
-) -> LexIsResourceProtected:
-    return LexIsResourceProtected(repo)
-
-
-def get_auth_service(  # noqa: D103
-    config: JWTAuthServiceConfig = Depends(inject_from_req(JWTAuthServiceConfig)),
-    query: LexIsResourceProtected = Depends(get_is_resource_protected),
-) -> JWTAuthService:
-    return JWTAuthService(
-        pubkey_path=config.pubkey_path,
-        is_resource_protected=query,
-    )
-
+get_auth_service = inject_from_req(JWTAuthService)
 
 # TODO this one uses "bearer_scheme"
 # get_user uses "auth_scheme"

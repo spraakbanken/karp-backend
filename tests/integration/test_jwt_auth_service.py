@@ -18,7 +18,6 @@ from karp.auth_infrastructure.services.jwt_auth_service import (
     JWTPayload,  # noqa: F401
 )
 from tests.integration.auth.adapters import create_access_token
-from tests.unit.auth import adapters
 
 # Generate our key
 
@@ -34,7 +33,6 @@ AUTH_JWT_AUDIENCE = "spraakbanken:auth"
 def jwt_authenticator() -> None:
     return JWTAuthService(
         pubkey_path=Path("assets/testing/pubkey.pem"),
-        is_resource_protected=adapters.InMemoryIsResourceProtected(),
     )
 
 
