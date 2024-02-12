@@ -25,6 +25,7 @@ class LexInfrastructure(injector.Module):  # noqa: D101
             session=session,
         )
 
+
 class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
     def resource_queries(  # noqa: D102

@@ -30,6 +30,7 @@ def _entry_to_entry_dto(entry: Entry, resource_id: str) -> EntryDto:
         message=entry.message,
     )
 
+
 class EntryQueries:
     def __init__(  # noqa: D107
         self,

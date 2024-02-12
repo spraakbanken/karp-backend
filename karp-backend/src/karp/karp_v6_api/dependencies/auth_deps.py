@@ -11,9 +11,9 @@ from karp.auth_infrastructure import (
     JWTAuthService,
     ResourcePermissionQueries,
 )
+from karp.lex.application.repositories import ResourceRepository
 from karp.main.errors import KarpError  # noqa: F401
 
-from karp.lex.application.repositories import ResourceRepository
 from . import lex_deps
 from .fastapi_injector import inject_from_req
 
@@ -40,6 +40,7 @@ def get_resource_permissions(  # noqa: D103
 
 
 get_auth_service = inject_from_req(JWTAuthService)
+
 
 # TODO this one uses "bearer_scheme"
 # get_user uses "auth_scheme"
