@@ -1,12 +1,12 @@
 import logging
 
+from karp.foundation.timings import utc_now
 from karp.lex.application.dtos import ResourceDto
 from karp.lex.application.repositories import ResourceRepository
 from karp.lex.domain import entities
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex_core.value_objects import make_unique_id
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
-from karp.foundation.timings import utc_now
 
 logger = logging.getLogger(__name__)
 

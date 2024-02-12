@@ -1,3 +1,4 @@
+from karp.foundation.timings import utc_now
 from karp.lex import EntryDto
 from karp.lex.application.repositories import EntryRepository, ResourceRepository
 from karp.lex.domain.entities import Resource
@@ -5,7 +6,6 @@ from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.search_infrastructure.transformers import entry_transformer
-from karp.foundation.timings import utc_now
 
 
 class EntryCommands:
