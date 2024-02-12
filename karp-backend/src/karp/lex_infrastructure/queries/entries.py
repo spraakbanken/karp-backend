@@ -30,8 +30,7 @@ def _entry_to_entry_dto(entry: Entry, resource_id: str) -> EntryDto:
         message=entry.message,
     )
 
-
-class GenericEntryViews:
+class EntryQueries:
     def __init__(  # noqa: D107
         self,
         resources: ResourceRepository,
@@ -61,17 +60,7 @@ class GenericEntryViews:
         entries = self.resources.entries_by_resource_id(resource_id)
         return (_entry_to_entry_dto(entry, resource_id) for entry in entries.all_entries())
 
-
-class GenericEntryQuery:  # noqa: D101
-    def __init__(  # noqa: D107, ANN204
-        self,
-        resources: ResourceRepository,
-    ):
-        self.resources = resources
-
-
-class GenericGetEntryHistory(GenericEntryQuery):  # noqa: D101
-    def query(  # noqa: D102
+    def get_entry_history(  # noqa: D102
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
@@ -90,9 +79,7 @@ class GenericGetEntryHistory(GenericEntryQuery):  # noqa: D101
             message=result.message,
         )
 
-
-class GenericGetHistory(GenericEntryQuery):  # noqa: D101
-    def query(  # noqa: D102
+    def get_history(  # noqa: D102
         self,
         request: EntryHistoryRequest,
     ) -> GetHistoryDto:
@@ -138,9 +125,7 @@ class GenericGetHistory(GenericEntryQuery):  # noqa: D101
 
         return GetHistoryDto(history=result, total=total)
 
-
-class GenericGetEntryDiff(GenericEntryQuery):
-    def query(  # noqa: D102
+    def get_entry_diff(  # noqa: D102
         self,
         request: EntryDiffRequest,
     ) -> EntryDiffDto:

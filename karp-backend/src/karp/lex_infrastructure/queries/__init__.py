@@ -1,8 +1,5 @@
-from .generic_entries import (
-    GenericEntryViews,
-    GenericGetEntryDiff,
-    GenericGetEntryHistory,
-    GenericGetHistory,
+from .entries import (
+    EntryQueries,
 )
 from .resources import (
     ResourceQueries,

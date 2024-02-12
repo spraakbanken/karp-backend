@@ -126,13 +126,3 @@ class InMemoryLexInfrastructure(injector.Module):
     @injector.singleton
     def resources(self) -> ResourceRepository:
         return InMemoryResourceRepository()
-
-    @injector.provider
-    @injector.singleton
-    def resource_queries(
-        self,
-        resources: ResourceRepository,
-    ) -> ResourceQueries:
-        return ResourceQueries(
-            resources=resources.repo.resources,  # type: ignore
-        )

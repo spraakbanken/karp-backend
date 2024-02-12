@@ -4,10 +4,7 @@ import injector
 from sqlalchemy.orm import Session
 
 from karp.lex_infrastructure.queries import (
-    GenericEntryViews,
-    GenericGetEntryDiff,
-    GenericGetEntryHistory,
-    GenericGetHistory,
+    EntryQueries,
     ResourceQueries,
 )
 from karp.lex_infrastructure.repositories import (
@@ -20,12 +17,6 @@ logger = logging.getLogger(__name__)
 
 class LexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def resource_queries(  # noqa: D102
-        self, resources: ResourceRepository
-    ) -> ResourceQueries:
-        return ResourceQueries(resources)
-
-    @injector.provider
     def resources(  # noqa: D102
         self,
         session: Session,
@@ -34,40 +25,18 @@ class LexInfrastructure(injector.Module):  # noqa: D101
             session=session,
         )
 
-
 class GenericLexInfrastructure(injector.Module):  # noqa: D101
     @injector.provider
-    def get_entry_diff(  # noqa: D102
-        self,
-        resources: ResourceRepository,
-    ) -> GenericGetEntryDiff:
-        return GenericGetEntryDiff(
-            resources=resources,
-        )
+    def resource_queries(  # noqa: D102
+        self, resources: ResourceRepository
+    ) -> ResourceQueries:
+        return ResourceQueries(resources)
 
     @injector.provider
-    def entry_views(  # noqa: D102
+    def entry_queries(  # noqa: D102
         self,
         resources: ResourceRepository,
-    ) -> GenericEntryViews:
-        return GenericEntryViews(
-            resources=resources,
-        )
-
-    @injector.provider
-    def get_history(  # noqa: D102
-        self,
-        resources: ResourceRepository,
-    ) -> GenericGetHistory:
-        return GenericGetHistory(
-            resources=resources,
-        )
-
-    @injector.provider
-    def get_entry_history(  # noqa: D102
-        self,
-        resources: ResourceRepository,
-    ) -> GenericGetEntryHistory:
-        return GenericGetEntryHistory(
+    ) -> EntryQueries:
+        return EntryQueries(
             resources=resources,
         )

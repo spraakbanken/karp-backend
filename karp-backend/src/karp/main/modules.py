@@ -6,7 +6,7 @@ import sys
 
 from karp.entry_commands import EntryCommands
 from karp.lex.application.repositories import ResourceRepository
-from karp.lex_infrastructure import ResourceQueries, GenericEntryViews
+from karp.lex_infrastructure import ResourceQueries, EntryQueries
 from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
@@ -102,10 +102,10 @@ class CommandsMod(injector.Module):  # noqa: D101
         self,
         index: Es6Index,
         resource_queries: ResourceQueries,
-        entry_views: GenericEntryViews,
+        entry_queries: EntryQueries,
     ) -> SearchCommands:
         return SearchCommands(
-            index=index, resource_queries=resource_queries, entry_views=entry_views
+            index=index, resource_queries=resource_queries, entry_queries=entry_queries
         )
 
 

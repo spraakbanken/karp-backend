@@ -6,9 +6,7 @@ from karp.karp_v6_api.dependencies.db_deps import (
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
 from karp.lex.application.repositories import ResourceRepository
 from karp.lex_infrastructure import (
-    GenericGetEntryDiff,
-    GenericGetEntryHistory,
-    GenericGetHistory,
+    EntryQueries,
     ResourceQueries,
     SqlResourceRepository,
 )
@@ -30,25 +28,7 @@ def get_resource_queries(  # noqa: D103
     return ResourceQueries(resources)
 
 
-def get_entry_diff(  # noqa: D103
-    resources: ResourceRepository = Depends(get_resource_repository),
-) -> GenericGetEntryDiff:
-    return GenericGetEntryDiff(
-        resources=resources,
-    )
-
-
-def get_entry_history(  # noqa: D103
-    resources: ResourceRepository = Depends(get_resource_repository),
-) -> GenericGetEntryHistory:
-    return GenericGetEntryHistory(
-        resources=resources,
-    )
-
-
-def get_history(  # noqa: D103
-    resources: ResourceRepository = Depends(get_resource_repository),
-) -> GenericGetHistory:
-    return GenericGetHistory(
-        resources=resources,
-    )
+def get_entry_queries(  # noqa: D103
+    resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
+) -> EntryQueries:
+    return EntryQueries(resources)

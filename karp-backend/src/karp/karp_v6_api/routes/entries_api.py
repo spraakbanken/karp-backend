@@ -18,7 +18,7 @@ from karp.auth_infrastructure import JWTAuthService
 from karp.entry_commands import EntryCommands
 from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
-from karp.lex_infrastructure import GenericGetEntryHistory
+from karp.lex_infrastructure import EntryQueries
 
 from karp.main import errors as karp_errors
 from karp import auth
@@ -42,7 +42,7 @@ def get_history_for_entry(  # noqa: ANN201, D103
     version: Optional[int] = Query(None),
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     auth_service: JWTAuthService = Depends(deps.get_auth_service),
-    get_entry_history: GenericGetEntryHistory = Depends(deps.get_entry_history),
+    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
@@ -57,7 +57,7 @@ def get_history_for_entry(  # noqa: ANN201, D103
             "user": user.identifier,
         },
     )
-    return get_entry_history.query(resource_id, entry_id, version=version)
+    return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
 
 @router.put(

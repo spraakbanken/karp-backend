@@ -17,7 +17,7 @@ from karp.karp_v6_api import schemas  # noqa: F401
 
 from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req  # noqa: F401
-from karp.lex_infrastructure import GenericGetEntryDiff, GenericGetHistory
+from karp.lex_infrastructure import EntryQueries
 
 # pylint: disable=unsubscriptable-object
 
@@ -35,7 +35,7 @@ def get_diff(  # noqa: ANN201, D103
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
     auth_service: JWTAuthService = Depends(deps.get_auth_service),
-    get_entry_diff: GenericGetEntryDiff = Depends(deps.get_entry_diff),
+    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
@@ -52,7 +52,7 @@ def get_diff(  # noqa: ANN201, D103
         toDate=to_date,
         entry=entry,
     )
-    return get_entry_diff.query(diff_request)
+    return entry_queries.get_entry_diff(diff_request)
 
 
 @router.get(
@@ -71,7 +71,7 @@ def get_history(  # noqa: ANN201, D103
     current_page: int = Query(0),
     page_size: int = Query(100),
     auth_service: JWTAuthService = Depends(deps.get_auth_service),
-    get_history: GenericGetHistory = Depends(deps.get_history),
+    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
     if not auth_service.authorize(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
@@ -89,7 +89,7 @@ def get_history(  # noqa: ANN201, D103
         fromVersion=from_version,
         toVersion=to_version,
     )
-    return get_history.query(history_request)
+    return entry_queries.get_history(history_request)
 
 
 def init_app(app):  # noqa: ANN201, D103
