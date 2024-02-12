@@ -16,19 +16,16 @@ from karp.lex.application import repositories
 from karp.lex.domain.entities.resource import Resource
 
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
-from karp.db_infrastructure.sql_repository import SqlRepository
 from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
 from karp.foundation.cache import Cache
 
 logger = logging.getLogger(__name__)
 
 
-class SqlResourceRepository(  # noqa: D101
-    SqlRepository, repositories.ResourceRepository
-):
+class SqlResourceRepository(repositories.ResourceRepository):
     def __init__(self, session: Session):  # noqa: D107, ANN204
         repositories.ResourceRepository.__init__(self)
-        SqlRepository.__init__(self, session=session)
+        self._session = session
         # caches lookups to self._by_resource_id
         # Note: we ought to also invalidate the cache if a transaction is rolled back.
         # It's OK right now because after rolling back we always end the session, so
@@ -36,7 +33,6 @@ class SqlResourceRepository(  # noqa: D101
         self._cache = Cache(self._by_resource_id_uncached)
 
     def _save(self, resource: Resource):  # noqa: ANN202
-        self._check_has_session()
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
         if resource.discarded:
@@ -45,7 +41,6 @@ class SqlResourceRepository(  # noqa: D101
         self._cache.clear()
 
     def resource_ids(self) -> List[str]:  # noqa: D102
-        self._check_has_session()
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -72,7 +67,6 @@ class SqlResourceRepository(  # noqa: D101
         version: Optional[int] = None,
         **kwargs,  # noqa: ANN003
     ) -> typing.Optional[entities.Resource]:
-        self._check_has_session()
         query = self._session.query(ResourceModel).filter_by(entity_id=id)
         if version:
             query = query.filter_by(version=version)
@@ -91,7 +85,6 @@ class SqlResourceRepository(  # noqa: D101
         self,
         resource_id: str,
     ) -> Optional[Resource]:
-        self._check_has_session()
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -116,7 +109,6 @@ class SqlResourceRepository(  # noqa: D101
         return resource_dto.to_entity() if resource_dto else None
 
     def _get_published_resources(self) -> typing.Iterable[entities.Resource]:
-        self._check_has_session()
         subq = (
             self._session.query(
                 ResourceModel.resource_id,
@@ -137,7 +129,6 @@ class SqlResourceRepository(  # noqa: D101
         return (resource_dto.to_entity() for resource_dto in query if resource_dto is not None)
 
     def _get_all_resources(self) -> typing.Iterable[entities.Resource]:
-        self._check_has_session()
         subq = (
             self._session.query(
                 ResourceModel.resource_id,

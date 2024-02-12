@@ -31,18 +31,15 @@ from karp.lex.domain.entities.entry import (
     EntryStatus,  # noqa: F401
 )
 from karp.lex_infrastructure.sql import sql_models
-from karp.db_infrastructure.sql_repository import SqlRepository
 
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: D101
+class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
     def __init__(  # noqa: D107, ANN204
         self, session: Session, resource: Resource
     ):
-        if not session:
-            raise TypeError("session can't be None")
-        SqlRepository.__init__(self, session=session)
+        self._session = session
         repositories.EntryRepository.__init__(
             self,
             id=resource.entity_id,
@@ -60,7 +57,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
         )
 
     def _save(self, entry: Entry):  # noqa: ANN202
-        self._check_has_session()
         entry_dto = self.history_model.from_entity(entry)
         self._session.add(entry_dto)
 
@@ -100,7 +96,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
         before_date: Optional[float] = None,
         oldest_first: bool = False,
     ) -> Optional[Entry]:
-        self._check_has_session()
         query = self._session.query(self.history_model)
         query = query.filter_by(entity_id=id)
         if version:
@@ -136,7 +131,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
 
     # TODO Rename this here and in `entity_ids` and `all_entries`
     def _stmt_latest_not_discarded(self):  # noqa: ANN202
-        self._check_has_session()
         subq = self._subq_for_latest()
         return sql.select(self.history_model).join(
             subq,
@@ -168,7 +162,6 @@ class SqlEntryRepository(SqlRepository, repositories.EntryRepository):  # noqa: 
         offset: int = 0,
         limit: int = 100,
     ):
-        self._check_has_session()
         query = self._session.query(self.history_model)
         if user_id:
             query = query.filter_by(last_modified_by=user_id)
