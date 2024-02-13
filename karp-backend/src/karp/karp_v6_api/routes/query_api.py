@@ -12,6 +12,7 @@ from karp import auth, search
 from karp.auth_infrastructure import ResourcePermissionQueries
 from karp.main import errors as karp_errors
 from karp.search.application.queries import QueryRequest
+from karp.search.domain.errors import IncompleteQuery
 
 from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
@@ -92,7 +93,7 @@ def query_split(  # noqa: ANN201, D103
             extra={"resources": resources, "q": q, "error_message": err.message},
         )
         raise
-    except search.IncompleteQuery as err:
+    except IncompleteQuery as err:
         raise HTTPException(  # noqa: B904
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
