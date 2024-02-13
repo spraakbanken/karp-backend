@@ -11,7 +11,6 @@ from karp.search.domain.errors import UnsupportedField
 logger = logging.getLogger("karp")
 
 KARP_CONFIGINDEX = "karp_config"
-KARP_CONFIGINDEX_TYPE = "configs"
 
 
 class Es6MappingRepository:  # noqa: D101
@@ -39,12 +38,10 @@ class Es6MappingRepository:  # noqa: D101
                         "refresh_interval": -1,
                     },
                     "mappings": {
-                        KARP_CONFIGINDEX_TYPE: {
-                            "dynamic": False,
-                            "properties": {
-                                "index_name": {"type": "text"},
-                                "alias_name": {"type": "text"},
-                            },
+                        "dynamic": False,
+                        "properties": {
+                            "index_name": {"type": "text"},
+                            "alias_name": {"type": "text"},
                         }
                     },
                 },
@@ -72,7 +69,6 @@ class Es6MappingRepository:  # noqa: D101
         self.es.index(
             index=self._config_index,
             id=resource_id,
-            doc_type=KARP_CONFIGINDEX_TYPE,
             body=names,
         )
         return names
@@ -96,9 +92,7 @@ class Es6MappingRepository:  # noqa: D101
 
     def get_index_name(self, resource_id: str) -> str:  # noqa: D102
         try:
-            res = self.es.get(
-                index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
-            )
+            res = self.es.get(index=self._config_index, id=resource_id)
         except es_exceptions.NotFoundError as err:
             logger.info("didn't find index_name for resource '%s' details: %s", resource_id, err)
             return self._update_config(resource_id)["index_name"]
@@ -106,9 +100,7 @@ class Es6MappingRepository:  # noqa: D101
 
     def get_alias_name(self, resource_id: str) -> str:  # noqa: D102
         try:
-            res = self.es.get(
-                index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
-            )
+            res = self.es.get(index=self._config_index, id=resource_id)
         except es_exceptions.NotFoundError as err:
             logger.info("didn't find alias_name for resource '%s' details: %s", resource_id, err)
             return self._update_config(resource_id)["alias_name"]
@@ -144,16 +136,12 @@ class Es6MappingRepository:  # noqa: D101
         aliases = self._get_all_aliases()
         mapping: Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]] = self.es.indices.get_mapping()
         for alias, index in aliases:
-            if (
-                "mappings" in mapping[index]
-                and "entry" in mapping[index]["mappings"]
-                and "properties" in mapping[index]["mappings"]["entry"]
-            ):
+            if "mappings" in mapping[index] and "properties" in mapping[index]["mappings"]:
                 field_mapping[alias] = Es6MappingRepository.get_analyzed_fields_from_mapping(
-                    mapping[index]["mappings"]["entry"]["properties"]
+                    mapping[index]["mappings"]["properties"]
                 )
                 sortable_fields[alias] = Es6MappingRepository.create_sortable_map_from_mapping(
-                    mapping[index]["mappings"]["entry"]["properties"]
+                    mapping[index]["mappings"]["properties"]
                 )
         return field_mapping, sortable_fields
 
@@ -226,20 +214,16 @@ class Es6MappingRepository:  # noqa: D101
         self, alias_name: str, index_name: str
     ):
         mapping = self._get_index_mappings(index=index_name)
-        if (
-            "mappings" in mapping[index_name]
-            and "entry" in mapping[index_name]["mappings"]
-            and "properties" in mapping[index_name]["mappings"]["entry"]
-        ):
+        if "mappings" in mapping[index_name] and "properties" in mapping[index_name]["mappings"]:
             self.analyzed_fields[
                 alias_name
             ] = Es6MappingRepository.get_analyzed_fields_from_mapping(
-                mapping[index_name]["mappings"]["entry"]["properties"]
+                mapping[index_name]["mappings"]["properties"]
             )
             self.sortable_fields[
                 alias_name
             ] = Es6MappingRepository.create_sortable_map_from_mapping(
-                mapping[index_name]["mappings"]["entry"]["properties"]
+                mapping[index_name]["mappings"]["properties"]
             )
 
     @staticmethod

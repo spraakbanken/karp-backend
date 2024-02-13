@@ -4,7 +4,7 @@ import pytest  # noqa: I001
 from starlette.config import environ
 
 environ["TESTING"] = "True"
-environ["ELASTICSEARCH_HOST"] = "localhost:9202"
+environ["ELASTICSEARCH_HOST"] = "http://localhost:9202"
 environ["CONSOLE_LOG_LEVEL"] = "DEBUG"
 
 from . import common_data, utils  # nopep8  # noqa: E402, F401

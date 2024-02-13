@@ -44,7 +44,7 @@ class Es6Index:
 
         body = {
             "settings": settings,
-            "mappings": {"entry": mapping},
+            "mappings": mapping,
         }
 
         index_alias_name = self.mapping_repo.create_index_and_alias_name(resource_id)
@@ -94,7 +94,6 @@ class Es6Index:
                 {
                     "_index": index_name,
                     "_id": entry.id,
-                    "_type": "entry",
                     "_source": entry.entry,
                 }
             )
@@ -117,7 +116,6 @@ class Es6Index:
         try:
             self.es.delete(
                 index=index_name,
-                doc_type="entry",
                 id=entry_id,
                 refresh=True,
             )

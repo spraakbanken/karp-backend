@@ -51,7 +51,7 @@ A Makefile is provided to simplify tasks.
 
 ```
 export ES_ENABLED=true
-export ELASTICSEARCH_HOST=localhost:9200
+export ELASTICSEARCH_HOST=http://localhost:9200
 ```
 
 ## Create test resources

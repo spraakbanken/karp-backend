@@ -149,7 +149,7 @@ class Es6SearchService:
             }
 
         result = {
-            "total": response.hits.total,
+            "total": response.hits.total.value,
             "hits": [format_entry(entry) for entry in response],
         }
         return result
@@ -186,6 +186,7 @@ class Es6SearchService:
                 alias_name = self.mapping_repo.get_alias_name(resource)
                 s = es_dsl.Search(index=alias_name)
                 s = self.add_runtime_mappings(s, field_names)
+                s = s.extra(track_total_hits=True) # get accurate hits numbers
 
                 if es_query is not None:
                     s = s.query(es_query)
@@ -204,11 +205,11 @@ class Es6SearchService:
                 result["hits"][query.resources[i]] = self._format_result(
                     query.resources, response
                 ).get("hits", [])
-                result["total"] += response.hits.total
+                result["total"] += response.hits.total.value
                 if query.lexicon_stats:
                     if "distribution" not in result:
                         result["distribution"] = {}
-                    result["distribution"][query.resources[i]] = response.hits.total
+                    result["distribution"][query.resources[i]] = response.hits.total.value
         else:
             result = self._extracted_from_search_with_query_47(query, es_query, field_names)
 
@@ -219,7 +220,7 @@ class Es6SearchService:
         alias_names = [
             self.mapping_repo.get_alias_name(resource) for resource in query.resources
         ]
-        s = es_dsl.Search(using=self.es, index=alias_names, doc_type="entry")
+        s = es_dsl.Search(using=self.es, index=alias_names)
         s = self.add_runtime_mappings(s, field_names)
         if es_query is not None:
             s = s.query(es_query)
