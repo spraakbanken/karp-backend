@@ -18,13 +18,11 @@ class SearchCommands:
 
     def reindex_resource(self, resource_id):
         logger.debug("Reindexing resource '%s'", resource_id)
-        self.index.create_index(
-            resource_id, self.resource_queries.by_resource_id_optional(resource_id).config
-        )
+        resource = self.resource_queries.by_resource_id_optional(resource_id)
+        self.index.create_index(resource_id, resource.config)
 
         def process():
             for entry in self.entry_queries.all_entries(resource_id):
-                resource = self.resource_queries.by_resource_id_optional(resource_id)
                 yield entry_transformer.transform(resource, entry)
 
         self.index.add_entries(resource_id, process())
