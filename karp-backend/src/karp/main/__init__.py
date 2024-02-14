@@ -125,7 +125,7 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
             "loggers": {
                 "karp": {
                     "handlers": ["json"],
-                    "level": "DEBUG",
+                    "level": "INFO",
                     "propagate": True,
                 },
                 # third-party package loggers

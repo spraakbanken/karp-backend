@@ -174,7 +174,7 @@ class Es6SearchService:
                 es_query = self.query_builder.walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
-                logger.debug("Parse error", extra={"err": err})
+                logger.info("Parse error", extra={"err": err})
                 raise errors.IncompleteQuery(
                     failing_query=query.q, error_description=str(err)
                 ) from err
