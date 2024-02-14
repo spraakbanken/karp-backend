@@ -168,7 +168,7 @@ def query(  # noqa: ANN201
         lexicon_stats=lexicon_stats,
     )
     try:
-        print(f"{search_service=}")
+        logger.debug(f"{search_service=}")
         response = search_service.query(query_request)
 
     except karp_errors.KarpError as err:

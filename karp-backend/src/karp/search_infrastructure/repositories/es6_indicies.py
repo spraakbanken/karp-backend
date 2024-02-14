@@ -167,7 +167,7 @@ def _create_es_mapping(config):  # noqa: C901, ANN202
         parent_schema["properties"][parent_field_name] = result
 
     for field_name, field_def in fields.items():
-        print(f"creating mapping for field '{field_name}'")
+        logger.debug(f"creating mapping for field '{field_name}'")
         recursive_field(es_mapping, field_name, field_def)
 
     return es_mapping

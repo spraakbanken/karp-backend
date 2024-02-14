@@ -54,7 +54,6 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
         return self.walk(node.ast).lower()
 
     def walk__quoted_string_value(self, node):
-        print("bepa")
         return "".join([part.replace('\\"', '"') for part in node.ast])
 
     def walk__exists(self, node):  # noqa: ANN201, D102

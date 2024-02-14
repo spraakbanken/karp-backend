@@ -1,4 +1,5 @@
 import typing  # noqa: D100, I001
+import logging
 
 import pydantic
 from fastapi import (
@@ -18,6 +19,8 @@ from karp.karp_v6_api import schemas  # noqa: F401
 
 from karp.karp_v6_api import dependencies as deps
 from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
+
+logger = logging.getLogger(__name__)
 
 
 router = APIRouter()
@@ -44,7 +47,7 @@ def get_field_values(  # noqa: ANN201, D103
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    print(f"calling statistics ... from {search_service=}")
+    logger.debug(f"calling statistics ... from {search_service=}")
     return search_service.statistics(resource_id, field)
 
 
