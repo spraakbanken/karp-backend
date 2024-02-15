@@ -3,6 +3,7 @@ import logging
 from typing import Any
 
 import fastjsonschema
+
 from karp.lex.domain import errors
 
 logger = logging.getLogger(__name__)

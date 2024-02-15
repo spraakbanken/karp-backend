@@ -1,6 +1,7 @@
 import typing  # noqa: D100
 
 import elasticsearch_dsl as es_dsl
+
 from karp.search.application.queries import QueryRequest
 from karp.search.domain.query import Query
 

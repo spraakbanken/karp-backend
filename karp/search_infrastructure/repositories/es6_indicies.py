@@ -5,6 +5,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union  # noqa: F4
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions  # noqa: F401
+
 from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
     IndexEntry,

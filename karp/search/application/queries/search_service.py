@@ -3,6 +3,7 @@ import typing
 from typing import Callable, Dict, List, Optional, Tuple, TypeVar  # noqa: F401
 
 import pydantic
+
 from karp.search.domain.query import Query  # noqa: F401
 
 logger = logging.getLogger(__name__)

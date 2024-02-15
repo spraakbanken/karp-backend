@@ -5,6 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.param_functions import Header
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityScopes
 from fastapi.security import utils as security_utils
+
 from karp import auth, lex
 from karp.auth.domain.errors import TokenError
 from karp.auth_infrastructure import (

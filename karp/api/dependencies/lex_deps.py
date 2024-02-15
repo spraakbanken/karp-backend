@@ -1,4 +1,7 @@
 from fastapi import Depends
+from sqlalchemy.orm import Session
+from starlette.requests import Request  # noqa: F401
+
 from karp.api.dependencies import db_deps
 from karp.api.dependencies.db_deps import (
     get_session,
@@ -10,8 +13,6 @@ from karp.lex_infrastructure import (
     ResourceQueries,
     SqlResourceRepository,
 )
-from sqlalchemy.orm import Session
-from starlette.requests import Request  # noqa: F401
 
 
 def get_resource_repository(

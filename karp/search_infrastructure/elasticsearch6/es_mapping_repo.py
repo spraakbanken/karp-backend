@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions
+
 from karp.lex.domain.entities import Entry  # noqa: F401
 from karp.search.domain.errors import UnsupportedField
 

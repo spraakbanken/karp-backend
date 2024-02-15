@@ -1,6 +1,7 @@
 """Resource DTO."""
 
 import pydantic
+
 from karp.lex_core import alias_generators
 from karp.lex_core.value_objects import UniqueIdStr
 

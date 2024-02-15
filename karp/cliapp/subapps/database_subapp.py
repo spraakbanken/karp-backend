@@ -1,4 +1,5 @@
 import typer
+
 from karp.main.migrations.use_cases import run_migrations_down, run_migrations_up
 
 subapp = typer.Typer()
