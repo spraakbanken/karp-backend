@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "karp-platform"
+name = "karp"
 version = "6.2.0.dev"
 license = "MIT"
 description = "Karp backend"
@@ -19,10 +19,6 @@ classifiers = [
 	"Operating System :: POSIX",
 	"Operating System :: Microsoft :: Windows",
 	"Topic :: Utilities",
-]
-packages = [
-	{ include = "karp", from = "karp-backend/src" },
-	{ include = "karp", from = "karp-lex-core/src" },
 ]
 
 [tool.poetry.scripts]

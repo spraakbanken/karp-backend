@@ -1,2 +1,2 @@
 [run]
-source = karp-backend/src/karp,karp-lex-core/src/karp
+source = src/karp
