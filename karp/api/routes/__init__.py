@@ -1,6 +1,6 @@
 from fastapi import APIRouter  # noqa: I001
 
-from karp.karp_v6_api.routes import (
+from karp.api.routes import (
     entries_api,
     history_api,
     query_api,

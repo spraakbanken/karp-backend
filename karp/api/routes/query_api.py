@@ -14,8 +14,8 @@ from karp.main import errors as karp_errors
 from karp.search.application.queries import QueryRequest
 from karp.search.domain.errors import IncompleteQuery
 
-from karp.karp_v6_api import dependencies as deps
-from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
+from karp.api import dependencies as deps
+from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.search_infrastructure.queries import Es6SearchService
 
 

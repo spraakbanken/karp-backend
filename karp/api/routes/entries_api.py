@@ -26,8 +26,8 @@ from karp.lex.application.queries import EntryDto
 from karp.lex.domain import errors
 from karp.auth import User
 from karp.foundation.value_objects import PermissionLevel
-from karp.karp_v6_api import schemas, dependencies as deps
-from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
+from karp.api import schemas, dependencies as deps
+from karp.api.dependencies.fastapi_injector import inject_from_req
 
 router = APIRouter()
 

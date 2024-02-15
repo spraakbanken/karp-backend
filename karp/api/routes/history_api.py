@@ -13,10 +13,10 @@ from karp.lex.application.queries import (
     EntryDiffRequest,
     EntryHistoryRequest,
 )
-from karp.karp_v6_api import schemas  # noqa: F401
+from karp.api import schemas  # noqa: F401
 
-from karp.karp_v6_api import dependencies as deps
-from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req  # noqa: F401
+from karp.api import dependencies as deps
+from karp.api.dependencies.fastapi_injector import inject_from_req  # noqa: F401
 from karp.lex_infrastructure import EntryQueries
 
 # pylint: disable=unsubscriptable-object

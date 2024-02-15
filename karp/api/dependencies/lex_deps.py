@@ -1,9 +1,9 @@
 from fastapi import Depends
-from karp.karp_v6_api.dependencies import db_deps
-from karp.karp_v6_api.dependencies.db_deps import (
+from karp.api.dependencies import db_deps
+from karp.api.dependencies.db_deps import (
     get_session,
 )
-from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
+from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.lex.application.repositories import ResourceRepository
 from karp.lex_infrastructure import (
     EntryQueries,

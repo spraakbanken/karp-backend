@@ -27,7 +27,7 @@ from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
 from karp.main import modules, config
-from karp.karp_v6_api.routes import router as api_router
+from karp.api.routes import router as api_router
 
 
 querying_description = """

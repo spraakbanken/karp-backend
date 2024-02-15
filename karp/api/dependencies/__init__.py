@@ -1,8 +1,8 @@
-from karp.karp_v6_api.dependencies.lex_deps import (  # noqa: I001
+from karp.api.dependencies.lex_deps import (  # noqa: I001
     get_entry_queries,
     get_resource_queries,
 )
-from karp.karp_v6_api.dependencies.auth_deps import (
+from karp.api.dependencies.auth_deps import (
     get_auth_service,
     get_user,
     get_user_optional,

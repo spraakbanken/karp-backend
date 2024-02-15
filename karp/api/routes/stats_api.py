@@ -15,10 +15,10 @@ from karp import auth
 from karp.auth_infrastructure import ResourcePermissionQueries
 from karp.foundation.value_objects import PermissionLevel
 from karp.search_infrastructure.queries import Es6SearchService
-from karp.karp_v6_api import schemas  # noqa: F401
+from karp.api import schemas  # noqa: F401
 
-from karp.karp_v6_api import dependencies as deps
-from karp.karp_v6_api.dependencies.fastapi_injector import inject_from_req
+from karp.api import dependencies as deps
+from karp.api.dependencies.fastapi_injector import inject_from_req
 
 logger = logging.getLogger(__name__)
 

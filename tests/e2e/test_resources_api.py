@@ -1,6 +1,6 @@
 from starlette import status
 
-from karp.karp_v6_api.schemas import ResourcePublic
+from karp.api.schemas import ResourcePublic
 
 
 class TestResourcesRoutes:
