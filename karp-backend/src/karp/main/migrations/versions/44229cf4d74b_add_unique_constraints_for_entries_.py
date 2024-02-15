@@ -19,6 +19,7 @@ depends_on = None
 # but maybe best to make a backup just in case :)
 delete_duplicate_entries = False
 
+
 def upgrade():
     conn = op.get_bind()
     for (table_name,) in conn.execute(sa.text("select distinct table_name from resources")):
@@ -30,27 +31,35 @@ def upgrade():
 
             # Entries are considered duplicates if all fields apart
             # from history_id are the same
-            columns_list = list(conn.execute(sa.text(f"select * from {table_name} limit 1")).keys())
-            columns_list.remove('history_id')
+            columns_list = list(
+                conn.execute(sa.text(f"select * from {table_name} limit 1")).keys()  # noqa: S608
+            )
+            columns_list.remove("history_id")
             columns = ", ".join(columns_list)
 
             # When we have duplicates, we keep only the one with the
             # highest history_id. This query finds the entries we want
             # to keep (including non-duplicates).
             history_ids_to_keep = set()
-            for (history_id,) in conn.execute(sa.text(f"select max(history_id) from {table_name} group by {columns}")):
+            for (history_id,) in conn.execute(
+                sa.text(f"select max(history_id) from {table_name} group by {columns}")  # noqa: S608
+            ):
                 history_ids_to_keep.add(history_id)
 
             # Find all entries so we can work out which ones to
             # delete, then delete them
             all_history_ids = set()
-            for (history_id,) in conn.execute(sa.text(f"select distinct history_id from {table_name}")):
+            for (history_id,) in conn.execute(
+                sa.text(f"select distinct history_id from {table_name}")  # noqa: S608
+            ):
                 all_history_ids.add(history_id)
             history_ids_to_delete = all_history_ids - history_ids_to_keep
             if history_ids_to_delete:
-                print(f"Deleting {len(history_ids_to_delete)} duplicate entries from {table_name}")
+                print(
+                    f"Deleting {len(history_ids_to_delete)} duplicate entries from {table_name}"
+                )
             for history_id in history_ids_to_delete:
-                conn.execute(sa.text(f"delete from {table_name} where history_id={history_id}"))
+                conn.execute(sa.text(f"delete from {table_name} where history_id={history_id}"))  # noqa: S608
 
         op.execute(
             f"alter table {table_name} drop constraint if exists id_version_unique_constraint"
