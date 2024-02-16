@@ -8,7 +8,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm.session import Session
 
-from karp.foundation.entity import TimestampedEntity
 from karp.foundation.repository import Repository
 from karp.lex.domain import errors
 from karp.lex.domain.entities import Resource
@@ -19,17 +18,9 @@ from karp.lex_infrastructure.sql import sql_models
 logger = logging.getLogger(__name__)
 
 
-class EntryRepository(TimestampedEntity, Repository):
+class EntryRepository(Repository):
     def __init__(self, session: Session, resource: Resource):
         self._session = session
-
-        TimestampedEntity.__init__(
-            self,
-            id=resource.entity_id,
-            last_modified_by=resource.last_modified_by,
-            last_modified=resource.last_modified,
-            discarded=resource.discarded,
-        )
         self._name = resource.resource_id
         self._config = resource.config
         self._message = resource.message
@@ -50,12 +41,6 @@ class EntryRepository(TimestampedEntity, Repository):
     @property
     def message(self) -> str:
         return self._message
-
-    def discard(self, *, user, timestamp: Optional[float] = None):
-        self._discarded = True
-        self._last_modified = self._ensure_timestamp(timestamp)
-        self._last_modified_by = user
-        return []
 
     def _save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
