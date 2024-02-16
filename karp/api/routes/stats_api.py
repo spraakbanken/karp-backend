@@ -1,24 +1,21 @@
-import typing  # noqa: D100, I001
 import logging
+import typing
 
 import pydantic
 from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
-    Response,  # noqa: F401
     Security,
     status,
 )
 
 from karp import auth
-from karp.auth_infrastructure import ResourcePermissionQueries
-from karp.foundation.value_objects import PermissionLevel
-from karp.search_infrastructure.queries import Es6SearchService
-from karp.api import schemas  # noqa: F401
-
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
+from karp.auth.infrastructure import ResourcePermissionQueries
+from karp.foundation.value_objects import PermissionLevel
+from karp.search_infrastructure.queries import Es6SearchService
 
 logger = logging.getLogger(__name__)
 

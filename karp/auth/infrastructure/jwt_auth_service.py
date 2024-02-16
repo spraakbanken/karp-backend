@@ -1,45 +1,42 @@
 """Module for jwt-based authentication."""
-from pathlib import Path  # noqa: I001
-from typing import Dict, List, Optional
+import logging
+from pathlib import Path
+from typing import Dict, Optional
 
 import jwt
-import jwt.exceptions as jwte  # pyre-ignore
+import jwt.exceptions as jwte
 import pydantic
-import logging
 
-from karp.auth_infrastructure import ResourcePermissionQueries
-from karp.foundation import value_objects
-from karp.auth.domain.errors import ExpiredToken, TokenError, InvalidTokenPayload
-from karp.auth.domain.entities.user import User
-
+from karp.auth.domain.errors import ExpiredToken, InvalidTokenPayload, TokenError
+from karp.auth.domain.user import User
 
 logger = logging.getLogger(__name__)
 
 
-class JWTMeta(pydantic.BaseModel):  # noqa: D101
+class JWTMeta(pydantic.BaseModel):
     iss: str
     aud: Optional[str]
     iat: float
     exp: float
 
 
-class JWTCreds(pydantic.BaseModel):  # noqa: D101
+class JWTCreds(pydantic.BaseModel):
     sub: str
     levels: Dict
     scope: Optional[Dict]
 
 
-class JWTPayload(JWTMeta, JWTCreds):  # noqa: D101
+class JWTPayload(JWTMeta, JWTCreds):
     pass
 
 
-def load_jwt_key(path: Path) -> str:  # noqa: D103
+def load_jwt_key(path: Path) -> str:
     with open(path) as fp:
         return fp.read()
 
 
 class JWTAuthServiceConfig:
-    def __init__(self, pubkey_path: str):  # noqa: D107, ANN204
+    def __init__(self, pubkey_path: str):
         self._pubkey_path = Path(pubkey_path)
 
     @property

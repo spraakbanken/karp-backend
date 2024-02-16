@@ -1,33 +1,30 @@
-import logging  # noqa: D100, I001
+import logging
 from typing import Optional
-import uuid  # noqa: F401
 
 from fastapi import (
     APIRouter,
-    Body,  # noqa: F401
     Depends,
     HTTPException,
+    Query,
     Security,
     status,
-    Path,  # noqa: F401
-    Query,
 )
 from starlette import responses
 
-from karp.auth_infrastructure import ResourcePermissionQueries
+from karp import auth
+from karp.api import dependencies as deps
+from karp.api import schemas
+from karp.api.dependencies.fastapi_injector import inject_from_req
+from karp.auth import User
+from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
+from karp.foundation.value_objects import PermissionLevel
+from karp.lex.application.queries import EntryDto
+from karp.lex.domain import errors
 from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_core.value_objects.unique_id import UniqueIdStr
 from karp.lex_infrastructure import EntryQueries
-
 from karp.main import errors as karp_errors
-from karp import auth
-from karp.lex.application.queries import EntryDto
-from karp.lex.domain import errors
-from karp.auth import User
-from karp.foundation.value_objects import PermissionLevel
-from karp.api import schemas, dependencies as deps
-from karp.api.dependencies.fastapi_injector import inject_from_req
 
 router = APIRouter()
 

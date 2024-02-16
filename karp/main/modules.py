@@ -1,12 +1,11 @@
-import logging  # noqa: D100, I001
-from pathlib import Path
-import threading
-from typing import Dict, Type
+import logging
 import sys
+from pathlib import Path
+from typing import Dict
 
 from karp.entry_commands import EntryCommands
 from karp.lex.application.repositories import ResourceRepository
-from karp.lex_infrastructure import ResourceQueries, EntryQueries
+from karp.lex_infrastructure import EntryQueries, ResourceQueries
 from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
@@ -15,20 +14,19 @@ try:
     from importlib.metadata import entry_points
 except ImportError:
     # used if python == 3.9
-    from importlib_metadata import entry_points  # type: ignore
+    from importlib_metadata import entry_points
 
-import elasticsearch  # noqa: I001
+from contextlib import contextmanager
+
+import elasticsearch
 import injector
-from injector import Provider, T
-from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from karp.auth_infrastructure import (
+from karp.auth.infrastructure import (
     AuthInfrastructure,
     JwtAuthInfrastructure,
 )
-
-from contextlib import contextmanager
 
 logger = logging.getLogger(__name__)
 

@@ -1,4 +1,4 @@
-import logging  # noqa: F811
+import logging
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
@@ -6,14 +6,12 @@ from fastapi.param_functions import Header
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, SecurityScopes
 from fastapi.security import utils as security_utils
 
-from karp import auth, lex
+from karp import auth
 from karp.auth.domain.errors import TokenError
-from karp.auth_infrastructure import (
-    JWTAuthService,
-    ResourcePermissionQueries,
-)
+from karp.auth.infrastructure.jwt_auth_service import JWTAuthService
+from karp.auth.infrastructure.lex_resources import ResourcePermissionQueries
 from karp.lex.application.repositories import ResourceRepository
-from karp.main.errors import KarpError  # noqa: F401
+from karp.main.errors import KarpError
 
 from . import lex_deps
 from .fastapi_injector import inject_from_req
@@ -25,7 +23,7 @@ auth_scheme = HTTPBearer(auto_error=False)
 logger = logging.getLogger(__name__)
 
 
-def bearer_scheme(authorization=Header(None)):  # noqa: ANN201, D103
+def bearer_scheme(authorization=Header(None)):
     if not authorization:
         return None
     scheme, credentials = security_utils.get_authorization_scheme_param(authorization)
@@ -34,7 +32,7 @@ def bearer_scheme(authorization=Header(None)):  # noqa: ANN201, D103
     return HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
 
 
-def get_resource_permissions(  # noqa: D103
+def get_resource_permissions(
     resources: ResourceRepository = Depends(lex_deps.get_resource_repository),
 ) -> ResourcePermissionQueries:
     return ResourcePermissionQueries(resources)

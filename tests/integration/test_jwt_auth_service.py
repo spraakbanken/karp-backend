@@ -11,11 +11,8 @@ from karp.auth.domain.errors import (
     InvalidTokenPayload,
     TokenError,
 )
-from karp.auth_infrastructure.services.jwt_auth_service import (
+from karp.auth.infrastructure.jwt_auth_service import (
     JWTAuthService,
-    JWTCreds,  # noqa: F401
-    JWTMeta,  # noqa: F401
-    JWTPayload,  # noqa: F401
 )
 from tests.integration.auth.adapters import create_access_token
 
@@ -30,7 +27,7 @@ AUTH_JWT_AUDIENCE = "spraakbanken:auth"
 
 
 @pytest.fixture
-def jwt_authenticator() -> None:
+def jwt_authenticator() -> JWTAuthService:
     return JWTAuthService(
         pubkey_path=Path("assets/testing/pubkey.pem"),
     )

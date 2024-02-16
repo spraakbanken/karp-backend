@@ -1,15 +1,10 @@
-"""
-Query API.
-
-## Query DSL
-"""  # noqa: D212
 import logging  # noqa: I001
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
 
 from karp import auth, search
-from karp.auth_infrastructure import ResourcePermissionQueries
+from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.main import errors as karp_errors
 from karp.search.application.queries import QueryRequest
 from karp.search.domain.errors import IncompleteQuery
