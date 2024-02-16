@@ -1,31 +1,21 @@
-from typing import Dict  # noqa: I001
-
 from sqlalchemy import (
     JSON,
     Column,
     Enum,
-    ForeignKey,
     Integer,
     String,
-    Table,
-    Text,
 )
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import relationship
+from sqlalchemy.schema import (
+    UniqueConstraint,
+)
 from sqlalchemy.types import Boolean, Float, Text
 from sqlalchemy_json import NestedMutableJson
 
-from sqlalchemy.schema import (
-    ForeignKeyConstraint,
-    PrimaryKeyConstraint,
-    UniqueConstraint,
-)
-
+from karp.db_infrastructure import db
 from karp.db_infrastructure.types import ULIDType
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
-from karp.db_infrastructure import db
 
 
 class ResourceModel(db.Base):
@@ -117,16 +107,6 @@ class ResourceModel(db.Base):
         )
 
 
-class BaseRuntimeEntry:
-    entry_id = Column(
-        String(100),
-        primary_key=True,
-    )
-    history_id = Column(Integer, nullable=False)
-    entity_id = Column(ULIDType, nullable=False)
-    discarded = Column(Boolean, nullable=False)
-
-
 class BaseHistoryEntry:
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
@@ -177,37 +157,6 @@ def get_or_create_entry_history_model(
 
     sqlalchemy_class = type(history_table_name, (db.Base, BaseHistoryEntry), attributes)
     class_cache[history_table_name] = sqlalchemy_class
-    return sqlalchemy_class
-
-
-def get_or_create_entry_runtime_model(
-    resource_id: str, history_model: Table, config: Dict
-) -> BaseRuntimeEntry:
-    table_name = create_runtime_table_name(resource_id)
-
-    if table_name in class_cache:
-        runtime_model = class_cache[table_name]
-        return runtime_model
-
-    foreign_key_constraint = ForeignKeyConstraint(
-        ["history_id"], [f"{history_model.__tablename__}.history_id"]
-    )
-
-    attributes = {
-        "__tablename__": table_name,
-        "__table_args__": (foreign_key_constraint, *BaseRuntimeEntry.__table_args__),
-    }
-    child_tables = {}
-
-    sqlalchemy_class = type(
-        table_name,
-        (db.Base, BaseRuntimeEntry),
-        attributes,
-    )
-    sqlalchemy_class.child_tables = child_tables
-
-    class_cache[table_name] = sqlalchemy_class
-
     return sqlalchemy_class
 
 
