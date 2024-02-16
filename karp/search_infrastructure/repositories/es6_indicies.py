@@ -1,10 +1,10 @@
-import logging  # noqa: D100
-import re  # noqa: F401
+import logging
+import re
 import typing
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union  # noqa: F401
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import elasticsearch
-from elasticsearch import exceptions as es_exceptions  # noqa: F401
+from elasticsearch import exceptions as es_exceptions
 
 from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
@@ -24,7 +24,7 @@ class Es6Index:
         self.es = es
         self.mapping_repo = mapping_repo
 
-    def create_index(self, resource_id: str, config):  # noqa: ANN201, D102
+    def create_index(self, resource_id: str, config):
         logger.info("creating es mapping")
         mapping = create_es6_mapping(config)
 
@@ -66,7 +66,7 @@ class Es6Index:
         self.es.indices.delete(index=index_name)
         self.mapping_repo.delete_from_config(resource_id)
 
-    def publish_index(self, resource_id: str):  # noqa: ANN201, D102
+    def publish_index(self, resource_id: str):
         alias_name = self.mapping_repo.get_alias_name(resource_id)
         if self.es.indices.exists_alias(name=alias_name):
             self.es.indices.delete_alias(name=alias_name, index="*")
@@ -83,9 +83,7 @@ class Es6Index:
         )
         self.es.indices.put_alias(name=alias_name, index=index_name)
 
-    def add_entries(  # noqa: D102, ANN201
-        self, resource_id: str, entries: Iterable[IndexEntry]
-    ):
+    def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
         index_name = self.mapping_repo.get_index_name(resource_id)
         index_to_es = []
         for entry in entries:
@@ -102,7 +100,7 @@ class Es6Index:
 
         elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
-    def delete_entry(  # noqa: ANN201, D102
+    def delete_entry(
         self,
         resource_id: str,
         *,
@@ -133,14 +131,12 @@ class Es6Index:
             )
 
 
-def _create_es_mapping(config):  # noqa: C901, ANN202
+def _create_es_mapping(config):
     es_mapping = {"dynamic": False, "properties": {}}
 
     fields = config["fields"]
 
-    def recursive_field(  # noqa: ANN202, C901
-        parent_schema, parent_field_name, parent_field_def
-    ):
+    def recursive_field(parent_schema, parent_field_name, parent_field_def):
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
@@ -174,7 +170,7 @@ def _create_es_mapping(config):  # noqa: C901, ANN202
     return es_mapping
 
 
-def create_es6_mapping(config: Dict) -> Dict:  # noqa: D103
+def create_es6_mapping(config: Dict) -> Dict:
     mapping = _create_es_mapping(config)
     mapping["settings"] = {
         "analysis": {

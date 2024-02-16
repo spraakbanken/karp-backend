@@ -31,7 +31,7 @@ from karp.auth.infrastructure import (
 logger = logging.getLogger(__name__)
 
 
-class CommandsMod(injector.Module):  # noqa: D101
+class CommandsMod(injector.Module):
     @injector.provider
     def entry_commands(
         self,
@@ -63,8 +63,8 @@ class CommandsMod(injector.Module):  # noqa: D101
         )
 
 
-class Db(injector.Module):  # noqa: D101
-    def __init__(self, engine: Engine) -> None:  # noqa: D107
+class Db(injector.Module):
+    def __init__(self, engine: Engine) -> None:
         self._engine = engine
 
     @injector.provider
@@ -77,31 +77,29 @@ class Db(injector.Module):  # noqa: D101
     # new_session can be used to create a fresh session.
 
 
-class ElasticSearchMod(injector.Module):  # noqa: D101
-    def __init__(self, es_url: str) -> None:  # noqa: D107
+class ElasticSearchMod(injector.Module):
+    def __init__(self, es_url: str) -> None:
         self._url = es_url
 
     @injector.provider
     @injector.singleton
-    def es(self) -> elasticsearch.Elasticsearch:  # noqa: D102
+    def es(self) -> elasticsearch.Elasticsearch:
         logger.info("Creating ES client url=%s", self._url)
         return elasticsearch.Elasticsearch(self._url)
 
 
-def install_auth_service(  # noqa: ANN201, D103
-    container: injector.Injector, settings: Dict[str, str]
-):
+def install_auth_service(container: injector.Injector, settings: Dict[str, str]):
     container.binder.install(AuthInfrastructure())
     container.binder.install(JwtAuthInfrastructure(Path(settings["auth.jwt.pubkey.path"])))
 
 
-def with_new_session(container: injector.Injector):  # noqa: ANN201, D103
+def with_new_session(container: injector.Injector):
     session = Session(bind=container.get(Engine), close_resets_only=True)
     # Note on close_resets_only=False: this will detect cases where we call close()
     # while another piece of code is still using the session. If you plan to remove this,
     # be careful about the cache in SqlResourceRepository.
 
-    def configure_child(binder):  # noqa: ANN202
+    def configure_child(binder):
         binder.bind(Session, to=injector.InstanceProvider(session))
 
     return container.create_child_injector(configure_child)
@@ -114,7 +112,7 @@ def new_session(container: injector.Injector):
         yield container
 
 
-def load_modules(group_name: str, app=None):  # noqa: ANN201, D103
+def load_modules(group_name: str, app=None):
     logger.debug("Loading %s", group_name)
     if sys.version_info.minor < 10:  # noqa: YTT204
         karp_modules = entry_points().get(group_name)

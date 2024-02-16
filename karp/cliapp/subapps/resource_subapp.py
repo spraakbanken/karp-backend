@@ -1,4 +1,4 @@
-import logging  # noqa: D100, I001
+import logging  # noqa: I001
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
@@ -23,7 +23,7 @@ subapp = typer.Typer()
 T = TypeVar("T")
 
 
-def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:  # noqa: D103
+def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
     for i, choice in enumerate(choices):
         typer.echo(f"{i}) {choice_fmt(choice)}")
     while True:
@@ -34,7 +34,7 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:  # noqa:
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def create(  # noqa: ANN201, D103
+def create(
     ctx: typer.Context,
     config: Path,
 ):
@@ -65,14 +65,14 @@ def create(  # noqa: ANN201, D103
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def update(  # noqa: ANN201
+def update(
     ctx: typer.Context,
     config: Path,
     version: int = typer.Option(..., "-v", "--version"),
     message: Optional[str] = typer.Option(None, "-m", "--message"),
     user: Optional[str] = typer.Option(None, "-u", "--user"),
 ):
-    """Update resource config."""  # noqa: D202
+    """Update resource config."""
 
     config_dict = jsonlib.load_from_file(config)
     resource_id = config_dict.pop("resource_id")
@@ -101,7 +101,7 @@ def update(  # noqa: ANN201
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def publish(ctx: typer.Context, resource_id: str, version: int):  # noqa: ANN201, D103
+def publish(ctx: typer.Context, resource_id: str, version: int):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     resource_commands.publish_resource(
         resource_id=resource_id,
@@ -115,7 +115,7 @@ def publish(ctx: typer.Context, resource_id: str, version: int):  # noqa: ANN201
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex(ctx: typer.Context, resource_id: str):  # noqa: ANN201, D103
+def reindex(ctx: typer.Context, resource_id: str):
     search_commands = inject_from_ctx(SearchCommands, ctx)
     search_commands.reindex_resource(resource_id=resource_id)
     typer.echo(f"Successfully reindexed all data in {resource_id}")
@@ -124,7 +124,7 @@ def reindex(ctx: typer.Context, resource_id: str):  # noqa: ANN201, D103
 @subapp.command("list")
 @cli_error_handler
 @cli_timer
-def list_resources(  # noqa: ANN201, D103
+def list_resources(
     ctx: typer.Context,
     show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),
 ):
@@ -147,9 +147,7 @@ def list_resources(  # noqa: ANN201, D103
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def show(  # noqa: ANN201, D103
-    ctx: typer.Context, resource_id: str, version: Optional[int] = None
-):
+def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
     resources = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
     resource = resources.by_resource_id_optional(resource_id, version=version)
     if not resource:
@@ -163,7 +161,7 @@ def show(  # noqa: ANN201, D103
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def delete(  # noqa: ANN201, D103
+def delete(
     ctx: typer.Context,
     resource_id: str,
     user: Optional[str] = typer.Option(None),
@@ -178,5 +176,5 @@ def delete(  # noqa: ANN201, D103
     typer.echo(f"Deleted resource '{resource_id}'")
 
 
-def init_app(app):  # noqa: ANN201, D103
+def init_app(app):
     app.add_typer(subapp, name="resource")

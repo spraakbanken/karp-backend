@@ -10,7 +10,7 @@ except ImportError:
 import injector  # noqa: I001
 from sqlalchemy import pool
 from sqlalchemy.engine import Engine, create_engine
-import logging  # noqa: F811
+import logging
 import asgi_correlation_id
 
 from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
@@ -85,7 +85,7 @@ def _setup_search_context(container: injector.Injector, settings: dict) -> None:
     container.binder.install(Es6SearchIndexMod(index_prefix=settings.get("es.index_prefix")))
 
 
-def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
+def configure_logging(settings: dict[str, str]) -> None:
     dictConfig(
         {
             "version": 1,
@@ -136,7 +136,7 @@ def configure_logging(settings: dict[str, str]) -> None:  # noqa: D103
     )
 
 
-def setup_logging():  # noqa: ANN201, D103
+def setup_logging():
     # Clear Gunicorn access log to remove duplicate requests logging
     logging.basicConfig(
         format="%(asctime)s %(message)s",

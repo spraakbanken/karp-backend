@@ -3,7 +3,7 @@ import typing
 import pydantic
 
 
-class Query(pydantic.BaseModel):  # noqa: D101
+class Query(pydantic.BaseModel):
     fields: list[str]
     resources: list[str]
     sort: list[str]
@@ -17,12 +17,12 @@ class Query(pydantic.BaseModel):  # noqa: D101
     sort_dict: typing.Optional[dict[str, list[str]]] = pydantic.Field(default_factory=dict)
 
     @pydantic.validator("resources", "include_fields", "exclude_fields", "sort", pre=True)
-    def split_str(cls, v):  # noqa: ANN206, D102
+    def split_str(cls, v):
         return v.split(",") if isinstance(v, str) else v
 
     @pydantic.validator("fields", "sort", pre=True, always=True)
-    def set_ts_now(cls, v):  # noqa: ANN206, D102
+    def set_ts_now(cls, v):
         return v or []
 
-    class Config:  # noqa: D106
+    class Config:
         arbitrary_types_allowed = True

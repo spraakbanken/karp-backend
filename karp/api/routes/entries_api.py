@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 @router.get("/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"])
 @router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
-def get_history_for_entry(  # noqa: ANN201, D103
+def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
@@ -63,7 +63,7 @@ def get_history_for_entry(  # noqa: ANN201, D103
     tags=["Editing"],
     response_model=schemas.EntryAddResponse,
 )
-def add_entry(  # noqa: ANN201, D103
+def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Security(deps.get_user, scopes=["write"]),
@@ -108,7 +108,7 @@ def add_entry(  # noqa: ANN201, D103
     tags=["Editing"],
     response_model=schemas.EntryAddResponse,
 )
-def update_entry(  # noqa: ANN201, D103
+def update_entry(
     resource_id: str,
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
@@ -158,7 +158,7 @@ def update_entry(  # noqa: ANN201, D103
         return responses.JSONResponse(
             status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj
         )
-    except Exception as err:  # noqa: F841
+    except Exception as err:
         logger.exception(
             "error occured",
             extra={"resource_id": resource_id, "entry_id": entry_id.str, "data": data},
@@ -171,7 +171,7 @@ def update_entry(  # noqa: ANN201, D103
     tags=["Editing"],
     status_code=status.HTTP_204_NO_CONTENT,
 )
-def delete_entry(  # noqa: ANN201
+def delete_entry(
     resource_id: str,
     entry_id: UniqueId,
     version: int,
@@ -205,5 +205,5 @@ def delete_entry(  # noqa: ANN201
     return
 
 
-def init_app(app):  # noqa: ANN201, D103
+def init_app(app):
     app.include_router(router)

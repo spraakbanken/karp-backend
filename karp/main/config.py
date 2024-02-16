@@ -1,30 +1,30 @@
-import os  # noqa: D100, I001
+import os  # noqa: I001
 
 import environs
 from sqlalchemy.engine import URL as DatabaseUrl, make_url
-from starlette.config import Config  # noqa: F401
-from starlette.datastructures import Secret  # noqa: F401
+from starlette.config import Config
+from starlette.datastructures import Secret
 
 PROJECT_NAME = "Karp"
 VERSION = "6.2.0"
 API_PREFIX = "/"
 
 
-def load_env() -> environs.Env:  # noqa: D103
+def load_env() -> environs.Env:
     config_path = os.environ.get("CONFIG_PATH", ".env")
     env = environs.Env()
     env.read_env(config_path)
     return env
 
 
-def parse_database_name(env: environs.Env) -> str:  # noqa: D103
+def parse_database_name(env: environs.Env) -> str:
     database_name = env("DB_DATABASE", "karp")
     if env("TESTING", None):
         database_name = env("DB_TEST_DATABASE", None) or f"{database_name}_test"
     return database_name
 
 
-def parse_database_url(env: environs.Env) -> DatabaseUrl:  # noqa: D103
+def parse_database_url(env: environs.Env) -> DatabaseUrl:
     database_url = env("DATABASE_URL", None)
     if env.bool("TESTING", False):
         if database_test_url := env("DATABASE_TEST_URL", None):
@@ -48,7 +48,7 @@ def parse_database_url(env: environs.Env) -> DatabaseUrl:  # noqa: D103
     )
 
 
-def parse_database_url_wo_db(env: environs.Env) -> DatabaseUrl:  # noqa: D103
+def parse_database_url_wo_db(env: environs.Env) -> DatabaseUrl:
     return DatabaseUrl.create(
         drivername=env("DB_DRIVER", "mysql+pymysql"),
         username=env("DB_USER", None),

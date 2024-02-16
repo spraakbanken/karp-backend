@@ -10,17 +10,17 @@ UniqueIdPrimitive = ulid.api.api.ULIDPrimitive
 # UniqueIdPrimitive = typing.Union[ulid.api.api.ULIDPrimitive, UniqueIdStr]
 
 
-class UniqueId(ulid.ULID):  # noqa: D101
+class UniqueId(ulid.ULID):
     @classmethod
-    def __modify_schema__(cls, field_schema):  # noqa: ANN206, ANN001, D105
+    def __modify_schema__(cls, field_schema):
         field_schema.update(examples=["01BJQMF54D093DXEAWZ6JYRPAQ"])
 
     @classmethod
-    def __get_validators__(cls):  # noqa: ANN206, D105
+    def __get_validators__(cls):
         yield cls.validate
 
     @classmethod
-    def validate(cls, v) -> "UniqueId":  # noqa: D102, ANN001
+    def validate(cls, v) -> "UniqueId":
         if isinstance(v, UniqueId):
             return v  # type: ignore
         if isinstance(v, ulid.ULID):
@@ -34,7 +34,7 @@ class UniqueId(ulid.ULID):  # noqa: D101
             msg = "not a valid ULID"
             raise ValueError(msg) from err
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         return f"UniqueId({super().__repr__()})"
 
 
@@ -58,17 +58,17 @@ def make_unique_id(
 parse = ulid.parse
 
 
-class UniqueIdStr(str):  # noqa: D101
+class UniqueIdStr(str):
     @classmethod
-    def __modify_schema__(cls, field_schema):  # noqa: ANN206, ANN001, D105
+    def __modify_schema__(cls, field_schema):
         field_schema.update(examples=["01BJQMF54D093DXEAWZ6JYRPAQ"])
 
     @classmethod
-    def __get_validators__(cls):  # noqa: ANN206, D105
+    def __get_validators__(cls):
         yield cls.validate
 
     @classmethod
-    def validate(cls, v):  # noqa: ANN206, D102, ANN001
+    def validate(cls, v):
         if isinstance(v, (UniqueId, ulid.ULID)):
             return str(v)
         elif not isinstance(v, str):
@@ -79,5 +79,5 @@ class UniqueIdStr(str):  # noqa: D101
 
         return cls(v)
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         return f"UniqueIdStr({super().__repr__()})"

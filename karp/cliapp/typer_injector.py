@@ -1,4 +1,4 @@
-from typing import Type, TypeVar  # noqa: D100, I001
+from typing import Type, TypeVar  # noqa: I001
 
 import typer
 
@@ -6,5 +6,5 @@ import typer
 T = TypeVar("T")
 
 
-def inject_from_ctx(klass: Type[T], ctx: typer.Context) -> T:  # noqa: D103
+def inject_from_ctx(klass: Type[T], ctx: typer.Context) -> T:
     return ctx.obj["container"].get(klass)

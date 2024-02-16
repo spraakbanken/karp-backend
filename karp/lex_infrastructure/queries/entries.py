@@ -1,4 +1,4 @@
-import typing  # noqa: D100, I001
+import typing  # noqa: I001
 
 from sb_json_tools import jsondiff
 import logging
@@ -32,14 +32,14 @@ def _entry_to_entry_dto(entry: Entry, resource_id: str) -> EntryDto:
 
 
 class EntryQueries:
-    def __init__(  # noqa: D107
+    def __init__(
         self,
         resources: ResourceRepository,
     ) -> None:
         super().__init__()
         self.resources = resources
 
-    def by_id(  # noqa: D102
+    def by_id(
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
@@ -47,7 +47,7 @@ class EntryQueries:
         entries = self.resources.entries_by_resource_id(resource_id)
         return _entry_to_entry_dto(entries.by_id(UniqueId.validate(id)), resource_id)
 
-    def by_id_optional(  # noqa: D102
+    def by_id_optional(
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
@@ -57,11 +57,11 @@ class EntryQueries:
             return _entry_to_entry_dto(entry, resource_id)
         return None
 
-    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:  # noqa: D102
+    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
         return (_entry_to_entry_dto(entry, resource_id) for entry in entries.all_entries())
 
-    def get_entry_history(  # noqa: D102
+    def get_entry_history(
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
@@ -80,7 +80,7 @@ class EntryQueries:
             message=result.message,
         )
 
-    def get_history(  # noqa: D102
+    def get_history(
         self,
         request: EntryHistoryRequest,
     ) -> GetHistoryDto:
@@ -126,7 +126,7 @@ class EntryQueries:
 
         return GetHistoryDto(history=result, total=total)
 
-    def get_entry_diff(  # noqa: D102
+    def get_entry_diff(
         self,
         request: EntryDiffRequest,
     ) -> EntryDiffDto:

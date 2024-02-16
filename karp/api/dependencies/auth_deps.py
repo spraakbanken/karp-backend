@@ -44,7 +44,7 @@ get_auth_service = inject_from_req(JWTAuthService)
 # TODO this one uses "bearer_scheme"
 # get_user uses "auth_scheme"
 # can this one call get_user with same creds?
-def get_user_optional(  # noqa: D103
+def get_user_optional(
     security_scopes: SecurityScopes,
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
     auth_service: JWTAuthService = Depends(get_auth_service),
@@ -54,7 +54,7 @@ def get_user_optional(  # noqa: D103
     return get_user(security_scopes, credentials, auth_service)
 
 
-def get_user(  # noqa: D103
+def get_user(
     security_scopes: SecurityScopes,
     credentials: HTTPAuthorizationCredentials = Depends(auth_scheme),
     auth_service: JWTAuthService = Depends(get_auth_service),

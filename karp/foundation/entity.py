@@ -1,8 +1,8 @@
-"""Entity"""  # noqa: D400, D415
+"""Entity"""
 import datetime  # noqa: I001
 from typing import Optional, Union, List, Iterable
 
-from deprecated import deprecated  # noqa: F401
+from deprecated import deprecated
 
 from karp.foundation.errors import ConsistencyError
 from karp.foundation import errors
@@ -13,7 +13,7 @@ from karp.foundation.timings import monotonic_utc_now
 class Entity:
     DiscardedEntityError = errors.DiscardedEntityError
 
-    def __init__(  # noqa: D107
+    def __init__(
         self,
         id: UniqueId,  # noqa: A002
         discarded: bool = False,
@@ -25,12 +25,12 @@ class Entity:
         self._root = aggregate_root
 
     @property
-    def id(self):  # noqa: A003, ANN201
+    def id(self):
         """A unique identifier for the entity."""
         return self._id
 
     @property
-    def entity_id(self):  # noqa: ANN201
+    def entity_id(self):
         """A unique identifier for the entity."""
         return self._id
 
@@ -40,19 +40,19 @@ class Entity:
         return self._discarded
 
     @property
-    def root(self):  # noqa: ANN201
+    def root(self):
         """The aggregate root or self."""
         return self if self._root is None else self._root
 
-    def _check_not_discarded(self):  # noqa: ANN202
+    def _check_not_discarded(self):
         if self._discarded:
             raise self.DiscardedEntityError(
                 f"Attempt to use {self!r}, entity_id = {self.entity_id}"
             )
 
 
-class VersionedEntity(Entity):  # noqa: D101
-    def __init__(  # noqa: D107
+class VersionedEntity(Entity):
+    def __init__(
         self,
         id: UniqueId,  # noqa: A002
         version: int,
@@ -66,7 +66,7 @@ class VersionedEntity(Entity):  # noqa: D101
         """An integer version for the entity."""
         return self._version
 
-    def _increment_version(self):  # noqa: ANN202
+    def _increment_version(self):
         self._version += 1
 
     def _validate_version(self, version: int) -> None:
@@ -74,8 +74,8 @@ class VersionedEntity(Entity):  # noqa: D101
             raise ConsistencyError(f"Entity version mismatch: {version} != {self.version}")
 
 
-class TimestampedEntity(Entity):  # noqa: D101
-    def __init__(  # noqa: D107
+class TimestampedEntity(Entity):
+    def __init__(
         self,
         id: UniqueId,  # noqa: A002
         last_modified: Optional[float] = None,
@@ -87,12 +87,12 @@ class TimestampedEntity(Entity):  # noqa: D101
         self._last_modified_by = "Unknown user" if last_modified_by is None else last_modified_by
 
     @property
-    def last_modified(self):  # noqa: ANN201
+    def last_modified(self):
         """The time this entity was last modified."""
         return self._last_modified
 
     @property
-    def last_modified_by(self):  # noqa: ANN201
+    def last_modified_by(self):
         """The time this entity was last modified."""
         return self._last_modified_by
 
@@ -105,15 +105,15 @@ class TimestampedEntity(Entity):  # noqa: D101
             return datetime.datetime.fromisoformat(timestamp).timestamp()
         return monotonic_utc_now() if timestamp is None else timestamp
 
-    def _validate_last_modified(self, last_modified: float):  # noqa: ANN202
+    def _validate_last_modified(self, last_modified: float):
         if int(last_modified) != int(self.last_modified):
             raise ConsistencyError(
                 f"Event entity last_modified mismatch: {last_modified} != {self.last_modified}"
             )
 
 
-class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):  # noqa: D101
-    def __init__(  # noqa: D107
+class TimestampedVersionedEntity(VersionedEntity, TimestampedEntity):
+    def __init__(
         self,
         id: UniqueId,  # noqa: A002
         last_modified: Optional[float] = None,

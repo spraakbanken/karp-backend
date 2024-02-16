@@ -95,7 +95,7 @@ class EntryCommands:
         -------
         List
             List of the id's of the created entries.
-        """  # noqa: D202, D212
+        """
 
         created_db_entries = []
         resource = self._get_resource(resource_id)

@@ -3,9 +3,9 @@ import typing
 import pydantic
 
 
-class IndexEntry(pydantic.BaseModel):  # noqa: D101
-    id: str  # noqa: A003
+class IndexEntry(pydantic.BaseModel):
+    id: str
     entry: typing.Dict
 
-    def __bool__(self) -> bool:  # noqa: D105
+    def __bool__(self) -> bool:
         return bool(self.entry)

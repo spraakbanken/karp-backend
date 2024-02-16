@@ -7,18 +7,18 @@ from karp.lex_core import alias_generators
 from karp.lex_core.value_objects import unique_id
 
 
-class BaseModel(pydantic.BaseModel):  # noqa: D101
-    class Config:  # noqa: D106
+class BaseModel(pydantic.BaseModel):
+    class Config:
         # arbitrary_types_allowed = True
         extra = "forbid"
         alias_generator = alias_generators.to_lower_camel
 
 
-class IdMixin(BaseModel):  # noqa: D101
-    id: unique_id.UniqueIdStr  # noqa: A003
+class IdMixin(BaseModel):
+    id: unique_id.UniqueIdStr
 
 
-class EntryDto(IdMixin, BaseModel):  # noqa: D101
+class EntryDto(IdMixin, BaseModel):
     resource: str
     version: int
     entry: typing.Dict
@@ -28,7 +28,7 @@ class EntryDto(IdMixin, BaseModel):  # noqa: D101
     discarded: bool = False
 
 
-class EntryDiffRequest(IdMixin, BaseModel):  # noqa: D101
+class EntryDiffRequest(IdMixin, BaseModel):
     resource_id: str
     from_version: typing.Optional[int] = None
     to_version: typing.Optional[int] = None
@@ -37,7 +37,7 @@ class EntryDiffRequest(IdMixin, BaseModel):  # noqa: D101
     entry: typing.Optional[typing.Dict] = None
 
 
-class EntryHistoryRequest(BaseModel):  # noqa: D101
+class EntryHistoryRequest(BaseModel):
     resource_id: str
     user_id: typing.Optional[str] = None
     entry_id: typing.Optional[unique_id.UniqueIdStr] = None
@@ -49,13 +49,13 @@ class EntryHistoryRequest(BaseModel):  # noqa: D101
     page_size: int = 100
 
 
-class EntryDiffDto(BaseModel):  # noqa: D101
+class EntryDiffDto(BaseModel):
     diff: typing.Any
     from_version: typing.Optional[int]
     to_version: typing.Optional[int]
 
 
-class HistoryDto(IdMixin, BaseModel):  # noqa: D101
+class HistoryDto(IdMixin, BaseModel):
     timestamp: float
     message: str
     version: int
@@ -64,6 +64,6 @@ class HistoryDto(IdMixin, BaseModel):  # noqa: D101
     diff: list[dict]
 
 
-class GetHistoryDto(BaseModel):  # noqa: D101
+class GetHistoryDto(BaseModel):
     history: list[HistoryDto]
     total: int

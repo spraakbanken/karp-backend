@@ -6,11 +6,11 @@ from karp.lex_core import alias_generators
 from karp.lex_core.value_objects import UniqueIdStr
 
 
-class ResourceDto(pydantic.BaseModel):  # noqa: D101
-    class Config:  # noqa: D106
+class ResourceDto(pydantic.BaseModel):
+    class Config:
         alias_generator = alias_generators.to_lower_camel
 
-    id: UniqueIdStr  # noqa: A003
+    id: UniqueIdStr
     resource_id: str
     is_published: bool
     version: int

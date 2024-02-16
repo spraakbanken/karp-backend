@@ -1,4 +1,4 @@
-"""SQL Resource Repository"""  # noqa: D400, D415
+"""SQL Resource Repository"""
 import logging  # noqa: I001
 import typing
 from typing import List, Optional, Union, Iterable
@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class SqlResourceRepository(repositories.ResourceRepository):
-    def __init__(self, session: Session):  # noqa: D107, ANN204
+    def __init__(self, session: Session):
         repositories.ResourceRepository.__init__(self)
         self._session = session
         # caches lookups to self._by_resource_id
@@ -32,7 +32,7 @@ class SqlResourceRepository(repositories.ResourceRepository):
         # the SqlResourceRepository itself is no longer valid.
         self._cache = Cache(self._by_resource_id_uncached)
 
-    def _save(self, resource: Resource):  # noqa: ANN202
+    def _save(self, resource: Resource):
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
         if resource.discarded:
@@ -40,7 +40,7 @@ class SqlResourceRepository(repositories.ResourceRepository):
             self._session.execute(text("DROP table " + resource.table_name))
         self._cache.clear()
 
-    def resource_ids(self) -> List[str]:  # noqa: D102
+    def resource_ids(self) -> List[str]:
         subq = (
             sql.select(
                 ResourceModel.entity_id,
@@ -65,7 +65,7 @@ class SqlResourceRepository(repositories.ResourceRepository):
         id: Union[UniqueId, str],  # noqa: A002
         *,
         version: Optional[int] = None,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ) -> typing.Optional[entities.Resource]:
         query = self._session.query(ResourceModel).filter_by(entity_id=id)
         if version:

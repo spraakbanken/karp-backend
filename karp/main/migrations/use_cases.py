@@ -1,4 +1,4 @@
-from pathlib import Path  # noqa: D100, I001
+from pathlib import Path  # noqa: I001
 
 from alembic.config import Config as AlembicConfig
 import alembic

@@ -5,24 +5,24 @@ try:
     from importlib.metadata import entry_points
 except ImportError:
     # used if python < 3.8
-    from importlib_metadata import entry_points  # type: ignore  # noqa: F401
+    from importlib_metadata import entry_points  # type: ignore
 
 from fastapi import FastAPI, Request, Response, status, HTTPException  # noqa: I001
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
-import injector  # noqa: F401
+import injector
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
-import logging  # noqa: F811
+import logging
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
 from asgi_matomo import MatomoMiddleware
 
 from karp import main
 from karp.foundation import errors as foundation_errors
-from karp.lex_core.value_objects import unique_id  # noqa: F401
+from karp.lex_core.value_objects import unique_id
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
@@ -93,7 +93,7 @@ tags_metadata = [
 logger = logging.getLogger(__name__)
 
 
-def create_app() -> FastAPI:  # noqa: D103
+def create_app() -> FastAPI:
     app_context = main.bootstrap_app()
 
     app = FastAPI(
@@ -123,7 +123,7 @@ def create_app() -> FastAPI:  # noqa: D103
     from karp.main.errors import KarpError
 
     @app.exception_handler(KarpError)
-    async def _karp_error_handler(request: Request, exc: KarpError):  # noqa: ANN202
+    async def _karp_error_handler(request: Request, exc: KarpError):
         logger.exception(exc)
         return JSONResponse(
             status_code=exc.http_return_code,
@@ -131,9 +131,7 @@ def create_app() -> FastAPI:  # noqa: D103
         )
 
     @app.exception_handler(foundation_errors.NotFoundError)
-    async def _entity_not_found(  # noqa: ANN202
-        request: Request, exc: foundation_errors.NotFoundError
-    ):
+    async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):
         return JSONResponse(
             status_code=404,
             content={
@@ -143,9 +141,7 @@ def create_app() -> FastAPI:  # noqa: D103
         )
 
     @app.exception_handler(auth_errors.ResourceNotFound)
-    async def _auth_entity_not_found(  # noqa: ANN202
-        request: Request, exc: auth_errors.ResourceNotFound
-    ):
+    async def _auth_entity_not_found(request: Request, exc: auth_errors.ResourceNotFound):
         return JSONResponse(
             status_code=404,
             content={
@@ -154,16 +150,12 @@ def create_app() -> FastAPI:  # noqa: D103
         )
 
     @app.exception_handler(lex_errors.LexDomainError)
-    def _lex_error_handler(  # noqa: ANN202
-        request: Request, exc: lex_errors.LexDomainError
-    ):
+    def _lex_error_handler(request: Request, exc: lex_errors.LexDomainError):
         logger.exception(exc)
         return lex_exc2response(exc)
 
     @app.exception_handler(Exception)
-    async def unhandled_exception_handler(  # noqa: ANN202
-        request: Request, exc: Exception
-    ):
+    async def unhandled_exception_handler(request: Request, exc: Exception):
         return await http_exception_handler(
             request,
             HTTPException(
@@ -177,7 +169,7 @@ def create_app() -> FastAPI:  # noqa: D103
         )
 
     @app.middleware("http")
-    async def injector_middleware(request: Request, call_next):  # noqa: ANN202
+    async def injector_middleware(request: Request, call_next):
         response: Response = JSONResponse(
             status_code=500, content={"detail": "Internal server error"}
         )
@@ -223,7 +215,7 @@ def create_app() -> FastAPI:  # noqa: D103
     return app
 
 
-def lex_exc2response(exc: lex_errors.LexDomainError) -> JSONResponse:  # noqa: D103
+def lex_exc2response(exc: lex_errors.LexDomainError) -> JSONResponse:
     status_code = 503
     content: dict[str, Any] = {"message": "Internal server error"}
     if isinstance(exc, lex_errors.UpdateConflict):

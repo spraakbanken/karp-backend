@@ -7,7 +7,7 @@ class ConstraintsError(ValueError):
     pass
 
 
-def length_ge(attribute, value, limit: int):  # noqa: ANN201, D103
+def length_ge(attribute, value, limit: int):
     if len(value) < limit:
         raise ConstraintsError(
             f"'{attribute}' has to have a length of at least {limit}. Got {attribute}='{value}'"
@@ -15,7 +15,7 @@ def length_ge(attribute, value, limit: int):  # noqa: ANN201, D103
     return value
 
 
-def no_space_in_str(s: str) -> str:  # noqa: D103
+def no_space_in_str(s: str) -> str:
     if " " in s:
         raise ConstraintsError("whitespace not allowed")
     return s

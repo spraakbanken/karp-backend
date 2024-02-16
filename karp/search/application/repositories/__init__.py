@@ -1,3 +1,3 @@
-from .indicies import IndexEntry  # noqa: I001
+from .indicies import IndexEntry
 
 __all__ = ["IndexEntry"]

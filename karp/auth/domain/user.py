@@ -1,4 +1,4 @@
-import logging  # noqa: D100
+import logging
 import typing
 
 from karp.foundation.value_objects.permission_level import PermissionLevel
@@ -6,8 +6,8 @@ from karp.foundation.value_objects.permission_level import PermissionLevel
 logger = logging.getLogger(__name__)
 
 
-class User:  # noqa: D101
-    def __init__(  # noqa: D107, ANN204
+class User:
+    def __init__(
         self,
         identifier: str,
         permissions: typing.Dict[str, int],
@@ -18,12 +18,10 @@ class User:  # noqa: D101
         self._levels = levels
 
     @property
-    def identifier(self) -> str:  # noqa: D102
+    def identifier(self) -> str:
         return self._identifier
 
-    def has_enough_permissions(  # noqa: D102
-        self, resource_id: str, level: PermissionLevel
-    ) -> bool:
+    def has_enough_permissions(self, resource_id: str, level: PermissionLevel) -> bool:
         try:
             return (self._permissions.get(resource_id) is not None) and (
                 self._permissions[resource_id] >= self._levels[level]

@@ -1,6 +1,6 @@
-import logging  # noqa: D100, I001
+import logging  # noqa: I001
 import random
-from re import I  # noqa: F401
+from re import I
 from typing import Optional
 import urllib.parse
 from urllib.parse import urlunparse
@@ -19,12 +19,12 @@ logger = logging.getLogger(__name__)
 http = urllib3.PoolManager()
 
 
-def get_remote_address(req: Request) -> str:  # noqa: D103
+def get_remote_address(req: Request) -> str:
     return req.scope["client"][0]
 
 
-class MatomoMiddleware(BaseHTTPMiddleware):  # noqa: D101
-    def __init__(  # noqa: D107
+class MatomoMiddleware(BaseHTTPMiddleware):
+    def __init__(
         self,
         app: ASGIApp,
         idsite: str,
@@ -39,9 +39,7 @@ class MatomoMiddleware(BaseHTTPMiddleware):  # noqa: D101
         self.assume_https = assume_https
         self._access_token = access_token
 
-    async def dispatch(  # noqa: D102
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         headers = {}
         for k, v in request.headers.items():
             headers[k.lower()] = v

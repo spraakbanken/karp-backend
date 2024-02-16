@@ -4,18 +4,18 @@ from karp.foundation import entity, repository
 from karp.lex_core.value_objects import UniqueId
 
 
-class EntryRepository(  # noqa: D101
+class EntryRepository(
     entity.TimestampedEntity,
     repository.Repository,
 ):
-    def __init__(  # noqa: D107, ANN204
+    def __init__(
         self,
         name: str,
         config: Dict,
         message: str,
         id: UniqueId,  # noqa: A002
-        *args,  # noqa: ANN002
-        **kwargs,  # noqa: ANN003
+        *args,
+        **kwargs,
     ):
         repository.Repository.__init__(self)
         entity.TimestampedEntity.__init__(self, *args, id=id, **kwargs)
@@ -24,18 +24,18 @@ class EntryRepository(  # noqa: D101
         self._message = message
 
     @property
-    def name(self) -> str:  # noqa: D102
+    def name(self) -> str:
         return self._name
 
     @property
-    def config(self) -> Dict:  # noqa: D102
+    def config(self) -> Dict:
         return self._config
 
     @property
-    def message(self) -> str:  # noqa: D102
+    def message(self) -> str:
         return self._message
 
-    def discard(self, *, user, timestamp: Optional[float] = None):  # noqa: ANN201, D102
+    def discard(self, *, user, timestamp: Optional[float] = None):
         self._discarded = True
         self._last_modified = self._ensure_timestamp(timestamp)
         self._last_modified_by = user

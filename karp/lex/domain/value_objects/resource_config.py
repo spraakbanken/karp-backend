@@ -1,5 +1,5 @@
-import pydantic  # noqa: D100
+import pydantic
 
 
-class ResourceConfig(pydantic.BaseModel):  # noqa: D101
+class ResourceConfig(pydantic.BaseModel):
     fields: dict

@@ -1,7 +1,7 @@
-import collections.abc  # noqa: D100, I001
+import collections.abc  # noqa: I001
 import logging
 from pathlib import Path
-import sys  # noqa: F401
+import sys
 from typing import Iterable, Optional
 
 
@@ -28,7 +28,7 @@ subapp = typer.Typer()
 @subapp.command("add")
 @cli_error_handler
 @cli_timer
-def add_entries_to_resource(  # noqa: ANN201, D103
+def add_entries_to_resource(
     ctx: typer.Context,
     resource_id: str,
     data: Path,
@@ -62,7 +62,7 @@ def add_entries_to_resource(  # noqa: ANN201, D103
 @subapp.command("import")
 @cli_error_handler
 @cli_timer
-def import_entries_to_resource(  # noqa: ANN201, D103
+def import_entries_to_resource(
     ctx: typer.Context,
     resource_id: str,
     data: Path,
@@ -96,14 +96,14 @@ def import_entries_to_resource(  # noqa: ANN201, D103
 @subapp.command("update")
 @cli_error_handler
 @cli_timer
-def update_entries(resource_id: str, data: Path):  # noqa: ANN201, D103
+def update_entries(resource_id: str, data: Path):
     raise NotImplementedError("")
 
 
 @subapp.command("export")
 @cli_error_handler
 @cli_timer
-def export_entries(  # noqa: ANN201, D103
+def export_entries(
     ctx: typer.Context,
     resource_id: str,
     output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
@@ -153,27 +153,27 @@ def batch_entries(
             entry_commands.delete_entry(**cmd)
 
 
-class Counter(collections.abc.Generator):  # noqa: D101
-    def __init__(self, sink) -> None:  # noqa: D107
+class Counter(collections.abc.Generator):
+    def __init__(self, sink) -> None:
         self._counter: int = 0
         self._sink = sink
 
     @property
-    def counter(self) -> int:  # noqa: D102
+    def counter(self) -> int:
         return self._counter
 
-    def send(self, value):  # noqa: ANN201, D102
+    def send(self, value):
         self._counter += 1
         self._sink.send(value)
 
-    def throw(self, typ=None, val=None, tb=None):  # noqa: ANN201, D102
+    def throw(self, typ=None, val=None, tb=None):
         raise StopIteration
 
 
 @subapp.command("validate")
 @cli_error_handler
 @cli_timer
-def validate_entries(  # noqa: ANN201, D103
+def validate_entries(
     ctx: typer.Context,
     path: Optional[Path] = typer.Argument(None),
     config_path: Optional[Path] = typer.Option(
@@ -253,5 +253,5 @@ def validate_entries(  # noqa: ANN201, D103
         raise typer.Exit(error_code)
 
 
-def init_app(app):  # noqa: ANN201, D103
+def init_app(app):
     app.add_typer(subapp, name="entries")

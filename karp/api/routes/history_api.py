@@ -18,7 +18,7 @@ router = APIRouter()
 
 
 @router.post("/diff/{resource_id}/{entry_id}", response_model=EntryDiffDto)
-def get_diff(  # noqa: ANN201, D103
+def get_diff(
     resource_id: str,
     entry_id: UniqueIdStr,
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
@@ -52,7 +52,7 @@ def get_diff(  # noqa: ANN201, D103
     "/{resource_id}",
     response_model=lex.GetHistoryDto,
 )
-def get_history(  # noqa: ANN201, D103
+def get_history(
     resource_id: str,
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     user_id: Optional[str] = Query(None),
@@ -85,5 +85,5 @@ def get_history(  # noqa: ANN201, D103
     return entry_queries.get_history(history_request)
 
 
-def init_app(app):  # noqa: ANN201, D103
+def init_app(app):
     app.include_router(router)

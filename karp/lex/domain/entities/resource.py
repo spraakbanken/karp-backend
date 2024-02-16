@@ -12,17 +12,17 @@ from karp.lex.domain.value_objects import EntrySchema
 from karp.lex_core.value_objects import unique_id
 
 
-class ResourceOp(enum.Enum):  # noqa: D101
+class ResourceOp(enum.Enum):
     ADDED = "ADDED"
     UPDATED = "UPDATED"
     DELETED = "DELETED"
 
 
-class Resource(TimestampedVersionedEntity):  # noqa: D101
+class Resource(TimestampedVersionedEntity):
     DiscardedEntityError = errors.DiscardedEntityError
     resource_type: str = "resource"
 
-    def __init__(  # noqa: D107, ANN204
+    def __init__(
         self,
         *,
         id: unique_id.UniqueId,  # noqa: A002
@@ -34,7 +34,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ):
         super().__init__(id=unique_id.UniqueId.validate(id), version=version, **kwargs)
         self._resource_id = resource_id
@@ -48,11 +48,11 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self.table_name = table_name
 
     @property
-    def resource_id(self) -> str:  # noqa: D102
+    def resource_id(self) -> str:
         return self._resource_id
 
     @property
-    def name(self):  # noqa: ANN201, D102
+    def name(self):
         return self._name
 
     @property
@@ -61,19 +61,19 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         return self.config.get("generators", {})
 
     @property
-    def message(self):  # noqa: ANN201, D102
+    def message(self):
         return self._message
 
     @property
-    def releases(self):  # noqa: ANN201
+    def releases(self):
         """Releases for this resource."""
         return self._releases
 
     @property
-    def op(self):  # noqa: ANN201, D102
+    def op(self):
         return self._op
 
-    def publish(  # noqa: D102
+    def publish(
         self,
         *,
         user: str,
@@ -84,7 +84,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
 
-    def set_resource_id(  # noqa: D102
+    def set_resource_id(
         self,
         *,
         resource_id: str,
@@ -96,7 +96,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._update_metadata(timestamp, user, message or "setting resource_id", version)
         self._resource_id = resource_id
 
-    def update(  # noqa: D102
+    def update(
         self,
         *,
         name: str,
@@ -113,7 +113,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self.config = config
         return True
 
-    def set_config(  # noqa: D102
+    def set_config(
         self,
         *,
         config: dict[str, Any],
@@ -127,7 +127,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._update_metadata(timestamp, user, message or "setting config", version)
         self.config = config
 
-    def _update_metadata(  # noqa: ANN202
+    def _update_metadata(
         self, timestamp: Optional[float], user: str, message: str, version: int
     ):
         self._check_not_discarded()
@@ -138,9 +138,7 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
         self._op = ResourceOp.UPDATED
         self._increment_version()
 
-    def discard(  # noqa: D102
-        self, *, user: str, message: str, timestamp: Optional[float] = None
-    ):
+    def discard(self, *, user: str, message: str, timestamp: Optional[float] = None):
         self._op = ResourceOp.DELETED
         self._message = message or "Entry deleted."
         self._discarded = True
@@ -237,22 +235,22 @@ class Resource(TimestampedVersionedEntity):  # noqa: D101
             timestamp=timestamp,
         )
 
-    def is_protected(self, level: PermissionLevel):  # noqa: ANN201
+    def is_protected(self, level: PermissionLevel):
         """
         Level can be READ, WRITE or ADMIN
-        """  # noqa: D200, D400, D212, D415
+        """
         protection = self.config.get("protected", {})
         return level == "WRITE" or level == "ADMIN" or protection.get("read")
 
 
 # ===== Entities =====
-class Release(Entity):  # noqa: D101
-    def __init__(  # noqa: D107
+class Release(Entity):
+    def __init__(
         self,
         name: str,
         publication_date: float,
         description: str,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self._name = name
@@ -278,7 +276,7 @@ class Release(Entity):  # noqa: D101
 # ===== Factories =====
 
 
-def create_resource(  # noqa: D103
+def create_resource(
     config: dict[str, Any],
     table_name: str,
     created_by: Optional[str] = None,

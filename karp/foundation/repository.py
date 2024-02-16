@@ -1,37 +1,37 @@
-import abc  # noqa: D100, I001
+import abc  # noqa: I001
 from typing import Generic, TypeVar, Optional, Type
 
 from karp.lex_core.value_objects import UniqueId
 from .errors import NotFoundError
 
 
-class Repository(abc.ABC):  # noqa: D101
+class Repository(abc.ABC):
     EntityNotFound: Type[NotFoundError] = NotFoundError
 
-    def save(self, entity):  # noqa: ANN201, D102
+    def save(self, entity):
         self._save(entity)
 
     @abc.abstractmethod
-    def _save(self, entity):  # noqa: ANN202
+    def _save(self, entity):
         raise NotImplementedError()
 
-    def by_id(  # noqa: D102
+    def by_id(
         self,
         id: UniqueId,  # noqa: A002
         *,
         version: Optional[int] = None,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ):
         if entity := self._by_id(id, version=version):
             return entity
         raise self.EntityNotFound(f"Entity with id={id} is not found")
 
-    def by_id_optional(  # noqa: D102
+    def by_id_optional(
         self,
         id: UniqueId,  # noqa: A002
         *,
         version: Optional[int] = None,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ) -> Optional:
         return self._by_id(id, version=version)
 
@@ -41,6 +41,6 @@ class Repository(abc.ABC):  # noqa: D101
         id: UniqueId,  # noqa: A002
         *,
         version: Optional[int] = None,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ) -> Optional:
         raise NotImplementedError()

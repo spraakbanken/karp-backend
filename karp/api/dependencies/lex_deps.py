@@ -1,6 +1,6 @@
 from fastapi import Depends
 from sqlalchemy.orm import Session
-from starlette.requests import Request  # noqa: F401
+from starlette.requests import Request
 
 from karp.api.dependencies import db_deps
 from karp.api.dependencies.db_deps import (
@@ -23,13 +23,13 @@ def get_resource_repository(
     )
 
 
-def get_resource_queries(  # noqa: D103
+def get_resource_queries(
     resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
 ) -> ResourceQueries:
     return ResourceQueries(resources)
 
 
-def get_entry_queries(  # noqa: D103
+def get_entry_queries(
     resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
 ) -> EntryQueries:
     return EntryQueries(resources)

@@ -7,79 +7,79 @@ from karp.foundation.errors import NotFoundError
 
 class LexDomainError(Exception):
 
-    """Base exception for domain errors."""  # noqa: D211
+    """Base exception for domain errors."""
 
-    def __init__(self, *args: object, **kwargs) -> None:  # noqa: ANN003, D107
+    def __init__(self, *args: object, **kwargs) -> None:
         super().__init__(*args)
         self.extras = kwargs or {}
 
 
-class DiscardedEntityError(LexDomainError):  # noqa: D101
+class DiscardedEntityError(LexDomainError):
     pass
 
 
-class EntryNotFound(NotFoundError, LexDomainError):  # noqa: D101
+class EntryNotFound(NotFoundError, LexDomainError):
     entity_name = "Entry"
 
-    def __init__(  # noqa: D107
+    def __init__(
         self,
         *args,
         entity_id=None,
-        **kwargs,  # noqa: ANN002, ANN003
+        **kwargs,
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, **kwargs)
         # super().__init__(entity_id, *args, **kwargs)
 
 
-class ResourceNotFound(NotFoundError, LexDomainError):  # noqa: D101
+class ResourceNotFound(NotFoundError, LexDomainError):
     entity_name = "Resource"
 
-    def __init__(  # noqa: D107
+    def __init__(
         self,
         entity_id,
         *args,
-        **kwargs,  # noqa: ANN002, ANN003
+        **kwargs,
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, entity_id, *args, **kwargs)
 
 
-class IntegrityError(LexDomainError):  # noqa: D101
+class IntegrityError(LexDomainError):
     pass
 
 
-class RepositoryError(LexDomainError):  # noqa: D101
+class RepositoryError(LexDomainError):
     pass
 
 
-class InvalidEntry(LexDomainError):  # noqa: D101
+class InvalidEntry(LexDomainError):
     pass
 
 
-class UpdateConflict(LexDomainError):  # noqa: D101
-    def __init__(self, diff):  # noqa: D107, ANN204
+class UpdateConflict(LexDomainError):
+    def __init__(self, diff):
         super().__init__(
             "Version conflict. Please update entry.",
         )
         self.error_obj = {"diff": diff, "error": str(self)}
 
 
-class LexValueError(ValueError, LexDomainError):  # noqa: D101
+class LexValueError(ValueError, LexDomainError):
     pass
 
 
-class InvalidResourceId(LexValueError):  # noqa: D101
+class InvalidResourceId(LexValueError):
     pass
 
 
-class InvalidEntrySchema(ValueError, LexDomainError):  # noqa: D101
+class InvalidEntrySchema(ValueError, LexDomainError):
     pass
 
 
-class NoSuchEntryRepository(ValueError, LexDomainError):  # noqa: D101
+class NoSuchEntryRepository(ValueError, LexDomainError):
     pass
 
 
-class DiffImposible(LexDomainError):  # noqa: D101
+class DiffImposible(LexDomainError):
     pass

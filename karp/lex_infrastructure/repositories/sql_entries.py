@@ -2,7 +2,7 @@
 import logging  # noqa: I001
 import typing
 from typing import Dict, List, Optional, Generic, Tuple, TypeVar
-from attr import has  # noqa: F401
+from attr import has
 
 import injector
 import regex
@@ -27,18 +27,16 @@ from karp.lex.domain.entities import Resource
 
 from karp.lex.domain.entities.entry import (
     Entry,
-    EntryOp,  # noqa: F401
-    EntryStatus,  # noqa: F401
+    EntryOp,
+    EntryStatus,
 )
 from karp.lex_infrastructure.sql import sql_models
 
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
-    def __init__(  # noqa: D107, ANN204
-        self, session: Session, resource: Resource
-    ):
+class SqlEntryRepository(repositories.EntryRepository):
+    def __init__(self, session: Session, resource: Resource):
         self._session = session
         repositories.EntryRepository.__init__(
             self,
@@ -56,18 +54,18 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
             bind=session.connection(), checkfirst=True
         )
 
-    def _save(self, entry: Entry):  # noqa: ANN202
+    def _save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
         self._session.add(entry_dto)
 
-    def entity_ids(self) -> List[str]:  # noqa: D102
+    def entity_ids(self) -> List[str]:
         stmt = self._stmt_latest_not_discarded()
         stmt = stmt.order_by(self.history_model.last_modified.desc())
         query = self._session.execute(stmt).scalars()
         # query = self._session.query(self.history_model).filter_by(discarded=False)
         return [row.entity_id for row in query.all()]
 
-    def by_id(  # noqa: D102
+    def by_id(
         self,
         id_: UniqueId,
         *,
@@ -75,7 +73,7 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
         after_date: Optional[float] = None,
         before_date: Optional[float] = None,
         oldest_first: bool = False,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ):
         if entry := self._by_id(
             id_,
@@ -115,7 +113,7 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
-    def teardown(self):  # noqa: ANN201
+    def teardown(self):
         """Use for testing purpose."""
         logger.info("starting teardown")
 
@@ -123,14 +121,14 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
         self.history_model.__table__.drop(bind=self._session.connection())
         logger.info("dropped history_model")
 
-    def all_entries(self) -> typing.Iterable[Entry]:  # noqa: D102
+    def all_entries(self) -> typing.Iterable[Entry]:
         stmt = self._stmt_latest_not_discarded()
         query = self._session.execute(stmt).scalars()
 
         return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
 
     # TODO Rename this here and in `entity_ids` and `all_entries`
-    def _stmt_latest_not_discarded(self):  # noqa: ANN202
+    def _stmt_latest_not_discarded(self):
         subq = self._subq_for_latest()
         return sql.select(self.history_model).join(
             subq,
@@ -151,7 +149,7 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
             .subquery("t2")
         )
 
-    def get_history(  # noqa: ANN201, D102
+    def get_history(
         self,
         user_id: Optional[str] = None,
         entry_id: Optional[str] = None,

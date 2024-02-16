@@ -1,4 +1,4 @@
-from typing import Iterable, Optional  # noqa: D100, I001
+from typing import Iterable, Optional  # noqa: I001
 
 import sqlalchemy as sa
 from sqlalchemy import sql
@@ -20,24 +20,24 @@ class ResourceQueries:
     def __init__(self, resources: ResourceRepository):
         self._resources = resources
 
-    def by_resource_id_optional(  # noqa: D102
+    def by_resource_id_optional(
         self, resource_id: str, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         result = self._resources.by_resource_id_optional(resource_id, version=version)
         if result is not None:
             return resource_to_dto(result)
 
-    def by_id_optional(  # noqa: D102
+    def by_id_optional(
         self, entity_id: UniqueId, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         result = self._resources.by_id_optional(entity_id, version=version)
         if result is not None:
             return resource_to_dto(result)
 
-    def get_published_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
+    def get_published_resources(self) -> Iterable[ResourceDto]:
         return map(resource_to_dto, self._resources.get_published_resources())
 
-    def get_all_resources(self) -> Iterable[ResourceDto]:  # noqa: D102
+    def get_all_resources(self) -> Iterable[ResourceDto]:
         return map(resource_to_dto, self._resources.get_all_resources())
 
 

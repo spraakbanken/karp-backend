@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-class StatisticsDto(pydantic.BaseModel):  # noqa: D101
+class StatisticsDto(pydantic.BaseModel):
     value: str
     count: int
 
@@ -32,7 +32,7 @@ class StatisticsDto(pydantic.BaseModel):  # noqa: D101
     "/{resource_id}/{field}",
     response_model=typing.List[StatisticsDto],
 )
-def get_field_values(  # noqa: ANN201, D103
+def get_field_values(
     resource_id: str,
     field: str,
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
@@ -48,5 +48,5 @@ def get_field_values(  # noqa: ANN201, D103
     return search_service.statistics(resource_id, field)
 
 
-def init_app(app):  # noqa: ANN201, D103
+def init_app(app):
     app.include_router(router)

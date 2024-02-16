@@ -9,8 +9,8 @@ from karp.lex.domain import errors
 logger = logging.getLogger(__name__)
 
 
-class EntrySchema:  # noqa: D101
-    def __init__(self, json_schema: dict) -> None:  # noqa: D107
+class EntrySchema:
+    def __init__(self, json_schema: dict) -> None:
         if not isinstance(json_schema, dict):
             msg = f"Expecting 'dict', got '{type(json_schema)}'"
             raise TypeError(msg)
@@ -61,7 +61,7 @@ def create_entry_json_schema(
     Returns
         Dict[str]: The json_schema to use.
 
-    """  # noqa: D407
+    """
     json_schema = {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",

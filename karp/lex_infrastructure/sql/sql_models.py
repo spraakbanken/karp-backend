@@ -1,4 +1,4 @@
-from typing import Dict  # noqa: D100, I001
+from typing import Dict  # noqa: I001
 
 from sqlalchemy import (
     JSON,
@@ -28,7 +28,7 @@ from karp.lex.domain.entities.resource import ResourceOp
 from karp.db_infrastructure import db
 
 
-class ResourceModel(db.Base):  # noqa: D101
+class ResourceModel(db.Base):
     __tablename__ = "resources"
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
@@ -55,7 +55,7 @@ class ResourceModel(db.Base):  # noqa: D101
         #    this works because the tuple (saldo, NULL) is not equal to (saldo, NULL)
     )
 
-    def __repr__(self):  # noqa: ANN204, D105
+    def __repr__(self):
         return """<ResourceModel(
                     history_id={},
                     entity_id={},
@@ -82,7 +82,7 @@ class ResourceModel(db.Base):  # noqa: D101
             self.discarded,
         )
 
-    def to_entity(self) -> entities.Resource:  # noqa: D102
+    def to_entity(self) -> entities.Resource:
         return entities.Resource(
             id=self.entity_id,
             resource_id=self.resource_id,
@@ -98,7 +98,7 @@ class ResourceModel(db.Base):  # noqa: D101
         )
 
     @staticmethod
-    def from_entity(resource: entities.Resource) -> "ResourceModel":  # noqa: D102
+    def from_entity(resource: entities.Resource) -> "ResourceModel":
         return ResourceModel(
             history_id=None,
             entity_id=resource.entity_id,
@@ -117,7 +117,7 @@ class ResourceModel(db.Base):  # noqa: D101
         )
 
 
-class BaseRuntimeEntry:  # noqa: D101
+class BaseRuntimeEntry:
     entry_id = Column(
         String(100),
         primary_key=True,
@@ -127,7 +127,7 @@ class BaseRuntimeEntry:  # noqa: D101
     discarded = Column(Boolean, nullable=False)
 
 
-class BaseHistoryEntry:  # noqa: D101
+class BaseHistoryEntry:
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
     version = Column(Integer, nullable=False)
@@ -144,7 +144,7 @@ class BaseHistoryEntry:  # noqa: D101
     )
 
     @classmethod
-    def from_entity(cls, entry: entities.Entry):  # noqa: ANN206, D102
+    def from_entity(cls, entry: entities.Entry):
         return cls(
             history_id=None,
             entity_id=entry.entity_id,
@@ -163,7 +163,7 @@ class BaseHistoryEntry:  # noqa: D101
 # Dynamic models
 
 
-def get_or_create_entry_history_model(  # noqa: D103
+def get_or_create_entry_history_model(
     resource_id: str,
 ) -> BaseHistoryEntry:
     history_table_name = create_history_table_name(resource_id)
@@ -180,7 +180,7 @@ def get_or_create_entry_history_model(  # noqa: D103
     return sqlalchemy_class
 
 
-def get_or_create_entry_runtime_model(  # noqa: D103, C901
+def get_or_create_entry_runtime_model(
     resource_id: str, history_model: Table, config: Dict
 ) -> BaseRuntimeEntry:
     table_name = create_runtime_table_name(resource_id)
@@ -217,9 +217,9 @@ class_cache = {}
 # Helpers
 
 
-def create_runtime_table_name(resource_id: str) -> str:  # noqa: D103
+def create_runtime_table_name(resource_id: str) -> str:
     return f"runtime_{resource_id}"
 
 
-def create_history_table_name(resource_id: str) -> str:  # noqa: D103
+def create_history_table_name(resource_id: str) -> str:
     return resource_id

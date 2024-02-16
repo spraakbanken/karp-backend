@@ -1,15 +1,15 @@
 import logging
 import typing
-from typing import Callable, Dict, List, Optional, Tuple, TypeVar  # noqa: F401
+from typing import Callable, Dict, List, Optional, Tuple, TypeVar
 
 import pydantic
 
-from karp.search.domain.query import Query  # noqa: F401
+from karp.search.domain.query import Query
 
 logger = logging.getLogger(__name__)
 
 
-class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member  # noqa: D101
+class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
     resource_ids: typing.List[str]
     q: typing.Optional[str] = None
     from_: int = 0
@@ -19,7 +19,7 @@ class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member  # noqa: D1
 
     @pydantic.validator("resource_ids", pre=True)
     @classmethod
-    def split_str(cls, v):  # noqa: ANN206, D102
+    def split_str(cls, v):
         if isinstance(v, str):
             return v.split(",")
         return v
