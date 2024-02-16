@@ -129,11 +129,11 @@ integration-tests-w-coverage: clean-pyc
 
 .PHONY: lint
 lint:
-	${INVENV} ruff ${flags} src
+	${INVENV} ruff ${flags} karp
 
 .PHONY: lint-fix
 lint-fix:
-	${INVENV} ruff ${flags} src --fix
+	${INVENV} ruff ${flags} karp --fix
 
 .PHONY: build-c4-docs
 build-c4-docs:
