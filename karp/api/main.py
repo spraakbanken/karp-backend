@@ -1,0 +1,238 @@
+import time
+from typing import Any
+
+try:
+    from importlib.metadata import entry_points
+except ImportError:
+    # used if python < 3.8
+    from importlib_metadata import entry_points  # type: ignore  # noqa: F401
+
+from fastapi import FastAPI, Request, Response, status, HTTPException  # noqa: I001
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exception_handlers import http_exception_handler
+import injector  # noqa: F401
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session
+import logging  # noqa: F811
+from asgi_correlation_id import CorrelationIdMiddleware
+from asgi_correlation_id.context import correlation_id
+from asgi_matomo import MatomoMiddleware
+
+from karp import main
+from karp.foundation import errors as foundation_errors
+from karp.lex_core.value_objects import unique_id  # noqa: F401
+from karp.auth import errors as auth_errors
+from karp.lex.domain import errors as lex_errors
+from karp.main.errors import ClientErrorCodes
+from karp.main import modules, config
+from karp.api.routes import router as api_router
+
+
+querying_description = """
+## Query DSL
+### Query operators
+- `contains|<field>|<string>` Find all entries where the field <field> contains <string>. More premissive than equals.
+
+- `endswith|<field>|<string>` Find all entries where the field <field> ends with <string>
+
+- `equals|<field>|<string>` Find all entries where <field> equals <string>. Stricter than contains
+
+- `exists|<field>` Find all entries that has the field <field>.
+
+- `freetext|<string>` Search in all fields for <string> and similar values.
+
+- `freergxp|<regex.*>` Search in all fields for the regex <regex.*>.
+
+- `gt|<field>|<value>` Find all entries where <field> is greater than <value>.
+
+- `gte|<field>|<value>` Find all entries where <field> is greater than or equals <value>.
+
+- `lt|<field>|<value>` Find all entries where <field> is less than <value>.
+
+- `lte|<field>|<value>` Find all entries where <field> is less than or equals <value>.
+
+- `missing|<field>` Search for all entries that doesn't have the field <field>.
+
+- `regexp|<field>|<regex.*>` Find all entries where the field <field> matches the regex <regex.*>.
+
+- `startswith|<field>|<string>` Find all entries where <field>starts with <string>.
+
+### Logical Operators
+The logical operators can be used both at top-level and lower-levels.
+
+- `not(<expression1>||<expression2>||...)` Find all entries that doesn't match the expression <expression>.
+
+- `and(<expression1>||<expression2>||...)` Find all entries that matches <expression1> AND <expression2>.
+
+- `or(<expression1>||<expression2>||...)` Find all entries that matches <expression1> OR <expression2>.
+
+### Regular expressions
+Always matches complete tokens.
+
+###  Examples
+- `not(missing|pos)`
+- `and(freergxp|str.*ng||regexp|pos|str.*ng)`
+- `and(missing|pos||equals|wf||or|blomma|äpple`
+- `and(equals|wf|sitta||not||equals|wf|satt`
+"""
+
+
+tags_metadata = [
+    {
+        "name": "Querying",
+        "description": querying_description,
+    },
+    {"name": "Editing"},
+    {"name": "Statistics"},
+    {"name": "History"},
+    {"name": "Resources"},
+]
+
+logger = logging.getLogger(__name__)
+
+
+def create_app() -> FastAPI:  # noqa: D103
+    app_context = main.bootstrap_app()
+
+    app = FastAPI(
+        title=f"{config.PROJECT_NAME} API",
+        redoc_url="/",
+        version=config.VERSION,
+        openapi_tags=tags_metadata,
+    )
+
+    app.state.app_context = app_context
+
+    main.install_auth_service(app_context.container, app_context.settings)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=app_context.settings.get("web.cors.origins", ["*"]),
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    app.include_router(api_router)
+
+    modules.load_modules("karp.karp_v6_api", app=app)
+
+    from karp.main.errors import KarpError
+
+    @app.exception_handler(KarpError)
+    async def _karp_error_handler(request: Request, exc: KarpError):  # noqa: ANN202
+        logger.exception(exc)
+        return JSONResponse(
+            status_code=exc.http_return_code,
+            content={"error": exc.message, "errorCode": exc.code},
+        )
+
+    @app.exception_handler(foundation_errors.NotFoundError)
+    async def _entity_not_found(  # noqa: ANN202
+        request: Request, exc: foundation_errors.NotFoundError
+    ):
+        return JSONResponse(
+            status_code=404,
+            content={
+                "detail": str(exc),
+                "type": str(type(exc)),
+            },
+        )
+
+    @app.exception_handler(auth_errors.ResourceNotFound)
+    async def _auth_entity_not_found(  # noqa: ANN202
+        request: Request, exc: auth_errors.ResourceNotFound
+    ):
+        return JSONResponse(
+            status_code=404,
+            content={
+                "detail": str(exc),
+            },
+        )
+
+    @app.exception_handler(lex_errors.LexDomainError)
+    def _lex_error_handler(  # noqa: ANN202
+        request: Request, exc: lex_errors.LexDomainError
+    ):
+        logger.exception(exc)
+        return lex_exc2response(exc)
+
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(  # noqa: ANN202
+        request: Request, exc: Exception
+    ):
+        return await http_exception_handler(
+            request,
+            HTTPException(
+                status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Internal server error",
+                headers={
+                    "X-Request-ID": correlation_id.get() or "",
+                    "Access-Control-Expose-Headers": "X-Request-ID",
+                },
+            ),
+        )
+
+    @app.middleware("http")
+    async def injector_middleware(request: Request, call_next):  # noqa: ANN202
+        response: Response = JSONResponse(
+            status_code=500, content={"detail": "Internal server error"}
+        )
+        # Create a new session per request
+        with modules.new_session(app_context.container) as container:
+            request.state.session = container.get(Session)
+            request.state.container = container
+
+            response = await call_next(request)
+
+        return response
+
+    @app.middleware("http")
+    async def _logging_middleware(request: Request, call_next) -> Response:
+        response: Response = JSONResponse(
+            status_code=500, content={"detail": "Internal server error"}
+        )
+        start_time = time.time()
+        try:
+            response = await call_next(request)
+        finally:
+            process_time = time.time() - start_time
+            logger.info(
+                "processed a request",
+                extra={
+                    "status_code": response.status_code,
+                    "process_time": process_time,
+                },
+            )
+        return response
+
+    if app_context.settings["tracking.matomo.url"]:
+        app.add_middleware(
+            MatomoMiddleware,
+            idsite=app_context.settings["tracking.matomo.idsite"],
+            matomo_url=app_context.settings["tracking.matomo.url"],
+            access_token=app_context.settings["tracking.matomo.token"],
+        )
+    else:
+        logger.warning("Tracking to Matomo is not enabled, please set TRACKING_MATOMO_URL.")
+    app.add_middleware(CorrelationIdMiddleware)
+
+    return app
+
+
+def lex_exc2response(exc: lex_errors.LexDomainError) -> JSONResponse:  # noqa: D103
+    status_code = 503
+    content: dict[str, Any] = {"message": "Internal server error"}
+    if isinstance(exc, lex_errors.UpdateConflict):
+        status_code = 400
+        content = {
+            "message": str(exc),
+            "errorCode": ClientErrorCodes.VERSION_CONFLICT,
+        }
+    return JSONResponse(
+        status_code=status_code,
+        content=content,
+    )
