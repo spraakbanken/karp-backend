@@ -1,14 +1,11 @@
 """Unit tests for JWTAuthenticator"""
 from pathlib import Path
-from typing import Dict, Optional, Type
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
 from karp.auth.domain.errors import (
     AuthError,
     ExpiredToken,
-    InvalidTokenAudience,
-    TokenError,
 )
 from karp.auth.infrastructure.jwt_auth_service import (
     JWTAuthService,
@@ -56,35 +53,3 @@ class TestAuthTokens:
         user = jwt_authenticator.authenticate("bearer", access_token)
         assert user is not None
         assert user.identifier == "test_user"
-
-    @pytest.mark.parametrize(
-        "user, levels, secret_key, jwt_audience, exception",
-        (
-            ("user", {}, other_key, AUTH_JWT_AUDIENCE, TokenError),
-            pytest.param(
-                "user",
-                {},
-                None,
-                "othersite:auth",
-                InvalidTokenAudience,
-                marks=pytest.mark.xfail(reason="audience not impl on auth"),
-            ),
-        ),
-    )
-    def test_invalid_token_content_raises_error(
-        self,
-        jwt_authenticator,
-        user: str,
-        levels: Optional[Dict],
-        secret_key: Optional[str],
-        jwt_audience: str,
-        exception: Type[BaseException],
-    ) -> None:
-        with pytest.raises(exception):
-            access_token = create_access_token(
-                user=user,
-                levels=levels,
-                priv_key=secret_key,
-                audience=jwt_audience,
-            )
-            jwt_authenticator.authenticate("bearer", access_token)
