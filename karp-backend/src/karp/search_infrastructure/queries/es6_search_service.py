@@ -54,7 +54,6 @@ class EsQueryBuilder(NodeWalker):  # noqa: D101
         return self.walk(node.ast).lower()
 
     def walk__quoted_string_value(self, node):
-        print("bepa")
         return "".join([part.replace('\\"', '"') for part in node.ast])
 
     def walk__exists(self, node):  # noqa: ANN201, D102
@@ -175,7 +174,7 @@ class Es6SearchService:
                 es_query = self.query_builder.walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
-                logger.debug("Parse error", extra={"err": err})
+                logger.info("Parse error", extra={"err": err})
                 raise errors.IncompleteQuery(
                     failing_query=query.q, error_description=str(err)
                 ) from err
