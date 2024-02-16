@@ -23,7 +23,6 @@ def transform(resource, src_entry: EntryDto) -> IndexEntry:
         index_entry,
         resource.config["fields"].items(),
     )
-    logger.debug("transformed entry", extra={"entry": src_entry, "index_entry": index_entry})
     return index_entry
 
 
@@ -32,7 +31,6 @@ def _transform_to_index_entry(
     _index_entry: IndexEntry,
     fields,
 ):
-    logger.debug("transforming [part of] entry", extra={"src_entry": _src_entry})
     for field_name, field_conf in fields:
         field_content = None
 
