@@ -147,9 +147,6 @@ class SqlResourceRepository(repositories.ResourceRepository):
 
         return (resource_dto.to_entity() for resource_dto in query if resource_dto is not None)
 
-    def resource_to_entries(self, resource: Resource) -> SqlEntryRepository:
-        return SqlEntryRepository(session=self._session, resource=resource)
-
     def entries_by_resource_id(self, resource_id: str) -> Optional[SqlEntryRepository]:
         resource = self.by_resource_id(resource_id)
-        return self.resource_to_entries(resource) if resource else None
+        return SqlEntryRepository(session=self._session, resource=resource) if resource else None

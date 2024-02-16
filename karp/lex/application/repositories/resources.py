@@ -1,13 +1,10 @@
-import abc  # noqa: I001
+import abc
 import logging
 import typing
-import uuid
 from typing import Dict, List, Optional, Tuple, Union
 
 from karp.foundation import repository
-from karp.lex.domain import entities
-
-from karp.lex.domain import errors
+from karp.lex.domain import entities, errors
 
 logger = logging.getLogger("karp")
 
