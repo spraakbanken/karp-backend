@@ -39,7 +39,7 @@ class JWTAuthService:
         self._jwt_key = load_jwt_key(pubkey_path)
         logger.debug("JWTAuthenticator created")
 
-    def authenticate(self, _scheme: str, credentials: str) -> User:
+    def authenticate(self, credentials: str) -> User:
         logger.debug("authenticate called", extra={"credentials": credentials})
 
         try:

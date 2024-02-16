@@ -30,7 +30,7 @@ def jwt_authenticator() -> JWTAuthService:
 
 def test_authenticate_invalid_token(jwt_authenticator) -> None:
     with pytest.raises(AuthError):
-        jwt_authenticator.authenticate("scheme", "invalid")
+        jwt_authenticator.authenticate("invalid")
 
 
 def test_authenticate_expired_token(jwt_authenticator) -> None:
@@ -41,7 +41,7 @@ def test_authenticate_expired_token(jwt_authenticator) -> None:
     )
 
     with pytest.raises(ExpiredToken):
-        jwt_authenticator.authenticate("scheme", token)
+        jwt_authenticator.authenticate(token)
 
 
 class TestAuthTokens:
@@ -50,6 +50,6 @@ class TestAuthTokens:
             user="test_user",
             levels={},
         )
-        user = jwt_authenticator.authenticate("bearer", access_token)
+        user = jwt_authenticator.authenticate(access_token)
         assert user is not None
         assert user.identifier == "test_user"

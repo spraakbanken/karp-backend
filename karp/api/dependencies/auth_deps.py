@@ -75,7 +75,7 @@ def get_user(  # noqa: D103
             "Calling auth_service",
             extra={"credentials": credentials},
         )
-        return auth_service.authenticate(credentials.scheme, credentials.credentials)
+        return auth_service.authenticate(credentials.credentials)
     except KarpError as err:
         raise credentials_exception from err
     except TokenError as err:
