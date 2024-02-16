@@ -21,30 +21,12 @@ class BaseModel(pydantic.BaseModel):
         return self.dict(by_alias=True)
 
 
-class PermissionLevel(str, Enum):
-    write = "write"
-    read = "read"
-    admin = "admin"
-
-
-class Entry(BaseModel):
-    entry_id: str
-    resource: str
-    version: int
-    entry: typing.Dict
-    last_modified_by: str
-    last_modified: float
-
-
-class EntryBase(BaseModel):
+class EntryAdd(BaseModel):
     entry: Dict
-
-
-class EntryAdd(EntryBase):
     message: str = ""
 
 
-class EntryUpdate(EntryBase):
+class EntryUpdate(EntryAdd):
     message: str
     version: int
 
@@ -53,15 +35,12 @@ class EntryAddResponse(BaseModel):
     newID: unique_id.UniqueIdStr
 
 
-class ResourceBase(BaseModel):
+class ResourcePublic(BaseModel):
+    id: unique_id.UniqueIdStr
     resource_id: str
     name: str
     config: typing.Dict
     message: Optional[str] = None
-
-
-class ResourcePublic(ResourceBase):
-    id: unique_id.UniqueIdStr
     last_modified: float
     is_published: Optional[bool] = None
     version: Optional[int] = None
@@ -69,5 +48,3 @@ class ResourcePublic(ResourceBase):
 
 class ResourceProtected(ResourcePublic):
     last_modified_by: str
-    is_published: Optional[bool] = None
-    version: Optional[int] = None
