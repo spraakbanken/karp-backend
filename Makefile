@@ -61,12 +61,12 @@ init-db:
 	${INVENV} alembic upgrade head
 
 # build parser
-build-parser: karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_parser.py karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_model.py
+build-parser: karp/search/domain/query_dsl/karp_query_v6_parser.py karp/search/domain/query_dsl/karp_query_v6_model.py
 
-karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
+karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
 	${INVENV} tatsu $< > $@
 
-karp-backend/src/karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
+karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
 	${INVENV} tatsu --object-model $< > $@
 
 .PHONY: serve
@@ -81,7 +81,7 @@ unit_test_dirs := tests/unit
 e2e_test_dirs := tests/e2e
 all_test_dirs := tests
 
-default_cov := "--cov=karp-backend/src/karp --cov=karp-lex-core/src/karp"
+default_cov := "--cov=karp"
 cov_report := "term-missing"
 cov := ${default_cov}
 
@@ -129,11 +129,11 @@ integration-tests-w-coverage: clean-pyc
 
 .PHONY: lint
 lint:
-	${INVENV} ruff ${flags} karp-backend karp-lex-core
+	${INVENV} ruff ${flags} karp
 
 .PHONY: lint-fix
 lint-fix:
-	${INVENV} ruff ${flags} karp-backend karp-lex-core --fix
+	${INVENV} ruff ${flags} karp --fix
 
 .PHONY: build-c4-docs
 build-c4-docs:

@@ -70,7 +70,7 @@ def fixture_cliapp() -> Typer:
 def fixture_app(
     apply_migrations: None, init_search_service: None
 ) -> Generator[FastAPI, None, None]:
-    from karp.karp_v6_api.main import create_app
+    from karp.api.main import create_app
 
     yield create_app()
     print("dropping app")
