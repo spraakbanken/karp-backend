@@ -1,5 +1,5 @@
-from .sql_resources import SqlResourceRepository
+from .sql_resources import ResourceRepository
 
 __all__ = [
-    "SqlResourceRepository",
+    "ResourceRepository",
 ]

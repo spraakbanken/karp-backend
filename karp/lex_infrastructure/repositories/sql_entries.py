@@ -19,7 +19,7 @@ from karp.lex_infrastructure.sql import sql_models
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryRepository(TimestampedEntity, Repository):
+class EntryRepository(TimestampedEntity, Repository):
     def __init__(self, session: Session, resource: Resource):
         self._session = session
 

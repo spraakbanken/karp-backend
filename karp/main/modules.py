@@ -5,7 +5,7 @@ from typing import Dict
 
 from karp.entry_commands import EntryCommands
 from karp.lex_infrastructure import EntryQueries, ResourceQueries
-from karp.lex_infrastructure.repositories import SqlResourceRepository
+from karp.lex_infrastructure.repositories import ResourceRepository
 from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
@@ -36,7 +36,7 @@ class CommandsMod(injector.Module):
     def entry_commands(
         self,
         session: Session,
-        resources: SqlResourceRepository,
+        resources: ResourceRepository,
         index: Es6Index,
     ) -> EntryCommands:
         return EntryCommands(
@@ -47,7 +47,7 @@ class CommandsMod(injector.Module):
 
     @injector.provider
     def resource_commands(
-        self, session: Session, resources: SqlResourceRepository, index: Es6Index
+        self, session: Session, resources: ResourceRepository, index: Es6Index
     ) -> ResourceCommands:
         return ResourceCommands(session=session, resources=resources, index=index)
 

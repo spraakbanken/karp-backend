@@ -7,9 +7,9 @@ import injector
 
 from karp.lex.domain import entities as lex_entities
 from karp.lex_core.value_objects import UniqueId, unique_id
-from karp.lex_infrastructure.repositories import SqlResourceRepository
+from karp.lex_infrastructure.repositories import ResourceRepository
 from karp.lex.domain import errors
-from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
+from karp.lex_infrastructure.repositories.sql_entries import EntryRepository
 
 
 @dataclasses.dataclass
@@ -24,7 +24,7 @@ def ensure_correct_id_type(v) -> unique_id.UniqueId:
         raise ValueError(f"expected valid UniqueId, got '{v}' (type: `{type(v)}')") from exc
 
 
-class InMemoryResourceRepository(SqlResourceRepository):
+class InMemoryResourceRepository(ResourceRepository):
     def __init__(self):  # noqa: ANN204
         super().__init__()
         self.resources = {}
@@ -57,7 +57,7 @@ class InMemoryResourceRepository(SqlResourceRepository):
         return (res.resource_id for res in self.resources)
 
 
-class InMemoryEntryRepository(SqlEntryRepository):
+class InMemoryEntryRepository(EntryRepository):
     def __init__(self):
         self.entries = {}
 
@@ -117,5 +117,5 @@ class InMemoryEntryRepository(SqlEntryRepository):
 class InMemoryLexInfrastructure(injector.Module):
     @injector.provider
     @injector.singleton
-    def resources(self) -> SqlResourceRepository:
+    def resources(self) -> ResourceRepository:
         return InMemoryResourceRepository()

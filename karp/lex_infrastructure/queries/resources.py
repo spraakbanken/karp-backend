@@ -3,7 +3,7 @@ from typing import Iterable, Optional
 from karp.lex.application.dtos import ResourceDto
 from karp.lex.domain.entities import Resource
 from karp.lex_core.value_objects.unique_id import UniqueId
-from karp.lex_infrastructure.repositories import SqlResourceRepository
+from karp.lex_infrastructure.repositories import ResourceRepository
 
 
 class ResourceQueries:
@@ -12,7 +12,7 @@ class ResourceQueries:
 
     For now the API is a subset of ResourceRepository, but returning DTOs."""
 
-    def __init__(self, resources: SqlResourceRepository):
+    def __init__(self, resources: ResourceRepository):
         self._resources = resources
 
     def by_resource_id_optional(

@@ -11,13 +11,13 @@ from karp.lex_core.value_objects import (
     unique_id,
 )
 from karp.lex.application.queries import EntryDto
-from karp.lex_infrastructure.repositories import SqlResourceRepository
+from karp.lex_infrastructure.repositories import ResourceRepository
 from karp.main import modules
 
 
 def get_entries(container, resource_id: str):  # noqa: ANN201
     with modules.new_session(container) as container:
-        resources = container.get(SqlResourceRepository)
+        resources = container.get(ResourceRepository)
         return resources.entries_by_resource_id("places")
 
 

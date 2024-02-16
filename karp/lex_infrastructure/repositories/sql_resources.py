@@ -12,13 +12,13 @@ from karp.lex.domain import entities
 from karp.lex.domain.entities.resource import Resource
 from karp.lex.domain.errors import ResourceNotFound
 from karp.lex_core.value_objects import UniqueId
-from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
+from karp.lex_infrastructure.repositories.sql_entries import EntryRepository
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 
 logger = logging.getLogger(__name__)
 
 
-class SqlResourceRepository(repository.Repository):
+class ResourceRepository(repository.Repository):
     EntityNotFound = ResourceNotFound
 
     def __init__(self, session: Session):
@@ -143,6 +143,6 @@ class SqlResourceRepository(repository.Repository):
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
-    def entries_by_resource_id(self, resource_id: str) -> Optional[SqlEntryRepository]:
+    def entries_by_resource_id(self, resource_id: str) -> Optional[EntryRepository]:
         resource = self.by_resource_id(resource_id)
-        return SqlEntryRepository(session=self._session, resource=resource) if resource else None
+        return EntryRepository(session=self._session, resource=resource) if resource else None

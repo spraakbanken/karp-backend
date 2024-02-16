@@ -14,7 +14,7 @@ from karp.lex.application.queries import (
     EntryDiffRequest,
 )
 from karp.lex_core.value_objects import UniqueId, UniqueIdStr
-from karp.lex_infrastructure.repositories import SqlResourceRepository
+from karp.lex_infrastructure.repositories import ResourceRepository
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def _entry_to_entry_dto(entry: Entry, resource_id: str) -> EntryDto:
 class EntryQueries:
     def __init__(
         self,
-        resources: SqlResourceRepository,
+        resources: ResourceRepository,
     ) -> None:
         super().__init__()
         self.resources = resources

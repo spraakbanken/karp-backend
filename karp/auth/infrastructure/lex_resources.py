@@ -4,11 +4,11 @@ from karp.auth.application.resources import ResourcePermissionDto
 from karp.auth.domain import errors
 from karp.auth.domain.user import User
 from karp.foundation.value_objects.permission_level import PermissionLevel
-from karp.lex_infrastructure.repositories import SqlResourceRepository
+from karp.lex_infrastructure.repositories import ResourceRepository
 
 
 class ResourcePermissionQueries:
-    def __init__(self, resources: SqlResourceRepository):
+    def __init__(self, resources: ResourceRepository):
         self.resources = resources
 
     def get_resource_permissions(self) -> typing.List[ResourcePermissionDto]:
