@@ -23,7 +23,6 @@ class EntryRepository(Repository):
         self._session = session
         self._name = resource.resource_id
         self._config = resource.config
-        self._message = resource.message
         self.resource = resource
         self.history_model = sql_models.get_or_create_entry_history_model(resource.table_name)
         self.history_model.__table__.create(  # type:ignore [attr-defined]
@@ -37,10 +36,6 @@ class EntryRepository(Repository):
     @property
     def config(self) -> Dict:
         return self._config
-
-    @property
-    def message(self) -> str:
-        return self._message
 
     def _save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
