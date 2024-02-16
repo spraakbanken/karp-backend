@@ -17,7 +17,7 @@ depends_on = None
 
 # Set this to True to remove the duplicate entries from the database,
 # but maybe best to make a backup just in case :)
-delete_duplicate_entries = False
+delete_duplicate_entries = True
 
 
 def upgrade():
