@@ -18,15 +18,6 @@ def load_jwt_key(path: Path) -> str:
         return fp.read()
 
 
-class JWTAuthServiceConfig:
-    def __init__(self, pubkey_path: str):
-        self._pubkey_path = Path(pubkey_path)
-
-    @property
-    def pubkey_path(self) -> Path:
-        return self._pubkey_path
-
-
 @dataclass
 class JWTPayload:
     sub: str
