@@ -168,20 +168,6 @@ class EntryRepository(Repository):
         total = query.count()
         return [self._history_row_to_entry(row) for row in paged_query.all()], total
 
-    def _entry_to_history_dict(self, entry: Entry, history_id: Optional[int] = None) -> Dict:
-        return {
-            "history_id": history_id,
-            "entity_id": entry.id,
-            "version": entry.version,
-            "last_modified": entry.last_modified,
-            "last_modified_by": entry.last_modified_by,
-            "body": entry.body,
-            "status": entry.status,
-            "message": entry.message,
-            "op": entry.op,
-            "discarded": entry.discarded,
-        }
-
     def _history_row_to_entry(self, row) -> Entry:
         return Entry(
             body=row.body,
