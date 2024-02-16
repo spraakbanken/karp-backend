@@ -101,14 +101,6 @@ class EntryRepository(Repository):
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
-    def teardown(self):
-        """Use for testing purpose."""
-        logger.info("starting teardown")
-
-        logger.info("droping history_model ...")
-        self.history_model.__table__.drop(bind=self._session.connection())
-        logger.info("dropped history_model")
-
     def all_entries(self) -> typing.Iterable[Entry]:
         stmt = self._stmt_latest_not_discarded()
         query = self._session.execute(stmt).scalars()
