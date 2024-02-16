@@ -20,7 +20,3 @@ class InvalidTokenSignature(TokenError):  # noqa: D101
 
 class InvalidTokenAudience(TokenError):  # noqa: D101
     pass
-
-
-class InvalidTokenPayload(TokenError):  # noqa: D101
-    pass

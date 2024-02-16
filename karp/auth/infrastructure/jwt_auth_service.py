@@ -1,33 +1,16 @@
 """Module for jwt-based authentication."""
 import logging
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
 
 import jwt
 import jwt.exceptions as jwte
-import pydantic
 
-from karp.auth.domain.errors import ExpiredToken, InvalidTokenPayload, TokenError
+from karp.auth.domain.errors import ExpiredToken, TokenError
 from karp.auth.domain.user import User
 
 logger = logging.getLogger(__name__)
-
-
-class JWTMeta(pydantic.BaseModel):
-    iss: str
-    aud: Optional[str]
-    iat: float
-    exp: float
-
-
-class JWTCreds(pydantic.BaseModel):
-    sub: str
-    levels: Dict
-    scope: Optional[Dict]
-
-
-class JWTPayload(JWTMeta, JWTCreds):
-    pass
 
 
 def load_jwt_key(path: Path) -> str:
@@ -40,33 +23,38 @@ class JWTAuthServiceConfig:
         self._pubkey_path = Path(pubkey_path)
 
     @property
-    def pubkey_path(self) -> Path:  # noqa: D102
+    def pubkey_path(self) -> Path:
         return self._pubkey_path
 
 
+@dataclass
+class JWTPayload:
+    sub: str
+    levels: Dict
+    scope: Optional[Dict]
+
+
 class JWTAuthService:
-    def __init__(  # noqa: D107
-        self, pubkey_path: Path
-    ) -> None:
+    def __init__(self, pubkey_path: Path) -> None:
         self._jwt_key = load_jwt_key(pubkey_path)
         logger.debug("JWTAuthenticator created")
 
-    def authenticate(self, _scheme: str, credentials: str) -> User:  # noqa: D102
+    def authenticate(self, _scheme: str, credentials: str) -> User:
         logger.debug("authenticate called", extra={"credentials": credentials})
 
         try:
-            user_token = jwt.decode(
+            jwt_decoded = jwt.decode(
                 credentials, key=self._jwt_key, algorithms=["RS256"], leeway=5
+            )
+            payload = JWTPayload(
+                sub=jwt_decoded["sub"],
+                levels=jwt_decoded["levels"],
+                scope=jwt_decoded.get("scope"),
             )
         except jwte.ExpiredSignatureError as exc:
             raise ExpiredToken() from exc
         except jwte.DecodeError as exc:
             raise TokenError() from exc
-
-        try:
-            payload = JWTPayload(**user_token)
-        except pydantic.ValidationError as exc:
-            raise InvalidTokenPayload() from exc
 
         lexicon_permissions = {}
         if payload.scope and "lexica" in payload.scope:

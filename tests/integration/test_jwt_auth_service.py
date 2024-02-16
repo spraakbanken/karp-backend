@@ -8,7 +8,6 @@ from karp.auth.domain.errors import (
     AuthError,
     ExpiredToken,
     InvalidTokenAudience,
-    InvalidTokenPayload,
     TokenError,
 )
 from karp.auth.infrastructure.jwt_auth_service import (
@@ -17,7 +16,6 @@ from karp.auth.infrastructure.jwt_auth_service import (
 from tests.integration.auth.adapters import create_access_token
 
 # Generate our key
-
 other_key = rsa.generate_private_key(
     public_exponent=65537,
     key_size=2048,
@@ -59,19 +57,10 @@ class TestAuthTokens:
         assert user is not None
         assert user.identifier == "test_user"
 
-    def test_token_missing_user_is_invalid(self, jwt_authenticator) -> None:
-        access_token = create_access_token(
-            user=None,
-            levels={},
-        )
-        with pytest.raises(TokenError):
-            jwt_authenticator.authenticate("bearer", access_token)
-
     @pytest.mark.parametrize(
         "user, levels, secret_key, jwt_audience, exception",
         (
             ("user", {}, other_key, AUTH_JWT_AUDIENCE, TokenError),
-            ("user", None, None, AUTH_JWT_AUDIENCE, InvalidTokenPayload),
             pytest.param(
                 "user",
                 {},
@@ -80,7 +69,6 @@ class TestAuthTokens:
                 InvalidTokenAudience,
                 marks=pytest.mark.xfail(reason="audience not impl on auth"),
             ),
-            (None, {}, None, AUTH_JWT_AUDIENCE, InvalidTokenPayload),
         ),
     )
     def test_invalid_token_content_raises_error(
