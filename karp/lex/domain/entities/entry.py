@@ -1,12 +1,11 @@
 """Model for a lexical entry."""
-import enum  # noqa: I001
+import enum
 import logging
 import typing
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional
 
-
-from karp.lex.domain import errors
 from karp.foundation.entity import Entity
+from karp.lex.domain import errors
 from karp.lex_core.value_objects import UniqueId, unique_id
 
 logger = logging.getLogger("karp")
@@ -87,18 +86,6 @@ class Entry(Entity):
     def message(self):
         """The message for the latest operation of this entry."""
         return self._message
-
-    def serialize(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "resource": "",
-            "version": self._version,
-            "entry": self._body,
-            "lastModified": self._last_modified,
-            "lastModifiedBy": self._last_modified_by,
-            "discarded": self._discarded,
-            "message": self._message,
-        }
 
     def discard(
         self,

@@ -146,29 +146,17 @@ class BaseHistoryEntry:
 def get_or_create_entry_history_model(
     resource_id: str,
 ) -> BaseHistoryEntry:
-    history_table_name = create_history_table_name(resource_id)
-    if history_table_name in class_cache:
-        history_model = class_cache[history_table_name]
+    if resource_id in class_cache:
+        history_model = class_cache[resource_id]
         return history_model
 
     attributes = {
-        "__tablename__": history_table_name,
+        "__tablename__": resource_id,
     }
 
-    sqlalchemy_class = type(history_table_name, (db.Base, BaseHistoryEntry), attributes)
-    class_cache[history_table_name] = sqlalchemy_class
+    sqlalchemy_class = type(resource_id, (db.Base, BaseHistoryEntry), attributes)
+    class_cache[resource_id] = sqlalchemy_class
     return sqlalchemy_class
 
 
 class_cache = {}
-
-
-# Helpers
-
-
-def create_runtime_table_name(resource_id: str) -> str:
-    return f"runtime_{resource_id}"
-
-
-def create_history_table_name(resource_id: str) -> str:
-    return resource_id

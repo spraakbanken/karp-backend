@@ -43,7 +43,6 @@ class Resource(Entity):
         self.config = config
         self._message = message
         self._op = op
-        self._releases = []
         self._entry_schema = None
         self.table_name = table_name
 
@@ -56,18 +55,8 @@ class Resource(Entity):
         return self._name
 
     @property
-    def generators(self) -> dict[str, str]:
-        """Generators for entry fields."""
-        return self.config.get("generators", {})
-
-    @property
     def message(self):
         return self._message
-
-    @property
-    def releases(self):
-        """Releases for this resource."""
-        return self._releases
 
     @property
     def op(self):
@@ -83,18 +72,6 @@ class Resource(Entity):
     ):
         self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
-
-    def set_resource_id(
-        self,
-        *,
-        resource_id: str,
-        user: str,
-        version: int,
-        timestamp: Optional[float] = None,
-        message: Optional[str] = None,
-    ):
-        self._update_metadata(timestamp, user, message or "setting resource_id", version)
-        self._resource_id = resource_id
 
     def update(
         self,
@@ -112,20 +89,6 @@ class Resource(Entity):
         self._name = name
         self.config = config
         return True
-
-    def set_config(
-        self,
-        *,
-        config: dict[str, Any],
-        user: str,
-        version: int,
-        timestamp: Optional[float] = None,
-        message: Optional[str] = None,
-    ):
-        if self.config == config:
-            return []
-        self._update_metadata(timestamp, user, message or "setting config", version)
-        self.config = config
 
     def _update_metadata(
         self, timestamp: Optional[float], user: str, message: str, version: int
@@ -235,13 +198,6 @@ class Resource(Entity):
             timestamp=timestamp,
         )
 
-    def is_protected(self, level: PermissionLevel):
-        """
-        Level can be READ, WRITE or ADMIN
-        """
-        protection = self.config.get("protected", {})
-        return level == "WRITE" or level == "ADMIN" or protection.get("read")
-
 
 # ===== Factories =====
 
@@ -278,6 +234,3 @@ def create_resource(
         last_modified_by=user or created_by or "unknown",
     )
     return resource
-
-
-# ===== Repository =====
