@@ -10,7 +10,7 @@ from karp import auth
 from karp.auth.domain.errors import TokenError
 from karp.auth.infrastructure.jwt_auth_service import JWTAuthService
 from karp.auth.infrastructure.lex_resources import ResourcePermissionQueries
-from karp.lex.application.repositories import ResourceRepository
+from karp.lex_infrastructure.repositories import SqlResourceRepository
 from karp.main.errors import KarpError
 
 from . import lex_deps
@@ -33,7 +33,7 @@ def bearer_scheme(authorization=Header(None)):
 
 
 def get_resource_permissions(
-    resources: ResourceRepository = Depends(lex_deps.get_resource_repository),
+    resources: SqlResourceRepository = Depends(lex_deps.get_resource_repository),
 ) -> ResourcePermissionQueries:
     return ResourcePermissionQueries(resources)
 

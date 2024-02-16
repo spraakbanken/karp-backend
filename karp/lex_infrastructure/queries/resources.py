@@ -1,14 +1,9 @@
-from typing import Iterable, Optional  # noqa: I001
-
-import sqlalchemy as sa
-from sqlalchemy import sql
+from typing import Iterable, Optional
 
 from karp.lex.application.dtos import ResourceDto
-from karp.lex_core.value_objects.unique_id import UniqueId
-
-from karp.lex_infrastructure.sql.sql_models import ResourceModel
-from karp.lex.application.repositories import ResourceRepository
 from karp.lex.domain.entities import Resource
+from karp.lex_core.value_objects.unique_id import UniqueId
+from karp.lex_infrastructure.repositories import SqlResourceRepository
 
 
 class ResourceQueries:
@@ -17,7 +12,7 @@ class ResourceQueries:
 
     For now the API is a subset of ResourceRepository, but returning DTOs."""
 
-    def __init__(self, resources: ResourceRepository):
+    def __init__(self, resources: SqlResourceRepository):
         self._resources = resources
 
     def by_resource_id_optional(

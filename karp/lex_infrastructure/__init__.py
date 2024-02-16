@@ -7,10 +7,8 @@ from karp.lex_infrastructure.queries import (
     EntryQueries,
     ResourceQueries,
 )
-from karp.lex_infrastructure.repositories import (
-    SqlResourceRepository,
-)
-from karp.lex.application.repositories import ResourceRepository
+from karp.lex_infrastructure.repositories import SqlResourceRepository
+
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +18,7 @@ class LexInfrastructure(injector.Module):
     def resources(
         self,
         session: Session,
-    ) -> ResourceRepository:
+    ) -> SqlResourceRepository:
         return SqlResourceRepository(
             session=session,
         )
@@ -28,13 +26,13 @@ class LexInfrastructure(injector.Module):
 
 class GenericLexInfrastructure(injector.Module):
     @injector.provider
-    def resource_queries(self, resources: ResourceRepository) -> ResourceQueries:
+    def resource_queries(self, resources: SqlResourceRepository) -> ResourceQueries:
         return ResourceQueries(resources)
 
     @injector.provider
     def entry_queries(
         self,
-        resources: ResourceRepository,
+        resources: SqlResourceRepository,
     ) -> EntryQueries:
         return EntryQueries(
             resources=resources,

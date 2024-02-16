@@ -4,12 +4,14 @@ import injector
 
 from karp.auth.infrastructure.jwt_auth_service import JWTAuthService
 from karp.auth.infrastructure.lex_resources import ResourcePermissionQueries
-from karp.lex.application.repositories import ResourceRepository
+from karp.lex_infrastructure.repositories import SqlResourceRepository
 
 
 class AuthInfrastructure(injector.Module):
     @injector.provider
-    def resource_permissions(self, resources: ResourceRepository) -> ResourcePermissionQueries:
+    def resource_permissions(
+        self, resources: SqlResourceRepository
+    ) -> ResourcePermissionQueries:
         return ResourcePermissionQueries(resources)
 
 

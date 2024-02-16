@@ -2,10 +2,10 @@ import logging
 
 from karp.foundation.timings import utc_now
 from karp.lex.application.dtos import ResourceDto
-from karp.lex.application.repositories import ResourceRepository
 from karp.lex.domain import entities
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex_core.value_objects import make_unique_id
+from karp.lex_infrastructure.repositories import SqlResourceRepository
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class ResourceCommands:
     def __init__(self, session, resources, index):
         self.session = session
-        self.resources: ResourceRepository = resources
+        self.resources: SqlResourceRepository = resources
         self.index: Es6Index = index
 
     def create_resource(self, resource_id, name, config, user):
