@@ -26,3 +26,6 @@ class SearchCommands:
                 yield entry_transformer.transform(resource, entry)
 
         self.index.add_entries(resource_id, process())
+
+        if resource.is_published:
+            self.index.publish_index(resource_id)
