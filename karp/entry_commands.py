@@ -1,10 +1,10 @@
 from karp.foundation.timings import utc_now
 from karp.lex import EntryDto
-from karp.lex.application.repositories import EntryRepository
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex_core.value_objects import unique_id
 from karp.lex_infrastructure.repositories import SqlResourceRepository
+from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.search_infrastructure.transformers import entry_transformer
 
@@ -29,7 +29,7 @@ class EntryCommands:
             raise ResourceNotFound(resource_id)
         return result
 
-    def _get_entries(self, resource_id: unique_id.UniqueId) -> EntryRepository:
+    def _get_entries(self, resource_id: unique_id.UniqueId) -> SqlEntryRepository:
         result = self.resources.entries_by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)

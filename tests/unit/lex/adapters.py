@@ -4,12 +4,12 @@ import typing
 from typing import Optional
 
 import injector
-from karp.lex.application import repositories as lex_repositories
 
 from karp.lex.domain import entities as lex_entities
 from karp.lex_core.value_objects import UniqueId, unique_id
 from karp.lex_infrastructure.repositories import SqlResourceRepository
 from karp.lex.domain import errors
+from karp.lex_infrastructure.repositories.sql_entries import SqlEntryRepository
 
 
 @dataclasses.dataclass
@@ -57,12 +57,11 @@ class InMemoryResourceRepository(SqlResourceRepository):
         return (res.resource_id for res in self.resources)
 
 
-class InMemoryEntryRepository(lex_repositories.EntryRepository):
-    def __init__(self):  # noqa: ANN204
-        super().__init__()
+class InMemoryEntryRepository(SqlEntryRepository):
+    def __init__(self):
         self.entries = {}
 
-    def check_status(self):  # noqa: ANN201
+    def check_status(self):
         pass
 
     def _save(self, entry):  # noqa: ANN202

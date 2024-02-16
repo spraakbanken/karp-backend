@@ -1,58 +1,61 @@
-"""SQL repositories for entries."""
-import logging  # noqa: I001
+import logging
 import typing
-from typing import Dict, List, Optional, Generic, Tuple, TypeVar
-from attr import has
+from typing import Dict, List, Optional
 
-import injector
-import regex
 import sqlalchemy as sa
-from sqlalchemy import func as sa_func
-
 from sqlalchemy import (
     sql,
-    exc,
 )
 from sqlalchemy.orm.session import Session
-from sqlalchemy.sql import insert
 
-
-import ulid
-
+from karp.foundation.entity import TimestampedEntity
 from karp.foundation.repository import Repository
-from karp.lex_core.value_objects import UniqueId
 from karp.lex.domain import errors
-from karp.lex.application import repositories
 from karp.lex.domain.entities import Resource
-
-from karp.lex.domain.entities.entry import (
-    Entry,
-    EntryOp,
-    EntryStatus,
-)
+from karp.lex.domain.entities.entry import Entry
+from karp.lex_core.value_objects import UniqueId
 from karp.lex_infrastructure.sql import sql_models
 
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryRepository(repositories.EntryRepository):
+class SqlEntryRepository(TimestampedEntity, Repository):
     def __init__(self, session: Session, resource: Resource):
         self._session = session
-        repositories.EntryRepository.__init__(
+
+        TimestampedEntity.__init__(
             self,
             id=resource.entity_id,
-            name=resource.resource_id,
-            config=resource.config,
-            message=resource.message,
             last_modified_by=resource.last_modified_by,
             last_modified=resource.last_modified,
             discarded=resource.discarded,
         )
+        self._name = resource.resource_id
+        self._config = resource.config
+        self._message = resource.message
         self.resource = resource
         self.history_model = sql_models.get_or_create_entry_history_model(resource.table_name)
         self.history_model.__table__.create(  # type:ignore [attr-defined]
             bind=session.connection(), checkfirst=True
         )
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def config(self) -> Dict:
+        return self._config
+
+    @property
+    def message(self) -> str:
+        return self._message
+
+    def discard(self, *, user, timestamp: Optional[float] = None):
+        self._discarded = True
+        self._last_modified = self._ensure_timestamp(timestamp)
+        self._last_modified_by = user
+        return []
 
     def _save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
