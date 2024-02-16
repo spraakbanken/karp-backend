@@ -4,7 +4,7 @@ import typing
 from typing import Any, Dict, Optional, Tuple
 
 from karp.foundation import timings
-from karp.foundation.entity import Entity, TimestampedVersionedEntity
+from karp.foundation.entity import Entity
 from karp.foundation.value_objects import PermissionLevel
 from karp.lex.domain import constraints, errors
 from karp.lex.domain.entities import Entry, create_entry
@@ -18,7 +18,7 @@ class ResourceOp(enum.Enum):
     DELETED = "DELETED"
 
 
-class Resource(TimestampedVersionedEntity):
+class Resource(Entity):
     DiscardedEntityError = errors.DiscardedEntityError
     resource_type: str = "resource"
 
@@ -241,36 +241,6 @@ class Resource(TimestampedVersionedEntity):
         """
         protection = self.config.get("protected", {})
         return level == "WRITE" or level == "ADMIN" or protection.get("read")
-
-
-# ===== Entities =====
-class Release(Entity):
-    def __init__(
-        self,
-        name: str,
-        publication_date: float,
-        description: str,
-        **kwargs,
-    ) -> None:
-        super().__init__(**kwargs)
-        self._name = name
-        self._publication_date = publication_date
-        self._description = description
-
-    @property
-    def name(self) -> str:
-        """The name of this release."""
-        return self._name
-
-    @property
-    def publication_date(self) -> float:
-        """The publication of this release."""
-        return self._publication_date
-
-    @property
-    def description(self) -> str:
-        """The description of this release."""
-        return self._description
 
 
 # ===== Factories =====

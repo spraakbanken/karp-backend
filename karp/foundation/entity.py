@@ -1,12 +1,13 @@
-import datetime  # noqa: I001
+import datetime
 from typing import Optional, Union
-from karp.foundation.errors import ConsistencyError
+
 from karp.foundation import errors
-from karp.lex_core.value_objects import UniqueId
+from karp.foundation.errors import ConsistencyError
 from karp.foundation.timings import monotonic_utc_now
+from karp.lex_core.value_objects import UniqueId
 
 
-class TimestampedVersionedEntity:
+class Entity:
     DiscardedEntityError = errors.DiscardedEntityError
 
     def __init__(
@@ -57,12 +58,6 @@ class TimestampedVersionedEntity:
         elif isinstance(timestamp, str):
             return datetime.datetime.fromisoformat(timestamp).timestamp()
         return monotonic_utc_now() if timestamp is None else timestamp
-
-    def _validate_last_modified(self, last_modified: float):
-        if int(last_modified) != int(self.last_modified):
-            raise ConsistencyError(
-                f"Event entity last_modified mismatch: {last_modified} != {self.last_modified}"
-            )
 
     def _check_not_discarded(self):
         if self._discarded:

@@ -6,7 +6,7 @@ from typing import Dict, Optional, Any, Tuple
 
 
 from karp.lex.domain import errors
-from karp.foundation.entity import TimestampedVersionedEntity
+from karp.foundation.entity import Entity
 from karp.lex_core.value_objects import UniqueId, unique_id
 
 logger = logging.getLogger("karp")
@@ -24,7 +24,7 @@ class EntryStatus(enum.Enum):
     OK = "OK"
 
 
-class Entry(TimestampedVersionedEntity):
+class Entry(Entity):
     DiscardedEntityError = errors.DiscardedEntityError
 
     def __init__(
