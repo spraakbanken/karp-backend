@@ -5,7 +5,7 @@ from typing import Dict
 
 from karp.entry_commands import EntryCommands
 from karp.lex_infrastructure import EntryQueries, ResourceQueries
-from karp.lex_infrastructure.repositories import ResourceRepository
+from karp.lex_infrastructure import ResourceRepository
 from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index

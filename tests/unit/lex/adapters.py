@@ -7,9 +7,8 @@ import injector
 
 from karp.lex.domain import entities as lex_entities
 from karp.foundation.value_objects import UniqueId, unique_id
-from karp.lex_infrastructure.repositories import ResourceRepository
+from karp.lex_infrastructure import ResourceRepository, EntryRepository
 from karp.lex.domain import errors
-from karp.lex_infrastructure.repositories.sql_entries import EntryRepository
 
 
 @dataclasses.dataclass

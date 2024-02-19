@@ -3,7 +3,7 @@ from typing import Iterable, Optional
 from karp.foundation.value_objects.unique_id import UniqueId
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.dtos import ResourceDto
-from karp.lex_infrastructure.repositories import ResourceRepository
+from karp.lex_infrastructure.sql import ResourceRepository
 
 
 class ResourceQueries:

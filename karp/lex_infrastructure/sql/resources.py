@@ -12,8 +12,8 @@ from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import entities
 from karp.lex.domain.entities.resource import Resource
 from karp.lex.domain.errors import ResourceNotFound
-from karp.lex_infrastructure.repositories.sql_entries import EntryRepository
-from karp.lex_infrastructure.sql.sql_models import ResourceModel
+from .entries import EntryRepository
+from .models import ResourceModel
 
 logger = logging.getLogger(__name__)
 

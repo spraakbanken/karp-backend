@@ -13,7 +13,7 @@ from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import errors
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.entities.entry import Entry
-from karp.lex_infrastructure.sql import sql_models
+from . import models
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class EntryRepository(Repository):
         self._name = resource.resource_id
         self._config = resource.config
         self.resource = resource
-        self.history_model = sql_models.get_or_create_entry_history_model(resource.table_name)
+        self.history_model = models.get_or_create_entry_history_model(resource.table_name)
         self.history_model.__table__.create(  # type:ignore [attr-defined]
             bind=session.connection(), checkfirst=True
         )

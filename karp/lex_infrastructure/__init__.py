@@ -7,7 +7,7 @@ from karp.lex.application import (
     EntryQueries,
     ResourceQueries,
 )
-from karp.lex_infrastructure.repositories import ResourceRepository
+from .sql import ResourceRepository, EntryRepository
 
 
 logger = logging.getLogger(__name__)
@@ -37,3 +37,10 @@ class GenericLexInfrastructure(injector.Module):
         return EntryQueries(
             resources=resources,
         )
+
+__all__ = [
+    "LexInfrastructure",
+    "GenericLexInfrastructure",
+    "ResourceRepository",
+    "EntryRepository",
+]
