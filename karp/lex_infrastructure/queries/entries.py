@@ -13,7 +13,7 @@ from karp.lex.application.queries import (
     EntryHistoryRequest,
     EntryDiffRequest,
 )
-from karp.lex_core.value_objects import UniqueId, UniqueIdStr
+from karp.foundation.value_objects import UniqueId, UniqueIdStr
 from karp.lex_infrastructure.repositories import ResourceRepository
 
 logger = logging.getLogger(__name__)

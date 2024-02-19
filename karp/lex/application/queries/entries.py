@@ -2,9 +2,9 @@ import typing
 
 import pydantic
 
+from karp.foundation import alias_generators
+from karp.foundation.value_objects import unique_id
 from karp.lex.domain.entities.entry import EntryOp
-from karp.lex_core import alias_generators
-from karp.lex_core.value_objects import unique_id
 
 
 class BaseModel(pydantic.BaseModel):

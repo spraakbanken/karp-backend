@@ -5,8 +5,8 @@ from typing import Dict, Optional
 import pydantic
 import ulid
 
-from karp.lex_core import alias_generators
-from karp.lex_core.value_objects import unique_id
+from karp.foundation import alias_generators
+from karp.foundation.value_objects import unique_id
 
 
 class BaseModel(pydantic.BaseModel):

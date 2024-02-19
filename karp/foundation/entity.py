@@ -4,7 +4,7 @@ from typing import Optional, Union
 from karp.foundation import errors
 from karp.foundation.errors import ConsistencyError
 from karp.foundation.timings import monotonic_utc_now
-from karp.lex_core.value_objects import UniqueId
+from karp.foundation.value_objects import UniqueId
 
 
 class Entity:

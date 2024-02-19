@@ -6,7 +6,7 @@ from fastapi import status
 from karp import auth
 from karp.main.errors import ClientErrorCodes
 from karp.foundation.timings import utc_now
-from karp.lex_core.value_objects import (
+from karp.foundation.value_objects import (
     make_unique_id,
     unique_id,
 )

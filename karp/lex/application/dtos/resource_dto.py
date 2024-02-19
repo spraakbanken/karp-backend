@@ -2,8 +2,8 @@
 
 import pydantic
 
-from karp.lex_core import alias_generators
-from karp.lex_core.value_objects import UniqueIdStr
+from karp.foundation import alias_generators
+from karp.foundation.value_objects import UniqueIdStr
 
 
 class ResourceDto(pydantic.BaseModel):

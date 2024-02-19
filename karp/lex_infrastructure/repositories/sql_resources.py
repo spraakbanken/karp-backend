@@ -8,10 +8,10 @@ from sqlalchemy.orm import Session
 
 from karp.foundation import repository
 from karp.foundation.cache import Cache
+from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import entities
 from karp.lex.domain.entities.resource import Resource
 from karp.lex.domain.errors import ResourceNotFound
-from karp.lex_core.value_objects import UniqueId
 from karp.lex_infrastructure.repositories.sql_entries import EntryRepository
 from karp.lex_infrastructure.sql.sql_models import ResourceModel
 

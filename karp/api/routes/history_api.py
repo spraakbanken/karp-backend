@@ -5,13 +5,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 from karp import auth, lex
 from karp.api import dependencies as deps
 from karp.auth.infrastructure import ResourcePermissionQueries
+from karp.foundation.value_objects import unique_id
+from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex.application.queries import (
     EntryDiffDto,
     EntryDiffRequest,
     EntryHistoryRequest,
 )
-from karp.lex_core.value_objects import unique_id
-from karp.lex_core.value_objects.unique_id import UniqueIdStr
 from karp.lex_infrastructure import EntryQueries
 
 router = APIRouter()

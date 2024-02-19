@@ -9,10 +9,10 @@ from sqlalchemy import (
 from sqlalchemy.orm.session import Session
 
 from karp.foundation.repository import Repository
+from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import errors
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.entities.entry import Entry
-from karp.lex_core.value_objects import UniqueId
 from karp.lex_infrastructure.sql import sql_models
 
 logger = logging.getLogger(__name__)

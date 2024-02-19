@@ -1,8 +1,8 @@
 from typing import Iterable, Optional
 
+from karp.foundation.value_objects.unique_id import UniqueId
 from karp.lex.application.dtos import ResourceDto
 from karp.lex.domain.entities import Resource
-from karp.lex_core.value_objects.unique_id import UniqueId
 from karp.lex_infrastructure.repositories import ResourceRepository
 
 

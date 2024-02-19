@@ -18,11 +18,10 @@ from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.auth import User
 from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
-from karp.foundation.value_objects import PermissionLevel
+from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
+from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex.application.queries import EntryDto
 from karp.lex.domain import errors
-from karp.lex_core.value_objects import UniqueId, unique_id
-from karp.lex_core.value_objects.unique_id import UniqueIdStr
 from karp.lex_infrastructure import EntryQueries
 from karp.main import errors as karp_errors
 
