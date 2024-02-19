@@ -1,3 +1,5 @@
+"""DTOs for some requests."""
+
 import typing
 
 import pydantic
@@ -5,27 +7,7 @@ import pydantic
 from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
 from karp.lex.domain.entities.entry import EntryOp
-
-
-class BaseModel(pydantic.BaseModel):
-    class Config:
-        # arbitrary_types_allowed = True
-        extra = "forbid"
-        alias_generator = alias_generators.to_lower_camel
-
-
-class IdMixin(BaseModel):
-    id: unique_id.UniqueIdStr
-
-
-class EntryDto(IdMixin, BaseModel):
-    resource: str
-    version: int
-    entry: typing.Dict
-    last_modified: float
-    last_modified_by: str
-    message: str | None = None
-    discarded: bool = False
+from karp.lex.domain.dtos import BaseModel, IdMixin
 
 
 class EntryDiffRequest(IdMixin, BaseModel):

@@ -1,9 +1,7 @@
 import logging
 import typing
 
-from karp.lex.application.queries import (
-    EntryDto,
-)
+from karp.lex.domain.dtos import EntryDto
 from karp.lex.domain import errors as lex_errors
 from karp.search.application.repositories.indicies import IndexEntry
 

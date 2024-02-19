@@ -3,7 +3,7 @@ import logging  # noqa: I001
 import injector
 from sqlalchemy.orm import Session
 
-from karp.lex_infrastructure.queries import (
+from karp.lex.application import (
     EntryQueries,
     ResourceQueries,
 )

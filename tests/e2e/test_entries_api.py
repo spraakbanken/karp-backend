@@ -10,7 +10,7 @@ from karp.foundation.value_objects import (
     make_unique_id,
     unique_id,
 )
-from karp.lex.application.queries import EntryDto
+from karp.lex.domain.dtos import EntryDto
 from karp.lex_infrastructure.repositories import ResourceRepository
 from karp.main import modules
 

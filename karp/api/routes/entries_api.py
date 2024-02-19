@@ -20,7 +20,7 @@ from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
 from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
-from karp.lex.application.queries import EntryDto
+from karp.lex.domain.dtos import EntryDto
 from karp.lex.domain import errors
 from karp.lex_infrastructure import EntryQueries
 from karp.main import errors as karp_errors

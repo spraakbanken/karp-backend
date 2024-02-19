@@ -8,7 +8,7 @@ from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.api.schemas import ResourceProtected, ResourcePublic
 from karp.auth.application.resources import ResourcePermissionDto
 from karp.auth.infrastructure import ResourcePermissionQueries
-from karp.lex.application.dtos import ResourceDto
+from karp.lex.domain.dtos import ResourceDto
 from karp.lex_infrastructure import ResourceQueries
 
 router = APIRouter()

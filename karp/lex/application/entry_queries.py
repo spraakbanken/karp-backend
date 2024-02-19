@@ -3,15 +3,16 @@ import typing  # noqa: I001
 from sb_json_tools import jsondiff
 import logging
 
-from karp.lex import GetHistoryDto, HistoryDto
 from karp.lex.domain import errors
 
 from karp.lex.domain.entities import Entry
-from karp.lex.application.queries import (
-    EntryDto,
+from karp.lex.domain.dtos import EntryDto
+from karp.lex.application.dtos import (
     EntryDiffDto,
     EntryHistoryRequest,
     EntryDiffRequest,
+    GetHistoryDto,
+    HistoryDto,
 )
 from karp.foundation.value_objects import UniqueId, UniqueIdStr
 from karp.lex_infrastructure.repositories import ResourceRepository

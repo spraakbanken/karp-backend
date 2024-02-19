@@ -1,5 +1,5 @@
-from karp.lex.application.queries import (
-    EntryDto,
+from karp.lex.domain.dtos import EntryDto
+from karp.lex.application.dtos import (
     GetHistoryDto,
     HistoryDto,
 )

@@ -7,7 +7,7 @@ from karp.api import dependencies as deps
 from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.foundation.value_objects import unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
-from karp.lex.application.queries import (
+from karp.lex.application.dtos import (
     EntryDiffDto,
     EntryDiffRequest,
     EntryHistoryRequest,
