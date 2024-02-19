@@ -68,7 +68,7 @@ class ResourceCommands:
 
     def delete_resource(self, resource_id, user, message):
         logger.info("deleting resource", extra={"resource_id": resource_id})
-        resource = self.resource.by_resource_id(resource_id)
+        resource = self.resources.by_resource_id(resource_id)
         resource.discard(user=user, message=message, timestamp=utc_now())
         self.resources.save(resource)
         self.session.commit()
