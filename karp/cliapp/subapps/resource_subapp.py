@@ -121,6 +121,15 @@ def reindex(ctx: typer.Context, resource_id: str):
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
 
+@subapp.command()
+@cli_error_handler
+@cli_timer
+def reindex_all(ctx: typer.Context):
+    search_commands = inject_from_ctx(SearchCommands, ctx)
+    search_commands.reindex_all_resources()
+    typer.echo(f"Successfully reindexed all resrouces")
+
+
 @subapp.command("list")
 @cli_error_handler
 @cli_timer
