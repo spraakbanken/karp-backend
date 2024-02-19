@@ -92,7 +92,7 @@ class ResourceRepository(repository.Repository):
         self._session.add(resource_dto)
         if resource.discarded:
             # If resource was discarded, drop the table containing all data entries
-            self._session.execute(text("DROP table " + resource.table_name))
+            self._session.execute(text("DROP TABLE IF EXISTS " + resource.table_name))
         self._cache.clear()
 
     def _by_id(
