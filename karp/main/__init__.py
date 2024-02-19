@@ -134,16 +134,3 @@ def configure_logging(settings: dict[str, str]) -> None:
             },
         }
     )
-
-
-def setup_logging():
-    # Clear Gunicorn access log to remove duplicate requests logging
-    logging.basicConfig(
-        format="%(asctime)s %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S%z",
-        level=logging.INFO,
-    )
-    logger = logging.getLogger("karp")
-    logger.setLevel(logging.INFO)
-    logger = logging.getLogger(__name__)
-    return logger
