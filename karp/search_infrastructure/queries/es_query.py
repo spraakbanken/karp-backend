@@ -1,4 +1,4 @@
-import typing  # noqa: D100
+import typing
 
 import elasticsearch_dsl as es_dsl
 
@@ -6,18 +6,18 @@ from karp.search.application.queries import QueryRequest
 from karp.search.domain.query import Query
 
 
-class EsQuery(Query):  # noqa: D101
+class EsQuery(Query):
     query: typing.Optional[es_dsl.query.Query] = None
     resource_str: typing.Optional[str] = None
 
-    def __init__(self, **kwargs):  # noqa: ANN003, ANN204, D107
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def _self_name(self) -> str:
         return f"EsQuery query={self.query} resource_str={self.resource_str}"
 
     @classmethod
-    def from_query_request(cls, request: QueryRequest):  # noqa: ANN206, D102
+    def from_query_request(cls, request: QueryRequest):
         query = cls(fields=[], resources=request.resource_ids, sort=[])
         query.from_ = request.from_
         query.size = request.size
@@ -26,5 +26,5 @@ class EsQuery(Query):  # noqa: D101
         query.sort = request.sort
         return query
 
-    class Config:  # noqa: D106
+    class Config:
         arbitrary_types_allowed = True

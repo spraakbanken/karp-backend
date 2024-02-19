@@ -1,4 +1,4 @@
-from pathlib import Path  # noqa: D100, I001
+from pathlib import Path  # noqa: I001
 from typing import Optional
 
 import json_streams
@@ -13,7 +13,7 @@ subapp = typer.Typer()
 
 
 @subapp.command()
-def resource(  # noqa: ANN201, D103
+def resource(
     ctx: typer.Context,
     resource_id: str,
     output: Optional[Path] = typer.Option(None, help="Path to write to. Defaults to stdout."),
@@ -27,5 +27,5 @@ def resource(  # noqa: ANN201, D103
     )
 
 
-def init_app(app: typer.Typer) -> None:  # noqa: D103
+def init_app(app: typer.Typer) -> None:
     app.add_typer(subapp, name="query")

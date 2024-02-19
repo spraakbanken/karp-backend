@@ -1,34 +1,24 @@
-from typing import Dict  # noqa: D100, I001
-
 from sqlalchemy import (
     JSON,
     Column,
     Enum,
-    ForeignKey,
     Integer,
     String,
-    Table,
-    Text,
 )
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import relationship
+from sqlalchemy.schema import (
+    UniqueConstraint,
+)
 from sqlalchemy.types import Boolean, Float, Text
 from sqlalchemy_json import NestedMutableJson
 
-from sqlalchemy.schema import (
-    ForeignKeyConstraint,
-    PrimaryKeyConstraint,
-    UniqueConstraint,
-)
-
+from karp.db_infrastructure import db
 from karp.db_infrastructure.types import ULIDType
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
-from karp.db_infrastructure import db
 
 
-class ResourceModel(db.Base):  # noqa: D101
+class ResourceModel(db.Base):
     __tablename__ = "resources"
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
@@ -55,7 +45,7 @@ class ResourceModel(db.Base):  # noqa: D101
         #    this works because the tuple (saldo, NULL) is not equal to (saldo, NULL)
     )
 
-    def __repr__(self):  # noqa: ANN204, D105
+    def __repr__(self):
         return """<ResourceModel(
                     history_id={},
                     entity_id={},
@@ -82,7 +72,7 @@ class ResourceModel(db.Base):  # noqa: D101
             self.discarded,
         )
 
-    def to_entity(self) -> entities.Resource:  # noqa: D102
+    def to_entity(self) -> entities.Resource:
         return entities.Resource(
             id=self.entity_id,
             resource_id=self.resource_id,
@@ -98,7 +88,7 @@ class ResourceModel(db.Base):  # noqa: D101
         )
 
     @staticmethod
-    def from_entity(resource: entities.Resource) -> "ResourceModel":  # noqa: D102
+    def from_entity(resource: entities.Resource) -> "ResourceModel":
         return ResourceModel(
             history_id=None,
             entity_id=resource.entity_id,
@@ -117,17 +107,7 @@ class ResourceModel(db.Base):  # noqa: D101
         )
 
 
-class BaseRuntimeEntry:  # noqa: D101
-    entry_id = Column(
-        String(100),
-        primary_key=True,
-    )
-    history_id = Column(Integer, nullable=False)
-    entity_id = Column(ULIDType, nullable=False)
-    discarded = Column(Boolean, nullable=False)
-
-
-class BaseHistoryEntry:  # noqa: D101
+class BaseHistoryEntry:
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
     version = Column(Integer, nullable=False)
@@ -144,7 +124,7 @@ class BaseHistoryEntry:  # noqa: D101
     )
 
     @classmethod
-    def from_entity(cls, entry: entities.Entry):  # noqa: ANN206, D102
+    def from_entity(cls, entry: entities.Entry):
         return cls(
             history_id=None,
             entity_id=entry.entity_id,
@@ -163,63 +143,20 @@ class BaseHistoryEntry:  # noqa: D101
 # Dynamic models
 
 
-def get_or_create_entry_history_model(  # noqa: D103
+def get_or_create_entry_history_model(
     resource_id: str,
 ) -> BaseHistoryEntry:
-    history_table_name = create_history_table_name(resource_id)
-    if history_table_name in class_cache:
-        history_model = class_cache[history_table_name]
+    if resource_id in class_cache:
+        history_model = class_cache[resource_id]
         return history_model
 
     attributes = {
-        "__tablename__": history_table_name,
+        "__tablename__": resource_id,
     }
 
-    sqlalchemy_class = type(history_table_name, (db.Base, BaseHistoryEntry), attributes)
-    class_cache[history_table_name] = sqlalchemy_class
-    return sqlalchemy_class
-
-
-def get_or_create_entry_runtime_model(  # noqa: D103, C901
-    resource_id: str, history_model: Table, config: Dict
-) -> BaseRuntimeEntry:
-    table_name = create_runtime_table_name(resource_id)
-
-    if table_name in class_cache:
-        runtime_model = class_cache[table_name]
-        return runtime_model
-
-    foreign_key_constraint = ForeignKeyConstraint(
-        ["history_id"], [f"{history_model.__tablename__}.history_id"]
-    )
-
-    attributes = {
-        "__tablename__": table_name,
-        "__table_args__": (foreign_key_constraint, *BaseRuntimeEntry.__table_args__),
-    }
-    child_tables = {}
-
-    sqlalchemy_class = type(
-        table_name,
-        (db.Base, BaseRuntimeEntry),
-        attributes,
-    )
-    sqlalchemy_class.child_tables = child_tables
-
-    class_cache[table_name] = sqlalchemy_class
-
+    sqlalchemy_class = type(resource_id, (db.Base, BaseHistoryEntry), attributes)
+    class_cache[resource_id] = sqlalchemy_class
     return sqlalchemy_class
 
 
 class_cache = {}
-
-
-# Helpers
-
-
-def create_runtime_table_name(resource_id: str) -> str:  # noqa: D103
-    return f"runtime_{resource_id}"
-
-
-def create_history_table_name(resource_id: str) -> str:  # noqa: D103
-    return resource_id

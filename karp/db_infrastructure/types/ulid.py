@@ -1,8 +1,8 @@
-from sqlalchemy import types  # noqa: D100, I001
+from sqlalchemy import types  # noqa: I001
 import ulid
 
 
-class ULIDType(types.TypeDecorator):  # noqa: D101
+class ULIDType(types.TypeDecorator):
     impl = types.CHAR(26)
 
     cache_ok = True
@@ -10,12 +10,12 @@ class ULIDType(types.TypeDecorator):  # noqa: D101
     python_type = ulid.ULID
 
     @staticmethod
-    def _coerce(value):  # noqa: ANN205
+    def _coerce(value):
         if value and not isinstance(value, ulid.ULID):
             value = ulid.parse(value)
         return value
 
-    def process_bind_param(self, value, dialect):  # noqa: ANN201, D102
+    def process_bind_param(self, value, dialect):
         if value is None:
             return value
 
@@ -24,5 +24,5 @@ class ULIDType(types.TypeDecorator):  # noqa: D101
 
         return value.str
 
-    def process_result_value(self, value, dialect):  # noqa: ANN201, D102
+    def process_result_value(self, value, dialect):
         return value if value is None else ulid.from_str(value)

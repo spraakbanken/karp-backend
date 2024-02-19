@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions
 
-from karp.lex.domain.entities import Entry  # noqa: F401
+from karp.lex.domain.entities import Entry
 from karp.search.domain.errors import UnsupportedField
 
 logger = logging.getLogger("karp")
@@ -14,8 +14,8 @@ logger = logging.getLogger("karp")
 KARP_CONFIGINDEX = "karp_config"
 
 
-class Es6MappingRepository:  # noqa: D101
-    def __init__(  # noqa: D107, ANN204
+class Es6MappingRepository:
+    def __init__(
         self,
         es: elasticsearch.Elasticsearch,
         prefix: str = "",
@@ -28,7 +28,7 @@ class Es6MappingRepository:  # noqa: D101
         self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
         self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
 
-    def ensure_config_index_exist(self) -> None:  # noqa: D102
+    def ensure_config_index_exist(self) -> None:
         if not self.es.indices.exists(index=self._config_index):
             self.es.indices.create(
                 index=self._config_index,
@@ -48,19 +48,17 @@ class Es6MappingRepository:  # noqa: D101
                 },
             )
 
-    def create_index_name(self, resource_id: str) -> str:  # noqa: D102
+    def create_index_name(self, resource_id: str) -> str:
         date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
         return f"{self._prefix}{resource_id}_{date}"
 
-    def create_alias_name(self, resource_id: str) -> str:  # noqa: D102
+    def create_alias_name(self, resource_id: str) -> str:
         return f"{self._prefix}{resource_id}"
 
-    def create_index_and_alias_name(  # noqa: D102
-        self, resource_id: str
-    ) -> dict[str, str]:
+    def create_index_and_alias_name(self, resource_id: str) -> dict[str, str]:
         return self._update_config(resource_id)
 
-    def get_name_base(self, resource_id: str) -> str:  # noqa: D102
+    def get_name_base(self, resource_id: str) -> str:
         return f"{self._prefix}{resource_id}"
 
     def _update_config(self, resource_id: str) -> dict[str, str]:
@@ -91,7 +89,7 @@ class Es6MappingRepository:  # noqa: D101
                 },
             )
 
-    def get_index_name(self, resource_id: str) -> str:  # noqa: D102
+    def get_index_name(self, resource_id: str) -> str:
         try:
             res = self.es.get(index=self._config_index, id=resource_id)
         except es_exceptions.NotFoundError as err:
@@ -99,7 +97,7 @@ class Es6MappingRepository:  # noqa: D101
             return self._update_config(resource_id)["index_name"]
         return res["_source"]["index_name"]
 
-    def get_alias_name(self, resource_id: str) -> str:  # noqa: D102
+    def get_alias_name(self, resource_id: str) -> str:
         try:
             res = self.es.get(index=self._config_index, id=resource_id)
         except es_exceptions.NotFoundError as err:
@@ -108,7 +106,7 @@ class Es6MappingRepository:  # noqa: D101
         return res["_source"]["alias_name"]
 
     @staticmethod
-    def get_analyzed_fields_from_mapping(  # noqa: D102
+    def get_analyzed_fields_from_mapping(
         properties: Dict[str, Dict[str, Dict[str, Any]]],
     ) -> List[str]:
         analyzed_fields = []
@@ -130,7 +128,7 @@ class Es6MappingRepository:  # noqa: D101
         Create a field mapping based on the mappings of elasticsearch
         currently the only information we need is if a field is analyzed (i.e. text)
         or not.
-        """  # noqa: D202, D212, D205
+        """
 
         field_mapping: Dict[str, List[str]] = {}
         sortable_fields = {}
@@ -155,7 +153,7 @@ class Es6MappingRepository:  # noqa: D101
     def _get_all_aliases(self) -> List[Tuple[str, str]]:
         """
         :return: a list of tuples (alias_name, index_name)
-        """  # noqa: D200, D212
+        """
         result = self.es.cat.aliases(h="alias,index")
         logger.debug(f"{result}")
         index_names = []
@@ -180,7 +178,7 @@ class Es6MappingRepository:  # noqa: D101
 
         Returns
             List[str] -- values that ES can sort by.
-        """  # noqa: D407
+        """
         translated_sort_fields: List[Union[str, Dict[str, Dict[str, str]]]] = []
         for sort_value in sort_values:
             sort_order = None
@@ -198,9 +196,7 @@ class Es6MappingRepository:  # noqa: D101
 
         return translated_sort_fields
 
-    def translate_sort_field(  # noqa: D102
-        self, resource_id: str, sort_value: str
-    ) -> List[str]:
+    def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
         logger.debug(
             f"es6_indextranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
         )
@@ -211,9 +207,7 @@ class Es6MappingRepository:  # noqa: D101
                 f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
             )
 
-    def on_publish_resource(  # noqa: ANN201, D102
-        self, alias_name: str, index_name: str
-    ):
+    def on_publish_resource(self, alias_name: str, index_name: str):
         mapping = self._get_index_mappings(index=index_name)
         if "mappings" in mapping[index_name] and "properties" in mapping[index_name]["mappings"]:
             self.analyzed_fields[
@@ -228,14 +222,12 @@ class Es6MappingRepository:  # noqa: D101
             )
 
     @staticmethod
-    def create_sortable_map_from_mapping(  # noqa: D102
+    def create_sortable_map_from_mapping(
         properties: Dict,
     ) -> Dict[str, List[str]]:
         sortable_map = {}
 
-        def parse_prop_value(  # noqa: ANN202
-            sort_map, base_name, prop_name, prop_value: Dict
-        ):
+        def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):
             if "properties" in prop_value:
                 for ext_name, ext_value in prop_value["properties"].items():
                     ext_base_name = f"{base_name}.{ext_name}"

@@ -4,7 +4,7 @@ Revision ID: d2f8d1c19b65
 Revises: 5bb29472d33f
 Create Date: 2021-10-27 22:08:06.924305
 
-"""  # noqa: D400, D415
+"""
 from alembic import op  # noqa: I001
 import sqlalchemy as sa
 from sqlalchemy_utils import UUIDType
@@ -18,7 +18,7 @@ branch_labels = None
 depends_on = None
 
 
-def create_entry_repos():  # noqa: ANN201, D103
+def create_entry_repos():
     op.create_table(
         "entry_repos",
         sa.Column("history_id", sa.Integer(), nullable=False),
@@ -34,9 +34,9 @@ def create_entry_repos():  # noqa: ANN201, D103
     )
 
 
-def upgrade():  # noqa: ANN201, D103
+def upgrade():
     create_entry_repos()
 
 
-def downgrade():  # noqa: ANN201, D103
+def downgrade():
     op.drop_table("entry_repos")

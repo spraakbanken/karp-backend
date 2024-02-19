@@ -1,33 +1,32 @@
 """Model for a lexical entry."""
-import enum  # noqa: I001
+import enum
 import logging
 import typing
-from typing import Dict, Optional, Any, Tuple
+from typing import Dict, Optional
 
-
+from karp.foundation.entity import Entity
 from karp.lex.domain import errors
-from karp.foundation.entity import TimestampedVersionedEntity
 from karp.lex_core.value_objects import UniqueId, unique_id
 
 logger = logging.getLogger("karp")
 
 
-class EntryOp(enum.Enum):  # noqa: D101
+class EntryOp(enum.Enum):
     ADDED = "ADDED"
     DELETED = "DELETED"
     UPDATED = "UPDATED"
 
 
-class EntryStatus(enum.Enum):  # noqa: D101
+class EntryStatus(enum.Enum):
     IN_PROGRESS = "IN-PROGRESS"
     IN_REVIEW = "IN_REVIEW"
     OK = "OK"
 
 
-class Entry(TimestampedVersionedEntity):  # noqa: D101
+class Entry(Entity):
     DiscardedEntityError = errors.DiscardedEntityError
 
-    def __init__(  # noqa: D107, ANN204
+    def __init__(
         self,
         *,
         id: UniqueId,  # noqa: A002
@@ -38,7 +37,7 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         status: EntryStatus = EntryStatus.IN_PROGRESS,
         op: EntryOp = EntryOp.ADDED,
         version: int = 1,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ):
         super().__init__(id=UniqueId.validate(id), version=version, **kwargs)
         self._body = body
@@ -48,15 +47,15 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         self._resource_id = resource_id
 
     @property
-    def resource_id(self) -> str:  # noqa: D102
+    def resource_id(self) -> str:
         return self._resource_id
 
     @property
-    def body(self):  # noqa: ANN201
+    def body(self):
         """The body of the entry."""
         return self._body
 
-    def update_body(  # noqa: D102
+    def update_body(
         self,
         body: Dict,
         *,
@@ -74,33 +73,21 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
         self._op = EntryOp.UPDATED
 
     @property
-    def op(self):  # noqa: ANN201
+    def op(self):
         """The latest operation of this entry."""
         return self._op
 
     @property
-    def status(self):  # noqa: ANN201
+    def status(self):
         """The workflow status of this entry."""
         return self._status
 
     @property
-    def message(self):  # noqa: ANN201
+    def message(self):
         """The message for the latest operation of this entry."""
         return self._message
 
-    def serialize(self) -> Dict[str, Any]:  # noqa: D102
-        return {
-            "id": self.id,
-            "resource": "",
-            "version": self._version,
-            "entry": self._body,
-            "lastModified": self._last_modified,
-            "lastModifiedBy": self._last_modified_by,
-            "discarded": self._discarded,
-            "message": self._message,
-        }
-
-    def discard(  # noqa: D102
+    def discard(
         self,
         *,
         version: int,
@@ -121,20 +108,18 @@ class Entry(TimestampedVersionedEntity):  # noqa: D101
             msg = f"Expecting version '{self.version}', got '{version}'"
             raise errors.UpdateConflict(msg)
 
-    def _update_field(  # noqa: ANN202
-        self, arg0, user: str, timestamp: Optional[float]
-    ):
+    def _update_field(self, arg0, user: str, timestamp: Optional[float]):
         result = arg0
         self._last_modified_by = user
         self._last_modified = self._ensure_timestamp(timestamp)
         self._increment_version()
         return result
 
-    def __repr__(self) -> str:  # noqa: D105
+    def __repr__(self) -> str:
         return f"Entry(id={self._id}, version={self.version}, last_modified={self._last_modified}, body={self.body})"
 
 
-def create_entry(  # noqa: D103
+def create_entry(
     body: Dict,
     *,
     id: unique_id.UniqueId,  # noqa: A002

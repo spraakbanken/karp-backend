@@ -1,15 +1,10 @@
-"""
-Query API.
-
-## Query DSL
-"""  # noqa: D212
 import logging  # noqa: I001
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
 
 from karp import auth, search
-from karp.auth_infrastructure import ResourcePermissionQueries
+from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.main import errors as karp_errors
 from karp.search.application.queries import QueryRequest
 from karp.search.domain.errors import IncompleteQuery
@@ -30,7 +25,7 @@ router = APIRouter()
     description="Returns a list of entries matching the given ids",
     name="Get lexical entries by id",
 )
-def get_entries_by_id(  # noqa: ANN201, D103
+def get_entries_by_id(
     resource_id: str = Path(..., description="The resource to perform operation on"),
     entry_ids: str = Path(
         ...,
@@ -51,7 +46,7 @@ def get_entries_by_id(  # noqa: ANN201, D103
 
 
 @router.get("/split/{resources}", name="Query per resource")
-def query_split(  # noqa: ANN201, D103
+def query_split(
     resources: str = Path(
         ...,
         regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
@@ -112,7 +107,7 @@ def query_split(  # noqa: ANN201, D103
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
 )
-def query(  # noqa: ANN201
+def query(
     resources: str = Path(
         ...,
         regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
@@ -146,7 +141,7 @@ def query(  # noqa: ANN201
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.
 
-    """  # noqa: D401, D200, D212
+    """
     logger.debug(
         "Called 'query' called with",
         extra={"resources": resources, "from": from_, "size": size},
@@ -180,5 +175,5 @@ def query(  # noqa: ANN201
     return response
 
 
-def init_app(app):  # noqa: ANN201, D103
+def init_app(app):
     app.include_router(router)

@@ -8,7 +8,7 @@ def utc_now() -> float:
     """A UTC timestamp in seconds.
 
     This function may return the same timestamp twice.
-    """  # noqa: D401
+    """
     return datetime.now(timezone.utc).timestamp()
 
 
@@ -19,7 +19,7 @@ def monotonic_utc_now() -> float:
     """A UTC timestamp in seconds.
 
     This function will never return the same result twice.
-    """  # noqa: D401
+    """
     global _previous
     result = utc_now()
     if result <= _previous:

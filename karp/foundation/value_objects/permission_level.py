@@ -1,7 +1,7 @@
-from enum import Enum  # noqa: D100
+from enum import Enum
 
 
-class PermissionLevel(str, Enum):  # noqa: D101
+class PermissionLevel(str, Enum):
     write = "WRITE"
     read = "READ"
     admin = "ADMIN"

@@ -1,8 +1,8 @@
-class AuthError(Exception):  # noqa: D100
+class AuthError(Exception):
     """Auth base exception."""
 
 
-class ResourceNotFound(AuthError):  # noqa: D101
+class ResourceNotFound(AuthError):
     pass
 
 
@@ -12,15 +12,3 @@ class TokenError(AuthError):
 
 class ExpiredToken(TokenError):
     """The given token has expired."""
-
-
-class InvalidTokenSignature(TokenError):  # noqa: D101
-    pass
-
-
-class InvalidTokenAudience(TokenError):  # noqa: D101
-    pass
-
-
-class InvalidTokenPayload(TokenError):  # noqa: D101
-    pass

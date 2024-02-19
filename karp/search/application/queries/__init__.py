@@ -1,4 +1,4 @@
-from .search_service import (  # noqa: I001
+from .search_service import (
     QueryRequest,
 )
 

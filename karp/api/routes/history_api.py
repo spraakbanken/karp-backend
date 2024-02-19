@@ -1,31 +1,24 @@
-from typing import Dict, Optional  # noqa: D100, I001
+from typing import Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
 
 from karp import auth, lex
-from karp.auth_infrastructure import ResourcePermissionQueries
-from karp.lex_core.value_objects import unique_id
-from karp.lex_core.value_objects.unique_id import UniqueIdStr
-
+from karp.api import dependencies as deps
+from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.lex.application.queries import (
     EntryDiffDto,
-    EntryDto,  # noqa: F401
     EntryDiffRequest,
     EntryHistoryRequest,
 )
-from karp.api import schemas  # noqa: F401
-
-from karp.api import dependencies as deps
-from karp.api.dependencies.fastapi_injector import inject_from_req  # noqa: F401
+from karp.lex_core.value_objects import unique_id
+from karp.lex_core.value_objects.unique_id import UniqueIdStr
 from karp.lex_infrastructure import EntryQueries
-
-# pylint: disable=unsubscriptable-object
 
 router = APIRouter()
 
 
 @router.post("/diff/{resource_id}/{entry_id}", response_model=EntryDiffDto)
-def get_diff(  # noqa: ANN201, D103
+def get_diff(
     resource_id: str,
     entry_id: UniqueIdStr,
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
@@ -59,7 +52,7 @@ def get_diff(  # noqa: ANN201, D103
     "/{resource_id}",
     response_model=lex.GetHistoryDto,
 )
-def get_history(  # noqa: ANN201, D103
+def get_history(
     resource_id: str,
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     user_id: Optional[str] = Query(None),
@@ -92,5 +85,5 @@ def get_history(  # noqa: ANN201, D103
     return entry_queries.get_history(history_request)
 
 
-def init_app(app):  # noqa: ANN201, D103
+def init_app(app):
     app.include_router(router)

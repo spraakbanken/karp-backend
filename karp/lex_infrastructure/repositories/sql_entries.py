@@ -1,73 +1,54 @@
-"""SQL repositories for entries."""
-import logging  # noqa: I001
+import logging
 import typing
-from typing import Dict, List, Optional, Generic, Tuple, TypeVar
-from attr import has  # noqa: F401
+from typing import Dict, List, Optional
 
-import injector
-import regex
 import sqlalchemy as sa
-from sqlalchemy import func as sa_func
-
 from sqlalchemy import (
     sql,
-    exc,
 )
 from sqlalchemy.orm.session import Session
-from sqlalchemy.sql import insert
-
-
-import ulid
 
 from karp.foundation.repository import Repository
-from karp.lex_core.value_objects import UniqueId
 from karp.lex.domain import errors
-from karp.lex.application import repositories
 from karp.lex.domain.entities import Resource
-
-from karp.lex.domain.entities.entry import (
-    Entry,
-    EntryOp,  # noqa: F401
-    EntryStatus,  # noqa: F401
-)
+from karp.lex.domain.entities.entry import Entry
+from karp.lex_core.value_objects import UniqueId
 from karp.lex_infrastructure.sql import sql_models
 
 logger = logging.getLogger(__name__)
 
 
-class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
-    def __init__(  # noqa: D107, ANN204
-        self, session: Session, resource: Resource
-    ):
+class EntryRepository(Repository):
+    def __init__(self, session: Session, resource: Resource):
         self._session = session
-        repositories.EntryRepository.__init__(
-            self,
-            id=resource.entity_id,
-            name=resource.resource_id,
-            config=resource.config,
-            message=resource.message,
-            last_modified_by=resource.last_modified_by,
-            last_modified=resource.last_modified,
-            discarded=resource.discarded,
-        )
+        self._name = resource.resource_id
+        self._config = resource.config
         self.resource = resource
         self.history_model = sql_models.get_or_create_entry_history_model(resource.table_name)
         self.history_model.__table__.create(  # type:ignore [attr-defined]
             bind=session.connection(), checkfirst=True
         )
 
-    def _save(self, entry: Entry):  # noqa: ANN202
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def config(self) -> Dict:
+        return self._config
+
+    def _save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
         self._session.add(entry_dto)
 
-    def entity_ids(self) -> List[str]:  # noqa: D102
+    def entity_ids(self) -> List[str]:
         stmt = self._stmt_latest_not_discarded()
         stmt = stmt.order_by(self.history_model.last_modified.desc())
         query = self._session.execute(stmt).scalars()
         # query = self._session.query(self.history_model).filter_by(discarded=False)
         return [row.entity_id for row in query.all()]
 
-    def by_id(  # noqa: D102
+    def by_id(
         self,
         id_: UniqueId,
         *,
@@ -75,7 +56,7 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
         after_date: Optional[float] = None,
         before_date: Optional[float] = None,
         oldest_first: bool = False,
-        **kwargs,  # noqa: ANN003
+        **kwargs,
     ):
         if entry := self._by_id(
             id_,
@@ -115,22 +96,14 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
-    def teardown(self):  # noqa: ANN201
-        """Use for testing purpose."""
-        logger.info("starting teardown")
-
-        logger.info("droping history_model ...")
-        self.history_model.__table__.drop(bind=self._session.connection())
-        logger.info("dropped history_model")
-
-    def all_entries(self) -> typing.Iterable[Entry]:  # noqa: D102
+    def all_entries(self) -> typing.Iterable[Entry]:
         stmt = self._stmt_latest_not_discarded()
         query = self._session.execute(stmt).scalars()
 
         return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
 
     # TODO Rename this here and in `entity_ids` and `all_entries`
-    def _stmt_latest_not_discarded(self):  # noqa: ANN202
+    def _stmt_latest_not_discarded(self):
         subq = self._subq_for_latest()
         return sql.select(self.history_model).join(
             subq,
@@ -151,7 +124,7 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
             .subquery("t2")
         )
 
-    def get_history(  # noqa: ANN201, D102
+    def get_history(
         self,
         user_id: Optional[str] = None,
         entry_id: Optional[str] = None,
@@ -181,20 +154,6 @@ class SqlEntryRepository(repositories.EntryRepository):  # noqa: D101
 
         total = query.count()
         return [self._history_row_to_entry(row) for row in paged_query.all()], total
-
-    def _entry_to_history_dict(self, entry: Entry, history_id: Optional[int] = None) -> Dict:
-        return {
-            "history_id": history_id,
-            "entity_id": entry.id,
-            "version": entry.version,
-            "last_modified": entry.last_modified,
-            "last_modified_by": entry.last_modified_by,
-            "body": entry.body,
-            "status": entry.status,
-            "message": entry.message,
-            "op": entry.op,
-            "discarded": entry.discarded,
-        }
 
     def _history_row_to_entry(self, row) -> Entry:
         return Entry(

@@ -13,20 +13,20 @@ from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
 logger = logging.getLogger(__name__)
 
 
-class Es6SearchIndexMod(injector.Module):  # noqa: D101
-    def __init__(self, index_prefix: Optional[str] = None) -> None:  # noqa: D107
+class Es6SearchIndexMod(injector.Module):
+    def __init__(self, index_prefix: Optional[str] = None) -> None:
         self._index_prefix = index_prefix or ""
 
     @injector.provider
     @injector.singleton
-    def es6_mapping_repo(  # noqa: D102
+    def es6_mapping_repo(
         self,
         es: elasticsearch.Elasticsearch,
     ) -> Es6MappingRepository:
         return Es6MappingRepository(es=es, prefix=self._index_prefix)
 
     @injector.provider
-    def es6_search_service(  # noqa: D102
+    def es6_search_service(
         self,
         es: elasticsearch.Elasticsearch,
         mapping_repo: Es6MappingRepository,

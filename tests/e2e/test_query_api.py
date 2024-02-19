@@ -4,16 +4,12 @@ import pytest  # pyre-ignore
 from fastapi import status
 from karp import auth
 from karp.lex_infrastructure import EntryQueries
-from tests.common_data import MUNICIPALITIES, PLACES  # noqa: F401
-from tests.utils import add_entries, get_json  # noqa: F401
+from tests.common_data import PLACES
+from tests.utils import get_json
 
 
-def extract_names(entries):  # noqa: ANN201
+def extract_names(entries):
     return [entry["entry"]["name"] for entry in entries["hits"]]
-
-
-def extract_names_set(entries):  # noqa: ANN201
-    return {entry["entry"]["name"] for entry in entries["hits"]}
 
 
 def _test_path(
@@ -45,113 +41,14 @@ def _test_path(
         assert expected in names
 
 
-def _test_path_has_expected_length(
-    client,
-    path: str,
-    expected_length: int,
-    *,
-    access_token: Optional[auth.AccessToken] = None,
-    headers: Optional[Dict] = None,
-) -> None:
-    if access_token:
-        if headers is None:
-            headers = access_token.as_header()
-        else:
-            headers.extend(access_token.as_header())
-    kwargs = {"headers": headers} if headers else {}
-
-    entries = get_json(client, path, **kwargs)
-
-    assert len(entries["hits"]) == expected_length
-
-
-def _test_against_entries(
-    client,
-    path: str,
-    field: str,
-    predicate: Callable,
-    expected_n_hits: int = None,
-    *,
-    access_token: Optional[auth.AccessToken] = None,
-    headers: Optional[Dict] = None,
-) -> None:
-    if access_token:
-        if headers is None:
-            headers = access_token.as_header()
-        else:
-            headers.extend(access_token.as_header())
-    kwargs = {"headers": headers} if headers else {}
-
-    entries = get_json(client, path, **kwargs)
-    names = extract_names(entries)
-
-    if field.endswith(".raw"):
-        field = field[:-4]
-
-    if expected_n_hits:
-        assert len(entries["hits"]) == expected_n_hits
-    else:
-        assert len(names) == sum(
-            bool(field in entry and predicate(entry[field])) for entry in PLACES
-        )
-
-    num_names_to_match = len(names)
-    for entry in PLACES:
-        if field in entry and predicate(entry[field]):
-            assert entry["name"] in names
-            num_names_to_match -= 1
-    assert num_names_to_match == 0
-
-
-def _test_against_entries_general(
-    client,
-    path: str,
-    fields: Tuple[str, str],
-    predicate: Callable,
-    expected_n_hits: int = None,
-    *,
-    access_token: Optional[auth.AccessToken] = None,
-    headers: Optional[Dict] = None,
-) -> None:
-    if access_token:
-        if headers is None:
-            headers = access_token.as_header()
-        else:
-            headers.update(access_token.as_header())
-    kwargs = {"headers": headers} if headers else {}
-
-    entries = get_json(client, path, **kwargs)
-    names = extract_names(entries)
-
-    print("names = {names}".format(names=names))
-    for i, field in enumerate(fields):
-        if field.endswith(".raw"):
-            fields[i] = field[:-4]
-
-    for field in fields:
-        print("field = {field}".format(field=field))
-
-    num_names_to_match = len(names)
-    for entry in PLACES:
-        print("entry = {entry}".format(entry=entry))
-        if predicate(entry, fields):
-            print("entry '{entry}' satisfied predicate".format(entry=entry))
-            assert entry["name"] in names
-            num_names_to_match -= 1
-    assert num_names_to_match == 0
-
-    if expected_n_hits:
-        assert len(entries["hits"]) == expected_n_hits
-
-
 class TestQuery:
-    def test_route_exist(self, fa_data_client):  # noqa: ANN201
+    def test_route_exist(self, fa_data_client):
         response = fa_data_client.get("/query/places")
         print(f"{response.json()=}")
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
-def test_query_no_q(  # noqa: ANN201
+def test_query_no_q(
     fa_data_client,
     read_token: auth.AccessToken,
     app_context,
@@ -193,7 +90,7 @@ def test_query_split(  # noqa: ANN201
         ("name", "Grund"),
     ],
 )
-def test_contains(  # noqa: ANN201
+def test_contains(
     fa_data_client,
     field: str,
     value,

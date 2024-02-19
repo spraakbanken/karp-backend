@@ -1,21 +1,15 @@
 import copy
 import dataclasses
 import typing
-from typing import Dict, Iterable, Optional, Tuple
+from typing import Optional
 
 import injector
-from karp.foundation.repository import Repository
-from karp.lex.application import repositories as lex_repositories
-from karp.lex.application.dtos import ResourceDto
-from karp.lex.application.repositories import (
-    EntryRepository,
-    ResourceRepository,
-)
+
 from karp.lex.domain import entities as lex_entities
-from karp.lex_core.value_objects import UniqueId, UniqueIdType, unique_id
-from karp.lex_core.value_objects.unique_id import UniqueIdPrimitive
+from karp.lex_core.value_objects import UniqueId, unique_id
+from karp.lex_infrastructure.repositories import ResourceRepository
 from karp.lex.domain import errors
-from karp.lex_infrastructure import ResourceQueries
+from karp.lex_infrastructure.repositories.sql_entries import EntryRepository
 
 
 @dataclasses.dataclass
@@ -30,7 +24,7 @@ def ensure_correct_id_type(v) -> unique_id.UniqueId:
         raise ValueError(f"expected valid UniqueId, got '{v}' (type: `{type(v)}')") from exc
 
 
-class InMemoryResourceRepository(lex_repositories.ResourceRepository):
+class InMemoryResourceRepository(ResourceRepository):
     def __init__(self):  # noqa: ANN204
         super().__init__()
         self.resources = {}
@@ -53,22 +47,21 @@ class InMemoryResourceRepository(lex_repositories.ResourceRepository):
     def __len__(self):  # noqa: ANN204
         return len(self.resources)
 
-    def _get_published_resources(self) -> typing.Iterable[lex_entities.Resource]:
+    def get_published_resources(self) -> typing.Iterable[lex_entities.Resource]:
         return (res for res in self.resources.values() if res.is_published)
 
-    def _get_all_resources(self) -> typing.Iterable[lex_entities.Resource]:
+    def get_all_resources(self) -> typing.Iterable[lex_entities.Resource]:
         return iter(self.resources.values())
 
     def resource_ids(self) -> typing.Iterable[str]:
         return (res.resource_id for res in self.resources)
 
 
-class InMemoryEntryRepository(lex_repositories.EntryRepository):
-    def __init__(self):  # noqa: ANN204
-        super().__init__()
+class InMemoryEntryRepository(EntryRepository):
+    def __init__(self):
         self.entries = {}
 
-    def check_status(self):  # noqa: ANN201
+    def check_status(self):
         pass
 
     def _save(self, entry):  # noqa: ANN202
