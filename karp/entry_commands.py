@@ -3,7 +3,7 @@ from karp.foundation.value_objects import unique_id
 from karp.lex import EntryDto
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
-from karp.lex.infrastructure import ResourceRepository, EntryRepository
+from karp.lex.infrastructure import EntryRepository, ResourceRepository
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.search_infrastructure.transformers import entry_transformer
 

@@ -12,6 +12,7 @@ from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import entities
 from karp.lex.domain.entities.resource import Resource
 from karp.lex.domain.errors import ResourceNotFound
+
 from .entries import EntryRepository
 from .models import ResourceModel
 

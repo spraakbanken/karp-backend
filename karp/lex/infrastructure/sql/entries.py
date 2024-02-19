@@ -13,6 +13,7 @@ from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import errors
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.entities.entry import Entry
+
 from . import models
 
 logger = logging.getLogger(__name__)
