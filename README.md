@@ -52,12 +52,7 @@ A Makefile is provided to simplify tasks.
    bin/elasticsearch-plugin install analysis-phonetic
    bin/elasticsearch-plugin install analysis-icu
    ```
-   Then edit the file `config/elasticsearch.yml`, find the line:
-   ```
-   xpack.security.enabled = true
-   ```
-   and change `true` to `false`.
-   Then run `bin/elasticsearch` to start it.
+   Then run `bin/elasticsearch -Expack.security.enabled=false` to start it.
 9. Add environment variables
 
 ```
