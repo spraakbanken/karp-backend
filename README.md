@@ -46,7 +46,13 @@ A Makefile is provided to simplify tasks.
 
    or `poetry shell` and then `uvicorn --factory karp.karp_v6_api.main:create_app`
 
-8. To setup Elasticsearch, download Elasticsearch 6.x and start it
+8. To setup Elasticsearch, download Elasticsearch 6.x and run the
+   following commands from the `elasticsearch-8.XXX` directory:
+   ```
+   bin/elasticsearch-plugin install analysis-phonetic
+   bin/elasticsearch-plugin install analysis-icu
+   ```
+   Then run `bin/elasticsearch` to start it.
 9. Add environment variables
 
 ```
