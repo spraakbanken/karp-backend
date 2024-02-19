@@ -15,7 +15,7 @@ from karp.lex.application.dtos import (
     HistoryDto,
 )
 from karp.foundation.value_objects import UniqueId, UniqueIdStr
-from karp.lex_infrastructure.sql import ResourceRepository
+from ..infrastructure.sql import ResourceRepository
 
 logger = logging.getLogger(__name__)
 

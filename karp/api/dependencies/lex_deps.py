@@ -5,11 +5,11 @@ from karp.api.dependencies.db_deps import (
     get_session,
 )
 from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.lex_infrastructure import (
+from karp.lex.application import (
     EntryQueries,
     ResourceQueries,
-    ResourceRepository,
 )
+from karp.lex.infrastructure import ResourceRepository
 
 
 def get_resource_repository(

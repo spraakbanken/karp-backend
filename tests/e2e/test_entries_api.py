@@ -11,7 +11,7 @@ from karp.foundation.value_objects import (
     unique_id,
 )
 from karp.lex.domain.dtos import EntryDto
-from karp.lex_infrastructure import ResourceRepository
+from karp.lex.infrastructure import ResourceRepository
 from karp.main import modules
 
 

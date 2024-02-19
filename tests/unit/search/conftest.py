@@ -1,8 +1,7 @@
 import injector  # noqa: I001
 import pytest
 
-from karp.lex_infrastructure import GenericLexInfrastructure
-from karp.main.modules import CommandsMod
+from karp.main.modules import CommandsMod, GenericLexInfrastructure
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
 
 from . import adapters

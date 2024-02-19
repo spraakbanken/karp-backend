@@ -1,9 +1,9 @@
-from karp.lex.domain.dtos import EntryDto
-from karp.lex.application.dtos import (
+from .domain.dtos import EntryDto
+from .application.dtos import (
     GetHistoryDto,
     HistoryDto,
 )
-from karp.lex.domain.value_objects import EntrySchema
+from .domain.value_objects import EntrySchema
 
 __all__ = [
     # dtos

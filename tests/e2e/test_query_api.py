@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 import pytest  # pyre-ignore
 from fastapi import status
 from karp import auth
-from karp.lex_infrastructure import EntryQueries
+from karp.lex.application import EntryQueries
 from tests.common_data import PLACES
 from tests.utils import get_json
 

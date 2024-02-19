@@ -1,6 +1,6 @@
 import logging
 
-from karp.lex_infrastructure import EntryQueries, ResourceQueries
+from karp.lex.application import EntryQueries, ResourceQueries
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 from karp.search_infrastructure.transformers import entry_transformer
 

@@ -12,7 +12,7 @@ from karp.lex.application.dtos import (
     EntryDiffRequest,
     EntryHistoryRequest,
 )
-from karp.lex_infrastructure import EntryQueries
+from karp.lex.application import EntryQueries
 
 router = APIRouter()
 

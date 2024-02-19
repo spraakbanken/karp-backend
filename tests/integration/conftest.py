@@ -9,8 +9,7 @@ from sqlalchemy.orm import session, sessionmaker
 from alembic.config import main as alembic_main  # noqa: F401
 
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
-from karp.main.modules import CommandsMod
-from karp.lex_infrastructure import LexInfrastructure
+from karp.main.modules import CommandsMod, LexInfrastructure
 
 
 # environ["TESTING"] = "True"

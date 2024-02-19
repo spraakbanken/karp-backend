@@ -4,7 +4,7 @@ import injector
 
 from karp.auth.infrastructure.jwt_auth_service import JWTAuthService
 from karp.auth.infrastructure.lex_resources import ResourcePermissionQueries
-from karp.lex_infrastructure import ResourceRepository
+from karp.lex.infrastructure import ResourceRepository
 
 
 class AuthInfrastructure(injector.Module):

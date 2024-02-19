@@ -9,7 +9,7 @@ from karp.api.schemas import ResourceProtected, ResourcePublic
 from karp.auth.application.resources import ResourcePermissionDto
 from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.lex.domain.dtos import ResourceDto
-from karp.lex_infrastructure import ResourceQueries
+from karp.lex.application import ResourceQueries
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

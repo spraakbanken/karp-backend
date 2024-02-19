@@ -5,7 +5,7 @@ from karp.foundation.value_objects import make_unique_id
 from karp.lex.domain import entities
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex.domain.dtos import ResourceDto
-from karp.lex_infrastructure import ResourceRepository
+from karp.lex.infrastructure import ResourceRepository
 from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
 logger = logging.getLogger(__name__)

@@ -22,7 +22,7 @@ from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex.domain.dtos import EntryDto
 from karp.lex.domain import errors
-from karp.lex_infrastructure import EntryQueries
+from karp.lex.application import EntryQueries
 from karp.main import errors as karp_errors
 
 router = APIRouter()

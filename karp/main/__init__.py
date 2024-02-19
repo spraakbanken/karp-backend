@@ -13,7 +13,6 @@ from sqlalchemy.engine import Engine, create_engine
 import logging
 import asgi_correlation_id
 
-from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
 from karp.search_infrastructure import (
     Es6SearchIndexMod,
 )
@@ -22,6 +21,8 @@ from karp.main.modules import (
     CommandsMod,
     Db,
     ElasticSearchMod,
+    GenericLexInfrastructure,
+    LexInfrastructure,
     install_auth_service,
 )
 

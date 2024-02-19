@@ -4,7 +4,7 @@ from karp.auth.application.resources import ResourcePermissionDto
 from karp.auth.domain import errors
 from karp.auth.domain.user import User
 from karp.foundation.value_objects.permission_level import PermissionLevel
-from karp.lex_infrastructure import ResourceRepository
+from karp.lex.infrastructure import ResourceRepository
 
 
 class ResourcePermissionQueries:
