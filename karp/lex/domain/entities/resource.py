@@ -115,24 +115,6 @@ class Resource(Entity):
             self._entry_schema = EntrySchema.from_resource_config(self.config)
         return self._entry_schema
 
-    def serialize(self) -> dict[str, Any]:
-        """Serialize resource to camelCased dict."""
-        return {
-            "id": self.id,
-            "resourceId": self.resource_id,
-            "name": self.name,
-            "version": self.version,
-            "lastModified": self.last_modified,
-            "lastModifiedBy": self.last_modified_by,
-            "op": self.op,
-            "message": self.message,
-            "tableName": self.table_name,
-            "isPublished": self.is_published,
-            "discarded": self.discarded,
-            "resource_type": self.resource_type,
-            "config": self.config,
-        }
-
     def _validate_entry(self, entry: dict[str, Any]) -> dict[str, Any]:
         """Validate an entry against this resource's entry schema."""
         return self.entry_schema.validate_entry(entry)

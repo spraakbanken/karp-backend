@@ -64,7 +64,7 @@ class EntryCommands:
                 id=unique_id.make_unique_id(),
             )
             entry_table.save(entry)
-            created_db_entries.append(entry)
+            created_db_entries.append(EntryDto.from_entry(entry))
 
             if chunk_size > 0 and i % chunk_size == 0:
                 self.session.commit()
@@ -111,7 +111,7 @@ class EntryCommands:
             )
             entry_table.save(entry)
 
-            created_db_entries.append(entry)
+            created_db_entries.append(EntryDto.from_entry(entry))
 
             if chunk_size > 0 and i % chunk_size == 0:
                 self.session.commit()
@@ -120,20 +120,10 @@ class EntryCommands:
 
         return created_db_entries
 
-    def add_entry(self, resource_id, user, message, entry):
-        resource = self._get_resource(resource_id)
-        entries = self._get_entries(resource_id)
-        entry = resource.create_entry_from_dict(
-            entry,
-            user=user,
-            message=message,
-            id=unique_id.make_unique_id(),
-            timestamp=utc_now(),
-        )
-        entries.save(entry)
-        self.session.commit()
-        self._entry_added_handler(resource, [entry])
-        return entry
+    def add_entry(self, resource_id, entry, user, message):
+        result = self.add_entries(resource_id, [entry], user, message)
+        assert len(result) == 1
+        return result[0]
 
     def update_entry(self, resource_id, _id, version, user, message, entry):
         resource = self._get_resource(resource_id)
@@ -157,9 +147,9 @@ class EntryCommands:
         if version != current_db_entry.version:
             entries.save(current_db_entry)
             self.session.commit()
-            self._entry_updated_handler(resource, current_db_entry)
+            self._entry_updated_handler(resource, EntryDto.from_entry(current_db_entry))
 
-        return current_db_entry
+        return EntryDto.from_entry(current_db_entry)
 
     def delete_entry(self, resource_id, _id, user, version, message="Entry deleted"):
         resource = self._get_resource(resource_id)
@@ -175,37 +165,17 @@ class EntryCommands:
         )
         entries.save(entry)
         self.session.commit()
-        self._entry_deleted_handler(entry)
+        self._entry_deleted_handler(EntryDto.from_entry(entry))
 
-    def _entry_added_handler(self, resource, entries):
-        entry_dtos = []
-        for entry in entries:
-            entry_dto = EntryDto(
-                id=entry.id,
-                resource=entry.resource_id,
-                entry=entry.body,
-                message=entry.message or "",
-                lastModified=entry.last_modified,
-                lastModifiedBy=entry.last_modified_by,
-                version=1,
-            )
-            entry_dtos.append(entry_transformer.transform(resource, entry_dto))
-        self.index.add_entries(entry.resource_id, entry_dtos)
+    def _entry_added_handler(self, resource, entry_dtos):
+        entry_dtos = [entry_transformer.transform(resource, entry_dto) for entry_dto in entry_dtos]
+        self.index.add_entries(resource.resource_id, entry_dtos)
 
-    def _entry_updated_handler(self, resource, entry):
-        entry_dto = EntryDto(
-            id=entry.id,
-            resource=entry.resource_id,
-            entry=entry.body,
-            message=entry.message,
-            lastModified=entry.last_modified,
-            lastModifiedBy=entry.last_modified_by,
-            version=entry.version,
-        )
+    def _entry_updated_handler(self, resource, entry_dto):
         self.index.add_entries(
-            entry.resource_id,
+            entry_dto.resource,
             [entry_transformer.transform(resource, entry_dto)],
         )
 
-    def _entry_deleted_handler(self, entry):
-        self.index.delete_entry(entry.resource_id, entry_id=entry.id)
+    def _entry_deleted_handler(self, entry_dto):
+        self.index.delete_entry(entry_dto.resource, entry_id=entry_dto.id)

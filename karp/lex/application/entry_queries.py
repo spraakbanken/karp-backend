@@ -20,18 +20,6 @@ from ..infrastructure.sql import ResourceRepository
 logger = logging.getLogger(__name__)
 
 
-def _entry_to_entry_dto(entry: Entry, resource_id: str) -> EntryDto:
-    return EntryDto(
-        id=entry.id,
-        resource=resource_id,
-        version=entry.version,
-        entry=entry.body,
-        lastModified=entry.last_modified,
-        lastModifiedBy=entry.last_modified_by,
-        message=entry.message,
-    )
-
-
 class EntryQueries:
     def __init__(
         self,
@@ -46,7 +34,7 @@ class EntryQueries:
         id: UniqueIdStr,  # noqa: A002
     ) -> EntryDto:
         entries = self.resources.entries_by_resource_id(resource_id)
-        return _entry_to_entry_dto(entries.by_id(UniqueId.validate(id)), resource_id)
+        return EntryDto.from_entry(entries.by_id(UniqueId.validate(id)))
 
     def by_id_optional(
         self,
@@ -55,12 +43,12 @@ class EntryQueries:
     ) -> typing.Optional[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
         if entry := entries.by_id_optional(UniqueId.validate(id)):
-            return _entry_to_entry_dto(entry, resource_id)
+            return EntryDto.from_entry(entry)
         return None
 
     def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
-        return (_entry_to_entry_dto(entry, resource_id) for entry in entries.all_entries())
+        return (EntryDto.from_entry(entry) for entry in entries.all_entries())
 
     def get_entry_history(
         self,
