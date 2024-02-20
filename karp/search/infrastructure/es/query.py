@@ -2,7 +2,7 @@ import typing
 
 import elasticsearch_dsl as es_dsl
 
-from karp.search.domain import QueryRequest, Query
+from karp.search.domain import Query, QueryRequest
 
 
 class EsQuery(Query):
