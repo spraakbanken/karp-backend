@@ -20,32 +20,17 @@ class ResourceQueries:
     ) -> Optional[ResourceDto]:
         result = self._resources.by_resource_id_optional(resource_id, version=version)
         if result is not None:
-            return resource_to_dto(result)
+            return ResourceDto.from_resource(result)
 
     def by_id_optional(
         self, entity_id: UniqueId, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         result = self._resources.by_id_optional(entity_id, version=version)
         if result is not None:
-            return resource_to_dto(result)
+            return ResourceDto.from_resource(result)
 
     def get_published_resources(self) -> Iterable[ResourceDto]:
-        return map(resource_to_dto, self._resources.get_published_resources())
+        return map(ResourceDto.from_resource, self._resources.get_published_resources())
 
     def get_all_resources(self) -> Iterable[ResourceDto]:
-        return map(resource_to_dto, self._resources.get_all_resources())
-
-
-def resource_to_dto(resource: Resource) -> ResourceDto:
-    return ResourceDto(
-        id=resource.id,
-        resourceId=resource.resource_id,
-        version=resource.version,
-        config=resource.config,
-        isPublished=resource.is_published,
-        lastModified=resource.last_modified,
-        lastModifiedBy=resource.last_modified_by,
-        message=resource.message,
-        name=resource.name,
-        discarded=resource.discarded,
-    )
+        return map(ResourceDto.from_resource, self._resources.get_all_resources())
