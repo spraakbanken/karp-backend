@@ -120,20 +120,10 @@ class EntryCommands:
 
         return created_db_entries
 
-    def add_entry(self, resource_id, user, message, entry):
-        resource = self._get_resource(resource_id)
-        entries = self._get_entries(resource_id)
-        entry = resource.create_entry_from_dict(
-            entry,
-            user=user,
-            message=message,
-            id=unique_id.make_unique_id(),
-            timestamp=utc_now(),
-        )
-        entries.save(entry)
-        self.session.commit()
-        self._entry_added_handler(resource, [entry])
-        return entry
+    def add_entry(self, resource_id, entry, user, message):
+        result = self.add_entries(resource_id, [entry], user, message)
+        assert len(result) == 1
+        return result[0]
 
     def update_entry(self, resource_id, _id, version, user, message, entry):
         resource = self._get_resource(resource_id)

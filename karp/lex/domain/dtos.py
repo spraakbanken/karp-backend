@@ -34,10 +34,10 @@ class EntryDto(EntityDto):
     entry: typing.Dict
 
     @classmethod
-    def from_entry(cls, resource_id: str, entry: Entry) -> 'EntryDto':
+    def from_entry(cls, entry: Entry) -> 'EntryDto':
         return EntryDto(
             id=entry.id,
-            resource=resource_id,
+            resource=entry.resource_id,
             version=entry.version,
             entry=entry.body,
             lastModified=entry.last_modified,
