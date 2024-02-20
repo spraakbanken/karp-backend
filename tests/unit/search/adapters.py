@@ -4,7 +4,7 @@ from typing import Dict, Iterable, Optional
 
 import injector
 
-from karp.search_infrastructure.repositories.es_indices import EsIndex
+from karp.search.infrastructure.es import EsIndex
 from karp.foundation.timings import utc_now
 from karp.search.application.repositories import IndexEntry
 

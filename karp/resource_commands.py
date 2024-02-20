@@ -6,7 +6,7 @@ from karp.lex.domain import entities
 from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex.infrastructure import ResourceRepository
-from karp.search_infrastructure.repositories.es_indices import EsIndex
+from karp.search.infrastructure.es.indices import EsIndex
 
 logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ import typer
 
 from karp import search
 from karp.cliapp.typer_injector import inject_from_ctx
-from karp.search_infrastructure.queries import EsSearchService
+from karp.search.infrastructure.es import EsSearchService
 
 
 subapp = typer.Typer()

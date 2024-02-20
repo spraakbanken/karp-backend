@@ -11,7 +11,7 @@ from karp.search.domain.errors import IncompleteQuery
 
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.search_infrastructure.queries import EsSearchService
+from karp.search.infrastructure.es import EsSearchService
 
 
 logger = logging.getLogger(__name__)

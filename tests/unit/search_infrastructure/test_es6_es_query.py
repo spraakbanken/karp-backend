@@ -4,7 +4,7 @@ import pytest
 
 from karp.search.application.queries import QueryRequest
 from karp.search.domain.query import Query  # noqa: F401
-from karp.search_infrastructure.queries import EsQuery
+from karp.search.infrastructure.es import EsQuery
 
 
 @pytest.fixture()

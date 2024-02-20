@@ -10,7 +10,8 @@ from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
     IndexEntry,
 )
-from karp.search_infrastructure.es import EsMappingRepository
+
+from .mapping_repo import EsMappingRepository
 
 logger = logging.getLogger(__name__)
 

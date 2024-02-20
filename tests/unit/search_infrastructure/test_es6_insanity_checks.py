@@ -1,5 +1,5 @@
 import contextlib  # noqa: I001
-from karp.search_infrastructure.repositories.es_indices import (
+from karp.search.infrastructure.es.indices import (
     EsIndex,
 )
 

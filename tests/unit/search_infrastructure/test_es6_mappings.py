@@ -2,7 +2,7 @@ from typing import Dict, Optional  # noqa: I001
 
 import pytest
 
-from karp.search_infrastructure.repositories.es_indices import create_es_mapping
+from karp.search.infrastructure.es.indices import create_es_mapping
 
 
 class TestCreateEsMapping:

@@ -7,8 +7,8 @@ from karp.entry_commands import EntryCommands
 from karp.lex.application import EntryQueries, ResourceQueries
 from karp.lex.infrastructure import ResourceRepository
 from karp.resource_commands import ResourceCommands
+from karp.search.infrastructure.es.indices import EsIndex
 from karp.search_commands import SearchCommands
-from karp.search_infrastructure.repositories.es_indices import EsIndex
 
 try:
     from importlib.metadata import entry_points

@@ -15,7 +15,7 @@ from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.foundation.value_objects import PermissionLevel
-from karp.search_infrastructure.queries import EsSearchService
+from karp.search.infrastructure.es import EsSearchService
 
 logger = logging.getLogger(__name__)
 

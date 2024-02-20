@@ -6,7 +6,7 @@ from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
 from karp.search.domain.query_dsl.karp_query_v6_model import (
     KarpQueryV6ModelBuilderSemantics,
 )
-from karp.search_infrastructure.queries.es_search_service import EsQueryBuilder
+from karp.search.infrastructure.es import EsQueryBuilder
 
 
 @pytest.fixture(scope="session")

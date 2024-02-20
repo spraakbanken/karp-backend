@@ -1,8 +1,8 @@
 import logging
 
 from karp.lex.application import EntryQueries, ResourceQueries
-from karp.search_infrastructure.repositories.es_indices import EsIndex
-from karp.search_infrastructure.transformers import entry_transformer
+from karp.search.infrastructure.es.indices import EsIndex
+from karp.search.infrastructure.transformers import entry_transformer
 
 logger = logging.getLogger(__name__)
 

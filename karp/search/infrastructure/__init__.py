@@ -3,11 +3,7 @@ import elasticsearch
 import injector
 import logging
 
-from karp.search_infrastructure.queries import (
-    EsSearchService,
-)
-from karp.search_infrastructure.repositories.es_indices import EsIndex
-from karp.search_infrastructure.es import EsMappingRepository
+from .es import EsSearchService, EsIndex, EsMappingRepository
 
 
 logger = logging.getLogger(__name__)

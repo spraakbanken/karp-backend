@@ -13,7 +13,7 @@ from sqlalchemy.engine import Engine, create_engine
 import logging
 import asgi_correlation_id
 
-from karp.search_infrastructure import (
+from karp.search.infrastructure import (
     EsSearchIndexMod,
 )
 from karp.main import config, modules

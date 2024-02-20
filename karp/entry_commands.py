@@ -4,8 +4,8 @@ from karp.lex import EntryDto
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure import EntryRepository, ResourceRepository
-from karp.search_infrastructure.repositories.es_indices import EsIndex
-from karp.search_infrastructure.transformers import entry_transformer
+from karp.search.infrastructure.es.indices import EsIndex
+from karp.search.infrastructure.transformers import entry_transformer
 
 
 class EntryCommands:

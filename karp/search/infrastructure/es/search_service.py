@@ -20,8 +20,8 @@ from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
 from karp.search.domain.query_dsl.karp_query_v6_model import (
     KarpQueryV6ModelBuilderSemantics,
 )
-from karp.search_infrastructure.es import EsMappingRepository
-from .es_query import EsQuery
+from .mapping_repo import EsMappingRepository
+from .query import EsQuery
 
 
 logger = logging.getLogger(__name__)
