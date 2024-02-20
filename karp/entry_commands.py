@@ -170,28 +170,12 @@ class EntryCommands:
     def _entry_added_handler(self, resource, entries):
         entry_dtos = []
         for entry in entries:
-            entry_dto = EntryDto(
-                id=entry.id,
-                resource=entry.resource_id,
-                entry=entry.body,
-                message=entry.message or "",
-                lastModified=entry.last_modified,
-                lastModifiedBy=entry.last_modified_by,
-                version=1,
-            )
+            entry_dto = EntryDto.from_entry(entry)
             entry_dtos.append(entry_transformer.transform(resource, entry_dto))
         self.index.add_entries(entry.resource_id, entry_dtos)
 
     def _entry_updated_handler(self, resource, entry):
-        entry_dto = EntryDto(
-            id=entry.id,
-            resource=entry.resource_id,
-            entry=entry.body,
-            message=entry.message,
-            lastModified=entry.last_modified,
-            lastModifiedBy=entry.last_modified_by,
-            version=entry.version,
-        )
+        entry_dto = EntryDto.from_entry(entry)
         self.index.add_entries(
             entry.resource_id,
             [entry_transformer.transform(resource, entry_dto)],
