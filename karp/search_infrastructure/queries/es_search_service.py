@@ -20,7 +20,7 @@ from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
 from karp.search.domain.query_dsl.karp_query_v6_model import (
     KarpQueryV6ModelBuilderSemantics,
 )
-from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
+from karp.search_infrastructure.es import EsMappingRepository
 from .es_query import EsQuery
 
 
@@ -110,11 +110,11 @@ class EsFieldNameCollector(NodeWalker):
         return set()
 
 
-class Es6SearchService:
+class EsSearchService:
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,
-        mapping_repo: Es6MappingRepository,
+        mapping_repo: EsMappingRepository,
     ):
         self.es: elasticsearch.Elasticsearch = es
         self.mapping_repo = mapping_repo

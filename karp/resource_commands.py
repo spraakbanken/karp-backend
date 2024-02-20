@@ -6,7 +6,7 @@ from karp.lex.domain import entities
 from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex.infrastructure import ResourceRepository
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
+from karp.search_infrastructure.repositories.es_indices import EsIndex
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class ResourceCommands:
     def __init__(self, session, resources, index):
         self.session = session
         self.resources: ResourceRepository = resources
-        self.index: Es6Index = index
+        self.index: EsIndex = index
 
     def create_resource(self, resource_id, name, config, user):
         existing_resource = self.resources.by_resource_id_optional(resource_id)

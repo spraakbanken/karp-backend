@@ -2,13 +2,13 @@ from typing import Dict, Optional  # noqa: I001
 
 import pytest
 
-from karp.search_infrastructure.repositories.es6_indicies import create_es6_mapping
+from karp.search_infrastructure.repositories.es_indices import create_es_mapping
 
 
-class TestCreateEs6Mapping:
+class TestCreateEsMapping:
     def test_minimal_valid_input(self):  # noqa: ANN201
         data = {"fields": {}}
-        mapping = create_es6_mapping(data)
+        mapping = create_es_mapping(data)
 
         assert mapping["properties"] == {}
 
@@ -34,7 +34,7 @@ class TestCreateEs6Mapping:
                 field: field_def,
             },
         }
-        mapping = create_es6_mapping(data)
+        mapping = create_es_mapping(data)
         assert field in mapping["properties"]
         expected_property = expected_property or field_def
         assert mapping["properties"][field] == expected_property
@@ -72,7 +72,7 @@ class TestCreateEs6Mapping:
                 field: field_def,
             },
         }
-        mapping = create_es6_mapping(data)
+        mapping = create_es_mapping(data)
         assert field in mapping["properties"]
         expected_property = expected_property or field_def
         assert mapping["properties"][field] == expected_property
@@ -80,7 +80,7 @@ class TestCreateEs6Mapping:
     def test_sort(self):  # noqa: ANN201
         data = {"fields": {"name": {"type": "string"}}, "sort": ["name"]}
 
-        mapping = create_es6_mapping(data)
+        mapping = create_es_mapping(data)
 
         expected = {
             "dynamic": False,
@@ -138,7 +138,7 @@ class TestCreateEs6Mapping:
     def test_sort_large(self):  # noqa: ANN201
         data = {"fields": {"name": {"type": "string"}}, "sort": ["name"]}
 
-        mapping = create_es6_mapping(data)
+        mapping = create_es_mapping(data)
 
         expected = {
             "properties": {"name": {"type": "text", "fields": {"raw": {"type": "keyword"}}}},

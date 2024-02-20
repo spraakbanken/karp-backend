@@ -1,7 +1,7 @@
 import logging
 
 from karp.lex.application import EntryQueries, ResourceQueries
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
+from karp.search_infrastructure.repositories.es_indices import EsIndex
 from karp.search_infrastructure.transformers import entry_transformer
 
 logger = logging.getLogger(__name__)
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class SearchCommands:
     def __init__(
-        self, index: Es6Index, resource_queries: ResourceQueries, entry_queries: EntryQueries
+        self, index: EsIndex, resource_queries: ResourceQueries, entry_queries: EntryQueries
     ):
         super().__init__()
         self.index = index

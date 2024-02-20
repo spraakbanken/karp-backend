@@ -1,3 +1,3 @@
-from .indicies import IndexEntry
+from .indices import IndexEntry
 
 __all__ = ["IndexEntry"]

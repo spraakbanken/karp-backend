@@ -4,7 +4,7 @@ from karp.lex import EntryDto
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure import EntryRepository, ResourceRepository
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
+from karp.search_infrastructure.repositories.es_indices import EsIndex
 from karp.search_infrastructure.transformers import entry_transformer
 
 
@@ -13,7 +13,7 @@ class EntryCommands:
         self,
         session,
         resources: ResourceRepository,
-        index: Es6Index,
+        index: EsIndex,
     ):
         self.session = session
         self.resources: ResourceRepository = resources

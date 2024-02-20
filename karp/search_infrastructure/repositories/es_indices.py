@@ -10,23 +10,23 @@ from karp.lex.domain.entities import Entry
 from karp.search.application.repositories import (
     IndexEntry,
 )
-from karp.search_infrastructure.elasticsearch6 import Es6MappingRepository
+from karp.search_infrastructure.es import EsMappingRepository
 
 logger = logging.getLogger(__name__)
 
 
-class Es6Index:
+class EsIndex:
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,
-        mapping_repo: Es6MappingRepository,
+        mapping_repo: EsMappingRepository,
     ):
         self.es = es
         self.mapping_repo = mapping_repo
 
     def create_index(self, resource_id: str, config):
         logger.info("creating es mapping")
-        mapping = create_es6_mapping(config)
+        mapping = create_es_mapping(config)
 
         settings = {
             "number_of_shards": 1,
@@ -170,7 +170,7 @@ def _create_es_mapping(config):
     return es_mapping
 
 
-def create_es6_mapping(config: Dict) -> Dict:
+def create_es_mapping(config: Dict) -> Dict:
     mapping = _create_es_mapping(config)
     mapping["settings"] = {
         "analysis": {

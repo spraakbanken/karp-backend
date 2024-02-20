@@ -15,7 +15,7 @@ KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
 
-class Es6MappingRepository:
+class EsMappingRepository:
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,
@@ -121,7 +121,7 @@ class Es6MappingRepository:
 
         for prop_name, prop_values in properties.items():
             if "properties" in prop_values:
-                res = Es6MappingRepository.get_analyzed_fields_from_mapping(
+                res = EsMappingRepository.get_analyzed_fields_from_mapping(
                     prop_values["properties"]
                 )
                 analyzed_fields.extend([f"{prop_name}.{prop}" for prop in res])
@@ -148,10 +148,10 @@ class Es6MappingRepository:
                 and "entry" in mapping[index]["mappings"]
                 and "properties" in mapping[index]["mappings"]["entry"]
             ):
-                field_mapping[alias] = Es6MappingRepository.get_analyzed_fields_from_mapping(
+                field_mapping[alias] = EsMappingRepository.get_analyzed_fields_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
-                sortable_fields[alias] = Es6MappingRepository.create_sortable_map_from_mapping(
+                sortable_fields[alias] = EsMappingRepository.create_sortable_map_from_mapping(
                     mapping[index]["mappings"]["entry"]["properties"]
                 )
         return field_mapping, sortable_fields
@@ -210,7 +210,7 @@ class Es6MappingRepository:
 
     def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
         logger.debug(
-            f"es6_indextranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
+            f"es_indextranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
         )
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value]
@@ -228,12 +228,12 @@ class Es6MappingRepository:
         ):
             self.analyzed_fields[
                 alias_name
-            ] = Es6MappingRepository.get_analyzed_fields_from_mapping(
+            ] = EsMappingRepository.get_analyzed_fields_from_mapping(
                 mapping[index_name]["mappings"]["entry"]["properties"]
             )
             self.sortable_fields[
                 alias_name
-            ] = Es6MappingRepository.create_sortable_map_from_mapping(
+            ] = EsMappingRepository.create_sortable_map_from_mapping(
                 mapping[index_name]["mappings"]["entry"]["properties"]
             )
 

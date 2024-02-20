@@ -14,7 +14,7 @@ import logging
 import asgi_correlation_id
 
 from karp.search_infrastructure import (
-    Es6SearchIndexMod,
+    EsSearchIndexMod,
 )
 from karp.main import config, modules
 from karp.main.modules import (
@@ -83,7 +83,7 @@ def _setup_dependency_injection(
 
 
 def _setup_search_context(container: injector.Injector, settings: dict) -> None:
-    container.binder.install(Es6SearchIndexMod(index_prefix=settings.get("es.index_prefix")))
+    container.binder.install(EsSearchIndexMod(index_prefix=settings.get("es.index_prefix")))
 
 
 def configure_logging(settings: dict[str, str]) -> None:

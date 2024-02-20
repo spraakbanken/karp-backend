@@ -8,7 +8,7 @@ from karp.lex.application import EntryQueries, ResourceQueries
 from karp.lex.infrastructure import ResourceRepository
 from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
+from karp.search_infrastructure.repositories.es_indices import EsIndex
 
 try:
     from importlib.metadata import entry_points
@@ -37,7 +37,7 @@ class CommandsMod(injector.Module):
         self,
         session: Session,
         resources: ResourceRepository,
-        index: Es6Index,
+        index: EsIndex,
     ) -> EntryCommands:
         return EntryCommands(
             session=session,
@@ -47,14 +47,14 @@ class CommandsMod(injector.Module):
 
     @injector.provider
     def resource_commands(
-        self, session: Session, resources: ResourceRepository, index: Es6Index
+        self, session: Session, resources: ResourceRepository, index: EsIndex
     ) -> ResourceCommands:
         return ResourceCommands(session=session, resources=resources, index=index)
 
     @injector.provider
     def search_commands(
         self,
-        index: Es6Index,
+        index: EsIndex,
         resource_queries: ResourceQueries,
         entry_queries: EntryQueries,
     ) -> SearchCommands:
