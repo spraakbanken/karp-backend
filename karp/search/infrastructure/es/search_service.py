@@ -10,10 +10,7 @@ import elasticsearch_dsl as es_dsl  # pyre-ignore
 from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
-from karp.search.application.queries import (
-    QueryRequest,
-)
-from karp.search.domain import errors
+from karp.search.domain import errors, QueryRequest
 from karp.lex.domain.entities.entry import Entry
 from karp.lex.domain.entities.resource import Resource
 from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser

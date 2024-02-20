@@ -7,9 +7,7 @@ import elasticsearch
 from elasticsearch import exceptions as es_exceptions
 
 from karp.lex.domain.entities import Entry
-from karp.search.application.repositories import (
-    IndexEntry,
-)
+from karp.search.domain import IndexEntry
 
 from .mapping_repo import EsMappingRepository
 

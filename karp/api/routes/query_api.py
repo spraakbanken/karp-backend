@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, st
 from karp import auth, search
 from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.main import errors as karp_errors
-from karp.search.application.queries import QueryRequest
+from karp.search.domain import QueryRequest
 from karp.search.domain.errors import IncompleteQuery
 
 from karp.api import dependencies as deps
