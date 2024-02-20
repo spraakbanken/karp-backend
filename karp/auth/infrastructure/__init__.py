@@ -3,7 +3,7 @@ from pathlib import Path
 import injector
 
 from karp.auth.infrastructure.jwt_auth_service import JWTAuthService
-from karp.auth.infrastructure.lex_resources import ResourcePermissionQueries
+from karp.auth.application.resource_permission_queries import ResourcePermissionQueries
 from karp.lex.infrastructure import ResourceRepository
 
 
