@@ -140,7 +140,7 @@ def update_entry(
             entry=data.entry,
         )
 
-        return schemas.EntryAddResponse(newID=entry.entity_id)
+        return schemas.EntryAddResponse(newID=entry.id)
 
     except errors.EntryNotFound:
         return responses.JSONResponse(
