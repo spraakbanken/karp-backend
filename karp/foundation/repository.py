@@ -1,7 +1,7 @@
 import abc  # noqa: I001
 from typing import Generic, TypeVar, Optional, Type
 
-from karp.lex_core.value_objects import UniqueId
+from karp.foundation.value_objects import UniqueId
 from .errors import NotFoundError
 
 

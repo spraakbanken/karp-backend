@@ -1,12 +1,11 @@
 from karp.foundation.timings import utc_now
+from karp.foundation.value_objects import unique_id
 from karp.lex import EntryDto
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
-from karp.lex_core.value_objects import unique_id
-from karp.lex_infrastructure.repositories import ResourceRepository
-from karp.lex_infrastructure.repositories.sql_entries import EntryRepository
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
-from karp.search_infrastructure.transformers import entry_transformer
+from karp.lex.infrastructure import EntryRepository, ResourceRepository
+from karp.search.infrastructure.es.indices import EsIndex
+from karp.search.infrastructure.transformers import entry_transformer
 
 
 class EntryCommands:
@@ -14,7 +13,7 @@ class EntryCommands:
         self,
         session,
         resources: ResourceRepository,
-        index: Es6Index,
+        index: EsIndex,
     ):
         self.session = session
         self.resources: ResourceRepository = resources

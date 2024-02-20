@@ -13,15 +13,16 @@ from sqlalchemy.engine import Engine, create_engine
 import logging
 import asgi_correlation_id
 
-from karp.lex_infrastructure import GenericLexInfrastructure, LexInfrastructure
-from karp.search_infrastructure import (
-    Es6SearchIndexMod,
+from karp.search.infrastructure import (
+    EsSearchIndexMod,
 )
 from karp.main import config, modules
 from karp.main.modules import (
     CommandsMod,
     Db,
     ElasticSearchMod,
+    GenericLexInfrastructure,
+    LexInfrastructure,
     install_auth_service,
 )
 
@@ -82,7 +83,7 @@ def _setup_dependency_injection(
 
 
 def _setup_search_context(container: injector.Injector, settings: dict) -> None:
-    container.binder.install(Es6SearchIndexMod(index_prefix=settings.get("es.index_prefix")))
+    container.binder.install(EsSearchIndexMod(index_prefix=settings.get("es.index_prefix")))
 
 
 def configure_logging(settings: dict[str, str]) -> None:
@@ -134,16 +135,3 @@ def configure_logging(settings: dict[str, str]) -> None:
             },
         }
     )
-
-
-def setup_logging():
-    # Clear Gunicorn access log to remove duplicate requests logging
-    logging.basicConfig(
-        format="%(asctime)s %(message)s",
-        datefmt="%Y-%m-%dT%H:%M:%S%z",
-        level=logging.INFO,
-    )
-    logger = logging.getLogger("karp")
-    logger.setLevel(logging.INFO)
-    logger = logging.getLogger(__name__)
-    return logger

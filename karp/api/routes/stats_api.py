@@ -15,7 +15,7 @@ from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.foundation.value_objects import PermissionLevel
-from karp.search_infrastructure.queries import Es6SearchService
+from karp.search.infrastructure.es import EsSearchService
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ def get_field_values(
     field: str,
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
-    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
+    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
 ):
     if not resource_permissions.has_permission(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(

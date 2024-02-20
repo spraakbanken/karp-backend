@@ -6,12 +6,12 @@ from fastapi import status
 from karp import auth
 from karp.main.errors import ClientErrorCodes
 from karp.foundation.timings import utc_now
-from karp.lex_core.value_objects import (
+from karp.foundation.value_objects import (
     make_unique_id,
     unique_id,
 )
-from karp.lex.application.queries import EntryDto
-from karp.lex_infrastructure.repositories import ResourceRepository
+from karp.lex.domain.dtos import EntryDto
+from karp.lex.infrastructure import ResourceRepository
 from karp.main import modules
 
 

@@ -1,12 +1,12 @@
 import logging
 
 from karp.foundation.timings import utc_now
-from karp.lex.application.dtos import ResourceDto
+from karp.foundation.value_objects import make_unique_id
 from karp.lex.domain import entities
+from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
-from karp.lex_core.value_objects import make_unique_id
-from karp.lex_infrastructure.repositories import ResourceRepository
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
+from karp.lex.infrastructure import ResourceRepository
+from karp.search.infrastructure.es.indices import EsIndex
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class ResourceCommands:
     def __init__(self, session, resources, index):
         self.session = session
         self.resources: ResourceRepository = resources
-        self.index: Es6Index = index
+        self.index: EsIndex = index
 
     def create_resource(self, resource_id, name, config, user):
         existing_resource = self.resources.by_resource_id_optional(resource_id)
@@ -68,7 +68,7 @@ class ResourceCommands:
 
     def delete_resource(self, resource_id, user, message):
         logger.info("deleting resource", extra={"resource_id": resource_id})
-        resource = self.resource.by_resource_id(resource_id)
+        resource = self.resources.by_resource_id(resource_id)
         resource.discard(user=user, message=message, timestamp=utc_now())
         self.resources.save(resource)
         self.session.commit()

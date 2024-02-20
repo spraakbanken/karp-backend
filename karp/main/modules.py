@@ -4,11 +4,11 @@ from pathlib import Path
 from typing import Dict
 
 from karp.entry_commands import EntryCommands
-from karp.lex_infrastructure import EntryQueries, ResourceQueries
-from karp.lex_infrastructure.repositories import ResourceRepository
+from karp.lex.application import EntryQueries, ResourceQueries
+from karp.lex.infrastructure import ResourceRepository
 from karp.resource_commands import ResourceCommands
+from karp.search.infrastructure.es.indices import EsIndex
 from karp.search_commands import SearchCommands
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
 
 try:
     from importlib.metadata import entry_points
@@ -37,7 +37,7 @@ class CommandsMod(injector.Module):
         self,
         session: Session,
         resources: ResourceRepository,
-        index: Es6Index,
+        index: EsIndex,
     ) -> EntryCommands:
         return EntryCommands(
             session=session,
@@ -47,14 +47,14 @@ class CommandsMod(injector.Module):
 
     @injector.provider
     def resource_commands(
-        self, session: Session, resources: ResourceRepository, index: Es6Index
+        self, session: Session, resources: ResourceRepository, index: EsIndex
     ) -> ResourceCommands:
         return ResourceCommands(session=session, resources=resources, index=index)
 
     @injector.provider
     def search_commands(
         self,
-        index: Es6Index,
+        index: EsIndex,
         resource_queries: ResourceQueries,
         entry_queries: EntryQueries,
     ) -> SearchCommands:
@@ -86,6 +86,32 @@ class ElasticSearchMod(injector.Module):
     def es(self) -> elasticsearch.Elasticsearch:
         logger.info("Creating ES client url=%s", self._url)
         return elasticsearch.Elasticsearch(self._url)
+
+
+class LexInfrastructure(injector.Module):
+    @injector.provider
+    def resources(
+        self,
+        session: Session,
+    ) -> ResourceRepository:
+        return ResourceRepository(
+            session=session,
+        )
+
+
+class GenericLexInfrastructure(injector.Module):
+    @injector.provider
+    def resource_queries(self, resources: ResourceRepository) -> ResourceQueries:
+        return ResourceQueries(resources)
+
+    @injector.provider
+    def entry_queries(
+        self,
+        resources: ResourceRepository,
+    ) -> EntryQueries:
+        return EntryQueries(
+            resources=resources,
+        )
 
 
 def install_auth_service(container: injector.Injector, settings: Dict[str, str]):

@@ -180,3 +180,8 @@ bumpversion:
 
 build:
 	cd ${project} && make build
+
+.PHONY: tags
+tags:
+	ctags --languages=python -R --python-kinds=-i karp
+	ctags --languages=python -R --python-kinds=-i -e karp

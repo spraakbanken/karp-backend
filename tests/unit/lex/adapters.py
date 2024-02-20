@@ -6,10 +6,9 @@ from typing import Optional
 import injector
 
 from karp.lex.domain import entities as lex_entities
-from karp.lex_core.value_objects import UniqueId, unique_id
-from karp.lex_infrastructure.repositories import ResourceRepository
+from karp.foundation.value_objects import UniqueId, unique_id
+from karp.lex.infrastructure import ResourceRepository, EntryRepository
 from karp.lex.domain import errors
-from karp.lex_infrastructure.repositories.sql_entries import EntryRepository
 
 
 @dataclasses.dataclass

@@ -6,12 +6,12 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, st
 from karp import auth, search
 from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.main import errors as karp_errors
-from karp.search.application.queries import QueryRequest
+from karp.search.domain import QueryRequest
 from karp.search.domain.errors import IncompleteQuery
 
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.search_infrastructure.queries import Es6SearchService
+from karp.search.infrastructure.es import EsSearchService
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def get_entries_by_id(
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
-    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
+    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
     if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
@@ -64,7 +64,7 @@ def query_split(
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
-    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
+    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
 ):
     logger.debug("/query/split called", extra={"resources": resources})
     resource_list = resources.split(",")
@@ -136,7 +136,7 @@ def query(
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
-    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
+    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
 ):
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.

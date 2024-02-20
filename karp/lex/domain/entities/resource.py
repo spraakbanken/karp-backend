@@ -5,11 +5,10 @@ from typing import Any, Dict, Optional, Tuple
 
 from karp.foundation import timings
 from karp.foundation.entity import Entity
-from karp.foundation.value_objects import PermissionLevel
+from karp.foundation.value_objects import PermissionLevel, unique_id
 from karp.lex.domain import constraints, errors
 from karp.lex.domain.entities import Entry, create_entry
 from karp.lex.domain.value_objects import EntrySchema
-from karp.lex_core.value_objects import unique_id
 
 
 class ResourceOp(enum.Enum):

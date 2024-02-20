@@ -3,7 +3,7 @@ import pytest  # noqa: I001
 from typer import Typer
 from typer.testing import CliRunner
 from karp import lex
-from karp.lex_infrastructure import ResourceQueries
+from karp.lex.application import ResourceQueries
 
 from karp.main import AppContext
 

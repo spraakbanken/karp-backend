@@ -6,8 +6,8 @@ import typer
 from json_streams import jsonlib
 from tabulate import tabulate
 
-from karp.lex_core.value_objects import UniqueIdStr, unique_id
-from karp.lex_infrastructure import ResourceQueries
+from karp.foundation.value_objects import UniqueIdStr, unique_id
+from karp.lex.application import ResourceQueries
 from karp.resource_commands import ResourceCommands
 
 from karp.cliapp.utility import cli_error_handler, cli_timer

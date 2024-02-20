@@ -5,8 +5,8 @@ import typing
 from typing import Dict, Optional
 
 from karp.foundation.entity import Entity
+from karp.foundation.value_objects import UniqueId, unique_id
 from karp.lex.domain import errors
-from karp.lex_core.value_objects import UniqueId, unique_id
 
 logger = logging.getLogger("karp")
 
