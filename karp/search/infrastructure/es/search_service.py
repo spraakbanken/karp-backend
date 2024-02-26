@@ -99,11 +99,18 @@ class EsQueryBuilder(NodeWalker):
 
     def no_wildcards(self, node):
         if "*" in node.field:
-            raise errors.IncompleteQuery(self._q, f"{node.op} queries don't support wildcards in field names")
+            raise errors.IncompleteQuery(
+                self._q, f"{node.op} queries don't support wildcards in field names"
+            )
 
     def regexp(self, field, regexp):
         if "*" in field:
-            return es_dsl.Q("query_string", query="/" + regexp.replace("/", "\\/") + "/", default_field=field, lenient=True)
+            return es_dsl.Q(
+                "query_string",
+                query="/" + regexp.replace("/", "\\/") + "/",
+                default_field=field,
+                lenient=True,
+            )
         else:
             return es_dsl.Q("regexp", **{field: regexp})
 
@@ -233,9 +240,7 @@ class EsSearchService:
         return result
 
     def build_search(self, query, es_query, resources, field_names):
-        alias_names = [
-            self.mapping_repo.get_alias_name(resource) for resource in resources
-        ]
+        alias_names = [self.mapping_repo.get_alias_name(resource) for resource in resources]
         s = es_dsl.Search(using=self.es, index=alias_names, doc_type="entry")
         s = self.add_runtime_mappings(s, field_names)
         if es_query is not None:
@@ -295,7 +300,10 @@ class EsSearchService:
         alias_name = self.mapping_repo.get_alias_name(resource_id)
         s = es_dsl.Search(using=self.es, index=alias_name)
         s = s[:0]
-        if field in self.mapping_repo.fields[alias_name] and self.mapping_repo.fields[alias_name][field].analyzed:
+        if (
+            field in self.mapping_repo.fields[alias_name]
+            and self.mapping_repo.fields[alias_name][field].analyzed
+        ):
             field += ".raw"
         logger.debug(
             "Doing aggregations on resource_id: {resource_id}, on field {field}".format(

@@ -1,5 +1,6 @@
 import logging
 import re
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -8,21 +9,21 @@ from elasticsearch import exceptions as es_exceptions
 
 from karp.lex.domain.entities import Entry
 from karp.search.domain.errors import UnsupportedField
-from dataclasses import dataclass
 
 logger = logging.getLogger("karp")
 
 KARP_CONFIGINDEX = "karp_config"
 KARP_CONFIGINDEX_TYPE = "configs"
 
+
 @dataclass
 class Field:
     """Information about a field in the index."""
 
-    path: list[str] # e.g. if the field name is "foo.bar" then this is ["foo", "bar"]
-    type: str       # e.g. "text"
+    path: list[str]  # e.g. if the field name is "foo.bar" then this is ["foo", "bar"]
+    type: str  # e.g. "text"
 
-    extra: bool = False # True for things like .raw fields
+    extra: bool = False  # True for things like .raw fields
 
     @property
     def name(self) -> str:
@@ -56,6 +57,7 @@ class Field:
 
         if self.analyzed:
             return self.name + ".raw"
+
 
 class EsMappingRepository:
     def __init__(
@@ -158,7 +160,9 @@ class EsMappingRepository:
             return self._update_config(resource_id)["alias_name"]
         return res["_source"]["alias_name"]
 
-    def _update_field_mapping(self, aliases: List[Tuple[str, str]]) -> Dict[str, Dict[str, Field]]:
+    def _update_field_mapping(
+        self, aliases: List[Tuple[str, str]]
+    ) -> Dict[str, Dict[str, Field]]:
         """
         Create a field mapping based on the mappings of elasticsearch.
         """
@@ -182,23 +186,30 @@ class EsMappingRepository:
 
     @staticmethod
     def _get_fields_from_mapping(
-        properties: Dict[str, Dict[str, Dict[str, Any]]], path: list[str] = None, extra: bool = False
+        properties: Dict[str, Dict[str, Dict[str, Any]]],
+        path: list[str] = None,
+        extra: bool = False,  # noqa: RUF013
     ) -> dict[str, Field]:
-        if path is None: path = []
+        if path is None:
+            path = []
         fields = {}
 
         for prop_name, prop_value in properties.items():
-            prop_path = path + [prop_name]
+            prop_path = path + [prop_name]  # noqa: RUF005
             if "properties" in prop_value and "type" not in prop_value:
                 field_type = "object"
             else:
                 field_type = prop_value["type"]
-            field = Field(path = prop_path, type = field_type, extra = extra)
+            field = Field(path=prop_path, type=field_type, extra=extra)
             fields[field.name] = field
 
             # Add all recursive fields too
-            res1 = EsMappingRepository._get_fields_from_mapping(prop_value.get("properties", {}), prop_path)
-            res2 = EsMappingRepository._get_fields_from_mapping(prop_value.get("fields", {}), prop_path, True)
+            res1 = EsMappingRepository._get_fields_from_mapping(
+                prop_value.get("properties", {}), prop_path
+            )
+            res2 = EsMappingRepository._get_fields_from_mapping(
+                prop_value.get("fields", {}), prop_path, True
+            )
             fields.update(res1)
             fields.update(res2)
 

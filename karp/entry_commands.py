@@ -122,7 +122,7 @@ class EntryCommands:
 
     def add_entry(self, resource_id, entry, user, message):
         result = self.add_entries(resource_id, [entry], user, message)
-        assert len(result) == 1
+        assert len(result) == 1  # noqa: S101
         return result[0]
 
     def update_entry(self, resource_id, _id, version, user, message, entry):
@@ -168,7 +168,9 @@ class EntryCommands:
         self._entry_deleted_handler(EntryDto.from_entry(entry))
 
     def _entry_added_handler(self, resource, entry_dtos):
-        entry_dtos = [entry_transformer.transform(resource, entry_dto) for entry_dto in entry_dtos]
+        entry_dtos = [
+            entry_transformer.transform(resource, entry_dto) for entry_dto in entry_dtos
+        ]
         self.index.add_entries(resource.resource_id, entry_dtos)
 
     def _entry_updated_handler(self, resource, entry_dto):
