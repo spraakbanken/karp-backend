@@ -179,19 +179,7 @@ class EsSearchService:
             ms = es_dsl.MultiSearch(using=self.es)
 
             for resource in query.resources:
-                alias_name = self.mapping_repo.get_alias_name(resource)
-                s = es_dsl.Search(index=alias_name)
-                s = self.add_runtime_mappings(s, field_names)
-
-                if es_query is not None:
-                    s = s.query(es_query)
-                s = s[query.from_ : query.from_ + query.size]
-                if query.sort:
-                    s = s.sort(*self.mapping_repo.translate_sort_fields([resource], query.sort))
-                elif query.sort_dict and resource in query.sort_dict:
-                    s = s.sort(
-                        *self.translate_sort_fields([resource], query.sort_dict[resource])
-                    )
+                s = self.build_search(query, es_query, [resource], field_names)
                 ms = ms.add(s)
 
             responses = ms.execute()
@@ -206,14 +194,25 @@ class EsSearchService:
                         result["distribution"] = {}
                     result["distribution"][query.resources[i]] = response.hits.total
         else:
-            result = self._extracted_from_search_with_query_47(query, es_query, field_names)
+            s = self.build_search(query, es_query, query.resources, field_names)
+            response = s.execute()
+
+            # TODO format response in a better way, because the whole response takes up too much space in the logs
+            # logger.debug('response = {}'.format(response.to_dict()))
+
+            logger.debug("calling _format_result")
+            result = self._format_result(query.resources, response)
+            if query.lexicon_stats:
+                result["distribution"] = {}
+                for bucket in response.aggregations.distribution.buckets:
+                    key = bucket["key"]
+                    result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
 
         return result
 
-    # TODO Rename this here and in `search_with_query`
-    def _extracted_from_search_with_query_47(self, query, es_query, field_names):
+    def build_search(self, query, es_query, resources, field_names):
         alias_names = [
-            self.mapping_repo.get_alias_name(resource) for resource in query.resources
+            self.mapping_repo.get_alias_name(resource) for resource in resources
         ]
         s = es_dsl.Search(using=self.es, index=alias_names, doc_type="entry")
         s = self.add_runtime_mappings(s, field_names)
@@ -223,29 +222,18 @@ class EsSearchService:
         s = s[query.from_ : query.from_ + query.size]
 
         if query.lexicon_stats:
-            s.aggs.bucket("distribution", "terms", field="_index", size=len(query.resources))
+            s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
         if query.sort:
-            s = s.sort(*self.mapping_repo.translate_sort_fields(query.resources, query.sort))
+            s = s.sort(*self.mapping_repo.translate_sort_fields(resources, query.sort))
         elif query.sort_dict:
             sort_fields = []
             for resource, sort in query.sort_dict.items():
-                sort_fields.extend(self.mapping_repo.translate_sort_fields([resource], sort))
-            s = s.sort(*sort_fields)
+                if resource in resources:
+                    sort_fields.extend(self.mapping_repo.translate_sort_fields([resource], sort))
+            if sort_fields:
+                s = s.sort(*sort_fields)
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
-        response = s.execute()
-
-        # TODO format response in a better way, because the whole response takes up too much space in the logs
-        # logger.debug('response = {}'.format(response.to_dict()))
-
-        logger.debug("calling _format_result")
-        result = self._format_result(query.resources, response)
-        if query.lexicon_stats:
-            result["distribution"] = {}
-            for bucket in response.aggregations.distribution.buckets:
-                key = bucket["key"]
-                result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
-
-        return result
+        return s
 
     def add_runtime_mappings(self, s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
         # When a query uses a field of the form "f.length", add a
