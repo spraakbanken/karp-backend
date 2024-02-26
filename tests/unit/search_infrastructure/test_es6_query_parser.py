@@ -18,10 +18,10 @@ def parser() -> KarpQueryV6Parser:
     "q,expected",
     [
         ("exists|test", es_dsl.Q("exists", field="test")),
-        ('freetext|"hej"', es_dsl.Q("multi_match", query="hej")),
+        ('freetext|"hej"', es_dsl.Q("multi_match", query="hej", fields=["*"], lenient=True)),
         (
             'freergxp|"1i.*2"',
-            es_dsl.Q("query_string", query="/1i.*2/", default_field="*"),
+            es_dsl.Q("query_string", query="/1i.*2/", default_field="*", lenient=True),
         ),
         ("missing|test", es_dsl.Q("bool", must_not=es_dsl.Q("exists", field="test"))),
         ('startswith|pos|"nn"', es_dsl.Q("regexp", pos="nn.*")),

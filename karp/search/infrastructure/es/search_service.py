@@ -25,44 +25,41 @@ logger = logging.getLogger(__name__)
 
 
 class EsQueryBuilder(NodeWalker):
-    def walk_object(self, node):
-        return node
-
-    def walk__and(self, node):
-        result = self.walk(node.exps[0])
-        for n in node.exps[1:]:
-            result = result & self.walk(n)
-
-        return result
-
-    def walk__contains(self, node):
-        return es_dsl.Q("regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}.*"})
-
-    def walk__endswith(self, node):
-        return es_dsl.Q("regexp", **{self.walk(node.field): f".*{self.walk(node.arg)}"})
+    def __init__(self, q=None):
+        super().__init__()
+        self._q = q
 
     def walk__equals(self, node):
-        return es_dsl.Q(
-            "match",
-            **{self.walk(node.field): {"query": self.walk(node.arg), "operator": "and"}},
-        )
-
-    def walk__string_value(self, node):
-        return self.walk(node.ast).lower()
-
-    def walk__quoted_string_value(self, node):
-        return "".join([part.replace('\\"', '"') for part in node.ast])
-
-    def walk__exists(self, node):
-        return es_dsl.Q("exists", field=self.walk(node.field))
-
-    def walk__freergxp(self, node):
-        return es_dsl.Q("query_string", query=f"/{self.walk(node.arg)}/", default_field="*")
+        return self.match(self.walk(node.field), self.walk(node.arg))
 
     def walk__freetext(self, node):
-        return es_dsl.Q("multi_match", query=self.walk(node.arg))
+        return self.match("*", self.walk(node.arg))
+
+    def walk__regexp(self, node):
+        return self.regexp(self.walk(node.field), self.walk(node.arg))
+
+    def walk__freergxp(self, node):
+        return self.regexp("*", self.walk(node.arg))
+
+    def walk__contains(self, node):
+        return self.regexp(self.walk(node.field), f".*{self.walk(node.arg)}.*")
+
+    def walk__startswith(self, node):
+        return self.regexp(self.walk(node.field), f"{self.walk(node.arg)}.*")
+
+    def walk__endswith(self, node):
+        return self.regexp(self.walk(node.field), f".*{self.walk(node.arg)}")
+
+    def walk__exists(self, node):
+        self.no_wildcards(node)
+        return es_dsl.Q("exists", field=self.walk(node.field))
+
+    def walk__missing(self, node):
+        self.no_wildcards(node)
+        return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=self.walk(node.field)))
 
     def walk_range(self, node):
+        self.no_wildcards(node)
         return es_dsl.Q(
             "range",
             **{self.walk(node.field): {self.walk(node.op): self.walk(node.arg)}},
@@ -72,9 +69,6 @@ class EsQueryBuilder(NodeWalker):
     walk__gte = walk_range
     walk__lt = walk_range
     walk__lte = walk_range
-
-    def walk__missing(self, node):
-        return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=self.walk(node.field)))
 
     def walk__not(self, node):
         must_nots = [self.walk(expr) for expr in node.exps]
@@ -87,11 +81,47 @@ class EsQueryBuilder(NodeWalker):
 
         return result
 
-    def walk__regexp(self, node):
-        return es_dsl.Q("regexp", **{self.walk(node.field): self.walk(node.arg)})
+    def walk__and(self, node):
+        result = self.walk(node.exps[0])
+        for n in node.exps[1:]:
+            result = result & self.walk(n)
 
-    def walk__startswith(self, node):
-        return es_dsl.Q("regexp", **{self.walk(node.field): f"{self.walk(node.arg)}.*"})
+        return result
+
+    def walk_object(self, node):
+        return node
+
+    def walk__string_value(self, node):
+        return self.walk(node.ast).lower()
+
+    def walk__quoted_string_value(self, node):
+        return "".join([part.replace('\\"', '"') for part in node.ast])
+
+    def no_wildcards(self, node):
+        if "*" in node.field:
+            raise errors.IncompleteQuery(
+                self._q, f"{node.op} queries don't support wildcards in field names"
+            )
+
+    def regexp(self, field, regexp):
+        if "*" in field:
+            return es_dsl.Q(
+                "query_string",
+                query="/" + regexp.replace("/", "\\/") + "/",
+                default_field=field,
+                lenient=True,
+            )
+        else:
+            return es_dsl.Q("regexp", **{field: regexp})
+
+    def match(self, field, query):
+        if "*" in field:
+            return es_dsl.Q("multi_match", query=query, fields=[field], lenient=True)
+        else:
+            return es_dsl.Q(
+                "match",
+                **{field: {"query": query, "operator": "and"}},
+            )
 
 
 class EsFieldNameCollector(NodeWalker):
@@ -115,7 +145,6 @@ class EsSearchService:
     ):
         self.es: elasticsearch.Elasticsearch = es
         self.mapping_repo = mapping_repo
-        self.query_builder = EsQueryBuilder()
         self.field_name_collector = EsFieldNameCollector()
         self.parser = KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
 
@@ -168,7 +197,7 @@ class EsSearchService:
         if query.q:
             try:
                 model = self.parser.parse(query.q)
-                es_query = self.query_builder.walk(model)
+                es_query = EsQueryBuilder(query.q).walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
                 logger.info("Parse error", extra={"err": err})
@@ -274,7 +303,10 @@ class EsSearchService:
         alias_name = self.mapping_repo.get_alias_name(resource_id)
         s = es_dsl.Search(using=self.es, index=alias_name)
         s = s[:0]
-        if field in self.mapping_repo.fields[alias_name] and self.mapping_repo.fields[alias_name][field].analyzed:
+        if (
+            field in self.mapping_repo.fields[alias_name]
+            and self.mapping_repo.fields[alias_name][field].analyzed
+        ):
             field += ".raw"
         logger.debug(
             "Doing aggregations on resource_id: {resource_id}, on field {field}".format(

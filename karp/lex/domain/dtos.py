@@ -6,8 +6,8 @@ import pydantic
 
 from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
-from karp.lex.domain.entities.entry import EntryOp
 from karp.lex.domain.entities import Entry, Resource
+from karp.lex.domain.entities.entry import EntryOp
 
 
 class BaseModel(pydantic.BaseModel):
@@ -34,7 +34,7 @@ class EntryDto(EntityDto):
     entry: typing.Dict
 
     @classmethod
-    def from_entry(cls, entry: Entry) -> 'EntryDto':
+    def from_entry(cls, entry: Entry) -> "EntryDto":
         return EntryDto(
             id=entry.id,
             resource=entry.resource_id,
@@ -53,7 +53,7 @@ class ResourceDto(EntityDto):
     config: dict
 
     @classmethod
-    def from_resource(cls, resource: Resource) -> 'ResourceDto':
+    def from_resource(cls, resource: Resource) -> "ResourceDto":
         return ResourceDto(
             id=resource.id,
             resourceId=resource.resource_id,
