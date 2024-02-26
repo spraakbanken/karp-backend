@@ -8,11 +8,53 @@ from elasticsearch import exceptions as es_exceptions
 
 from karp.lex.domain.entities import Entry
 from karp.search.domain.errors import UnsupportedField
+from dataclasses import dataclass
 
 logger = logging.getLogger("karp")
 
 KARP_CONFIGINDEX = "karp_config"
 
+@dataclass
+class Field:
+    """Information about a field in the index."""
+
+    path: list[str] # e.g. if the field name is "foo.bar" then this is ["foo", "bar"]
+    type: str       # e.g. "text"
+
+    extra: bool = False # True for things like .raw fields
+
+    @property
+    def name(self) -> str:
+        return ".".join(self.path)
+
+    @property
+    def lastname(self) -> str:
+        return self.path[-1]
+
+    @property
+    def parent(self) -> Optional[str]:
+        if self.path:
+            return ".".join(self.path[:-1])
+
+    @property
+    def analyzed(self) -> bool:
+        return self.type == "text"
+
+    @property
+    def sort_form(self) -> Optional[str]:
+        """Return which field should be used when we ask to sort on this field."""
+        if self.type in [
+            "boolean",
+            "date",
+            "double",
+            "keyword",
+            "long",
+            "ip",
+        ]:
+            return self.name
+
+        if self.analyzed:
+            return self.name + ".raw"
 
 class EsMappingRepository:
     def __init__(
@@ -24,9 +66,12 @@ class EsMappingRepository:
         self._prefix = prefix
         self._config_index = f"{prefix}_config" if prefix else KARP_CONFIGINDEX
         self.ensure_config_index_exist()
-        analyzed_fields, sortable_fields = self._init_field_mapping()
-        self.analyzed_fields: Dict[str, List[str]] = analyzed_fields
-        self.sortable_fields: Dict[str, Dict[str, List[str]]] = sortable_fields
+
+        self.fields: Dict[str, Dict[str, Field]] = {}
+        self.sortable_fields: Dict[str, Dict[str, Field]] = {}
+
+        aliases = self._get_all_aliases()
+        self._update_field_mapping(aliases)
 
     def ensure_config_index_exist(self) -> None:
         if not self.es.indices.exists(index=self._config_index):
@@ -105,44 +150,47 @@ class EsMappingRepository:
             return self._update_config(resource_id)["alias_name"]
         return res["_source"]["alias_name"]
 
-    @staticmethod
-    def get_analyzed_fields_from_mapping(
-        properties: Dict[str, Dict[str, Dict[str, Any]]],
-    ) -> List[str]:
-        analyzed_fields = []
-
-        for prop_name, prop_values in properties.items():
-            if "properties" in prop_values:
-                res = EsMappingRepository.get_analyzed_fields_from_mapping(
-                    prop_values["properties"]
-                )
-                analyzed_fields.extend([f"{prop_name}.{prop}" for prop in res])
-            elif prop_values["type"] == "text":
-                analyzed_fields.append(prop_name)
-        return analyzed_fields
-
-    def _init_field_mapping(
-        self,
-    ) -> Tuple[Dict[str, List[str]], Dict[str, Dict[str, List[str]]]]:
+    def _update_field_mapping(self, aliases: List[Tuple[str, str]]) -> Dict[str, Dict[str, Field]]:
         """
-        Create a field mapping based on the mappings of elasticsearch
-        currently the only information we need is if a field is analyzed (i.e. text)
-        or not.
+        Create a field mapping based on the mappings of elasticsearch.
         """
 
-        field_mapping: Dict[str, List[str]] = {}
-        sortable_fields = {}
-        aliases = self._get_all_aliases()
         mapping: Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]] = self.es.indices.get_mapping()
         for alias, index in aliases:
             if "mappings" in mapping[index] and "properties" in mapping[index]["mappings"]:
-                field_mapping[alias] = EsMappingRepository.get_analyzed_fields_from_mapping(
+                self.fields[alias] = self._get_fields_from_mapping(
                     mapping[index]["mappings"]["properties"]
                 )
-                sortable_fields[alias] = EsMappingRepository.create_sortable_map_from_mapping(
-                    mapping[index]["mappings"]["properties"]
-                )
-        return field_mapping, sortable_fields
+                self.sortable_fields[alias] = {}
+                for field in self.fields[alias].values():
+                    if field.sort_form in self.fields[alias]:
+                        sort_form = self.fields[alias][field.sort_form]
+                        self.sortable_fields[alias][field.name] = sort_form
+                        self.sortable_fields[alias][field.lastname] = sort_form
+
+    @staticmethod
+    def _get_fields_from_mapping(
+        properties: Dict[str, Dict[str, Dict[str, Any]]], path: list[str] = None, extra: bool = False
+    ) -> dict[str, Field]:
+        if path is None: path = []
+        fields = {}
+
+        for prop_name, prop_value in properties.items():
+            prop_path = path + [prop_name]
+            if "properties" in prop_value and "type" not in prop_value:
+                field_type = "object"
+            else:
+                field_type = prop_value["type"]
+            field = Field(path = prop_path, type = field_type, extra = extra)
+            fields[field.name] = field
+
+            # Add all recursive fields too
+            res1 = EsMappingRepository._get_fields_from_mapping(prop_value.get("properties", {}), prop_path)
+            res2 = EsMappingRepository._get_fields_from_mapping(prop_value.get("fields", {}), prop_path, True)
+            fields.update(res1)
+            fields.update(res2)
+
+        return fields
 
     def _get_index_mappings(
         self, index: Optional[str] = None
@@ -186,73 +234,22 @@ class EsMappingRepository:
                 sort_value, sort_order = sort_value.split("|", 1)
             for resource_id in resources:
                 if sort_order:
-                    translated_sort_fields.extend(
-                        (
-                            {field: {"order": sort_order}}
-                            for field in self.translate_sort_field(resource_id, sort_value)
-                        )
-                    )
-                translated_sort_fields.extend(self.translate_sort_field(resource_id, sort_value))
+                    field = self.translate_sort_field(resource_id, sort_value)
+                    translated_sort_fields.append({field: {"order": sort_order}})
+                translated_sort_fields.append(self.translate_sort_field(resource_id, sort_value))
 
         return translated_sort_fields
 
-    def translate_sort_field(self, resource_id: str, sort_value: str) -> List[str]:
+    def translate_sort_field(self, resource_id: str, sort_value: str) -> str:
         logger.debug(
             f"es_indextranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
         )
         if sort_value in self.sortable_fields[resource_id]:
-            return self.sortable_fields[resource_id][sort_value]
+            return self.sortable_fields[resource_id][sort_value].name
         else:
             raise UnsupportedField(
                 f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
             )
 
     def on_publish_resource(self, alias_name: str, index_name: str):
-        mapping = self._get_index_mappings(index=index_name)
-        if "mappings" in mapping[index_name] and "properties" in mapping[index_name]["mappings"]:
-            self.analyzed_fields[
-                alias_name
-            ] = EsMappingRepository.get_analyzed_fields_from_mapping(
-                mapping[index_name]["mappings"]["properties"]
-            )
-            self.sortable_fields[
-                alias_name
-            ] = EsMappingRepository.create_sortable_map_from_mapping(
-                mapping[index_name]["mappings"]["properties"]
-            )
-
-    @staticmethod
-    def create_sortable_map_from_mapping(
-        properties: Dict,
-    ) -> Dict[str, List[str]]:
-        sortable_map = {}
-
-        def parse_prop_value(sort_map, base_name, prop_name, prop_value: Dict):
-            if "properties" in prop_value:
-                for ext_name, ext_value in prop_value["properties"].items():
-                    ext_base_name = f"{base_name}.{ext_name}"
-                    parse_prop_value(sort_map, ext_base_name, ext_base_name, ext_value)
-                return
-            if prop_value["type"] in [
-                "boolean",
-                "date",
-                "double",
-                "keyword",
-                "long",
-                "ip",
-            ]:
-                sort_map[base_name] = [prop_name]
-                sort_map[prop_name] = [prop_name]
-                return
-            if prop_value["type"] == "text":
-                if "fields" in prop_value:
-                    for ext_name, ext_value in prop_value["fields"].items():
-                        parse_prop_value(
-                            sort_map, base_name, f"{base_name}.{ext_name}", ext_value
-                        )
-                return
-
-        for prop_name, prop_value in properties.items():
-            parse_prop_value(sortable_map, prop_name, prop_name, prop_value)
-
-        return sortable_map
+        self._update_field_mapping([(alias_name, index_name)])
