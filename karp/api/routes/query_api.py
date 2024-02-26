@@ -172,6 +172,16 @@ def query(
             extra={"resources": resources, "q": q, "error_message": err.message},
         )
         raise
+    except IncompleteQuery as err:
+        raise HTTPException(  # noqa: B904
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "errorCode": karp_errors.ClientErrorCodes.SEARCH_INCOMPLETE_QUERY,
+                "message": "Error in query",
+                "failing_query": err.failing_query,
+                "error_description": err.error_description,
+            },
+        )
     return response
 
 
