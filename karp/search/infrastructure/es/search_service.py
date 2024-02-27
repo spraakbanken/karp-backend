@@ -51,15 +51,15 @@ class EsQueryBuilder(NodeWalker):
         return self.regexp(self.walk(node.field), f".*{self.walk(node.arg)}")
 
     def walk__exists(self, node):
-        self.no_wildcards(node)
+        self.no_wildcards("exists", node)
         return es_dsl.Q("exists", field=self.walk(node.field))
 
     def walk__missing(self, node):
-        self.no_wildcards(node)
+        self.no_wildcards("exists", node)
         return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=self.walk(node.field)))
 
     def walk_range(self, node):
-        self.no_wildcards(node)
+        self.no_wildcards(node.op, node)
         return es_dsl.Q(
             "range",
             **{self.walk(node.field): {self.walk(node.op): self.walk(node.arg)}},
@@ -97,10 +97,10 @@ class EsQueryBuilder(NodeWalker):
     def walk__quoted_string_value(self, node):
         return "".join([part.replace('\\"', '"') for part in node.ast])
 
-    def no_wildcards(self, node):
+    def no_wildcards(self, query, node):
         if "*" in node.field:
             raise errors.IncompleteQuery(
-                self._q, f"{node.op} queries don't support wildcards in field names"
+                self._q, f"{query} queries don't support wildcards in field names"
             )
 
     def regexp(self, field, regexp):
