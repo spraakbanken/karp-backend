@@ -1,3 +1,6 @@
+from injector import inject
+from sqlalchemy.orm import Session
+
 from karp.foundation.timings import utc_now
 from karp.foundation.value_objects import unique_id
 from karp.lex import EntryDto
@@ -6,12 +9,10 @@ from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure import EntryRepository, ResourceRepository
 from karp.search.infrastructure.es.indices import EsIndex
 from karp.search.infrastructure.transformers import entry_transformer
-import injector
-from sqlalchemy.orm import Session
 
 
 class EntryCommands:
-    @injector.inject
+    @inject
     def __init__(
         self,
         session: Session,

@@ -13,7 +13,7 @@ from fastapi import (
 from karp import auth
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.auth.infrastructure import ResourcePermissionQueries
+from karp.auth.application import ResourcePermissionQueries
 from karp.foundation.value_objects import PermissionLevel
 from karp.search.infrastructure.es import EsSearchService
 

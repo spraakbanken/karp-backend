@@ -6,8 +6,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.api.schemas import ResourceProtected, ResourcePublic
+from karp.auth.application import ResourcePermissionQueries
 from karp.auth.application.resources import ResourcePermissionDto
-from karp.auth.infrastructure import ResourcePermissionQueries
 from karp.lex.application import ResourceQueries
 from karp.lex.domain.dtos import ResourceDto
 

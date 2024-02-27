@@ -1,4 +1,4 @@
-import injector  # noqa: I001
+from injector import Injector  # noqa: I001
 import pytest
 
 from . import adapters
@@ -6,11 +6,11 @@ from . import adapters
 
 @pytest.fixture()
 def lex_ctx() -> adapters.UnitTestContext:
-    container = injector.Injector(
+    injector = Injector(
         [
             adapters.InMemoryLexInfrastructure(),
         ]
     )
     return adapters.UnitTestContext(
-        container=container,
+        injector=injector,
     )

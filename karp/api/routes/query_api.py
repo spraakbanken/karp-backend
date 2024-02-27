@@ -4,7 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
 
 from karp import auth, search
-from karp.auth.infrastructure import ResourcePermissionQueries
+from karp.auth.application import ResourcePermissionQueries
 from karp.main import errors as karp_errors
 from karp.search.domain import QueryRequest
 from karp.search.domain.errors import IncompleteQuery

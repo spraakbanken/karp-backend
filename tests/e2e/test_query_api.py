@@ -97,7 +97,7 @@ def test_contains(
     app_context,
 ):
     query = f'/query/places?q=contains|{field}|"{value}"'
-    entry_queries = app_context.container.get(EntryQueries)  # type: ignore [misc]
+    entry_queries = app_context.injector.get(EntryQueries)  # type: ignore [misc]
     expected_result = []
     analyzed_value = value.lower()
     for entry in entry_queries.all_entries("places"):

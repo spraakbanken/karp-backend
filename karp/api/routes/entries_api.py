@@ -16,7 +16,7 @@ from karp.api import dependencies as deps
 from karp.api import schemas
 from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.auth import User
-from karp.auth.infrastructure import ResourcePermissionQueries
+from karp.auth.application import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
 from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr

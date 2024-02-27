@@ -19,7 +19,7 @@ from karp.search.domain.query_dsl.karp_query_v6_model import (
 )
 from .mapping_repo import EsMappingRepository
 from .query import EsQuery
-import injector
+from injector import inject
 
 
 logger = logging.getLogger(__name__)
@@ -124,7 +124,9 @@ class EsQueryBuilder(NodeWalker):
 
     def match(self, field, query):
         if self.is_multi_field(field):
-            return es_dsl.Q("multi_match", query=query, fields=self.multi_fields(field), lenient=True)
+            return es_dsl.Q(
+                "multi_match", query=query, fields=self.multi_fields(field), lenient=True
+            )
         else:
             return es_dsl.Q(
                 "match",
@@ -146,7 +148,7 @@ class EsFieldNameCollector(NodeWalker):
 
 
 class EsSearchService:
-    @injector.inject
+    @inject
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,
@@ -286,7 +288,7 @@ class EsSearchService:
                 }
 
         if mappings:
-            s = s.extra(runtime_mappings = mappings)
+            s = s.extra(runtime_mappings=mappings)
         return s
 
     def search_ids(self, resource_id: str, entry_ids: str):

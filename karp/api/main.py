@@ -12,7 +12,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
-import injector
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 import logging
@@ -26,7 +25,7 @@ from karp.foundation.value_objects import unique_id
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
-from karp.main import modules, config
+from karp.main import config, load_modules, new_session
 from karp.api.routes import router as api_router
 
 
@@ -105,8 +104,6 @@ def create_app() -> FastAPI:
 
     app.state.app_context = app_context
 
-    main.install_auth_service(app_context.container, app_context.settings)
-
     app.add_middleware(
         CORSMiddleware,
         allow_origins=app_context.settings.get("web.cors.origins", ["*"]),
@@ -118,7 +115,7 @@ def create_app() -> FastAPI:
 
     app.include_router(api_router)
 
-    modules.load_modules("karp.karp_v6_api", app=app)
+    load_modules("karp.karp_v6_api", app=app)
 
     from karp.main.errors import KarpError
 
@@ -174,9 +171,9 @@ def create_app() -> FastAPI:
             status_code=500, content={"detail": "Internal server error"}
         )
         # Create a new session per request
-        with modules.new_session(app_context.container) as container:
-            request.state.session = container.get(Session)
-            request.state.container = container
+        with new_session(app_context.injector) as injector:
+            request.state.session = injector.get(Session)
+            request.state.injector = injector
 
             response = await call_next(request)
 

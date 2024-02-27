@@ -3,7 +3,7 @@ import dataclasses
 import typing
 from typing import Optional
 
-import injector
+from injector import Injector, Module, provider, singleton
 
 from karp.lex.domain import entities as lex_entities
 from karp.foundation.value_objects import UniqueId, unique_id
@@ -13,7 +13,7 @@ from karp.lex.domain import errors
 
 @dataclasses.dataclass
 class UnitTestContext:
-    container: injector.Injector
+    injector: Injector
 
 
 def ensure_correct_id_type(v) -> unique_id.UniqueId:
@@ -113,8 +113,8 @@ class InMemoryEntryRepository(EntryRepository):
         yield from self.entries.values()
 
 
-class InMemoryLexInfrastructure(injector.Module):
-    @injector.provider
-    @injector.singleton
+class InMemoryLexInfrastructure(Module):
+    @provider
+    @singleton
     def resources(self) -> ResourceRepository:
         return InMemoryResourceRepository()

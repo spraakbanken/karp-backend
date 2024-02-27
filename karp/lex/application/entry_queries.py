@@ -16,13 +16,13 @@ from karp.lex.application.dtos import (
 )
 from karp.foundation.value_objects import UniqueId, UniqueIdStr
 from ..infrastructure.sql import ResourceRepository
-import injector
+from injector import inject
 
 logger = logging.getLogger(__name__)
 
 
 class EntryQueries:
-    @injector.inject
+    @inject
     def __init__(
         self,
         resources: ResourceRepository,

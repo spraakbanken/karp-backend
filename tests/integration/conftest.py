@@ -1,7 +1,7 @@
 """Pytest entry point."""
 
 
-import injector
+from injector import Injector
 import pytest  # pyre-ignore  # noqa: F811
 from sqlalchemy import create_engine
 from sqlalchemy.orm import session, sessionmaker
@@ -36,12 +36,12 @@ def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201
 
 @pytest.fixture()
 def integration_ctx() -> adapters.IntegrationTestContext:
-    container = injector.Injector(
+    injector = Injector(
         [
             InMemoryLexInfrastructure(),
             search_adapters.InMemorySearchInfrastructure(),
         ]
     )
     return adapters.IntegrationTestContext(
-        container=container,
+        injector=injector,
     )

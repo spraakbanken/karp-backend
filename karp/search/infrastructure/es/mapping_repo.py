@@ -187,7 +187,7 @@ class EsMappingRepository:
     @staticmethod
     def _get_fields_from_mapping(
         properties: Dict[str, Dict[str, Dict[str, Any]]],
-        path: list[str] = None,
+        path: Optional[list[str]] = None,
         extra: bool = False,  # noqa: RUF013
     ) -> dict[str, Field]:
         if path is None:
