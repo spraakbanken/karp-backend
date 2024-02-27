@@ -11,6 +11,13 @@
       "type": "integer",
       "required": true
     },
+    "_municipality": {
+      "collection": true,
+      "virtual": true,
+      "plugin": "link",
+      "field_params": {"id": "municipality"},
+      "params": {"resource": "municipalities", "target": "code"}
+    },
     "larger_place": {
       "type": "integer"
     },
