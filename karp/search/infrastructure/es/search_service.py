@@ -19,6 +19,7 @@ from karp.search.domain.query_dsl.karp_query_v6_model import (
 )
 from .mapping_repo import EsMappingRepository
 from .query import EsQuery
+import injector
 
 
 logger = logging.getLogger(__name__)
@@ -145,6 +146,7 @@ class EsFieldNameCollector(NodeWalker):
 
 
 class EsSearchService:
+    @injector.inject
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,

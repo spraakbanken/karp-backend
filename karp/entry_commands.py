@@ -6,12 +6,15 @@ from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure import EntryRepository, ResourceRepository
 from karp.search.infrastructure.es.indices import EsIndex
 from karp.search.infrastructure.transformers import entry_transformer
+import injector
+from sqlalchemy.orm import Session
 
 
 class EntryCommands:
+    @injector.inject
     def __init__(
         self,
-        session,
+        session: Session,
         resources: ResourceRepository,
         index: EsIndex,
     ):

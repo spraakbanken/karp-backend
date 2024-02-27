@@ -4,6 +4,7 @@ from karp.foundation.value_objects.unique_id import UniqueId
 from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.entities import Resource
 from karp.lex.infrastructure.sql import ResourceRepository
+import injector
 
 
 class ResourceQueries:
@@ -12,6 +13,7 @@ class ResourceQueries:
 
     For now the API is a subset of ResourceRepository, but returning DTOs."""
 
+    @injector.inject
     def __init__(self, resources: ResourceRepository):
         self._resources = resources
 

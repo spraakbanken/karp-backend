@@ -15,6 +15,7 @@ from karp.lex.domain.errors import ResourceNotFound
 
 from .entries import EntryRepository
 from .models import ResourceModel
+import injector
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 class ResourceRepository(repository.Repository):
     EntityNotFound = ResourceNotFound
 
+    @injector.inject
     def __init__(self, session: Session):
         self._session = session
         # caches lookups to self._by_resource_id

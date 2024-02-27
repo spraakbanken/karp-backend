@@ -7,13 +7,16 @@ from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex.infrastructure import ResourceRepository
 from karp.search.infrastructure.es.indices import EsIndex
+from sqlalchemy.orm import Session
+import injector
 
 logger = logging.getLogger(__name__)
 
 
 class ResourceCommands:
-    def __init__(self, session, resources, index):
-        self.session = session
+    @injector.inject
+    def __init__(self, session: Session, resources: ResourceRepository, index: EsIndex):
+        self.session: Session = session
         self.resources: ResourceRepository = resources
         self.index: EsIndex = index
 

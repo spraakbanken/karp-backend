@@ -10,11 +10,13 @@ from karp.lex.domain.entities import Entry
 from karp.search.domain import IndexEntry
 
 from .mapping_repo import EsMappingRepository
+import injector
 
 logger = logging.getLogger(__name__)
 
 
 class EsIndex:
+    @injector.inject
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,

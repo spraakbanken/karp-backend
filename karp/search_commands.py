@@ -3,11 +3,13 @@ import logging
 from karp.lex.application import EntryQueries, ResourceQueries
 from karp.search.infrastructure.es.indices import EsIndex
 from karp.search.infrastructure.transformers import entry_transformer
+import injector
 
 logger = logging.getLogger(__name__)
 
 
 class SearchCommands:
+    @injector.inject
     def __init__(
         self, index: EsIndex, resource_queries: ResourceQueries, entry_queries: EntryQueries
     ):

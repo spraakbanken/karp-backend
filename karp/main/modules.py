@@ -24,43 +24,10 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from karp.auth.infrastructure import (
-    AuthInfrastructure,
     JwtAuthInfrastructure,
 )
 
 logger = logging.getLogger(__name__)
-
-
-class CommandsMod(injector.Module):
-    @injector.provider
-    def entry_commands(
-        self,
-        session: Session,
-        resources: ResourceRepository,
-        index: EsIndex,
-    ) -> EntryCommands:
-        return EntryCommands(
-            session=session,
-            resources=resources,
-            index=index,
-        )
-
-    @injector.provider
-    def resource_commands(
-        self, session: Session, resources: ResourceRepository, index: EsIndex
-    ) -> ResourceCommands:
-        return ResourceCommands(session=session, resources=resources, index=index)
-
-    @injector.provider
-    def search_commands(
-        self,
-        index: EsIndex,
-        resource_queries: ResourceQueries,
-        entry_queries: EntryQueries,
-    ) -> SearchCommands:
-        return SearchCommands(
-            index=index, resource_queries=resource_queries, entry_queries=entry_queries
-        )
 
 
 class Db(injector.Module):
@@ -88,34 +55,7 @@ class ElasticSearchMod(injector.Module):
         return elasticsearch.Elasticsearch(self._url)
 
 
-class LexInfrastructure(injector.Module):
-    @injector.provider
-    def resources(
-        self,
-        session: Session,
-    ) -> ResourceRepository:
-        return ResourceRepository(
-            session=session,
-        )
-
-
-class GenericLexInfrastructure(injector.Module):
-    @injector.provider
-    def resource_queries(self, resources: ResourceRepository) -> ResourceQueries:
-        return ResourceQueries(resources)
-
-    @injector.provider
-    def entry_queries(
-        self,
-        resources: ResourceRepository,
-    ) -> EntryQueries:
-        return EntryQueries(
-            resources=resources,
-        )
-
-
 def install_auth_service(container: injector.Injector, settings: Dict[str, str]):
-    container.binder.install(AuthInfrastructure())
     container.binder.install(JwtAuthInfrastructure(Path(settings["auth.jwt.pubkey.path"])))
 
 

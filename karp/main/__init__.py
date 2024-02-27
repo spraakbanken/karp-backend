@@ -18,11 +18,8 @@ from karp.search.infrastructure import (
 )
 from karp.main import config, modules
 from karp.main.modules import (
-    CommandsMod,
     Db,
     ElasticSearchMod,
-    GenericLexInfrastructure,
-    LexInfrastructure,
     install_auth_service,
 )
 
@@ -73,12 +70,8 @@ def _setup_dependency_injection(
     return injector.Injector(
         [
             Db(engine),
-            CommandsMod(),
             ElasticSearchMod(es_url),
-            LexInfrastructure(),
-            GenericLexInfrastructure(),
-        ],
-        auto_bind=False,
+        ]
     )
 
 

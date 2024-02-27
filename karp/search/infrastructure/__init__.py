@@ -20,25 +20,3 @@ class EsSearchIndexMod(injector.Module):
         es: elasticsearch.Elasticsearch,
     ) -> EsMappingRepository:
         return EsMappingRepository(es=es, prefix=self._index_prefix)
-
-    @injector.provider
-    def es_search_service(
-        self,
-        es: elasticsearch.Elasticsearch,
-        mapping_repo: EsMappingRepository,
-    ) -> EsSearchService:
-        return EsSearchService(
-            es=es,
-            mapping_repo=mapping_repo,
-        )
-
-    @injector.provider
-    def es_index(
-        self,
-        es: elasticsearch.Elasticsearch,
-        mapping_repo: EsMappingRepository,
-    ) -> EsIndex:
-        return EsIndex(
-            es=es,
-            mapping_repo=mapping_repo,
-        )

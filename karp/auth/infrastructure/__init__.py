@@ -7,12 +7,6 @@ from karp.auth.infrastructure.jwt_auth_service import JWTAuthService
 from karp.lex.infrastructure import ResourceRepository
 
 
-class AuthInfrastructure(injector.Module):
-    @injector.provider
-    def resource_permissions(self, resources: ResourceRepository) -> ResourcePermissionQueries:
-        return ResourcePermissionQueries(resources)
-
-
 class JwtAuthInfrastructure(injector.Module):
     def __init__(self, pubkey_path: Path) -> None:
         super().__init__()
