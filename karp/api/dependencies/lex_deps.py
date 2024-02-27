@@ -10,6 +10,7 @@ from karp.lex.application import (
     ResourceQueries,
 )
 from karp.lex.infrastructure import ResourceRepository
+from karp.plugins import Plugins
 
 
 def get_resource_repository(
@@ -28,5 +29,6 @@ def get_resource_queries(
 
 def get_entry_queries(
     resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
+    plugins: Plugins = Depends(inject_from_req(Plugins)),
 ) -> EntryQueries:
-    return EntryQueries(resources)
+    return EntryQueries(resources, plugins)
