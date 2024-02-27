@@ -51,18 +51,18 @@ class EsQueryBuilder(NodeWalker):
         return self.regexp(self.walk(node.field), f".*{self.walk(node.arg)}")
 
     def walk__exists(self, node):
-        self.no_wildcards("exists", node)
-        return es_dsl.Q("exists", field=self.walk(node.field))
+        field = self.single_field("exists", self.walk(node.field))
+        return es_dsl.Q("exists", field=field)
 
     def walk__missing(self, node):
-        self.no_wildcards("exists", node)
-        return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=self.walk(node.field)))
+        field = self.single_field("missing", self.walk(node.field))
+        return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=field))
 
     def walk_range(self, node):
-        self.no_wildcards(node.op, node)
+        field = self.single_field(node.op, self.walk(node.field))
         return es_dsl.Q(
             "range",
-            **{self.walk(node.field): {self.walk(node.op): self.walk(node.arg)}},
+            **{field: {self.walk(node.op): self.walk(node.arg)}},
         )
 
     walk__gt = walk_range
@@ -97,26 +97,33 @@ class EsQueryBuilder(NodeWalker):
     def walk__quoted_string_value(self, node):
         return "".join([part.replace('\\"', '"') for part in node.ast])
 
-    def no_wildcards(self, query, node):
-        if "*" in node.field:
+    def is_multi_field(self, field):
+        return "*" in field or "," in field
+
+    def single_field(self, query_type, field):
+        if self.is_multi_field(field):
             raise errors.IncompleteQuery(
-                self._q, f"{query} queries don't support wildcards in field names"
+                self._q, f"{query_type} queries don't support wildcards in field names"
             )
+        return field
+
+    def multi_fields(self, field):
+        return field.split(",")
 
     def regexp(self, field, regexp):
-        if "*" in field:
+        if self.is_multi_field(field):
             return es_dsl.Q(
                 "query_string",
                 query="/" + regexp.replace("/", "\\/") + "/",
-                default_field=field,
+                fields=self.multi_fields(field),
                 lenient=True,
             )
         else:
             return es_dsl.Q("regexp", **{field: regexp})
 
     def match(self, field, query):
-        if "*" in field:
-            return es_dsl.Q("multi_match", query=query, fields=[field], lenient=True)
+        if self.is_multi_field(field):
+            return es_dsl.Q("multi_match", query=query, fields=self.multi_fields(field), lenient=True)
         else:
             return es_dsl.Q(
                 "match",
