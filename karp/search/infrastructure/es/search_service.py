@@ -276,9 +276,8 @@ class EsSearchService:
                     },
                 }
 
-        # elasticsearch_dsl doesn't know about runtime_mappings so we have to add them 'by hand'
         if mappings:
-            s.update_from_dict({"runtime_mappings": mappings})
+            s = s.extra(runtime_mappings = mappings)
         return s
 
     def search_ids(self, resource_id: str, entry_ids: str):
