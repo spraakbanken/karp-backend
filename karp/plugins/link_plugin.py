@@ -1,8 +1,11 @@
-from .plugin import Plugin, register_plugin
 from injector import Injector, inject
+
 from karp.lex.application import ResourceQueries
-from karp.search.infrastructure import EsSearchService
 from karp.search.domain import QueryRequest
+from karp.search.infrastructure import EsSearchService
+
+from .plugin import Plugin, register_plugin
+
 
 class LinkPlugin(Plugin):
     @inject
@@ -11,14 +14,16 @@ class LinkPlugin(Plugin):
         self.search_service = search_service
 
     def output_config(self, resource, target):
-        resource = self.resources.by_resource_id_optional(resource)
-        return {"type": "object", "fields": resource.config["fields"]}
+        resource_dto = self.resources.by_resource_id_optional(resource)
+        return {"type": "object", "fields": resource_dto.config["fields"]}
 
-    def generate(self, id, resource, target):
+    def generate(self, id, resource, target):  # noqa: A002
         if isinstance(id, list):
             return [self.generate(x, resource, target) for x in id]
 
-        query = QueryRequest(resource_ids = [resource], q = f"equals|{target}|{id}", lexicon_stats = False)
+        query = QueryRequest(
+            resource_ids=[resource], q=f"equals|{target}|{id}", lexicon_stats=False
+        )
         result = self.search_service.query(query)["hits"]
 
         if len(result) == 0:

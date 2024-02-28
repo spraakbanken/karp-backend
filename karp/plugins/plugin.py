@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Type
-from injector import Injector, inject
 from pprint import pp
+from typing import Dict, Type
+
+from injector import Injector, inject
 
 
 class Plugin(ABC):
@@ -52,6 +53,7 @@ class Plugins:
     def generate(self, config: Dict, **kwargs) -> Dict:
         return self._get_plugin(config).generate(**config.get("params", {}), **kwargs)
 
+
 def transform_config(plugins: Plugins, resource_config: Dict) -> Dict:
     def _transform_fields(config: Dict) -> Dict:
         return {k: _transform_field(v) for k, v in config.items()}
@@ -72,6 +74,7 @@ def transform_config(plugins: Plugins, resource_config: Dict) -> Dict:
     result["fields"] = _transform_fields(resource_config["fields"])
     return result
 
+
 def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
     def _resolve_field(path, bodies, arg):
         path = list(path)
@@ -85,14 +88,17 @@ def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
         return _select_field(arg, bodies[tuple(prefix)])
 
     def _select_field(arg, body):
-        if not arg: return body
-        if isinstance(body, list): # assume collection
+        if not arg:
+            return body
+        if isinstance(body, list):  # assume collection
             return [_select_field(x, arg) for x in body]
         # TODO raise a proper exception
-        assert isinstance(body, dict) and arg[0] in body
+        assert isinstance(body, dict) and arg[0] in body  # noqa: S101
         return _select_field(arg[1:], body[arg[0]])
 
-    def _transform_fields(config: Dict, path: tuple[str], bodies: Dict[tuple[str], Dict]) -> Dict:
+    def _transform_fields(
+        config: Dict, path: tuple[str], bodies: Dict[tuple[str], Dict]
+    ) -> Dict:
         result = {}
         for k, v in bodies[path].items():
             if k in config:
@@ -104,8 +110,10 @@ def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
 
         for field, field_config in config.items():
             if field_config.get("virtual"):
-                field_params = {k: _resolve_field(path, bodies, v)
-                          for k, v in field_config.get("field_params", {}).items()}
+                field_params = {
+                    k: _resolve_field(path, bodies, v)
+                    for k, v in field_config.get("field_params", {}).items()
+                }
                 result[field] = plugins.generate(field_config, **field_params)
 
         return result
@@ -128,4 +136,3 @@ def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
 
     config = transform_config(plugins, resource_config)
     return _transform_fields(config["fields"], (), {(): body})
-
