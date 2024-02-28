@@ -195,7 +195,7 @@ class EsMappingRepository:
         fields = {}
 
         for prop_name, prop_value in properties.items():
-            prop_path = path + [prop_name]  # noqa: RUF005
+            prop_path = path + [prop_name]
             if "properties" in prop_value and "type" not in prop_value:
                 field_type = "object"
             else:
