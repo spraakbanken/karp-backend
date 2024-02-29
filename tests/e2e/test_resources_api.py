@@ -31,12 +31,12 @@ class TestGetResourcePermissions:
 
         assert len(response_data) == 2
         assert response_data[0] == {
-            "resource_id": "places",
-            "protected": None,
-        }
-        assert response_data[1] == {
             "resource_id": "municipalities",
             "protected": "READ",
+        }
+        assert response_data[1] == {
+            "resource_id": "places",
+            "protected": None,
         }
 
 
