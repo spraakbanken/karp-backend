@@ -125,3 +125,5 @@ def test_regex(
     assert len(response_data["hits"]) == hit_count
     for hit in response_data["hits"]:
         print(hit["entry"]["name"])
+
+# TODO: test that we can search for virtual fields
