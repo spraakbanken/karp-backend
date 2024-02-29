@@ -49,6 +49,9 @@ def bootstrap_app() -> AppContext:
         "es.index_prefix": es_url,
     }
 
+    # Load builtin plugins
+    import karp.plugins.link_plugin
+
     engine = _create_db_engine(DATABASE_URL)
 
     def configure_dependency_injection(binder):

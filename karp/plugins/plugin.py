@@ -51,8 +51,11 @@ class Plugins:
         return self._get_plugin(config).output_config(**config.get("params", {}))
 
     def generate(self, config: Dict, **kwargs) -> Dict:
+        # TODO: turn into {"error": "plugin failed"} or whatever
         return self._get_plugin(config).generate(**config.get("params", {}), **kwargs)
 
+# TODO: maybe these things should take EntryDto and ResourceDto and
+# transform them?
 
 def transform_config(plugins: Plugins, resource_config: Dict) -> Dict:
     def _transform_fields(config: Dict) -> Dict:

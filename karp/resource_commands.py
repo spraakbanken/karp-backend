@@ -10,16 +10,19 @@ from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex.infrastructure import ResourceRepository
 from karp.search.infrastructure.es.indices import EsIndex
+from karp import plugins
+from karp.plugins import Plugins
 
 logger = logging.getLogger(__name__)
 
 
 class ResourceCommands:
     @inject
-    def __init__(self, session: Session, resources: ResourceRepository, index: EsIndex):
+    def __init__(self, session: Session, resources: ResourceRepository, index: EsIndex, plugins: Plugins):
         self.session: Session = session
         self.resources: ResourceRepository = resources
         self.index: EsIndex = index
+        self.plugins: Plugins = plugins
 
     def create_resource(self, resource_id, name, config, user):
         existing_resource = self.resources.by_resource_id_optional(resource_id)
@@ -38,7 +41,7 @@ class ResourceCommands:
 
         self.resources.save(resource)
         self.session.commit()
-        self._create_search_servie_handler(resource)
+        self._create_search_service_handler(resource)
         return ResourceDto.from_resource(resource)
 
     def update_resource(self, resource_id, name, version, config, message, user):
@@ -81,8 +84,9 @@ class ResourceCommands:
     def _deleting_index(self, resource_id):
         self.index.delete_index(resource_id)
 
-    def _create_search_servie_handler(self, resource):
-        self.index.create_index(resource.resource_id, resource.config)
+    def _create_search_service_handler(self, resource):
+        config = plugins.transform_config(self.plugins, resource.config)
+        self.index.create_index(resource.resource_id, config)
 
     def _resource_published_handler(self, resource_id):
         self.index.publish_index(resource_id)

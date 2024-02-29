@@ -1,3 +1,3 @@
-from .plugin import Plugin, Plugins, register_plugin
+from .plugin import Plugin, Plugins, register_plugin, transform, transform_config
 
-__all__ = ["Plugin", "Plugins", "register_plugin"]
+__all__ = ["Plugin", "Plugins", "register_plugin", "transform", "transform_config"]

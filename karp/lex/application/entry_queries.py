@@ -17,6 +17,7 @@ from karp.lex.application.dtos import (
 from karp.foundation.value_objects import UniqueId, UniqueIdStr
 from ..infrastructure.sql import ResourceRepository
 from injector import inject
+from karp import plugins
 from karp.plugins import Plugins
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,9 @@ class EntryQueries:
 
     def _to_dto(self, entry) -> EntryDto:
         resource = self.resources.by_resource_id(entry.resource_id)
-        return EntryDto.from_entry(self.plugins.transform(resource.config, entry))
+        result = EntryDto.from_entry(entry)
+        result.entry = plugins.transform(self.plugins, resource.config, result.entry)
+        return result
 
     def by_id(
         self,
