@@ -52,7 +52,6 @@ def bootstrap_app() -> AppContext:
     engine = _create_db_engine(DATABASE_URL)
 
     def configure_dependency_injection(binder):
-        es = Elasticsearch(es_url)
         binder.bind(Engine, engine)
         binder.install(ElasticSearchMod(es_url, es_index_prefix))
         if jwt_pubkey_path is not None:
