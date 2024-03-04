@@ -2,11 +2,6 @@ import typing
 from dataclasses import dataclass
 from logging.config import dictConfig
 
-try:
-    from importlib.metadata import entry_points
-except ImportError:
-    from importlib_metadata import entry_points  # type: ignore
-
 import logging
 import sys
 from contextlib import contextmanager
@@ -35,8 +30,6 @@ class AppContext:
 
 def bootstrap_app() -> AppContext:
     configure_logging()
-    for plugin in load_modules("karp.plugins"):
-        plugin.register()
 
     jwt_pubkey_path = env("AUTH_JWT_PUBKEY_PATH", None)
     es_url = env("ELASTICSEARCH_HOST")
@@ -157,27 +150,3 @@ def new_session(injector: Injector):
     injector = with_new_session(injector)
     with injector.get(Session) as session:
         yield injector
-
-
-def load_modules(group_name: str, app=None):
-    result = []
-    logger.debug("Loading %s", group_name)
-    if sys.version_info.minor < 10:  # noqa: YTT204
-        karp_modules = entry_points().get(group_name)
-    else:
-        karp_modules = entry_points(group=group_name)  # type: ignore
-    if karp_modules:
-        for ep in karp_modules:
-            logger.info(
-                "Loading '%s' from '%s'",
-                ep.name,
-                group_name,
-                extra={"group_name": group_name, "entry_point_name": ep.name},
-            )
-            mod = ep.load()
-            result.append(mod)
-            if app:
-                init_app = getattr(mod, "init_app", None)
-                if init_app:
-                    init_app(app)
-    return result

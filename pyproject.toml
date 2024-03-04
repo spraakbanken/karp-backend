@@ -24,7 +24,7 @@ classifiers = [
 [tool.poetry.scripts]
 karp-cli = "karp.cliapp.main:cliapp"
 
-[tool.poetry.plugins."karp.plugins"]
+[tool.poetry.plugins."karp.plugin"]
 "link" = "karp.plugins.link_plugin:LinkPlugin"
 
 [tool.poetry.urls]

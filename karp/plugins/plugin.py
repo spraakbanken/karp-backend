@@ -1,30 +1,16 @@
 from abc import ABC, abstractmethod
 from pprint import pp
-from typing import Dict, Type, Union, Iterator
+from typing import Dict, Type, Union, Iterator, Callable
 
 from injector import Injector, inject
+import logging
+from karp.foundation.cache import Cache
+from karp.foundation.entry_points import entry_points
+
+logger = logging.getLogger(__name__)
 
 
 class Plugin(ABC):
-    @classmethod
-    def register(cls):
-        register_plugin(cls)
-
-    @classmethod
-    def name(cls) -> str:
-        # Take class name, remove "Plugin" suffix and convert
-        # ThingsLikeThis to things_like_this
-        name = cls.__name__.removesuffix("Plugin")
-
-        def transform_char(i, c):
-            if c.isupper():
-                c = c.lower()
-                if i != 0:
-                    c = "_" + c
-            return c
-
-        return "".join([transform_char(i, c) for i, c in enumerate(name)])
-
     @abstractmethod
     def output_config(**kwargs) -> Dict:
         raise NotImplementedError
@@ -36,19 +22,39 @@ class Plugin(ABC):
     # TODO: bulk generate
 
 
-plugin_registry: list[Type[Plugin]] = []
+plugin_registry: dict[str, Callable[[], Type[Plugin]]] = {}
 
 
-def register_plugin(plugin: Type[Plugin]):
-    plugin_registry.append(plugin)
+def register_plugin(name: str, plugin: Type[Plugin]):
+    plugin_registry[name] = lambda: plugin
+
+
+def register_plugin_entry_point(entry_point):
+    def load_plugin():
+        logger.info("Loading plugin '%s'", entry_point.name)
+        cls = entry_point.load()
+        register_plugin(entry_point.name, cls)
+        return cls
+
+    plugin_registry[entry_point.name] = load_plugin
+
+
+for entry_point in entry_points("karp.plugin"):
+    register_plugin_entry_point(entry_point)
+
+
+def find_plugin(name: str) -> Type[Plugin]:
+    # TODO: raise a suitable exception if not found
+    return plugin_registry[name]()
 
 
 class Plugins:
     @inject
     def __init__(self, injector: Injector):
-        self.plugins = {plugin.name(): injector.get(plugin) for plugin in plugin_registry}
+        self.plugins = Cache(lambda name: injector.get(find_plugin(name)))
 
     def _get_plugin(self, config: Dict) -> Plugin:
+        # TODO: check if config["plugin"] exists (use pydantic?)
         return self.plugins[config["plugin"]]
 
     def output_config(self, config: Dict) -> Dict:
