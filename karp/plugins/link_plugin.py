@@ -18,9 +18,6 @@ class LinkPlugin(Plugin):
         return {"type": "object", "fields": resource_dto.config["fields"]}
 
     def generate(self, id, resource, target):  # noqa: A002
-        if isinstance(id, list):
-            return [self.generate(x, resource, target) for x in id]
-
         query = QueryRequest(
             resource_ids=[resource], q=f"equals|{target}|{id}", lexicon_stats=False
         )

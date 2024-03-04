@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pprint import pp
-from typing import Dict, Type, Union
+from typing import Dict, Type, Union, Iterator
 
 from injector import Injector, inject
 
@@ -79,59 +79,77 @@ def transform_config(plugins: Plugins, resource_config: Dict) -> Dict:
 
 
 def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> Dict:
-    def _find_common_path(path, arg, body):
-        if path and isinstance(path[0], int):
-            return _find_common_path(path[1:], arg, body[path[0]])
-        if path and arg and path[0] == arg[0]:
-            return _find_common_path(path[1:], arg[1:], body[path[0]])
-        return arg, body
-
-    def _resolve_field(path, arg):
-        arg = list(arg.split("."))
-
-        arg, body = _find_common_path(path, arg, original_body)
-        return _select_field(arg, body)
-
-    def _select_field(arg, body):
-        if not arg:
-            return body
-        if isinstance(body, list):  # assume collection
-            return [_select_field(x, arg) for x in body]
-        # TODO raise a proper exception
-        assert isinstance(body, dict) and arg[0] in body  # noqa: S101
-        return _select_field(arg[1:], body[arg[0]])
-
-    def _transform_fields(config: Dict, path: list[Union[str, int]], body: Dict) -> Dict:
+    def transform_fields(config: Dict, path: list[Union[str, int]], body: Dict) -> Dict:
         result = {}
         for k, v in body.items():
-            if k in config:
-                result[k] = _transform_field(config[k], path + [k], v)
+            if k in config and not config[k].get("virtual"): # virtual is handled below
+                result[k] = transform_field(config[k], path + [k], v)
             else:
                 result[k] = v
 
         for field, field_config in config.items():
             if field_config.get("virtual"):
-                field_params = {
-                    k: _resolve_field(path, v)
-                    for k, v in field_config.get("field_params", {}).items()
-                }
-                result[field] = plugins.generate(field_config, **field_params)
+                result[field] = generate_virtual(field_config, path + [field])
 
         return result
 
     # TODO: do everything in-place so that recursive virtual fields work
-    def _transform_field(config: Dict, path: list[Union[str, int]], body: Dict) -> Dict:
+    def transform_field(config: Dict, path: list[Union[str, int]], body: Dict) -> Dict:
         if config.get("collection"):
             flat_config = dict(config)
             del flat_config["collection"]
-            return [_transform_field(flat_config, path + [i], x)
+            return [transform_field(flat_config, path + [i], x)
                     for i, x in enumerate(body)]
 
         elif config["type"] == "object":
-            return _transform_fields(config["fields"], path, body)
+            return transform_fields(config["fields"], path, body)
 
         else:
             return body
 
+    def resolve_field(path, arg):
+        arg = list(arg.split("."))
+
+        arg, body = find_common_path(path, arg, original_body)
+        return select_field(arg, body)
+
+    def find_common_path(path, arg, body):
+        if path and isinstance(path[0], int):
+            return find_common_path(path[1:], arg, body[path[0]])
+        if path and arg and path[0] == arg[0]:
+            return find_common_path(path[1:], arg[1:], body[path[0]])
+        return arg, body
+
+    def select_field(arg, body):
+        if not arg:
+            return body
+        if isinstance(body, list):  # assume collection
+            return [select_field(x, arg) for x in body]
+        # TODO raise a proper exception
+        assert isinstance(body, dict) and arg[0] in body  # noqa: S101
+        return select_field(arg[1:], body[arg[0]])
+
+    def generate_virtual(config: Dict, path: list[Union[str, int]]) -> Dict:
+        field_params = {
+            k: resolve_field(path, v)
+            for k, v in config.get("field_params", {}).items()
+        }
+
+        # If any field_param is a list, call the plugin once per list element
+        if any(isinstance(value, list) for value in field_params.values()):
+            return [plugins.generate(config, **field_params_flat)
+                    for field_params_flat in flatten_dict(field_params)]
+        else:
+            return plugins.generate(config, **field_params)
+
+    def flatten_dict(d: Dict) -> Iterator[Dict]:
+        for k, v in d.items():
+            if isinstance(v, list):
+                for item in v:
+                    yield from flatten_dict(d | {k: item})
+                break
+        else:
+            yield d
+
     config = transform_config(plugins, resource_config)
-    return _transform_fields(config["fields"], [], original_body)
+    return transform_fields(config["fields"], [], original_body)
