@@ -176,11 +176,14 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
         # returns [lexem["kc_nr"] for lexem in original_body["SOLemman"][1]]
         """
 
-        if not field:
-            assert not pos
-            return body
+        if isinstance(body, list):
+            # pos[0] tells us which field to access.
+            if pos:
+                return get_field(field, pos[1:], body[pos[0]])
+            else:
+                return [get_field(field, pos, x) for x in body]
 
-        if isinstance(body, dict):
+        elif isinstance(body, dict):
             # field[0] tells us which field to access.
             if pos and pos[0] != field[0]:
                 # field and pos refer to different subfields so we should ignore pos
@@ -189,13 +192,8 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
             return get_field(field[1:], pos[1:], body[field[0]])
 
         else:
-            assert isinstance(body, list)
-
-            # pos[0] tells us which field to access.
-            if pos:
-                return get_field(field, pos[1:], body[pos[0]])
-            else:
-                return [get_field(field, pos, x) for x in body]
+            assert not field and not pos
+            return body
 
     def select_from_dict(d: Dict) -> Iterator[Dict]:
         """Flatten a dict-of-lists into an iterator-of-dicts.
