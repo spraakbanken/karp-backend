@@ -35,6 +35,8 @@ class AppContext:
 
 def bootstrap_app() -> AppContext:
     configure_logging()
+    for plugin in load_modules("karp.plugins"):
+        plugin.register()
 
     jwt_pubkey_path = env("AUTH_JWT_PUBKEY_PATH", None)
     es_url = env("ELASTICSEARCH_HOST")
@@ -48,10 +50,6 @@ def bootstrap_app() -> AppContext:
         "es.url": es_url,
         "es.index_prefix": es_url,
     }
-
-    # Load builtin plugins
-    # TODO: find a better way to configure this (maybe using load_modules)
-    import karp.plugins.link_plugin
 
     engine = _create_db_engine(DATABASE_URL)
 
@@ -162,6 +160,7 @@ def new_session(injector: Injector):
 
 
 def load_modules(group_name: str, app=None):
+    result = []
     logger.debug("Loading %s", group_name)
     if sys.version_info.minor < 10:  # noqa: YTT204
         karp_modules = entry_points().get(group_name)
@@ -176,7 +175,9 @@ def load_modules(group_name: str, app=None):
                 extra={"group_name": group_name, "entry_point_name": ep.name},
             )
             mod = ep.load()
+            result.append(mod)
             if app:
                 init_app = getattr(mod, "init_app", None)
                 if init_app:
                     init_app(app)
+    return result

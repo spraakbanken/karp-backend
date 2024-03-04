@@ -4,7 +4,7 @@ from karp.lex.application import ResourceQueries
 from karp.search.domain import QueryRequest
 from karp.search.infrastructure import EsSearchService
 
-from .plugin import Plugin, register_plugin
+from .plugin import Plugin
 
 
 class LinkPlugin(Plugin):
@@ -29,6 +29,3 @@ class LinkPlugin(Plugin):
             return result[0]["entry"]
         else:
             return {"error": "multiple matches"}
-
-
-register_plugin(LinkPlugin)

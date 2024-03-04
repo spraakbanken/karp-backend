@@ -7,6 +7,10 @@ from injector import Injector, inject
 
 class Plugin(ABC):
     @classmethod
+    def register(cls):
+        register_plugin(cls)
+
+    @classmethod
     def name(cls) -> str:
         # Take class name, remove "Plugin" suffix and convert
         # ThingsLikeThis to things_like_this

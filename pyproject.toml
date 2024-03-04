@@ -24,11 +24,8 @@ classifiers = [
 [tool.poetry.scripts]
 karp-cli = "karp.cliapp.main:cliapp"
 
-[tool.poetry.plugins."karp.infrastructure"]
-"es6" = "karp.infrastructure.elasticsearch6"
-"sql" = "karp.infrastructure.sql"
-"testing" = "karp.infrastructure.testing"
-"jwt" = "karp.infrastructure.jwt"
+[tool.poetry.plugins."karp.plugins"]
+"link" = "karp.plugins.link_plugin:LinkPlugin"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/spraakbanken/karp-backend/issues"
