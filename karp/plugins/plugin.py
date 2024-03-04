@@ -164,7 +164,17 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
             return plugins.generate(config, **field_params)
 
     def get_field(field: list[str], pos: list[Union[str, int]]=None, body=original_body):
-        """Get the value for a field_param. See comments at top of function transform."""
+        """Get the value for a field_param. See comments at top of function transform.
+
+        Examples:
+
+        >>> get_field(["SOLemman", "s_nr"], ["SOLemman", 1, "extra_info"])
+        # returns original_body["SOLemman"][1]["s_nr"]
+        >>> get_field(["SOLemman", "s_nr"], ["extra_info"]
+        # returns [lemma["s_nr"] for lemma in original_body["SOLemman"]]
+        >>> get_field(["SOLemman", "lexem", "kc_nr"], ["SOLemman", 1, "extra_info"])
+        # returns [lexem["kc_nr"] for lexem in original_body["SOLemman"][1]]
+        """
 
         if not field:
             assert not pos
