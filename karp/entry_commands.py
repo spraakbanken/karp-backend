@@ -9,6 +9,8 @@ from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure import EntryRepository, ResourceRepository
 from karp.search.infrastructure.es.indices import EsIndex
 from karp.search.infrastructure.transformers import entry_transformer
+from karp import plugins
+from karp.plugins import Plugins
 
 
 class EntryCommands:
@@ -18,10 +20,12 @@ class EntryCommands:
         session: Session,
         resources: ResourceRepository,
         index: EsIndex,
+        plugins: Plugins,
     ):
         self.session = session
         self.resources: ResourceRepository = resources
         self.index = index
+        self.plugins = plugins
 
     def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
         if not isinstance(resource_id, str):
@@ -37,6 +41,12 @@ class EntryCommands:
         if not result:
             raise ResourceNotFound(resource_id)
         return result
+
+    def _transform(self, resource, entry):
+        config = plugins.transform_config(self.plugins, resource.config)
+        entry = entry.copy()
+        entry.entry = plugins.transform(self.plugins, config, entry.entry)
+        return entry_transformer.transform(config, entry)
 
     def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message):
         """
@@ -173,14 +183,14 @@ class EntryCommands:
 
     def _entry_added_handler(self, resource, entry_dtos):
         entry_dtos = [
-            entry_transformer.transform(resource, entry_dto) for entry_dto in entry_dtos
+            self._transform(resource, entry_dto) for entry_dto in entry_dtos
         ]
         self.index.add_entries(resource.resource_id, entry_dtos)
 
     def _entry_updated_handler(self, resource, entry_dto):
         self.index.add_entries(
             entry_dto.resource,
-            [entry_transformer.transform(resource, entry_dto)],
+            [self._transform(resource, entry_dto)],
         )
 
     def _entry_deleted_handler(self, entry_dto):

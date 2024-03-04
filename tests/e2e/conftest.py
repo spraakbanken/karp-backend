@@ -117,15 +117,15 @@ def fixture_fa_data_client(  # noqa: ANN201
 ):
     create_and_publish_resource(
         fa_client,
-        path_to_config="assets/testing/config/places.json",
+        path_to_config="assets/testing/config/municipalities.json",
     )
     create_and_publish_resource(
         fa_client,
-        path_to_config="assets/testing/config/municipalities.json",
+        path_to_config="assets/testing/config/places.json",
     )
     utils.add_entries(
         fa_client,
-        {"places": common_data.PLACES, "municipalities": common_data.MUNICIPALITIES},
+        {"municipalities": common_data.MUNICIPALITIES, "places": common_data.PLACES},
         access_token=admin_token,
     )
 

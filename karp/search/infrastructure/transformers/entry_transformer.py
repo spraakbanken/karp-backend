@@ -8,18 +8,16 @@ from karp.search.domain import IndexEntry
 logger = logging.getLogger(__name__)
 
 
-def transform(resource, src_entry: EntryDto) -> IndexEntry:
+def transform(resource_config, src_entry: EntryDto) -> IndexEntry:
     index_entry = create_empty_object()
     index_entry.id = str(src_entry.id)
     assign_field(index_entry, "_entry_version", src_entry.version)
     assign_field(index_entry, "_last_modified", src_entry.last_modified)
     assign_field(index_entry, "_last_modified_by", src_entry.last_modified_by)
-    if not resource:
-        raise lex_errors.ResourceNotFound(None, resource_id=resource.resource_id)
     _transform_to_index_entry(
         src_entry.entry,
         index_entry,
-        resource.config["fields"].items(),
+        resource_config["fields"].items(),
     )
     return index_entry
 

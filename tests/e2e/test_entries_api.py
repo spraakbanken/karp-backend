@@ -231,6 +231,32 @@ class TestAddEntry:
         # )
 
 
+    def test_add_fails_with_virtual_field(  # noqa: ANN201
+        self,
+        fa_data_client,
+        write_token: auth.AccessToken,
+    ):
+        response = fa_data_client.put(
+            "/entries/places",
+            json={
+                "entry": {
+                    "code": 20789,
+                    "name": "add203",
+                    "population": 4,
+                    "area": 50000,
+                    "density": 5,
+                    "municipality": [2],
+                    "_municipality": [{"code": 2}],
+                },
+            },
+            headers=write_token.as_header(),
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        response_data = response.json()
+        assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
+
+
 class TestDeleteEntry:
     def test_delete(  # noqa: ANN201
         self,
@@ -686,6 +712,7 @@ class TestGetEntry:
 
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_214_id
+        assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 1
 
     def test_route_w_version_exist(  # noqa: ANN201
@@ -702,4 +729,5 @@ class TestGetEntry:
 
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_209_id
+        assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 5
