@@ -17,15 +17,21 @@ class LinkPlugin(Plugin):
         resource_dto = self.resources.by_resource_id_optional(resource)
         return {"type": "object", "fields": resource_dto.config["fields"]}
 
-    def generate(self, id, resource, target):  # noqa: A002
-        query = QueryRequest(
-            resource_ids=[resource], q=f"equals|{target}|{id}", lexicon_stats=False
-        )
-        result = self.search_service.query(query)["hits"]
+    def generate_batch(self, batch):  # noqa: A002
+        def make_request(id, resource, target):
+            return QueryRequest(
+                resource_ids=[resource], q=f"equals|{target}|{id}", lexicon_stats=False
+            )
 
-        if len(result) == 0:
-            return {"error": "not found"}
-        elif len(result) == 1:
-            return result[0]["entry"]
-        else:
-            return {"error": "multiple matches"}
+        requests = [make_request(**d) for d in batch]
+        results = self.search_service.multi_query(requests)
+
+        for result in results:
+            result = result["hits"]
+
+            if len(result) == 0:
+                yield {"error": "not found"}
+            elif len(result) == 1:
+                yield result[0]["entry"]
+            else:
+                yield {"error": "multiple matches"}

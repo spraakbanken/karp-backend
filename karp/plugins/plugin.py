@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pprint import pp
-from typing import Dict, Type, Union, Iterator, Callable
+from typing import Dict, Type, Union, Iterable, Iterator, Callable
 
 from injector import Injector, inject
 import logging
@@ -15,11 +15,12 @@ class Plugin(ABC):
     def output_config(**kwargs) -> Dict:
         raise NotImplementedError
 
-    @abstractmethod
-    def generate(**kwargs) -> Dict:
-        raise NotImplementedError
+    # Either generate or generate_batch should be implemented
+    def generate_batch(self, batch) -> Iterable[Dict]:
+        return [self.generate(**d) for d in batch]
 
-    # TODO: bulk generate
+    def generate(self, **kwargs) -> Dict:
+        return iter(self.generate_batch([kwargs])).__next__()
 
 
 plugin_registry: dict[str, Callable[[], Type[Plugin]]] = {}

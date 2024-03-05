@@ -205,7 +205,7 @@ class EsSearchService:
         logger.info("multi_query called")
         queries = [EsQuery.from_query_request(request) for request in requests]
         ms = es_dsl.MultiSearch(using=self.es)
-        for request in requests:
+        for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
         return [self._build_result(query, response)
