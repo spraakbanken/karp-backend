@@ -153,7 +153,9 @@ def _create_es_mapping(config):
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
-            if parent_field_def["type"] == "string":
+            if parent_field_def["type"] == "string" and not parent_field_def.get(
+                "skip_raw", False
+            ):
                 result["fields"] = {"raw": {"type": "keyword"}}
         else:
             result = {"properties": {}}
