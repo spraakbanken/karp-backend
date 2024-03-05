@@ -201,25 +201,23 @@ class EsSearchService:
         query.split_results = True
         return self.search_with_query(query)
 
+    def multi_query(self, requests: list[QueryRequest]):
+        logger.info("multi_query called")
+        queries = [EsQuery.from_query_request(request) for request in requests]
+        ms = es_dsl.MultiSearch(using=self.es)
+        for request in requests:
+            ms = ms.add(self._build_search(query, query.resources))
+        responses = ms.execute()
+        return [self._build_result(query, response)
+                for query, response in zip(queries, responses)]
+
     def search_with_query(self, query: EsQuery):
         logger.info("search_with_query called", extra={"query": query})
-        es_query = None
-        field_names = set()
-        if query.q:
-            try:
-                model = self.parser.parse(query.q)
-                es_query = EsQueryBuilder(query.q).walk(model)
-                field_names = self.field_name_collector.walk(model)
-            except tatsu_exc.FailedParse as err:
-                logger.info("Parse error", extra={"err": err})
-                raise errors.IncompleteQuery(
-                    failing_query=query.q, error_description=str(err)
-                ) from err
         if query.split_results:
             ms = es_dsl.MultiSearch(using=self.es)
 
             for resource in query.resources:
-                s = self.build_search(query, es_query, [resource], field_names)
+                s = self._build_search(query, [resource])
                 ms = ms.add(s)
 
             responses = ms.execute()
@@ -234,23 +232,29 @@ class EsSearchService:
                         result["distribution"] = {}
                     result["distribution"][query.resources[i]] = response.hits.total
         else:
-            s = self.build_search(query, es_query, query.resources, field_names)
+            s = self._build_search(query, query.resources)
             response = s.execute()
 
             # TODO format response in a better way, because the whole response takes up too much space in the logs
             # logger.debug('response = {}'.format(response.to_dict()))
-
-            logger.debug("calling _format_result")
-            result = self._format_result(query.resources, response)
-            if query.lexicon_stats:
-                result["distribution"] = {}
-                for bucket in response.aggregations.distribution.buckets:
-                    key = bucket["key"]
-                    result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
+            result = self._build_result(query, response)
 
         return result
 
-    def build_search(self, query, es_query, resources, field_names):
+    def _build_search(self, query, resources):
+        field_names = set()
+        es_query = None
+        if query.q:
+            try:
+                model = self.parser.parse(query.q)
+                es_query = EsQueryBuilder(query.q).walk(model)
+                field_names = self.field_name_collector.walk(model)
+            except tatsu_exc.FailedParse as err:
+                logger.info("Parse error", extra={"err": err})
+                raise errors.IncompleteQuery(
+                    failing_query=query.q, error_description=str(err)
+                ) from err
+
         alias_names = [self.mapping_repo.get_alias_name(resource) for resource in resources]
         s = es_dsl.Search(using=self.es, index=alias_names, doc_type="entry")
         s = self.add_runtime_mappings(s, field_names)
@@ -272,6 +276,16 @@ class EsSearchService:
                 s = s.sort(*sort_fields)
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
+
+    def _build_result(self, query, response):
+        logger.debug("calling _build_result")
+        result = self._format_result(query.resources, response)
+        if query.lexicon_stats:
+            result["distribution"] = {}
+            for bucket in response.aggregations.distribution.buckets:
+                key = bucket["key"]
+                result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
+        return result
 
     def add_runtime_mappings(self, s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
         # When a query uses a field of the form "f.length", add a
