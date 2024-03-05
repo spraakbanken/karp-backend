@@ -26,7 +26,7 @@ class ResourceModel(db.Base):
     resource_type = Column(String(32), nullable=False)
     version = Column(Integer, nullable=False)
     name = Column(String(64), nullable=False)
-    table_name = Column(Text, nullable=False)
+    table_name = Column(String(64), nullable=False)
     config = Column(NestedMutableJson, nullable=False)
     is_published = Column(Boolean, index=True, nullable=True, default=None)
     last_modified = Column(Float(precision=53), nullable=False)
