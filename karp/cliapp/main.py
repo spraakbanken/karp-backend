@@ -5,7 +5,8 @@ import sys
 from sqlalchemy.orm import Session
 import typer
 
-from karp.main import bootstrap_app, with_new_session, load_modules, config
+from karp.main import bootstrap_app, with_new_session, config
+from karp.foundation.entry_points import load_modules
 from karp.cliapp import subapps
 
 logger = logging.getLogger(__name__)

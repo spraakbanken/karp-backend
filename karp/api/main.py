@@ -25,7 +25,8 @@ from karp.foundation.value_objects import unique_id
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
-from karp.main import config, load_modules, new_session
+from karp.main import config, new_session
+from karp.foundation.entry_points import load_modules
 from karp.api.routes import router as api_router
 
 
