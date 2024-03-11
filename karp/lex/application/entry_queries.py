@@ -34,11 +34,18 @@ class EntryQueries:
         self.resources = resources
         self.plugins = plugins
 
-    def _to_dto(self, entry) -> EntryDto:
-        resource = self.resources.by_resource_id(entry.resource_id)
-        result = EntryDto.from_entry(entry)
-        result.entry = plugins.transform(self.plugins, resource.config, result.entry)
+    def _to_dtos(self, resource_id, entries) -> list[EntryDto]:
+        resource = self.resources.by_resource_id(resource_id)
+        result = [EntryDto.from_entry(entry) for entry in entries]
+        new_entries = plugins.transform_many(
+            self.plugins, resource.config, [entry.entry for entry in result]
+        )
+        for i, _ in enumerate(result):
+            result[i].entry = new_entries[i]
         return result
+
+    def _to_dto(self, entry) -> EntryDto:
+        return self._to_dtos(entry.resource_id, [entry])[0]
 
     def by_id(
         self,
@@ -60,7 +67,7 @@ class EntryQueries:
 
     def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
-        return (self._to_dto(entry) for entry in entries.all_entries())
+        return self._to_dtos(resource_id, entries.all_entries())
 
     def get_entry_history(
         self,

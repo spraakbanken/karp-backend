@@ -65,6 +65,7 @@ ulid-py = "^1.1.0"
 urllib3 = "^1.26.13"
 asgi-matomo = "^0.4.1"
 rich = "^13.3.5"
+frozendict = "^2.4"
 
 [tool.poetry.extras]
 mysql = ["mysqlclient", "PyMySQL", "aiomysql"]

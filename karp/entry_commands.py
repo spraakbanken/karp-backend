@@ -43,10 +43,17 @@ class EntryCommands:
         return result
 
     def _transform(self, resource, entry):
+        return self._transform_entries(resource, [entry])[0]
+
+    def _transform_entries(self, resource, entries):
         config = plugins.transform_config(self.plugins, resource.config)
-        entry = entry.copy()
-        entry.entry = plugins.transform(self.plugins, config, entry.entry)
-        return entry_transformer.transform(config, entry)
+        entries = [entry.copy() for entry in entries]
+        new_entries = plugins.transform_many(
+            self.plugins, config, [entry.entry for entry in entries]
+        )
+        for i, _ in enumerate(entries):
+            entries[i].entry = new_entries[i]
+        return [entry_transformer.transform(config, entry) for entry in entries]
 
     def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message):
         """
@@ -182,7 +189,7 @@ class EntryCommands:
         self._entry_deleted_handler(EntryDto.from_entry(entry))
 
     def _entry_added_handler(self, resource, entry_dtos):
-        entry_dtos = [self._transform(resource, entry_dto) for entry_dto in entry_dtos]
+        entry_dtos = self._transform_entries(resource, entry_dtos)
         self.index.add_entries(resource.resource_id, entry_dtos)
 
     def _entry_updated_handler(self, resource, entry_dto):

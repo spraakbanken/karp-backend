@@ -5,6 +5,7 @@ from copy import deepcopy
 from pprint import pp
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type, Union
 
+from frozendict import deepfreeze
 from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
 
@@ -80,6 +81,14 @@ class Plugins:
         # TODO: turn into {"error": "plugin failed"} or whatever
         return self._get_plugin(config).generate(**config.get("params", {}), **kwargs)
 
+    def generate_batch(self, config: Dict, batch) -> Iterable[Dict]:
+        # TODO: turn into {"error": "plugin failed"} or whatever
+        params = config.get("params", {})
+        result = list(self._get_plugin(config).generate_batch([params | item for item in batch]))
+        if len(result) != len(batch):
+            raise AssertionError("batch result had wrong length")
+        return result
+
 
 # TODO: maybe these things should take EntryDto and ResourceDto and
 # transform them?
@@ -135,28 +144,47 @@ def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
     Given an entry body, calculate all the virtual fields.
     """
 
+    return transform_many(plugins, resource_config, [body])[0]
+
+
+def transform_many(plugins: Plugins, resource_config: Dict, bodies: list[Dict]) -> list[Dict]:
+    """
+    Given a list of entry bodies, calculate all the virtual fields.
+    """
+
     # TODO: support references to collections which should be passed in as lists
 
     resource_config = transform_config(plugins, resource_config)
+    bodies = deepcopy(bodies)
     virtual_fields = find_virtual_fields(resource_config)
-    body = deepcopy(body)
 
-    def generate_virtual(config: Dict, pos: list[Union[str, int]]) -> Dict:
-        """Calculate the value for a virtual field."""
+    def generate_batch(config: Dict, batch: list) -> Iterator:
+        """Calculate the value for a batch of virtual fields."""
 
-        field_params = {
-            k: get_path(localise_path(v, pos), body)
-            for k, v in config.get("field_params", {}).items()
-        }
+        # In the simple case we can just call plugins.generate_batch.
+        # But here the tricky bit is: If any field_param is a list,
+        # we should invoke the plugin once per list element.
 
-        # If any field_param is a list, call the plugin once per list element
-        if any(isinstance(value, list) for value in field_params.values()):
-            return [
-                plugins.generate(config, **selection)
-                for selection in select_from_dict(field_params)
-            ]
-        else:
-            return plugins.generate(config, **field_params)
+        # First compute all needed plugin invocations (we use a dict to remove
+        # duplicates - can't use a set because flat_field_params isn't hashable)
+        batch_dict = {}
+        for field_params in batch:
+            for flat_field_params in select_from_dict(field_params):
+                batch_dict[deepfreeze(flat_field_params)] = flat_field_params
+
+        # Execute the batch query and make a map 'invocation -> result'
+        batch_result_list = plugins.generate_batch(config, batch_dict.values())
+        batch_result = dict(zip(batch_dict, batch_result_list))
+
+        # Now look up the results
+        for field_params in batch:
+            if any(isinstance(value, list) for value in field_params.values()):
+                yield [
+                    batch_result[deepfreeze(flat_field_params)]
+                    for flat_field_params in select_from_dict(field_params)
+                ]
+            else:
+                yield batch_result[deepfreeze(field_params)]
 
     def select_from_dict(d: Dict) -> Iterator[Dict]:
         """Flatten a dict-of-lists into an iterator-of-dicts.
@@ -212,11 +240,24 @@ def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
         parent_path = field_path[:-1]
 
         # Find all occurrences of the field
-        occurrences = expand_path(parent_path, body)
+        occurrences = [
+            (i, parent_pos + [field_path[-1]])
+            for i, body in enumerate(bodies)
+            for parent_pos in expand_path(parent_path, body)
+        ]
 
-        for parent_pos in occurrences:
-            field_pos = parent_pos + [field_path[-1]]
-            value = generate_virtual(virtual_fields[field_name], field_pos)
-            set_path(field_pos, value, body)
+        # Generate a batch of all needed field_params values
+        batch = [
+            {
+                k: get_path(localise_path(v, pos), bodies[i])
+                for k, v in config.get("field_params", {}).items()
+            }
+            for i, pos in occurrences
+        ]
 
-    return body
+        # Execute the plugin on the batch and store the result
+        batch_result = generate_batch(virtual_fields[field_name], batch)
+        for (i, pos), result in zip(occurrences, batch_result):
+            set_path(pos, result, bodies[i])
+
+    return bodies
