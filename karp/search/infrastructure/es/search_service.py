@@ -268,13 +268,11 @@ class EsSearchService:
             s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
         if query.sort:
             s = s.sort(*self.mapping_repo.translate_sort_fields(resources, query.sort))
-        elif query.sort_dict:
-            sort_fields = []
-            for resource, sort in query.sort_dict.items():
-                if resource in resources:
-                    sort_fields.extend(self.mapping_repo.translate_sort_fields([resource], sort))
-            if sort_fields:
-                s = s.sort(*sort_fields)
+        else:
+            new_s = self.mapping_repo.get_default_sort(resources)
+            if new_s:
+                s = s.sort(new_s)
+
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
 
