@@ -7,6 +7,7 @@ from injector import Injector, inject
 
 from karp.foundation.cache import Cache
 from karp.foundation.entry_points import entry_points
+from karp.foundation.json import get_path, localise_path
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +166,8 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
         """Calculate the value for a virtual field."""
 
         field_params = {
-            k: get_field(v.split("."), pos) for k, v in config.get("field_params", {}).items()
+            k: get_path(localise_path(v, pos), original_body)
+            for k, v in config.get("field_params", {}).items()
         }
 
         # If any field_param is a list, call the plugin once per list element
@@ -176,43 +178,6 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
             ]
         else:
             return plugins.generate(config, **field_params)
-
-    def get_field(
-        field: list[str], pos: Optional[list[Union[str, int]]] = None, body=original_body
-    ):
-        """Get the value for a field_param. See comments at top of function transform.
-
-        Examples:
-
-        >>> get_field(["SOLemman", "s_nr"], ["SOLemman", 1, "extra_info"])
-        # returns original_body["SOLemman"][1]["s_nr"]
-        >>> get_field(["SOLemman", "s_nr"], ["extra_info"]
-        # returns [lemma["s_nr"] for lemma in original_body["SOLemman"]]
-        >>> get_field(["SOLemman", "lexem", "kc_nr"], ["SOLemman", 1, "extra_info"])
-        # returns [lexem["kc_nr"] for lexem in original_body["SOLemman"][1]]
-        """
-
-        if isinstance(body, list):
-            # pos[0] tells us which field to access.
-            if pos:
-                return get_field(field, pos[1:], body[pos[0]])
-            else:
-                return [get_field(field, pos, x) for x in body]
-
-        elif isinstance(body, dict):
-            # field[0] tells us which field to access.
-            if pos and pos[0] != field[0]:
-                # field and pos refer to different subfields so we should ignore pos
-                pos = []
-
-            return get_field(field[1:], pos[1:], body[field[0]])
-
-        else:
-            if field:
-                raise AssertionError(f"can't look up field {field[0]} in non-object {body}")
-            if pos:
-                raise AssertionError(f"can't look up array index {pos[0]} in non-object {body}")
-            return body
 
     def select_from_dict(d: Dict) -> Iterator[Dict]:
         """Flatten a dict-of-lists into an iterator-of-dicts.
