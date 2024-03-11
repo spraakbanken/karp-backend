@@ -65,11 +65,8 @@ class Field:
 class EsMappingRepository:
     @inject
     def __init__(self, es: elasticsearch.Elasticsearch, resource_repo: ResourceRepository):
-        prefix = env("ES_INDEX_PREFIX", "")
-
         self.es = es
-        self._prefix = prefix
-        self._config_index = f"{prefix}_config" if prefix else KARP_CONFIGINDEX
+        self._config_index = KARP_CONFIGINDEX
         self.ensure_config_index_exist()
 
         self.fields: Dict[str, Dict[str, Field]] = {}
@@ -107,16 +104,16 @@ class EsMappingRepository:
 
     def create_index_name(self, resource_id: str) -> str:
         date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
-        return f"{self._prefix}{resource_id}_{date}"
+        return f"{resource_id}_{date}"
 
     def create_alias_name(self, resource_id: str) -> str:
-        return f"{self._prefix}{resource_id}"
+        return f"{resource_id}"
 
     def create_index_and_alias_name(self, resource_id: str) -> dict[str, str]:
         return self._update_config(resource_id)
 
     def get_name_base(self, resource_id: str) -> str:
-        return f"{self._prefix}{resource_id}"
+        return f"{resource_id}"
 
     def _update_config(self, resource_id: str) -> dict[str, str]:
         index_name = self.create_index_name(resource_id)
