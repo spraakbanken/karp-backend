@@ -177,7 +177,9 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
         else:
             return plugins.generate(config, **field_params)
 
-    def get_field(field: list[str], pos: Optional[list[Union[str, int]]] = None, body=original_body):
+    def get_field(
+        field: list[str], pos: Optional[list[Union[str, int]]] = None, body=original_body
+    ):
         """Get the value for a field_param. See comments at top of function transform.
 
         Examples:
