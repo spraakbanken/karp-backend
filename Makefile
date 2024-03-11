@@ -170,7 +170,7 @@ fmt:
 # test if code is formatted
 .PHONY: check-fmt
 check-fmt:
-	${INVENV} black . --check
+	${INVENV} ruff format . --check
 
 part := "patch"
 project := "PLEASE, GIVE ME A PROJECT"
