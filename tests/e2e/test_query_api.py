@@ -126,4 +126,5 @@ def test_regex(
     for hit in response_data["hits"]:
         print(hit["entry"]["name"])
 
+
 # TODO: test that we can search for virtual fields

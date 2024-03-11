@@ -77,7 +77,7 @@ def create_entry_json_schema(
             # This forbids virtual fields from being present in the entry
             result: dict[str, Any] = {"not": {}}
             parent_schema["properties"][parent_field_name] = result
-            return # skip the handling of collection fields down below
+            return  # skip the handling of collection fields down below
 
         if parent_field_def["type"] != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid

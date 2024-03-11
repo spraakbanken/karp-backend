@@ -208,8 +208,9 @@ class EsSearchService:
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
-        return [self._build_result(query, response)
-                for query, response in zip(queries, responses)]
+        return [
+            self._build_result(query, response) for query, response in zip(queries, responses)
+        ]
 
     def search_with_query(self, query: EsQuery):
         logger.info("search_with_query called", extra={"query": query})

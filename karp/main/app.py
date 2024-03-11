@@ -1,10 +1,9 @@
-import typing
-from dataclasses import dataclass
-from logging.config import dictConfig
-
 import logging
 import sys
+import typing
 from contextlib import contextmanager
+from dataclasses import dataclass
+from logging.config import dictConfig
 from pathlib import Path
 
 import asgi_correlation_id

@@ -1,16 +1,16 @@
 from injector import inject
 from sqlalchemy.orm import Session
 
+from karp import plugins
 from karp.foundation.timings import utc_now
 from karp.foundation.value_objects import unique_id
 from karp.lex import EntryDto
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure import EntryRepository, ResourceRepository
+from karp.plugins import Plugins
 from karp.search.infrastructure.es.indices import EsIndex
 from karp.search.infrastructure.transformers import entry_transformer
-from karp import plugins
-from karp.plugins import Plugins
 
 
 class EntryCommands:
@@ -182,9 +182,7 @@ class EntryCommands:
         self._entry_deleted_handler(EntryDto.from_entry(entry))
 
     def _entry_added_handler(self, resource, entry_dtos):
-        entry_dtos = [
-            self._transform(resource, entry_dto) for entry_dto in entry_dtos
-        ]
+        entry_dtos = [self._transform(resource, entry_dto) for entry_dto in entry_dtos]
         self.index.add_entries(resource.resource_id, entry_dtos)
 
     def _entry_updated_handler(self, resource, entry_dto):

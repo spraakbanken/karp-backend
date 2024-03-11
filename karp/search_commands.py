@@ -2,12 +2,11 @@ import logging
 
 from injector import inject
 
+import karp.plugins as plugins
 from karp.lex.application import EntryQueries, ResourceQueries
+from karp.plugins import Plugins
 from karp.search.infrastructure.es.indices import EsIndex
 from karp.search.infrastructure.transformers import entry_transformer
-import karp.plugins as plugins
-from karp.plugins import Plugins
-
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,11 @@ logger = logging.getLogger(__name__)
 class SearchCommands:
     @inject
     def __init__(
-        self, index: EsIndex, resource_queries: ResourceQueries, entry_queries: EntryQueries, plugins: Plugins
+        self,
+        index: EsIndex,
+        resource_queries: ResourceQueries,
+        entry_queries: EntryQueries,
+        plugins: Plugins,
     ):
         super().__init__()
         self.index = index

@@ -17,8 +17,8 @@ class LinkPlugin(Plugin):
         resource_dto = self.resources.by_resource_id_optional(resource)
         return {"type": "object", "fields": resource_dto.config["fields"]}
 
-    def generate_batch(self, batch):  # noqa: A002
-        def make_request(id, resource, target):
+    def generate_batch(self, batch):
+        def make_request(id, resource, target): # noqa: A002
             return QueryRequest(
                 resource_ids=[resource], q=f"equals|{target}|{id}", lexicon_stats=False
             )

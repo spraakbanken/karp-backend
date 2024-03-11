@@ -230,7 +230,6 @@ class TestAddEntry:
         #     response_data["error"] == "Missing ID field for resource 'places' in '{}'"
         # )
 
-
     def test_add_fails_with_virtual_field(  # noqa: ANN201
         self,
         fa_data_client,

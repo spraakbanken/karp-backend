@@ -1,9 +1,10 @@
+import logging
 from abc import ABC, abstractmethod
 from pprint import pp
-from typing import Dict, Type, Union, Iterable, Iterator, Callable
+from typing import Callable, Dict, Iterable, Iterator, Optional, Type, Union
 
 from injector import Injector, inject
-import logging
+
 from karp.foundation.cache import Cache
 from karp.foundation.entry_points import entry_points
 
@@ -65,10 +66,12 @@ class Plugins:
         # TODO: turn into {"error": "plugin failed"} or whatever
         return self._get_plugin(config).generate(**config.get("params", {}), **kwargs)
 
+
 # TODO: maybe these things should take EntryDto and ResourceDto and
 # transform them?
 
 # TODO: maybe a more descriptive name like expand instead of transform?
+
 
 def transform_config(plugins: Plugins, resource_config: Dict) -> Dict:
     """Given a resource config with virtual fields, expand the config
@@ -133,7 +136,7 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
         result = {}
         # First transform the fields that currently exist in the body
         for k, v in body.items():
-            if k in config and not config[k].get("virtual"): # virtual is handled below
+            if k in config and not config[k].get("virtual"):  # virtual is handled below
                 result[k] = transform_field(config[k], pos + [k], v)
             else:
                 result[k] = v
@@ -150,8 +153,7 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
         if config.get("collection"):
             flat_config = dict(config)
             del flat_config["collection"]
-            return [transform_field(flat_config, pos + [i], x)
-                    for i, x in enumerate(body)]
+            return [transform_field(flat_config, pos + [i], x) for i, x in enumerate(body)]
 
         elif config["type"] == "object":
             return transform_fields(config["fields"], pos, body)
@@ -163,18 +165,19 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
         """Calculate the value for a virtual field."""
 
         field_params = {
-            k: get_field(v.split("."), pos)
-            for k, v in config.get("field_params", {}).items()
+            k: get_field(v.split("."), pos) for k, v in config.get("field_params", {}).items()
         }
 
         # If any field_param is a list, call the plugin once per list element
         if any(isinstance(value, list) for value in field_params.values()):
-            return [plugins.generate(config, **selection)
-                    for selection in select_from_dict(field_params)]
+            return [
+                plugins.generate(config, **selection)
+                for selection in select_from_dict(field_params)
+            ]
         else:
             return plugins.generate(config, **field_params)
 
-    def get_field(field: list[str], pos: list[Union[str, int]]=None, body=original_body):
+    def get_field(field: list[str], pos: Optional[list[Union[str, int]]] = None, body=original_body):
         """Get the value for a field_param. See comments at top of function transform.
 
         Examples:
@@ -203,7 +206,10 @@ def transform(plugins: Plugins, resource_config: Dict, original_body: Dict) -> D
             return get_field(field[1:], pos[1:], body[field[0]])
 
         else:
-            assert not field and not pos
+            if field:
+                raise AssertionError(f"can't look up field {field[0]} in non-object {body}")
+            if pos:
+                raise AssertionError(f"can't look up array index {pos[0]} in non-object {body}")
             return body
 
     def select_from_dict(d: Dict) -> Iterator[Dict]:
