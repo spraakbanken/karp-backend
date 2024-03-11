@@ -7,13 +7,9 @@ from karp.search.domain import Query, QueryRequest
 
 class EsQuery(Query):
     query: typing.Optional[es_dsl.query.Query] = None
-    resource_str: typing.Optional[str] = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-    def _self_name(self) -> str:
-        return f"EsQuery query={self.query} resource_str={self.resource_str}"
 
     @classmethod
     def from_query_request(cls, request: QueryRequest):
