@@ -6,8 +6,11 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import elasticsearch
 from elasticsearch import exceptions as es_exceptions
+from injector import inject
 
 from karp.lex.domain.entities import Entry
+from karp.lex.infrastructure import ResourceRepository
+from karp.main.config import env
 from karp.search.domain.errors import UnsupportedField
 
 logger = logging.getLogger("karp")
@@ -60,11 +63,10 @@ class Field:
 
 
 class EsMappingRepository:
-    def __init__(
-        self,
-        es: elasticsearch.Elasticsearch,
-        prefix: str = "",
-    ):
+    @inject
+    def __init__(self, es: elasticsearch.Elasticsearch, resource_repo: ResourceRepository):
+        prefix = env("ES_INDEX_PREFIX", "")
+
         self.es = es
         self._prefix = prefix
         self._config_index = f"{prefix}_config" if prefix else KARP_CONFIGINDEX
@@ -72,6 +74,11 @@ class EsMappingRepository:
 
         self.fields: Dict[str, Dict[str, Field]] = {}
         self.sortable_fields: Dict[str, Dict[str, Field]] = {}
+        resources = resource_repo.get_published_resources()
+        self.default_sort: Dict[str, str] = {
+            resource.resource_id: resource.config.get("sort") or resource.config.get("id")
+            for resource in resources
+        }
 
         aliases = self._get_all_aliases()
         self._update_field_mapping(aliases)
@@ -238,6 +245,20 @@ class EsMappingRepository:
                     index_names.append((alias, index))
         return index_names
 
+    def get_default_sort(self, resources: List[str]) -> str:
+        """
+        Returns the default sort field for the resources. Throws an error
+        if the resources have different sort fields, or if those sort  fields
+        have different types (i.e. if _raw must be added)
+        """
+        sort_field = self.translate_sort_field(resources[0], self.default_sort[resources[0]])
+        for resource in resources[1:]:
+            if self.translate_sort_field(resource, self.default_sort[resource]) != sort_field:
+                raise Exception(
+                    "Resources do not share default sort field, set sort field explicitly"
+                )
+        return sort_field
+
     def translate_sort_fields(
         self, resources: List[str], sort_values: List[str]
     ) -> List[Union[str, Dict[str, Dict[str, str]]]]:
@@ -264,9 +285,6 @@ class EsMappingRepository:
         return translated_sort_fields
 
     def translate_sort_field(self, resource_id: str, sort_value: str) -> str:
-        logger.debug(
-            f"es_indextranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
-        )
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value].name
         else:

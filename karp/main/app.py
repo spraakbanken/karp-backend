@@ -14,7 +14,6 @@ from sqlalchemy.engine import URL, Engine, create_engine
 from sqlalchemy.orm import Session
 
 from karp.auth.infrastructure import JWTAuthService
-from karp.search.infrastructure.es import EsMappingRepository
 
 from .config import DATABASE_URL, env
 
@@ -32,7 +31,6 @@ def bootstrap_app() -> AppContext:
 
     jwt_pubkey_path = env("AUTH_JWT_PUBKEY_PATH", None)
     es_url = env("ELASTICSEARCH_HOST")
-    es_index_prefix = env("ES_INDEX_PREFIX", "")
 
     settings = {
         "auth.jwt.pubkey.path": jwt_pubkey_path,
@@ -47,7 +45,7 @@ def bootstrap_app() -> AppContext:
 
     def configure_dependency_injection(binder):
         binder.bind(Engine, engine)
-        binder.install(ElasticSearchMod(es_url, es_index_prefix))
+        binder.install(ElasticSearchMod(es_url))
         if jwt_pubkey_path is not None:
             binder.bind(JWTAuthService, JWTAuthService(Path(jwt_pubkey_path)))
 
@@ -56,20 +54,14 @@ def bootstrap_app() -> AppContext:
 
 
 class ElasticSearchMod(Module):
-    def __init__(self, url, index_prefix):
+    def __init__(self, url):
         self._url = url
-        self._index_prefix = index_prefix
 
     @provider
     @singleton
     def es(self) -> Elasticsearch:
         logger.info("Creating ES client url=%s", self._url)
         return Elasticsearch(self._url)
-
-    @provider
-    @singleton
-    def es_mapping_repo(self, es: Elasticsearch) -> EsMappingRepository:
-        return EsMappingRepository(es=es, prefix=self._index_prefix)
 
 
 def _create_db_engine(db_url: URL) -> Engine:
@@ -120,13 +112,12 @@ def configure_logging() -> None:
             },
             "loggers": {
                 "karp": {
-                    "handlers": ["json"],
                     "level": "INFO",
                     "propagate": True,
                 },
                 # third-party package loggers
-                "sqlalchemy": {"handlers": ["json"], "level": "WARNING"},
-                "uvicorn": {"handlers": ["json"], "level": "INFO"},
+                "sqlalchemy": {"level": "WARNING"},
+                "uvicorn": {"level": "INFO"},
             },
         }
     )
