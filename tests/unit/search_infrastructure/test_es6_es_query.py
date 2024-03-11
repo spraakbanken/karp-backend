@@ -2,7 +2,7 @@ from typing import List  # noqa: I001
 
 import pytest
 
-from karp.search.domain import QueryRequest, Query
+from karp.search.domain import QueryRequest
 from karp.search.infrastructure.es import EsQuery
 
 
