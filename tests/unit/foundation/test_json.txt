@@ -27,6 +27,12 @@ Testing get_path:
 >>> get_path(['SOLemman', 'lexem', 'kc_nr'], doc)
 [[1, 2], [3, 4]]
 
+Testing set_path:
+
+>>> set_path(['SOLemman', 0, 'lexem', 1, 'kc_nr'], 5, doc)
+>>> get_path(['SOLemman', 'lexem', 'kc_nr'], doc)
+[[1, 5], [3, 4]]
+
 Testing localise_path:
 
 >>> localise_path('SOLemman.s_nr', ['SOLemman', 0])
@@ -39,3 +45,23 @@ Testing path_fields:
 
 >>> path_fields(['SOLemman', 0, 's_nr'])
 [('SOLemman', [0]), ('s_nr', [])]
+
+Testing all_paths:
+
+>>> for path in all_paths({'SOLemman': [{'s_nr': 1}, {'s_nr': 2}]}): print(path)
+[]
+['SOLemman']
+['SOLemman', 0]
+['SOLemman', 0, 's_nr']
+['SOLemman', 1]
+['SOLemman', 1, 's_nr']
+
+Testing expand_path:
+
+>>> doc = {'SOLemman': [{'s_nr': 1}, {'s_nr': 2}]}
+>>> for path in expand_path('SOLemman', doc): print(path)
+['SOLemman', 0]
+['SOLemman', 1]
+>>> for path in expand_path('SOLemman.s_nr', doc): print(path)
+['SOLemman', 0, 's_nr']
+['SOLemman', 1, 's_nr']

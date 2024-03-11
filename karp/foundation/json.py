@@ -63,6 +63,20 @@ def get_path(path: Union[str, Path], data):
         raise AssertionError(f"can't look up field {field[0]} in non-object {data}")
 
 
+def set_path(path: Union[str, Path], value, data):
+    """
+    Set the value at a given path.
+
+    The path must give a list index for any list values along the path.
+    """
+
+    path = make_path(path)
+    for component in path[:-1]:
+        data = data[component]
+
+    data[path[-1]] = value
+
+
 def localise_path(path1, path2: Union[str, Path]) -> Path:
     """
     Paths can (but do not have to) specify what index to read when encountering
@@ -135,3 +149,58 @@ def path_fields(path: Union[str, Path]) -> list[tuple[str, list[int]]]:
         result.append((field, args))
 
     return result
+
+
+def all_paths(data) -> Iterator[Path]:
+    """Generate all possible paths in a JSON object.
+
+    >>> for path in all_paths({"SOLemman": [{"s_nr": 1}, {"s_nr": 2}]}): print(path)
+    []
+    ["SOLemman"]
+    ["SOLemman", 0]
+    ["SOLemman", 0, "s_nr"]
+    ["SOLemman", 1]
+    ["SOLemman", 1, "s_nr"]
+    """
+
+    yield []
+
+    if isinstance(data, dict):
+        for name, value in data.items():
+            for path in all_paths(value):
+                yield [name] + path
+
+    if isinstance(data, list):
+        for i, value in enumerate(data):
+            for path in all_paths(value):
+                yield [i] + path
+
+
+def expand_path(path: Union[str, Path], data, prefix=None) -> Iterator[Path]:
+    """
+    Look up a path in a JSON object.
+    Instead of returning the values, return the paths to the values.
+
+    >>> doc = {"SOLemman": [{"s_nr": 1}, {"s_nr": 2}]}
+    >>> for path in matching_paths("SOLemman", doc): print(path)
+    ["SOLemman", 0]
+    ["SOLemman", 1]
+    >>> for path in matching_paths("SOLemman.s_nr", doc): print(path)
+    ["SOLemman", 0, "s_nr"]
+    ["SOLemman", 1, "s_nr"]
+    """
+
+    if prefix is None:
+        prefix = []
+
+    path = make_path(path)
+
+    if isinstance(data, list) and (not path or not isinstance(path[0], int)):
+        for i, item in enumerate(data):
+            yield from expand_path(path, item, prefix + [i])
+
+    elif not path:
+        yield prefix
+
+    else:
+        yield from expand_path(path[1:], data[path[0]], prefix + [path[0]])

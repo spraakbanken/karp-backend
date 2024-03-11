@@ -31,11 +31,12 @@ class LinkPlugin(Plugin):
         results = self.search_service.multi_query(requests)
 
         for result in results:
-            result = result["hits"]
+            hits = result["hits"]
 
-            if len(result) == 0:
+            if len(hits) == 0:
+                # TODO: how to communicate errors?
                 yield {"error": "not found"}
-            elif len(result) == 1:
-                yield result[0]["entry"]
+            elif len(hits) == 1:
+                yield hits[0]["entry"]
             else:
                 yield {"error": "multiple matches"}
