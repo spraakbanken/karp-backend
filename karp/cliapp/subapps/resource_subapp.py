@@ -170,19 +170,19 @@ def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def delete(
-    ctx: typer.Context,
-    resource_id: str,
-    user: Optional[str] = typer.Option(None),
-    message: Optional[str] = typer.Option(None),
+def unpublish(
+    ctx: typer.Context, resource_id: str, version: int, keep_index: Optional[bool] = False
 ):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
-    resource_commands.delete_resource(
-        resource_id=resource_id,
-        user=user or "local admin",
-        message=message or "resource deleted",
+    unpublished = resource_commands.unpublish_resource(
+        resource_id=resource_id, user="local admin", version=version, keep_index=keep_index
     )
-    typer.echo(f"Deleted resource '{resource_id}'")
+    if unpublished:
+        typer.echo(f"Resource unpublished")
+        if keep_index:
+            typer.echo(f"Elasticsearch index kept")
+    else:
+        typer.echo(f"Resource already unpublished")
 
 
 def init_app(app):

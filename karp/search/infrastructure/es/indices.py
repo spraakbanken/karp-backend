@@ -68,7 +68,7 @@ class EsIndex:
         logger.info("index created")
 
     def delete_index(self, resource_id: str):
-        index_name = self.es.indices.get_alias(name=resource_id)
+        index_name = self.es.indices.get_alias(name=resource_id).popitem()[0]
         self.es.indices.delete(index=index_name)
 
     def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):

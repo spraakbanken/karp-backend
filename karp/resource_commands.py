@@ -75,11 +75,14 @@ class ResourceCommands:
         self.resources.save(resource)
         self.session.commit()
 
-    # TODO this should be called unpublish and we should create a new CLI function that removes a resource completely
-    def delete_resource(self, resource_id, user, message):
-        logger.info("deleting resource", extra={"resource_id": resource_id})
+    def unpublish_resource(self, resource_id, user, version, keep_index=False):
+        logger.info("unpublishing resource", extra={"resource_id": resource_id})
         resource = self.resources.by_resource_id(resource_id)
-        resource.discard(user=user, message=message, timestamp=utc_now())
+        if not resource.is_published:
+            return False
+        resource.unpublish(user=user, version=version)
         self.resources.save(resource)
         self.session.commit()
-        self.index.delete_index(resource_id)
+        if not keep_index:
+            self.index.delete_index(resource_id)
+        return True
