@@ -114,10 +114,11 @@ def configure_logging() -> None:
                 "karp": {
                     "level": "INFO",
                     "propagate": True,
+                    "handlers": ["console"],
                 },
                 # third-party package loggers
-                "sqlalchemy": {"level": "WARNING"},
-                "uvicorn": {"level": "INFO"},
+                "sqlalchemy": {"level": "WARNING", "handlers": ["console"]},
+                "uvicorn": {"level": "INFO", "handlers": ["console"]},
             },
         }
     )
