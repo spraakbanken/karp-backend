@@ -73,22 +73,16 @@ class ResourceCommands:
         )
         self.resources.save(resource)
         self.session.commit()
-        self._resource_published_handler(resource_id)
 
+    # TODO this should be called unpublish and we should create a new CLI function that removes a resource completely
     def delete_resource(self, resource_id, user, message):
         logger.info("deleting resource", extra={"resource_id": resource_id})
         resource = self.resources.by_resource_id(resource_id)
         resource.discard(user=user, message=message, timestamp=utc_now())
         self.resources.save(resource)
         self.session.commit()
-        self._deleting_index(resource_id)
-
-    def _deleting_index(self, resource_id):
         self.index.delete_index(resource_id)
 
     def _create_search_service_handler(self, resource):
         config = plugins.transform_config(self.plugins, resource.config)
         self.index.create_index(resource.resource_id, config)
-
-    def _resource_published_handler(self, resource_id):
-        self.index.publish_index(resource_id)

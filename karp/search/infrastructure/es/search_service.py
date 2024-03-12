@@ -1,26 +1,21 @@
-import json  # noqa: I001
 import logging
-import re
-from datetime import datetime
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import Any, Iterable
 
 import elasticsearch
-import elasticsearch.helpers  # pyre-ignore
-import elasticsearch_dsl as es_dsl  # pyre-ignore
+import elasticsearch.helpers
+import elasticsearch_dsl as es_dsl
+from injector import inject
 from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
-from karp.search.domain import errors, QueryRequest
-from karp.lex.domain.entities.entry import Entry
-from karp.lex.domain.entities.resource import Resource
-from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
+from karp.search.domain import QueryRequest, errors
 from karp.search.domain.query_dsl.karp_query_v6_model import (
     KarpQueryV6ModelBuilderSemantics,
 )
+from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
+
 from .mapping_repo import EsMappingRepository
 from .query import EsQuery
-from injector import inject
-
 
 logger = logging.getLogger(__name__)
 
@@ -161,10 +156,6 @@ class EsSearchService:
 
     def _format_result(self, resource_ids, response):
         logger.debug("_format_result called", extra={"resource_ids": resource_ids})
-        resource_id_map = {
-            resource_id: self.mapping_repo.get_name_base(resource_id)
-            for resource_id in resource_ids
-        }
 
         def format_entry(entry):
             dict_entry = entry.to_dict()
@@ -178,8 +169,8 @@ class EsSearchService:
                 "last_modified_by": last_modified_by,
                 "resource": next(
                     resource
-                    for resource, index_base in resource_id_map.items()
-                    if entry.meta.index.startswith(index_base)
+                    for resource in resource_ids
+                    if entry.meta.index.startswith(resource)
                 ),
                 "entry": dict_entry,
             }
@@ -261,8 +252,7 @@ class EsSearchService:
                     failing_query=query.q, error_description=str(err)
                 ) from err
 
-        alias_names = [self.mapping_repo.get_alias_name(resource) for resource in resources]
-        s = es_dsl.Search(using=self.es, index=alias_names, doc_type="entry")
+        s = es_dsl.Search(using=self.es, index=resources, doc_type="entry")
         s = self.add_runtime_mappings(s, field_names)
         if es_query is not None:
             s = s.query(es_query)
@@ -317,20 +307,18 @@ class EsSearchService:
         entries = entry_ids.split(",")
         query = es_dsl.Q("terms", _id=entries)
         logger.debug("query", extra={"query": query})
-        alias_name = self.mapping_repo.get_alias_name(resource_id)
-        s = es_dsl.Search(using=self.es, index=alias_name).query(query)
+        s = es_dsl.Search(using=self.es, index=resource_id).query(query)
         logger.debug("s", extra={"es_query s": s.to_dict()})
         response = s.execute()
 
         return self._format_result([resource_id], response)
 
     def statistics(self, resource_id: str, field: str) -> Iterable:
-        alias_name = self.mapping_repo.get_alias_name(resource_id)
-        s = es_dsl.Search(using=self.es, index=alias_name)
+        s = es_dsl.Search(using=self.es, index=resource_id)
         s = s[:0]
         if (
-            field in self.mapping_repo.fields[alias_name]
-            and self.mapping_repo.fields[alias_name][field].analyzed
+            field in self.mapping_repo.fields[resource_id]
+            and self.mapping_repo.fields[resource_id][field].analyzed
         ):
             field += ".raw"
         logger.debug(

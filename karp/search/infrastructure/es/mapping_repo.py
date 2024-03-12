@@ -1,22 +1,15 @@
 import logging
 import re
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import elasticsearch
-from elasticsearch import exceptions as es_exceptions
 from injector import inject
 
-from karp.lex.domain.entities import Entry
 from karp.lex.infrastructure import ResourceRepository
-from karp.main.config import env
 from karp.search.domain.errors import UnsupportedField
 
 logger = logging.getLogger("karp")
-
-KARP_CONFIGINDEX = "karp_config"
-KARP_CONFIGINDEX_TYPE = "configs"
 
 
 @dataclass
@@ -66,8 +59,6 @@ class EsMappingRepository:
     @inject
     def __init__(self, es: elasticsearch.Elasticsearch, resource_repo: ResourceRepository):
         self.es = es
-        self._config_index = KARP_CONFIGINDEX
-        self.ensure_config_index_exist()
 
         self.fields: Dict[str, Dict[str, Field]] = {}
         self.sortable_fields: Dict[str, Dict[str, Field]] = {}
@@ -79,90 +70,6 @@ class EsMappingRepository:
 
         aliases = self._get_all_aliases()
         self._update_field_mapping(aliases)
-
-    def ensure_config_index_exist(self) -> None:
-        if not self.es.indices.exists(index=self._config_index):
-            self.es.indices.create(
-                index=self._config_index,
-                body={
-                    "settings": {
-                        "number_of_shards": 1,
-                        "number_of_replicas": 1,
-                        "refresh_interval": -1,
-                    },
-                    "mappings": {
-                        KARP_CONFIGINDEX_TYPE: {
-                            "dynamic": False,
-                            "properties": {
-                                "index_name": {"type": "text"},
-                                "alias_name": {"type": "text"},
-                            },
-                        }
-                    },
-                },
-            )
-
-    def create_index_name(self, resource_id: str) -> str:
-        date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
-        return f"{resource_id}_{date}"
-
-    def create_alias_name(self, resource_id: str) -> str:
-        return f"{resource_id}"
-
-    def create_index_and_alias_name(self, resource_id: str) -> dict[str, str]:
-        return self._update_config(resource_id)
-
-    def get_name_base(self, resource_id: str) -> str:
-        return f"{resource_id}"
-
-    def _update_config(self, resource_id: str) -> dict[str, str]:
-        index_name = self.create_index_name(resource_id)
-        alias_name = self.create_alias_name(resource_id)
-        names = {"index_name": index_name, "alias_name": alias_name}
-        self.es.index(
-            index=self._config_index,
-            id=resource_id,
-            doc_type=KARP_CONFIGINDEX_TYPE,
-            body=names,
-        )
-        return names
-
-    def delete_from_config(self, resource_id: str) -> None:
-        try:
-            self.es.delete(
-                index=self._config_index,
-                doc_type="configs",
-                id=resource_id,
-                refresh=True,
-            )
-        except elasticsearch.exceptions.ElasticsearchException:
-            logger.exception(
-                "Error deleting from config",
-                extra={
-                    "resource_id": resource_id,
-                    "index_name": self._config_index,
-                },
-            )
-
-    def get_index_name(self, resource_id: str) -> str:
-        try:
-            res = self.es.get(
-                index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
-            )
-        except es_exceptions.NotFoundError as err:
-            logger.info("didn't find index_name for resource '%s' details: %s", resource_id, err)
-            return self._update_config(resource_id)["index_name"]
-        return res["_source"]["index_name"]
-
-    def get_alias_name(self, resource_id: str) -> str:
-        try:
-            res = self.es.get(
-                index=self._config_index, id=resource_id, doc_type=KARP_CONFIGINDEX_TYPE
-            )
-        except es_exceptions.NotFoundError as err:
-            logger.info("didn't find alias_name for resource '%s' details: %s", resource_id, err)
-            return self._update_config(resource_id)["alias_name"]
-        return res["_source"]["alias_name"]
 
     def _update_field_mapping(
         self, aliases: List[Tuple[str, str]]
