@@ -125,7 +125,7 @@ def update_entry(
 ):
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_403,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
     if resource_id not in published_resources:
