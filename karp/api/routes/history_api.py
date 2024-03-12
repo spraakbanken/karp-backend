@@ -83,7 +83,3 @@ def get_history(
         toVersion=to_version,
     )
     return entry_queries.get_history(history_request)
-
-
-def init_app(app):
-    app.include_router(router)

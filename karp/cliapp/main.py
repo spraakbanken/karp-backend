@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 import typer
 
 from karp.main import bootstrap_app, with_new_session, config
-from karp.foundation.entry_points import load_modules
 from karp.cliapp import subapps
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,6 @@ def create_app():
             ctx.obj["injector"] = with_new_session(app_context.injector)
 
     subapps.add_subapps(app)
-    load_commands(app)
 
     return app
 
@@ -40,10 +38,6 @@ def version_callback(value: bool):
     if value:
         typer.echo(f"{config.PROJECT_NAME} CLI {config.VERSION}")
         raise typer.Exit()
-
-
-def load_commands(app: typer.Typer):
-    load_modules("karp.clicommands", app=app)
 
 
 cliapp = create_app()

@@ -183,7 +183,3 @@ def query(
             },
         )
     return response
-
-
-def init_app(app):
-    app.include_router(router)

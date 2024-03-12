@@ -202,7 +202,3 @@ def delete_entry(
             },
         )
     return
-
-
-def init_app(app):
-    app.include_router(router)

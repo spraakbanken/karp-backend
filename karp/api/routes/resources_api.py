@@ -47,7 +47,3 @@ def get_resource_by_resource_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No resource with resource_id '{resource_id}' was found.",
         )
-
-
-def init_app(app):
-    app.include_router(router)

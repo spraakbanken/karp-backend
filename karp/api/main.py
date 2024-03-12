@@ -26,7 +26,6 @@ from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
 from karp.main import config, new_session
-from karp.foundation.entry_points import load_modules
 from karp.api.routes import router as api_router
 
 
@@ -115,8 +114,6 @@ def create_app() -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     app.include_router(api_router)
-
-    load_modules("karp.karp_v6_api", app=app)
 
     from karp.main.errors import KarpError
 

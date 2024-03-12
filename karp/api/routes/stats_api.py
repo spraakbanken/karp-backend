@@ -46,7 +46,3 @@ def get_field_values(
         )
     logger.debug(f"calling statistics ... from {search_service=}")
     return search_service.statistics(resource_id, field)
-
-
-def init_app(app):
-    app.include_router(router)
