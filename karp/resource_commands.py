@@ -43,7 +43,8 @@ class ResourceCommands:
 
         self.resources.save(resource)
         self.session.commit()
-        self._create_search_service_handler(resource)
+        config = plugins.transform_config(self.plugins, resource.config)
+        self.index.create_index(resource.resource_id, config)
         return ResourceDto.from_resource(resource)
 
     def update_resource(self, resource_id, name, version, config, message, user):
@@ -82,7 +83,3 @@ class ResourceCommands:
         self.resources.save(resource)
         self.session.commit()
         self.index.delete_index(resource_id)
-
-    def _create_search_service_handler(self, resource):
-        config = plugins.transform_config(self.plugins, resource.config)
-        self.index.create_index(resource.resource_id, config)
