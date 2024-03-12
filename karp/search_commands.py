@@ -42,9 +42,6 @@ class SearchCommands:
             resource_id, self._transform(resource, self.entry_queries.all_entries(resource_id))
         )
 
-        if resource.is_published:
-            self.index.publish_index(resource_id)
-
     def reindex_all_resources(self):
         for resource in self.resource_queries.get_all_resources():
             self.reindex_resource(resource.resource_id)
