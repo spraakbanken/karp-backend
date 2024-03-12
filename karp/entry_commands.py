@@ -1,3 +1,5 @@
+from typing import Iterable, Iterator
+
 from injector import inject
 from sqlalchemy.orm import Session
 
@@ -42,18 +44,13 @@ class EntryCommands:
             raise ResourceNotFound(resource_id)
         return result
 
-    def _transform(self, resource, entry):
-        return self._transform_entries(resource, [entry])[0]
+    def _transform(self, config, entry: EntryDto) -> EntryDto:
+        return next(self._transform_entries(config, [entry]))
 
-    def _transform_entries(self, resource, entries):
-        config = plugins.transform_config(self.plugins, resource.config)
-        entries = [entry.copy() for entry in entries]
-        new_entries = plugins.transform_many(
-            self.plugins, config, [entry.entry for entry in entries]
-        )
-        for i, _ in enumerate(entries):
-            entries[i].entry = new_entries[i]
-        return [entry_transformer.transform(config, entry) for entry in entries]
+    def _transform_entries(self, config, entries: Iterable[EntryDto]) -> Iterator[EntryDto]:
+        config = plugins.transform_config(self.plugins, config)
+        entries = plugins.transform_entries(self.plugins, config, entries)
+        return (entry_transformer.transform(config, entry) for entry in entries)
 
     def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message):
         """
@@ -189,13 +186,13 @@ class EntryCommands:
         self._entry_deleted_handler(EntryDto.from_entry(entry))
 
     def _entry_added_handler(self, resource, entry_dtos):
-        entry_dtos = self._transform_entries(resource, entry_dtos)
+        entry_dtos = self._transform_entries(resource.config, entry_dtos)
         self.index.add_entries(resource.resource_id, entry_dtos)
 
     def _entry_updated_handler(self, resource, entry_dto):
         self.index.add_entries(
             entry_dto.resource,
-            [self._transform(resource, entry_dto)],
+            [self._transform(resource.config, entry_dto)],
         )
 
     def _entry_deleted_handler(self, entry_dto):

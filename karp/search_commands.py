@@ -26,12 +26,11 @@ class SearchCommands:
         self.entry_queries = entry_queries
         self.plugins = plugins
 
-    def _transform(self, resource, entry):
+    def _transform(self, resource, entries):
         # TODO: make _transform only live in one place
         config = plugins.transform_config(self.plugins, resource.config)
-        entry = entry.copy()
-        entry.entry = plugins.transform(self.plugins, config, entry.entry)
-        return entry_transformer.transform(config, entry)
+        entries = plugins.transform_entries(self.plugins, config, entries)
+        return (entry_transformer.transform(config, entry) for entry in entries)
 
     def reindex_resource(self, resource_id):
         logger.info("Reindexing resource '%s'", resource_id)
@@ -39,11 +38,9 @@ class SearchCommands:
         resource_config = plugins.transform_config(self.plugins, resource.config)
         self.index.create_index(resource_id, resource_config)
 
-        def process():
-            for entry in self.entry_queries.all_entries(resource_id):
-                yield self._transform(resource, entry)
-
-        self.index.add_entries(resource_id, process())
+        self.index.add_entries(
+            resource_id, self._transform(resource, self.entry_queries.all_entries(resource_id))
+        )
 
         if resource.is_published:
             self.index.publish_index(resource_id)

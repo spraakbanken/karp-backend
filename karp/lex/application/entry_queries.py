@@ -34,18 +34,16 @@ class EntryQueries:
         self.resources = resources
         self.plugins = plugins
 
-    def _to_dtos(self, resource_id, entries) -> list[EntryDto]:
+    def _to_dtos(
+        self, resource_id, entries: typing.Iterator[Entry]
+    ) -> typing.Iterator[EntryDto]:
         resource = self.resources.by_resource_id(resource_id)
-        result = [EntryDto.from_entry(entry) for entry in entries]
-        new_entries = plugins.transform_many(
-            self.plugins, resource.config, [entry.entry for entry in result]
+        return plugins.transform_entries(
+            self.plugins, resource.config, (EntryDto.from_entry(entry) for entry in entries)
         )
-        for i, _ in enumerate(result):
-            result[i].entry = new_entries[i]
-        return result
 
-    def _to_dto(self, entry) -> EntryDto:
-        return self._to_dtos(entry.resource_id, [entry])[0]
+    def _to_dto(self, entry: Entry) -> EntryDto:
+        return next(self._to_dtos(entry.resource_id, [entry]))
 
     def by_id(
         self,

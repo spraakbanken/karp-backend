@@ -9,6 +9,7 @@ from frozendict import deepfreeze
 from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
 
+from karp.foundation.batch import batch_items
 from karp.foundation.cache import Cache
 from karp.foundation.entry_points import entry_points
 from karp.foundation.json import expand_path, get_path, localise_path, make_path, set_path
@@ -90,10 +91,16 @@ class Plugins:
         return result
 
 
-# TODO: maybe these things should take EntryDto and ResourceDto and
-# transform them?
-
 # TODO: maybe a more descriptive name like expand instead of transform?
+
+
+def transform_resource(plugins: Plugins, resource_dto: "ResourceDto") -> "ResourceDto":
+    """Given a resource with virtual fields, expand the config
+    by adding the output_config for each virtual field."""
+
+    result = resource_dto.copy()
+    result.config = transform_config(plugins, result.config)
+    return result
 
 
 def transform_config(plugins: Plugins, resource_config: Dict) -> Dict:
@@ -139,20 +146,66 @@ def find_virtual_fields(resource_config: Dict) -> dict[str, Dict]:
     return result
 
 
+def transform_entry(
+    plugins: Plugins, resource_config: Dict, entry_dto: "EntryDto"
+) -> "EntryDto":
+    """
+    Given an entry, calculate all the virtual fields.
+    """
+
+    result = entry_dto.copy()
+    result.entry = transform(plugins, resource_config, body)
+    return result
+
+
+def transform_entries(
+    plugins: Plugins, resource_config: Dict, entry_dtos: Iterable["EntryDto"]
+) -> Iterator["EntryDto"]:
+    """
+    Given a list of entries, calculate all the virtual fields.
+    """
+
+    cached_results = {}
+    for batch in batch_items(entry_dtos):
+        new_entries = transform_list(
+            plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results
+        )
+        for entry_dto, new_entry in zip(batch, new_entries):
+            entry_dto = entry_dto.copy()
+            entry_dto.entry = new_entry
+            yield entry_dto
+
+
 def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
     """
     Given an entry body, calculate all the virtual fields.
     """
 
-    return transform_many(plugins, resource_config, [body])[0]
+    return next(transform_list(plugins, resource_config, [body]))
 
 
-def transform_many(plugins: Plugins, resource_config: Dict, bodies: list[Dict]) -> list[Dict]:
+def transform_list(
+    plugins: Plugins,
+    resource_config: Dict,
+    bodies: list[Dict],
+    cached_results: Optional[Dict] = None,
+) -> list[Dict]:
     """
     Given a list of entry bodies, calculate all the virtual fields.
+
+    cached_results is an optional parameter which allows for caching plugin
+    results across multiple calls to transform_list. Use it like this:
+
+    cached_results = {}                  # create cache once
+    transform_list(..., cached_results)  # use it in several calls to transform_list
+    transform_list(..., cached_results)
+    transform_list(..., cached_results)
     """
 
     # TODO: support references to collections which should be passed in as lists
+
+    if cached_results is None:
+        cached_results = {}
 
     resource_config = transform_config(plugins, resource_config)
     bodies = deepcopy(bodies)
@@ -160,6 +213,8 @@ def transform_many(plugins: Plugins, resource_config: Dict, bodies: list[Dict]) 
 
     def generate_batch(config: Dict, batch: list) -> Iterator:
         """Calculate the value for a batch of virtual fields."""
+
+        nonlocal cached_results
 
         # In the simple case we can just call plugins.generate_batch.
         # But here the tricky bit is: If any field_param is a list,
@@ -170,21 +225,23 @@ def transform_many(plugins: Plugins, resource_config: Dict, bodies: list[Dict]) 
         batch_dict = {}
         for field_params in batch:
             for flat_field_params in select_from_dict(field_params):
-                batch_dict[deepfreeze(flat_field_params)] = flat_field_params
+                key = deepfreeze(flat_field_params)
+                if key not in cached_results:
+                    batch_dict[key] = flat_field_params
 
-        # Execute the batch query and make a map 'invocation -> result'
+        # Execute the batch query and store the results into cached_results
         batch_result_list = plugins.generate_batch(config, batch_dict.values())
-        batch_result = dict(zip(batch_dict, batch_result_list))
+        cached_results |= dict(zip(batch_dict, batch_result_list))
 
         # Now look up the results
         for field_params in batch:
             if any(isinstance(value, list) for value in field_params.values()):
                 yield [
-                    batch_result[deepfreeze(flat_field_params)]
+                    cached_results[deepfreeze(flat_field_params)]
                     for flat_field_params in select_from_dict(field_params)
                 ]
             else:
-                yield batch_result[deepfreeze(field_params)]
+                yield cached_results[deepfreeze(field_params)]
 
     def select_from_dict(d: Dict) -> Iterator[Dict]:
         """Flatten a dict-of-lists into an iterator-of-dicts.
