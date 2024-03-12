@@ -63,6 +63,7 @@ class EsMappingRepository:
         self.fields: Dict[str, Dict[str, Field]] = {}
         self.sortable_fields: Dict[str, Dict[str, Field]] = {}
         resources = resource_repo.get_published_resources()
+
         self.default_sort: Dict[str, str] = {
             resource.resource_id: resource.config.get("sort") or resource.config.get("id")
             for resource in resources
@@ -149,15 +150,18 @@ class EsMappingRepository:
                     index_names.append((alias, index))
         return index_names
 
+    def check_resource_is_published(self, resource_id):
+        return resource_id in self.default_sort
+
     def get_default_sort(self, resources: List[str]) -> str:
         """
         Returns the default sort field for the resources. Throws an error
         if the resources have different sort fields, or if those sort  fields
         have different types (i.e. if _raw must be added)
         """
-        sort_field = self.translate_sort_field(resources[0], self.default_sort[resources[0]])
+        sort_field = self._translate_sort_field(resources[0], self.default_sort[resources[0]])
         for resource in resources[1:]:
-            if self.translate_sort_field(resource, self.default_sort[resource]) != sort_field:
+            if self._translate_sort_field(resource, self.default_sort[resource]) != sort_field:
                 raise Exception(
                     "Resources do not share default sort field, set sort field explicitly"
                 )
@@ -182,19 +186,18 @@ class EsMappingRepository:
                 sort_value, sort_order = sort_value.split("|", 1)
             for resource_id in resources:
                 if sort_order:
-                    field = self.translate_sort_field(resource_id, sort_value)
+                    field = self._translate_sort_field(resource_id, sort_value)
                     translated_sort_fields.append({field: {"order": sort_order}})
-                translated_sort_fields.append(self.translate_sort_field(resource_id, sort_value))
+                translated_sort_fields.append(
+                    self._translate_sort_field(resource_id, sort_value)
+                )
 
         return translated_sort_fields
 
-    def translate_sort_field(self, resource_id: str, sort_value: str) -> str:
+    def _translate_sort_field(self, resource_id: str, sort_value: str) -> str:
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value].name
         else:
             raise UnsupportedField(
                 f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
             )
-
-    def on_publish_resource(self, alias_name: str, index_name: str):
-        self._update_field_mapping([(alias_name, index_name)])

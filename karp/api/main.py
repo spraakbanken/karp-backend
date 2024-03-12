@@ -1,4 +1,5 @@
 import time
+import traceback
 from typing import Any
 
 try:
@@ -138,9 +139,18 @@ def create_app() -> FastAPI:
     @app.exception_handler(auth_errors.ResourceNotFound)
     async def _auth_entity_not_found(request: Request, exc: auth_errors.ResourceNotFound):
         return JSONResponse(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             content={
                 "detail": str(exc),
+            },
+        )
+
+    @app.exception_handler(lex_errors.ResourceNotFound)
+    async def _resource_not_found_handler(request, exc):
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": "One of the given resources do not exist.",
             },
         )
 
@@ -151,6 +161,7 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
+        traceback.print_exception(exc)
         return await http_exception_handler(
             request,
             HTTPException(

@@ -32,3 +32,10 @@ def get_entry_queries(
     plugins: Plugins = Depends(inject_from_req(Plugins)),
 ) -> EntryQueries:
     return EntryQueries(resources, plugins)
+
+
+# TODO This should be cached
+def get_published_resources(
+    resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
+) -> [str]:
+    return [resource.resource_id for resource in resources.get_published_resources()]

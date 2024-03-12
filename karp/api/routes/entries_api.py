@@ -23,6 +23,7 @@ from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex.application import EntryQueries
 from karp.lex.domain import errors
 from karp.lex.domain.dtos import EntryDto
+from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 
 router = APIRouter()
@@ -39,12 +40,15 @@ def get_history_for_entry(
     user: auth.User = Security(deps.get_user, scopes=["admin"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
+    published_resources: [str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     logger.info(
         "getting history for entry",
         extra={
@@ -68,12 +72,15 @@ def add_entry(
     user: User = Security(deps.get_user, scopes=["write"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
+    published_resources: [str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
         new_entry = entry_commands.add_entry(
@@ -114,12 +121,15 @@ def update_entry(
     user: User = Security(deps.get_user, scopes=["write"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
+    published_resources: [str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403,
             detail="Not enough permissions",
         )
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
 
     logger.info(
         "updating entry",
@@ -177,6 +187,7 @@ def delete_entry(
     user: User = Security(deps.get_user, scopes=["write"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
+    published_resources: [str] = Depends(deps.get_published_resources),
 ):
     """Delete a entry from a resource."""
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
@@ -184,6 +195,8 @@ def delete_entry(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     try:
         entry_commands.delete_entry(
             resource_id=resource_id,
