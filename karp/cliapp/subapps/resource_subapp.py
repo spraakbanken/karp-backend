@@ -185,5 +185,24 @@ def unpublish(
         typer.echo(f"Resource already unpublished")
 
 
+@subapp.command()
+@cli_error_handler
+@cli_timer
+def delete(ctx: typer.Context, resource_id: str, force: Optional[bool] = False):
+    resource_commands = inject_from_ctx(ResourceCommands, ctx)
+    if not force:
+        force = typer.confirm(
+            "This will delete every row, table and index for this resource permanently. Are you sure?"
+        )
+    if force:
+        deleted = resource_commands.delete_resource(resource_id=resource_id)
+        if deleted:
+            typer.echo(f"Resource deleted")
+        else:
+            typer.echo(f"Resource already deleted")
+    else:
+        typer.echo(f"Resource not deleted")
+
+
 def init_app(app):
     app.add_typer(subapp, name="resource")

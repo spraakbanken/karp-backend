@@ -90,12 +90,23 @@ class ResourceRepository(repository.Repository):
 
         return [resource_dto.to_entity() for resource_dto in query if resource_dto is not None]
 
+    def delete_all_versions(self, resource_id):
+        query = self._session.query(ResourceModel).filter_by(resource_id=resource_id)
+        for resource in query:
+            self._session.delete(resource)
+
+    def remove_resource_table(self, resource):
+        self._session.execute(text("DROP TABLE IF EXISTS " + resource.table_name))
+
+    def remove(self, resource: Resource):
+        self._session.delete(resource)
+
     def _save(self, resource: Resource):
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
         if resource.discarded:
             # If resource was discarded, drop the table containing all data entries
-            self._session.execute(text("DROP TABLE IF EXISTS " + resource.table_name))
+            self.remove_resource_table(resource)
         self._cache.clear()
 
     def _by_id(

@@ -86,3 +86,20 @@ class ResourceCommands:
         if not keep_index:
             self.index.delete_index(resource_id)
         return True
+
+    def delete_resource(self, resource_id):
+        resource = self.resources.by_resource_id(resource_id)
+        if not resource:
+            return False
+
+        # delete the index with alias "resource_id" from Elasticsearch
+        self.index.delete_index(resource_id)
+
+        # drop resource table
+        resource = self.resources.by_resource_id(resource_id)
+        self.resources.remove_resource_table(resource)
+
+        # delete all rows from resource table associated with resource_id
+        self.resources.delete_all_versions(resource_id)
+        self.session.commit()
+        return True
