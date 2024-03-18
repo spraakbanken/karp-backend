@@ -186,10 +186,14 @@ class EsSearchService:
         query = EsQuery.from_query_request(request)
         return self.search_with_query(query)
 
-    def query_split(self, request: QueryRequest):
-        logger.info("query_split called", extra={"request": request})
-        query = EsQuery.from_query_request(request)
-        query.split_results = True
+    def query_stats(self, resources, q):
+        query = EsQuery()
+        query.resources = resources
+        query.from_ = 0
+        query.size = 0
+        query.lexicon_stats = True
+        query.q = q or ""
+        query.split_results = False
         return self.search_with_query(query)
 
     def multi_query(self, requests: list[QueryRequest]):
@@ -262,12 +266,14 @@ class EsSearchService:
 
         if query.lexicon_stats:
             s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
-        if query.sort:
-            s = s.sort(*self.mapping_repo.translate_sort_fields(resources, query.sort))
-        else:
-            new_s = self.mapping_repo.get_default_sort(resources)
-            if new_s:
-                s = s.sort(new_s)
+        if query.size != 0:
+            # if no hits are returned, no sorting is needed
+            if query.sort:
+                s = s.sort(*self.mapping_repo.translate_sort_fields(resources, query.sort))
+            else:
+                new_s = self.mapping_repo.get_default_sort(resources)
+                if new_s:
+                    s = s.sort(new_s)
 
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s

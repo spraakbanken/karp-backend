@@ -1,10 +1,10 @@
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-import pytest  # pyre-ignore
+import pytest
 from fastapi import status
+
 from karp import auth
 from karp.lex.application import EntryQueries
-from tests.common_data import PLACES
 from tests.utils import get_json
 
 
@@ -69,14 +69,14 @@ def test_query_no_q(
     print("names = {}".format(names))
 
 
-def test_query_split(  # noqa: ANN201
+def test_query_stats(
     fa_data_client,
     read_token: auth.AccessToken,
 ):
     resources = ["places", "municipalities"]
     entries = get_json(
         fa_data_client,
-        "/query/split/{}".format(",".join(resources)),
+        "/query/stats/{}".format(",".join(resources)),
         headers=read_token.as_header(),
     )
 
