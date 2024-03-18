@@ -7,6 +7,7 @@ import elasticsearch
 from injector import inject
 
 from karp.lex.infrastructure import ResourceRepository
+from karp.main.errors import KarpError
 from karp.search.domain.errors import UnsupportedField
 
 logger = logging.getLogger("karp")
@@ -158,8 +159,8 @@ class EsMappingRepository:
         sort_field = self._translate_sort_field(resources[0], self.default_sort[resources[0]])
         for resource in resources[1:]:
             if self._translate_sort_field(resource, self.default_sort[resource]) != sort_field:
-                raise Exception(
-                    "Resources do not share default sort field, set sort field explicitly"
+                raise KarpError(
+                    message="Resources do not share default sort field, set sort field explicitly"
                 )
         return sort_field
 

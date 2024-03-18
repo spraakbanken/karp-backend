@@ -49,8 +49,8 @@ def get_entries_by_id(
     return search_service.search_ids(resource_id, entry_ids)
 
 
-@router.get("/split/{resources}", name="Query per resource")
-def query_split(
+@router.get("/stats/{resources}", name="Hits per resource, no entries in result")
+def query_stats(
     resources: str = Path(
         ...,
         regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
@@ -61,17 +61,11 @@ def query_split(
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned.",
     ),
-    from_: int = Query(
-        0, alias="from", description="Specify which entry should be the first returned."
-    ),
-    size: int = Query(25, description="Number of entries in page."),
-    lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: [str] = Depends(deps.get_published_resources),
 ):
-    logger.debug("/query/split called", extra={"resources": resources})
     resource_list = resources.split(",")
     if not resource_permissions.has_permission(auth.PermissionLevel.read, user, resource_list):
         raise HTTPException(
@@ -80,23 +74,16 @@ def query_split(
         )
     if any(resource not in published_resources for resource in resource_list):
         raise ResourceNotFound(resource_list)
-    query_request = QueryRequest(
-        resource_ids=resource_list,
-        q=q,
-        from_=from_,
-        size=size,
-        lexicon_stats=lexicon_stats,
-    )
     try:
-        response = search_service.query_split(query_request)
+        response = search_service.query_stats(resource_list, q)
     except karp_errors.KarpError as err:
         logger.exception(
-            "Error occured when calling '/query/split'",
+            "Error occured when calling '/query/stats'",
             extra={"resources": resources, "q": q, "error_message": err.message},
         )
         raise
     except IncompleteQuery as err:
-        raise HTTPException(  # noqa: B904
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "errorCode": karp_errors.ClientErrorCodes.SEARCH_INCOMPLETE_QUERY,
@@ -104,7 +91,7 @@ def query_split(
                 "failing_query": err.failing_query,
                 "error_description": err.error_description,
             },
-        )
+        ) from None
     return response
 
 
