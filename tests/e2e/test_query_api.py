@@ -1,7 +1,8 @@
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import pytest
 from fastapi import status
+
 from karp import auth
 from karp.lex.application import EntryQueries
 from tests.utils import get_json
