@@ -1,4 +1,5 @@
 import time
+import traceback
 from typing import Any
 
 try:
@@ -12,7 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
-import injector
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 import logging
@@ -22,11 +22,11 @@ from asgi_matomo import MatomoMiddleware
 
 from karp import main
 from karp.foundation import errors as foundation_errors
-from karp.lex_core.value_objects import unique_id
+from karp.foundation.value_objects import unique_id
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes
-from karp.main import modules, config
+from karp.main import config, new_session
 from karp.api.routes import router as api_router
 
 
@@ -105,8 +105,6 @@ def create_app() -> FastAPI:
 
     app.state.app_context = app_context
 
-    main.install_auth_service(app_context.container, app_context.settings)
-
     app.add_middleware(
         CORSMiddleware,
         allow_origins=app_context.settings.get("web.cors.origins", ["*"]),
@@ -117,8 +115,6 @@ def create_app() -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     app.include_router(api_router)
-
-    modules.load_modules("karp.karp_v6_api", app=app)
 
     from karp.main.errors import KarpError
 
@@ -143,9 +139,18 @@ def create_app() -> FastAPI:
     @app.exception_handler(auth_errors.ResourceNotFound)
     async def _auth_entity_not_found(request: Request, exc: auth_errors.ResourceNotFound):
         return JSONResponse(
-            status_code=404,
+            status_code=status.HTTP_404_NOT_FOUND,
             content={
                 "detail": str(exc),
+            },
+        )
+
+    @app.exception_handler(lex_errors.ResourceNotFound)
+    async def _resource_not_found_handler(request, exc):
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": "One of the given resources do not exist.",
             },
         )
 
@@ -156,6 +161,7 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
+        traceback.print_exception(exc)
         return await http_exception_handler(
             request,
             HTTPException(
@@ -174,9 +180,9 @@ def create_app() -> FastAPI:
             status_code=500, content={"detail": "Internal server error"}
         )
         # Create a new session per request
-        with modules.new_session(app_context.container) as container:
-            request.state.session = container.get(Session)
-            request.state.container = container
+        with new_session(app_context.injector) as injector:
+            request.state.session = injector.get(Session)
+            request.state.injector = injector
 
             response = await call_next(request)
 

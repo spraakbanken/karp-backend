@@ -6,7 +6,7 @@ from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
 from karp.search.domain.query_dsl.karp_query_v6_model import (
     KarpQueryV6ModelBuilderSemantics,
 )
-from karp.search_infrastructure.queries.es6_search_service import EsQueryBuilder
+from karp.search.infrastructure.es import EsQueryBuilder
 
 
 @pytest.fixture(scope="session")
@@ -18,10 +18,10 @@ def parser() -> KarpQueryV6Parser:
     "q,expected",
     [
         ("exists|test", es_dsl.Q("exists", field="test")),
-        ('freetext|"hej"', es_dsl.Q("multi_match", query="hej")),
+        ('freetext|"hej"', es_dsl.Q("multi_match", query="hej", fields=["*"], lenient=True)),
         (
             'freergxp|"1i.*2"',
-            es_dsl.Q("query_string", query="/1i.*2/", default_field="*"),
+            es_dsl.Q("query_string", query="/1i.*2/", fields=["*"], lenient=True),
         ),
         ("missing|test", es_dsl.Q("bool", must_not=es_dsl.Q("exists", field="test"))),
         ('startswith|pos|"nn"', es_dsl.Q("regexp", pos="nn.*")),

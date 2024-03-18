@@ -6,10 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.api.schemas import ResourceProtected, ResourcePublic
+from karp.auth.application import ResourcePermissionQueries
 from karp.auth.application.resources import ResourcePermissionDto
-from karp.auth.infrastructure import ResourcePermissionQueries
-from karp.lex.application.dtos import ResourceDto
-from karp.lex_infrastructure import ResourceQueries
+from karp.lex.application import ResourceQueries
+from karp.lex.domain.dtos import ResourceDto
+from karp.lex.domain.errors import ResourceNotFound
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -41,13 +42,6 @@ def get_resource_by_resource_id(
     resource_queries: ResourceQueries = Depends(deps.get_resource_queries),
 ) -> ResourcePublic:
     if resource := resource_queries.by_resource_id_optional(resource_id):
-        return resource  # type: ignore [return-value]
+        return resource
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No resource with resource_id '{resource_id}' was found.",
-        )
-
-
-def init_app(app):
-    app.include_router(router)
+        raise ResourceNotFound()

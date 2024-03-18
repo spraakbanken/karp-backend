@@ -5,11 +5,10 @@ from typing import Any, Dict, Optional, Tuple
 
 from karp.foundation import timings
 from karp.foundation.entity import Entity
-from karp.foundation.value_objects import PermissionLevel
+from karp.foundation.value_objects import PermissionLevel, unique_id
 from karp.lex.domain import constraints, errors
 from karp.lex.domain.entities import Entry, create_entry
 from karp.lex.domain.value_objects import EntrySchema
-from karp.lex_core.value_objects import unique_id
 
 
 class ResourceOp(enum.Enum):
@@ -73,6 +72,14 @@ class Resource(Entity):
         self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
 
+    def unpublish(
+        self,
+        user: str,
+        version: int,
+    ):
+        self._update_metadata(None, user, "Unpublished", version)
+        self.is_published = False
+
     def update(
         self,
         *,
@@ -102,12 +109,7 @@ class Resource(Entity):
         self._increment_version()
 
     def discard(self, *, user: str, message: str, timestamp: Optional[float] = None):
-        self._op = ResourceOp.DELETED
-        self._message = message or "Entry deleted."
-        self._discarded = True
-        self._last_modified_by = user
-        self._last_modified = timestamp or timings.utc_now()
-        self._version += 1
+        raise NotImplementedError()
 
     @property
     def entry_schema(self) -> EntrySchema:
@@ -115,24 +117,6 @@ class Resource(Entity):
         if self._entry_schema is None:
             self._entry_schema = EntrySchema.from_resource_config(self.config)
         return self._entry_schema
-
-    def serialize(self) -> dict[str, Any]:
-        """Serialize resource to camelCased dict."""
-        return {
-            "id": self.id,
-            "resourceId": self.resource_id,
-            "name": self.name,
-            "version": self.version,
-            "lastModified": self.last_modified,
-            "lastModifiedBy": self.last_modified_by,
-            "op": self.op,
-            "message": self.message,
-            "tableName": self.table_name,
-            "isPublished": self.is_published,
-            "discarded": self.discarded,
-            "resource_type": self.resource_type,
-            "config": self.config,
-        }
 
     def _validate_entry(self, entry: dict[str, Any]) -> dict[str, Any]:
         """Validate an entry against this resource's entry schema."""

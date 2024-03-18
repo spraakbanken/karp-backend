@@ -17,7 +17,7 @@ from karp.lex.domain.value_objects import entry_schema
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
-from karp.lex_infrastructure import ResourceQueries, EntryQueries
+from karp.lex.application import ResourceQueries, EntryQueries
 
 logger = logging.getLogger(__name__)
 

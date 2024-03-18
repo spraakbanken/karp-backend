@@ -8,9 +8,9 @@ from starlette import status
 
 from karp import auth
 from karp.foundation.timings import utc_now
-from karp.lex.application.queries.entries import (
+from karp.lex.domain.dtos import EntryDto
+from karp.lex.application.dtos import (
     EntryDiffDto,
-    EntryDto,
     GetHistoryDto,
     HistoryDto,  # noqa: F401
 )

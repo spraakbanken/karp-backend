@@ -2,19 +2,19 @@ import dataclasses  # noqa: I001
 import typing
 from typing import Dict, Iterable, Optional
 
-import injector
+from injector import Injector, Module, provider, singleton
 
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
+from karp.search.infrastructure.es import EsIndex
 from karp.foundation.timings import utc_now
-from karp.search.application.repositories import IndexEntry
+from karp.search.domain import IndexEntry
 
 
 @dataclasses.dataclass
 class SearchUnitTestContext:
-    container: injector.Injector
+    injector: Injector
 
 
-class InMemoryIndex(Es6Index):
+class InMemoryIndex(EsIndex):
     @dataclasses.dataclass
     class Index:
         config: Dict
@@ -25,19 +25,19 @@ class InMemoryIndex(Es6Index):
 
     def __init__(self) -> None:
         super().__init__()
-        self.indicies: dict[str, InMemoryIndex.Index] = {}
+        self.indices: dict[str, InMemoryIndex.Index] = {}
 
     def create_index(self, resource_id: str, config: Dict):  # noqa: ANN201
-        self.indicies[resource_id] = InMemoryIndex.Index(config=config, created_at=utc_now())
+        self.indices[resource_id] = InMemoryIndex.Index(config=config, created_at=utc_now())
 
     def publish_index(self, alias_name: str, index_name: str = None):  # noqa: ANN201
-        self.indicies[alias_name].published = True
+        self.indices[alias_name].published = True
 
     def add_entries(  # noqa: ANN201
         self, resource_id: str, entries: Iterable[IndexEntry]
     ):
         for entry in entries:
-            self.indicies[resource_id].entries[entry.id] = entry
+            self.indices[resource_id].entries[entry.id] = entry
 
     def delete_entry(  # noqa: ANN201
         self,
@@ -50,7 +50,7 @@ class InMemoryIndex(Es6Index):
             return
         if not isinstance(entry_id, str):
             entry_id = str(entry_id)
-        del self.indicies[resource_id].entries[entry_id]
+        del self.indices[resource_id].entries[entry_id]
 
     def _save(self, _notused):  # noqa: ANN202
         pass
@@ -59,8 +59,8 @@ class InMemoryIndex(Es6Index):
         return None
 
 
-class InMemorySearchInfrastructure(injector.Module):
-    @injector.provider
-    @injector.singleton
-    def index(self) -> Es6Index:
+class InMemorySearchInfrastructure(Module):
+    @provider
+    @singleton
+    def index(self) -> EsIndex:
         return InMemoryIndex()

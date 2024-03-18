@@ -59,9 +59,9 @@ def parse_database_url_wo_db(env: environs.Env) -> DatabaseUrl:
     )
 
 
-config = load_env()
+env = load_env()
 
 
-DATABASE_URL = parse_database_url(config)
-DATABASE_URL_WO_DB = parse_database_url_wo_db(config)
-DATABASE_NAME = parse_database_name(config)
+DATABASE_URL = parse_database_url(env)
+DATABASE_URL_WO_DB = parse_database_url_wo_db(env)
+DATABASE_NAME = parse_database_name(env)

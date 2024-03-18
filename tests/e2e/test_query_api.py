@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 import pytest  # pyre-ignore
 from fastapi import status
 from karp import auth
-from karp.lex_infrastructure import EntryQueries
+from karp.lex.application import EntryQueries
 from tests.common_data import PLACES
 from tests.utils import get_json
 
@@ -97,7 +97,7 @@ def test_contains(
     app_context,
 ):
     query = f'/query/places?q=contains|{field}|"{value}"'
-    entry_queries = app_context.container.get(EntryQueries)  # type: ignore [misc]
+    entry_queries = app_context.injector.get(EntryQueries)  # type: ignore [misc]
     expected_result = []
     analyzed_value = value.lower()
     for entry in entry_queries.all_entries("places"):
@@ -125,3 +125,6 @@ def test_regex(
     assert len(response_data["hits"]) == hit_count
     for hit in response_data["hits"]:
         print(hit["entry"]["name"])
+
+
+# TODO: test that we can search for virtual fields

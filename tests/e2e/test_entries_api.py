@@ -6,18 +6,18 @@ from fastapi import status
 from karp import auth
 from karp.main.errors import ClientErrorCodes
 from karp.foundation.timings import utc_now
-from karp.lex_core.value_objects import (
+from karp.foundation.value_objects import (
     make_unique_id,
     unique_id,
 )
-from karp.lex.application.queries import EntryDto
-from karp.lex_infrastructure.repositories import ResourceRepository
-from karp.main import modules
+from karp.lex.domain.dtos import EntryDto
+from karp.lex.infrastructure import ResourceRepository
+from karp.main import new_session
 
 
-def get_entries(container, resource_id: str):  # noqa: ANN201
-    with modules.new_session(container) as container:
-        resources = container.get(ResourceRepository)
+def get_entries(injector, resource_id: str):  # noqa: ANN201
+    with new_session(injector) as injector:
+        resources = injector.get(ResourceRepository)
         return resources.entries_by_resource_id("places")
 
 
@@ -129,7 +129,7 @@ class TestAddEntry:
         new_id = unique_id.parse(response_data["newID"])
 
         entries = get_entries(
-            fa_data_client.app.state.app_context.container, resource_id="places"
+            fa_data_client.app.state.app_context.injector, resource_id="places"
         )
         assert new_id in entries.entity_ids()
 
@@ -161,7 +161,7 @@ class TestAddEntry:
         new_id = response_data["newID"]
 
         entries = get_entries(
-            fa_data_client.app.state.app_context.container, resource_id="places"
+            fa_data_client.app.state.app_context.injector, resource_id="places"
         )
         assert new_id in entries.entity_ids()
 
@@ -230,6 +230,31 @@ class TestAddEntry:
         #     response_data["error"] == "Missing ID field for resource 'places' in '{}'"
         # )
 
+    def test_add_fails_with_virtual_field(  # noqa: ANN201
+        self,
+        fa_data_client,
+        write_token: auth.AccessToken,
+    ):
+        response = fa_data_client.put(
+            "/entries/places",
+            json={
+                "entry": {
+                    "code": 20789,
+                    "name": "add203",
+                    "population": 4,
+                    "area": 50000,
+                    "density": 5,
+                    "municipality": [2],
+                    "_municipality": [{"code": 2}],
+                },
+            },
+            headers=write_token.as_header(),
+        )
+
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        response_data = response.json()
+        assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
+
 
 class TestDeleteEntry:
     def test_delete(  # noqa: ANN201
@@ -262,7 +287,7 @@ class TestDeleteEntry:
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         entries = get_entries(
-            fa_data_client.app.state.app_context.container, resource_id="places"
+            fa_data_client.app.state.app_context.injector, resource_id="places"
         )
         assert entries.by_id(entity_id).discarded
         assert entity_id not in entries.entity_ids()
@@ -321,7 +346,7 @@ class TestDeleteEntryRest:
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         entries = get_entries(
-            fa_data_client.app.state.app_context.container, resource_id="places"
+            fa_data_client.app.state.app_context.injector, resource_id="places"
         )
         assert entries.by_id(entity_id).discarded
         assert entity_id not in entries.entity_ids()
@@ -525,7 +550,7 @@ class TestUpdateEntry:
         assert response_data["newID"] == entity_id
 
         entries = get_entries(
-            fa_data_client.app.state.app_context.container, resource_id="places"
+            fa_data_client.app.state.app_context.injector, resource_id="places"
         )
         assert entries.by_id(entity_id).body["population"] == 5
         assert entity_id in entries.entity_ids()
@@ -597,7 +622,7 @@ class TestUpdateEntry:
         assert str(entry_id + 1) == response_data["newID"]
 
         entries = get_entries(
-            fa_data_client.app.state.app_context.container, resource_id="places"
+            fa_data_client.app.state.app_context.injector, resource_id="places"
         )
         entry_ids = entries.entry_ids()
         assert str(entry_id) not in entry_ids
@@ -622,7 +647,7 @@ class TestUpdateEntry:
         after_add = utc_now()
 
         entries = get_entries(
-            fa_data_client.app.state.app_context.container, resource_id="places"
+            fa_data_client.app.state.app_context.injector, resource_id="places"
         )
         entity_id = ids[0]
         entry = entries.by_id(entity_id)
@@ -646,7 +671,7 @@ class TestUpdateEntry:
         after_update = utc_now()
 
         entries = get_entries(
-            fa_data_client.app.state.app_context.container, resource_id="places"
+            fa_data_client.app.state.app_context.injector, resource_id="places"
         )
         entry = entries.by_id(entity_id)
         assert entry.last_modified > after_add
@@ -686,6 +711,7 @@ class TestGetEntry:
 
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_214_id
+        assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 1
 
     def test_route_w_version_exist(  # noqa: ANN201
@@ -702,4 +728,5 @@ class TestGetEntry:
 
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_209_id
+        assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 5

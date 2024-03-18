@@ -1,7 +1,6 @@
-from karp.search.application.repositories import (
-    IndexEntry,
-)
+from .domain import IndexEntry, QueryRequest
 
 __all__ = [
     "IndexEntry",
+    "QueryRequest",
 ]

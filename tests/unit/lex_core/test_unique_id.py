@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import pytest
-from karp.lex_core.value_objects import UniqueId, make_unique_id
+from karp.foundation.value_objects import UniqueId, make_unique_id
 
 
 def test_unique_ids_are_sortable():  # noqa: ANN201

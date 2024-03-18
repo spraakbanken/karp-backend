@@ -1,21 +1,30 @@
 import logging
 
+from injector import inject
+from sqlalchemy.orm import Session
+
+from karp import plugins
 from karp.foundation.timings import utc_now
-from karp.lex.application.dtos import ResourceDto
+from karp.foundation.value_objects import make_unique_id
 from karp.lex.domain import entities
+from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
-from karp.lex_core.value_objects import make_unique_id
-from karp.lex_infrastructure.repositories import ResourceRepository
-from karp.search_infrastructure.repositories.es6_indicies import Es6Index
+from karp.lex.infrastructure import ResourceRepository
+from karp.plugins import Plugins
+from karp.search.infrastructure.es.indices import EsIndex
 
 logger = logging.getLogger(__name__)
 
 
 class ResourceCommands:
-    def __init__(self, session, resources, index):
-        self.session = session
+    @inject
+    def __init__(
+        self, session: Session, resources: ResourceRepository, index: EsIndex, plugins: Plugins
+    ):
+        self.session: Session = session
         self.resources: ResourceRepository = resources
-        self.index: Es6Index = index
+        self.index: EsIndex = index
+        self.plugins: Plugins = plugins
 
     def create_resource(self, resource_id, name, config, user):
         existing_resource = self.resources.by_resource_id_optional(resource_id)
@@ -34,8 +43,9 @@ class ResourceCommands:
 
         self.resources.save(resource)
         self.session.commit()
-        self._create_search_servie_handler(resource)
-        return ResourceDto(**resource.serialize())
+        config = plugins.transform_config(self.plugins, resource.config)
+        self.index.create_index(resource.resource_id, config)
+        return ResourceDto.from_resource(resource)
 
     def update_resource(self, resource_id, name, version, config, message, user):
         resource = self.resources.by_resource_id(resource_id)
@@ -64,21 +74,32 @@ class ResourceCommands:
         )
         self.resources.save(resource)
         self.session.commit()
-        self._resource_published_handler(resource_id)
 
-    def delete_resource(self, resource_id, user, message):
-        logger.info("deleting resource", extra={"resource_id": resource_id})
-        resource = self.resource.by_resource_id(resource_id)
-        resource.discard(user=user, message=message, timestamp=utc_now())
+    def unpublish_resource(self, resource_id, user, version, keep_index=False):
+        logger.info("unpublishing resource", extra={"resource_id": resource_id})
+        resource = self.resources.by_resource_id(resource_id)
+        if not resource.is_published:
+            return False
+        resource.unpublish(user=user, version=version)
         self.resources.save(resource)
         self.session.commit()
-        self._deleting_index(resource_id)
+        if not keep_index:
+            self.index.delete_index(resource_id)
+        return True
 
-    def _deleting_index(self, resource_id):
+    def delete_resource(self, resource_id):
+        resource = self.resources.by_resource_id(resource_id)
+        if not resource:
+            return False
+
+        # delete the index with alias "resource_id" from Elasticsearch
         self.index.delete_index(resource_id)
 
-    def _create_search_servie_handler(self, resource):
-        self.index.create_index(resource.resource_id, resource.config)
+        # drop resource table
+        resource = self.resources.by_resource_id(resource_id)
+        self.resources.remove_resource_table(resource)
 
-    def _resource_published_handler(self, resource_id):
-        self.index.publish_index(resource_id)
+        # delete all rows from resource table associated with resource_id
+        self.resources.delete_all_versions(resource_id)
+        self.session.commit()
+        return True

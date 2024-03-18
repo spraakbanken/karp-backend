@@ -4,14 +4,15 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
 
 from karp import auth, search
-from karp.auth.infrastructure import ResourcePermissionQueries
+from karp.auth.application import ResourcePermissionQueries
+from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
-from karp.search.application.queries import QueryRequest
+from karp.search.domain import QueryRequest
 from karp.search.domain.errors import IncompleteQuery
 
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.search_infrastructure.queries import Es6SearchService
+from karp.search.infrastructure.es import EsSearchService
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,8 @@ def get_entries_by_id(
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
-    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
+    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
+    published_resources: [str] = Depends(deps.get_published_resources),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
     if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
@@ -42,6 +44,8 @@ def get_entries_by_id(
             status_code=status.HTTP_403,
             detail="Not enough permissions",
         )
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     return search_service.search_ids(resource_id, entry_ids)
 
 
@@ -64,7 +68,8 @@ def query_split(
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
-    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
+    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
+    published_resources: [str] = Depends(deps.get_published_resources),
 ):
     logger.debug("/query/split called", extra={"resources": resources})
     resource_list = resources.split(",")
@@ -73,6 +78,8 @@ def query_split(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+    if any(resource not in published_resources for resource in resource_list):
+        raise ResourceNotFound(resource_list)
     query_request = QueryRequest(
         resource_ids=resource_list,
         q=q,
@@ -136,7 +143,8 @@ def query(
     ),
     user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
-    search_service: Es6SearchService = Depends(inject_from_req(Es6SearchService)),
+    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
+    published_resources: [str] = Depends(deps.get_published_resources),
 ):
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.
@@ -152,6 +160,8 @@ def query(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+    if any(resource not in published_resources for resource in resource_list):
+        raise ResourceNotFound(resource_list)
     query_request = QueryRequest(
         resource_ids=resource_list,
         q=q,
@@ -172,8 +182,14 @@ def query(
             extra={"resources": resources, "q": q, "error_message": err.message},
         )
         raise
+    except IncompleteQuery as err:
+        raise HTTPException(  # noqa: B904
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "errorCode": karp_errors.ClientErrorCodes.SEARCH_INCOMPLETE_QUERY,
+                "message": "Error in query",
+                "failing_query": err.failing_query,
+                "error_description": err.error_description,
+            },
+        )
     return response
-
-
-def init_app(app):
-    app.include_router(router)

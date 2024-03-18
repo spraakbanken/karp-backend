@@ -3,7 +3,7 @@ import pytest  # noqa: I001
 from typer import Typer
 from typer.testing import CliRunner
 from karp import lex
-from karp.lex_infrastructure import ResourceQueries
+from karp.lex.application import ResourceQueries
 
 from karp.main import AppContext
 
@@ -33,5 +33,5 @@ class TestCliResourceLifetime:
         else:
             assert result.exit_code == 0
 
-        resource_queries = app_context.container.get(ResourceQueries)  # type: ignore [misc]
+        resource_queries = app_context.injector.get(ResourceQueries)  # type: ignore [misc]
         assert resource_queries.by_resource_id_optional("lexlex") is not None
