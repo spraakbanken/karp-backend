@@ -10,7 +10,7 @@ select = [
   "YTT",
 ]
 
-ignore = ["E501","ANN001","ANN101", "ANN102","B008","D203", "D213","D104", "RUF100"]
+ignore = ["E501","ANN001","ANN101", "ANN102","B008","D203","D213","D104", "RUF100","RUF005"]
 
 line-length = 97
 

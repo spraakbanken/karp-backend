@@ -1,8 +1,8 @@
 import dataclasses  # noqa: I001
 
-import injector
+from injector import Injector
 
 
 @dataclasses.dataclass
 class IntegrationTestContext:
-    container: injector.Injector
+    injector: Injector

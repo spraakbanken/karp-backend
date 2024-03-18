@@ -33,5 +33,5 @@ class TestCliResourceLifetime:
         else:
             assert result.exit_code == 0
 
-        resource_queries = app_context.container.get(ResourceQueries)  # type: ignore [misc]
+        resource_queries = app_context.injector.get(ResourceQueries)  # type: ignore [misc]
         assert resource_queries.by_resource_id_optional("lexlex") is not None

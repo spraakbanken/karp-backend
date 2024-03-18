@@ -16,17 +16,34 @@ from karp.lex.application.dtos import (
 )
 from karp.foundation.value_objects import UniqueId, UniqueIdStr
 from ..infrastructure.sql import ResourceRepository
+from injector import inject
+from karp import plugins
+from karp.plugins import Plugins
 
 logger = logging.getLogger(__name__)
 
 
 class EntryQueries:
+    @inject
     def __init__(
         self,
         resources: ResourceRepository,
+        plugins: Plugins,
     ) -> None:
         super().__init__()
         self.resources = resources
+        self.plugins = plugins
+
+    def _to_dtos(
+        self, resource_id, entries: typing.Iterator[Entry]
+    ) -> typing.Iterator[EntryDto]:
+        resource = self.resources.by_resource_id(resource_id)
+        return plugins.transform_entries(
+            self.plugins, resource.config, (EntryDto.from_entry(entry) for entry in entries)
+        )
+
+    def _to_dto(self, entry: Entry) -> EntryDto:
+        return next(self._to_dtos(entry.resource_id, [entry]))
 
     def by_id(
         self,
@@ -34,7 +51,7 @@ class EntryQueries:
         id: UniqueIdStr,  # noqa: A002
     ) -> EntryDto:
         entries = self.resources.entries_by_resource_id(resource_id)
-        return EntryDto.from_entry(entries.by_id(UniqueId.validate(id)))
+        return self._to_dto(entries.by_id(UniqueId.validate(id)))
 
     def by_id_optional(
         self,
@@ -43,12 +60,12 @@ class EntryQueries:
     ) -> typing.Optional[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
         if entry := entries.by_id_optional(UniqueId.validate(id)):
-            return EntryDto.from_entry(entry)
+            return self._to_dto(entry)
         return None
 
     def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
-        return (EntryDto.from_entry(entry) for entry in entries.all_entries())
+        return self._to_dtos(resource_id, entries.all_entries())
 
     def get_entry_history(
         self,
@@ -58,16 +75,7 @@ class EntryQueries:
     ) -> EntryDto:
         entries = self.resources.entries_by_resource_id(resource_id)
         result = entries.by_id(UniqueId.validate(id), version=version)
-
-        return EntryDto(
-            id=result.id,
-            resource=resource_id,
-            version=result.version,
-            entry=result.body,
-            lastModifiedBy=result.last_modified_by,
-            lastModified=result.last_modified,
-            message=result.message,
-        )
+        return self._to_dto(result)
 
     def get_history(
         self,

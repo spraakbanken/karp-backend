@@ -21,6 +21,27 @@
     "larger_place": {
       "type": "integer"
     },
+    "municipality_again_again_again": {
+      "collection": "true",
+      "virtual": "true",
+      "plugin": "copy",
+      "field_params": {"value": "municipality_again"},
+      "params": {"config": {"type": "integer"}}
+    },
+    "municipality_again": {
+      "collection": "true",
+      "virtual": "true",
+      "plugin": "copy",
+      "field_params": {"value": "municipality"},
+      "params": {"config": {"type": "integer"}}
+    },
+    "municipality_again_again": {
+      "collection": "true",
+      "virtual": "true",
+      "plugin": "copy",
+      "field_params": {"value": "municipality_again"},
+      "params": {"config": {"type": "integer"}}
+    },
     "population": {
       "type": "integer"
     },

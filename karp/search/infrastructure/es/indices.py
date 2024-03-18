@@ -1,10 +1,9 @@
 import logging
-import re
-import typing
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from datetime import datetime
+from typing import Dict, Iterable, Optional
 
 import elasticsearch
-from elasticsearch import exceptions as es_exceptions
+from injector import inject
 
 from karp.lex.domain.entities import Entry
 from karp.search.domain import IndexEntry
@@ -15,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class EsIndex:
+    @inject
     def __init__(
         self,
         es: elasticsearch.Elasticsearch,
@@ -35,6 +35,8 @@ class EsIndex:
         if "settings" in mapping:
             settings |= mapping["settings"]
             del mapping["settings"]
+        else:
+            raise Exception("This should never happen")
         properties = mapping["properties"]
         properties["freetext"] = {"type": "text"}
         disabled_property = {"enabled": False}
@@ -47,50 +49,36 @@ class EsIndex:
             "mappings": mapping,
         }
 
-        index_alias_name = self.mapping_repo.create_index_and_alias_name(resource_id)
-        logger.info("creating index", extra={"index_alias_name": index_alias_name, "body": body})
-        result = self.es.indices.create(index=index_alias_name["index_name"], body=body)
+        date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
+        index_name = f"{resource_id}_{date}"
+        logger.debug("creating index", extra={"index_name": index_name, "body": body})
+        result = self.es.indices.create(index=index_name, body=body)
+
+        # create an alias so we can interact with the index using resource_id
+        if self.es.indices.exists_alias(name=resource_id):
+            self.es.indices.delete_alias(name=resource_id, index="*")
+        self.es.indices.put_alias(name=resource_id, index=index_name)
+
         if "error" in result:
             logger.error(
                 "failed to create index",
-                extra={"index_name": index_alias_name["index_name"], "body": body},
+                extra={"index_name": index_name, "body": body},
             )
             raise RuntimeError("failed to create index")
         logger.info("index created")
-        return index_alias_name
 
     def delete_index(self, resource_id: str):
-        index_name = self.mapping_repo.get_index_name(resource_id)
-        alias_name = self.mapping_repo.get_alias_name(resource_id)
+        index_name = self.es.indices.get_alias(name=resource_id).popitem()[0]
         self.es.indices.delete(index=index_name)
-        self.mapping_repo.delete_from_config(resource_id)
-
-    def publish_index(self, resource_id: str):
-        alias_name = self.mapping_repo.get_alias_name(resource_id)
-        if self.es.indices.exists_alias(name=alias_name):
-            self.es.indices.delete_alias(name=alias_name, index="*")
-
-        index_name = self.mapping_repo.get_index_name(resource_id)
-        self.mapping_repo.on_publish_resource(alias_name, index_name)
-        logger.info(
-            "publishing resource",
-            extra={
-                "resource_id": resource_id,
-                "index_name": index_name,
-                "alias_name": alias_name,
-            },
-        )
-        self.es.indices.put_alias(name=alias_name, index=index_name)
 
     def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
-        index_name = self.mapping_repo.get_index_name(resource_id)
         index_to_es = []
         for entry in entries:
-            assert isinstance(entry, IndexEntry)  # noqa: S101
-            # entry.update(metadata.to_dict())
+            if not isinstance(entry, IndexEntry):
+                raise Exception("Will this happen?")
             index_to_es.append(
                 {
-                    "_index": index_name,
+                    "_index": resource_id,
                     "_id": entry.id,
                     "_source": entry.entry,
                 }
@@ -110,10 +98,9 @@ class EsIndex:
         if entry:
             entry_id = entry.entry_id
         logger.info("deleting entry", extra={"entry_id": entry_id, "resource_id": resource_id})
-        index_name = self.mapping_repo.get_index_name(resource_id)
         try:
             self.es.delete(
-                index=index_name,
+                index=resource_id,
                 id=entry_id,
                 refresh=True,
             )
@@ -123,7 +110,7 @@ class EsIndex:
                 extra={
                     "entry_id": entry_id,
                     "resource_id": resource_id,
-                    "index_name": index_name,
+                    "index_name": resource_id,
                 },
             )
 
@@ -150,7 +137,9 @@ def _create_es_mapping(config):
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
-            if parent_field_def["type"] == "string":
+            if parent_field_def["type"] == "string" and not parent_field_def.get(
+                "skip_raw", False
+            ):
                 result["fields"] = {"raw": {"type": "keyword"}}
         else:
             result = {"properties": {}}

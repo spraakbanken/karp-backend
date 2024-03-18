@@ -1,7 +1,7 @@
 """Pytest entry point."""
 
 
-import injector
+from injector import Injector
 import pytest  # pyre-ignore  # noqa: F811
 from sqlalchemy import create_engine
 from sqlalchemy.orm import session, sessionmaker
@@ -9,7 +9,6 @@ from sqlalchemy.orm import session, sessionmaker
 from alembic.config import main as alembic_main  # noqa: F401
 
 from tests.unit.lex.adapters import InMemoryLexInfrastructure
-from karp.main.modules import CommandsMod, LexInfrastructure
 
 
 # environ["TESTING"] = "True"
@@ -37,15 +36,12 @@ def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201
 
 @pytest.fixture()
 def integration_ctx() -> adapters.IntegrationTestContext:
-    container = injector.Injector(
+    injector = Injector(
         [
-            CommandsMod(),
-            GenericLexInfrastructure(),
             InMemoryLexInfrastructure(),
             search_adapters.InMemorySearchInfrastructure(),
-        ],
-        auto_bind=False,
+        ]
     )
     return adapters.IntegrationTestContext(
-        container=container,
+        injector=injector,
     )

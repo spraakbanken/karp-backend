@@ -72,6 +72,14 @@ class Resource(Entity):
         self._update_metadata(timestamp, user, message or "Published", version)
         self.is_published = True
 
+    def unpublish(
+        self,
+        user: str,
+        version: int,
+    ):
+        self._update_metadata(None, user, "Unpublished", version)
+        self.is_published = False
+
     def update(
         self,
         *,
@@ -101,12 +109,7 @@ class Resource(Entity):
         self._increment_version()
 
     def discard(self, *, user: str, message: str, timestamp: Optional[float] = None):
-        self._op = ResourceOp.DELETED
-        self._message = message or "Entry deleted."
-        self._discarded = True
-        self._last_modified_by = user
-        self._last_modified = timestamp or timings.utc_now()
-        self._version += 1
+        raise NotImplementedError()
 
     @property
     def entry_schema(self) -> EntrySchema:

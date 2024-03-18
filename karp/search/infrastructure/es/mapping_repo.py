@@ -1,18 +1,15 @@
 import logging
 import re
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import elasticsearch
-from elasticsearch import exceptions as es_exceptions
+from injector import inject
 
-from karp.lex.domain.entities import Entry
+from karp.lex.infrastructure import ResourceRepository
 from karp.search.domain.errors import UnsupportedField
 
 logger = logging.getLogger("karp")
-
-KARP_CONFIGINDEX = "karp_config"
 
 
 @dataclass
@@ -59,98 +56,21 @@ class Field:
 
 
 class EsMappingRepository:
-    def __init__(
-        self,
-        es: elasticsearch.Elasticsearch,
-        prefix: str = "",
-    ):
+    @inject
+    def __init__(self, es: elasticsearch.Elasticsearch, resource_repo: ResourceRepository):
         self.es = es
-        self._prefix = prefix
-        self._config_index = f"{prefix}_config" if prefix else KARP_CONFIGINDEX
-        self.ensure_config_index_exist()
 
         self.fields: Dict[str, Dict[str, Field]] = {}
         self.sortable_fields: Dict[str, Dict[str, Field]] = {}
+        resources = resource_repo.get_published_resources()
+
+        self.default_sort: Dict[str, str] = {
+            resource.resource_id: resource.config.get("sort") or resource.config.get("id")
+            for resource in resources
+        }
 
         aliases = self._get_all_aliases()
         self._update_field_mapping(aliases)
-
-    def ensure_config_index_exist(self) -> None:
-        if not self.es.indices.exists(index=self._config_index):
-            self.es.indices.create(
-                index=self._config_index,
-                body={
-                    "settings": {
-                        "number_of_shards": 1,
-                        "number_of_replicas": 1,
-                        "refresh_interval": -1,
-                    },
-                    "mappings": {
-                        "dynamic": False,
-                        "properties": {
-                            "index_name": {"type": "text"},
-                            "alias_name": {"type": "text"},
-                        }
-                    },
-                },
-            )
-
-    def create_index_name(self, resource_id: str) -> str:
-        date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
-        return f"{self._prefix}{resource_id}_{date}"
-
-    def create_alias_name(self, resource_id: str) -> str:
-        return f"{self._prefix}{resource_id}"
-
-    def create_index_and_alias_name(self, resource_id: str) -> dict[str, str]:
-        return self._update_config(resource_id)
-
-    def get_name_base(self, resource_id: str) -> str:
-        return f"{self._prefix}{resource_id}"
-
-    def _update_config(self, resource_id: str) -> dict[str, str]:
-        index_name = self.create_index_name(resource_id)
-        alias_name = self.create_alias_name(resource_id)
-        names = {"index_name": index_name, "alias_name": alias_name}
-        self.es.index(
-            index=self._config_index,
-            id=resource_id,
-            body=names,
-        )
-        return names
-
-    def delete_from_config(self, resource_id: str) -> None:
-        try:
-            self.es.delete(
-                index=self._config_index,
-                doc_type="configs",
-                id=resource_id,
-                refresh=True,
-            )
-        except elasticsearch.exceptions.ElasticsearchException:
-            logger.exception(
-                "Error deleting from config",
-                extra={
-                    "resource_id": resource_id,
-                    "index_name": self._config_index,
-                },
-            )
-
-    def get_index_name(self, resource_id: str) -> str:
-        try:
-            res = self.es.get(index=self._config_index, id=resource_id)
-        except es_exceptions.NotFoundError as err:
-            logger.info("didn't find index_name for resource '%s' details: %s", resource_id, err)
-            return self._update_config(resource_id)["index_name"]
-        return res["_source"]["index_name"]
-
-    def get_alias_name(self, resource_id: str) -> str:
-        try:
-            res = self.es.get(index=self._config_index, id=resource_id)
-        except es_exceptions.NotFoundError as err:
-            logger.info("didn't find alias_name for resource '%s' details: %s", resource_id, err)
-            return self._update_config(resource_id)["alias_name"]
-        return res["_source"]["alias_name"]
 
     def _update_field_mapping(
         self, aliases: List[Tuple[str, str]]
@@ -175,7 +95,7 @@ class EsMappingRepository:
     @staticmethod
     def _get_fields_from_mapping(
         properties: Dict[str, Dict[str, Dict[str, Any]]],
-        path: list[str] = None,
+        path: Optional[list[str]] = None,
         extra: bool = False,  # noqa: RUF013
     ) -> dict[str, Field]:
         if path is None:
@@ -183,7 +103,7 @@ class EsMappingRepository:
         fields = {}
 
         for prop_name, prop_value in properties.items():
-            prop_path = path + [prop_name]  # noqa: RUF005
+            prop_path = path + [prop_name]
             if "properties" in prop_value and "type" not in prop_value:
                 field_type = "object"
             else:
@@ -226,6 +146,23 @@ class EsMappingRepository:
                     index_names.append((alias, index))
         return index_names
 
+    def check_resource_is_published(self, resource_id):
+        return resource_id in self.default_sort
+
+    def get_default_sort(self, resources: List[str]) -> str:
+        """
+        Returns the default sort field for the resources. Throws an error
+        if the resources have different sort fields, or if those sort  fields
+        have different types (i.e. if _raw must be added)
+        """
+        sort_field = self._translate_sort_field(resources[0], self.default_sort[resources[0]])
+        for resource in resources[1:]:
+            if self._translate_sort_field(resource, self.default_sort[resource]) != sort_field:
+                raise Exception(
+                    "Resources do not share default sort field, set sort field explicitly"
+                )
+        return sort_field
+
     def translate_sort_fields(
         self, resources: List[str], sort_values: List[str]
     ) -> List[Union[str, Dict[str, Dict[str, str]]]]:
@@ -245,22 +182,18 @@ class EsMappingRepository:
                 sort_value, sort_order = sort_value.split("|", 1)
             for resource_id in resources:
                 if sort_order:
-                    field = self.translate_sort_field(resource_id, sort_value)
+                    field = self._translate_sort_field(resource_id, sort_value)
                     translated_sort_fields.append({field: {"order": sort_order}})
-                translated_sort_fields.append(self.translate_sort_field(resource_id, sort_value))
+                translated_sort_fields.append(
+                    self._translate_sort_field(resource_id, sort_value)
+                )
 
         return translated_sort_fields
 
-    def translate_sort_field(self, resource_id: str, sort_value: str) -> str:
-        logger.debug(
-            f"es_indextranslate_sort_field: sortable_fields[{resource_id}] = {self.sortable_fields[resource_id]}"
-        )
+    def _translate_sort_field(self, resource_id: str, sort_value: str) -> str:
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value].name
         else:
             raise UnsupportedField(
                 f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
             )
-
-    def on_publish_resource(self, alias_name: str, index_name: str):
-        self._update_field_mapping([(alias_name, index_name)])

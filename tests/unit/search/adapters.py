@@ -2,7 +2,7 @@ import dataclasses  # noqa: I001
 import typing
 from typing import Dict, Iterable, Optional
 
-import injector
+from injector import Injector, Module, provider, singleton
 
 from karp.search.infrastructure.es import EsIndex
 from karp.foundation.timings import utc_now
@@ -11,7 +11,7 @@ from karp.search.domain import IndexEntry
 
 @dataclasses.dataclass
 class SearchUnitTestContext:
-    container: injector.Injector
+    injector: Injector
 
 
 class InMemoryIndex(EsIndex):
@@ -59,8 +59,8 @@ class InMemoryIndex(EsIndex):
         return None
 
 
-class InMemorySearchInfrastructure(injector.Module):
-    @injector.provider
-    @injector.singleton
+class InMemorySearchInfrastructure(Module):
+    @provider
+    @singleton
     def index(self) -> EsIndex:
         return InMemoryIndex()

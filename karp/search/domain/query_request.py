@@ -1,15 +1,13 @@
 import logging
 import typing
-from typing import Callable, Dict, List, Optional, Tuple, TypeVar
+from typing import List
 
 import pydantic
-
-from karp.search.domain.query import Query
 
 logger = logging.getLogger(__name__)
 
 
-class QueryRequest(pydantic.BaseModel):  # pylint: disable=no-member
+class QueryRequest(pydantic.BaseModel):
     resource_ids: typing.List[str]
     q: typing.Optional[str] = None
     from_: int = 0

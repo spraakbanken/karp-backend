@@ -170,19 +170,38 @@ def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def delete(
-    ctx: typer.Context,
-    resource_id: str,
-    user: Optional[str] = typer.Option(None),
-    message: Optional[str] = typer.Option(None),
+def unpublish(
+    ctx: typer.Context, resource_id: str, version: int, keep_index: Optional[bool] = False
 ):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
-    resource_commands.delete_resource(
-        resource_id=resource_id,
-        user=user or "local admin",
-        message=message or "resource deleted",
+    unpublished = resource_commands.unpublish_resource(
+        resource_id=resource_id, user="local admin", version=version, keep_index=keep_index
     )
-    typer.echo(f"Deleted resource '{resource_id}'")
+    if unpublished:
+        typer.echo(f"Resource unpublished")
+        if keep_index:
+            typer.echo(f"Elasticsearch index kept")
+    else:
+        typer.echo(f"Resource already unpublished")
+
+
+@subapp.command()
+@cli_error_handler
+@cli_timer
+def delete(ctx: typer.Context, resource_id: str, force: Optional[bool] = False):
+    resource_commands = inject_from_ctx(ResourceCommands, ctx)
+    if not force:
+        force = typer.confirm(
+            "This will delete every row, table and index for this resource permanently. Are you sure?"
+        )
+    if force:
+        deleted = resource_commands.delete_resource(resource_id=resource_id)
+        if deleted:
+            typer.echo(f"Resource deleted")
+        else:
+            typer.echo(f"Resource already deleted")
+    else:
+        typer.echo(f"Resource not deleted")
 
 
 def init_app(app):
