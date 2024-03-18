@@ -176,7 +176,7 @@ class EsSearchService:
             }
 
         result = {
-            "total": response.hits.total,
+            "total": response.hits.total.value,
             "hits": [format_entry(entry) for entry in response],
         }
         return result
@@ -223,11 +223,11 @@ class EsSearchService:
                 result["hits"][query.resources[i]] = self._format_result(
                     query.resources, response
                 ).get("hits", [])
-                result["total"] += response.hits.total
+                result["total"] += response.hits.total.value
                 if query.lexicon_stats:
                     if "distribution" not in result:
                         result["distribution"] = {}
-                    result["distribution"][query.resources[i]] = response.hits.total
+                    result["distribution"][query.resources[i]] = response.hits.total.value
         else:
             s = self._build_search(query, query.resources)
             response = s.execute()
@@ -252,8 +252,9 @@ class EsSearchService:
                     failing_query=query.q, error_description=str(err)
                 ) from err
 
-        s = es_dsl.Search(using=self.es, index=resources, doc_type="entry")
+        s = es_dsl.Search(using=self.es, index=resources)
         s = self.add_runtime_mappings(s, field_names)
+        s = s.extra(track_total_hits=True)  # get accurate hits numbers
         if es_query is not None:
             s = s.query(es_query)
 
