@@ -81,13 +81,9 @@ class EsMappingRepository:
 
         mapping: Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]] = self.es.indices.get_mapping()
         for alias, index in aliases:
-            if (
-                "mappings" in mapping[index]
-                and "entry" in mapping[index]["mappings"]
-                and "properties" in mapping[index]["mappings"]["entry"]
-            ):
+            if "mappings" in mapping[index] and "properties" in mapping[index]["mappings"]:
                 self.fields[alias] = self._get_fields_from_mapping(
-                    mapping[index]["mappings"]["entry"]["properties"]
+                    mapping[index]["mappings"]["properties"]
                 )
                 self.sortable_fields[alias] = {}
                 for field in self.fields[alias].values():

@@ -46,7 +46,7 @@ class EsIndex:
 
         body = {
             "settings": settings,
-            "mappings": {"entry": mapping},
+            "mappings": mapping,
         }
 
         date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
@@ -80,7 +80,6 @@ class EsIndex:
                 {
                     "_index": resource_id,
                     "_id": entry.id,
-                    "_type": "entry",
                     "_source": entry.entry,
                 }
             )
@@ -102,7 +101,6 @@ class EsIndex:
         try:
             self.es.delete(
                 index=resource_id,
-                doc_type="entry",
                 id=entry_id,
                 refresh=True,
             )

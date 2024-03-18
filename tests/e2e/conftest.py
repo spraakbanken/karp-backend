@@ -43,7 +43,7 @@ def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201
 def setup_environment() -> None:
     os.environ["TESTING"] = "1"
     os.environ["AUTH_JWT_PUBKEY_PATH"] = "assets/testing/pubkey.pem"
-    os.environ["ELASTICSEARCH_HOST"] = "localhost:9202"
+    os.environ["ELASTICSEARCH_HOST"] = "http://localhost:9202"
 
 
 @pytest.fixture(scope="session")
