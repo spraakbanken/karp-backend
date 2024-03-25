@@ -124,7 +124,7 @@ class TestCreateEsMapping:
                     "filter": {
                         "swedish_folding": {
                             "type": "icu_folding",
-                            "unicodeSetFilter": "[^åäöÅÄÖ]",
+                            "unicode_set_filter": "[^åäöÅÄÖ]",
                         },
                         "swedish_sort": {"language": "sv", "type": "icu_collation"},
                     },
