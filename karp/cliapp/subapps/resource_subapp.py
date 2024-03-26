@@ -115,9 +115,9 @@ def publish(ctx: typer.Context, resource_id: str, version: int):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex(ctx: typer.Context, resource_id: str):
+def reindex(ctx: typer.Context, resource_id: str, remove_old_index: Optional[bool] = False):
     search_commands = inject_from_ctx(SearchCommands, ctx)
-    search_commands.reindex_resource(resource_id=resource_id)
+    search_commands.reindex_resource(resource_id=resource_id, remove_old_index=remove_old_index)
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
 
