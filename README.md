@@ -49,7 +49,6 @@ A Makefile is provided to simplify tasks.
 8. To setup Elasticsearch, download Elasticsearch 8.x and run the
    following commands from the `elasticsearch-8.XXX` directory:
    ```
-   bin/elasticsearch-plugin install analysis-phonetic
    bin/elasticsearch-plugin install analysis-icu
    ```
    Then run `bin/elasticsearch -Expack.security.enabled=false` to start it.
