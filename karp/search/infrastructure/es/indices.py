@@ -137,8 +137,6 @@ def _create_es_mapping(config):
                 mapped_type = "boolean"
             elif parent_field_def["type"] == "string":
                 mapped_type = "text"
-            elif parent_field_def["type"] == "long_string":
-                mapped_type = "text"
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
