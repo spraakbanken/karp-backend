@@ -145,7 +145,10 @@ def _create_es_mapping(config):
             if parent_field_def["type"] == "string" and not parent_field_def.get(
                 "skip_raw", False
             ):
-                result["fields"] = {"raw": {"type": "keyword"}}
+                result["fields"] = {
+                    "raw": {"type": "keyword"},
+                    "sort": {"type": "icu_collation_keyword", "index": False, "language": "sv"},
+                }
         else:
             result = {"properties": {}}
 
