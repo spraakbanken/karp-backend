@@ -205,7 +205,6 @@ def create_es_mapping(config: Dict) -> Dict:
                     "type": "icu_folding",
                     "unicode_set_filter": "[^åäöÅÄÖ]",
                 },
-                "swedish_sort": {"language": "sv", "type": "icu_collation"},
             },
         }
     }

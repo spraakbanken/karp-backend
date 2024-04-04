@@ -21,9 +21,18 @@ class TestCreateEsMapping:
             (
                 "name",
                 {"type": "string"},
-                {"type": "text", "fields": {"raw": {"type": "keyword"}}},
+                {
+                    "type": "text",
+                    "fields": {
+                        "raw": {"type": "keyword"},
+                        "sort": {
+                            "index": False,
+                            "type": "icu_collation_keyword",
+                            "language": "sv",
+                        },
+                    },
+                },
             ),
-            ("name", {"type": "long_string"}, {"type": "text"}),
         ],
     )
     def test_standard_types(  # noqa: ANN201
@@ -49,7 +58,14 @@ class TestCreateEsMapping:
                     "properties": {
                         "first": {
                             "type": "text",
-                            "fields": {"raw": {"type": "keyword"}},
+                            "fields": {
+                                "raw": {"type": "keyword"},
+                                "sort": {
+                                    "index": False,
+                                    "type": "icu_collation_keyword",
+                                    "language": "sv",
+                                },
+                            },
                         }
                     }
                 },
@@ -59,9 +75,18 @@ class TestCreateEsMapping:
             (
                 "name",
                 {"type": "string"},
-                {"type": "text", "fields": {"raw": {"type": "keyword"}}},
+                {
+                    "type": "text",
+                    "fields": {
+                        "raw": {"type": "keyword"},
+                        "sort": {
+                            "index": False,
+                            "type": "icu_collation_keyword",
+                            "language": "sv",
+                        },
+                    },
+                },
             ),
-            ("name", {"type": "long_string"}, {"type": "text"}),
         ],
     )
     def test_complex_types(  # noqa: ANN201
@@ -84,7 +109,19 @@ class TestCreateEsMapping:
 
         expected = {
             "dynamic": False,
-            "properties": {"name": {"type": "text", "fields": {"raw": {"type": "keyword"}}}},
+            "properties": {
+                "name": {
+                    "type": "text",
+                    "fields": {
+                        "raw": {"type": "keyword"},
+                        "sort": {
+                            "index": False,
+                            "type": "icu_collation_keyword",
+                            "language": "sv",
+                        },
+                    },
+                }
+            },
             "settings": {
                 "analysis": {
                     "analyzer": {
@@ -126,104 +163,6 @@ class TestCreateEsMapping:
                             "type": "icu_folding",
                             "unicode_set_filter": "[^åäöÅÄÖ]",
                         },
-                        "swedish_sort": {"language": "sv", "type": "icu_collation"},
-                    },
-                }
-            },
-        }
-
-        assert mapping == expected
-
-    @pytest.mark.skip()
-    def test_sort_large(self):  # noqa: ANN201
-        data = {"fields": {"name": {"type": "string"}}, "sort": ["name"]}
-
-        mapping = create_es_mapping(data)
-
-        expected = {
-            "properties": {"name": {"type": "text", "fields": {"raw": {"type": "keyword"}}}},
-            "settings": {
-                "analysis": {
-                    "analyzer": {
-                        "default": {
-                            "char_filter": [
-                                "compound",
-                                "swedish_aa",
-                                "swedish_ae",
-                                "swedish_oe",
-                            ],
-                            "filter": ["swedish_folding", "lowercase"],
-                            "tokenizer": "standard",
-                        },
-                    },
-                    "char_filter": {
-                        "clean_lastname": {
-                            "pattern": "^(af|von) ",
-                            "replacement": "",
-                            "type": "pattern_replace",
-                        },
-                        "compound": {
-                            "pattern": "-",
-                            "replacement": "",
-                            "type": "pattern_replace",
-                        },
-                        "init": {
-                            "pattern": "^(.).*",
-                            "replacement": "$1",
-                            "type": "pattern_replace",
-                        },
-                        "links": {
-                            "pattern": "\\[([^\\]]*)\\](\\([^\\)]*\\))?",
-                            "replacement": "$1",
-                            "type": "pattern_replace",
-                        },
-                        "pics": {
-                            "pattern": "!\\[[^\\]]*\\](\\([^\\)]*\\))?",
-                            "replacement": "",
-                            "type": "pattern_replace",
-                        },
-                        "remove_slash_filter": {
-                            "pattern": "(.*)/(.+)/(.*)",
-                            "replacement": "$1$2$3",
-                            "type": "pattern_replace",
-                        },
-                        "removespecials": {
-                            "pattern": "[^A-Za-zÀÁÂÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÖØÙÚÛÜàáâäåæçèéêëìíîïñòóôøöùúûü]",
-                            "replacement": "",
-                            "type": "pattern_replace",
-                        },
-                        "slash_filter": {
-                            "pattern": "(.*)/(.+)/(.*)",
-                            "replacement": "$2",
-                            "type": "pattern_replace",
-                        },
-                        "swedish_aa": {
-                            "pattern": "[Ǻǻ]",
-                            "replacement": "å",
-                            "type": "pattern_replace",
-                        },
-                        "swedish_ae": {
-                            "pattern": "[æÆǞǟ]",
-                            "replacement": "ä",
-                            "type": "pattern_replace",
-                        },
-                        "swedish_oe": {
-                            "pattern": "[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]",
-                            "replacement": "ö",
-                            "type": "pattern_replace",
-                        },
-                        "underscore": {
-                            "pattern": "_*((~_)*)_*",
-                            "replacement": "$1",
-                            "type": "pattern_replace",
-                        },
-                    },
-                    "filter": {
-                        "swedish_folding": {
-                            "type": "icu_folding",
-                            "unicodeSetFilter": "[^åäöÅÄÖ]",
-                        },
-                        "swedish_sort": {"language": "sv", "type": "icu_collation"},
                     },
                 }
             },
