@@ -7,7 +7,7 @@ import alembic
 from sqlalchemy import create_engine, engine_from_config, pool, text
 from sqlalchemy.engine import URL
 
-from karp.db_infrastructure import db
+from karp.lex.infrastructure.sql.models import Base
 from karp.main import config as karp_config
 
 # this is the Alembic Config object, which provides
@@ -76,7 +76,7 @@ def run_migrations_online():
     with connectable.connect() as connection:
         alembic.context.configure(
             connection=connection,
-            target_metadata=db.metadata,
+            target_metadata=Base.metadata,
             compare_type=True,
         )
 
