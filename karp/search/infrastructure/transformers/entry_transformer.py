@@ -3,7 +3,7 @@ import typing
 
 from karp.lex.domain import errors as lex_errors
 from karp.lex.domain.dtos import EntryDto
-from karp.search.domain import IndexEntry
+from karp.search.domain.index_entry import IndexEntry
 
 logger = logging.getLogger(__name__)
 

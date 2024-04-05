@@ -6,7 +6,7 @@ import elasticsearch
 from injector import inject
 
 from karp.lex.domain.entities import Entry
-from karp.search.domain import IndexEntry
+from karp.search.domain.index_entry import IndexEntry
 
 from .mapping_repo import EsMappingRepository
 
