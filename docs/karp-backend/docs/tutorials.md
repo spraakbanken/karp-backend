@@ -1,3 +1,0 @@
-- [Add resource](tutorials/add-resource.md)
-- [Create a resource config](tutorials/create-resource-config.md)
-- [Readd a resource](tutorials/readd-resource.md)

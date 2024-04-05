@@ -47,7 +47,6 @@ The fields are defined by `"<field_name>": {"type": "<field_type>"}` where field
 | field_type    | python_type | comment                                        |
 | ------------- | ----------- | ---------------------------------------------- |
 | `string`      | `str`       | smaller kind of string                         |
-| `long_string` | `str`       | larger kind of string, exact limit?            |
 | `boolean`     | `bool`      |
 | `integer`     | `int`       |
 | `number`      | `float`     |
@@ -80,7 +79,7 @@ After we can handle all `string` fields:
 }
 ```
 
-Currently `array`:s are specified by defining the type and and then adding the field `collection` as in:
+`array`:s are specified by defining the type and then adding the field `collection` as in:
 
 ```json
 {
@@ -98,7 +97,7 @@ Currently `array`:s are specified by defining the type and and then adding the f
 
 ## `id` [required]
 
-Currently not used, but requried to set.
+Currently not used, but required to set.
 
 ```json
 {

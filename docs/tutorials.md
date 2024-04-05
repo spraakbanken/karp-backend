@@ -1,0 +1,2 @@
+- [Add resource](cli/add-resource.md)
+- [Create a resource config](cli/create-resource-config.md)

@@ -1,7 +1,5 @@
-from injector import Injector  # noqa: I001
+from injector import Injector
 import pytest
-
-from tests.unit.lex.adapters import InMemoryLexInfrastructure
 
 from . import adapters
 
@@ -10,7 +8,6 @@ from . import adapters
 def search_unit_ctx() -> adapters.SearchUnitTestContext:
     injector = Injector(
         [
-            InMemoryLexInfrastructure(),
             adapters.InMemorySearchInfrastructure(),
         ]
     )
