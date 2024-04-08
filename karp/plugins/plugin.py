@@ -307,7 +307,7 @@ def transform_list(
         batch = [
             {
                 k: get_path(localise_path(v, pos), bodies[i])
-                for k, v in config.get("field_params", {}).items()
+                for k, v in virtual_fields[field_name].get("field_params", {}).items()
             }
             for i, pos in occurrences
         ]
