@@ -195,42 +195,10 @@ Usual commands for `ruff` is:
 
 ### Version handling
 
-Version can be bumped with [`bump2version`](https://pypi.org/project/bump2version/).
+### Version handling
 
-Usage for:
-
-- Increase patch number `a.b.X => a.b.(X+1)`:
-  - From repo root for project `<project>`
-    - `make project=<project> bumpversion`
-  - From project root
-    - `make bumpversion`
-    - `bump2version patch`
-- Increase minor number `a.X.c => a.(X+1).0`:
-  - From repo root for project `<project>`
-    - `make project=<project> part=minor bumpversion`
-  - From project root
-    - `make part=minor bumpversion`
-    - `bump2version minor`
-- Increase major number `X.b.c => (X+1).0.0`:
-  - From repo root for project `<project>`
-    - `make project=<project> part=major bumpversion`
-  - From project root
-    - `make part=major bumpversion`
-    - `bump2version major`
-- To custom version `a.b.c => X.Y.Z`:
-  - From repo root for project `<project>`
-    - `make project=<project> part="--new-version X.Y.Z" bumpversion`
-  - From project root
-    - `make part="--new-version X.Y.Z" bumpversion`
-    - `bumpversion --new-version X.Y.Z`
-
-`bump2version` is configured in [`karp-backend/.bumpversion.cfg`](karp-backend/.bumpversion.cfg) and [`karp-lex-core/.bumpversion.cfg`](karp-lex-core/.bumpversion.cfg).
-
-`bump2version` will update version in specific files, commit them and create a tag.
-
-For releasing a new version:
-
-- `make publish`
-- `git push origin main --tags`
+Update version in the following files:
+- [`pyproj.toml`](pyproject.toml)
+- [`karp.main.config`](karp/main/config.py)
 
 [es-download]: https://www.elastic.co/downloads/elasticsearch

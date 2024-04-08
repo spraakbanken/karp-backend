@@ -140,10 +140,6 @@ build-c4-docs:
 	structurizr-site-generatr generate-site -w docs/c4-docs/workspace.dsl -o docs/karp-backend/docs/system-overview
 
 .PHONY: serve-docs
-serve-docs:
-	cd docs/karp-backend && ${INVENV} mkdocs serve && cd -
-
-.PHONY: serve-docs
 serve-c4-docs:
 	structurizr-site-generatr serve -w docs/c4-docs/workspace.dsl
 
@@ -171,15 +167,6 @@ fmt:
 .PHONY: check-fmt
 check-fmt:
 	${INVENV} ruff format . --check
-
-part := "patch"
-project := "PLEASE, GIVE ME A PROJECT"
-
-bumpversion:
-	cd ${project} && make part=${part} bumpversion
-
-build:
-	cd ${project} && make build
 
 .PHONY: tags
 tags:
