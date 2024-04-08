@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Dict, Iterable, Optional
 
 import elasticsearch
+from elasticsearch.exceptions import NotFoundError
 from injector import inject
 
 from karp.lex.domain.entities import Entry
@@ -68,8 +69,11 @@ class EsIndex:
         logger.info("index created")
 
     def delete_index(self, resource_id: str):
-        index_name = self.es.indices.get_alias(name=resource_id).popitem()[0]
-        self.es.indices.delete(index=index_name)
+        try:
+            index_name = self.es.indices.get_alias(name=resource_id).popitem()[0]
+            self.es.indices.delete(index=index_name)
+        except NotFoundError:
+            pass
 
     def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
         index_to_es = []
