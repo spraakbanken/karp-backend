@@ -15,28 +15,11 @@ from typer import Typer
 from typer.testing import CliRunner
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import session, sessionmaker, Session
 from starlette.testclient import TestClient
 
 from tests import common_data, utils
-from karp.db_infrastructure.db import metadata
 from karp.main import new_session
 from dataclasses import replace
-
-
-@pytest.fixture(name="in_memory_sqlite_db")
-def fixture_in_memory_sqlite_db():  # noqa: ANN201
-    engine = create_engine("sqlite:///:memory:")
-    metadata.create_all(engine)
-    yield engine
-    session.close_all_sessions()
-    metadata.drop_all(bind=engine)
-
-
-@pytest.fixture
-def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201
-    yield sessionmaker(bind=in_memory_sqlite_db)
 
 
 @pytest.fixture(scope="session")

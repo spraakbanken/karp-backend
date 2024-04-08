@@ -1,12 +1,8 @@
-class DomainError(Exception):
+class UnsupportedField(Exception):
     pass
 
 
-class UnsupportedField(DomainError):
-    pass
-
-
-class IncompleteQuery(DomainError):
+class IncompleteQuery(Exception):
     def __init__(self, failing_query: str, error_description: str, *args: object) -> None:
         super().__init__(*args)
         self.failing_query = failing_query

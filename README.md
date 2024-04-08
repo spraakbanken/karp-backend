@@ -2,23 +2,63 @@
 
 # Karp backend
 
-[![Build Status](https://github.com/spraakbanken/karp-backend/workflows/Build/badge.svg)](https://github.com/spraakbanken/karp-backend/actions)
-[![CodeScene Code Health](https://codescene.io/projects/24151/status-badges/code-health)](https://codescene.io/projects/24151)
-[![codecov](https://codecov.io/gh/spraakbanken/karp-backend/branch/main/graph/badge.svg?token=iwTQnHKOpm)](https://codecov.io/gh/spraakbanken/karp-backend)
+This is the backend of Karp, SBX:s tool for managing lexical data and other 
+structured data.
 
-This is a monorepo containing the following projects:
+The basic structure in Karp is a resource, which is a collection of entries.
+Each resource may  be configured according to the format of the data and other needs.
 
-- **karp-lex-core** [![PyPI version](https://badge.fury.io/py/karp-lex-core.svg)](https://badge.fury.io/py/karp-lex-core)
+The backend consists of two parts. The command-line interface (CLI), used to 
+manage resources and the web API for modifying and querying the data.
 
-- **karp-backend** [![PyPI version](https://badge.fury.io/py/karp-backend.svg)](https://badge.fury.io/py/karp-backend)
+There is also a frontend, contact SBX for more information.
 
-This is the version 6 of Karp backend, [for the legacy version (v5)](https://github.com/spraakbanken/karp-backend-v5).
+## Installation
+
+Follow the steps in [getting started](#getting-started).
+
+## CLI
+
+Use the CLI to create or modify resources, publish resources and do bulk editing.
+To view the CLI documentation, use:
+
+`karp-cli --help`
+
+The resource configuration is documented [here](docs/resource-config.md).
+
+There is also a tutorial describing [creation of a resource](docs/add-resource.md).
+
+## Web API
+
+The API documentation for the current version is available [here](https://ws.spraakbanken.gu.se/ws/karp/v7/).
+
+### Editing
+
+Using the API (with credentials) one can:
+- add an entry to a resource
+- modify existing entries
+- delete an entry from a resource (discard, actual data is retained) 
+
+All edits are stored, along with time and the editor. The history of an entry is
+also available through the API.
+
+### Searching
+
+Searching is done with our [custom query language](https://ws.spraakbanken.gu.se/ws/karp/v7/#section/Query-DSL).
+
+Searching supports sorting and pagination.
+
+## Versions
+
+This is the version 7 of Karp backend, [for the legacy version (v5)](https://github.com/spraakbanken/karp-backend-v5).
+
+## Dependencies
+
+We use [MariaDB](https://mariadb.org/) for storage and [Elasticsearch][es-download] for search.
 
 ## Development
 
 This project uses [poetry](https://python-poetry.org).
-
-The metadata and source-code to each project lives in `<project-name>`.
 
 A Makefile is provided to simplify tasks.
 
@@ -46,17 +86,15 @@ A Makefile is provided to simplify tasks.
 
    or `poetry shell` and then `uvicorn --factory karp.karp_v6_api.main:create_app`
 
-8. To setup Elasticsearch, download Elasticsearch 8.x and run the
+8. To setup Elasticsearch, [download][es-download] Elasticsearch 8.x and run the
    following commands from the `elasticsearch-8.XXX` directory:
    ```
-   bin/elasticsearch-plugin install analysis-phonetic
    bin/elasticsearch-plugin install analysis-icu
    ```
    Then run `bin/elasticsearch -Expack.security.enabled=false` to start it.
 9. Add environment variables
 
 ```
-export ES_ENABLED=true
 export ELASTICSEARCH_HOST=http://localhost:9200
 ```
 
@@ -142,77 +180,25 @@ Run them by:
   - `make test-w-coverage` or `make cov_report=xml test-w-coverage`
   - `make all-tests-w-coverage`
 
-### Linting
+### Linting and formatting
 
-Linting is done by [`ruff`](https://beta.ruff.rs/docs/).
+Linting and formatting is done by [`ruff`](https://beta.ruff.rs/docs/).
 
-Run with `make lint`. Settings are in `ruff.toml`.
+Run linter with `make lint`. Settings are in `ruff.toml`.
+
+Run formatter with `make fmt`, check if formatting is needed `make check-fmt`.
 
 Usual commands for `ruff` is:
 
 - `ruff --fix <path>` tries to fix linting problems.
 - `ruff --add-noqa <path>` add noqa:s (silence lint) to each line that needs
 
-### Formatting
-
-Formatting is done by `black`.
-
-Run formatter with `make fmt`, check if formatting is needed `make check-fmt`.
-
-### Type checking
-
-Type checking is done by `mypy`
-
-Currently only `karp-lex-core` is expected to pass type-checking.
-The goal is that also `karp-backend` should pass type-checking.
-
-### Continous Integration
-
-This projects uses Github Actions to test and check the code.
-
-- When pushing a commit to Github:
-  - All tests are run and coverage is uploaded to [`codecov`](https://codecov.io/gh/spraakbanken/karp-backend).
-  - All code is linted and expected to pass.
-  - All code is checked if it is formatted.
-  - All code is type-checked and for `karp-lex-core` it is expected to pass.
-- All above also apply to Pull Requests.
+### Version handling
 
 ### Version handling
 
-Version can be bumped with [`bump2version`](https://pypi.org/project/bump2version/).
+Update version in the following files:
+- [`pyproj.toml`](pyproject.toml)
+- [`karp.main.config`](karp/main/config.py)
 
-Usage for:
-
-- Increase patch number `a.b.X => a.b.(X+1)`:
-  - From repo root for project `<project>`
-    - `make project=<project> bumpversion`
-  - From project root
-    - `make bumpversion`
-    - `bump2version patch`
-- Increase minor number `a.X.c => a.(X+1).0`:
-  - From repo root for project `<project>`
-    - `make project=<project> part=minor bumpversion`
-  - From project root
-    - `make part=minor bumpversion`
-    - `bump2version minor`
-- Increase major number `X.b.c => (X+1).0.0`:
-  - From repo root for project `<project>`
-    - `make project=<project> part=major bumpversion`
-  - From project root
-    - `make part=major bumpversion`
-    - `bump2version major`
-- To custom version `a.b.c => X.Y.Z`:
-  - From repo root for project `<project>`
-    - `make project=<project> part="--new-version X.Y.Z" bumpversion`
-  - From project root
-    - `make part="--new-version X.Y.Z" bumpversion`
-    - `bumpversion --new-version X.Y.Z`
-
-`bump2version` is configured in [`karp-backend/.bumpversion.cfg`](karp-backend/.bumpversion.cfg) and [`karp-lex-core/.bumpversion.cfg`](karp-lex-core/.bumpversion.cfg).
-
-`bump2version` will update version in specific files, commit them and create a tag.
-
-For releasing a new version:
-
-- `make publish`
-- `git push origin main --tags`
+[es-download]: https://www.elastic.co/downloads/elasticsearch
