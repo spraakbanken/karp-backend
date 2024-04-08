@@ -66,7 +66,7 @@ class Resource(Entity):
         *,
         user: str,
         message: str,
-        version: int,
+        version: Optional[int],
         timestamp: Optional[float] = None,
     ):
         self._update_metadata(timestamp, user, message or "Published", version)
@@ -75,7 +75,7 @@ class Resource(Entity):
     def unpublish(
         self,
         user: str,
-        version: int,
+        version: Optional[int],
     ):
         self._update_metadata(None, user, "Unpublished", version)
         self.is_published = False
@@ -86,7 +86,7 @@ class Resource(Entity):
         name: str,
         config: dict[str, Any],
         user: str,
-        version: int,
+        version: Optional[int],
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
     ) -> bool:
@@ -98,7 +98,7 @@ class Resource(Entity):
         return True
 
     def _update_metadata(
-        self, timestamp: Optional[float], user: str, message: str, version: int
+        self, timestamp: Optional[float], user: str, message: str, version: Optional[int]
     ):
         self._check_not_discarded()
         self._validate_version(version)
