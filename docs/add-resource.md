@@ -1,6 +1,6 @@
 # Add a resource to karp
 
-In this tutorial we are gonna add the resource `Lex Lex` to Karp.
+In this tutorial we are gonna add a resource `Lex Lex` to Karp.
 
 All commands are supposed to run after `poetry shell` (that is, in an activated virtual environment).
 
