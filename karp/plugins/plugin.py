@@ -12,7 +12,14 @@ from injector import Injector, inject
 from karp.foundation.batch import batch_items
 from karp.foundation.cache import Cache
 from karp.foundation.entry_points import entry_points
-from karp.foundation.json import expand_path, get_path, localise_path, make_path, set_path
+from karp.foundation.json import (
+    expand_path,
+    get_path,
+    has_path,
+    localise_path,
+    make_path,
+    set_path,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -304,13 +311,19 @@ def transform_list(
         ]
 
         # Generate a batch of all needed field_params values
-        batch = [
-            {
-                k: get_path(localise_path(v, pos), bodies[i])
-                for k, v in virtual_fields[field_name].get("field_params", {}).items()
-            }
-            for i, pos in occurrences
-        ]
+        batch = []
+        for i, pos in occurrences:
+            field_params = {}
+            for k, v in virtual_fields[field_name].get("field_params", {}).items():
+                path = localise_path(v, pos)
+                # If the path does not exist, skip this field
+                if not has_path(path, bodies[i]):
+                    field_params = None
+                    break
+                field_params[k] = get_path(path, bodies[i])
+
+            if field_params is not None:
+                batch.append(field_params)
 
         # Execute the plugin on the batch and store the result
         batch_result = generate_batch(virtual_fields[field_name], batch)
