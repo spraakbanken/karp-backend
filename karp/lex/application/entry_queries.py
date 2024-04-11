@@ -152,7 +152,7 @@ class EntryQueries:
             obj2 = db_entry
             obj2_body = db_entry.body
 
-        if not obj1_body or not obj2_body:
+        if obj1_body is None or obj2_body is None:
             raise errors.DiffImposible("diff impossible!")
 
         return EntryDiffDto(
