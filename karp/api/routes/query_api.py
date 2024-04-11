@@ -41,7 +41,7 @@ def get_entries_by_id(
     logger.debug("karp_v6_api.views.get_entries_by_id")
     if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
-            status_code=status.HTTP_403,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
     if resource_id not in published_resources:
