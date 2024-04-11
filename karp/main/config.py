@@ -5,7 +5,7 @@ from sqlalchemy.engine import URL as DatabaseUrl
 from sqlalchemy.engine import make_url
 
 PROJECT_NAME = "Karp"
-VERSION = "6.2.0"
+VERSION = "7.0.0"
 API_PREFIX = "/"
 
 
