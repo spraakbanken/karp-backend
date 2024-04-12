@@ -106,7 +106,7 @@ class EntryQueries:
             # else:
             #     previous_body = {}
             history_diff = jsondiff.compare(previous_body, history_entry.body)
-            logger.info("diff", extra={"diff": history_diff})
+            logger.debug("diff", extra={"diff": history_diff})
             result.append(
                 HistoryDto(
                     timestamp=history_entry.last_modified,
