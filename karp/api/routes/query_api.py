@@ -1,7 +1,7 @@
 import logging  # noqa: I001
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from karp import auth, search
 from karp.auth.application import ResourcePermissionQueries
@@ -33,7 +33,7 @@ def get_entries_by_id(
         description="Comma-separated. The ids to perform operation on.",
         regex=r"^\w(,\w)*",
     ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -61,7 +61,7 @@ def query_stats(
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned.",
     ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -128,7 +128,7 @@ def query(
     exclude_fields: Optional[List[str]] = Query(
         None, description="Comma-separated list of which fields to remove from result"
     ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: [str] = Depends(deps.get_published_resources),

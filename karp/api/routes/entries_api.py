@@ -6,7 +6,6 @@ from fastapi import (
     Depends,
     HTTPException,
     Query,
-    Security,
     status,
 )
 from starlette import responses
@@ -37,7 +36,7 @@ def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -64,7 +63,7 @@ def get_history_for_entry(
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -113,7 +112,7 @@ def update_entry(
     resource_id: str,
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -179,7 +178,7 @@ def delete_entry(
     resource_id: str,
     entry_id: UniqueId,
     version: int,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),

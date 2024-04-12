@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from karp import auth
 from karp.api import dependencies as deps
@@ -23,7 +23,7 @@ router = APIRouter()
 def get_diff(
     resource_id: str,
     entry_id: UniqueIdStr,
-    user: User = Security(deps.get_user_optional, scopes=["read"]),
+    user: User = Depends(deps.get_user_optional),
     from_version: Optional[int] = None,
     to_version: Optional[int] = None,
     from_date: Optional[float] = None,
@@ -56,7 +56,7 @@ def get_diff(
 )
 def get_history(
     resource_id: str,
-    user: User = Security(deps.get_user_optional, scopes=["read"]),
+    user: User = Depends(deps.get_user_optional),
     user_id: Optional[str] = Query(None),
     entry_id: Optional[UniqueIdStr] = Query(None),
     from_date: Optional[float] = Query(None),
