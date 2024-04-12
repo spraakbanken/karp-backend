@@ -6,7 +6,6 @@ from fastapi import (
     Depends,
     HTTPException,
     Query,
-    Security,
     status,
 )
 from starlette import responses
@@ -37,25 +36,20 @@ def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: [str] = Depends(deps.get_published_resources),
 ):
-    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
     if resource_id not in published_resources:
         raise ResourceNotFound(resource_id)
-    logger.info(
-        "getting history for entry",
-        extra={
-            "resource_id": resource_id,
-            "entry_id": entry_id,
-            "user": user.identifier,
-        },
+    logger.debug(
+        "getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id}
     )
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
@@ -69,7 +63,7 @@ def get_history_for_entry(
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -118,7 +112,7 @@ def update_entry(
     resource_id: str,
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -184,7 +178,7 @@ def delete_entry(
     resource_id: str,
     entry_id: UniqueId,
     version: int,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),

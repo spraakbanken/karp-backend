@@ -41,6 +41,7 @@ class HistoryDto(IdMixin, BaseModel):
     op: EntryOp
     user_id: str
     diff: list[dict]
+    entry: dict
 
 
 class GetHistoryDto(BaseModel):
