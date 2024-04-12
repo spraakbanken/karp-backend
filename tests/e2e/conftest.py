@@ -115,19 +115,13 @@ def fixture_fa_data_client(  # noqa: ANN201
     return fa_client
 
 
-@pytest.fixture(scope="session")
-def auth_levels() -> typing.Dict[str, int]:
-    curr_level = 10
-    levels = {}
-    for level in auth.PermissionLevel:
-        levels[level.value] = curr_level
-        curr_level += 10
-
-    return levels
+auth_levels: typing.Dict[str, int] = {
+    level.value: (idx + 1) * 10 for idx, level in enumerate(auth.PermissionLevel)
+}
 
 
 @pytest.fixture(scope="session")
-def user1_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def user1_token() -> auth.AccessToken:
     return create_bearer_token(
         user="user1",
         levels=auth_levels,
@@ -140,7 +134,7 @@ def user1_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def user2_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def user2_token() -> auth.AccessToken:
     return create_bearer_token(
         user="user2",
         levels=auth_levels,
@@ -153,7 +147,7 @@ def user2_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def user4_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def user4_token() -> auth.AccessToken:
     return create_bearer_token(
         user="user4",
         levels=auth_levels,
@@ -166,7 +160,7 @@ def user4_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def admin_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def admin_token() -> auth.AccessToken:
     return create_bearer_token(
         user="alice@example.com",
         levels=auth_levels,
@@ -181,7 +175,7 @@ def admin_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def read_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def read_token() -> auth.AccessToken:
     return create_bearer_token(
         user="bob@example.com",
         levels=auth_levels,
@@ -196,7 +190,7 @@ def read_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def write_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def write_token() -> auth.AccessToken:
     return create_bearer_token(
         user="charlie@example.com",
         levels=auth_levels,
