@@ -37,25 +37,20 @@ def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: [str] = Depends(deps.get_published_resources),
 ):
-    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
     if resource_id not in published_resources:
         raise ResourceNotFound(resource_id)
-    logger.info(
-        "getting history for entry",
-        extra={
-            "resource_id": resource_id,
-            "entry_id": entry_id,
-            "user": user.identifier,
-        },
+    logger.debug(
+        "getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id}
     )
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 

@@ -23,7 +23,7 @@ router = APIRouter()
 def get_diff(
     resource_id: str,
     entry_id: UniqueIdStr,
-    user: User = Security(deps.get_user, scopes=["admin"]),
+    user: User = Security(deps.get_user_optional, scopes=["read"]),
     from_version: Optional[int] = None,
     to_version: Optional[int] = None,
     from_date: Optional[float] = None,
@@ -32,7 +32,7 @@ def get_diff(
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
-    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
@@ -56,7 +56,7 @@ def get_diff(
 )
 def get_history(
     resource_id: str,
-    user: User = Security(deps.get_user, scopes=["admin"]),
+    user: User = Security(deps.get_user_optional, scopes=["read"]),
     user_id: Optional[str] = Query(None),
     entry_id: Optional[UniqueIdStr] = Query(None),
     from_date: Optional[float] = Query(None),
@@ -68,7 +68,7 @@ def get_history(
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
-    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",

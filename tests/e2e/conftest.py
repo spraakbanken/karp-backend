@@ -204,6 +204,15 @@ def write_token() -> auth.AccessToken:
     )
 
 
+@pytest.fixture(scope="session")
+def no_municipalities_token() -> auth.AccessToken:
+    return create_bearer_token(
+        user="charlie@example.com",
+        levels=auth_levels,
+        scope={"lexica": {}},
+    )
+
+
 @pytest.fixture(name="init_search_service", scope="session")
 def fixture_init_search_service():
     if not env("TEST_ES_HOME"):

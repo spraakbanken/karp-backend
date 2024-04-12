@@ -679,25 +679,23 @@ class TestUpdateEntry:
 
 
 class TestGetEntry:
-    def test_get_entry_wo_auth_returns_403(  # noqa: ANN201
-        self, fa_data_client, entry_places_214_id: str
-    ):
+    def test_get_entry_wo_auth_returns_200(self, fa_data_client, entry_places_214_id: str):
         response = fa_data_client.get(f"/entries/places/{entry_places_214_id}")
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+        assert response.status_code == status.HTTP_200_OK
 
-    def test_get_entry_w_lower_auth_returns_403(  # noqa: ANN201
+    def test_get_entry_w_lower_auth_returns_403(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        no_municipalities_token: auth.AccessToken,
         entry_places_214_id: str,
     ):
         response = fa_data_client.get(
-            f"/entries/places/{entry_places_214_id}",
-            headers=write_token.as_header(),
+            f"/entries/municipalities/{entry_places_214_id}",
+            headers=no_municipalities_token.as_header(),
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    def test_get_entry_by_entry_id(  # noqa: ANN201
+    def test_get_entry_by_entry_id(
         self,
         fa_data_client,
         admin_token: auth.AccessToken,
