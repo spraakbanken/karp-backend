@@ -112,11 +112,11 @@ class EntryQueries:
                     timestamp=history_entry.last_modified,
                     message=history_entry.message or "",
                     id=history_entry.entity_id,
-                    # entry_id=history_entry.entry_id,
                     version=history_entry.version,
                     op=history_entry.op,
                     userId=history_entry.last_modified_by,
                     diff=history_diff,
+                    entry=history_entry.body,
                 )
             )
             previous_body = history_entry.body
