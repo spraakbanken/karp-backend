@@ -41,7 +41,7 @@ def get_history_for_entry(
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: [str] = Depends(deps.get_published_resources),
 ):
-    if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",

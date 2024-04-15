@@ -679,9 +679,9 @@ class TestUpdateEntry:
 
 
 class TestGetEntry:
-    def test_get_entry_wo_auth_returns_200(self, fa_data_client, entry_places_214_id: str):
+    def test_get_entry_wo_auth_returns_403(self, fa_data_client, entry_places_214_id: str):
         response = fa_data_client.get(f"/entries/places/{entry_places_214_id}")
-        assert response.status_code == status.HTTP_200_OK
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_get_entry_w_lower_auth_returns_403(
         self,
