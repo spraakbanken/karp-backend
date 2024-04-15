@@ -19,8 +19,17 @@ from starlette.testclient import TestClient
 from tests import common_data, utils
 from karp.main import new_session
 from dataclasses import replace
-from karp.auth import AccessToken
 from tests.integration.auth.adapters import create_access_token
+
+
+class AccessToken:
+    def __init__(self, access_token):
+        self.access_token = access_token
+
+    def as_header(self) -> typing.Dict[str, str]:
+        return {
+            "Authorization": f"Bearer {self.access_token}",
+        }
 
 
 @pytest.fixture(scope="session")
@@ -97,7 +106,7 @@ def create_and_publish_resource(
 @pytest.fixture(scope="session", name="fa_data_client")
 def fixture_fa_data_client(  # noqa: ANN201
     fa_client,
-    admin_token: auth.AccessToken,
+    admin_token: AccessToken,
 ):
     create_and_publish_resource(
         fa_client,
@@ -128,12 +137,11 @@ def create_bearer_token(
     levels = auth_levels
     return AccessToken(
         access_token=create_access_token(user, levels, scope),
-        token_type="bearer",
     )
 
 
 @pytest.fixture(scope="session")
-def user1_token() -> auth.AccessToken:
+def user1_token() -> AccessToken:
     return create_bearer_token(
         user="user1",
         scope={
@@ -145,7 +153,7 @@ def user1_token() -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def user2_token() -> auth.AccessToken:
+def user2_token() -> AccessToken:
     return create_bearer_token(
         user="user2",
         scope={
@@ -157,7 +165,7 @@ def user2_token() -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def user4_token() -> auth.AccessToken:
+def user4_token() -> AccessToken:
     return create_bearer_token(
         user="user4",
         scope={
@@ -169,7 +177,7 @@ def user4_token() -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def admin_token() -> auth.AccessToken:
+def admin_token() -> AccessToken:
     return create_bearer_token(
         user="alice@example.com",
         scope={
@@ -183,7 +191,7 @@ def admin_token() -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def read_token() -> auth.AccessToken:
+def read_token() -> AccessToken:
     return create_bearer_token(
         user="bob@example.com",
         scope={
@@ -197,7 +205,7 @@ def read_token() -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def write_token() -> auth.AccessToken:
+def write_token() -> AccessToken:
     return create_bearer_token(
         user="charlie@example.com",
         scope={
@@ -211,7 +219,7 @@ def write_token() -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def no_municipalities_token() -> auth.AccessToken:
+def no_municipalities_token() -> AccessToken:
     return create_bearer_token(
         user="charlie@example.com",
         scope={"lexica": {}},

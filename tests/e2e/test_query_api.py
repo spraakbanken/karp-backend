@@ -3,8 +3,8 @@ from typing import Dict, List, Optional
 import pytest
 from fastapi import status
 
-from karp import auth
 from karp.lex.application import EntryQueries
+from tests.e2e.conftest import AccessToken
 from tests.utils import get_json
 
 
@@ -17,7 +17,7 @@ def _test_path(
     path: str,
     expected_result: List[str],
     *,
-    access_token: Optional[auth.AccessToken] = None,
+    access_token: Optional[AccessToken] = None,
     headers: Optional[Dict] = None,
 ) -> None:
     if access_token:
@@ -50,7 +50,7 @@ class TestQuery:
 
 def test_query_no_q(
     fa_data_client,
-    read_token: auth.AccessToken,
+    read_token: AccessToken,
     app_context,
 ):
     resource = "places"
@@ -71,7 +71,7 @@ def test_query_no_q(
 
 def test_query_stats(
     fa_data_client,
-    read_token: auth.AccessToken,
+    read_token: AccessToken,
 ):
     resources = ["places", "municipalities"]
     entries = get_json(

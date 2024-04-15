@@ -3,7 +3,6 @@ from typing import Dict, List  # noqa: I001
 import pytest
 from fastapi import status
 
-from karp import auth
 from karp.main.errors import ClientErrorCodes
 from karp.foundation.timings import utc_now
 from karp.foundation.value_objects import (
@@ -13,6 +12,7 @@ from karp.foundation.value_objects import (
 from karp.lex.domain.dtos import EntryDto
 from karp.lex.infrastructure import ResourceRepository
 from karp.main import new_session
+from tests.e2e.conftest import AccessToken
 
 
 def get_entries(injector, resource_id: str):
@@ -24,7 +24,7 @@ def get_entries(injector, resource_id: str):
 def init(
     client,
     entries: List[Dict],
-    access_token: auth.AccessToken,
+    access_token: AccessToken,
 ) -> list[str]:
     result = []
     for entry in entries:
@@ -41,7 +41,7 @@ def init(
 @pytest.fixture(name="entry_places_214_id", scope="session")
 def fixture_entry_places_214_id(
     fa_data_client,
-    write_token: auth.AccessToken,
+    write_token: AccessToken,
 ):
     ids = init(
         fa_data_client,
@@ -56,7 +56,7 @@ def fixture_entry_places_214_id(
 @pytest.fixture(name="entry_places_209_id", scope="session")
 def fixture_entry_places_209_id(
     fa_data_client,
-    write_token: auth.AccessToken,
+    write_token: AccessToken,
 ):
     ids = init(
         fa_data_client,
@@ -93,7 +93,7 @@ class TestAddEntry:
         self,
         fa_data_client,
         invalid_data: Dict,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         response = fa_data_client.put(
             "/entries/places",
@@ -106,7 +106,7 @@ class TestAddEntry:
     def test_add_with_valid_data_returns_201(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         response = fa_data_client.put(
             "/entries/places",
@@ -136,7 +136,7 @@ class TestAddEntry:
     def test_add_with_valid_data_and_entity_id_returns_201(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entity_id = make_unique_id()
         response = fa_data_client.put(
@@ -169,7 +169,7 @@ class TestAddEntry:
     def test_adding_existing_fails_with_400(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = 204
         entry_name = f"add{entry_id}"
@@ -216,7 +216,7 @@ class TestAddEntry:
     def test_add_fails_with_invalid_entry(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         response = fa_data_client.put(
             "/entries/places", json={"entry": {}}, headers=write_token.as_header()
@@ -233,7 +233,7 @@ class TestAddEntry:
     def test_add_fails_with_virtual_field(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         response = fa_data_client.put(
             "/entries/places",
@@ -260,7 +260,7 @@ class TestDeleteEntry:
     def test_delete(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = 205
         entry_name = f"delete{entry_id}"
@@ -295,7 +295,7 @@ class TestDeleteEntry:
     def test_delete_non_existing_fails(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = make_unique_id()
 
@@ -319,7 +319,7 @@ class TestDeleteEntryRest:
     def test_delete_rest(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = 205
         entry_name = f"delete{entry_id}"
@@ -354,7 +354,7 @@ class TestDeleteEntryRest:
     def test_delete_rest_non_existing_fails(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = "00000000000000000000000000"
 
@@ -378,7 +378,7 @@ class TestUpdateEntry:
     def test_update_non_existing_fails(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = make_unique_id()
         response = fa_data_client.post(
@@ -409,7 +409,7 @@ class TestUpdateEntry:
     def test_update_wo_changes_succeeds(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = 206
         entry_name = f"update{entry_id}"
@@ -452,7 +452,7 @@ class TestUpdateEntry:
     def test_update_wrong_version_fails(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = 207
         response = fa_data_client.put(
@@ -506,7 +506,7 @@ class TestUpdateEntry:
     def test_update_returns_200_on_valid_data(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = 208
         entry_name = f"update{entry_id}"
@@ -558,7 +558,7 @@ class TestUpdateEntry:
     def test_update_several_times(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
         entry_places_209_id: str,
     ):
         entry_id = 209
@@ -582,7 +582,7 @@ class TestUpdateEntry:
     def test_update_entry_id(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = 210
         response = fa_data_client.put(
@@ -631,7 +631,7 @@ class TestUpdateEntry:
     def test_update_changes_last_modified(
         self,
         fa_data_client,
-        write_token: auth.AccessToken,
+        write_token: AccessToken,
     ):
         entry_id = 212
         before_add = utc_now()
@@ -686,7 +686,7 @@ class TestGetEntry:
     def test_get_entry_w_lower_auth_returns_403(
         self,
         fa_data_client,
-        no_municipalities_token: auth.AccessToken,
+        no_municipalities_token: AccessToken,
         entry_places_214_id: str,
     ):
         response = fa_data_client.get(
@@ -698,7 +698,7 @@ class TestGetEntry:
     def test_get_entry_by_entry_id(
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         entry_places_214_id: str,
     ):
         response = fa_data_client.get(
@@ -715,7 +715,7 @@ class TestGetEntry:
     def test_route_w_version_exist(
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         entry_places_209_id: str,
     ):
         response = fa_data_client.get(
