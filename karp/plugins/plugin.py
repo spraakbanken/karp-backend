@@ -312,6 +312,7 @@ def transform_list(
 
         # Generate a batch of all needed field_params values
         batch = []
+        batch_occurrences = []
         for i, pos in occurrences:
             field_params = {}
             for k, v in virtual_fields[field_name].get("field_params", {}).items():
@@ -323,11 +324,12 @@ def transform_list(
                 field_params[k] = get_path(path, bodies[i])
 
             if field_params is not None:
+                batch_occurrences.append((i, pos))
                 batch.append(field_params)
 
         # Execute the plugin on the batch and store the result
         batch_result = generate_batch(virtual_fields[field_name], batch)
-        for (i, pos), result in zip(occurrences, batch_result):
+        for (i, pos), result in zip(batch_occurrences, batch_result):
             set_path(pos, result, bodies[i])
 
     return bodies
