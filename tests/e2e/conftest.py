@@ -34,9 +34,7 @@ class AccessToken:
 
 @pytest.fixture(scope="session")
 def setup_environment() -> None:
-    os.environ["TESTING"] = "1"
     os.environ["AUTH_JWT_PUBKEY_PATH"] = "assets/testing/pubkey.pem"
-    os.environ["ELASTICSEARCH_HOST"] = "http://localhost:9202"
 
 
 @pytest.fixture(scope="session")

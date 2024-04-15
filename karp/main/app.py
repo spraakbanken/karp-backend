@@ -29,9 +29,6 @@ class AppContext:
 def bootstrap_app() -> AppContext:
     configure_logging()
 
-    jwt_pubkey_path = env("AUTH_JWT_PUBKEY_PATH", None)
-    es_url = env("ELASTICSEARCH_HOST")
-
     settings = {
         "tracking.matomo.idsite": env("TRACKING_MATOMO_IDSITE", None),
         "tracking.matomo.url": env("TRACKING_MATOMO_URL", None),
@@ -42,7 +39,8 @@ def bootstrap_app() -> AppContext:
 
     def configure_dependency_injection(binder):
         binder.bind(Engine, engine)
-        binder.install(ElasticSearchMod(es_url))
+        binder.install(ElasticSearchMod(env("ELASTICSEARCH_HOST")))
+        jwt_pubkey_path = env("AUTH_JWT_PUBKEY_PATH", None)
         if jwt_pubkey_path is not None:
             binder.bind(JWTAuthService, JWTAuthService(Path(jwt_pubkey_path)))
 
