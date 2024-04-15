@@ -2,7 +2,6 @@
 import elasticsearch_test
 from karp.main import AppContext
 from karp.resource_commands import ResourceCommands
-from tests.integration.auth.adapters import create_bearer_token
 from karp import auth
 from karp.main.config import env
 import os
@@ -20,6 +19,8 @@ from starlette.testclient import TestClient
 from tests import common_data, utils
 from karp.main import new_session
 from dataclasses import replace
+from karp.auth import AccessToken
+from tests.integration.auth.adapters import create_access_token
 
 
 @pytest.fixture(scope="session")
@@ -120,11 +121,21 @@ auth_levels: typing.Dict[str, int] = {
 }
 
 
+def create_bearer_token(
+    user: str,
+    scope: Optional[typing.Dict] = None,
+) -> AccessToken:
+    levels = auth_levels
+    return AccessToken(
+        access_token=create_access_token(user, levels, scope),
+        token_type="bearer",
+    )
+
+
 @pytest.fixture(scope="session")
 def user1_token() -> auth.AccessToken:
     return create_bearer_token(
         user="user1",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.write],
@@ -137,7 +148,6 @@ def user1_token() -> auth.AccessToken:
 def user2_token() -> auth.AccessToken:
     return create_bearer_token(
         user="user2",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.write],
@@ -150,7 +160,6 @@ def user2_token() -> auth.AccessToken:
 def user4_token() -> auth.AccessToken:
     return create_bearer_token(
         user="user4",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.admin],
@@ -163,7 +172,6 @@ def user4_token() -> auth.AccessToken:
 def admin_token() -> auth.AccessToken:
     return create_bearer_token(
         user="alice@example.com",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.admin],
@@ -178,7 +186,6 @@ def admin_token() -> auth.AccessToken:
 def read_token() -> auth.AccessToken:
     return create_bearer_token(
         user="bob@example.com",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.read],
@@ -193,7 +200,6 @@ def read_token() -> auth.AccessToken:
 def write_token() -> auth.AccessToken:
     return create_bearer_token(
         user="charlie@example.com",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.write],
@@ -208,7 +214,6 @@ def write_token() -> auth.AccessToken:
 def no_municipalities_token() -> auth.AccessToken:
     return create_bearer_token(
         user="charlie@example.com",
-        levels=auth_levels,
         scope={"lexica": {}},
     )
 
