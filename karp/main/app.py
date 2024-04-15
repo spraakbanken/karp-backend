@@ -33,12 +33,9 @@ def bootstrap_app() -> AppContext:
     es_url = env("ELASTICSEARCH_HOST")
 
     settings = {
-        "auth.jwt.pubkey.path": jwt_pubkey_path,
         "tracking.matomo.idsite": env("TRACKING_MATOMO_IDSITE", None),
         "tracking.matomo.url": env("TRACKING_MATOMO_URL", None),
         "tracking.matomo.token": env("TRACKING_MATOMO_TOKEN", None),
-        "es.url": es_url,
-        "es.index_prefix": es_url,
     }
 
     engine = _create_db_engine(DATABASE_URL)
