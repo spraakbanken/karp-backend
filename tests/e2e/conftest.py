@@ -33,28 +33,11 @@ class AccessToken:
 
 
 @pytest.fixture(scope="session")
-def setup_environment() -> None:
-    os.environ["AUTH_JWT_PUBKEY_PATH"] = "assets/testing/pubkey.pem"
-
-
-@pytest.fixture(scope="session")
-def apply_migrations(setup_environment: None):  # noqa: ANN201
+def apply_migrations():
     from karp.main.migrations import use_cases
 
     use_cases.run_migrations_up()
     yield
-
-
-@pytest.fixture(scope="session", name="runner")
-def fixture_runner() -> CliRunner:
-    return CliRunner()
-
-
-@pytest.fixture(scope="session", name="cliapp")
-def fixture_cliapp() -> Typer:
-    from karp.cliapp.main import create_app
-
-    return create_app()
 
 
 @pytest.fixture(name="app", scope="session")
@@ -129,8 +112,8 @@ auth_levels: typing.Dict[str, int] = {
 
 
 def create_bearer_token(
-    user: str,
-    scope: Optional[typing.Dict] = None,
+    scope: typing.Dict,
+    user: Optional[str] = "abc123",
 ) -> AccessToken:
     levels = auth_levels
     return AccessToken(
@@ -165,7 +148,6 @@ def user2_token() -> AccessToken:
 @pytest.fixture(scope="session")
 def user4_token() -> AccessToken:
     return create_bearer_token(
-        user="user4",
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.admin],
@@ -177,7 +159,6 @@ def user4_token() -> AccessToken:
 @pytest.fixture(scope="session")
 def admin_token() -> AccessToken:
     return create_bearer_token(
-        user="alice@example.com",
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.admin],
@@ -191,7 +172,6 @@ def admin_token() -> AccessToken:
 @pytest.fixture(scope="session")
 def read_token() -> AccessToken:
     return create_bearer_token(
-        user="bob@example.com",
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.read],
@@ -205,7 +185,6 @@ def read_token() -> AccessToken:
 @pytest.fixture(scope="session")
 def write_token() -> AccessToken:
     return create_bearer_token(
-        user="charlie@example.com",
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.write],
@@ -219,7 +198,6 @@ def write_token() -> AccessToken:
 @pytest.fixture(scope="session")
 def no_municipalities_token() -> AccessToken:
     return create_bearer_token(
-        user="charlie@example.com",
         scope={"lexica": {}},
     )
 
