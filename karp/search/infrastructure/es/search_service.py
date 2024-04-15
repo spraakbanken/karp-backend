@@ -197,11 +197,11 @@ class EsSearchService:
         return self.search_with_query(query)
 
     def multi_query(self, requests: list[QueryRequest]):
-        logger.info(f"multi_query called for {len(requests)} requests")
-
         # ES fails on a multi-search with an empty request list
         if not requests:
             return []
+
+        logger.info(f"multi_query called for {len(requests)} requests")
 
         queries = [EsQuery.from_query_request(request) for request in requests]
         ms = es_dsl.MultiSearch(using=self.es)
