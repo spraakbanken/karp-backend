@@ -92,7 +92,10 @@ class Plugins:
     def generate_batch(self, config: Dict, batch) -> Iterable[Dict]:
         # TODO: turn into {"error": "plugin failed"} or whatever
         params = config.get("params", {})
-        result = list(self._get_plugin(config).generate_batch([params | item for item in batch]))
+        batch = list(batch)
+        if not batch:
+            return []
+        result = list(self._get_plugin(config).generate_batch(params | item for item in batch))
         if len(result) != len(batch):
             raise AssertionError("batch result had wrong length")
         return result
