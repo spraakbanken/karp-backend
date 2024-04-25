@@ -44,7 +44,6 @@ elasticsearch-dsl = "^8"
 environs = "^9.3.4"
 fastapi = "^0.89.0"
 injector = "^0.20.1"
-json-streams = "^0.12.0"
 mysqlclient = { version = "^2.1.1", optional = true }
 pydantic = "^1.10.2"
 pyjwt = { version = "^2.6.0", extras = ["crypto"] }
@@ -60,6 +59,7 @@ ulid-py = "^1.1.0"
 urllib3 = "^1.26.13"
 asgi-matomo = "^0.4.1"
 frozendict = "^2.4"
+json-arrays = "^0.14.1"
 
 [tool.poetry.extras]
 mysql = ["mysqlclient", "PyMySQL", "aiomysql"]
