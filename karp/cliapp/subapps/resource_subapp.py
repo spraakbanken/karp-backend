@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
 import typer
-from json_streams import jsonlib
+from json_arrays import jsonlib
 from tabulate import tabulate
 
 from karp.foundation.value_objects import UniqueIdStr, unique_id

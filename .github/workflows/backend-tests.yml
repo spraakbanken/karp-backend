@@ -5,16 +5,20 @@ on:
     branches:
       - "**/*"
     paths:
-      - 'karp-backend/**/*.py'
-      - 'karp-backend/pyproject.toml'
-      - 'karp-lex-core/**/*.py'
+      - 'karp/**'
+      - 'tests/**'
+      - 'grammars/**'
+      - 'assets/**'
+      - '*.toml'
   pull_request:
     branches:
       - "**/*"
     paths:
-      - 'karp-backend/**/*.py'
-      - 'karp-backend/pyproject.toml'
-      - 'karp-lex-core/**/*.py'
+      - 'karp/**'
+      - 'tests/**'
+      - 'grammars/**'
+      - 'assets/**'
+      - '*.toml'
   workflow_dispatch:
 
 env:

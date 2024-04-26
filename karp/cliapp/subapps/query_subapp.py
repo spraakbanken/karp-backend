@@ -1,7 +1,7 @@
 from pathlib import Path  # noqa: I001
 from typing import Optional
 
-import json_streams
+import json_arrays
 import typer
 
 from karp import search
@@ -20,7 +20,7 @@ def resource(
 ):
     search_service = inject_from_ctx(EsSearchService, ctx)
     query_request = search.QueryRequest(resource_ids=[resource_id])
-    json_streams.dump_to_file(
+    json_arrays.dump_to_file(
         search_service.query(query_request),
         output,
         use_stdout_as_default=True,
