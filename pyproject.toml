@@ -36,7 +36,7 @@ python = "^3.10"
 PyMySQL = { version = "^1.0.2", optional = true }
 TatSu = "^5.8.3"
 aiomysql = { version = "^0.1.1", optional = true }
-aiosqlite = { version = "^0.17.0", optional = true }
+aiosqlite = { version = "^0.20.0", optional = true }
 alembic = "^1.8.1"
 asgi-correlation-id = "^3.0.1"
 elasticsearch = "^8"
