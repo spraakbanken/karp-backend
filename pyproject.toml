@@ -41,7 +41,7 @@ alembic = "^1.8.1"
 asgi-correlation-id = "^3.0.1"
 elasticsearch = "^8"
 elasticsearch-dsl = "^8"
-environs = "^9.3.4"
+environs = "^11.0.0"
 fastapi = "^0.89.0"
 injector = "^0.20.1"
 mysqlclient = { version = "^2.1.1", optional = true }
