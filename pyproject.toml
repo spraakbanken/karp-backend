@@ -43,7 +43,7 @@ elasticsearch = "^8"
 elasticsearch-dsl = "^8"
 environs = "^9.3.4"
 fastapi = "^0.89.0"
-injector = "^0.20.1"
+injector = "^0.21.0"
 mysqlclient = { version = "^2.1.1", optional = true }
 pydantic = "^1.10.2"
 pyjwt = { version = "^2.6.0", extras = ["crypto"] }
