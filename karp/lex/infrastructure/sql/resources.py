@@ -95,8 +95,11 @@ class ResourceRepository(repository.Repository):
         for resource in query:
             self._session.delete(resource)
 
+    def create_resource_table(self, resource):
+        EntryRepository(self._session, resource).create_table()
+
     def remove_resource_table(self, resource):
-        self._session.execute(text("DROP TABLE IF EXISTS " + resource.table_name))
+        EntryRepository(self._session, resource).drop_table()
 
     def remove(self, resource: Resource):
         self._session.delete(resource)
@@ -106,11 +109,10 @@ class ResourceRepository(repository.Repository):
         self._session.add(resource_dto)
         # If resource was discarded, drop the table containing all data entries.
         # Otherwise, create the table.
-        entry_repo = EntryRepository(self._session, resource)
         if resource.discarded:
-            entry_repo.drop_table()
+            self.remove_resource_table(resource)
         else:
-            entry_repo.create_table()
+            self.create_resource_table(resource)
 
         self._cache.clear()
 
