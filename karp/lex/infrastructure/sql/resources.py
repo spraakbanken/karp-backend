@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 
 import sqlalchemy as sa
 from injector import inject
-from sqlalchemy import and_, func, sql, text
+from sqlalchemy import Engine, and_, func, sql, text
 from sqlalchemy.orm import Session
 
 from karp.foundation import repository
@@ -104,9 +104,14 @@ class ResourceRepository(repository.Repository):
     def _save(self, resource: Resource):
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
+        # If resource was discarded, drop the table containing all data entries.
+        # Otherwise, create the table.
+        entry_repo = EntryRepository(self._session, resource)
         if resource.discarded:
-            # If resource was discarded, drop the table containing all data entries
-            self.remove_resource_table(resource)
+            entry_repo.drop_table()
+        else:
+            entry_repo.create_table()
+
         self._cache.clear()
 
     def _by_id(
