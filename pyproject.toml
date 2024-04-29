@@ -67,7 +67,7 @@ sqlite = ["aiosqlite"]
 
 [tool.poetry.group.dev.dependencies]
 uvicorn = "^0.18.3"
-pytest = "^7.1.3"
+pytest = "^8.2.0"
 pytest-cov = "^3.0.0"
 mypy = "^1.0.1"
 cryptography = "^38.0.1"
