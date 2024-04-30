@@ -21,7 +21,6 @@ from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex.application import EntryQueries
 from karp.lex.domain import errors
-from karp.lex.domain.dtos import EntryDto
 from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 
@@ -30,8 +29,7 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"])
-@router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
+@router.get("/{resource_id}/{entry_id}", summary="Get entry history", tags=["History"])
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
@@ -57,8 +55,8 @@ def get_history_for_entry(
 @router.put(
     "/{resource_id}",
     status_code=status.HTTP_201_CREATED,
-    tags=["Editing"],
     response_model=schemas.EntryAddResponse,
+    tags=["Editing"],
 )
 def add_entry(
     resource_id: str,
@@ -105,8 +103,8 @@ def add_entry(
 
 @router.post(
     "/{resource_id}/{entry_id}",
-    tags=["Editing"],
     response_model=schemas.EntryAddResponse,
+    tags=["Editing"],
 )
 def update_entry(
     resource_id: str,
@@ -171,8 +169,8 @@ def update_entry(
 
 @router.delete(
     "/{resource_id}/{entry_id}/{version}",
-    tags=["Editing"],
     status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Editing"],
 )
 def delete_entry(
     resource_id: str,

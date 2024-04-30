@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from karp import auth, search
 from karp.auth.application import ResourcePermissionQueries
+from karp.lex import EntryDto
 from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 from karp.search.domain import QueryRequest
@@ -24,7 +25,8 @@ router = APIRouter()
 @router.get(
     "/entries/{resource_id}/{entry_ids}",
     description="Returns a list of entries matching the given ids",
-    name="Get lexical entries by id",
+    name="Get entries by id",
+    response_model=List[EntryDto],
 )
 def get_entries_by_id(
     resource_id: str = Path(..., description="The resource to perform operation on"),
@@ -57,9 +59,10 @@ def query_stats(
         description="A comma-separated list of resource identifiers",
     ),
     q: Optional[str] = Query(
-        "",
+        None,
         title="query",
-        description="The query. If missing, all entries in chosen resource(s) will be returned.",
+        description="""The query. If missing, the number of entries in the chosen resource(s) 
+            will be returned. See [Query DSL](#section/Query-DSL)""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
@@ -97,7 +100,6 @@ def query_stats(
 
 @router.get(
     "/{resources}",
-    # summary="Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.",
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
 )
@@ -108,9 +110,9 @@ def query(
         description="A comma-separated list of resource identifiers",
     ),
     q: Optional[str] = Query(
-        "",
+        None,
         title="query",
-        description="The query. If missing, all entries in chosen resource(s) will be returned.",
+        description="The query. If missing, all entries in chosen resource(s) will be returned. See [Query DSL](#section/Query-DSL)",
     ),
     from_: int = Query(
         0, alias="from", description="Specify which entry should be the first returned."

@@ -31,6 +31,7 @@ class StatisticsDto(pydantic.BaseModel):
 @router.get(
     "/{resource_id}/{field}",
     response_model=typing.List[StatisticsDto],
+    description="Return all possible values for `<field>` in `<resource_id>`",
 )
 def get_field_values(
     resource_id: str,
