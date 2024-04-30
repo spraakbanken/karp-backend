@@ -151,7 +151,7 @@ def query(
     if any(resource not in published_resources for resource in resource_list):
         raise ResourceNotFound(resource_list)
     query_request = QueryRequest(
-        resource_ids=resource_list,
+        resources=resource_list,
         q=q,
         from_=from_,
         size=size,

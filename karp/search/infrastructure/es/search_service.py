@@ -16,7 +16,6 @@ from karp.search.domain.query_dsl.karp_query_v6_model import (
 from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
 
 from .mapping_repo import EsMappingRepository
-from .query import EsQuery
 
 logger = logging.getLogger(__name__)
 
@@ -180,28 +179,21 @@ class EsSearchService:
         self.field_name_collector = EsFieldNameCollector()
         self.parser = KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
 
-    def query(self, request: QueryRequest):
-        logger.info("query called", extra={"request": request})
-        query = EsQuery.from_query_request(request)
+    def query(self, query: QueryRequest):
+        logger.info("query called", extra={"request": query})
         return self.search_with_query(query)
 
     def query_stats(self, resources, q):
-        query = EsQuery()
-        query.resources = resources
-        query.from_ = 0
-        query.size = 0
-        query.lexicon_stats = True
-        query.q = q or ""
+        query = QueryRequest(resources=resources, q=q, size=0)
         return self.search_with_query(query)
 
-    def multi_query(self, requests: list[QueryRequest]):
+    def multi_query(self, queries: list[QueryRequest]):
         # ES fails on a multi-search with an empty request list
-        if not requests:
+        if not queries:
             return []
 
-        logger.info(f"multi_query called for {len(requests)} requests")
+        logger.info(f"multi_query called for {len(queries)} requests")
 
-        queries = [EsQuery.from_query_request(request) for request in requests]
         ms = es_dsl.MultiSearch(using=self.es)
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
@@ -210,7 +202,7 @@ class EsSearchService:
             self._build_result(query, response) for query, response in zip(queries, responses)
         ]
 
-    def search_with_query(self, query: EsQuery):
+    def search_with_query(self, query: QueryRequest):
         logger.info("search_with_query called", extra={"query": query})
         s = self._build_search(query, query.resources)
         response = s.execute()
