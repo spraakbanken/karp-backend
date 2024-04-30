@@ -9,6 +9,7 @@ from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
 from karp.foundation.json import get_path
+from karp.main.errors import KarpError
 from karp.search.domain import QueryRequest, errors
 from karp.search.domain.query_dsl.karp_query_v6_model import (
     KarpQueryV6ModelBuilderSemantics,
@@ -293,8 +294,17 @@ class EsSearchService:
                 resource_id=resource_id, field=field
             )
         )
-        s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
-        response = s.execute()
+        # use an Elasticsearch instance configured to fail at less than 66000 buckets
+        # If there are more buckets than that, the ES-lib will raise an exception that we
+        # can catch and inform the user.
+        s.aggs.bucket("field_values", "terms", field=field, size=66000)
+        try:
+            response = s.execute()
+        except elasticsearch.BadRequestError as e:
+            if e.body["error"]["caused_by"]["type"] == "too_many_buckets_exception":
+                raise KarpError("Too many unique values for statistics") from None
+            else:
+                raise e
         logger.debug("Elasticsearch response", extra={"response": response})
         return [
             {"value": bucket["key"], "count": bucket["doc_count"]}
