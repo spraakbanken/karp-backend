@@ -10,7 +10,6 @@ class EsQuery(pydantic.BaseModel):
     sort: list[str] = []
     from_: int = pydantic.Field(0, alias="from")
     size: int = 25
-    split_results: bool = False
     lexicon_stats: bool = True
     path: typing.Optional[list[str]] = None
     q: typing.Optional[str] = None

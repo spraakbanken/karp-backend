@@ -192,7 +192,6 @@ class EsSearchService:
         query.size = 0
         query.lexicon_stats = True
         query.q = q or ""
-        query.split_results = False
         return self.search_with_query(query)
 
     def multi_query(self, requests: list[QueryRequest]):
@@ -213,30 +212,9 @@ class EsSearchService:
 
     def search_with_query(self, query: EsQuery):
         logger.info("search_with_query called", extra={"query": query})
-        if query.split_results:
-            ms = es_dsl.MultiSearch(using=self.es)
-
-            for resource in query.resources:
-                s = self._build_search(query, [resource])
-                ms = ms.add(s)
-
-            responses = ms.execute()
-            result: dict[str, Any] = {"total": 0, "hits": {}}
-            for i, response in enumerate(responses):
-                result["hits"][query.resources[i]] = _format_result(
-                    query.resources, response, path=query.path
-                ).get("hits", [])
-                result["total"] += response.hits.total.value
-                if query.lexicon_stats:
-                    if "distribution" not in result:
-                        result["distribution"] = {}
-                    result["distribution"][query.resources[i]] = response.hits.total.value
-        else:
-            s = self._build_search(query, query.resources)
-            response = s.execute()
-            result = self._build_result(query, response)
-
-        return result
+        s = self._build_search(query, query.resources)
+        response = s.execute()
+        return self._build_result(query, response)
 
     def _build_search(self, query, resources):
         field_names = set()
