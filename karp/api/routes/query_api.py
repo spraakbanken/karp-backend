@@ -57,7 +57,7 @@ def query_stats(
         description="A comma-separated list of resource identifiers",
     ),
     q: Optional[str] = Query(
-        None,
+        "",
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned.",
     ),
@@ -108,7 +108,7 @@ def query(
         description="A comma-separated list of resource identifiers",
     ),
     q: Optional[str] = Query(
-        None,
+        "",
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned.",
     ),
@@ -122,11 +122,12 @@ def query(
         regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
-    include_fields: Optional[List[str]] = Query(
-        None, description="Comma-separated list of which fields to return"
-    ),
-    exclude_fields: Optional[List[str]] = Query(
-        None, description="Comma-separated list of which fields to remove from result"
+    path: Optional[str] = Query(
+        None,
+        description="""A dot-separataed path to for returning a specific field in JSON. 
+        Only supports one path down into the tree with no indexing.
+        For example, to fetch only the field `baseform` in the entry, use: `?path=entry.baseform`
+        If the selected field is an array, the result will also be wrapped in an array.""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
@@ -155,8 +156,7 @@ def query(
         from_=from_,
         size=size,
         sort=sort,
-        include_fields=include_fields,
-        exclude_fields=exclude_fields,
+        path=path,
         lexicon_stats=lexicon_stats,
     )
     try:

@@ -127,4 +127,16 @@ def test_regex(
         print(hit["entry"]["name"])
 
 
+def test_path_parameter(fa_data_client):
+    query = f"/query/places?path=entry._municipality.code"
+    response = fa_data_client.get(query)
+    response_data = response.json()
+    # there are different number of hits if running in isolation or
+    # with other tests, so just check that some expected values are in there
+    assert [1] in response_data["hits"]
+    assert [2] in response_data["hits"]
+    assert [3] in response_data["hits"]
+    assert [2, 3] in response_data["hits"]
+
+
 # TODO: test that we can search for virtual fields

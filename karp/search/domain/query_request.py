@@ -9,11 +9,12 @@ logger = logging.getLogger(__name__)
 
 class QueryRequest(pydantic.BaseModel):
     resource_ids: typing.List[str]
-    q: typing.Optional[str] = None
+    q: str = ""
     from_: int = 0
     size: int = 25
     lexicon_stats: bool = True
     sort: List[str] = pydantic.Field(default_factory=list)
+    path: typing.Optional[str] = None
 
     @pydantic.validator("resource_ids", pre=True)
     @classmethod
