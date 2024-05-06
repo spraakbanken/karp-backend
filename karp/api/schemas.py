@@ -1,12 +1,13 @@
 import typing
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import pydantic
 import ulid
 
 from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
+from karp.lex import EntryDto
 
 
 class BaseModel(pydantic.BaseModel):
@@ -48,3 +49,19 @@ class ResourcePublic(BaseModel):
 
 class ResourceProtected(ResourcePublic):
     last_modified_by: str
+
+
+class QueryResponse(pydantic.BaseModel):
+    total: int
+    hits: list[Union[EntryDto, object]]
+    distribution: Optional[Dict[str, int]]
+
+
+class QueryStatsResponse(pydantic.BaseModel):
+    total: int
+    distribution: Dict[str, int]
+
+
+class EntriesByIdResponse(pydantic.BaseModel):
+    total: int
+    hits: list[Union[EntryDto, object]]

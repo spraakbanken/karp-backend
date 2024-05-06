@@ -14,6 +14,7 @@ from karp.search.domain.errors import IncompleteQuery
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.search.infrastructure.es import EsSearchService
+from .. import schemas
 
 
 logger = logging.getLogger(__name__)
@@ -26,7 +27,7 @@ router = APIRouter()
     "/entries/{resource_id}/{entry_ids}",
     description="Returns a list of entries matching the given ids",
     name="Get entries by id",
-    response_model=List[EntryDto],
+    response_model=schemas.EntriesByIdResponse,
 )
 def get_entries_by_id(
     resource_id: str = Path(..., description="The resource to perform operation on"),
@@ -51,7 +52,11 @@ def get_entries_by_id(
     return search_service.search_ids(resource_id, entry_ids)
 
 
-@router.get("/stats/{resources}", name="Hits per resource, no entries in result")
+@router.get(
+    "/stats/{resources}",
+    name="Hits per resource, no entries in result",
+    response_model=schemas.QueryStatsResponse,
+)
 def query_stats(
     resources: str = Path(
         ...,
@@ -102,6 +107,7 @@ def query_stats(
     "/{resources}",
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
+    response_model=schemas.QueryResponse,
 )
 def query(
     resources: str = Path(

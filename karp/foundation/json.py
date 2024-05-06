@@ -60,7 +60,7 @@ def get_path(path: Union[str, Path], data):
         return get_path(path[1:], data[path[0]])
 
     else:
-        raise AssertionError(f"can't look up field {field[0]} in non-object {data}")
+        raise AssertionError(f"can't look up field {path[0]} in non-object {data}")
 
 
 def set_path(path: Union[str, Path], value, data):

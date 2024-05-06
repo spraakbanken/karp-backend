@@ -19,6 +19,7 @@ from karp.auth.application import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
 from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
+from karp.lex import EntryDto
 from karp.lex.application import EntryQueries
 from karp.lex.domain import errors
 from karp.lex.domain.errors import ResourceNotFound
@@ -29,7 +30,8 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/{resource_id}/{entry_id}", summary="Get entry history", tags=["History"])
+@router.get("/{resource_id}/{entry_id}", summary="Get entry", tags=["History"])
+@router.get("/{resource_id}/{entry_id}/{version}", summary="Get entry history", tags=["History"])
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
@@ -38,7 +40,7 @@ def get_history_for_entry(
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: [str] = Depends(deps.get_published_resources),
-):
+) -> EntryDto:
     if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
