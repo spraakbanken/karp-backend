@@ -41,21 +41,15 @@ help:
 	@echo "   run formatter on all code"
 
 install:
-	poetry install --only=main -E mysql
+	poetry install --only=main
 
 dev: install-dev
 install-dev:
-	poetry install -E mysql
+	poetry install
 
 # setup CI environment
 install-ci: install-dev
 	poetry install --only ci
-
-install-wo-mysql:
-	poetry install --no-dev
-
-install-dev-wo-mysql:
-	poetry install
 
 init-db:
 	${INVENV} alembic upgrade head
