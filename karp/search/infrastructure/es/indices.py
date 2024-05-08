@@ -3,10 +3,11 @@ from datetime import datetime
 from typing import Dict, Iterable, Optional
 
 import elasticsearch
+from elasticsearch.exceptions import NotFoundError
 from injector import inject
 
 from karp.lex.domain.entities import Entry
-from karp.search.domain import IndexEntry
+from karp.search.domain.index_entry import IndexEntry
 
 from .mapping_repo import EsMappingRepository
 
@@ -23,7 +24,7 @@ class EsIndex:
         self.es = es
         self.mapping_repo = mapping_repo
 
-    def create_index(self, resource_id: str, config):
+    def create_index(self, resource_id: str, config, create_alias=True):
         logger.info("creating es mapping")
         mapping = create_es_mapping(config)
 
@@ -54,10 +55,9 @@ class EsIndex:
         logger.debug("creating index", extra={"index_name": index_name, "body": body})
         result = self.es.indices.create(index=index_name, body=body)
 
-        # create an alias so we can interact with the index using resource_id
-        if self.es.indices.exists_alias(name=resource_id):
-            self.es.indices.delete_alias(name=resource_id, index="*")
-        self.es.indices.put_alias(name=resource_id, index=index_name)
+        if create_alias:
+            # create an alias so we can interact with the index using resource_id
+            self.create_alias(resource_id, index_name)
 
         if "error" in result:
             logger.error(
@@ -66,10 +66,19 @@ class EsIndex:
             )
             raise RuntimeError("failed to create index")
         logger.info("index created")
+        return index_name
+
+    def create_alias(self, resource_id, index_name):
+        if self.es.indices.exists_alias(name=resource_id):
+            self.es.indices.delete_alias(name=resource_id, index="*")
+        self.es.indices.put_alias(name=resource_id, index=index_name)
 
     def delete_index(self, resource_id: str):
-        index_name = self.es.indices.get_alias(name=resource_id).popitem()[0]
-        self.es.indices.delete(index=index_name)
+        try:
+            index_name = self.es.indices.get_alias(name=resource_id).popitem()[0]
+            self.es.indices.delete(index=index_name)
+        except NotFoundError:
+            pass
 
     def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
         index_to_es = []
@@ -132,15 +141,16 @@ def _create_es_mapping(config):
                 mapped_type = "boolean"
             elif parent_field_def["type"] == "string":
                 mapped_type = "text"
-            elif parent_field_def["type"] == "long_string":
-                mapped_type = "text"
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
             if parent_field_def["type"] == "string" and not parent_field_def.get(
                 "skip_raw", False
             ):
-                result["fields"] = {"raw": {"type": "keyword"}}
+                result["fields"] = {
+                    "raw": {"type": "keyword"},
+                    "sort": {"type": "icu_collation_keyword", "index": False, "language": "sv"},
+                }
         else:
             result = {"properties": {}}
 
@@ -199,7 +209,6 @@ def create_es_mapping(config: Dict) -> Dict:
                     "type": "icu_folding",
                     "unicode_set_filter": "[^åäöÅÄÖ]",
                 },
-                "swedish_sort": {"language": "sv", "type": "icu_collation"},
             },
         }
     }

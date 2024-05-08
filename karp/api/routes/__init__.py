@@ -15,13 +15,12 @@ router = APIRouter()
 router.include_router(
     entries_api.router,
     prefix="/entries",
-    tags=["Entries"],
 )
 
 router.include_router(
     history_api.router,
     prefix="/history",
-    tags=["Entries", "History"],
+    tags=["History"],
 )
 router.include_router(
     query_api.router,

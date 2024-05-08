@@ -68,8 +68,8 @@ class Entity:
     def _increment_version(self):
         self._version += 1
 
-    def _validate_version(self, version: int) -> None:
-        if version != self.version:
+    def _validate_version(self, version: Optional[int]) -> None:
+        if version is not None and version != self.version:
             raise ConsistencyError(f"Entity version mismatch: {version} != {self.version}")
 
     @property

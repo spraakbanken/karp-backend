@@ -1,10 +1,11 @@
 from typing import Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Security, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from karp import auth, lex
+from karp import auth
 from karp.api import dependencies as deps
 from karp.auth.application import ResourcePermissionQueries
+from karp.auth.domain.user import User
 from karp.foundation.value_objects import unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex.application import EntryQueries
@@ -12,6 +13,7 @@ from karp.lex.application.dtos import (
     EntryDiffDto,
     EntryDiffRequest,
     EntryHistoryRequest,
+    GetHistoryDto,
 )
 
 router = APIRouter()
@@ -21,7 +23,7 @@ router = APIRouter()
 def get_diff(
     resource_id: str,
     entry_id: UniqueIdStr,
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    user: User = Depends(deps.get_user_optional),
     from_version: Optional[int] = None,
     to_version: Optional[int] = None,
     from_date: Optional[float] = None,
@@ -30,7 +32,7 @@ def get_diff(
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
-    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
@@ -50,11 +52,11 @@ def get_diff(
 
 @router.get(
     "/{resource_id}",
-    response_model=lex.GetHistoryDto,
+    response_model=GetHistoryDto,
 )
 def get_history(
     resource_id: str,
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    user: User = Depends(deps.get_user_optional),
     user_id: Optional[str] = Query(None),
     entry_id: Optional[UniqueIdStr] = Query(None),
     from_date: Optional[float] = Query(None),
@@ -66,7 +68,7 @@ def get_history(
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
-    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
+    if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",

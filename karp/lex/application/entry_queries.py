@@ -106,17 +106,17 @@ class EntryQueries:
             # else:
             #     previous_body = {}
             history_diff = jsondiff.compare(previous_body, history_entry.body)
-            logger.info("diff", extra={"diff": history_diff})
+            logger.debug("diff", extra={"diff": history_diff})
             result.append(
                 HistoryDto(
                     timestamp=history_entry.last_modified,
                     message=history_entry.message or "",
                     id=history_entry.entity_id,
-                    # entry_id=history_entry.entry_id,
                     version=history_entry.version,
                     op=history_entry.op,
                     userId=history_entry.last_modified_by,
                     diff=history_diff,
+                    entry=history_entry.body,
                 )
             )
             previous_body = history_entry.body
@@ -152,7 +152,7 @@ class EntryQueries:
             obj2 = db_entry
             obj2_body = db_entry.body
 
-        if not obj1_body or not obj2_body:
+        if obj1_body is None or obj2_body is None:
             raise errors.DiffImposible("diff impossible!")
 
         return EntryDiffDto(

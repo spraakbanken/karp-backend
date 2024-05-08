@@ -6,7 +6,6 @@ from fastapi import (
     Depends,
     HTTPException,
     Query,
-    Security,
     status,
 )
 from starlette import responses
@@ -20,9 +19,9 @@ from karp.auth.application import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
 from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
+from karp.lex import EntryDto
 from karp.lex.application import EntryQueries
 from karp.lex.domain import errors
-from karp.lex.domain.dtos import EntryDto
 from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 
@@ -31,31 +30,26 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"])
-@router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
+@router.get("/{resource_id}/{entry_id}", summary="Get entry", tags=["History"])
+@router.get("/{resource_id}/{entry_id}/{version}", summary="Get entry history", tags=["History"])
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
     version: Optional[int] = Query(None),
-    user: auth.User = Security(deps.get_user, scopes=["admin"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: [str] = Depends(deps.get_published_resources),
-):
-    if not resource_permissions.has_permission(auth.PermissionLevel.admin, user, [resource_id]):
+) -> EntryDto:
+    if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
     if resource_id not in published_resources:
         raise ResourceNotFound(resource_id)
-    logger.info(
-        "getting history for entry",
-        extra={
-            "resource_id": resource_id,
-            "entry_id": entry_id,
-            "user": user.identifier,
-        },
+    logger.debug(
+        "getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id}
     )
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
@@ -63,13 +57,13 @@ def get_history_for_entry(
 @router.put(
     "/{resource_id}",
     status_code=status.HTTP_201_CREATED,
-    tags=["Editing"],
     response_model=schemas.EntryAddResponse,
+    tags=["Editing"],
 )
 def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -111,14 +105,14 @@ def add_entry(
 
 @router.post(
     "/{resource_id}/{entry_id}",
-    tags=["Editing"],
     response_model=schemas.EntryAddResponse,
+    tags=["Editing"],
 )
 def update_entry(
     resource_id: str,
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -177,14 +171,14 @@ def update_entry(
 
 @router.delete(
     "/{resource_id}/{entry_id}/{version}",
-    tags=["Editing"],
     status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Editing"],
 )
 def delete_entry(
     resource_id: str,
     entry_id: UniqueId,
     version: int,
-    user: User = Security(deps.get_user, scopes=["write"]),
+    user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: [str] = Depends(deps.get_published_resources),

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
 import typer
-from json_streams import jsonlib
+from json_arrays import jsonlib
 from tabulate import tabulate
 
 from karp.foundation.value_objects import UniqueIdStr, unique_id
@@ -68,7 +68,7 @@ def create(
 def update(
     ctx: typer.Context,
     config: Path,
-    version: int = typer.Option(..., "-v", "--version"),
+    version: Optional[int] = typer.Option(None, "-v", "--version"),
     message: Optional[str] = typer.Option(None, "-m", "--message"),
     user: Optional[str] = typer.Option(None, "-u", "--user"),
 ):
@@ -101,7 +101,7 @@ def update(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def publish(ctx: typer.Context, resource_id: str, version: int):
+def publish(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     resource_commands.publish_resource(
         resource_id=resource_id,
@@ -115,9 +115,9 @@ def publish(ctx: typer.Context, resource_id: str, version: int):
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex(ctx: typer.Context, resource_id: str):
+def reindex(ctx: typer.Context, resource_id: str, remove_old_index: Optional[bool] = False):
     search_commands = inject_from_ctx(SearchCommands, ctx)
-    search_commands.reindex_resource(resource_id=resource_id)
+    search_commands.reindex_resource(resource_id=resource_id, remove_old_index=remove_old_index)
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
 
@@ -171,7 +171,10 @@ def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
 @cli_error_handler
 @cli_timer
 def unpublish(
-    ctx: typer.Context, resource_id: str, version: int, keep_index: Optional[bool] = False
+    ctx: typer.Context,
+    resource_id: str,
+    version: Optional[int] = None,
+    keep_index: Optional[bool] = False,
 ):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     unpublished = resource_commands.unpublish_resource(

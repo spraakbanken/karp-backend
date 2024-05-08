@@ -1,6 +1,7 @@
 import pytest  # noqa: F401
 from fastapi import status
-from karp import auth
+
+from tests.e2e.conftest import AccessToken
 
 
 def test_stats_wo_auth(fa_data_client):  # noqa: ANN201
@@ -14,7 +15,7 @@ def test_stats_wo_auth(fa_data_client):  # noqa: ANN201
     assert len(entries) == 4
 
 
-def test_stats_w_auth(fa_data_client, read_token: auth.AccessToken):  # noqa: ANN201
+def test_stats_w_auth(fa_data_client, read_token: AccessToken):  # noqa: ANN201
     response = fa_data_client.get(
         "/stats/places/area",
         headers=read_token.as_header(),

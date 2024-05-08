@@ -2,9 +2,6 @@
 
 import typing
 
-import pydantic
-
-from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
 from karp.lex.domain.dtos import BaseModel, IdMixin
 from karp.lex.domain.entities.entry import EntryOp
@@ -44,6 +41,7 @@ class HistoryDto(IdMixin, BaseModel):
     op: EntryOp
     user_id: str
     diff: list[dict]
+    entry: dict
 
 
 class GetHistoryDto(BaseModel):

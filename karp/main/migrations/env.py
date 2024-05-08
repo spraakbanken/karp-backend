@@ -1,16 +1,14 @@
-import logging  # noqa: I001
+import logging
 import os
 import pathlib
-
-import alembic
-from sqlalchemy import engine_from_config, pool, create_engine, text
 from logging.config import fileConfig
 
+import alembic
+from sqlalchemy import create_engine, engine_from_config, pool, text
+from sqlalchemy.engine import URL
+
+from karp.lex.infrastructure.sql.models import Base
 from karp.main import config as karp_config
-from karp.db_infrastructure import db
-
-# from karp.migration_helper import entry_tables, history_tables, database_uri
-
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -40,9 +38,15 @@ def run_migrations_online():
             db_file.unlink(missing_ok=True)
         else:
             # connect to primary db
-            default_engine = create_engine(
-                karp_config.DATABASE_URL_WO_DB, isolation_level="AUTOCOMMIT"
+            database_url = URL.create(
+                drivername=karp_config.DATABASE_URL.drivername,
+                username=karp_config.DATABASE_URL.username,
+                password=karp_config.DATABASE_URL.password,
+                host=karp_config.DATABASE_URL.host,
+                port=karp_config.DATABASE_URL.port,
+                query=karp_config.DATABASE_URL.query,
             )
+            default_engine = create_engine(database_url, isolation_level="AUTOCOMMIT")
             # drop testing db if it exists and create a fresh one
             with default_engine.connect() as default_conn:
                 logger.warning("dropping database: %s", karp_config.DATABASE_NAME)
@@ -72,7 +76,7 @@ def run_migrations_online():
     with connectable.connect() as connection:
         alembic.context.configure(
             connection=connection,
-            target_metadata=db.metadata,
+            target_metadata=Base.metadata,
             compare_type=True,
         )
 
@@ -82,9 +86,8 @@ def run_migrations_online():
 
 def run_migrations_offline() -> None:
     """
-    Run migrations in 'offline' mode.
+    Run migrations in 'offline' mode. This means an SQL script is created. !!! UNTESTED !!!
     """
-
     if os.environ.get("TESTING"):
         raise RuntimeError("Running testing migrations offline currently not permitted.")
 

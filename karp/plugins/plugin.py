@@ -12,7 +12,14 @@ from injector import Injector, inject
 from karp.foundation.batch import batch_items
 from karp.foundation.cache import Cache
 from karp.foundation.entry_points import entry_points
-from karp.foundation.json import expand_path, get_path, localise_path, make_path, set_path
+from karp.foundation.json import (
+    expand_path,
+    get_path,
+    has_path,
+    localise_path,
+    make_path,
+    set_path,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +92,10 @@ class Plugins:
     def generate_batch(self, config: Dict, batch) -> Iterable[Dict]:
         # TODO: turn into {"error": "plugin failed"} or whatever
         params = config.get("params", {})
-        result = list(self._get_plugin(config).generate_batch([params | item for item in batch]))
+        batch = list(batch)
+        if not batch:
+            return []
+        result = list(self._get_plugin(config).generate_batch(params | item for item in batch))
         if len(result) != len(batch):
             raise AssertionError("batch result had wrong length")
         return result
@@ -304,17 +314,25 @@ def transform_list(
         ]
 
         # Generate a batch of all needed field_params values
-        batch = [
-            {
-                k: get_path(localise_path(v, pos), bodies[i])
-                for k, v in config.get("field_params", {}).items()
-            }
-            for i, pos in occurrences
-        ]
+        batch = []
+        batch_occurrences = []
+        for i, pos in occurrences:
+            field_params = {}
+            for k, v in virtual_fields[field_name].get("field_params", {}).items():
+                path = localise_path(v, pos)
+                # If the path does not exist, skip this field
+                if not has_path(path, bodies[i]):
+                    field_params = None
+                    break
+                field_params[k] = get_path(path, bodies[i])
+
+            if field_params is not None:
+                batch_occurrences.append((i, pos))
+                batch.append(field_params)
 
         # Execute the plugin on the batch and store the result
         batch_result = generate_batch(virtual_fields[field_name], batch)
-        for (i, pos), result in zip(occurrences, batch_result):
+        for (i, pos), result in zip(batch_occurrences, batch_result):
             set_path(pos, result, bodies[i])
 
     return bodies

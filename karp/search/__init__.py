@@ -1,6 +1,5 @@
-from .domain import IndexEntry, QueryRequest
+from .domain import QueryRequest
 
 __all__ = [
-    "IndexEntry",
     "QueryRequest",
 ]

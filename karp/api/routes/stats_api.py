@@ -6,7 +6,6 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
-    Security,
     status,
 )
 
@@ -32,11 +31,12 @@ class StatisticsDto(pydantic.BaseModel):
 @router.get(
     "/{resource_id}/{field}",
     response_model=typing.List[StatisticsDto],
+    description="Return all possible values for `<field>` in `<resource_id>`",
 )
 def get_field_values(
     resource_id: str,
     field: str,
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: [str] = Depends(deps.get_published_resources),

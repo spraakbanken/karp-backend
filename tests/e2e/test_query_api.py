@@ -3,8 +3,8 @@ from typing import Dict, List, Optional
 import pytest
 from fastapi import status
 
-from karp import auth
 from karp.lex.application import EntryQueries
+from tests.e2e.conftest import AccessToken
 from tests.utils import get_json
 
 
@@ -17,7 +17,7 @@ def _test_path(
     path: str,
     expected_result: List[str],
     *,
-    access_token: Optional[auth.AccessToken] = None,
+    access_token: Optional[AccessToken] = None,
     headers: Optional[Dict] = None,
 ) -> None:
     if access_token:
@@ -50,7 +50,7 @@ class TestQuery:
 
 def test_query_no_q(
     fa_data_client,
-    read_token: auth.AccessToken,
+    read_token: AccessToken,
     app_context,
 ):
     resource = "places"
@@ -71,7 +71,7 @@ def test_query_no_q(
 
 def test_query_stats(
     fa_data_client,
-    read_token: auth.AccessToken,
+    read_token: AccessToken,
 ):
     resources = ["places", "municipalities"]
     entries = get_json(
@@ -125,6 +125,18 @@ def test_regex(
     assert len(response_data["hits"]) == hit_count
     for hit in response_data["hits"]:
         print(hit["entry"]["name"])
+
+
+def test_path_parameter(fa_data_client):
+    query = f"/query/places?path=entry._municipality.code"
+    response = fa_data_client.get(query)
+    response_data = response.json()
+    # there are different number of hits if running in isolation or
+    # with other tests, so just check that some expected values are in there
+    assert [1] in response_data["hits"]
+    assert [2] in response_data["hits"]
+    assert [3] in response_data["hits"]
+    assert [2, 3] in response_data["hits"]
 
 
 # TODO: test that we can search for virtual fields

@@ -2,7 +2,6 @@
 import elasticsearch_test
 from karp.main import AppContext
 from karp.resource_commands import ResourceCommands
-from tests.integration.auth.adapters import create_bearer_token
 from karp import auth
 from karp.main.config import env
 import os
@@ -15,55 +14,30 @@ from typer import Typer
 from typer.testing import CliRunner
 
 import pytest
-from sqlalchemy import create_engine
-from sqlalchemy.orm import session, sessionmaker, Session
 from starlette.testclient import TestClient
 
 from tests import common_data, utils
-from karp.db_infrastructure.db import metadata
 from karp.main import new_session
 from dataclasses import replace
+from tests.integration.auth.adapters import create_access_token
 
 
-@pytest.fixture(name="in_memory_sqlite_db")
-def fixture_in_memory_sqlite_db():  # noqa: ANN201
-    engine = create_engine("sqlite:///:memory:")
-    metadata.create_all(engine)
-    yield engine
-    session.close_all_sessions()
-    metadata.drop_all(bind=engine)
+class AccessToken:
+    def __init__(self, access_token):
+        self.access_token = access_token
 
-
-@pytest.fixture
-def sqlite_session_factory(in_memory_sqlite_db):  # noqa: ANN201
-    yield sessionmaker(bind=in_memory_sqlite_db)
+    def as_header(self) -> typing.Dict[str, str]:
+        return {
+            "Authorization": f"Bearer {self.access_token}",
+        }
 
 
 @pytest.fixture(scope="session")
-def setup_environment() -> None:
-    os.environ["TESTING"] = "1"
-    os.environ["AUTH_JWT_PUBKEY_PATH"] = "assets/testing/pubkey.pem"
-    os.environ["ELASTICSEARCH_HOST"] = "http://localhost:9202"
-
-
-@pytest.fixture(scope="session")
-def apply_migrations(setup_environment: None):  # noqa: ANN201
+def apply_migrations():
     from karp.main.migrations import use_cases
 
     use_cases.run_migrations_up()
     yield
-
-
-@pytest.fixture(scope="session", name="runner")
-def fixture_runner() -> CliRunner:
-    return CliRunner()
-
-
-@pytest.fixture(scope="session", name="cliapp")
-def fixture_cliapp() -> Typer:
-    from karp.cliapp.main import create_app
-
-    return create_app()
 
 
 @pytest.fixture(name="app", scope="session")
@@ -113,7 +87,7 @@ def create_and_publish_resource(
 @pytest.fixture(scope="session", name="fa_data_client")
 def fixture_fa_data_client(  # noqa: ANN201
     fa_client,
-    admin_token: auth.AccessToken,
+    admin_token: AccessToken,
 ):
     create_and_publish_resource(
         fa_client,
@@ -132,22 +106,25 @@ def fixture_fa_data_client(  # noqa: ANN201
     return fa_client
 
 
+auth_levels: typing.Dict[str, int] = {
+    level.value: (idx + 1) * 10 for idx, level in enumerate(auth.PermissionLevel)
+}
+
+
+def create_bearer_token(
+    scope: typing.Dict,
+    user: Optional[str] = "abc123",
+) -> AccessToken:
+    levels = auth_levels
+    return AccessToken(
+        access_token=create_access_token(user, levels, scope),
+    )
+
+
 @pytest.fixture(scope="session")
-def auth_levels() -> typing.Dict[str, int]:
-    curr_level = 10
-    levels = {}
-    for level in auth.PermissionLevel:
-        levels[level.value] = curr_level
-        curr_level += 10
-
-    return levels
-
-
-@pytest.fixture(scope="session")
-def user1_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def user1_token() -> AccessToken:
     return create_bearer_token(
         user="user1",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.write],
@@ -157,10 +134,9 @@ def user1_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def user2_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def user2_token() -> AccessToken:
     return create_bearer_token(
         user="user2",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.write],
@@ -170,10 +146,8 @@ def user2_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def user4_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def user4_token() -> AccessToken:
     return create_bearer_token(
-        user="user4",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.admin],
@@ -183,10 +157,8 @@ def user4_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def admin_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def admin_token() -> AccessToken:
     return create_bearer_token(
-        user="alice@example.com",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.admin],
@@ -198,10 +170,8 @@ def admin_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def read_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def read_token() -> AccessToken:
     return create_bearer_token(
-        user="bob@example.com",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.read],
@@ -213,10 +183,8 @@ def read_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
 
 
 @pytest.fixture(scope="session")
-def write_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
+def write_token() -> AccessToken:
     return create_bearer_token(
-        user="charlie@example.com",
-        levels=auth_levels,
         scope={
             "lexica": {
                 "places": auth_levels[auth.PermissionLevel.write],
@@ -224,6 +192,13 @@ def write_token(auth_levels: typing.Dict[str, int]) -> auth.AccessToken:
                 "municipalities": auth_levels[auth.PermissionLevel.write],
             }
         },
+    )
+
+
+@pytest.fixture(scope="session")
+def no_municipalities_token() -> AccessToken:
+    return create_bearer_token(
+        scope={"lexica": {}},
     )
 
 

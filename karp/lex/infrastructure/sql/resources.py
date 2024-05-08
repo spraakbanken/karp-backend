@@ -4,7 +4,7 @@ from typing import List, Optional, Union
 
 import sqlalchemy as sa
 from injector import inject
-from sqlalchemy import and_, func, sql, text
+from sqlalchemy import Engine, and_, func, sql, text
 from sqlalchemy.orm import Session
 
 from karp.foundation import repository
@@ -95,8 +95,11 @@ class ResourceRepository(repository.Repository):
         for resource in query:
             self._session.delete(resource)
 
+    def create_resource_table(self, resource):
+        EntryRepository(self._session, resource).create_table()
+
     def remove_resource_table(self, resource):
-        self._session.execute(text("DROP TABLE IF EXISTS " + resource.table_name))
+        EntryRepository(self._session, resource).drop_table()
 
     def remove(self, resource: Resource):
         self._session.delete(resource)
@@ -104,9 +107,13 @@ class ResourceRepository(repository.Repository):
     def _save(self, resource: Resource):
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
+        # If resource was discarded, drop the table containing all data entries.
+        # Otherwise, create the table.
         if resource.discarded:
-            # If resource was discarded, drop the table containing all data entries
             self.remove_resource_table(resource)
+        else:
+            self.create_resource_table(resource)
+
         self._cache.clear()
 
     def _by_id(

@@ -1,10 +1,11 @@
 import logging  # noqa: I001
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Security, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from karp import auth, search
 from karp.auth.application import ResourcePermissionQueries
+from karp.lex import EntryDto
 from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 from karp.search.domain import QueryRequest
@@ -13,6 +14,7 @@ from karp.search.domain.errors import IncompleteQuery
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.search.infrastructure.es import EsSearchService
+from .. import schemas
 
 
 logger = logging.getLogger(__name__)
@@ -24,7 +26,8 @@ router = APIRouter()
 @router.get(
     "/entries/{resource_id}/{entry_ids}",
     description="Returns a list of entries matching the given ids",
-    name="Get lexical entries by id",
+    name="Get entries by id",
+    response_model=schemas.EntriesByIdResponse,
 )
 def get_entries_by_id(
     resource_id: str = Path(..., description="The resource to perform operation on"),
@@ -33,7 +36,7 @@ def get_entries_by_id(
         description="Comma-separated. The ids to perform operation on.",
         regex=r"^\w(,\w)*",
     ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -49,7 +52,11 @@ def get_entries_by_id(
     return search_service.search_ids(resource_id, entry_ids)
 
 
-@router.get("/stats/{resources}", name="Hits per resource, no entries in result")
+@router.get(
+    "/stats/{resources}",
+    name="Hits per resource, no entries in result",
+    response_model=schemas.QueryStatsResponse,
+)
 def query_stats(
     resources: str = Path(
         ...,
@@ -59,9 +66,10 @@ def query_stats(
     q: Optional[str] = Query(
         None,
         title="query",
-        description="The query. If missing, all entries in chosen resource(s) will be returned.",
+        description="""The query. If missing, the number of entries in the chosen resource(s) 
+            will be returned. See [Query DSL](#section/Query-DSL)""",
     ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -97,9 +105,9 @@ def query_stats(
 
 @router.get(
     "/{resources}",
-    # summary="Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.",
     name="Query",
     responses={200: {"content": {"application/json": {}}}},
+    response_model=schemas.QueryResponse,
 )
 def query(
     resources: str = Path(
@@ -110,7 +118,7 @@ def query(
     q: Optional[str] = Query(
         None,
         title="query",
-        description="The query. If missing, all entries in chosen resource(s) will be returned.",
+        description="The query. If missing, all entries in chosen resource(s) will be returned. See [Query DSL](#section/Query-DSL)",
     ),
     from_: int = Query(
         0, alias="from", description="Specify which entry should be the first returned."
@@ -122,13 +130,14 @@ def query(
         regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
-    include_fields: Optional[List[str]] = Query(
-        None, description="Comma-separated list of which fields to return"
+    path: Optional[str] = Query(
+        None,
+        description="""A dot-separataed path to for returning a specific field in JSON. 
+        Only supports one path down into the tree with no indexing.
+        For example, to fetch only the field `baseform` in the entry, use: `?path=entry.baseform`
+        If the selected field is an array, the result will also be wrapped in an array.""",
     ),
-    exclude_fields: Optional[List[str]] = Query(
-        None, description="Comma-separated list of which fields to remove from result"
-    ),
-    user: auth.User = Security(deps.get_user_optional, scopes=["read"]),
+    user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: [str] = Depends(deps.get_published_resources),
@@ -150,13 +159,12 @@ def query(
     if any(resource not in published_resources for resource in resource_list):
         raise ResourceNotFound(resource_list)
     query_request = QueryRequest(
-        resource_ids=resource_list,
+        resources=resource_list,
         q=q,
         from_=from_,
         size=size,
         sort=sort,
-        include_fields=include_fields,
-        exclude_fields=exclude_fields,
+        path=path,
         lexicon_stats=lexicon_stats,
     )
     try:

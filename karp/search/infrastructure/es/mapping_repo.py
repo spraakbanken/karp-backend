@@ -1,6 +1,7 @@
 import logging
 import re
 from dataclasses import dataclass
+from itertools import groupby
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import elasticsearch
@@ -150,18 +151,23 @@ class EsMappingRepository:
     def check_resource_is_published(self, resource_id):
         return resource_id in self.default_sort
 
-    def get_default_sort(self, resources: List[str]) -> str:
+    def get_default_sort(self, resources: List[str]) -> Optional[str]:
         """
         Returns the default sort field for the resources. Throws an error
         if the resources have different sort fields, or if those sort  fields
         have different types (i.e. if _raw must be added)
         """
-        sort_field = self._translate_sort_field(resources[0], self.default_sort[resources[0]])
-        for resource in resources[1:]:
-            if self._translate_sort_field(resource, self.default_sort[resource]) != sort_field:
-                raise KarpError(
-                    message="Resources do not share default sort field, set sort field explicitly"
-                )
+
+        def _translate_unless_none(resource):
+            maybe_sort_field1 = self.default_sort.get(resource)
+            return maybe_sort_field1 and self._translate_sort_field(resource, maybe_sort_field1)
+
+        g = groupby(map(_translate_unless_none, resources))
+        sort_field = next(g)[0]
+        if next(g, False):
+            raise KarpError(
+                message="Resources do not share default sort field, set sort field explicitly"
+            )
         return sort_field
 
     def translate_sort_fields(

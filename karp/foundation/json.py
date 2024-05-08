@@ -1,7 +1,7 @@
 """Utilities for working with JSON objects."""
 
 from itertools import takewhile
-from typing import Iterator, Tuple, Union
+from typing import Dict, Iterator, Tuple, Union
 
 Path = list[Union[str, int]]
 
@@ -60,7 +60,7 @@ def get_path(path: Union[str, Path], data):
         return get_path(path[1:], data[path[0]])
 
     else:
-        raise AssertionError(f"can't look up field {field[0]} in non-object {data}")
+        raise AssertionError(f"can't look up field {path[0]} in non-object {data}")
 
 
 def set_path(path: Union[str, Path], value, data):
@@ -202,5 +202,21 @@ def expand_path(path: Union[str, Path], data, prefix=None) -> Iterator[Path]:
     elif not path:
         yield prefix
 
+    elif isinstance(data, Dict) and path[0] not in data:
+        # Skip if the field doesn't exist
+        pass
+
     else:
         yield from expand_path(path[1:], data[path[0]], prefix + [path[0]])
+
+
+def has_path(path: Union[str, Path], data) -> bool:
+    """
+    Check if a given path exists.
+    """
+
+    try:
+        next(expand_path(path, data))
+        return True
+    except StopIteration:
+        return False

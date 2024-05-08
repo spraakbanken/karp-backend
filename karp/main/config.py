@@ -1,9 +1,8 @@
-import os  # noqa: I001
+import os
 
 import environs
-from sqlalchemy.engine import URL as DatabaseUrl, make_url
-from starlette.config import Config
-from starlette.datastructures import Secret
+from sqlalchemy.engine import URL as DatabaseUrl
+from sqlalchemy.engine import make_url
 
 PROJECT_NAME = "Karp"
 VERSION = "7.0.0"
@@ -48,20 +47,8 @@ def parse_database_url(env: environs.Env) -> DatabaseUrl:
     )
 
 
-def parse_database_url_wo_db(env: environs.Env) -> DatabaseUrl:
-    return DatabaseUrl.create(
-        drivername=env("DB_DRIVER", "mysql+pymysql"),
-        username=env("DB_USER", None),
-        password=env("DB_PASSWORD", None),
-        host=env("DB_HOST", None),
-        port=env.int("DB_PORT", None),
-        query={"charset": "utf8mb4"},
-    )
-
-
 env = load_env()
 
 
 DATABASE_URL = parse_database_url(env)
-DATABASE_URL_WO_DB = parse_database_url_wo_db(env)
 DATABASE_NAME = parse_database_name(env)

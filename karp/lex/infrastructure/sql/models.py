@@ -5,20 +5,22 @@ from sqlalchemy import (
     Integer,
     String,
 )
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.schema import (
     UniqueConstraint,
 )
 from sqlalchemy.types import Boolean, Float, Text
 from sqlalchemy_json import NestedMutableJson
 
-from karp.db_infrastructure import db
 from karp.db_infrastructure.types import ULIDType
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
 
+Base = declarative_base()
 
-class ResourceModel(db.Base):
+
+class ResourceModel(Base):
     __tablename__ = "resources"
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
@@ -154,7 +156,7 @@ def get_or_create_entry_history_model(
         "__tablename__": resource_id,
     }
 
-    sqlalchemy_class = type(resource_id, (db.Base, BaseHistoryEntry), attributes)
+    sqlalchemy_class = type(resource_id, (Base, BaseHistoryEntry), attributes)
     class_cache[resource_id] = sqlalchemy_class
     return sqlalchemy_class
 
