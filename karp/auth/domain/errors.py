@@ -12,3 +12,7 @@ class TokenError(AuthError):
 
 class ExpiredToken(TokenError):
     """The given token has expired."""
+
+
+class ApiKeyError(AuthError):
+    """The given API key  is not valid"""
