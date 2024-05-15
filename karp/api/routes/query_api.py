@@ -39,7 +39,7 @@ def get_entries_by_id(
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
     if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
@@ -72,7 +72,7 @@ def query_stats(
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     resource_list = resources.split(",")
     if not resource_permissions.has_permission(auth.PermissionLevel.read, user, resource_list):
@@ -140,7 +140,7 @@ def query(
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.

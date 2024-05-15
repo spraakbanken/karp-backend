@@ -35,6 +35,7 @@ class Field:
     def parent(self) -> Optional[str]:
         if self.path:
             return ".".join(self.path[:-1])
+        return None
 
     @property
     def analyzed(self) -> bool:
@@ -55,6 +56,7 @@ class Field:
 
         if self.analyzed:
             return self.name + ".raw"
+        return None
 
 
 class EsMappingRepository:

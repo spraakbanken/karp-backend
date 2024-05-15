@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
@@ -44,5 +46,5 @@ def get_entry_queries(
 # TODO This should be cached
 def get_published_resources(
     resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
-) -> [str]:
+) -> List[str]:
     return [resource.resource_id for resource in resources.get_published_resources()]
