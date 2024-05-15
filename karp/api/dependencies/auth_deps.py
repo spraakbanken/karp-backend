@@ -73,7 +73,7 @@ def get_user(
                 extra={"credentials": credentials},
             )
             return auth_service.authenticate(credentials.credentials)
-        elif api_key:
+        else:
             return api_key_service.authenticate(api_key)
     except AuthError as err:
         raise HTTPException(

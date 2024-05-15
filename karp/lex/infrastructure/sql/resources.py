@@ -164,6 +164,6 @@ class ResourceRepository(repository.Repository):
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
-    def entries_by_resource_id(self, resource_id: str) -> Optional[EntryRepository]:
+    def entries_by_resource_id(self, resource_id: str) -> EntryRepository:
         resource = self.by_resource_id(resource_id)
-        return EntryRepository(session=self._session, resource=resource) if resource else None
+        return EntryRepository(session=self._session, resource=resource)

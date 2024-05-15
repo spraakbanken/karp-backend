@@ -14,8 +14,6 @@ class ResourcePermissionQueries:
     def get_resource_permissions(self) -> typing.List[ResourcePermissionDto]:
         resource_permissions = []
         for resource in self.resources.get_published_resources():
-            resource_obj = {"resource_id": resource.resource_id}
-
             protected_conf = resource.config.get("protected")
             if not protected_conf:
                 protected = None
@@ -25,10 +23,9 @@ class ResourcePermissionQueries:
                 protected = "WRITE"
             else:
                 protected = "READ"
-
-            if protected:
-                resource_obj["protected"] = protected
-            resource_permissions.append(resource_obj)
+            resource_permissions.append(
+                ResourcePermissionDto(resource_id=resource.resource_id, protected=protected)
+            )
 
         return resource_permissions
 

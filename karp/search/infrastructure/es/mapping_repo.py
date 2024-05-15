@@ -21,7 +21,7 @@ class Field:
     path: list[str]  # e.g. if the field name is "foo.bar" then this is ["foo", "bar"]
     type: str  # e.g. "text"
 
-    extra: bool = False  # True for things like .raw fields
+    extra: Optional[bool] = False  # True for things like .raw fields
 
     @property
     def name(self) -> str:
@@ -76,9 +76,7 @@ class EsMappingRepository:
         aliases = self._get_all_aliases()
         self._update_field_mapping(aliases)
 
-    def _update_field_mapping(
-        self, aliases: List[Tuple[str, str]]
-    ) -> Dict[str, Dict[str, Field]]:
+    def _update_field_mapping(self, aliases: List[Tuple[str, str]]):
         """
         Create a field mapping based on the mappings of elasticsearch.
         """
@@ -100,7 +98,7 @@ class EsMappingRepository:
     def _get_fields_from_mapping(
         properties: Dict[str, Dict[str, Dict[str, Any]]],
         path: Optional[list[str]] = None,
-        extra: bool = False,  # noqa: RUF013
+        extra: Optional[bool] = False,
     ) -> dict[str, Field]:
         if path is None:
             path = []
