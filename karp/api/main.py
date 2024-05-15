@@ -165,7 +165,17 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
-        traceback.print_exception(exc)
+        def extract_exceptions(excs):
+            output = []
+            for inner_exc in excs:
+                if hasattr(inner_exc, "exceptions"):
+                    output.extend(extract_exceptions(inner_exc.exceptions))
+                else:
+                    output.append(inner_exc)
+            return output
+
+        for out_exc in extract_exceptions([exc]):
+            traceback.print_exception(out_exc)
         return await http_exception_handler(
             request,
             HTTPException(

@@ -24,7 +24,6 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
-# poetry.lock
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -116,9 +115,6 @@ venv.bak/
 
 # VS Code settings
 .vscode/
-
-# Poetry lock
-poetry.lock
 
 jwtRS256.key
 jwtRS256.key.pub

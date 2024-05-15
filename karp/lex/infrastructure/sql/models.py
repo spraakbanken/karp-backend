@@ -142,6 +142,14 @@ class BaseHistoryEntry:
         )
 
 
+class ApiKeyModel(Base):
+    __tablename__ = "api_keys"
+    id = Column(Integer, primary_key=True)
+    username = Column(Text(), nullable=False)
+    api_key = Column(String(36), nullable=False, unique=True)
+    permissions = Column(JSON, nullable=False)
+
+
 # Dynamic models
 
 

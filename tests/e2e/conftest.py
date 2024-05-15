@@ -1,4 +1,5 @@
 """Pytest entry point."""
+
 import elasticsearch_test
 from karp.main import AppContext
 from karp.resource_commands import ResourceCommands
