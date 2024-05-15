@@ -22,14 +22,8 @@ help:
 	@echo "dev | install-dev"
 	@echo "   setup development environment"
 	@echo ""
-	@echo "test | run-all-tests"
+	@echo "all-tests"
 	@echo "   run all tests"
-	@echo ""
-	@echo "run-doc-tests"
-	@echo "   run all tests"
-	@echo ""
-	@echo "run-all-tests-w-coverage"
-	@echo "   run all tests with coverage collection"
 	@echo ""
 	@echo "lint"
 	@echo "   lint the code"
@@ -47,14 +41,9 @@ dev: install-dev
 install-dev:
 	poetry install
 
-# setup CI environment
-install-ci: install-dev
-	poetry install --only ci
-
 init-db:
 	${INVENV} alembic upgrade head
 
-# build parser
 build-parser: karp/search/domain/query_dsl/karp_query_v6_parser.py karp/search/domain/query_dsl/karp_query_v6_model.py
 
 karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
@@ -83,12 +72,11 @@ tests := ${unit_test_dirs}
 all_tests := ${all_test_dirs}
 
 .PHONY: test
-test:
-	${INVENV} pytest -vv ${tests}
+test: unit-tests
 
 .PHONY: all-tests
 all-tests: clean-pyc
-	${INVENV} pytest -vv ${all_test_dirs}
+	${INVENV} pytest -vv tests
 
 .PHONY: all-tests-w-coverage
 all-tests-w-coverage:
@@ -99,11 +87,11 @@ test-w-coverage:
 	${INVENV} pytest -vv ${cov} --cov-report=${cov_report} ${all_tests}
 .PHONY: unit-tests
 unit-tests:
-	${INVENV} pytest -vv ${unit_test_dirs}
+	${INVENV} pytest -vv tests/unit
 
 .PHONY: e2e-tests
 e2e-tests: clean-pyc
-	${INVENV} pytest -vv ${e2e_test_dirs}
+	${INVENV} pytest -vv tests/e2e
 
 .PHONY: e2e-tests-w-coverage
 e2e-tests-w-coverage: clean-pyc
@@ -129,21 +117,14 @@ lint:
 lint-fix:
 	${INVENV} ruff ${flags} karp --fix
 
-.PHONY: build-c4-docs
-build-c4-docs:
-	structurizr-site-generatr generate-site -w docs/c4-docs/workspace.dsl -o docs/karp-backend/docs/system-overview
-
-.PHONY: serve-docs
-serve-c4-docs:
-	structurizr-site-generatr serve -w docs/c4-docs/workspace.dsl
+.PHONY: fmt
+fmt:
+	${INVENV} ruff format .
 
 .PHONY: type-check
 type-check:
 	${INVENV} mypy --config-file mypy.ini -p karp
 
-.PHONY: publish
-publish:
-	git push origin main --tags
 
 .PHONY: clean clean-pyc
 clean: clean-pyc
@@ -152,17 +133,3 @@ clean-pyc:
 	find . -name '*.pyo' -exec rm -f {} +
 	find . -name '*~' -exec rm -f {} +
 	find . -name '__pycache__' -exec rm -fr {} +
-
-.PHONY: fmt
-fmt:
-	${INVENV} ruff format .
-
-# test if code is formatted
-.PHONY: check-fmt
-check-fmt:
-	${INVENV} ruff format . --check
-
-.PHONY: tags
-tags:
-	ctags --languages=python -R --python-kinds=-i karp
-	ctags --languages=python -R --python-kinds=-i -e karp
