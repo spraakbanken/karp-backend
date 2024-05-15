@@ -1,4 +1,5 @@
 """Unit tests for JWTAuthenticator"""
+
 from pathlib import Path
 
 import pytest

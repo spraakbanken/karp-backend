@@ -1,4 +1,5 @@
 """Utilities for working with json_schema."""
+
 import logging
 from typing import Any
 

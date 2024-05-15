@@ -1,4 +1,5 @@
 """Handle of unique ids."""
+
 import typing
 
 import ulid

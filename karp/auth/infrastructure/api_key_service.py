@@ -1,4 +1,5 @@
 """Module for API key authentication."""
+
 import uuid
 from typing import List
 
