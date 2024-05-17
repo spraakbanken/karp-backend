@@ -99,13 +99,8 @@ class EsIndex:
         self,
         resource_id: str,
         *,
-        entry_id: Optional[str] = None,
-        entry: Optional[Entry] = None,
+        entry_id: str,
     ):
-        if not entry and not entry_id:
-            raise ValueError("Must give either 'entry' or 'entry_id'.")
-        if entry:
-            entry_id = entry.entry_id
         logger.info("deleting entry", extra={"entry_id": entry_id, "resource_id": resource_id})
         try:
             self.es.delete(

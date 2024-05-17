@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import (
     APIRouter,
@@ -39,7 +39,7 @@ def get_history_for_entry(
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ) -> EntryDto:
     if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -66,7 +66,7 @@ def add_entry(
     user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -115,7 +115,7 @@ def update_entry(
     user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -181,7 +181,7 @@ def delete_entry(
     user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     """Delete a entry from a resource."""
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):

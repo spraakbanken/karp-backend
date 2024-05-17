@@ -1,4 +1,5 @@
 """Constraints."""
+
 from karp.foundation import constraints
 from karp.lex.domain import errors
 

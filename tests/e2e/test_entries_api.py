@@ -165,54 +165,6 @@ class TestAddEntry:
         )
         assert new_id in entries.entity_ids()
 
-    @pytest.mark.skip(reason="we don't use entry_id")
-    def test_adding_existing_fails_with_400(
-        self,
-        fa_data_client,
-        write_token: AccessToken,
-    ):
-        entry_id = 204
-        entry_name = f"add{entry_id}"
-        response = fa_data_client.put(
-            "/entries/places",
-            json={
-                "entry": {
-                    "code": entry_id,
-                    "name": entry_name,
-                    "population": 4,
-                    "area": 50000,
-                    "density": 5,
-                    "municipality": [2, 3],
-                }
-            },
-            headers=write_token.as_header(),
-        )
-        print(f"response = {response.json()}")
-
-        assert response.status_code == 201
-
-        response = fa_data_client.put(
-            "/entries/places",
-            json={
-                "entry": {
-                    "code": entry_id,
-                    "name": entry_name,
-                    "population": 4,
-                    "area": 50000,
-                    "density": 5,
-                    "municipality": [2, 3],
-                }
-            },
-            headers=write_token.as_header(),
-        )
-        assert response.status_code == 400
-        response_data = response.json()
-
-        assert "error" in response_data
-        assert "errorCode" in response_data
-        assert ClientErrorCodes.DB_INTEGRITY_ERROR == response_data["errorCode"]
-        assert response_data["error"] == f"An entry with entry_id '{entry_id}' already exists."
-
     def test_add_fails_with_invalid_entry(
         self,
         fa_data_client,
@@ -225,10 +177,6 @@ class TestAddEntry:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         response_data = response.json()
         assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_VALID
-
-        # assert (
-        #     response_data["error"] == "Missing ID field for resource 'places' in '{}'"
-        # )
 
     def test_add_fails_with_virtual_field(
         self,

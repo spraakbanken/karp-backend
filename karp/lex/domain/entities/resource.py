@@ -1,4 +1,5 @@
 """LexicalResource."""
+
 import enum
 import typing
 from typing import Any, Dict, Optional, Tuple

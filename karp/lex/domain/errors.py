@@ -1,12 +1,10 @@
 """Lex domain errors."""
 
-
 from typing import Dict  # noqa: I001
 from karp.foundation.errors import NotFoundError
 
 
 class LexDomainError(Exception):
-
     """Base exception for domain errors."""
 
     def __init__(self, *args: object, **kwargs) -> None:

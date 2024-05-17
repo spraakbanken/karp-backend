@@ -1,4 +1,5 @@
 """Pytest entry point."""
+
 import pytest
 
 from starlette.config import environ

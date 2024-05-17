@@ -5,6 +5,7 @@ Revises:
 Create Date: ~2018-12-12 13:48:19.255822~2024-03-05
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from sqlalchemy_json import NestedMutableJson
