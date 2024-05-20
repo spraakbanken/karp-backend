@@ -59,7 +59,7 @@ def create(
         print(f"Created resource '{resource_id}'")
 
     elif config.is_dir():
-        typer.Abort("not supported yetls")
+        typer.Abort("not supported yet")
 
 
 @subapp.command()

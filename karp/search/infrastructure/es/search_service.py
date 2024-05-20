@@ -132,6 +132,7 @@ class EsQueryBuilder(NodeWalker):
 
 class EsFieldNameCollector(NodeWalker):
     # Return a set of all field names occurring in the given query
+    # TODO: support multi-fields too
     def walk_Node(self, node):
         result = set().union(*(self.walk(child) for child in node.children()))
         # TODO maybe a bit too automagic?
