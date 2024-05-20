@@ -11,10 +11,11 @@ from karp.lex.domain.entities.entry import EntryOp
 
 
 class BaseModel(pydantic.BaseModel):
-    class Config:
+    model_config = {
         # arbitrary_types_allowed = True
         # extra = "forbid"
-        alias_generator = alias_generators.to_lower_camel
+        "alias_generator": alias_generators.to_lower_camel
+    }
 
 
 class IdMixin(BaseModel):

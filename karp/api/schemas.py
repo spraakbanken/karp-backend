@@ -13,14 +13,7 @@ from karp.lex import EntryDto
 class BaseModel(pydantic.BaseModel):
     """Base class for schema classes."""
 
-    class Config:
-        alias_generator = alias_generators.to_lower_camel
-        json_encoders: typing.ClassVar = {ulid.ULID: lambda u: u.str}
-        populate_by_name = True
-
-    def serialize(self) -> dict:
-        """Serialize model to dict."""
-        return self.dict(by_alias=True)
+    model_config = {"alias_generator": alias_generators.to_lower_camel, "populate_by_name": True}
 
 
 class EntryAdd(BaseModel):

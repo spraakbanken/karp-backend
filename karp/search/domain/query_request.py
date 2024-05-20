@@ -16,14 +16,14 @@ class QueryRequest(pydantic.BaseModel):
     sort: List[str] = pydantic.Field(default_factory=list)
     path: typing.Optional[str] = None
 
-    @pydantic.validator("q", pre=True)
+    @pydantic.field_validator("q", mode="before")
     @classmethod
     def remove_none(cls, v):
         if v is None:
             return ""
         return v
 
-    @pydantic.validator("resources", pre=True)
+    @pydantic.field_validator("resources", mode="before")
     @classmethod
     def split_str(cls, v):
         if isinstance(v, str):
