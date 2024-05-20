@@ -16,6 +16,7 @@ class BaseModel(pydantic.BaseModel):
     class Config:
         alias_generator = alias_generators.to_lower_camel
         json_encoders: typing.ClassVar = {ulid.ULID: lambda u: u.str}
+        populate_by_name = True
 
     def serialize(self) -> dict:
         """Serialize model to dict."""

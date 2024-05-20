@@ -127,7 +127,8 @@ def query(
     sort: List[str] = Query(
         [],
         description="The `field` to sort by. If missing, default order for each resource will be used.",
-        pattern=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
+        # pattern is only supported for str, not list[str]
+        # pattern=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     path: Optional[str] = Query(
