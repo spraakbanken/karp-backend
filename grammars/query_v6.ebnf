@@ -9,6 +9,7 @@ expression
     =
     | logical_expression
     | query_expression
+    | sub_query
     ;
 
 query_expression
@@ -33,6 +34,11 @@ logical_expression
     | and
     | or
     | not
+    ;
+
+sub_query::SubQuery
+    =
+    field:identifier '(' exp:expression ')'
     ;
 
 and::And
@@ -140,4 +146,4 @@ integer_value::int
     ;
 
 # for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to name  field "myfield|"
-identifier = /[^|)(]+/ ;
+identifier::Identifier = /[^|)(]+/ ;

@@ -71,13 +71,16 @@ class KarpQueryV6Parser(Parser):
                 self._logical_expression_()
             with self._option():
                 self._query_expression_()
+            with self._option():
+                self._sub_query_()
             self._error(
                 'expecting one of: '
                 '<and> <contains> <endswith> <equals>'
                 '<exists> <freergxp> <freetext> <gt>'
-                '<gte> <logical_expression> <lt> <lte>'
-                '<missing> <not> <or> <query_expression>'
-                '<regexp> <startswith>'
+                '<gte> <identifier> <logical_expression>'
+                '<lt> <lte> <missing> <not> <or>'
+                '<query_expression> <regexp> <startswith>'
+                '<sub_query>'
             )
 
     @tatsumasu()
@@ -129,6 +132,20 @@ class KarpQueryV6Parser(Parser):
                 'expecting one of: '
                 "'and' 'not' 'or'"
             )
+
+    @tatsumasu('SubQuery')
+    def _sub_query_(self):  # noqa
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('(')
+        self._expression_()
+        self.name_last_node('exp')
+        self._token(')')
+
+        self._define(
+            ['exp', 'field'],
+            []
+        )
 
     @tatsumasu('And')
     def _and_(self):  # noqa
@@ -415,7 +432,7 @@ class KarpQueryV6Parser(Parser):
     def _integer_value_(self):  # noqa
         self._pattern('\\d+')
 
-    @tatsumasu()
+    @tatsumasu('Identifier')
     def _identifier_(self):  # noqa
         self._pattern('[^|)(]+')
 
@@ -431,6 +448,9 @@ class KarpQueryV6Semantics:
         return ast
 
     def logical_expression(self, ast):  # noqa
+        return ast
+
+    def sub_query(self, ast):  # noqa
         return ast
 
     def and_(self, ast):  # noqa

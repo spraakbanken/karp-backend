@@ -94,6 +94,17 @@ def parser() -> KarpQueryV6Parser:
             r'and(regexp|name|"\s")',
             es_dsl.Q("regexp", name="\\s"),
         ),
+        (
+            "infT(and(equals|wf|apa||equals|msd|singular))",
+            es_dsl.Q(
+                "nested",
+                path="infT",
+                query=(
+                    es_dsl.Q("match", infT__wf={"query": "apa", "operator": "and"})
+                    & es_dsl.Q("match", infT__msd={"query": "singular", "operator": "and"})
+                ),
+            ),
+        ),
     ],
 )
 def test_es_query(parser, q, expected):  # noqa: ANN201
@@ -153,3 +164,33 @@ def test_combined_es_query(parser, q, expected):  # noqa: ANN201
     query = EsQueryBuilder().walk(parser.parse(q))
 
     assert query == expected
+
+
+@pytest.mark.parametrize(
+    "q1,q2",
+    [
+        (
+            "equals|infT.wf|word",
+            "infT(equals|wf|word)",
+        ),
+        (
+            "equals|t1.infT.wf|word",
+            "t1(infT(equals|wf|word))",
+        ),
+        (
+            "t1(equals|infT.wf|word)",
+            "t1(infT(equals|wf|word))",
+        ),
+        (
+            "t1.infT(equals|wf|word)",
+            "t1(infT(equals|wf|word))",
+        ),
+    ],
+)
+def test_sub_query_rewrite(parser, q1, q2):
+    assert EsQueryBuilder().walk(parser.parse(q1)) == EsQueryBuilder().walk(parser.parse(q2))
+
+
+def test_lol(parser):
+    query = EsQueryBuilder().walk(parser.parse("t1(equals|infT.wf|word)"))
+    assert query

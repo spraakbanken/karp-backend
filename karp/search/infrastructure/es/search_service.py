@@ -25,42 +25,46 @@ class EsQueryBuilder(NodeWalker):
     def __init__(self, q=None):
         super().__init__()
         self._q = q
+        self.nested_path = ""
 
     def walk__equals(self, node):
-        return self.match(self.walk(node.field), self.walk(node.arg))
+        return self.match(node.field, self.walk(node.arg))
 
     def walk__freetext(self, node):
         return self.match("*", self.walk(node.arg))
 
     def walk__regexp(self, node):
-        return self.regexp(self.walk(node.field), self.walk(node.arg))
+        return self.regexp(node.field, self.walk(node.arg))
 
     def walk__freergxp(self, node):
         return self.regexp("*", self.walk(node.arg))
 
     def walk__contains(self, node):
-        return self.regexp(self.walk(node.field), f".*{self.walk(node.arg)}.*")
+        return self.regexp(node.field, f".*{self.walk(node.arg)}.*")
 
     def walk__startswith(self, node):
-        return self.regexp(self.walk(node.field), f"{self.walk(node.arg)}.*")
+        return self.regexp(node.field, f"{self.walk(node.arg)}.*")
 
     def walk__endswith(self, node):
-        return self.regexp(self.walk(node.field), f".*{self.walk(node.arg)}")
+        return self.regexp(node.field, f".*{self.walk(node.arg)}")
 
     def walk__exists(self, node):
-        field = self.single_field("exists", self.walk(node.field))
-        return es_dsl.Q("exists", field=field)
+        def query_f(field):
+            return es_dsl.Q("exists", field=field)
+
+        return self._exists_missing_range_helper("exists", node, query_f)
 
     def walk__missing(self, node):
-        field = self.single_field("missing", self.walk(node.field))
-        return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=field))
+        def query_f(field):
+            return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=field))
+
+        return self._exists_missing_range_helper("missing", node, query_f)
 
     def walk_range(self, node):
-        field = self.single_field(node.op, self.walk(node.field))
-        return es_dsl.Q(
-            "range",
-            **{field: {self.walk(node.op): self.walk(node.arg)}},
-        )
+        def query_f(field):
+            return es_dsl.Q("range", **{field: {self.walk(node.op): self.walk(node.arg)}})
+
+        return self._exists_missing_range_helper(node.op, node, query_f)
 
     walk__gt = walk_range
     walk__gte = walk_range
@@ -85,6 +89,30 @@ class EsQueryBuilder(NodeWalker):
 
         return result
 
+    def walk__sub_query(self, node):
+        path, is_nested_field = self.walk(node.field)
+        self.nested_path = path + "."
+        query = self.walk(node.exp)
+        self.nested_path = ""
+        query = es_dsl.Q("nested", path=path, query=query)
+        return query if not is_nested_field else self.wrap_nested(path, query)
+
+    def wrap_nested(self, path, query):
+        path, field = path.rsplit(".", 1)
+        query = es_dsl.Q("nested", path=path, query=query)
+        lol1 = path
+        lol2 = self.nested_path
+        if "." in path and not (self.nested_path and path.startswith(self.nested_path)):
+            return self.wrap_nested(path, query)
+        return query
+
+    def walk__identifier(self, node):
+        nested = False
+        # If field supplied by user was "path.field", we must wrap the parent query in a nested query
+        if "." in node.ast:
+            nested = True
+        return self.nested_path + node.ast, nested
+
     def walk_object(self, node):
         return node
 
@@ -98,36 +126,59 @@ class EsQueryBuilder(NodeWalker):
         return "*" in field or "," in field
 
     def single_field(self, query_type, field):
+        field, is_nested_field = self.walk(field)
         if self.is_multi_field(field):
             raise errors.IncompleteQuery(
                 self._q, f"{query_type} queries don't support wildcards in field names"
             )
-        return field
+        return field, is_nested_field
 
     def multi_fields(self, field):
         return field.split(",")
 
-    def regexp(self, field, regexp):
-        if self.is_multi_field(field):
+    def regexp(self, field_node, regexp):
+        def multi(field):
             return es_dsl.Q(
                 "query_string",
                 query="/" + regexp.replace("/", "\\/") + "/",
                 fields=self.multi_fields(field),
                 lenient=True,
             )
-        else:
+
+        def single(field):
             return es_dsl.Q("regexp", **{field: regexp})
 
-    def match(self, field, query):
-        if self.is_multi_field(field):
+        return self._match_regexp_helper(field_node, multi, single)
+
+    def match(self, field_node, query):
+        def multi(field):
             return es_dsl.Q(
                 "multi_match", query=query, fields=self.multi_fields(field), lenient=True
             )
-        else:
+
+        def single(field):
             return es_dsl.Q(
                 "match",
                 **{field: {"query": query, "operator": "and"}},
             )
+
+        return self._match_regexp_helper(field_node, multi, single)
+
+    def _match_regexp_helper(self, field_node, multi, single):
+        if field_node == "*":
+            field, nested_field = field_node, False
+        else:
+            field, nested_field = self.walk(field_node)
+        if self.is_multi_field(field):
+            query = multi(field)
+        else:
+            query = single(field)
+        return query if not nested_field else self.wrap_nested(field, query)
+
+    def _exists_missing_range_helper(self, op, node, query_f):
+        field, is_nested_field = self.single_field(op, node.field)
+        q = query_f(field)
+        return q if not is_nested_field else self.wrap_nested(field, q)
 
 
 class EsFieldNameCollector(NodeWalker):
@@ -137,7 +188,7 @@ class EsFieldNameCollector(NodeWalker):
         result = set().union(*(self.walk(child) for child in node.children()))
         # TODO maybe a bit too automagic?
         if hasattr(node, "field"):
-            result.add(node.field)
+            result.add(node.field.ast)
         return result
 
     def walk_object(self, _obj):
