@@ -55,6 +55,7 @@ class TestCreateEsMapping:
                 "name",
                 {"type": "object", "fields": {"first": {"type": "string"}}},
                 {
+                    "type": "nested",
                     "properties": {
                         "first": {
                             "type": "text",
@@ -66,8 +67,8 @@ class TestCreateEsMapping:
                                     "language": "sv",
                                 },
                             },
-                        }
-                    }
+                        },
+                    },
                 },
             ),
             ("name", {"type": "number"}, {"type": "double"}),

@@ -147,7 +147,7 @@ def _create_es_mapping(config):
                     "sort": {"type": "icu_collation_keyword", "index": False, "language": "sv"},
                 }
         else:
-            result = {"properties": {}}
+            result = {"properties": {}, "type": "nested"}
 
             for child_field_name, child_field_def in parent_field_def["fields"].items():
                 recursive_field(result, child_field_name, child_field_def)
