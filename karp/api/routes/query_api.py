@@ -34,7 +34,7 @@ def get_entries_by_id(
     entry_ids: str = Path(
         ...,
         description="Comma-separated. The ids to perform operation on.",
-        regex=r"^\w(,\w)*",
+        pattern=r"^\w(,\w)*",
     ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
@@ -60,7 +60,7 @@ def get_entries_by_id(
 def query_stats(
     resources: str = Path(
         ...,
-        regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
+        pattern=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
         description="A comma-separated list of resource identifiers",
     ),
     q: Optional[str] = Query(
@@ -112,7 +112,7 @@ def query_stats(
 def query(
     resources: str = Path(
         ...,
-        regex=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
+        pattern=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
         description="A comma-separated list of resource identifiers",
     ),
     q: Optional[str] = Query(
@@ -127,7 +127,7 @@ def query(
     sort: List[str] = Query(
         [],
         description="The `field` to sort by. If missing, default order for each resource will be used.",
-        regex=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
+        pattern=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
     ),
     lexicon_stats: bool = Query(True, description="Show the hit count per lexicon"),
     path: Optional[str] = Query(

@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
-    version: Optional[int] = Query(None),
+    version: Optional[int] = None,
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
