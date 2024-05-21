@@ -134,25 +134,15 @@ class KarpQueryV6Parser(Parser):
     def _and_(self):  # noqa
         self._token('and')
         self._token('(')
-        self._expression_()
-        self.add_last_node_to_name('exps')
+
+        def sep1():
+            self._token('||')
 
         def block1():
-            self._token('||')
             self._expression_()
-            self.add_last_node_to_name('exps')
-
-            self._define(
-                [],
-                ['exps']
-            )
-        self._closure(block1)
+        self._positive_gather(block1, sep1)
+        self.name_last_node('@')
         self._token(')')
-
-        self._define(
-            [],
-            ['exps']
-        )
 
     @tatsumasu('Contains')
     def _contains_(self):  # noqa
@@ -315,49 +305,29 @@ class KarpQueryV6Parser(Parser):
     def _not_(self):  # noqa
         self._token('not')
         self._token('(')
-        self._expression_()
-        self.add_last_node_to_name('exps')
+
+        def sep1():
+            self._token('||')
 
         def block1():
-            self._token('||')
             self._expression_()
-            self.add_last_node_to_name('exps')
-
-            self._define(
-                [],
-                ['exps']
-            )
-        self._closure(block1)
+        self._positive_gather(block1, sep1)
+        self.name_last_node('@')
         self._token(')')
-
-        self._define(
-            [],
-            ['exps']
-        )
 
     @tatsumasu('Or')
     def _or_(self):  # noqa
         self._token('or')
         self._token('(')
-        self._expression_()
-        self.add_last_node_to_name('exps')
+
+        def sep1():
+            self._token('||')
 
         def block1():
-            self._token('||')
             self._expression_()
-            self.add_last_node_to_name('exps')
-
-            self._define(
-                [],
-                ['exps']
-            )
-        self._closure(block1)
+        self._positive_gather(block1, sep1)
+        self.name_last_node('@')
         self._token(')')
-
-        self._define(
-            [],
-            ['exps']
-        )
 
     @tatsumasu('Regexp')
     def _regexp_(self):  # noqa

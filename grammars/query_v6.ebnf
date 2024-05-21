@@ -37,7 +37,7 @@ logical_expression
 
 and::And
     =
-    'and' '(' exps+:expression {'||' exps+:expression}* ')'
+    'and' '(' @:'||'.{expression}+ ')'
     ;
 
 contains::Contains
@@ -97,12 +97,12 @@ missing::Missing
 
 not::Not
     =
-    'not' '(' exps+:expression {'||' exps+:expression}* ')'
+    'not' '(' @:'||'.{expression}+ ')'
     ;
 
 or::Or
     =
-    'or' '(' exps+:expression {'||' exps+:expression}* ')'
+    'or' '(' @:'||'.{expression}+ ')'
     ;
 
 regexp::Regexp

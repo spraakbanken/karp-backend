@@ -68,19 +68,19 @@ class EsQueryBuilder(NodeWalker):
     walk__lte = walk_range
 
     def walk__not(self, node):
-        must_nots = [self.walk(expr) for expr in node.exps]
+        must_nots = [self.walk(expr) for expr in node.ast]
         return es_dsl.Q("bool", must_not=must_nots)
 
     def walk__or(self, node):
-        result = self.walk(node.exps[0])
-        for n in node.exps[1:]:
+        result = self.walk(node.ast[0])
+        for n in node.ast[1:]:
             result = result | self.walk(n)
 
         return result
 
     def walk__and(self, node):
-        result = self.walk(node.exps[0])
-        for n in node.exps[1:]:
+        result = self.walk(node.ast[0])
+        for n in node.ast[1:]:
             result = result & self.walk(n)
 
         return result
