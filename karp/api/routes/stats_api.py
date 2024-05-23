@@ -24,7 +24,7 @@ router = APIRouter()
 
 
 class StatisticsDto(pydantic.BaseModel):
-    value: str
+    value: str | typing.Any
     count: int
 
 

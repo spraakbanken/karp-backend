@@ -9,6 +9,7 @@ expression
     =
     | logical_expression
     | query_expression
+    | sub_query
     ;
 
 query_expression
@@ -35,9 +36,14 @@ logical_expression
     | not
     ;
 
+sub_query::SubQuery
+    =
+    field:identifier '(' exp:expression ')'
+    ;
+
 and::And
     =
-    'and' '(' exps+:expression {'||' exps+:expression}* ')'
+    'and' '(' @:'||'.{expression}+ ')'
     ;
 
 contains::Contains
@@ -97,12 +103,12 @@ missing::Missing
 
 not::Not
     =
-    'not' '(' exps+:expression {'||' exps+:expression}* ')'
+    'not' '(' @:'||'.{expression}+ ')'
     ;
 
 or::Or
     =
-    'or' '(' exps+:expression {'||' exps+:expression}* ')'
+    'or' '(' @:'||'.{expression}+ ')'
     ;
 
 regexp::Regexp
@@ -140,4 +146,4 @@ integer_value::int
     ;
 
 # for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to name  field "myfield|"
-identifier = /[^|)(]+/ ;
+identifier::Identifier = /[^|)(]+/ ;

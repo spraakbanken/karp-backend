@@ -71,13 +71,16 @@ class KarpQueryV6Parser(Parser):
                 self._logical_expression_()
             with self._option():
                 self._query_expression_()
+            with self._option():
+                self._sub_query_()
             self._error(
                 'expecting one of: '
                 '<and> <contains> <endswith> <equals>'
                 '<exists> <freergxp> <freetext> <gt>'
-                '<gte> <logical_expression> <lt> <lte>'
-                '<missing> <not> <or> <query_expression>'
-                '<regexp> <startswith>'
+                '<gte> <identifier> <logical_expression>'
+                '<lt> <lte> <missing> <not> <or>'
+                '<query_expression> <regexp> <startswith>'
+                '<sub_query>'
             )
 
     @tatsumasu()
@@ -130,29 +133,33 @@ class KarpQueryV6Parser(Parser):
                 "'and' 'not' 'or'"
             )
 
+    @tatsumasu('SubQuery')
+    def _sub_query_(self):  # noqa
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('(')
+        self._expression_()
+        self.name_last_node('exp')
+        self._token(')')
+
+        self._define(
+            ['exp', 'field'],
+            []
+        )
+
     @tatsumasu('And')
     def _and_(self):  # noqa
         self._token('and')
         self._token('(')
-        self._expression_()
-        self.add_last_node_to_name('exps')
+
+        def sep1():
+            self._token('||')
 
         def block1():
-            self._token('||')
             self._expression_()
-            self.add_last_node_to_name('exps')
-
-            self._define(
-                [],
-                ['exps']
-            )
-        self._closure(block1)
+        self._positive_gather(block1, sep1)
+        self.name_last_node('@')
         self._token(')')
-
-        self._define(
-            [],
-            ['exps']
-        )
 
     @tatsumasu('Contains')
     def _contains_(self):  # noqa
@@ -315,49 +322,29 @@ class KarpQueryV6Parser(Parser):
     def _not_(self):  # noqa
         self._token('not')
         self._token('(')
-        self._expression_()
-        self.add_last_node_to_name('exps')
+
+        def sep1():
+            self._token('||')
 
         def block1():
-            self._token('||')
             self._expression_()
-            self.add_last_node_to_name('exps')
-
-            self._define(
-                [],
-                ['exps']
-            )
-        self._closure(block1)
+        self._positive_gather(block1, sep1)
+        self.name_last_node('@')
         self._token(')')
-
-        self._define(
-            [],
-            ['exps']
-        )
 
     @tatsumasu('Or')
     def _or_(self):  # noqa
         self._token('or')
         self._token('(')
-        self._expression_()
-        self.add_last_node_to_name('exps')
+
+        def sep1():
+            self._token('||')
 
         def block1():
-            self._token('||')
             self._expression_()
-            self.add_last_node_to_name('exps')
-
-            self._define(
-                [],
-                ['exps']
-            )
-        self._closure(block1)
+        self._positive_gather(block1, sep1)
+        self.name_last_node('@')
         self._token(')')
-
-        self._define(
-            [],
-            ['exps']
-        )
 
     @tatsumasu('Regexp')
     def _regexp_(self):  # noqa
@@ -445,7 +432,7 @@ class KarpQueryV6Parser(Parser):
     def _integer_value_(self):  # noqa
         self._pattern('\\d+')
 
-    @tatsumasu()
+    @tatsumasu('Identifier')
     def _identifier_(self):  # noqa
         self._pattern('[^|)(]+')
 
@@ -461,6 +448,9 @@ class KarpQueryV6Semantics:
         return ast
 
     def logical_expression(self, ast):  # noqa
+        return ast
+
+    def sub_query(self, ast):  # noqa
         return ast
 
     def and_(self, ast):  # noqa

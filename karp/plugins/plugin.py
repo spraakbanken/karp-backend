@@ -108,7 +108,7 @@ def transform_resource(plugins: Plugins, resource_dto: "ResourceDto") -> "Resour
     """Given a resource with virtual fields, expand the config
     by adding the output_config for each virtual field."""
 
-    result = resource_dto.copy()
+    result = resource_dto.model_copy(deep=True)
     result.config = transform_config(plugins, result.config)
     return result
 
@@ -163,7 +163,7 @@ def transform_entry(
     Given an entry, calculate all the virtual fields.
     """
 
-    result = entry_dto.copy()
+    result = entry_dto.model_copy(deep=True)
     result.entry = transform(plugins, resource_config, body)
     return result
 
@@ -181,7 +181,7 @@ def transform_entries(
             plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results
         )
         for entry_dto, new_entry in zip(batch, new_entries):
-            entry_dto = entry_dto.copy()
+            entry_dto = entry_dto.model_copy(deep=True)
             entry_dto.entry = new_entry
             yield entry_dto
 
