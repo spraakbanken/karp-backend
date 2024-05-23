@@ -10,7 +10,8 @@ from pydantic_core import core_schema
 class UniqueId(ulid.ULID):
     @classmethod
     def __get_pydantic_json_schema__(cls, core_schema, handler):
-        json_schema = handler(core_schema.str_schema())
+        json_schema = handler(core_schema)
+        json_schema = handler.resolve_ref_schema(json_schema)
         json_schema["examples"] = ["01BJQMF54D093DXEAWZ6JYRPAQ"]
         return json_schema
 
