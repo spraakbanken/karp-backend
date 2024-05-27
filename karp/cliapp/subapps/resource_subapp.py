@@ -1,3 +1,4 @@
+import json
 import logging  # noqa: I001
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
@@ -6,12 +7,11 @@ import typer
 from json_arrays import jsonlib
 from tabulate import tabulate
 
+from karp.cliapp.typer_injector import inject_from_ctx
+from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.foundation.value_objects import UniqueIdStr, unique_id
 from karp.lex.application import ResourceQueries
 from karp.resource_commands import ResourceCommands
-
-from karp.cliapp.utility import cli_error_handler, cli_timer
-from karp.cliapp.typer_injector import inject_from_ctx
 from karp.search_commands import SearchCommands
 
 logger = logging.getLogger("karp")
@@ -45,10 +45,7 @@ def create(
             resource_id = data.pop("resource_id")
         except KeyError as exc:
             raise ValueError("'resource_id' is missing") from exc
-        try:
-            name = data.pop("resource_name")
-        except KeyError as exc:
-            raise ValueError("'resource_name' is missing") from exc
+        name = data.pop("resource_name", None)
         resource_commands.create_resource(
             resource_id,
             name,

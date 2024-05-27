@@ -5,6 +5,7 @@ from sqlalchemy import (
     Integer,
     String,
 )
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.schema import (
     UniqueConstraint,
@@ -29,7 +30,7 @@ class ResourceModel(Base):
     version = Column(Integer, nullable=False)
     name = Column(String(64), nullable=False)
     table_name = Column(String(64), nullable=False)
-    config = Column(NestedMutableJson, nullable=False)
+    config_str = Column("config", LONGTEXT, nullable=False)
     is_published = Column(Boolean, index=True, nullable=True, default=None)
     last_modified = Column(Float(precision=53), nullable=False)
     last_modified_by = Column(String(100), nullable=False)
@@ -54,7 +55,7 @@ class ResourceModel(Base):
                     resource_id={},
                     version={},
                     name={},
-                    config={},
+                    config_str={},
                     table_name={},
                     is_published={},
                     last_modified={},
@@ -66,7 +67,7 @@ class ResourceModel(Base):
             self.resource_id,
             self.version,
             self.name,
-            self.config,
+            self.config_str,
             self.table_name,
             self.is_published,
             self.last_modified,
@@ -80,7 +81,7 @@ class ResourceModel(Base):
             resource_id=self.resource_id,
             version=self.version,
             name=self.name,
-            config=self.config,
+            config_str=self.config_str,
             table_name=self.table_name,
             is_published=self.is_published,
             last_modified=self.last_modified,
@@ -98,7 +99,7 @@ class ResourceModel(Base):
             resource_type=resource.resource_type,
             version=resource.version,
             name=resource.name,
-            config=resource.config,
+            config_str=resource.config_str,
             table_name=resource.table_name,
             is_published=resource.is_published,
             last_modified=resource.last_modified,
