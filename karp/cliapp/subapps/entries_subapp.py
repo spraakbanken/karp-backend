@@ -218,8 +218,8 @@ def validate_entries(
         typer.echo("You must provide either '--resource_id' or '--config/-c'", err=True)
         raise typer.Exit(code=300)
 
-    allow_additional_properties = config.get("additionalProperties", True)
-    schema = entry_schema.create_entry_json_schema(config["fields"], allow_additional_properties)
+    allow_additional_properties = config.additional_properties
+    schema = entry_schema.create_entry_json_schema(config.fields, allow_additional_properties)
 
     error_code = 0
 

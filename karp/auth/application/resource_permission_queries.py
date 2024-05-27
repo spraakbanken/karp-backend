@@ -14,7 +14,7 @@ class ResourcePermissionQueries:
     def get_resource_permissions(self) -> typing.List[ResourcePermissionDto]:
         resource_permissions = []
         for resource in self.resources.get_published_resources():
-            protected_conf = resource.config.get("protected")
+            protected_conf = resource.config.protected
             if not protected_conf:
                 protected = None
             elif protected_conf.get("admin"):
@@ -35,7 +35,7 @@ class ResourcePermissionQueries:
         resource = self.resources.by_resource_id_optional(resource_id=resource_id)
         if not resource:
             raise errors.ResourceNotFound(f"Can't find resource '{resource_id}'")
-        return resource.config.get("protected", {}).get("read", False)
+        return resource.config.protected.get("read", False)
 
     def has_permission(
         self,

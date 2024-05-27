@@ -10,7 +10,7 @@ from karp.foundation.entity import Entity
 from karp.foundation.value_objects import PermissionLevel, unique_id
 from karp.lex.domain import constraints, errors
 from karp.lex.domain.entities import Entry, create_entry
-from karp.lex.domain.value_objects import EntrySchema
+from karp.lex.domain.value_objects import EntrySchema, ResourceConfig
 
 
 class ResourceOp(enum.Enum):
@@ -42,7 +42,7 @@ class Resource(Entity):
         self._name = name
         self.is_published = is_published
         self.config_str = config_str
-        self.config = json.loads(config_str)
+        self.config = ResourceConfig.from_str(config_str)
         self._message = message
         self._op = op
         self._entry_schema = None
@@ -191,7 +191,7 @@ class Resource(Entity):
 
 def create_resource(
     resource_id: str,
-    config: dict[str, any],
+    config: ResourceConfig,
     name: Optional[str] = None,
     created_by: Optional[str] = None,
     user: Optional[str] = None,
@@ -208,7 +208,7 @@ def create_resource(
         id=id,
         resource_id=resource_id,
         name=name,
-        config_str=json.dumps(config),
+        config_str=config.model_dump_json(),
         table_name=table_name,
         message=message or "Resource added.",
         op=ResourceOp.ADDED,

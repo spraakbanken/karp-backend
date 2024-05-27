@@ -11,6 +11,7 @@ from karp.cliapp.typer_injector import inject_from_ctx
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.foundation.value_objects import UniqueIdStr, unique_id
 from karp.lex.application import ResourceQueries
+from karp.lex.domain.value_objects import parse_create_resource_config
 from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
 
@@ -36,26 +37,22 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
 @cli_timer
 def create(
     ctx: typer.Context,
-    config: Path,
+    config_path: Path,
 ):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
-    if config.is_file():
-        data = jsonlib.load_from_file(config)
-        try:
-            resource_id = data.pop("resource_id")
-        except KeyError as exc:
-            raise ValueError("'resource_id' is missing") from exc
-        name = data.pop("resource_name", None)
+    if config_path.is_file():
+        data = jsonlib.load_from_file(config_path)
+        resource_id, name, config = parse_create_resource_config(data)
         resource_commands.create_resource(
             resource_id,
             name,
-            data,
+            config,
             user="local admin",
         )
 
         print(f"Created resource '{resource_id}'")
 
-    elif config.is_dir():
+    elif config_path.is_dir():
         typer.Abort("not supported yet")
 
 

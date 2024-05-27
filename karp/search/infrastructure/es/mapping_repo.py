@@ -69,7 +69,7 @@ class EsMappingRepository:
         resources = resource_repo.get_published_resources()
 
         self.default_sort: Dict[str, str] = {
-            resource.resource_id: resource.config.get("sort") or resource.config.get("id")
+            resource.resource_id: resource.config.sort or resource.config.id
             for resource in resources
         }
 
