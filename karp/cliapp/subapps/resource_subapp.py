@@ -55,6 +55,11 @@ def create(
     elif config_path.is_dir():
         typer.Abort("not supported yet")
 
+    else:
+        typer.echo(f"The config file {config_path} was not found.", err=True)
+        typer.echo(f"Could not create the resource.", err=True)
+        raise typer.Exit(1)
+
 
 @subapp.command()
 @cli_error_handler
