@@ -57,6 +57,7 @@ class Field(BaseModel):
     field_params: dict[str, str] = {}
     fields: Optional[dict[str, "Field"]] = None
     skip_raw: Optional[bool] = False  # for strings only
+    additional_properties: bool = True
 
 
 def parse_create_resource_config(config: dict[str, Any]):
