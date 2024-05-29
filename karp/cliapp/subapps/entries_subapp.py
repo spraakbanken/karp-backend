@@ -134,15 +134,14 @@ def batch_entries(
 
     > Example:
 
-    > `[{"cmd": {"cmdtype": "add_entry","resourceId": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
+    > `[{"cmd": {"cmdtype": "add_entry","resource_id": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
     """
     logger.info("run entries command in batch")
     entry_commands = inject_from_ctx(EntryCommands, ctx)  # type: ignore[type-abstract]
-    for cmd_outer in json_arrays.load_from_file(data):
-        cmd = cmd_outer["cmd"]
+    for cmd in json_arrays.load_from_file(data):
         command_type = cmd["cmdtype"]
         del cmd["cmdtype"]
-        if "id" in cmd:
+        if "id" in cmd and command_type != "add_entry":
             cmd["_id"] = cmd["id"]
             del cmd["id"]
         if command_type == "add_entry":
@@ -218,8 +217,8 @@ def validate_entries(
         typer.echo("You must provide either '--resource_id' or '--config/-c'", err=True)
         raise typer.Exit(code=300)
 
-    allow_additional_properties = config.get("additionalProperties", True)
-    schema = entry_schema.create_entry_json_schema(config["fields"], allow_additional_properties)
+    allow_additional_properties = config.additional_properties
+    schema = entry_schema.create_entry_json_schema(config.fields, allow_additional_properties)
 
     error_code = 0
 

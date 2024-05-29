@@ -16,7 +16,7 @@ class LinkPlugin(Plugin):
     def output_config(self, resource, target):
         resource_dto = self.resources.by_resource_id_optional(resource)
         if resource_dto:
-            return {"type": "object", "fields": resource_dto.config["fields"]}
+            return {"type": "object", "fields": resource_dto.config.fields}
         else:
             # Return no fields for now - the user must run 'karp-cli resource reindex' later
             return {"type": "object", "fields": {}}

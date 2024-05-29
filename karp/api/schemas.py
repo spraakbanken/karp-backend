@@ -8,6 +8,7 @@ import ulid
 from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
 from karp.lex import EntryDto
+from karp.lex.domain.value_objects import ResourceConfig
 
 
 class BaseModel(pydantic.BaseModel):
@@ -34,7 +35,7 @@ class ResourcePublic(BaseModel):
     id: unique_id.UniqueIdStr
     resource_id: str
     name: str
-    config: typing.Dict
+    config: ResourceConfig
     message: Optional[str] = None
     last_modified: float
     is_published: Optional[bool] = None

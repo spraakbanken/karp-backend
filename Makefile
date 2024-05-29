@@ -25,6 +25,9 @@ help:
 	@echo "all-tests"
 	@echo "   run all tests"
 	@echo ""
+	@echo "serve | serve-w-reload"
+	@echo "   start web server"
+	@echo ""
 	@echo "lint"
 	@echo "   lint the code"
 	@echo ""
@@ -33,6 +36,9 @@ help:
 	@echo ""
 	@echo "fmt"
 	@echo "   run formatter on all code"
+	@echo ""
+	@echo "tags"
+	@echo "   generate tags file"
 
 install:
 	poetry install --only=main
@@ -102,6 +108,10 @@ fmt:
 type-check:
 	${INVENV} mypy --config-file mypy.ini -p karp
 
+.PHONY: tags
+tags:
+	ctags --languages=python -R --python-kinds=-i karp
+	ctags --languages=python -R --python-kinds=-i -e karp
 
 .PHONY: clean clean-pyc
 clean: clean-pyc

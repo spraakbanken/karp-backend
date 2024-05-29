@@ -8,6 +8,7 @@ from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
 from karp.lex.domain.entities import Entry, Resource
 from karp.lex.domain.entities.entry import EntryOp
+from karp.lex.domain.value_objects import ResourceConfig
 
 
 class BaseModel(pydantic.BaseModel):
@@ -51,7 +52,7 @@ class ResourceDto(EntityDto):
     resource_id: str
     is_published: bool
     name: str
-    config: dict
+    config: ResourceConfig
 
     @classmethod
     def from_resource(cls, resource: Resource) -> "ResourceDto":

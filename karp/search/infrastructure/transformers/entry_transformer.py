@@ -15,7 +15,7 @@ def transform(resource_config, src_entry: EntryDto) -> IndexEntry:
     _transform_to_index_entry(
         src_entry.entry,
         entry,
-        resource_config["fields"].items(),
+        resource_config.fields.items(),
     )
     return IndexEntry(id=str(src_entry.id), entry=entry)
 
@@ -28,33 +28,33 @@ def _transform_to_index_entry(
     for field_name, field_conf in fields:
         field_content = None
 
-        if field_conf.get("collection"):
+        if field_conf.collection:
             field_content = []
             if field_name in _src_entry:
                 for subfield in _src_entry[field_name]:
-                    if field_conf["type"] == "object":
+                    if field_conf.type == "object":
                         subfield_content = create_empty_object()
                         _transform_to_index_entry(
                             subfield,
                             subfield_content,
-                            field_conf["fields"].items(),
+                            field_conf.fields.items(),
                         )
                         add_to_list_field(field_content, subfield_content)
                     else:
                         add_to_list_field(field_content, subfield)
                 assign_field(_index_entry, field_name, field_content)
 
-        elif field_conf["type"] == "object":
+        elif field_conf.type == "object":
             field_content = create_empty_object()
             if field_name in _src_entry:
                 _transform_to_index_entry(
                     _src_entry[field_name],
                     field_content,
-                    field_conf["fields"].items(),
+                    field_conf.fields.items(),
                 )
                 assign_field(_index_entry, field_name, field_content)
 
-        elif field_conf["type"] in (
+        elif field_conf.type in (
             "integer",
             "string",
             "number",

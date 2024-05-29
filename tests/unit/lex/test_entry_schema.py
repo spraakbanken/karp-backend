@@ -3,37 +3,7 @@ from karp.lex.domain.value_objects.entry_schema import (
     EntrySchema,
     create_entry_json_schema,
 )
-
-CONFIG_PLACES = """{
-  "resource_id": "places",
-  "resource_name": "Platser i Sverige",
-  "fields": {
-    "name": {
-      "type": "string",
-      "required": True
-    },
-    "municipality": {
-      "collection": True,
-      "type": "number",
-      "required": True
-    },
-    "population": {
-      "type": "number"
-    },
-    "area": {
-      "type": "number"
-    },
-    "density": {
-      "type": "number"
-    },
-    "code": {
-      "type": "number",
-      "required": True
-    }
-  },
-  "sort": "name",
-  "id": "code"
-}"""
+from karp.lex.domain.value_objects.resource_config import ResourceConfig, Field
 
 
 @pytest.fixture()
@@ -93,12 +63,14 @@ def problem_config() -> dict:
 
 
 def test_error(problem_config: dict):  # noqa: ANN201
-    json_schema = create_entry_json_schema(problem_config["fields"], True)
+    json_schema = create_entry_json_schema(ResourceConfig.from_dict(problem_config).fields, True)
     _entry_schema = EntrySchema(json_schema)
 
 
 def test_create_json_schema(json_schema_config):  # noqa: ANN201
-    json_schema = create_entry_json_schema(json_schema_config["fields"], True)
+    json_schema = create_entry_json_schema(
+        ResourceConfig.from_dict(json_schema_config).fields, True
+    )
     assert json_schema["type"] == "object"
 
 
@@ -439,12 +411,12 @@ def test_create_complex_json_schema():  # noqa: ANN201
             },
         }
     }
-    _json_schema = create_entry_json_schema(config["fields"], True)
+    _json_schema = create_entry_json_schema(ResourceConfig.from_dict(config).fields, True)
 
 
 class TestCreateJsonSchema:
     @pytest.mark.parametrize("field_type", ["long_string"])
     def test_create_with_type(self, field_type: str):  # noqa: ANN201
-        resource_config = {"field_name": {"type": field_type}}
+        resource_config = {"field_name": Field(type=field_type)}
         json_schema = create_entry_json_schema(resource_config, True)
         _entry_schema = EntrySchema(json_schema)

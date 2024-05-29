@@ -21,6 +21,7 @@ from tests import common_data, utils
 from karp.main import new_session
 from dataclasses import replace
 from tests.integration.auth.adapters import create_access_token
+from karp.lex.domain.value_objects import parse_create_resource_config
 
 
 class AccessToken:
@@ -71,14 +72,14 @@ def create_and_publish_resource(
     path_to_config: str,
 ) -> Tuple[bool, Optional[dict[str, Any]]]:
     with open(path_to_config) as fp:
-        resource_config = json.load(fp)
+        data = json.load(fp)
 
-    resource_id = resource_config.pop("resource_id")
+    resource_id, name, resource_config = parse_create_resource_config(data)
 
     with new_session(client.app.state.app_context.injector) as injector:
         resource_commands = injector.get(ResourceCommands)
 
-        resource_commands.create_resource(resource_id, resource_id, resource_config, "")
+        resource_commands.create_resource(resource_id, name, resource_config, "")
 
         resource_commands.publish_resource(
             user="", resource_id=resource_id, version=1, message=""

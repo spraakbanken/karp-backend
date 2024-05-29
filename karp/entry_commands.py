@@ -55,7 +55,9 @@ class EntryCommands:
         entries = plugins.transform_entries(self.plugins, config, entries)
         return (entry_transformer.transform(config, entry) for entry in entries)
 
-    def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message):
+    def add_entries_in_chunks(
+        self, resource_id, chunk_size, entries, user, message, timestamp=None
+    ):
         """
         Add entries to DB and INDEX (if present and resource is active).
 
@@ -83,6 +85,7 @@ class EntryCommands:
                 user=user,
                 message=message,
                 id=unique_id.make_unique_id(),
+                timestamp=timestamp,
             )
             entry_table.save(entry)
             created_db_entries.append(EntryDto.from_entry(entry))
@@ -94,8 +97,10 @@ class EntryCommands:
 
         return created_db_entries
 
-    def add_entries(self, resource_id, entries, user, message):
-        return self.add_entries_in_chunks(resource_id, 0, entries, user, message)
+    def add_entries(self, resource_id, entries, user, message, timestamp=None):
+        return self.add_entries_in_chunks(
+            resource_id, 0, entries, user, message, timestamp=timestamp
+        )
 
     def import_entries(self, resource_id, entries, user, message):
         return self.import_entries_in_chunks(resource_id, 0, entries, user, message)
@@ -141,12 +146,12 @@ class EntryCommands:
 
         return created_db_entries
 
-    def add_entry(self, resource_id, entry, user, message):
-        result = self.add_entries(resource_id, [entry], user, message)
+    def add_entry(self, resource_id, entry, user, message, timestamp=None):
+        result = self.add_entries(resource_id, [entry], user, message, timestamp=timestamp)
         assert len(result) == 1  # noqa: S101
         return result[0]
 
-    def update_entry(self, resource_id, _id, version, user, message, entry):
+    def update_entry(self, resource_id, _id, version, user, message, entry, timestamp=None):
         resource = self._get_resource(resource_id)
         entries = self._get_entries(resource_id)
         try:
@@ -163,7 +168,7 @@ class EntryCommands:
             version=version,
             user=user,
             message=message,
-            timestamp=utc_now(),
+            timestamp=timestamp or utc_now(),
         )
         if version != current_db_entry.version:
             entries.save(current_db_entry)
@@ -172,7 +177,9 @@ class EntryCommands:
 
         return EntryDto.from_entry(current_db_entry)
 
-    def delete_entry(self, resource_id, _id, user, version, message="Entry deleted"):
+    def delete_entry(
+        self, resource_id, _id, user, version, message="Entry deleted", timestamp=None
+    ):
         resource = self._get_resource(resource_id)
         entries = self._get_entries(resource_id)
         entry = entries.by_id(_id)
@@ -182,7 +189,7 @@ class EntryCommands:
             version=version,
             user=user,
             message=message,
-            timestamp=utc_now(),
+            timestamp=timestamp or utc_now(),
         )
         entries.save(entry)
         self.session.commit()

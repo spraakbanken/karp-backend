@@ -1,6 +1,7 @@
 """LexicalResource."""
 
 import enum
+import json
 import typing
 from typing import Any, Dict, Optional, Tuple
 
@@ -9,7 +10,7 @@ from karp.foundation.entity import Entity
 from karp.foundation.value_objects import PermissionLevel, unique_id
 from karp.lex.domain import constraints, errors
 from karp.lex.domain.entities import Entry, create_entry
-from karp.lex.domain.value_objects import EntrySchema
+from karp.lex.domain.value_objects import EntrySchema, ResourceConfig
 
 
 class ResourceOp(enum.Enum):
@@ -28,7 +29,7 @@ class Resource(Entity):
         id: unique_id.UniqueId,  # noqa: A002
         resource_id: str,
         name: str,
-        config: Dict[str, Any],
+        config_str: str,
         message: str,
         table_name: str,
         version: int = 1,
@@ -40,7 +41,8 @@ class Resource(Entity):
         self._resource_id = resource_id
         self._name = name
         self.is_published = is_published
-        self.config = config
+        self.config_str = config_str
+        self.config = ResourceConfig.from_str(config_str)
         self._message = message
         self._op = op
         self._entry_schema = None
@@ -188,29 +190,25 @@ class Resource(Entity):
 
 
 def create_resource(
-    config: dict[str, Any],
-    table_name: str,
+    resource_id: str,
+    config: ResourceConfig,
+    name: Optional[str] = None,
     created_by: Optional[str] = None,
     user: Optional[str] = None,
     created_at: Optional[float] = None,
     id: unique_id.UniqueId = None,  # noqa: A002
-    resource_id: typing.Optional[str] = None,
     message: typing.Optional[str] = None,
-    name: typing.Optional[str] = None,
 ) -> Resource:
-    resource_id_in_config: Optional[str] = config.pop("resource_id", None)
-    resource_id_resolved = resource_id or resource_id_in_config
-    if resource_id_resolved is None:
-        raise ValueError("resource_id is missing")
-    constraints.valid_resource_id(resource_id_resolved)
-    name_in_config: str = config.pop("resource_name", None)
-    resource_name: str = name or name_in_config or resource_id_resolved  # type: ignore [assignment]
+    constraints.valid_resource_id(resource_id)
+    name = name or resource_id
 
+    id = id or unique_id.make_unique_id()  # noqa: A001
+    table_name = f"{resource_id}_{id}"
     resource = Resource(
-        id=id or unique_id.make_unique_id(),
-        resource_id=resource_id_resolved,
-        name=resource_name,
-        config=config,
+        id=id,
+        resource_id=resource_id,
+        name=name,
+        config_str=config.model_dump_json(),
         table_name=table_name,
         message=message or "Resource added.",
         op=ResourceOp.ADDED,
