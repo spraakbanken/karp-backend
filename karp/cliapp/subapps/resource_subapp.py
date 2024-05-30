@@ -74,18 +74,14 @@ def update(
     """Update resource config."""
 
     config_dict = jsonlib.load_from_file(config)
-    resource_id = config_dict.pop("resource_id")
-    # TODO use parse_create_resource_config
-    if resource_id is None:
-        raise ValueError("resource_id must be present")
-    resource_name = config_dict.pop("resource_name") or resource_id
+    resource_id, resource_name, config = parse_create_resource_config(config_dict)
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     try:
         resource_commands.update_resource(
             resource_id=resource_id,
             name=resource_name,
             version=version,
-            config=config_dict,
+            config=config,
             message=message or "config updated",
             user=user or "local admin",
         )
