@@ -102,22 +102,25 @@ class EsIndex:
         *,
         entry_id: str,
     ):
-        logger.info("deleting entry", extra={"entry_id": entry_id, "resource_id": resource_id})
-        try:
-            self.es.delete(
-                index=resource_id,
-                id=entry_id,
-                refresh=True,
+        return self.delete_entries(resource_id, entry_ids=[entry_id])
+
+    def delete_entries(
+        self,
+        resource_id: str,
+        *,
+        entry_ids: Iterable[str],
+    ):
+        index_to_es = []
+        for entry_id in entry_ids:
+            index_to_es.append(
+                {
+                    "_op_type": "delete",
+                    "_index": resource_id,
+                    "_id": str(entry_id),
+                }
             )
-        except elasticsearch.exceptions.ElasticsearchException:
-            logger.exception(
-                "Error deleting entry",
-                extra={
-                    "entry_id": entry_id,
-                    "resource_id": resource_id,
-                    "index_name": resource_id,
-                },
-            )
+
+        elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
 
 def _create_es_mapping(config):

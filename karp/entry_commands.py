@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Generator, Iterable, Iterator
 
 from injector import inject
@@ -29,6 +30,9 @@ class EntryCommands:
         self.resources: ResourceRepository = resources
         self.index = index
         self.plugins = plugins
+        self.added_entries = defaultdict(list)
+        self.deleted_entries = defaultdict(list)
+        self.in_transaction = False
 
     def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
         if not isinstance(resource_id, str):
@@ -91,9 +95,11 @@ class EntryCommands:
             created_db_entries.append(EntryDto.from_entry(entry))
 
             if chunk_size > 0 and i % chunk_size == 0:
-                self.session.commit()
-        self.session.commit()
-        self._entry_added_handler(resource, created_db_entries)
+                self.added_entries[resource_id].extend(created_db_entries)
+                self._commit()
+
+        self.added_entries[resource_id].extend(created_db_entries)
+        self._commit()
 
         return created_db_entries
 
@@ -140,9 +146,11 @@ class EntryCommands:
             created_db_entries.append(EntryDto.from_entry(entry))
 
             if chunk_size > 0 and i % chunk_size == 0:
-                self.session.commit()
-        self.session.commit()
-        self._entry_added_handler(resource, created_db_entries)
+                self.added_entries[resource_id].extend(created_db_entries)
+                self._commit()
+
+        self.added_entries[resource_id].extend(created_db_entries)
+        self._commit()
 
         return created_db_entries
 
@@ -172,8 +180,8 @@ class EntryCommands:
         )
         if version != current_db_entry.version:
             entries.save(current_db_entry)
-            self.session.commit()
-            self._entry_updated_handler(resource, EntryDto.from_entry(current_db_entry))
+            self.added_entries[resource_id].append(EntryDto.from_entry(current_db_entry))
+            self._commit()
 
         return EntryDto.from_entry(current_db_entry)
 
@@ -192,18 +200,50 @@ class EntryCommands:
             timestamp=timestamp or utc_now(),
         )
         entries.save(entry)
+        self.deleted_entries[resource_id].append(entry.id)
+        self._commit()
+
+    def _commit(self):
+        """Commits the session and updates ES, but not if in a transaction."""
+
+        if self.in_transaction:
+            return
+
         self.session.commit()
-        self._entry_deleted_handler(EntryDto.from_entry(entry))
+        for resource_id, entry_dtos in self.added_entries.items():
+            resource = self._get_resource(resource_id)
+            index_entries = self._transform_entries(resource.config, entry_dtos)
+            self.index.add_entries(resource.resource_id, index_entries)
+        self.added_entries.clear()
 
-    def _entry_added_handler(self, resource, entry_dtos):
-        index_entries = self._transform_entries(resource.config, entry_dtos)
-        self.index.add_entries(resource.resource_id, index_entries)
+        for resource_id, entry_ids in self.deleted_entries.items():
+            self.index.delete_entries(resource_id, entry_ids=entry_ids)
+        self.deleted_entries.clear()
 
-    def _entry_updated_handler(self, resource, entry_dto):
-        self.index.add_entries(
-            entry_dto.resource,
-            [self._transform(resource.config, entry_dto)],
-        )
+    def start_transaction(self):
+        """Runs commands inside a transaction. Nothing will be
+        committed until the transaction ends."""
 
-    def _entry_deleted_handler(self, entry_dto):
-        self.index.delete_entry(entry_dto.resource, entry_id=entry_dto.id)
+        if self.in_transaction:
+            raise RuntimeError("Nested transactions are not supported")
+
+        self.in_transaction = True
+
+    def commit(self):
+        """Commits a transaction."""
+
+        if not self.in_transaction:
+            raise RuntimeError("Can't commit when outside a transaction")
+
+        self.in_transaction = False
+        self._commit()
+
+    def rollback(self):
+        """Aborts a transaction."""
+
+        if not self.in_transaction:
+            raise RuntimeError("Can't roll back when outside a transaction")
+
+        self.in_transaction = True
+        self.added_entries.clear()
+        self.deleted_entries.clear()
