@@ -75,6 +75,7 @@ def update(
 
     config_dict = jsonlib.load_from_file(config)
     resource_id = config_dict.pop("resource_id")
+    # TODO use parse_create_resource_config
     if resource_id is None:
         raise ValueError("resource_id must be present")
     resource_name = config_dict.pop("resource_name") or resource_id
