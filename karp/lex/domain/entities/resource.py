@@ -87,7 +87,7 @@ class Resource(Entity):
         self,
         *,
         name: str,
-        config: dict[str, Any],
+        config: ResourceConfig,
         user: str,
         version: Optional[int],
         timestamp: Optional[float] = None,
