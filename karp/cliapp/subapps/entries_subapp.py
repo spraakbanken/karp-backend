@@ -13,7 +13,7 @@ import typer
 from tqdm import tqdm
 
 from karp.entry_commands import EntryCommands
-from karp.lex.domain.value_objects import entry_schema
+from karp.lex.domain.value_objects import entry_schema, ResourceConfig
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
@@ -205,7 +205,7 @@ def validate_entries(
         raise typer.Exit(301)
 
     if config_path:
-        config = json_arrays.jsonlib.load_from_file(config_path)
+        config = ResourceConfig.from_dict(json_arrays.jsonlib.load_from_file(config_path))
     elif resource_id_raw:
         repo = inject_from_ctx(ResourceQueries, ctx=ctx)
         if resource := repo.by_resource_id(resource_id_raw):
