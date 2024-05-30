@@ -98,6 +98,7 @@ class Resource(Entity):
         self._update_metadata(timestamp, user, message or "updating", version)
         self._name = name
         self.config = config
+        self.config_str = config.model_dump_json()
         return True
 
     def _update_metadata(

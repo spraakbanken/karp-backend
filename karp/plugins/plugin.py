@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
+from functools import cache
 from pprint import pp
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type, Union
 
@@ -10,7 +11,6 @@ from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
 
 from karp.foundation.batch import batch_items
-from karp.foundation.cache import Cache
 from karp.foundation.entry_points import entry_points
 from karp.foundation.json import (
     expand_path,
@@ -76,20 +76,21 @@ def find_plugin(name: str) -> Type[Plugin]:
 class Plugins:
     @inject
     def __init__(self, injector: Injector):
-        self.plugins = Cache(lambda name: injector.get(find_plugin(name)))
+        self.injector = injector
+        self._get_plugin = cache(self._get_plugin)
 
-    def _get_plugin(self, config: Field) -> Plugin:
-        if not config.plugin:
+    def _get_plugin(self, name: str) -> Plugin:
+        if not name:
             raise PluginException(f'Resource config has "virtual": "true" but no "plugin" field')
-        return self.plugins[config.plugin]
+        return self.injector.get(find_plugin(name))
 
     def output_config(self, config: Field) -> Field:
-        result = self._get_plugin(config).output_config(**config.params)
+        result = self._get_plugin(config.plugin).output_config(**config.params)
         return Field.model_validate(dict(result))
 
     def generate(self, config: Field, **kwargs) -> Dict:
         # TODO: turn into {"error": "plugin failed"} or whatever
-        return self._get_plugin(config).generate(**config.params, **kwargs)
+        return self._get_plugin(config.plugin).generate(**config.params, **kwargs)
 
     def generate_batch(self, config: Field, batch) -> Iterable[Dict]:
         # TODO: turn into {"error": "plugin failed"} or whatever
@@ -97,7 +98,9 @@ class Plugins:
         if not batch:
             return []
         result = list(
-            self._get_plugin(config).generate_batch(config.params | item for item in batch)
+            self._get_plugin(config.plugin).generate_batch(
+                config.params | item for item in batch
+            )
         )
         if len(result) != len(batch):
             raise AssertionError("batch result had wrong length")

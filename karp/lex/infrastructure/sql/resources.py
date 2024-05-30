@@ -1,5 +1,6 @@
 import logging
 import typing
+from functools import cache
 from typing import List, Optional, Union
 
 import sqlalchemy as sa
@@ -8,7 +9,6 @@ from sqlalchemy import Engine, and_, func, sql, text
 from sqlalchemy.orm import Session
 
 from karp.foundation import repository
-from karp.foundation.cache import Cache
 from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import entities
 from karp.lex.domain.entities.resource import Resource
@@ -27,10 +27,12 @@ class ResourceRepository(repository.Repository):
     def __init__(self, session: Session):
         self._session = session
         # caches lookups to self._by_resource_id
-        # Note: we ought to also invalidate the cache if a transaction is rolled back.
+        # Note 1: we can't do this using a decorate, as then it would be
+        # a single global cache for the whole class, rather than per-instance
+        # Note 2: we ought to also invalidate the cache if a transaction is rolled back.
         # It's OK right now because after rolling back we always end the session, so
         # the SqlResourceRepository itself is no longer valid.
-        self._cache = Cache(self._by_resource_id_uncached)
+        self._by_resource_id = cache(self._by_resource_id)
 
     def by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
@@ -114,7 +116,7 @@ class ResourceRepository(repository.Repository):
         else:
             self.create_resource_table(resource)
 
-        self._cache.clear()
+        self._by_resource_id.cache_clear()
 
     def _by_id(
         self,
@@ -132,12 +134,6 @@ class ResourceRepository(repository.Repository):
         return resource_dto.to_entity() if resource_dto else None
 
     def _by_resource_id(
-        self,
-        resource_id: str,
-    ) -> Optional[Resource]:
-        return self._cache[resource_id]
-
-    def _by_resource_id_uncached(
         self,
         resource_id: str,
     ) -> Optional[Resource]:
