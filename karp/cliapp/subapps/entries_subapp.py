@@ -138,6 +138,7 @@ def batch_entries(
     """
     logger.info("run entries command in batch")
     entry_commands = inject_from_ctx(EntryCommands, ctx)  # type: ignore[type-abstract]
+    entry_commands.start_transaction()
     for cmd in json_arrays.load_from_file(data):
         command_type = cmd["cmdtype"]
         del cmd["cmdtype"]
@@ -150,6 +151,7 @@ def batch_entries(
             entry_commands.update_entry(**cmd)
         elif command_type == "delete_entry":
             entry_commands.delete_entry(**cmd)
+    entry_commands.commit()
 
 
 class Counter(collections.abc.Generator):
