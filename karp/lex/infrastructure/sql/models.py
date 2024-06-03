@@ -1,3 +1,5 @@
+import functools
+
 from sqlalchemy import (
     JSON,
     Column,
@@ -154,20 +156,12 @@ class ApiKeyModel(Base):
 # Dynamic models
 
 
+@functools.cache
 def get_or_create_entry_history_model(
     resource_id: str,
 ) -> BaseHistoryEntry:
-    if resource_id in class_cache:
-        history_model = class_cache[resource_id]
-        return history_model
-
     attributes = {
         "__tablename__": resource_id,
     }
 
-    sqlalchemy_class = type(resource_id, (Base, BaseHistoryEntry), attributes)
-    class_cache[resource_id] = sqlalchemy_class
-    return sqlalchemy_class
-
-
-class_cache = {}
+    return type(resource_id, (Base, BaseHistoryEntry), attributes)

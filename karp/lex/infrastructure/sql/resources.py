@@ -1,8 +1,8 @@
 import logging
 import typing
-from functools import cache
 from typing import List, Optional, Union
 
+import methodtools
 import sqlalchemy as sa
 from injector import inject
 from sqlalchemy import Engine, and_, func, sql, text
@@ -26,13 +26,6 @@ class ResourceRepository(repository.Repository):
     @inject
     def __init__(self, session: Session):
         self._session = session
-        # caches lookups to self._by_resource_id
-        # Note 1: we can't do this using a decorate, as then it would be
-        # a single global cache for the whole class, rather than per-instance
-        # Note 2: we ought to also invalidate the cache if a transaction is rolled back.
-        # It's OK right now because after rolling back we always end the session, so
-        # the SqlResourceRepository itself is no longer valid.
-        self._by_resource_id = cache(self._by_resource_id)
 
     def by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
@@ -133,6 +126,10 @@ class ResourceRepository(repository.Repository):
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
+    # Note: we ought to also invalidate the cache if a transaction is rolled back.
+    # It's OK right now because after rolling back we always end the session, so
+    # the SqlResourceRepository itself is no longer valid.
+    @methodtools.lru_cache(maxsize=None)
     def _by_resource_id(
         self,
         resource_id: str,

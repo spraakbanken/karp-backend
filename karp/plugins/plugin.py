@@ -2,10 +2,10 @@ import logging
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
-from functools import cache
 from pprint import pp
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type, Union
 
+import methodtools
 from frozendict import deepfreeze
 from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
@@ -77,8 +77,8 @@ class Plugins:
     @inject
     def __init__(self, injector: Injector):
         self.injector = injector
-        self._get_plugin = cache(self._get_plugin)
 
+    @methodtools.lru_cache(maxsize=None)
     def _get_plugin(self, name: str) -> Plugin:
         if not name:
             raise PluginException(f'Resource config has "virtual": "true" but no "plugin" field')
