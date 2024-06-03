@@ -17,6 +17,9 @@ from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
 from karp.search.infrastructure import EsSearchService
 from karp.auth.infrastructure import APIKeyService
+import readline
+import rlcompleter
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +55,16 @@ def version_callback(value: bool):
 
 
 @app.command("repl")
-def repl(ctx: typer.Context):
+def repl(
+    ctx: typer.Context,
+    script: Optional[Path] = typer.Argument(
+        None,
+        help="optional script file to run before entering REPL",
+    ),
+):
     """Start a Python REPL with the Karp API available."""
 
-    local = {
+    locals = {  # noqa: A001
         "ctx": ctx,
         "injector": ctx.obj["injector"],
         "engine": inject_from_ctx(Engine, ctx),
@@ -71,7 +80,7 @@ def repl(ctx: typer.Context):
     }
 
     banner = ["The following objects are available:"]
-    for name, obj in local.items():
+    for name, obj in locals.items():
         cls = type(obj).__name__
         mod = type(obj).__module__
         if mod.startswith("karp."):
@@ -82,7 +91,17 @@ def repl(ctx: typer.Context):
 
     exitmsg = "Leaving the Karp REPL."
 
-    code.interact(banner=banner, local=local, exitmsg=exitmsg)
+    if "libedit" in readline.__doc__:
+        readline.parse_and_bind("bind ^I complete")
+    else:
+        readline.parse_and_bind("tab: complete")
+    readline.set_completer(rlcompleter.Completer(locals).complete)
+
+    console = code.InteractiveConsole(locals)
+    if script is not None:
+        with open(script) as file:
+            console.runsource(file.read(), filename=str(script), symbol="exec")
+    console.interact(banner, exitmsg)
 
 
 cliapp = create_app()
