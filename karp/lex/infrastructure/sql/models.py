@@ -13,7 +13,6 @@ from sqlalchemy.schema import (
     UniqueConstraint,
 )
 from sqlalchemy.types import Boolean, Float, Text
-from sqlalchemy_json import NestedMutableJson
 
 from karp.db_infrastructure.types import ULIDType
 from karp.lex.domain import entities

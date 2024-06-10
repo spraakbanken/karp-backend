@@ -8,7 +8,7 @@ Create Date: ~2018-12-12 13:48:19.255822~2024-03-05
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy_json import NestedMutableJson
+from sqlalchemy.dialects.mysql import LONGTEXT
 
 from karp.db_infrastructure.types import ULIDType
 
@@ -29,7 +29,7 @@ def upgrade():
         sa.Column("table_name", sa.String(length=64), nullable=False),
         sa.Column("version", sa.Integer(), nullable=False),
         sa.Column("name", sa.String(length=64), nullable=False),
-        sa.Column("config", NestedMutableJson, nullable=False),
+        sa.Column("config", LONGTEXT, nullable=False),
         sa.Column("is_published", sa.Boolean, index=True, nullable=True, default=None),
         sa.Column("last_modified", sa.Float(precision=53), nullable=False),
         sa.Column("last_modified_by", sa.String(100), nullable=False),
