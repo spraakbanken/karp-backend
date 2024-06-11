@@ -45,6 +45,10 @@ class ResourceConfig(BaseModel):
             del config["resource_name"]
         return cls.model_validate(config)
 
+    def nested_fields(self):
+        for field, config in self.fields.items():
+            yield from config.nested_fields([field])
+
 
 class Field(BaseModel):
     # TODO split this up into one class per type, to allow for better validation
@@ -58,6 +62,12 @@ class Field(BaseModel):
     fields: Optional[dict[str, "Field"]] = None
     skip_raw: Optional[bool] = False  # for strings only
     additional_properties: bool = True
+
+    def nested_fields(self, prefix):
+        yield ".".join(prefix)
+        if self.type == "object":
+            for field, config in self.fields.items():
+                yield from config.nested_fields(prefix + [field])
 
 
 def parse_create_resource_config(config: dict[str, Any]):

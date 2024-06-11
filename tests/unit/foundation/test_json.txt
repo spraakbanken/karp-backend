@@ -56,6 +56,12 @@ Testing all_paths:
 ['SOLemman', 1]
 ['SOLemman', 1, 's_nr']
 
+Testing all_fields:
+
+>>> for path in all_fields({'SOLemman': [{'s_nr': 1}, {'s_nr': 2}]}): print(path)
+SOLemman
+SOLemman.s_nr
+
 Testing expand_path:
 
 >>> doc = {'SOLemman': [{'s_nr': 1}, {'s_nr': 2}]}

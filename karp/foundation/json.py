@@ -176,6 +176,20 @@ def all_paths(data) -> Iterator[Path]:
                 yield [i] + path
 
 
+def all_fields(data) -> Iterator[str]:
+    """Generate all possible field names in a JSON object.
+
+    >>> for path in all_fields({"SOLemman": [{"s_nr": 1}, {"s_nr": 2}]}): print(path)
+    "SOLemman"
+    "SOLemman.s_nr"
+    """
+
+    def field_name(path):
+        return ".".join(x for x in path if isinstance(x, str))
+
+    return list(dict.fromkeys(field_name(path) for path in all_paths(data) if path))
+
+
 def expand_path(path: Union[str, Path], data, prefix=None) -> Iterator[Path]:
     """
     Look up a path in a JSON object.
