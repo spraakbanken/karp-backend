@@ -50,7 +50,7 @@ class ResourceRepository(repository.Repository):
         subq = (
             self._session.query(
                 ResourceModel.resource_id,
-                func.max(ResourceModel.last_modified).label("maxdate"),
+                func.max(ResourceModel.history_id).label("history_id"),
             )
             .group_by(ResourceModel.resource_id)
             .subquery("t2")
@@ -59,7 +59,7 @@ class ResourceRepository(repository.Repository):
             subq,
             and_(
                 ResourceModel.resource_id == subq.c.resource_id,
-                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.history_id == subq.c.history_id,
                 ResourceModel.is_published == True,  # noqa: E712
             ),
         )
@@ -70,7 +70,7 @@ class ResourceRepository(repository.Repository):
         subq = (
             self._session.query(
                 ResourceModel.resource_id,
-                func.max(ResourceModel.last_modified).label("maxdate"),
+                func.max(ResourceModel.history_id).label("history_id"),
             )
             .group_by(ResourceModel.resource_id)
             .subquery("t2")
@@ -79,7 +79,7 @@ class ResourceRepository(repository.Repository):
             subq,
             and_(
                 ResourceModel.resource_id == subq.c.resource_id,
-                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.history_id == subq.c.history_id,
             ),
         )
 
@@ -137,7 +137,7 @@ class ResourceRepository(repository.Repository):
         subq = (
             sql.select(
                 ResourceModel.entity_id,
-                sa.func.max(ResourceModel.last_modified).label("maxdate"),
+                sa.func.max(ResourceModel.history_id).label("history_id"),
             )
             .group_by(ResourceModel.entity_id)
             .subquery("t2")
@@ -147,11 +147,11 @@ class ResourceRepository(repository.Repository):
             subq,
             sa.and_(
                 ResourceModel.entity_id == subq.c.entity_id,
-                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.history_id == subq.c.history_id,
                 ResourceModel.resource_id == resource_id,
             ),
         )
-        stmt = stmt.order_by(ResourceModel.last_modified.desc())
+        stmt = stmt.order_by(ResourceModel.history_id.desc())
 
         query = self._session.execute(stmt).scalars()
         resource_dto = query.first()

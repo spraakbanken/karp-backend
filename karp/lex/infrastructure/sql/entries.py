@@ -120,7 +120,7 @@ class EntryRepository(Repository):
             subq,
             sa.and_(
                 self.history_model.entity_id == subq.c.entity_id,
-                self.history_model.last_modified == subq.c.maxdate,
+                self.history_model.history_id == subq.c.history_id,
                 self.history_model.discarded == False,  # noqa: E712
             ),
         )
@@ -129,7 +129,7 @@ class EntryRepository(Repository):
         return (
             sql.select(
                 self.history_model.entity_id,
-                sa.func.max(self.history_model.last_modified).label("maxdate"),
+                sa.func.max(self.history_model.history_id).label("history_id"),
             )
             .group_by(self.history_model.entity_id)
             .subquery("t2")
