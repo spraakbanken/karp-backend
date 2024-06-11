@@ -7,7 +7,6 @@ from .domain.value_objects import (
     EntrySchema,
     Field,
     ResourceConfig,
-    parse_create_resource_config,
 )
 
 __all__ = [
@@ -19,5 +18,4 @@ __all__ = [
     "EntrySchema",
     "ResourceConfig",
     "Field",
-    "parse_create_resource_config",
 ]

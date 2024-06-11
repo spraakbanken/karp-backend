@@ -25,18 +25,17 @@ class ResourceCommands:
         self.index: EsIndex = index
         self.plugins: Plugins = plugins
 
-    def create_resource(self, resource_id, name, config, user):
+    def create_resource(self, config, user):
+        resource_id = config.resource_id
         existing_resource = self.resources.by_resource_id_optional(resource_id)
         if existing_resource and not existing_resource.discarded:
             raise IntegrityError(f"Resource with resource_id='{resource_id}' already exists.")
 
         resource = entities.create_resource(
-            resource_id=resource_id,
             config=config,
             message=f"Resource '{resource_id}' created.",
             created_at=utc_now(),
             created_by=user,
-            name=name,
         )
 
         self.resources.save(resource)
@@ -45,10 +44,9 @@ class ResourceCommands:
         self.session.commit()
         return ResourceDto.from_resource(resource)
 
-    def update_resource(self, resource_id, name, version, config, message, user):
+    def update_resource(self, resource_id, version, config, message, user):
         resource = self.resources.by_resource_id(resource_id)
         updated = resource.update(
-            name=name,
             config=config,
             user=user,
             message=message,

@@ -8,7 +8,7 @@ from karp.lex.domain.value_objects import ResourceConfig, Field
 
 class TestCreateEsMapping:
     def test_minimal_valid_input(self):  # noqa: ANN201
-        data = ResourceConfig(fields={})
+        data = ResourceConfig(resource_id="", config_str="", fields={})
         mapping = create_es_mapping(data)
 
         assert mapping["properties"] == {}
@@ -39,7 +39,7 @@ class TestCreateEsMapping:
     def test_standard_types(  # noqa: ANN201
         self, field: str, field_def: Field, expected_property: Optional[Dict]
     ):
-        data = ResourceConfig(fields={field: field_def})
+        data = ResourceConfig(resource_id="", config_str="", fields={field: field_def})
         mapping = create_es_mapping(data)
         assert field in mapping["properties"]
         assert mapping["properties"][field] == expected_property
@@ -88,14 +88,16 @@ class TestCreateEsMapping:
     def test_complex_types(  # noqa: ANN201
         self, field: str, field_def: Field, expected_property: Optional[Dict]
     ):
-        data = ResourceConfig(fields={field: field_def})
+        data = ResourceConfig(resource_id="", config_str="", fields={field: field_def})
         mapping = create_es_mapping(data)
         assert field in mapping["properties"]
         expected_property = expected_property or field_def.model_dump()
         assert mapping["properties"][field] == expected_property
 
     def test_sort(self):  # noqa: ANN201
-        data = ResourceConfig(fields={"name": Field(type="string")}, sort=["name"])
+        data = ResourceConfig(
+            resource_id="", config_str="", fields={"name": Field(type="string")}, sort=["name"]
+        )
 
         mapping = create_es_mapping(data)
 

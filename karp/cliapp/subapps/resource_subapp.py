@@ -11,7 +11,7 @@ from karp.cliapp.typer_injector import inject_from_ctx
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.foundation.value_objects import UniqueIdStr, unique_id
 from karp.lex.application import ResourceQueries
-from karp.lex.domain.value_objects import parse_create_resource_config
+from karp.lex.domain.value_objects import ResourceConfig
 from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
 
@@ -41,16 +41,9 @@ def create(
 ):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     if config_path.is_file():
-        data = jsonlib.load_from_file(config_path)
-        resource_id, name, config = parse_create_resource_config(data)
-        resource_commands.create_resource(
-            resource_id,
-            name,
-            config,
-            user="local admin",
-        )
-
-        print(f"Created resource '{resource_id}'")
+        config = ResourceConfig.from_path(config_path)
+        resource_commands.create_resource(config, user="local admin")
+        print(f"Created resource '{config.id}'")
 
     elif config_path.is_dir():
         typer.Abort("not supported yet")
@@ -73,13 +66,12 @@ def update(
 ):
     """Update resource config."""
 
-    config_dict = jsonlib.load_from_file(config)
-    resource_id, resource_name, config = parse_create_resource_config(config_dict)
+    config = ResourceConfig.from_path(config)
+    resource_id = config.resource_id
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     try:
         resource_commands.update_resource(
             resource_id=resource_id,
-            name=resource_name,
             version=version,
             config=config,
             message=message or "config updated",

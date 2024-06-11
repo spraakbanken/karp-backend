@@ -76,6 +76,7 @@ def test_create_json_schema(json_schema_config):  # noqa: ANN201
 
 def test_create_complex_json_schema():  # noqa: ANN201
     config = {
+        "resource_id": "salex",
         "fields": {
             "id": {"type": "string", "required": True},
             "s_nr": {"type": "integer"},
@@ -409,7 +410,7 @@ def test_create_complex_json_schema():  # noqa: ANN201
                     },
                 },
             },
-        }
+        },
     }
     _json_schema = create_entry_json_schema(ResourceConfig.from_dict(config).fields, True)
 
