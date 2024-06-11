@@ -98,7 +98,7 @@ class Resource(Entity):
         self._update_metadata(timestamp, user, message or "updating", version)
         self._name = name
         self.config = config
-        self.config_str = config.model_dump_json()
+        self.config_str = config.model_dump_json(exclude_unset=True)
         return True
 
     def _update_metadata(
@@ -209,7 +209,7 @@ def create_resource(
         id=id,
         resource_id=resource_id,
         name=name,
-        config_str=config.model_dump_json(),
+        config_str=config.model_dump_json(exclude_unset=True),
         table_name=table_name,
         message=message or "Resource added.",
         op=ResourceOp.ADDED,
