@@ -55,6 +55,7 @@ frozendict = "2.4.4"
 json-arrays = "0.14.1"
 uvicorn = "0.18.3"
 methodtools = "0.4.7"
+PyYAML = "6.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"

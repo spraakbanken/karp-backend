@@ -1,4 +1,3 @@
-import json
 import logging  # noqa: I001
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
@@ -147,7 +146,11 @@ def list_resources(
 def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
     resources = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
     resource = resources.by_resource_id(resource_id, version=version)
-    typer.echo(tabulate(((key, value) for key, value in resource.dict().items())))
+    typer.echo(
+        tabulate(((key, value) for key, value in resource.dict().items() if key != "config"))
+    )
+    typer.echo()
+    typer.echo(resource.config.config_str)
 
 
 @subapp.command()

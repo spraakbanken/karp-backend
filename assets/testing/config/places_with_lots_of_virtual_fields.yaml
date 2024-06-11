@@ -1,0 +1,39 @@
+resource_id: places
+resource_name: Platser i Sverige
+fields:
+  name: {type: string, required: true}
+  municipality: {collection: true, type: integer, required: true}
+  _municipality:
+    collection: true
+    virtual: true
+    plugin: link
+    field_params: {id: municipality}
+    params: {resource: municipalities, target: code}
+  larger_place: {type: integer}
+  municipality_again_again_again:
+    collection: 'true'
+    virtual: 'true'
+    plugin: copy
+    field_params: {value: municipality_again}
+    params:
+      config: {type: integer}
+  municipality_again:
+    collection: 'true'
+    virtual: 'true'
+    plugin: copy
+    field_params: {value: municipality}
+    params:
+      config: {type: integer}
+  municipality_again_again:
+    collection: 'true'
+    virtual: 'true'
+    plugin: copy
+    field_params: {value: municipality_again}
+    params:
+      config: {type: integer}
+  population: {type: integer}
+  area: {type: integer}
+  density: {type: integer}
+  code: {type: integer, required: true}
+sort: name
+id: code

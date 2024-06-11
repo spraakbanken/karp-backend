@@ -101,7 +101,7 @@ export ELASTICSEARCH_HOST=http://localhost:9200
 ## Create test resources
 
 1. `poetry shell` and then:
-2. `karp-cli resource create assets/testing/config/places.json`
+2. `karp-cli resource create assets/testing/config/places.yaml`
 3. `karp-cli entries add places assets/testing/data/places.jsonl`
 4. Do the same for `municipalities`
 5. `karp-cli resource publish places 1`

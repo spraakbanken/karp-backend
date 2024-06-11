@@ -1,9 +1,9 @@
 """The resource config."""
 
-import json
 from typing import Any, Optional
 
 import pydantic
+import yaml
 
 from karp.foundation import alias_generators
 
@@ -33,7 +33,12 @@ class ResourceConfig(BaseModel):
 
     @classmethod
     def from_str(cls, config_str, extra=None):
-        config_dict = json.loads(config_str)
+        # If the config file is in JSON format, it might use tab
+        # characters, which are not allowed in YAML 1.1.
+        # This can be removed once PyYAML supports YAML 1.2.
+        config_str = config_str.replace("\t", " ")
+
+        config_dict = yaml.safe_load(config_str)
         config_dict["config_str"] = config_str
         if extra:
             config_dict.update(extra)
@@ -46,7 +51,7 @@ class ResourceConfig(BaseModel):
 
     @classmethod
     def from_dict(cls, config_dict):
-        config_str = json.dumps(config_dict)
+        config_str = yaml.dump(config_dict)
         return cls.from_str(config_str)
 
     def nested_fields(self):

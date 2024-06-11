@@ -1,7 +1,6 @@
 """LexicalResource."""
 
 import enum
-import json
 import typing
 from typing import Any, Dict, Optional, Tuple
 

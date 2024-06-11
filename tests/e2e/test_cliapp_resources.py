@@ -22,7 +22,7 @@ class TestCliResourceLifetime:
             [
                 "resource",
                 "create",
-                "assets/testing/config/lexlex.json",
+                "assets/testing/config/lexlex.yaml",
             ],
         )
 
