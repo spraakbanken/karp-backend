@@ -34,7 +34,7 @@ class SearchCommands:
 
     def reindex_resource(self, resource_id, remove_old_index):
         logger.info("Reindexing resource '%s'", resource_id)
-        resource = self.resource_queries.by_resource_id_optional(resource_id)
+        resource = self.resource_queries.by_resource_id(resource_id)
         resource_config = plugins.transform_config(self.plugins, resource.config)
 
         # create and add data to new index without touching the old alias

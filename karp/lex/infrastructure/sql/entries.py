@@ -111,7 +111,7 @@ class EntryRepository(Repository):
         stmt = self._stmt_latest_not_discarded()
         query = self._session.execute(stmt).scalars()
 
-        return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
+        return (self._history_row_to_entry(db_entry) for db_entry in query)
 
     # TODO Rename this here and in `entity_ids` and `all_entries`
     def _stmt_latest_not_discarded(self):

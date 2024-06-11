@@ -18,12 +18,20 @@ class ResourceQueries:
     def __init__(self, resources: ResourceRepository):
         self._resources = resources
 
+    def by_resource_id(self, resource_id: str, version: Optional[int] = None) -> ResourceDto:
+        result = self._resources.by_resource_id(resource_id, version=version)
+        return ResourceDto.from_resource(result)
+
     def by_resource_id_optional(
         self, resource_id: str, version: Optional[int] = None
     ) -> Optional[ResourceDto]:
         result = self._resources.by_resource_id_optional(resource_id, version=version)
         if result is not None:
             return ResourceDto.from_resource(result)
+
+    def by_id(self, entity_id: UniqueId, version: Optional[int] = None) -> ResourceDto:
+        result = self._resources.by_id(resource_id, version=version)
+        return ResourceDto.from_resource(result)
 
     def by_id_optional(
         self, entity_id: UniqueId, version: Optional[int] = None

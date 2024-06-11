@@ -154,12 +154,7 @@ def list_resources(
 @cli_timer
 def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
     resources = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
-    resource = resources.by_resource_id_optional(resource_id, version=version)
-    if not resource:
-        version_str = version or "latest"
-        typer.echo(f"Can't find resource '{resource_id}', version '{version_str}'", err=True)
-        raise typer.Exit(3)
-
+    resource = resources.by_resource_id(resource_id, version=version)
     typer.echo(tabulate(((key, value) for key, value in resource.dict().items())))
 
 

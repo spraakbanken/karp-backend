@@ -32,9 +32,7 @@ class ResourcePermissionQueries:
     def is_resource_protected(self, resource_id: str, level: PermissionLevel) -> bool:
         if level in [PermissionLevel.write, PermissionLevel.admin]:
             return True
-        resource = self.resources.by_resource_id_optional(resource_id=resource_id)
-        if not resource:
-            raise errors.ResourceNotFound(f"Can't find resource '{resource_id}'")
+        resource = self.resources.by_resource_id(resource_id=resource_id)
         return resource.config.protected.get("read", False)
 
     def has_permission(

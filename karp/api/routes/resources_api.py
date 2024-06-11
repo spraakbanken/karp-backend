@@ -41,7 +41,4 @@ def get_resource_by_resource_id(
     resource_id: str,
     resource_queries: ResourceQueries = Depends(deps.get_resource_queries),
 ) -> ResourcePublic:
-    if resource := resource_queries.by_resource_id_optional(resource_id):
-        return resource
-    else:
-        raise ResourceNotFound()
+    return resource_queries.by_resource_id(resource_id)
