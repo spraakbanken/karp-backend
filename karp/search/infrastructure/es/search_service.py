@@ -1,4 +1,5 @@
 import logging
+from itertools import groupby
 from typing import Any, Dict, Iterable, List, Optional
 
 import elasticsearch
@@ -22,45 +23,51 @@ logger = logging.getLogger(__name__)
 
 
 class EsQueryBuilder(NodeWalker):
-    def __init__(self, q=None):
+    def __init__(self, resources, mapping_repo, q=None):
         super().__init__()
         self._q = q
+        self.path = ""
+        self.resources = resources
+        self.mapping_repo = mapping_repo
 
     def walk__equals(self, node):
-        return self.match(self.walk(node.field), self.walk(node.arg))
+        return self.match(node.field, self.walk(node.arg))
 
     def walk__freetext(self, node):
         return self.match("*", self.walk(node.arg))
 
     def walk__regexp(self, node):
-        return self.regexp(self.walk(node.field), self.walk(node.arg))
+        return self.regexp(node.field, self.walk(node.arg))
 
     def walk__freergxp(self, node):
         return self.regexp("*", self.walk(node.arg))
 
     def walk__contains(self, node):
-        return self.regexp(self.walk(node.field), f".*{self.walk(node.arg)}.*")
+        return self.regexp(node.field, f".*{self.walk(node.arg)}.*")
 
     def walk__startswith(self, node):
-        return self.regexp(self.walk(node.field), f"{self.walk(node.arg)}.*")
+        return self.regexp(node.field, f"{self.walk(node.arg)}.*")
 
     def walk__endswith(self, node):
-        return self.regexp(self.walk(node.field), f".*{self.walk(node.arg)}")
+        return self.regexp(node.field, f".*{self.walk(node.arg)}")
 
     def walk__exists(self, node):
-        field = self.single_field("exists", self.walk(node.field))
-        return es_dsl.Q("exists", field=field)
+        def query_f(field):
+            return es_dsl.Q("exists", field=field)
+
+        return self._exists_missing_range_helper("exists", node, query_f)
 
     def walk__missing(self, node):
-        field = self.single_field("missing", self.walk(node.field))
-        return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=field))
+        def query_f(field):
+            return es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=field))
+
+        return self._exists_missing_range_helper("missing", node, query_f)
 
     def walk_range(self, node):
-        field = self.single_field(node.op, self.walk(node.field))
-        return es_dsl.Q(
-            "range",
-            **{field: {self.walk(node.op): self.walk(node.arg)}},
-        )
+        def query_f(field):
+            return es_dsl.Q("range", **{field: {self.walk(node.op): self.walk(node.arg)}})
+
+        return self._exists_missing_range_helper(node.op, node, query_f)
 
     walk__gt = walk_range
     walk__gte = walk_range
@@ -85,6 +92,52 @@ class EsQueryBuilder(NodeWalker):
 
         return result
 
+    def walk__sub_query(self, node):
+        path = self.walk(node.field)
+        self.path = path + "."
+        query = self.walk(node.exp)
+        self.path = ""
+        # add ".TODO" to path since wrap_nested splits, refactor!
+        return self.wrap_nested(path + ".TODO", query)
+
+    def wrap_nested(self, field, query):
+        path, *leaf = field.rsplit(".", 1)
+
+        # if leaf is empty, the field is not a path, and cannot be nested
+        if not leaf:
+            return query
+
+        # if self.path is set and the current field is part of the current path, no nesting should be added at this level
+        # TODO ugly, refactor
+        if self.path and (path + ".") == self.path:
+            pass
+        else:
+            # check that all the resources have the same nested settings for the field, if they do not, the query will fail
+            g = groupby(
+                [
+                    self.mapping_repo.is_nested(resource_id, self.path + path)
+                    for resource_id in self.resources
+                ]
+            )
+            is_nested = next(g)[0]
+            if next(g, False):
+                raise errors.IncompleteQuery(
+                    self._q,
+                    f"Resources: {self.resources} have different settings for field: {self.path + field}",
+                )
+
+            if is_nested:
+                query = es_dsl.Q("nested", path=path, query=query)
+
+        # check if there are most nested fields in the remaining path
+        return self.wrap_nested(path, query)
+
+    def walk__identifier(self, node):
+        # Add the current path to field, for example query path(equals|field|val)
+        # must yield an es-query in field "path.field"
+        field = node.ast
+        return self.path + field
+
     def walk_object(self, node):
         return node
 
@@ -98,6 +151,7 @@ class EsQueryBuilder(NodeWalker):
         return "*" in field or "," in field
 
     def single_field(self, query_type, field):
+        field = self.walk(field)
         if self.is_multi_field(field):
             raise errors.IncompleteQuery(
                 self._q, f"{query_type} queries don't support wildcards in field names"
@@ -107,27 +161,49 @@ class EsQueryBuilder(NodeWalker):
     def multi_fields(self, field):
         return field.split(",")
 
-    def regexp(self, field, regexp):
-        if self.is_multi_field(field):
+    def regexp(self, field_node, regexp):
+        def multi(field):
             return es_dsl.Q(
                 "query_string",
                 query="/" + regexp.replace("/", "\\/") + "/",
                 fields=self.multi_fields(field),
                 lenient=True,
             )
-        else:
+
+        def single(field):
             return es_dsl.Q("regexp", **{field: regexp})
 
-    def match(self, field, query):
-        if self.is_multi_field(field):
+        return self._match_regexp_helper(field_node, multi, single)
+
+    def match(self, field_node, query):
+        def multi(field):
             return es_dsl.Q(
                 "multi_match", query=query, fields=self.multi_fields(field), lenient=True
             )
-        else:
+
+        def single(field):
             return es_dsl.Q(
                 "match",
                 **{field: {"query": query, "operator": "and"}},
             )
+
+        return self._match_regexp_helper(field_node, multi, single)
+
+    def _match_regexp_helper(self, field_node, multi, single):
+        if field_node == "*":
+            field = field_node
+        else:
+            field = self.walk(field_node)
+        if self.is_multi_field(field):
+            query = multi(field)
+        else:
+            query = single(field)
+        return self.wrap_nested(field, query)
+
+    def _exists_missing_range_helper(self, op, node, query_f):
+        field = self.single_field(op, node.field)
+        q = query_f(field)
+        return self.wrap_nested(field, q)
 
 
 class EsFieldNameCollector(NodeWalker):
@@ -137,7 +213,7 @@ class EsFieldNameCollector(NodeWalker):
         result = set().union(*(self.walk(child) for child in node.children()))
         # TODO maybe a bit too automagic?
         if hasattr(node, "field"):
-            result.add(node.field)
+            result.add(node.field.ast)
         return result
 
     def walk_object(self, _obj):
@@ -216,7 +292,7 @@ class EsSearchService:
         if query.q:
             try:
                 model = self.parser.parse(query.q)
-                es_query = EsQueryBuilder(query.q).walk(model)
+                es_query = EsQueryBuilder(resources, self.mapping_repo, query.q).walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
                 logger.info("Parse error", extra={"err": err})
@@ -285,20 +361,48 @@ class EsSearchService:
     def statistics(self, resource_id: str, field: str) -> Iterable:
         s = es_dsl.Search(using=self.es, index=resource_id)
         s = s[:0]
+
+        # if field is analyzed, do aggregation on the "raw" multi-field
         if (
             field in self.mapping_repo.fields[resource_id]
             and self.mapping_repo.fields[resource_id][field].analyzed
         ):
-            field += ".raw"
+            agg_field = field + ".raw"
+        else:
+            agg_field = field
         logger.debug(
             "Doing aggregations on resource_id: {resource_id}, on field {field}".format(
                 resource_id=resource_id, field=field
             )
         )
+
         # use an Elasticsearch instance configured to fail at less than 66000 buckets
         # If there are more buckets than that, the ES-lib will raise an exception that we
         # can catch and inform the user.
-        s.aggs.bucket("field_values", "terms", field=field, size=66000)
+        max_buckets = 66000
+
+        # if the aggregation field is in a field with type "nested", it needs a special aggregation
+        # nested-aggregations counts occurrence of the "sub-documents" and not parent document, this
+        # is why the "parent_doc_count" aggregation is needed for its values and sorting
+        nest_levels = self.mapping_repo.get_nest_levels(resource_id, field)
+        if nest_levels:
+            name = "field_values"
+            agg = es_dsl.A(
+                "terms",
+                field=agg_field,
+                size=max_buckets,
+                order=[{"parent_doc_count": "desc"}],
+                # empty reverse_nested means merge on top-level, same result no matter how many levels of nesting there is
+                aggs={"parent_doc_count": es_dsl.A("reverse_nested")},
+            )
+            # add innermost nesting level first
+            for level in reversed(nest_levels):
+                agg = es_dsl.A("nested", path=level, aggs={name: agg})
+                name = level
+            s.aggs.bucket(name, agg)
+        else:
+            s.aggs.bucket("field_values", es_dsl.A("terms", field=agg_field, size=max_buckets))
+
         try:
             response = s.execute()
         except elasticsearch.BadRequestError as e:
@@ -307,7 +411,20 @@ class EsSearchService:
             else:
                 raise e
         logger.debug("Elasticsearch response", extra={"response": response})
-        return [
-            {"value": bucket["key"], "count": bucket["doc_count"]}
-            for bucket in response.aggregations.field_values.buckets
-        ]
+        agg_response = response.aggregations
+        if nest_levels:
+            # unwrap the doc_count from the "parent_doc_count" aggregation
+            for level in nest_levels:
+                agg_response = agg_response[level]
+            field_values = agg_response["field_values"]
+            return [
+                {"value": bucket["key"], "count": bucket["parent_doc_count"]["doc_count"]}
+                for bucket in field_values.buckets
+            ]
+
+        else:
+            field_values = agg_response.field_values
+            return [
+                {"value": bucket["key"], "count": bucket["doc_count"]}
+                for bucket in field_values.buckets
+            ]

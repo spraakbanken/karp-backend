@@ -76,6 +76,25 @@ class EsMappingRepository:
         aliases = self._get_all_aliases()
         self._update_field_mapping(aliases)
 
+    def is_nested(self, resource_id, field):
+        return self.fields[resource_id][field].type == "nested"
+
+    def get_nest_levels(self, resource_id, field):
+        """
+        Given a dot-separated path ("apa.bepa.cepa") it will check if any of the fields in the path is
+        nested and return those, path included, otherwise return [].
+
+        Example: if both "apa" and "apa.bepa" are nested, it will return ["apa", "apa.bepa"]
+        """
+        nest_levels = []
+        subfield = None
+        parts = field.split(".")[0:-1]
+        for part in parts:
+            subfield = ".".join([subfield, part]) if subfield else part
+            if self.is_nested(resource_id, subfield):
+                nest_levels.append(subfield)
+        return nest_levels
+
     def _update_field_mapping(self, aliases: List[Tuple[str, str]]):
         """
         Create a field mapping based on the mappings of elasticsearch.

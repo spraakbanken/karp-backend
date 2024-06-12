@@ -150,6 +150,8 @@ def _create_es_mapping(config):
                 }
         else:
             result = {"properties": {}}
+            if parent_field_def.collection:
+                result["type"] = "nested"
 
             for child_field_name, child_field_def in parent_field_def.fields.items():
                 recursive_field(result, child_field_name, child_field_def)
