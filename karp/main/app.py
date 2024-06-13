@@ -64,6 +64,9 @@ def _create_db_engine(db_url: URL) -> Engine:
     if str(db_url).startswith("sqlite"):
         kwargs["poolclass"] = pool.SingletonThreadPool
         kwargs["connect_args"] = {"check_same_thread": False}
+    else:
+        # 28800 s is the default value for MariaDB to drop connections, causing errors unless "pool_recycle" is set
+        kwargs["pool_recycle"] = env("MARIADB_IDLE_TIMEOUT", 28800)
     engine_echo = False
     return create_engine(db_url, echo=engine_echo, future=True, **kwargs)
 
