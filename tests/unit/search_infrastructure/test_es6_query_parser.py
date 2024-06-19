@@ -14,6 +14,10 @@ def parser() -> KarpQueryV6Parser:
     return KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
 
 
+def get_match_object(query_str):
+    return {"query": query_str, "operator": "and", "lenient": True}
+
+
 @pytest.mark.parametrize(
     "q,expected",
     [
@@ -31,64 +35,64 @@ def parser() -> KarpQueryV6Parser:
         ("gte|val|2", es_dsl.Q("range", val={"gte": 2})),
         ('lt|val|"lok"', es_dsl.Q("range", val={"lt": "lok"})),
         ('lte|val|"lok"', es_dsl.Q("range", val={"lte": "lok"})),
-        ('equals|pos|"vb"', es_dsl.Q("match", pos={"query": "vb", "operator": "and"})),
+        ('equals|pos|"vb"', es_dsl.Q("match", pos=get_match_object("vb"))),
         ('regexp|kjh|"lk.*k"', es_dsl.Q("regexp", kjh="lk.*k")),
         ('not(regexp|kjh|"lk.*k")', ~es_dsl.Q("regexp", kjh="lk.*k")),
         (
             'and(regexp|baseform|"g[oe]t"||equals|pos|"nn")',
             es_dsl.Q("regexp", baseform="g[oe]t")
-            & es_dsl.Q("match", pos={"query": "nn", "operator": "and"}),
+            & es_dsl.Q("match", pos=get_match_object("nn")),
         ),
         (
             'and(regexp|baseform|"g[oe]t"||equals|pos|"nn"||regexp|pos|"n.*")',
             es_dsl.Q("regexp", baseform="g[oe]t")
-            & es_dsl.Q("match", pos={"query": "nn", "operator": "and"})
+            & es_dsl.Q("match", pos=get_match_object("nn"))
             & es_dsl.Q("regexp", pos="n.*"),
         ),
         (
             'or(regexp|baseform|"g[oe]t"||equals|pos|"nn")',
             es_dsl.Q("regexp", baseform="g[oe]t")
-            | es_dsl.Q("match", pos={"query": "nn", "operator": "and"}),
+            | es_dsl.Q("match", pos=get_match_object("nn")),
         ),
         (
             'or(regexp|baseform|"g[oe]t"||equals|pos|"nn"||regexp|pos|"n.*")',
             es_dsl.Q("regexp", baseform="g[oe]t")
-            | es_dsl.Q("match", pos={"query": "nn", "operator": "and"})
+            | es_dsl.Q("match", pos=get_match_object("nn"))
             | es_dsl.Q("regexp", pos="n.*"),
         ),
         (
             'equals|baseform|"t|est"',
-            es_dsl.Q("match", baseform={"query": "t|est", "operator": "and"}),
+            es_dsl.Q("match", baseform=get_match_object("t|est")),
         ),
         (
             'equals|baseform|"|test"',
-            es_dsl.Q("match", baseform={"query": "|test", "operator": "and"}),
+            es_dsl.Q("match", baseform=get_match_object("|test")),
         ),
         (
             'equals|baseform|"test|"',
-            es_dsl.Q("match", baseform={"query": "test|", "operator": "and"}),
+            es_dsl.Q("match", baseform=get_match_object("test|")),
         ),
         (
             'and(equals|ortografi|"ständigt förknippad")',
-            es_dsl.Q("match", ortografi={"query": "ständigt förknippad", "operator": "and"}),
+            es_dsl.Q("match", ortografi=get_match_object("ständigt förknippad")),
         ),
         (
             'and(equals|ortografi|"(ständigt) förknippad")',
-            es_dsl.Q("match", ortografi={"query": "(ständigt) förknippad", "operator": "and"}),
+            es_dsl.Q("match", ortografi=get_match_object("(ständigt) förknippad")),
         ),
         (
             'and(equals|ortografi|"(ständigt förknippad")',
-            es_dsl.Q("match", ortografi={"query": "(ständigt förknippad", "operator": "and"}),
+            es_dsl.Q("match", ortografi=get_match_object("(ständigt förknippad")),
         ),
         # escaped quotes
         (
             'and(equals|baseform|"att \\"vara\\"")',
-            es_dsl.Q("match", baseform={"query": 'att "vara"', "operator": "and"}),
+            es_dsl.Q("match", baseform=get_match_object('att "vara"')),
         ),
         # no quotes work
         (
             "and(equals|baseform|noquotes)",
-            es_dsl.Q("match", baseform={"query": "noquotes", "operator": "and"}),
+            es_dsl.Q("match", baseform=get_match_object("noquotes")),
         ),
         (
             r'and(regexp|name|"\s")',
@@ -142,8 +146,8 @@ def test_es_query(parser, q, expected):  # noqa: ANN201
             es_dsl.Q(
                 "bool",
                 must_not=[
-                    es_dsl.Q("match", ordklass={"query": "substantiv", "operator": "and"}),
-                    es_dsl.Q("match", ordklass={"query": "verb", "operator": "and"}),
+                    es_dsl.Q("match", ordklass=get_match_object("substantiv")),
+                    es_dsl.Q("match", ordklass=get_match_object("verb")),
                 ],
             ),
         ),

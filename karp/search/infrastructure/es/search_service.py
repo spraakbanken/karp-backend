@@ -126,7 +126,7 @@ class EsQueryBuilder(NodeWalker):
         else:
             return es_dsl.Q(
                 "match",
-                **{field: {"query": query, "operator": "and"}},
+                **{field: {"query": query, "operator": "and", "lenient": True}},
             )
 
 
