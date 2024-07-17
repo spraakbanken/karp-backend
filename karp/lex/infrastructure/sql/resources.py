@@ -2,13 +2,13 @@ import logging
 import typing
 from typing import List, Optional, Union
 
+import methodtools
 import sqlalchemy as sa
 from injector import inject
-from sqlalchemy import and_, func, sql, text
+from sqlalchemy import Engine, and_, func, sql, text
 from sqlalchemy.orm import Session
 
 from karp.foundation import repository
-from karp.foundation.cache import Cache
 from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import entities
 from karp.lex.domain.entities.resource import Resource
@@ -26,11 +26,6 @@ class ResourceRepository(repository.Repository):
     @inject
     def __init__(self, session: Session):
         self._session = session
-        # caches lookups to self._by_resource_id
-        # Note: we ought to also invalidate the cache if a transaction is rolled back.
-        # It's OK right now because after rolling back we always end the session, so
-        # the SqlResourceRepository itself is no longer valid.
-        self._cache = Cache(self._by_resource_id_uncached)
 
     def by_resource_id(
         self, resource_id: str, *, version: Optional[int] = None
@@ -55,7 +50,7 @@ class ResourceRepository(repository.Repository):
         subq = (
             self._session.query(
                 ResourceModel.resource_id,
-                func.max(ResourceModel.last_modified).label("maxdate"),
+                func.max(ResourceModel.history_id).label("history_id"),
             )
             .group_by(ResourceModel.resource_id)
             .subquery("t2")
@@ -64,7 +59,7 @@ class ResourceRepository(repository.Repository):
             subq,
             and_(
                 ResourceModel.resource_id == subq.c.resource_id,
-                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.history_id == subq.c.history_id,
                 ResourceModel.is_published == True,  # noqa: E712
             ),
         )
@@ -75,7 +70,7 @@ class ResourceRepository(repository.Repository):
         subq = (
             self._session.query(
                 ResourceModel.resource_id,
-                func.max(ResourceModel.last_modified).label("maxdate"),
+                func.max(ResourceModel.history_id).label("history_id"),
             )
             .group_by(ResourceModel.resource_id)
             .subquery("t2")
@@ -84,7 +79,7 @@ class ResourceRepository(repository.Repository):
             subq,
             and_(
                 ResourceModel.resource_id == subq.c.resource_id,
-                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.history_id == subq.c.history_id,
             ),
         )
 
@@ -95,8 +90,11 @@ class ResourceRepository(repository.Repository):
         for resource in query:
             self._session.delete(resource)
 
+    def create_resource_table(self, resource):
+        EntryRepository(self._session, resource).create_table()
+
     def remove_resource_table(self, resource):
-        self._session.execute(text("DROP TABLE IF EXISTS " + resource.table_name))
+        EntryRepository(self._session, resource).drop_table()
 
     def remove(self, resource: Resource):
         self._session.delete(resource)
@@ -104,10 +102,14 @@ class ResourceRepository(repository.Repository):
     def _save(self, resource: Resource):
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
+        # If resource was discarded, drop the table containing all data entries.
+        # Otherwise, create the table.
         if resource.discarded:
-            # If resource was discarded, drop the table containing all data entries
             self.remove_resource_table(resource)
-        self._cache.clear()
+        else:
+            self.create_resource_table(resource)
+
+        self._by_resource_id.cache_clear()
 
     def _by_id(
         self,
@@ -124,20 +126,18 @@ class ResourceRepository(repository.Repository):
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
+    # Note: we ought to also invalidate the cache if a transaction is rolled back.
+    # It's OK right now because after rolling back we always end the session, so
+    # the SqlResourceRepository itself is no longer valid.
+    @methodtools.lru_cache(maxsize=None)
     def _by_resource_id(
-        self,
-        resource_id: str,
-    ) -> Optional[Resource]:
-        return self._cache[resource_id]
-
-    def _by_resource_id_uncached(
         self,
         resource_id: str,
     ) -> Optional[Resource]:
         subq = (
             sql.select(
                 ResourceModel.entity_id,
-                sa.func.max(ResourceModel.last_modified).label("maxdate"),
+                sa.func.max(ResourceModel.history_id).label("history_id"),
             )
             .group_by(ResourceModel.entity_id)
             .subquery("t2")
@@ -147,16 +147,16 @@ class ResourceRepository(repository.Repository):
             subq,
             sa.and_(
                 ResourceModel.entity_id == subq.c.entity_id,
-                ResourceModel.last_modified == subq.c.maxdate,
+                ResourceModel.history_id == subq.c.history_id,
                 ResourceModel.resource_id == resource_id,
             ),
         )
-        stmt = stmt.order_by(ResourceModel.last_modified.desc())
+        stmt = stmt.order_by(ResourceModel.history_id.desc())
 
         query = self._session.execute(stmt).scalars()
         resource_dto = query.first()
         return resource_dto.to_entity() if resource_dto else None
 
-    def entries_by_resource_id(self, resource_id: str) -> Optional[EntryRepository]:
+    def entries_by_resource_id(self, resource_id: str) -> EntryRepository:
         resource = self.by_resource_id(resource_id)
-        return EntryRepository(session=self._session, resource=resource) if resource else None
+        return EntryRepository(session=self._session, resource=resource)

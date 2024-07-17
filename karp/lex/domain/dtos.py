@@ -8,13 +8,15 @@ from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
 from karp.lex.domain.entities import Entry, Resource
 from karp.lex.domain.entities.entry import EntryOp
+from karp.lex.domain.value_objects import ResourceConfig
 
 
 class BaseModel(pydantic.BaseModel):
-    class Config:
+    model_config = {
         # arbitrary_types_allowed = True
         # extra = "forbid"
-        alias_generator = alias_generators.to_lower_camel
+        "alias_generator": alias_generators.to_lower_camel
+    }
 
 
 class IdMixin(BaseModel):
@@ -50,7 +52,7 @@ class ResourceDto(EntityDto):
     resource_id: str
     is_published: bool
     name: str
-    config: dict
+    config: ResourceConfig
 
     @classmethod
     def from_resource(cls, resource: Resource) -> "ResourceDto":

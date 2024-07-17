@@ -5,15 +5,15 @@ import sys
 from typing import Iterable, Optional
 
 
-import json_streams
-import json_streams.jsonlib
+import json_arrays
+import json_arrays.jsonlib
 from sb_json_tools import jt_val
 import typer
 
 from tqdm import tqdm
 
 from karp.entry_commands import EntryCommands
-from karp.lex.domain.value_objects import entry_schema
+from karp.lex.domain.value_objects import entry_schema, ResourceConfig
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
@@ -40,7 +40,7 @@ def add_entries_to_resource(
     entry_commands = inject_from_ctx(EntryCommands, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
-    entries = tqdm(json_streams.load_from_file(data), desc="Adding", unit=" entries")
+    entries = tqdm(json_arrays.load_from_file(data), desc="Adding", unit=" entries")
     if chunked:
         entry_commands.add_entries_in_chunks(
             resource_id=resource_id,
@@ -74,7 +74,7 @@ def import_entries_to_resource(
     entry_commands = inject_from_ctx(EntryCommands, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
-    entries = tqdm(json_streams.load_from_file(data), desc="Importing", unit=" entries")
+    entries = tqdm(json_arrays.load_from_file(data), desc="Importing", unit=" entries")
     if chunked:
         entry_commands.import_entries_in_chunks(
             resource_id=resource_id,
@@ -114,7 +114,7 @@ def export_entries(
         "exporting entries",
         extra={"resource_id": resource_id, "type(all_entries)": type(all_entries)},
     )
-    json_streams.dump(
+    json_arrays.dump(
         (entry.dict() for entry in all_entries),
         output,
     )
@@ -134,15 +134,15 @@ def batch_entries(
 
     > Example:
 
-    > `[{"cmd": {"cmdtype": "add_entry","resourceId": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
+    > `[{"cmd": {"cmdtype": "add_entry","resource_id": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
     """
     logger.info("run entries command in batch")
     entry_commands = inject_from_ctx(EntryCommands, ctx)  # type: ignore[type-abstract]
-    for cmd_outer in json_streams.load_from_file(data):
-        cmd = cmd_outer["cmd"]
+    entry_commands.start_transaction()
+    for cmd in json_arrays.load_from_file(data):
         command_type = cmd["cmdtype"]
         del cmd["cmdtype"]
-        if "id" in cmd:
+        if "id" in cmd and command_type != "add_entry":
             cmd["_id"] = cmd["id"]
             del cmd["id"]
         if command_type == "add_entry":
@@ -151,6 +151,7 @@ def batch_entries(
             entry_commands.update_entry(**cmd)
         elif command_type == "delete_entry":
             entry_commands.delete_entry(**cmd)
+    entry_commands.commit()
 
 
 class Counter(collections.abc.Generator):
@@ -206,7 +207,7 @@ def validate_entries(
         raise typer.Exit(301)
 
     if config_path:
-        config = json_streams.jsonlib.load_from_file(config_path)
+        config = ResourceConfig.from_dict(json_arrays.jsonlib.load_from_file(config_path))
     elif resource_id_raw:
         repo = inject_from_ctx(ResourceQueries, ctx=ctx)
         if resource := repo.by_resource_id(resource_id_raw):
@@ -218,17 +219,17 @@ def validate_entries(
         typer.echo("You must provide either '--resource_id' or '--config/-c'", err=True)
         raise typer.Exit(code=300)
 
-    allow_additional_properties = config.get("additionalProperties", True)
-    schema = entry_schema.create_entry_json_schema(config["fields"], allow_additional_properties)
+    allow_additional_properties = config.additional_properties
+    schema = entry_schema.create_entry_json_schema(config.fields, allow_additional_properties)
 
     error_code = 0
 
-    entries: Iterable[dict] = json_streams.load_from_file(path, use_stdin_as_default=True)
+    entries: Iterable[dict] = json_arrays.load_from_file(path, use_stdin_as_default=True)
     if as_import:
         entries = (import_entry["entry"] for import_entry in entries)
-    with json_streams.sink_from_file(
+    with json_arrays.sink_from_file(
         err_output, use_stderr_as_default=True
-    ) as error_sink, json_streams.sink_from_file(
+    ) as error_sink, json_arrays.sink_from_file(
         output, use_stdout_as_default=True
     ) as correct_sink:
         error_counter = Counter(error_sink)

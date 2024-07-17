@@ -34,7 +34,7 @@ class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):
 
 @dataclass(eq=False)
 class And(ModelBase):
-    exps: Any = None
+    pass
 
 
 @dataclass(eq=False)
@@ -105,12 +105,12 @@ class Missing(ModelBase):
 
 @dataclass(eq=False)
 class Not(ModelBase):
-    exps: Any = None
+    pass
 
 
 @dataclass(eq=False)
 class Or(ModelBase):
-    exps: Any = None
+    pass
 
 
 @dataclass(eq=False)

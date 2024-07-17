@@ -3,9 +3,7 @@ import typing
 from typing import Dict, List, Optional
 
 import sqlalchemy as sa
-from sqlalchemy import (
-    sql,
-)
+from sqlalchemy import Engine, sql
 from sqlalchemy.orm.session import Session
 
 from karp.foundation.repository import Repository
@@ -26,9 +24,6 @@ class EntryRepository(Repository):
         self._config = resource.config
         self.resource = resource
         self.history_model = models.get_or_create_entry_history_model(resource.table_name)
-        self.history_model.__table__.create(  # type:ignore [attr-defined]
-            bind=session.connection(), checkfirst=True
-        )
 
     @property
     def name(self) -> str:
@@ -37,6 +32,21 @@ class EntryRepository(Repository):
     @property
     def config(self) -> Dict:
         return self._config
+
+    @property
+    def _engine(self):
+        result = self._session.get_bind()
+        assert isinstance(result, Engine)  # noqa: S101
+        return result
+
+    def create_table(self):
+        # We bind to self._engine instead of self._session because CREATE TABLE
+        # automatically commits the transaction, which we don't want
+        # (using self._engine makes it run in its own transaction)
+        self.history_model.__table__.create(bind=self._engine, checkfirst=True)
+
+    def drop_table(self):
+        self.history_model.__table__.drop(bind=self._engine, checkfirst=True)
 
     def _save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
@@ -101,7 +111,7 @@ class EntryRepository(Repository):
         stmt = self._stmt_latest_not_discarded()
         query = self._session.execute(stmt).scalars()
 
-        return [self._history_row_to_entry(db_entry) for db_entry in query.all()]
+        return (self._history_row_to_entry(db_entry) for db_entry in query)
 
     # TODO Rename this here and in `entity_ids` and `all_entries`
     def _stmt_latest_not_discarded(self):
@@ -110,7 +120,7 @@ class EntryRepository(Repository):
             subq,
             sa.and_(
                 self.history_model.entity_id == subq.c.entity_id,
-                self.history_model.last_modified == subq.c.maxdate,
+                self.history_model.history_id == subq.c.history_id,
                 self.history_model.discarded == False,  # noqa: E712
             ),
         )
@@ -119,7 +129,7 @@ class EntryRepository(Repository):
         return (
             sql.select(
                 self.history_model.entity_id,
-                sa.func.max(self.history_model.last_modified).label("maxdate"),
+                sa.func.max(self.history_model.history_id).label("history_id"),
             )
             .group_by(self.history_model.entity_id)
             .subquery("t2")

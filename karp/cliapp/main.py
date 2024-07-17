@@ -1,18 +1,32 @@
 import logging  # noqa: I001
 from typing import Optional
 import sys
+import code
 
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 import typer
 
 from karp.main import bootstrap_app, with_new_session, config
 from karp.cliapp import subapps
+from .typer_injector import inject_from_ctx
+from karp.lex.infrastructure import ResourceRepository
+from karp.lex.application import ResourceQueries, EntryQueries
+from karp.entry_commands import EntryCommands
+from karp.resource_commands import ResourceCommands
+from karp.search_commands import SearchCommands
+from karp.search.infrastructure import EsSearchService
+from karp.auth.infrastructure import APIKeyService
+import readline
+import rlcompleter
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown")
+
 
 def create_app():
-    app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown")
     app_context = bootstrap_app()
 
     @app.callback()
@@ -38,6 +52,56 @@ def version_callback(value: bool):
     if value:
         typer.echo(f"{config.PROJECT_NAME} CLI {config.VERSION}")
         raise typer.Exit()
+
+
+@app.command("repl")
+def repl(
+    ctx: typer.Context,
+    script: Optional[Path] = typer.Argument(
+        None,
+        help="optional script file to run before entering REPL",
+    ),
+):
+    """Start a Python REPL with the Karp API available."""
+
+    locals = {  # noqa: A001
+        "ctx": ctx,
+        "injector": ctx.obj["injector"],
+        "engine": inject_from_ctx(Engine, ctx),
+        "session": inject_from_ctx(Session, ctx),
+        "resource_queries": inject_from_ctx(ResourceQueries, ctx),
+        "entry_queries": inject_from_ctx(EntryQueries, ctx),
+        "resource_commands": inject_from_ctx(ResourceCommands, ctx),
+        "entry_commands": inject_from_ctx(EntryCommands, ctx),
+        "search_commands": inject_from_ctx(SearchCommands, ctx),
+        "resources": inject_from_ctx(ResourceRepository, ctx),
+        "es_search_service": inject_from_ctx(EsSearchService, ctx),
+        "api_key_service": inject_from_ctx(APIKeyService, ctx),
+    }
+
+    banner = ["The following objects are available:"]
+    for name, obj in locals.items():
+        cls = type(obj).__name__
+        mod = type(obj).__module__
+        if mod.startswith("karp."):
+            banner.append(f"  {name}: {cls} ({mod})")
+        else:
+            banner.append(f"  {name}: {cls}")
+    banner = "\n".join(banner)
+
+    exitmsg = "Leaving the Karp REPL."
+
+    if "libedit" in readline.__doc__:
+        readline.parse_and_bind("bind ^I complete")
+    else:
+        readline.parse_and_bind("tab: complete")
+    readline.set_completer(rlcompleter.Completer(locals).complete)
+
+    console = code.InteractiveConsole(locals)
+    if script is not None:
+        with open(script) as file:
+            console.runsource(file.read(), filename=str(script), symbol="exec")
+    console.interact(banner, exitmsg)
 
 
 cliapp = create_app()

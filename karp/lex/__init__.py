@@ -3,7 +3,11 @@ from .application.dtos import (
     HistoryDto,
 )
 from .domain.dtos import EntryDto
-from .domain.value_objects import EntrySchema
+from .domain.value_objects import (
+    EntrySchema,
+    Field,
+    ResourceConfig,
+)
 
 __all__ = [
     # dtos
@@ -12,4 +16,6 @@ __all__ = [
     "HistoryDto",
     # value objects
     "EntrySchema",
+    "ResourceConfig",
+    "Field",
 ]

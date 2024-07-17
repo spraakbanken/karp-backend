@@ -3,15 +3,15 @@ from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
 import typer
-from json_streams import jsonlib
+from json_arrays import jsonlib
 from tabulate import tabulate
 
+from karp.cliapp.typer_injector import inject_from_ctx
+from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.foundation.value_objects import UniqueIdStr, unique_id
 from karp.lex.application import ResourceQueries
+from karp.lex.domain.value_objects import ResourceConfig
 from karp.resource_commands import ResourceCommands
-
-from karp.cliapp.utility import cli_error_handler, cli_timer
-from karp.cliapp.typer_injector import inject_from_ctx
 from karp.search_commands import SearchCommands
 
 logger = logging.getLogger("karp")
@@ -36,30 +36,21 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
 @cli_timer
 def create(
     ctx: typer.Context,
-    config: Path,
+    config_path: Path,
 ):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
-    if config.is_file():
-        data = jsonlib.load_from_file(config)
-        try:
-            resource_id = data.pop("resource_id")
-        except KeyError as exc:
-            raise ValueError("'resource_id' is missing") from exc
-        try:
-            name = data.pop("resource_name")
-        except KeyError as exc:
-            raise ValueError("'resource_name' is missing") from exc
-        resource_commands.create_resource(
-            resource_id,
-            name,
-            data,
-            user="local admin",
-        )
+    if config_path.is_file():
+        config = ResourceConfig.from_path(config_path)
+        resource_commands.create_resource(config, user="local admin")
+        print(f"Created resource '{config.id}'")
 
-        print(f"Created resource '{resource_id}'")
+    elif config_path.is_dir():
+        typer.Abort("not supported yet")
 
-    elif config.is_dir():
-        typer.Abort("not supported yetls")
+    else:
+        typer.echo(f"The config file {config_path} was not found.", err=True)
+        typer.echo(f"Could not create the resource.", err=True)
+        raise typer.Exit(1)
 
 
 @subapp.command()
@@ -74,18 +65,14 @@ def update(
 ):
     """Update resource config."""
 
-    config_dict = jsonlib.load_from_file(config)
-    resource_id = config_dict.pop("resource_id")
-    if resource_id is None:
-        raise ValueError("resource_id must be present")
-    resource_name = config_dict.pop("resource_name") or resource_id
+    config = ResourceConfig.from_path(config)
+    resource_id = config.resource_id
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     try:
         resource_commands.update_resource(
             resource_id=resource_id,
-            name=resource_name,
             version=version,
-            config=config_dict,
+            config=config,
             message=message or "config updated",
             user=user or "local admin",
         )
@@ -158,13 +145,12 @@ def list_resources(
 @cli_timer
 def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
     resources = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
-    resource = resources.by_resource_id_optional(resource_id, version=version)
-    if not resource:
-        version_str = version or "latest"
-        typer.echo(f"Can't find resource '{resource_id}', version '{version_str}'", err=True)
-        raise typer.Exit(3)
-
-    typer.echo(tabulate(((key, value) for key, value in resource.dict().items())))
+    resource = resources.by_resource_id(resource_id, version=version)
+    typer.echo(
+        tabulate(((key, value) for key, value in resource.dict().items() if key != "config"))
+    )
+    typer.echo()
+    typer.echo(resource.config.config_str)
 
 
 @subapp.command()

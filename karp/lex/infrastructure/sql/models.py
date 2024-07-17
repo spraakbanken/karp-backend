@@ -1,3 +1,5 @@
+import functools
+
 from sqlalchemy import (
     JSON,
     Column,
@@ -5,17 +7,18 @@ from sqlalchemy import (
     Integer,
     String,
 )
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.schema import (
     UniqueConstraint,
 )
 from sqlalchemy.types import Boolean, Float, Text
-from sqlalchemy_json import NestedMutableJson
 
 from karp.db_infrastructure.types import ULIDType
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
+from karp.lex.domain.value_objects import ResourceConfig
 
 Base = declarative_base()
 
@@ -29,7 +32,7 @@ class ResourceModel(Base):
     version = Column(Integer, nullable=False)
     name = Column(String(64), nullable=False)
     table_name = Column(String(64), nullable=False)
-    config = Column(NestedMutableJson, nullable=False)
+    config_str = Column("config", LONGTEXT, nullable=False)
     is_published = Column(Boolean, index=True, nullable=True, default=None)
     last_modified = Column(Float(precision=53), nullable=False)
     last_modified_by = Column(String(100), nullable=False)
@@ -54,7 +57,7 @@ class ResourceModel(Base):
                     resource_id={},
                     version={},
                     name={},
-                    config={},
+                    config_str={},
                     table_name={},
                     is_published={},
                     last_modified={},
@@ -66,7 +69,7 @@ class ResourceModel(Base):
             self.resource_id,
             self.version,
             self.name,
-            self.config,
+            self.config_str,
             self.table_name,
             self.is_published,
             self.last_modified,
@@ -75,12 +78,16 @@ class ResourceModel(Base):
         )
 
     def to_entity(self) -> entities.Resource:
+        # Only needed to handle resources that were created/updated
+        # before ResourceConfig had resource_id and resource_name fields
+        extra = {"resource_id": self.resource_id}
+        if self.name:
+            extra["resource_name"] = self.name
+
         return entities.Resource(
             id=self.entity_id,
-            resource_id=self.resource_id,
             version=self.version,
-            name=self.name,
-            config=self.config,
+            config=ResourceConfig.from_str(self.config_str, extra=extra),
             table_name=self.table_name,
             is_published=self.is_published,
             last_modified=self.last_modified,
@@ -98,7 +105,7 @@ class ResourceModel(Base):
             resource_type=resource.resource_type,
             version=resource.version,
             name=resource.name,
-            config=resource.config,
+            config_str=resource.config_str,
             table_name=resource.table_name,
             is_published=resource.is_published,
             last_modified=resource.last_modified,
@@ -142,23 +149,23 @@ class BaseHistoryEntry:
         )
 
 
+class ApiKeyModel(Base):
+    __tablename__ = "api_keys"
+    id = Column(Integer, primary_key=True)
+    username = Column(Text(), nullable=False)
+    api_key = Column(String(36), nullable=False, unique=True)
+    permissions = Column(JSON, nullable=False)
+
+
 # Dynamic models
 
 
+@functools.cache
 def get_or_create_entry_history_model(
     resource_id: str,
 ) -> BaseHistoryEntry:
-    if resource_id in class_cache:
-        history_model = class_cache[resource_id]
-        return history_model
-
     attributes = {
         "__tablename__": resource_id,
     }
 
-    sqlalchemy_class = type(resource_id, (Base, BaseHistoryEntry), attributes)
-    class_cache[resource_id] = sqlalchemy_class
-    return sqlalchemy_class
-
-
-class_cache = {}
+    return type(resource_id, (Base, BaseHistoryEntry), attributes)

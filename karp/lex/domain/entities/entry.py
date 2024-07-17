@@ -1,4 +1,5 @@
 """Model for a lexical entry."""
+
 import enum
 import logging
 import typing

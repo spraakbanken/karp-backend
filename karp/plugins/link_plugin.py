@@ -16,15 +16,15 @@ class LinkPlugin(Plugin):
     def output_config(self, resource, target):
         resource_dto = self.resources.by_resource_id_optional(resource)
         if resource_dto:
-            return {"type": "object", "fields": resource_dto.config["fields"]}
+            return {"type": "object", "fields": resource_dto.config.fields}
         else:
             # Return no fields for now - the user must run 'karp-cli resource reindex' later
-            return {"type": "object", "fields": []}
+            return {"type": "object", "fields": {}}
 
     def generate_batch(self, batch):
         def make_request(id, resource, target):  # noqa: A002
             return QueryRequest(
-                resource_ids=[resource], q=f"equals|{target}|\"{id}\"", lexicon_stats=False
+                resources=[resource], q=f"equals|{target}|\"{id}\"", lexicon_stats=False
             )
 
         requests = [make_request(**d) for d in batch]

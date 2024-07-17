@@ -9,8 +9,6 @@ import jwt
 import pathlib
 from karp.foundation.timings import utc_now
 
-from karp.auth import AccessToken
-
 AUTH_JWT_AUDIENCE = "spraakbanken:auth"
 
 PRIVATE_KEY_PATH = os.environ.get(
@@ -49,14 +47,3 @@ def create_access_token(
         token_payload["scope"] = scope
 
     return jwt.encode(token_payload, priv_key, algorithm="RS256")
-
-
-def create_bearer_token(
-    user: str,
-    levels: Dict,
-    scope: Optional[Dict] = None,
-) -> AccessToken:
-    return AccessToken(
-        access_token=create_access_token(user, levels, scope),
-        token_type="bearer",  # noqa: S106
-    )

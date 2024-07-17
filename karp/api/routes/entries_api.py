@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import (
     APIRouter,
@@ -19,9 +19,9 @@ from karp.auth.application import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
 from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
+from karp.lex import EntryDto
 from karp.lex.application import EntryQueries
 from karp.lex.domain import errors
-from karp.lex.domain.dtos import EntryDto
 from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 
@@ -30,17 +30,17 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-@router.get("/{resource_id}/{entry_id}/{version}", response_model=EntryDto, tags=["History"])
-@router.get("/{resource_id}/{entry_id}", response_model=EntryDto, tags=["History"])
+@router.get("/{resource_id}/{entry_id}", summary="Get entry", tags=["History"])
+@router.get("/{resource_id}/{entry_id}/{version}", summary="Get entry history", tags=["History"])
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
-    version: Optional[int] = Query(None),
+    version: Optional[int] = None,
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
-    published_resources: [str] = Depends(deps.get_published_resources),
-):
+    published_resources: List[str] = Depends(deps.get_published_resources),
+) -> EntryDto:
     if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -57,8 +57,8 @@ def get_history_for_entry(
 @router.put(
     "/{resource_id}",
     status_code=status.HTTP_201_CREATED,
-    tags=["Editing"],
     response_model=schemas.EntryAddResponse,
+    tags=["Editing"],
 )
 def add_entry(
     resource_id: str,
@@ -66,7 +66,7 @@ def add_entry(
     user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -105,8 +105,8 @@ def add_entry(
 
 @router.post(
     "/{resource_id}/{entry_id}",
-    tags=["Editing"],
     response_model=schemas.EntryAddResponse,
+    tags=["Editing"],
 )
 def update_entry(
     resource_id: str,
@@ -115,7 +115,7 @@ def update_entry(
     user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -171,8 +171,8 @@ def update_entry(
 
 @router.delete(
     "/{resource_id}/{entry_id}/{version}",
-    tags=["Editing"],
     status_code=status.HTTP_204_NO_CONTENT,
+    tags=["Editing"],
 )
 def delete_entry(
     resource_id: str,
@@ -181,7 +181,7 @@ def delete_entry(
     user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     """Delete a entry from a resource."""
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):

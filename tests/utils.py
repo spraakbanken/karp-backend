@@ -1,7 +1,8 @@
 """Handle calls and json convertions."""
+
 from typing import Dict  # noqa: I001
 from fastapi import status
-from karp import auth
+from tests.e2e.conftest import AccessToken
 
 
 def get_json(  # noqa: ANN201
@@ -32,7 +33,7 @@ def get_json(  # noqa: ANN201
 def add_entries(  # noqa: ANN201
     client,
     entries: Dict,
-    access_token: auth.AccessToken,
+    access_token: AccessToken,
 ):
     for resource, _entries in entries.items():
         for entry in _entries:

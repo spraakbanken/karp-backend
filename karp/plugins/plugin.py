@@ -5,12 +5,12 @@ from copy import deepcopy
 from pprint import pp
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type, Union
 
+import methodtools
 from frozendict import deepfreeze
 from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
 
 from karp.foundation.batch import batch_items
-from karp.foundation.cache import Cache
 from karp.foundation.entry_points import entry_points
 from karp.foundation.json import (
     expand_path,
@@ -20,6 +20,7 @@ from karp.foundation.json import (
     make_path,
     set_path,
 )
+from karp.lex.domain.value_objects import Field, ResourceConfig
 
 logger = logging.getLogger(__name__)
 
@@ -75,24 +76,32 @@ def find_plugin(name: str) -> Type[Plugin]:
 class Plugins:
     @inject
     def __init__(self, injector: Injector):
-        self.plugins = Cache(lambda name: injector.get(find_plugin(name)))
+        self.injector = injector
 
-    def _get_plugin(self, config: Dict) -> Plugin:
-        if "plugin" not in config:
+    @methodtools.lru_cache(maxsize=None)
+    def _get_plugin(self, name: str) -> Plugin:
+        if not name:
             raise PluginException(f'Resource config has "virtual": "true" but no "plugin" field')
-        return self.plugins[config["plugin"]]
+        return self.injector.get(find_plugin(name))
 
-    def output_config(self, config: Dict) -> Dict:
-        return self._get_plugin(config).output_config(**config.get("params", {}))
+    def output_config(self, config: Field) -> Field:
+        result = self._get_plugin(config.plugin).output_config(**config.params)
+        return Field.model_validate(dict(result))
 
-    def generate(self, config: Dict, **kwargs) -> Dict:
+    def generate(self, config: Field, **kwargs) -> Dict:
         # TODO: turn into {"error": "plugin failed"} or whatever
-        return self._get_plugin(config).generate(**config.get("params", {}), **kwargs)
+        return self._get_plugin(config.plugin).generate(**config.params, **kwargs)
 
-    def generate_batch(self, config: Dict, batch) -> Iterable[Dict]:
+    def generate_batch(self, config: Field, batch) -> Iterable[Dict]:
         # TODO: turn into {"error": "plugin failed"} or whatever
-        params = config.get("params", {})
-        result = list(self._get_plugin(config).generate_batch([params | item for item in batch]))
+        batch = list(batch)
+        if not batch:
+            return []
+        result = list(
+            self._get_plugin(config.plugin).generate_batch(
+                config.params | item for item in batch
+            )
+        )
         if len(result) != len(batch):
             raise AssertionError("batch result had wrong length")
         return result
@@ -105,31 +114,38 @@ def transform_resource(plugins: Plugins, resource_dto: "ResourceDto") -> "Resour
     """Given a resource with virtual fields, expand the config
     by adding the output_config for each virtual field."""
 
-    result = resource_dto.copy()
+    result = resource_dto.model_copy(deep=True)
     result.config = transform_config(plugins, result.config)
     return result
 
 
-def transform_config(plugins: Plugins, resource_config: Dict) -> Dict:
+def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> ResourceConfig:
     """Given a resource config with virtual fields, expand the config
     by adding the output_config for each virtual field."""
 
     def _transform_fields(config: Dict) -> Dict:
         return {k: _transform_field(v) for k, v in config.items()}
 
-    def _transform_field(config: Dict):
-        if config.get("virtual"):
+    def _transform_field(config: Field):
+        if config.virtual:
             result = _transform_field(plugins.output_config(config))
-            return config | result
+            # take some values from the input config too
+            result = result.update(
+                collection=config.collection or result.collection,
+                required=config.required or result.required,
+                virtual=True,
+                plugin=config.plugin,
+                params=config.params,
+                field_params=config.field_params,
+            )
+            return result
 
-        if config["type"] == "object":
-            config = dict(config)
-            config["fields"] = _transform_fields(config["fields"])
+        if config.type == "object":
+            return config.update(fields=_transform_fields(config.fields))
 
         return config
 
-    result = dict(resource_config)
-    result["fields"] = _transform_fields(resource_config["fields"])
+    result = resource_config.update(fields=_transform_fields(resource_config.fields))
     return result
 
 
@@ -143,13 +159,13 @@ def find_virtual_fields(resource_config: Dict) -> dict[str, Dict]:
             _search_field(path + [field], value)
 
     def _search_field(path: list[str], config: Dict):
-        if config.get("virtual"):
+        if config.virtual:
             result[".".join(path)] = config
 
-        elif config["type"] == "object":
-            _search_fields(path, config["fields"])
+        elif config.type == "object":
+            _search_fields(path, config.fields)
 
-    _search_fields([], resource_config["fields"])
+    _search_fields([], resource_config.fields)
     return result
 
 
@@ -160,7 +176,7 @@ def transform_entry(
     Given an entry, calculate all the virtual fields.
     """
 
-    result = entry_dto.copy()
+    result = entry_dto.model_copy(deep=True)
     result.entry = transform(plugins, resource_config, body)
     return result
 
@@ -178,7 +194,7 @@ def transform_entries(
             plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results
         )
         for entry_dto, new_entry in zip(batch, new_entries):
-            entry_dto = entry_dto.copy()
+            entry_dto = entry_dto.model_copy(deep=True)
             entry_dto.entry = new_entry
             yield entry_dto
 
@@ -278,7 +294,7 @@ def transform_list(
         dependencies[field_name] = set()
 
         # Dependencies through field_params
-        for target_name in config.get("field_params", {}).values():
+        for target_name in config.field_params.values():
             if target_name in virtual_fields:
                 dependencies[field_name].add(target_name)
 
@@ -315,7 +331,7 @@ def transform_list(
         batch_occurrences = []
         for i, pos in occurrences:
             field_params = {}
-            for k, v in virtual_fields[field_name].get("field_params", {}).items():
+            for k, v in virtual_fields[field_name].field_params.items():
                 path = localise_path(v, pos)
                 # If the path does not exist, skip this field
                 if not has_path(path, bodies[i]):

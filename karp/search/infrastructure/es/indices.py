@@ -7,6 +7,7 @@ from elasticsearch.exceptions import NotFoundError
 from injector import inject
 
 from karp.lex.domain.entities import Entry
+from karp.lex.domain.value_objects import Field, ResourceConfig
 from karp.search.domain.index_entry import IndexEntry
 
 from .mapping_repo import EsMappingRepository
@@ -99,54 +100,50 @@ class EsIndex:
         self,
         resource_id: str,
         *,
-        entry_id: Optional[str] = None,
-        entry: Optional[Entry] = None,
+        entry_id: str,
     ):
-        if not entry and not entry_id:
-            raise ValueError("Must give either 'entry' or 'entry_id'.")
-        if entry:
-            entry_id = entry.entry_id
-        logger.info("deleting entry", extra={"entry_id": entry_id, "resource_id": resource_id})
-        try:
-            self.es.delete(
-                index=resource_id,
-                id=entry_id,
-                refresh=True,
+        return self.delete_entries(resource_id, entry_ids=[entry_id])
+
+    def delete_entries(
+        self,
+        resource_id: str,
+        *,
+        entry_ids: Iterable[str],
+    ):
+        index_to_es = []
+        for entry_id in entry_ids:
+            index_to_es.append(
+                {
+                    "_op_type": "delete",
+                    "_index": resource_id,
+                    "_id": str(entry_id),
+                }
             )
-        except elasticsearch.exceptions.ElasticsearchException:
-            logger.exception(
-                "Error deleting entry",
-                extra={
-                    "entry_id": entry_id,
-                    "resource_id": resource_id,
-                    "index_name": resource_id,
-                },
-            )
+
+        elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
 
 def _create_es_mapping(config):
     es_mapping = {"dynamic": False, "properties": {}}
 
-    fields = config["fields"]
+    fields = config.fields
 
     def recursive_field(parent_schema, parent_field_name, parent_field_def):
-        if parent_field_def["type"] != "object":
+        if parent_field_def.type != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
-            if parent_field_def["type"] == "integer":
+            if parent_field_def.type == "integer":
                 mapped_type = "long"
-            elif parent_field_def["type"] == "number":
+            elif parent_field_def.type == "number":
                 mapped_type = "double"
-            elif parent_field_def["type"] == "boolean":
+            elif parent_field_def.type == "boolean":
                 mapped_type = "boolean"
-            elif parent_field_def["type"] == "string":
+            elif parent_field_def.type == "string":
                 mapped_type = "text"
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
-            if parent_field_def["type"] == "string" and not parent_field_def.get(
-                "skip_raw", False
-            ):
+            if parent_field_def.type == "string" and not parent_field_def.skip_raw:
                 result["fields"] = {
                     "raw": {"type": "keyword"},
                     "sort": {"type": "icu_collation_keyword", "index": False, "language": "sv"},
@@ -154,7 +151,7 @@ def _create_es_mapping(config):
         else:
             result = {"properties": {}}
 
-            for child_field_name, child_field_def in parent_field_def["fields"].items():
+            for child_field_name, child_field_def in parent_field_def.fields.items():
                 recursive_field(result, child_field_name, child_field_def)
 
         parent_schema["properties"][parent_field_name] = result
@@ -166,7 +163,7 @@ def _create_es_mapping(config):
     return es_mapping
 
 
-def create_es_mapping(config: Dict) -> Dict:
+def create_es_mapping(config: ResourceConfig) -> Dict:
     mapping = _create_es_mapping(config)
     mapping["settings"] = {
         "analysis": {

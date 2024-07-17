@@ -1,4 +1,3 @@
-# import json
 import re  # noqa: I001
 import time
 from karp.lex.domain.entities import EntryOp
@@ -6,7 +5,6 @@ from karp.lex.domain.entities import EntryOp
 import pytest  # pyre-ignore
 from starlette import status
 
-from karp import auth
 from karp.foundation.timings import utc_now
 from karp.lex.domain.dtos import EntryDto
 from karp.lex.application.dtos import (
@@ -14,6 +12,7 @@ from karp.lex.application.dtos import (
     GetHistoryDto,
     HistoryDto,  # noqa: F401
 )
+from tests.e2e.conftest import AccessToken
 
 places = [
     {"code": 103, "name": "a", "municipality": [1]},
@@ -23,7 +22,7 @@ places = [
 ]
 
 
-def get_helper(client, url: str, access_token: auth.AccessToken) -> dict:
+def get_helper(client, url: str, access_token: AccessToken) -> dict:
     response = client.get(
         url,
         headers=access_token.as_header(),
@@ -39,9 +38,9 @@ def username(name: str) -> str:
 @pytest.fixture(name="history_entity_ids", scope="session")
 def fixture_history_entity_ids(
     fa_data_client,
-    user1_token: auth.AccessToken,
-    user2_token: auth.AccessToken,
-    user4_token: auth.AccessToken,
+    user1_token: AccessToken,
+    user2_token: AccessToken,
+    user4_token: AccessToken,
 ) -> list[str]:
     entity_ids = []
     for entry in places[:2]:
@@ -108,7 +107,7 @@ class TestGetHistory:
     def test_empty_user_history(  # noqa: ANN201
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response_data = get_helper(fa_data_client, "/history/places?user_id=user3", admin_token)
@@ -118,7 +117,7 @@ class TestGetHistory:
     def test_user1_history(  # noqa: ANN201
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response_data = get_helper(
@@ -135,7 +134,7 @@ class TestGetHistory:
     def test_user2_history(  # noqa: ANN201
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response_data = get_helper(
@@ -157,7 +156,7 @@ class TestGetHistory:
     def test_user_history_from_date(  # noqa: ANN201
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response_data = get_helper(
@@ -170,7 +169,7 @@ class TestGetHistory:
     def test_user_history_to_date(  # noqa: ANN201
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response_data = get_helper(
@@ -183,7 +182,7 @@ class TestGetHistory:
     def test_entry_id(  # noqa: ANN201
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response_data = get_helper(
@@ -199,7 +198,7 @@ class TestGetHistory:
     def test_entry_id_and_user_id(  # noqa: ANN201
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response_data = get_helper(
@@ -217,7 +216,7 @@ class TestGetHistory:
     def test_diff_against_nothing(  # noqa: ANN201
         self,
         fa_data_client,
-        admin_token: auth.AccessToken,
+        admin_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response_data = get_helper(
@@ -236,7 +235,7 @@ class TestGetHistory:
 
 def test_historical_entry(  # noqa: ANN201
     fa_data_client,
-    admin_token: auth.AccessToken,
+    admin_token: AccessToken,
     history_entity_ids: list[str],
 ):
     response_json = get_helper(
@@ -257,7 +256,7 @@ class TestGetEntryDiff:
     def test_diff1(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response = fa_data_client.post(
@@ -278,7 +277,7 @@ class TestGetEntryDiff:
     def test_diff2(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response = fa_data_client.post(
@@ -295,7 +294,7 @@ class TestGetEntryDiff:
     def test_diff_from_first_to_date(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         """
@@ -317,7 +316,7 @@ class TestGetEntryDiff:
     def test_diff_from_date_to_last(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         """
@@ -337,7 +336,7 @@ class TestGetEntryDiff:
     def test_diff_from_first_to_version(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response = fa_data_client.post(
@@ -354,7 +353,7 @@ class TestGetEntryDiff:
     def test_diff_from_version_to_last(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response = fa_data_client.post(
@@ -371,7 +370,7 @@ class TestGetEntryDiff:
     def test_diff_mix_version_date(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response = fa_data_client.post(
@@ -389,7 +388,7 @@ class TestGetEntryDiff:
     def test_diff_to_entry_data(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         edited_entry = places[0].copy()
@@ -409,7 +408,7 @@ class TestGetEntryDiff:
     def test_diff_no_flags(  # noqa: ANN201
         self,
         fa_data_client,
-        user4_token: auth.AccessToken,
+        user4_token: AccessToken,
         history_entity_ids: list[str],
     ):
         response = fa_data_client.post(

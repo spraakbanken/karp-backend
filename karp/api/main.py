@@ -98,7 +98,11 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=f"{config.PROJECT_NAME} API",
+        description="""Karp is Språkbanken's tool for editing structural data.\n\nThe
+        main goal of Karp is to be great for working with **lexical** data, but will work with 
+        other data as well.\n\n[Read more here](https://spraakbanken.gu.se/en/tools/karp)""",
         redoc_url="/",
+        docs_url=None,
         version=config.VERSION,
         openapi_tags=tags_metadata,
     )
@@ -161,7 +165,17 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception):
-        traceback.print_exception(exc)
+        def extract_exceptions(excs):
+            output = []
+            for inner_exc in excs:
+                if hasattr(inner_exc, "exceptions"):
+                    output.extend(extract_exceptions(inner_exc.exceptions))
+                else:
+                    output.append(inner_exc)
+            return output
+
+        for out_exc in extract_exceptions([exc]):
+            traceback.print_exception(out_exc)
         return await http_exception_handler(
             request,
             HTTPException(

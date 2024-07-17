@@ -3,11 +3,12 @@ from typing import Dict, Optional  # noqa: I001
 import pytest
 
 from karp.search.infrastructure.es.indices import create_es_mapping
+from karp.lex.domain.value_objects import ResourceConfig, Field
 
 
 class TestCreateEsMapping:
     def test_minimal_valid_input(self):  # noqa: ANN201
-        data = {"fields": {}}
+        data = ResourceConfig(resource_id="", config_str="", fields={})
         mapping = create_es_mapping(data)
 
         assert mapping["properties"] == {}
@@ -15,12 +16,12 @@ class TestCreateEsMapping:
     @pytest.mark.parametrize(
         "field, field_def, expected_property",
         [
-            ("name", {"type": "boolean"}, {}),
-            ("name", {"type": "number"}, {"type": "double"}),
-            ("name", {"type": "integer"}, {"type": "long"}),
+            ("name", Field(type="boolean"), {"type": "boolean"}),
+            ("name", Field(type="number"), {"type": "double"}),
+            ("name", Field(type="integer"), {"type": "long"}),
             (
                 "name",
-                {"type": "string"},
+                Field(type="string"),
                 {
                     "type": "text",
                     "fields": {
@@ -36,16 +37,11 @@ class TestCreateEsMapping:
         ],
     )
     def test_standard_types(  # noqa: ANN201
-        self, field: str, field_def: Dict, expected_property: Optional[Dict]
+        self, field: str, field_def: Field, expected_property: Optional[Dict]
     ):
-        data = {
-            "fields": {
-                field: field_def,
-            },
-        }
+        data = ResourceConfig(resource_id="", config_str="", fields={field: field_def})
         mapping = create_es_mapping(data)
         assert field in mapping["properties"]
-        expected_property = expected_property or field_def
         assert mapping["properties"][field] == expected_property
 
     @pytest.mark.parametrize(
@@ -53,7 +49,7 @@ class TestCreateEsMapping:
         [
             (
                 "name",
-                {"type": "object", "fields": {"first": {"type": "string"}}},
+                Field(type="object", fields={"first": {"type": "string"}}),
                 {
                     "properties": {
                         "first": {
@@ -70,11 +66,11 @@ class TestCreateEsMapping:
                     }
                 },
             ),
-            ("name", {"type": "number"}, {"type": "double"}),
-            ("name", {"type": "integer"}, {"type": "long"}),
+            ("name", Field(type="number"), {"type": "double"}),
+            ("name", Field(type="integer"), {"type": "long"}),
             (
                 "name",
-                {"type": "string"},
+                Field(type="string"),
                 {
                     "type": "text",
                     "fields": {
@@ -90,20 +86,18 @@ class TestCreateEsMapping:
         ],
     )
     def test_complex_types(  # noqa: ANN201
-        self, field: str, field_def: Dict, expected_property: Optional[Dict]
+        self, field: str, field_def: Field, expected_property: Optional[Dict]
     ):
-        data = {
-            "fields": {
-                field: field_def,
-            },
-        }
+        data = ResourceConfig(resource_id="", config_str="", fields={field: field_def})
         mapping = create_es_mapping(data)
         assert field in mapping["properties"]
-        expected_property = expected_property or field_def
+        expected_property = expected_property or field_def.model_dump()
         assert mapping["properties"][field] == expected_property
 
     def test_sort(self):  # noqa: ANN201
-        data = {"fields": {"name": {"type": "string"}}, "sort": ["name"]}
+        data = ResourceConfig(
+            resource_id="", config_str="", fields={"name": Field(type="string")}, sort=["name"]
+        )
 
         mapping = create_es_mapping(data)
 

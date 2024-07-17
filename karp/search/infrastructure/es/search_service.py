@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Iterable
+from typing import Any, Dict, Iterable, List, Optional
 
 import elasticsearch
 import elasticsearch.helpers
@@ -8,6 +8,8 @@ from injector import inject
 from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
+from karp.foundation.json import get_path
+from karp.main.errors import KarpError
 from karp.search.domain import QueryRequest, errors
 from karp.search.domain.query_dsl.karp_query_v6_model import (
     KarpQueryV6ModelBuilderSemantics,
@@ -15,7 +17,6 @@ from karp.search.domain.query_dsl.karp_query_v6_model import (
 from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
 
 from .mapping_repo import EsMappingRepository
-from .query import EsQuery
 
 logger = logging.getLogger(__name__)
 
@@ -67,19 +68,19 @@ class EsQueryBuilder(NodeWalker):
     walk__lte = walk_range
 
     def walk__not(self, node):
-        must_nots = [self.walk(expr) for expr in node.exps]
+        must_nots = [self.walk(expr) for expr in node.ast]
         return es_dsl.Q("bool", must_not=must_nots)
 
     def walk__or(self, node):
-        result = self.walk(node.exps[0])
-        for n in node.exps[1:]:
+        result = self.walk(node.ast[0])
+        for n in node.ast[1:]:
             result = result | self.walk(n)
 
         return result
 
     def walk__and(self, node):
-        result = self.walk(node.exps[0])
-        for n in node.exps[1:]:
+        result = self.walk(node.ast[0])
+        for n in node.ast[1:]:
             result = result & self.walk(n)
 
         return result
@@ -131,6 +132,7 @@ class EsQueryBuilder(NodeWalker):
 
 class EsFieldNameCollector(NodeWalker):
     # Return a set of all field names occurring in the given query
+    # TODO: support multi-fields too
     def walk_Node(self, node):
         result = set().union(*(self.walk(child) for child in node.children()))
         # TODO maybe a bit too automagic?
@@ -140,6 +142,31 @@ class EsFieldNameCollector(NodeWalker):
 
     def walk_object(self, _obj):
         return set()
+
+
+def _format_result(resource_ids: List[str], response, path: Optional[str] = None):
+    def format_entry(entry):
+        dict_entry = entry.to_dict()
+        version = dict_entry.pop("_entry_version", None)
+        last_modified_by = dict_entry.pop("_last_modified_by", None)
+        last_modified = dict_entry.pop("_last_modified", None)
+        res = {
+            "id": entry.meta.id,
+            "version": version,
+            "last_modified": last_modified,
+            "last_modified_by": last_modified_by,
+            "resource": next(
+                resource for resource in resource_ids if entry.meta.index.startswith(resource)
+            ),
+            "entry": dict_entry,
+        }
+        return get_path(path, res) if path else res
+
+    result = {
+        "total": response.hits.total.value,
+        "hits": [format_entry(entry) for entry in response],
+    }
+    return result
 
 
 class EsSearchService:
@@ -154,56 +181,21 @@ class EsSearchService:
         self.field_name_collector = EsFieldNameCollector()
         self.parser = KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
 
-    def _format_result(self, resource_ids, response):
-        logger.debug("_format_result called", extra={"resource_ids": resource_ids})
-
-        def format_entry(entry):
-            dict_entry = entry.to_dict()
-            version = dict_entry.pop("_entry_version", None)
-            last_modified_by = dict_entry.pop("_last_modified_by", None)
-            last_modified = dict_entry.pop("_last_modified", None)
-            return {
-                "id": entry.meta.id,
-                "version": version,
-                "last_modified": last_modified,
-                "last_modified_by": last_modified_by,
-                "resource": next(
-                    resource
-                    for resource in resource_ids
-                    if entry.meta.index.startswith(resource)
-                ),
-                "entry": dict_entry,
-            }
-
-        result = {
-            "total": response.hits.total.value,
-            "hits": [format_entry(entry) for entry in response],
-        }
-        return result
-
-    def query(self, request: QueryRequest):
-        logger.info("query called", extra={"request": request})
-        query = EsQuery.from_query_request(request)
+    def query(self, query: QueryRequest):
+        logger.info("query called", extra={"request": query})
         return self.search_with_query(query)
 
     def query_stats(self, resources, q):
-        query = EsQuery()
-        query.resources = resources
-        query.from_ = 0
-        query.size = 0
-        query.lexicon_stats = True
-        query.q = q or ""
-        query.split_results = False
+        query = QueryRequest(resources=resources, q=q, size=0)
         return self.search_with_query(query)
 
-    def multi_query(self, requests: list[QueryRequest]):
+    def multi_query(self, queries: list[QueryRequest]):
         # ES fails on a multi-search with an empty request list
-        if not requests:
+        if not queries:
             return []
 
-        logger.info(f"multi_query called for {len(requests)} requests")
+        logger.info(f"multi_query called for {len(queries)} requests")
 
-        queries = [EsQuery.from_query_request(request) for request in requests]
         ms = es_dsl.MultiSearch(using=self.es)
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
@@ -212,35 +204,11 @@ class EsSearchService:
             self._build_result(query, response) for query, response in zip(queries, responses)
         ]
 
-    def search_with_query(self, query: EsQuery):
+    def search_with_query(self, query: QueryRequest):
         logger.info("search_with_query called", extra={"query": query})
-        if query.split_results:
-            ms = es_dsl.MultiSearch(using=self.es)
-
-            for resource in query.resources:
-                s = self._build_search(query, [resource])
-                ms = ms.add(s)
-
-            responses = ms.execute()
-            result: dict[str, Any] = {"total": 0, "hits": {}}
-            for i, response in enumerate(responses):
-                result["hits"][query.resources[i]] = self._format_result(
-                    query.resources, response
-                ).get("hits", [])
-                result["total"] += response.hits.total.value
-                if query.lexicon_stats:
-                    if "distribution" not in result:
-                        result["distribution"] = {}
-                    result["distribution"][query.resources[i]] = response.hits.total.value
-        else:
-            s = self._build_search(query, query.resources)
-            response = s.execute()
-
-            # TODO format response in a better way, because the whole response takes up too much space in the logs
-            # logger.debug('response = {}'.format(response.to_dict()))
-            result = self._build_result(query, response)
-
-        return result
+        s = self._build_search(query, query.resources)
+        response = s.execute()
+        return self._build_result(query, response)
 
     def _build_search(self, query, resources):
         field_names = set()
@@ -279,8 +247,7 @@ class EsSearchService:
         return s
 
     def _build_result(self, query, response):
-        logger.debug("calling _build_result")
-        result = self._format_result(query.resources, response)
+        result = _format_result(query.resources, response, path=query.path)
         if query.lexicon_stats:
             result["distribution"] = {}
             for bucket in response.aggregations.distribution.buckets:
@@ -307,18 +274,13 @@ class EsSearchService:
         return s
 
     def search_ids(self, resource_id: str, entry_ids: str):
-        logger.info(
-            "Called EsSearch.search_ids with:",
-            extra={"resource_id": resource_id, "entry_ids": entry_ids},
-        )
         entries = entry_ids.split(",")
         query = es_dsl.Q("terms", _id=entries)
         logger.debug("query", extra={"query": query})
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
         logger.debug("s", extra={"es_query s": s.to_dict()})
         response = s.execute()
-
-        return self._format_result([resource_id], response)
+        return _format_result([resource_id], response)
 
     def statistics(self, resource_id: str, field: str) -> Iterable:
         s = es_dsl.Search(using=self.es, index=resource_id)
@@ -333,8 +295,17 @@ class EsSearchService:
                 resource_id=resource_id, field=field
             )
         )
-        s.aggs.bucket("field_values", "terms", field=field, size=2147483647)
-        response = s.execute()
+        # use an Elasticsearch instance configured to fail at less than 66000 buckets
+        # If there are more buckets than that, the ES-lib will raise an exception that we
+        # can catch and inform the user.
+        s.aggs.bucket("field_values", "terms", field=field, size=66000)
+        try:
+            response = s.execute()
+        except elasticsearch.BadRequestError as e:
+            if e.body["error"]["caused_by"]["type"] == "too_many_buckets_exception":
+                raise KarpError("Too many unique values for statistics") from None
+            else:
+                raise e
         logger.debug("Elasticsearch response", extra={"response": response})
         return [
             {"value": bucket["key"], "count": bucket["doc_count"]}

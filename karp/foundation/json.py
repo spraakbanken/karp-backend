@@ -60,7 +60,7 @@ def get_path(path: Union[str, Path], data):
         return get_path(path[1:], data[path[0]])
 
     else:
-        raise AssertionError(f"can't look up field {field[0]} in non-object {data}")
+        raise AssertionError(f"can't look up field {path[0]} in non-object {data}")
 
 
 def set_path(path: Union[str, Path], value, data):
@@ -174,6 +174,20 @@ def all_paths(data) -> Iterator[Path]:
         for i, value in enumerate(data):
             for path in all_paths(value):
                 yield [i] + path
+
+
+def all_fields(data) -> Iterator[str]:
+    """Generate all possible field names in a JSON object.
+
+    >>> for path in all_fields({"SOLemman": [{"s_nr": 1}, {"s_nr": 2}]}): print(path)
+    "SOLemman"
+    "SOLemman.s_nr"
+    """
+
+    def field_name(path):
+        return ".".join(x for x in path if isinstance(x, str))
+
+    return list(dict.fromkeys(field_name(path) for path in all_paths(data) if path))
 
 
 def expand_path(path: Union[str, Path], data, prefix=None) -> Iterator[Path]:

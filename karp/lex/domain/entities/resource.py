@@ -1,4 +1,5 @@
 """LexicalResource."""
+
 import enum
 import typing
 from typing import Any, Dict, Optional, Tuple
@@ -8,7 +9,7 @@ from karp.foundation.entity import Entity
 from karp.foundation.value_objects import PermissionLevel, unique_id
 from karp.lex.domain import constraints, errors
 from karp.lex.domain.entities import Entry, create_entry
-from karp.lex.domain.value_objects import EntrySchema
+from karp.lex.domain.value_objects import EntrySchema, ResourceConfig
 
 
 class ResourceOp(enum.Enum):
@@ -25,9 +26,7 @@ class Resource(Entity):
         self,
         *,
         id: unique_id.UniqueId,  # noqa: A002
-        resource_id: str,
-        name: str,
-        config: Dict[str, Any],
+        config: ResourceConfig,
         message: str,
         table_name: str,
         version: int = 1,
@@ -36,8 +35,6 @@ class Resource(Entity):
         **kwargs,
     ):
         super().__init__(id=unique_id.UniqueId.validate(id), version=version, **kwargs)
-        self._resource_id = resource_id
-        self._name = name
         self.is_published = is_published
         self.config = config
         self._message = message
@@ -47,11 +44,15 @@ class Resource(Entity):
 
     @property
     def resource_id(self) -> str:
-        return self._resource_id
+        return self.config.resource_id
 
     @property
     def name(self):
-        return self._name
+        return self.config.resource_name
+
+    @property
+    def config_str(self):
+        return self.config.config_str
 
     @property
     def message(self):
@@ -83,17 +84,15 @@ class Resource(Entity):
     def update(
         self,
         *,
-        name: str,
-        config: dict[str, Any],
+        config: ResourceConfig,
         user: str,
         version: Optional[int],
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
     ) -> bool:
-        if self.name == name and self.config == config:
+        if self.config == config:
             return False
         self._update_metadata(timestamp, user, message or "updating", version)
-        self._name = name
         self.config = config
         return True
 
@@ -187,28 +186,20 @@ class Resource(Entity):
 
 
 def create_resource(
-    config: dict[str, Any],
-    table_name: str,
+    config: ResourceConfig,
     created_by: Optional[str] = None,
     user: Optional[str] = None,
     created_at: Optional[float] = None,
     id: unique_id.UniqueId = None,  # noqa: A002
-    resource_id: typing.Optional[str] = None,
     message: typing.Optional[str] = None,
-    name: typing.Optional[str] = None,
 ) -> Resource:
-    resource_id_in_config: Optional[str] = config.pop("resource_id", None)
-    resource_id_resolved = resource_id or resource_id_in_config
-    if resource_id_resolved is None:
-        raise ValueError("resource_id is missing")
-    constraints.valid_resource_id(resource_id_resolved)
-    name_in_config: str = config.pop("resource_name", None)
-    resource_name: str = name or name_in_config or resource_id_resolved  # type: ignore [assignment]
+    resource_id = config.resource_id
+    constraints.valid_resource_id(resource_id)
 
+    id = id or unique_id.make_unique_id()  # noqa: A001
+    table_name = f"{resource_id}_{id}"
     resource = Resource(
-        id=id or unique_id.make_unique_id(),
-        resource_id=resource_id_resolved,
-        name=resource_name,
+        id=id,
         config=config,
         table_name=table_name,
         message=message or "Resource added.",

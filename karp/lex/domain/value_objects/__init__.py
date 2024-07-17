@@ -1,4 +1,6 @@
 """Value objects for lex."""
-from karp.lex.domain.value_objects.entry_schema import EntrySchema
 
-__all__ = ["EntrySchema"]
+from .entry_schema import EntrySchema
+from .resource_config import Field, ResourceConfig
+
+__all__ = ["ResourceConfig", "Field"]

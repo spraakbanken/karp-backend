@@ -1,24 +1,20 @@
 import typing
 from enum import Enum
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import pydantic
 import ulid
 
 from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
+from karp.lex import EntryDto
+from karp.lex.domain.value_objects import ResourceConfig
 
 
 class BaseModel(pydantic.BaseModel):
     """Base class for schema classes."""
 
-    class Config:
-        alias_generator = alias_generators.to_lower_camel
-        json_encoders: typing.ClassVar = {ulid.ULID: lambda u: u.str}
-
-    def serialize(self) -> dict:
-        """Serialize model to dict."""
-        return self.dict(by_alias=True)
+    model_config = {"alias_generator": alias_generators.to_lower_camel, "populate_by_name": True}
 
 
 class EntryAdd(BaseModel):
@@ -39,7 +35,7 @@ class ResourcePublic(BaseModel):
     id: unique_id.UniqueIdStr
     resource_id: str
     name: str
-    config: typing.Dict
+    config: ResourceConfig
     message: Optional[str] = None
     last_modified: float
     is_published: Optional[bool] = None
@@ -48,3 +44,19 @@ class ResourcePublic(BaseModel):
 
 class ResourceProtected(ResourcePublic):
     last_modified_by: str
+
+
+class QueryResponse(pydantic.BaseModel):
+    total: int
+    hits: list[Union[EntryDto, object]]
+    distribution: Optional[Dict[str, int]]
+
+
+class QueryStatsResponse(pydantic.BaseModel):
+    total: int
+    distribution: Dict[str, int]
+
+
+class EntriesByIdResponse(pydantic.BaseModel):
+    total: int
+    hits: list[Union[EntryDto, object]]

@@ -24,13 +24,14 @@ router = APIRouter()
 
 
 class StatisticsDto(pydantic.BaseModel):
-    value: str
+    value: str | typing.Any
     count: int
 
 
 @router.get(
     "/{resource_id}/{field}",
     response_model=typing.List[StatisticsDto],
+    description="Return all possible values for `<field>` in `<resource_id>`",
 )
 def get_field_values(
     resource_id: str,
@@ -38,7 +39,7 @@ def get_field_values(
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
-    published_resources: [str] = Depends(deps.get_published_resources),
+    published_resources: typing.List[str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(

@@ -1,5 +1,4 @@
-import dataclasses  # noqa: I001
-import typing
+import dataclasses
 from typing import Dict, Iterable, Optional
 
 from injector import Injector, Module, provider, singleton
@@ -7,6 +6,7 @@ from injector import Injector, Module, provider, singleton
 from karp.search.infrastructure.es import EsIndex
 from karp.foundation.timings import utc_now
 from karp.search.domain.index_entry import IndexEntry
+from karp.lex.domain.entities import Entry
 
 
 @dataclasses.dataclass
@@ -27,7 +27,7 @@ class InMemoryIndex(EsIndex):
         super().__init__()
         self.indices: dict[str, InMemoryIndex.Index] = {}
 
-    def create_index(self, resource_id: str, config: Dict):  # noqa: ANN201
+    def create_index(self, resource_id: str, config, create_alias=True):
         self.indices[resource_id] = InMemoryIndex.Index(config=config, created_at=utc_now())
 
     def publish_index(self, alias_name: str, index_name: str = None):  # noqa: ANN201
@@ -39,12 +39,11 @@ class InMemoryIndex(EsIndex):
         for entry in entries:
             self.indices[resource_id].entries[entry.id] = entry
 
-    def delete_entry(  # noqa: ANN201
+    def delete_entry(
         self,
         resource_id: str,
         *,
         entry_id: Optional[str] = None,
-        # entry: typing.Optional[model.Entry]
     ):
         if entry_id is None:
             return

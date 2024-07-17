@@ -1,23 +1,27 @@
 """Handle of unique ids."""
+
 import typing
 
 import ulid
 import ulid.codec
-
-# UniqueId = ulid.ULID
-
-UniqueIdPrimitive = ulid.api.api.ULIDPrimitive
-# UniqueIdPrimitive = typing.Union[ulid.api.api.ULIDPrimitive, UniqueIdStr]
+from pydantic_core import core_schema
 
 
 class UniqueId(ulid.ULID):
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(examples=["01BJQMF54D093DXEAWZ6JYRPAQ"])
+    def __get_pydantic_json_schema__(cls, core_schema, handler):
+        json_schema = handler(core_schema)
+        json_schema = handler.resolve_ref_schema(json_schema)
+        json_schema["examples"] = ["01BJQMF54D093DXEAWZ6JYRPAQ"]
+        return json_schema
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        return core_schema.no_info_after_validator_function(
+            cls.validate,
+            core_schema.any_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
     @classmethod
     def validate(cls, v) -> "UniqueId":
@@ -25,7 +29,7 @@ class UniqueId(ulid.ULID):
             return v  # type: ignore
         if isinstance(v, ulid.ULID):
             return v  # type: ignore
-        if not isinstance(v, UniqueIdPrimitive):  # type: ignore
+        if not isinstance(v, (str, bytes, bytearray, memoryview)):  # type: ignore
             msg = f"Unsupported type ('{type(v)}')"
             raise TypeError(msg)
         try:
@@ -36,9 +40,6 @@ class UniqueId(ulid.ULID):
 
     def __repr__(self) -> str:
         return f"UniqueId({super().__repr__()})"
-
-
-UniqueIdType = (ulid.ULID, UniqueId)
 
 
 def make_unique_id(
@@ -60,12 +61,19 @@ parse = ulid.parse
 
 class UniqueIdStr(str):
     @classmethod
-    def __modify_schema__(cls, field_schema):
-        field_schema.update(examples=["01BJQMF54D093DXEAWZ6JYRPAQ"])
+    def __get_pydantic_json_schema__(cls, core_schema, handler):
+        json_schema = handler(core_schema)
+        json_schema = handler.resolve_ref_schema(json_schema)
+        json_schema["examples"] = ["01BJQMF54D093DXEAWZ6JYRPAQ"]
+        return json_schema
 
     @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        return core_schema.no_info_after_validator_function(
+            cls.validate,
+            core_schema.any_schema(),
+            serialization=core_schema.to_string_ser_schema(),
+        )
 
     @classmethod
     def validate(cls, v):
