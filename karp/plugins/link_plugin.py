@@ -24,7 +24,7 @@ class LinkPlugin(Plugin):
     def generate_batch(self, batch):
         def make_request(id, resource, target):  # noqa: A002
             return QueryRequest(
-                resource_ids=[resource], q=f"equals|{target}|{id}", lexicon_stats=False
+                resource_ids=[resource], q=f"equals|{target}|\"{id}\"", lexicon_stats=False
             )
 
         requests = [make_request(**d) for d in batch]
