@@ -18,6 +18,7 @@ from karp.lex.domain.value_objects import entry_schema, ResourceConfig
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
 from karp.lex.application import ResourceQueries, EntryQueries
+from karp.plugins.plugin import untransform_entries
 
 logger = logging.getLogger(__name__)
 
@@ -107,15 +108,21 @@ def export_entries(
     ctx: typer.Context,
     resource_id: str,
     output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
+    include_virtual_fields: bool = True,
 ):
+    resource_queries = inject_from_ctx(ResourceQueries, ctx=ctx)
     entry_queries = inject_from_ctx(EntryQueries, ctx=ctx)
-    all_entries = entry_queries.all_entries(resource_id=resource_id)
+    resource = resource_queries.by_resource_id(resource_id)
+    entries = entry_queries.all_entries(resource_id=resource_id)
     logger.debug(
         "exporting entries",
-        extra={"resource_id": resource_id, "type(all_entries)": type(all_entries)},
+        extra={"resource_id": resource_id, "type(all_entries)": type(entries)},
     )
+    if not include_virtual_fields:
+        entries = untransform_entries(resource.config, entries)
+
     json_arrays.dump(
-        (entry.dict() for entry in all_entries),
+        (entry.dict() for entry in entries),
         output,
     )
 
