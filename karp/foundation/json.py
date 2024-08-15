@@ -77,6 +77,20 @@ def set_path(path: Union[str, Path], value, data):
     data[path[-1]] = value
 
 
+def del_path(path: Union[str, Path], data):
+    """
+    Delete the value at a given path.
+
+    The path must give a list index for any list values along the path.
+    """
+
+    path = make_path(path)
+    for component in path[:-1]:
+        data = data[component]
+
+    del data[path[-1]]
+
+
 def localise_path(path1, path2: Union[str, Path]) -> Path:
     """
     Paths can (but do not have to) specify what index to read when encountering
