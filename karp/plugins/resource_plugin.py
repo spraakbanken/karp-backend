@@ -19,7 +19,7 @@ class ResourcePlugin(Plugin):
             return resource_dto.config.field_config(path, collection=True)
         else:
             # Return no fields for now - the user must run 'karp-cli resource reindex' later
-            return {"type": "object", "fields": {}, collection: True}
+            return {"type": "object", "fields": {}, "collection": True}
 
     def generate(self, resource, path=""):
         data = self.entries.all_entries(resource)
