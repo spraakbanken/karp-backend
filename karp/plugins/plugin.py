@@ -337,17 +337,17 @@ def transform_list(
                 if not has_path(path, bodies[i]):
                     field_params = None
                     break
-                
-                val = get_path(path,bodies[i])
+
+                val = get_path(path, bodies[i])
                 # Skip field if include value is False
-                if k == 'include' :          
-                  if not val :
-                    field_params = None
-                    break
-                  else : ()
-                else :
+                if k == "include":
+                    if not val:
+                        field_params = None
+                        break
+
+                else:
                     field_params[k] = val
-            
+
             if field_params is not None:
                 batch_occurrences.append((i, pos))
                 batch.append(field_params)
