@@ -77,6 +77,20 @@ def set_path(path: Union[str, Path], value, data):
     data[path[-1]] = value
 
 
+def del_path(path: Union[str, Path], data):
+    """
+    Delete the value at a given path.
+
+    The path must give a list index for any list values along the path.
+    """
+
+    path = make_path(path)
+    for component in path[:-1]:
+        data = data[component]
+
+    del data[path[-1]]
+
+
 def localise_path(path1, path2: Union[str, Path]) -> Path:
     """
     Paths can (but do not have to) specify what index to read when encountering
@@ -190,16 +204,25 @@ def all_fields(data) -> Iterator[str]:
     return list(dict.fromkeys(field_name(path) for path in all_paths(data) if path))
 
 
-def expand_path(path: Union[str, Path], data, prefix=None) -> Iterator[Path]:
+def expand_path(path: Union[str, Path], data, prefix=None, expand_arrays=True) -> Iterator[Path]:
     """
     Look up a path in a JSON object.
     Instead of returning the values, return the paths to the values.
 
     >>> doc = {"SOLemman": [{"s_nr": 1}, {"s_nr": 2}]}
-    >>> for path in matching_paths("SOLemman", doc): print(path)
+    >>> for path in expand_path("SOLemman", doc): print(path)
     ["SOLemman", 0]
     ["SOLemman", 1]
-    >>> for path in matching_paths("SOLemman.s_nr", doc): print(path)
+    >>> for path in expand_path("SOLemman.s_nr", doc): print(path)
+    ["SOLemman", 0, "s_nr"]
+    ["SOLemman", 1, "s_nr"]
+
+    If expand_arrays is False, arrays are not descended into if they are the
+    last component of the path:
+
+    >>> for path in expand_path("SOLemman", doc, expand_arrays=False): print(path)
+    ["SOLemman"]
+    >>> for path in expand_path("SOLemman.s_nr", doc, expand_arrays=False): print(path)
     ["SOLemman", 0, "s_nr"]
     ["SOLemman", 1, "s_nr"]
     """
@@ -209,9 +232,17 @@ def expand_path(path: Union[str, Path], data, prefix=None) -> Iterator[Path]:
 
     path = make_path(path)
 
-    if isinstance(data, list) and (not path or not isinstance(path[0], int)):
+    def should_descend_into_array():
+        if not path and expand_arrays:
+            return True
+        elif path and not isinstance(path[0], int):
+            return True
+        else:
+            return False
+
+    if isinstance(data, list) and should_descend_into_array():
         for i, item in enumerate(data):
-            yield from expand_path(path, item, prefix + [i])
+            yield from expand_path(path, item, prefix + [i], expand_arrays)
 
     elif not path:
         yield prefix
@@ -221,7 +252,7 @@ def expand_path(path: Union[str, Path], data, prefix=None) -> Iterator[Path]:
         pass
 
     else:
-        yield from expand_path(path[1:], data[path[0]], prefix + [path[0]])
+        yield from expand_path(path[1:], data[path[0]], prefix + [path[0]], expand_arrays)
 
 
 def has_path(path: Union[str, Path], data) -> bool:

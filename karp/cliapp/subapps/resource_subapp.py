@@ -42,7 +42,7 @@ def create(
     if config_path.is_file():
         config = ResourceConfig.from_path(config_path)
         resource_commands.create_resource(config, user="local admin")
-        print(f"Created resource '{config.id}'")
+        print(f"Created resource '{config.resource_id}'")
 
     elif config_path.is_dir():
         typer.Abort("not supported yet")

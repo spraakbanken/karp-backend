@@ -6,6 +6,7 @@ import pydantic
 import yaml
 
 from karp.foundation import alias_generators
+from karp.foundation.json import Path, make_path
 
 
 class BaseModel(pydantic.BaseModel):
@@ -57,6 +58,39 @@ class ResourceConfig(BaseModel):
     def nested_fields(self):
         for field, config in self.fields.items():
             yield from config.nested_fields([field])
+
+    def entry_field_config(self) -> "Field":
+        """Return a Field config for a whole entry considered as a JSON object."""
+
+        return Field(
+            type="object",
+            required=True,
+            additional_properties=self.additional_properties,
+            fields=self.fields,
+        )
+
+    def field_config(self, path: str | Path, collection=False) -> "Field":
+        """
+        Return a Field config for a given path, according to what
+        would be returned by get_path. Sets 'collection' and
+        'required' as appropriate.
+        """
+
+        required = True
+
+        field = self.entry_field_config()
+        for component in make_path(path):
+            if field.type != "object" or component not in field.fields:
+                raise ValueError(f"Path {path} not found in config")
+
+            field = field.fields[component]
+
+            if collection and field.collection:
+                raise ValueError(f"Nested collection in path {path}")
+            collection = collection or field.collection
+            required = required and field.required
+
+        return field.update(collection=collection, required=required)
 
 
 class Field(BaseModel):

@@ -13,6 +13,7 @@ from injector import Injector, inject
 from karp.foundation.batch import batch_items
 from karp.foundation.entry_points import entry_points
 from karp.foundation.json import (
+    del_path,
     expand_path,
     get_path,
     has_path,
@@ -31,7 +32,7 @@ class PluginException(Exception):
 
 class Plugin(ABC):
     @abstractmethod
-    def output_config(**kwargs) -> Dict:
+    def output_config(**kwargs) -> dict[str, Field]:
         raise NotImplementedError
 
     # Either generate or generate_batch should be implemented
@@ -123,7 +124,7 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
     """Given a resource config with virtual fields, expand the config
     by adding the output_config for each virtual field."""
 
-    def _transform_fields(config: Dict) -> Dict:
+    def _transform_fields(config: dict[str, Field]) -> dict[str, Field]:
         return {k: _transform_field(v) for k, v in config.items()}
 
     def _transform_field(config: Field):
@@ -149,40 +150,30 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
     return result
 
 
-def find_virtual_fields(resource_config: Dict) -> dict[str, Dict]:
+def find_virtual_fields(resource_config: ResourceConfig) -> dict[str, Field]:
     """Find all virtual fields declared in a resource_config."""
 
     result = {}
+    for name in resource_config.nested_fields():
+        field = resource_config.field_config(name)
+        if field.virtual:
+            result[name] = field
 
-    def _search_fields(path: list[str], config: Dict):
-        for field, value in config.items():
-            _search_field(path + [field], value)
-
-    def _search_field(path: list[str], config: Dict):
-        if config.virtual:
-            result[".".join(path)] = config
-
-        elif config.type == "object":
-            _search_fields(path, config.fields)
-
-    _search_fields([], resource_config.fields)
     return result
 
 
 def transform_entry(
-    plugins: Plugins, resource_config: Dict, entry_dto: "EntryDto"
+    plugins: Plugins, resource_config: ResourceConfig, entry_dto: "EntryDto"
 ) -> "EntryDto":
     """
     Given an entry, calculate all the virtual fields.
     """
 
-    result = entry_dto.model_copy(deep=True)
-    result.entry = transform(plugins, resource_config, body)
-    return result
+    return next(transform_entries(plugins, resource_config, [entry_dto]))
 
 
 def transform_entries(
-    plugins: Plugins, resource_config: Dict, entry_dtos: Iterable["EntryDto"]
+    plugins: Plugins, resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"]
 ) -> Iterator["EntryDto"]:
     """
     Given a list of entries, calculate all the virtual fields.
@@ -199,7 +190,7 @@ def transform_entries(
             yield entry_dto
 
 
-def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
+def transform(plugins: Plugins, resource_config: ResourceConfig, body: Dict) -> Dict:
     """
     Given an entry body, calculate all the virtual fields.
     """
@@ -209,7 +200,7 @@ def transform(plugins: Plugins, resource_config: Dict, body: Dict) -> Dict:
 
 def transform_list(
     plugins: Plugins,
-    resource_config: Dict,
+    resource_config: ResourceConfig,
     bodies: list[Dict],
     cached_results: Optional[Dict] = None,
 ) -> list[Dict]:
@@ -234,7 +225,7 @@ def transform_list(
     bodies = deepcopy(bodies)
     virtual_fields = find_virtual_fields(resource_config)
 
-    def generate_batch(config: Dict, batch: list) -> Iterator:
+    def generate_batch(config: Field, batch: list) -> Iterator:
         """Calculate the value for a batch of virtual fields."""
 
         nonlocal cached_results
@@ -339,6 +330,7 @@ def transform_list(
                     break
 
                 val = get_path(path, bodies[i])
+
                 # Skip field if include value is False
                 if k == "include":
                     if not val:
@@ -358,3 +350,48 @@ def transform_list(
             set_path(pos, result, bodies[i])
 
     return bodies
+
+
+def untransform_entry(resource_config: ResourceConfig, entry_dto: "EntryDto") -> "EntryDto":
+    """
+    Remove all the virtual fields from an entry.
+    """
+
+    return next(untransform_entries(resource_config, [entry_dto]))
+
+
+def untransform_entries(
+    resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"]
+) -> Iterator["EntryDto"]:
+    """
+    Remove all the virtual fields from a list of entries.
+    """
+
+    entry_dtos = list(entry_dtos)
+    new_bodies = untransform_list(resource_config, (entry_dto.entry for entry_dto in entry_dtos))
+    for entry_dto, new_body in zip(entry_dtos, new_bodies):
+        entry_dto = entry_dto.model_copy(deep=True)
+        entry_dto.entry = new_body
+        yield entry_dto
+
+
+def untransform(resource_config: ResourceConfig, body: Dict) -> Dict:
+    """
+    Remove all the virtual fields from a dict.
+    """
+
+    return next(untransform_list(resource_config, [body]))
+
+
+def untransform_list(resource_config: ResourceConfig, bodies: Iterable[Dict]) -> Iterable[Dict]:
+    """
+    Remove all the virtual fields from a list of dicts.
+    """
+
+    virtual_fields = find_virtual_fields(resource_config)
+    for body in bodies:
+        body = deepcopy(body)
+        for field in virtual_fields:
+            for path in expand_path(field, body, expand_arrays=False):
+                del_path(path, body)
+        yield body

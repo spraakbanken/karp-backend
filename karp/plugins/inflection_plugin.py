@@ -42,7 +42,8 @@ def ek(s):
             # found doubled m,n or r
             s = drop_index(i, s)
             break
-
+        elif is_consonant(s[i + 1]):
+            pass
     return s
 
 

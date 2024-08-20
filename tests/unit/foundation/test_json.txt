@@ -33,6 +33,12 @@ Testing set_path:
 >>> get_path(['SOLemman', 'lexem', 'kc_nr'], doc)
 [[1, 5], [3, 4]]
 
+Testing del_path:
+
+>>> del_path(['SOLemman', 0, 'lexem', 1, 'kc_nr'], doc)
+>>> doc
+{'SOLemman': [{'lexem': [{'kc_nr': 1}, {}]}, {'lexem': [{'kc_nr': 3}, {'kc_nr': 4}]}]}
+
 Testing localise_path:
 
 >>> localise_path('SOLemman.s_nr', ['SOLemman', 0])
@@ -69,5 +75,10 @@ Testing expand_path:
 ['SOLemman', 0]
 ['SOLemman', 1]
 >>> for path in expand_path('SOLemman.s_nr', doc): print(path)
+['SOLemman', 0, 's_nr']
+['SOLemman', 1, 's_nr']
+>>> for path in expand_path('SOLemman', doc, expand_arrays=False): print(path)
+['SOLemman']
+>>> for path in expand_path('SOLemman.s_nr', doc, expand_arrays=False): print(path)
 ['SOLemman', 0, 's_nr']
 ['SOLemman', 1, 's_nr']
