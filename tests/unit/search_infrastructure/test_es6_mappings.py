@@ -62,8 +62,28 @@ class TestCreateEsMapping:
                                     "language": "sv",
                                 },
                             },
-                        }
-                    }
+                        },
+                    },
+                },
+            ),
+            (
+                "name",
+                Field(type="object", collection=True, fields={"first": {"type": "string"}}),
+                {
+                    "type": "nested",
+                    "properties": {
+                        "first": {
+                            "type": "text",
+                            "fields": {
+                                "raw": {"type": "keyword"},
+                                "sort": {
+                                    "index": False,
+                                    "type": "icu_collation_keyword",
+                                    "language": "sv",
+                                },
+                            },
+                        },
+                    },
                 },
             ),
             ("name", Field(type="number"), {"type": "double"}),

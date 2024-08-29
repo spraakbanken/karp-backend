@@ -14,6 +14,24 @@ def parser() -> KarpQueryV6Parser:
     return KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
 
 
+class MappingRepo:
+    """
+    For these query parser tests, infT means that the field is nested, no matter
+    where in the hierachy it appears
+    """
+
+    def __init__(self):
+        pass
+
+    def is_nested(self, resource_id, field):
+        return field.endswith("infT")
+
+
+def es_query_builder():
+    mapping_repo = MappingRepo()
+    return EsQueryBuilder("r", mapping_repo)
+
+
 def get_match_object(query_str):
     return {"query": query_str, "operator": "and", "lenient": True}
 
@@ -98,12 +116,39 @@ def get_match_object(query_str):
             r'and(regexp|name|"\s")',
             es_dsl.Q("regexp", name="\\s"),
         ),
+        (
+            "infT(and(equals|wf|a||equals|msd|s))",
+            es_dsl.Q(
+                "nested",
+                path="infT",
+                query=(
+                    es_dsl.Q("match", infT__wf=get_match_object("a"))
+                    & es_dsl.Q("match", infT__msd=get_match_object("s"))
+                ),
+            ),
+        ),
+        (
+            "t1(equals|infT.wf|word)",
+            es_dsl.Q(
+                "nested",
+                path="t1.infT",
+                query=es_dsl.Q("match", t1__infT__wf=get_match_object("word")),
+            ),
+        ),
+        (
+            "t1(infT(equals|wf|word))",
+            es_dsl.Q(
+                "nested",
+                path="t1.infT",
+                query=es_dsl.Q("match", t1__infT__wf=get_match_object("word")),
+            ),
+        ),
     ],
 )
-def test_es_query(parser, q, expected):  # noqa: ANN201
+def test_es_query(parser, q, expected):
     model = parser.parse(q)
 
-    query = EsQueryBuilder().walk(model)
+    query = es_query_builder().walk(model)
 
     assert query == expected
 
@@ -154,6 +199,31 @@ def test_es_query(parser, q, expected):  # noqa: ANN201
     ],
 )
 def test_combined_es_query(parser, q, expected):  # noqa: ANN201
-    query = EsQueryBuilder().walk(parser.parse(q))
+    query = es_query_builder().walk(parser.parse(q))
 
     assert query == expected
+
+
+@pytest.mark.parametrize(
+    "q1,q2",
+    [
+        (
+            "equals|infT.wf|word",
+            "infT(equals|wf|word)",
+        ),
+        (
+            "equals|t1.infT.wf|word",
+            "t1(infT(equals|wf|word))",
+        ),
+        (
+            "t1(equals|infT.wf|word)",
+            "t1(infT(equals|wf|word))",
+        ),
+        (
+            "t1.infT(equals|wf|word)",
+            "t1(infT(equals|wf|word))",
+        ),
+    ],
+)
+def test_sub_query_rewrite(parser, q1, q2):
+    assert es_query_builder().walk(parser.parse(q1)) == es_query_builder().walk(parser.parse(q2))

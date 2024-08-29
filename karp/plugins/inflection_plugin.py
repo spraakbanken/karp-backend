@@ -222,7 +222,10 @@ class InflectionPlugin(Plugin):
         return config
 
     def generate(self, lemma, table):
-        definitioner = table["definition"]
+        if "definition" in table.keys():
+            definitioner = table["definition"]
+        else:
+            definitioner = []
         tabellrader = defaultdict(list)
 
         for defi in definitioner:

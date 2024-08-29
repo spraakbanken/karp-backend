@@ -33,6 +33,12 @@ class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):
 
 
 @dataclass(eq=False)
+class SubQuery(ModelBase):
+    exp: Any = None
+    field: Any = None
+
+
+@dataclass(eq=False)
 class And(ModelBase):
     pass
 
@@ -132,5 +138,10 @@ class StringValue(ModelBase):
 
 @dataclass(eq=False)
 class QuotedStringValue(ModelBase):
+    pass
+
+
+@dataclass(eq=False)
+class Identifier(ModelBase):
     pass
 
