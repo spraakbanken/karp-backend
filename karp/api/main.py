@@ -68,6 +68,15 @@ The logical operators can be used both at top-level and lower-levels.
 
 - `or(<expression1>||<expression2>||...)` Find all entries that matches <expression1> OR <expression2>.
 
+### Sub-queries - searching in collections of objects
+
+Used for fields with setting `collection: true` and that contain other fields (collection of objects). Boolean queries
+such as: `and(equals|my_field.x|1||equals|my_field.y|3)` will find entries where objects in `my_field` 
+match `equals|x|1` or `equals|y|3`, or both. To find entries where an individual object in `my_field` matches a boolean query, 
+wrap the query with the sub-query notation: `my_field(and(equals|x|1||equals|y|3))`.
+
+- `<field>(expression)` Do `<expression>` on objects inside `<field>`. `<field>` must be a collection. 
+
 ### Regular expressions
 Always matches complete tokens.
 
