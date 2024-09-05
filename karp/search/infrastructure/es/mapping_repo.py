@@ -55,7 +55,7 @@ class Field:
             return self.name
 
         if self.analyzed:
-            return self.name + ".raw"
+            return self.name + ".sort"
         return None
 
 
