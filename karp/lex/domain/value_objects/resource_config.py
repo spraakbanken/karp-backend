@@ -69,11 +69,10 @@ class ResourceConfig(BaseModel):
             fields=self.fields,
         )
 
-    def field_config(self, path: str | Path, collection=False) -> "Field":
+    def field_config(self, path: str | Path) -> "Field":
         """
         Return a Field config for a given path, according to what
-        would be returned by get_path. Sets 'collection' and
-        'required' as appropriate.
+        would be returned by get_path.
         """
 
         required = True
@@ -85,12 +84,23 @@ class ResourceConfig(BaseModel):
 
             field = field.fields[component]
 
-            if collection and field.collection:
-                raise ValueError(f"Nested collection in path {path}")
-            collection = collection or field.collection
-            required = required and field.required
+        return field
 
-        return field.update(collection=collection, required=required)
+    def nesting_level(self, path: str | Path) -> int:
+        """
+        Given a path, calculate how many levels of nested lists are
+        returned by a call to get_path. For example, a collection
+        inside of another collection has a nesting level of 2.
+        """
+
+        result = 0
+        field = self.entry_field_config()
+        for component in make_path(path):
+            field = field.fields[component]
+            if field.collection:
+                result += 1
+
+        return result
 
 
 class Field(BaseModel):
