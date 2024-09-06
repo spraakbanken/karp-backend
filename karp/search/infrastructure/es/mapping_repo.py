@@ -77,7 +77,8 @@ class EsMappingRepository:
         self._update_field_mapping(aliases)
 
     def is_nested(self, resource_id, field):
-        return self.fields[resource_id][field].type == "nested"
+        fields = self.fields[resource_id]
+        return field in fields and fields[field].type == "nested"
 
     def get_nest_levels(self, resource_id, field):
         """
