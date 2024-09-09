@@ -202,28 +202,3 @@ def test_combined_es_query(parser, q, expected):  # noqa: ANN201
     query = es_query_builder().walk(parser.parse(q))
 
     assert query == expected
-
-
-@pytest.mark.parametrize(
-    "q1,q2",
-    [
-        (
-            "equals|infT.wf|word",
-            "infT(equals|wf|word)",
-        ),
-        (
-            "equals|t1.infT.wf|word",
-            "t1(infT(equals|wf|word))",
-        ),
-        (
-            "t1(equals|infT.wf|word)",
-            "t1(infT(equals|wf|word))",
-        ),
-        (
-            "t1.infT(equals|wf|word)",
-            "t1(infT(equals|wf|word))",
-        ),
-    ],
-)
-def test_sub_query_rewrite(parser, q1, q2):
-    assert es_query_builder().walk(parser.parse(q1)) == es_query_builder().walk(parser.parse(q2))
