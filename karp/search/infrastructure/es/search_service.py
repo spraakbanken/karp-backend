@@ -33,14 +33,28 @@ class EsQueryBuilder(NodeWalker):
     def walk__equals(self, node):
         return self.match(node.field, self.walk(node.arg))
 
+    def expand_freetext_to_nested_fields(self, node, function):
+        value = self.walk(node.arg)
+        query = function("*", value)
+
+        nested_fields = set()
+        for resource_id in self.resources:
+            nested_fields.update(self.mapping_repo.get_nested_fields(resource_id))
+
+        for nested_field in nested_fields:
+            # adding the field name for nested fields will trigger match to generate es_dsl.Q("nested", ...) where needed
+            query = query | function(nested_field + ".*", value)
+
+        return query
+
     def walk__freetext(self, node):
-        return self.match("*", self.walk(node.arg))
+        return self.expand_freetext_to_nested_fields(node, self.match)
 
     def walk__regexp(self, node):
         return self.regexp(node.field, self.walk(node.arg))
 
     def walk__freergxp(self, node):
-        return self.regexp("*", self.walk(node.arg))
+        return self.expand_freetext_to_nested_fields(node, self.regexp)
 
     def walk__contains(self, node):
         return self.regexp(node.field, f".*{self.walk(node.arg)}.*")
