@@ -26,6 +26,9 @@ class MappingRepo:
     def is_nested(self, resource_id, field):
         return field.endswith("infT")
 
+    def get_nested_fields(self, _):
+        return ["infT"]
+
 
 def es_query_builder():
     mapping_repo = MappingRepo()
@@ -40,10 +43,37 @@ def get_match_object(query_str):
     "q,expected",
     [
         ("exists|test", es_dsl.Q("exists", field="test")),
-        ('freetext|"hej"', es_dsl.Q("multi_match", query="hej", fields=["*"], lenient=True)),
+        (
+            'freetext|"hej"',
+            es_dsl.Q(
+                "bool",
+                should=[
+                    es_dsl.Q("multi_match", query="hej", fields=["*"], lenient=True),
+                    es_dsl.Q(
+                        "nested",
+                        path="infT",
+                        query=es_dsl.Q(
+                            "multi_match", query="hej", fields=["infT.*"], lenient=True
+                        ),
+                    ),
+                ],
+            ),
+        ),
         (
             'freergxp|"1i.*2"',
-            es_dsl.Q("query_string", query="/1i.*2/", fields=["*"], lenient=True),
+            es_dsl.Q(
+                "bool",
+                should=[
+                    es_dsl.Q("query_string", query="/1i.*2/", fields=["*"], lenient=True),
+                    es_dsl.Q(
+                        "nested",
+                        path="infT",
+                        query=es_dsl.Q(
+                            "query_string", query="/1i.*2/", fields=["infT.*"], lenient=True
+                        ),
+                    ),
+                ],
+            ),
         ),
         ("missing|test", es_dsl.Q("bool", must_not=es_dsl.Q("exists", field="test"))),
         ('startswith|pos|"nn"', es_dsl.Q("regexp", pos="nn.*")),

@@ -96,6 +96,11 @@ class EsMappingRepository:
                 nest_levels.append(subfield)
         return nest_levels
 
+    def get_nested_fields(self, resource_id):
+        for field_name, field_def in self.fields[resource_id].items():
+            if field_def.type == "nested":
+                yield field_name
+
     def _update_field_mapping(self, aliases: List[Tuple[str, str]]):
         """
         Create a field mapping based on the mappings of elasticsearch.
