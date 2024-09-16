@@ -40,7 +40,6 @@ class EsIndex:
         else:
             raise Exception("This should never happen")
         properties = mapping["properties"]
-        properties["freetext"] = {"type": "text"}
         disabled_property = {"enabled": False}
         properties["_entry_version"] = disabled_property
         properties["_last_modified"] = disabled_property
