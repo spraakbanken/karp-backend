@@ -43,8 +43,6 @@ querying_description = """
 
 - `freetext|<string>` Search in all fields for <string> and similar values.
 
-- `freergxp|<regex.*>` Search in all fields for the regex <regex.*>.
-
 - `gt|<field>|<value>` Find all entries where <field> is greater than <value>.
 
 - `gte|<field>|<value>` Find all entries where <field> is greater than or equals <value>.

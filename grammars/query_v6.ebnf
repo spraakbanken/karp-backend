@@ -18,7 +18,6 @@ query_expression
     | endswith
     | equals
     | exists
-    | freergxp
     | freetext
     | gt
     | gte

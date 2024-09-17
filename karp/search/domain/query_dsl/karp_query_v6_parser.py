@@ -76,9 +76,9 @@ class KarpQueryV6Parser(Parser):
             self._error(
                 'expecting one of: '
                 '<and> <contains> <endswith> <equals>'
-                '<exists> <freergxp> <freetext> <gt>'
-                '<gte> <identifier> <logical_expression>'
-                '<lt> <lte> <missing> <not> <or>'
+                '<exists> <freetext> <gt> <gte>'
+                '<identifier> <logical_expression> <lt>'
+                '<lte> <missing> <not> <or>'
                 '<query_expression> <regexp> <startswith>'
                 '<sub_query>'
             )
@@ -94,8 +94,6 @@ class KarpQueryV6Parser(Parser):
                 self._equals_()
             with self._option():
                 self._exists_()
-            with self._option():
-                self._freergxp_()
             with self._option():
                 self._freetext_()
             with self._option():
@@ -115,8 +113,8 @@ class KarpQueryV6Parser(Parser):
             self._error(
                 'expecting one of: '
                 "'contains' 'endswith' 'equals' 'exists'"
-                "'freergxp' 'freetext' 'gt' 'gte' 'lt'"
-                "'lte' 'missing' 'regexp' 'startswith'"
+                "'freetext' 'gt' 'gte' 'lt' 'lte'"
+                "'missing' 'regexp' 'startswith'"
             )
 
     @tatsumasu()
