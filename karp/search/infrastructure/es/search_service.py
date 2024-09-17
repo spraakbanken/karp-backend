@@ -192,7 +192,11 @@ class EsQueryBuilder(NodeWalker):
     def match(self, field_node, query):
         def multi(field):
             return es_dsl.Q(
-                "multi_match", query=query, fields=self.multi_fields(field), lenient=True
+                "multi_match",
+                query=query,
+                fields=self.multi_fields(field),
+                lenient=True,
+                type="phrase",
             )
 
         def single(field):
