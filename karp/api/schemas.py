@@ -27,8 +27,16 @@ class EntryUpdate(EntryAdd):
     version: int
 
 
+class EntryPreview(BaseModel):
+    entry: Dict
+
+
 class EntryAddResponse(BaseModel):
     newID: unique_id.UniqueIdStr
+
+
+class EntryPreviewResponse(BaseModel):
+    entry: Dict
 
 
 class ResourcePublic(BaseModel):

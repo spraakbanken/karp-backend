@@ -676,3 +676,33 @@ class TestGetEntry:
         assert entry.id == entry_places_209_id
         assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 5
+
+
+class TestPreviewEntry:
+    def test_preview_entry(
+        self,
+        fa_data_client,
+        write_token: AccessToken,
+    ):
+        entry = {
+            "code": 100,
+            "name": "preview",
+            "population": 5,
+            "area": 50000,
+            "density": 5,
+            "municipality": [2, 3],
+        }
+
+        response = fa_data_client.post(
+            f"/entries/places/preview",
+            json={"entry": entry},
+            headers=write_token.as_header(),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()["entry"]
+
+        assert response_data["municipality"] == [
+            m["code"] for m in response_data["_municipality"]
+        ]
+        del response_data["_municipality"]
+        assert response_data == entry

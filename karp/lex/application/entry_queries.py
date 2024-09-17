@@ -63,6 +63,14 @@ class EntryQueries:
             return self._to_dto(entry)
         return None
 
+    def transform_entry_body(
+        self,
+        resource_id: str,
+        entry_body: dict,
+    ) -> dict:
+        resource = self.resources.by_resource_id(resource_id)
+        return plugins.transform(self.plugins, resource.config, entry_body)
+
     def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
         return self._to_dtos(resource_id, entries.all_entries())

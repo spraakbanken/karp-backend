@@ -169,7 +169,7 @@ def transform_entry(
     Given an entry, calculate all the virtual fields.
     """
 
-    return next(transform_entries(plugins, resource_config, [entry_dto]))
+    return next(iter(transform_entries(plugins, resource_config, [entry_dto])))
 
 
 def transform_entries(
@@ -195,7 +195,7 @@ def transform(plugins: Plugins, resource_config: ResourceConfig, body: Dict) -> 
     Given an entry body, calculate all the virtual fields.
     """
 
-    return next(transform_list(plugins, resource_config, [body]))
+    return next(iter(transform_list(plugins, resource_config, [body])))
 
 
 def transform_list(

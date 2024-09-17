@@ -103,6 +103,41 @@ def add_entry(
     return {"newID": new_entry.id}
 
 
+# must go before update_entry otherwise it thinks this is an
+# update requests with entry_id="preview"
+@router.post(
+    "/{resource_id}/preview",
+    response_model=schemas.EntryPreviewResponse,
+)
+def preview_entry(
+    resource_id: str,
+    data: schemas.EntryPreview,
+    user: User = Depends(deps.get_user),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    entry_queries: EntryQueries = Depends(inject_from_req(EntryQueries)),
+    published_resources: List[str] = Depends(deps.get_published_resources),
+):
+    if not resource_permissions.has_permission(PermissionLevel.read, user, [resource_id]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
+        )
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
+
+    logger.info(
+        "previewing entry",
+        extra={
+            "resource_id": resource_id,
+            "data": data,
+            "user": user.identifier,
+        },
+    )
+
+    result = entry_queries.transform_entry_body(resource_id, data.entry)
+    return schemas.EntryPreviewResponse(entry=result)
+
+
 @router.post(
     "/{resource_id}/{entry_id}",
     response_model=schemas.EntryAddResponse,
