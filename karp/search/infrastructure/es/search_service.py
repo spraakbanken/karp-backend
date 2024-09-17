@@ -169,46 +169,30 @@ class EsQueryBuilder(NodeWalker):
         return field.split(",")
 
     def regexp(self, field_node, regexp):
-        def multi(field):
-            return es_dsl.Q(
-                "query_string",
-                query="/" + regexp.replace("/", "\\/") + "/",
-                fields=self.multi_fields(field),
-                lenient=True,
-            )
-
-        def single(field):
-            return es_dsl.Q("regexp", **{field: regexp})
-
-        return self._match_regexp_helper(field_node, multi, single)
+        field = self.walk(field_node)
+        q = es_dsl.Q(
+            "query_string",
+            query="/" + regexp.replace("/", "\\/") + "/",
+            fields=self.multi_fields(field),
+            lenient=True,
+        )
+        return self.wrap_nested(field, q)
 
     def match(self, field_node, query):
-        def multi(field):
-            return es_dsl.Q(
+        if field_node == "*":
+            field = field_node
+        else:
+            field = self.walk(field_node)
+        if self.is_multi_field(field):
+            query = es_dsl.Q(
                 "multi_match",
                 query=query,
                 fields=self.multi_fields(field),
                 lenient=True,
                 type="phrase",
             )
-
-        def single(field):
-            return es_dsl.Q(
-                "match",
-                **{field: {"query": query, "operator": "and", "lenient": True}},
-            )
-
-        return self._match_regexp_helper(field_node, multi, single)
-
-    def _match_regexp_helper(self, field_node, multi, single):
-        if field_node == "*":
-            field = field_node
         else:
-            field = self.walk(field_node)
-        if self.is_multi_field(field):
-            query = multi(field)
-        else:
-            query = single(field)
+            query = es_dsl.Q("match_phrase", **{field: query})
         return self.wrap_nested(field, query)
 
     def _exists_missing_range_helper(self, op, node, query_f):

@@ -35,8 +35,13 @@ def es_query_builder():
     return EsQueryBuilder("r", mapping_repo)
 
 
-def get_match_object(query_str):
-    return {"query": query_str, "operator": "and", "lenient": True}
+def get_regexp_object(field, val):
+    return es_dsl.Q(
+        "query_string",
+        query=f"/{val}/",
+        fields=[field],
+        lenient=True,
+    )
 
 
 @pytest.mark.parametrize(
@@ -48,112 +53,103 @@ def get_match_object(query_str):
             es_dsl.Q(
                 "bool",
                 should=[
-                    es_dsl.Q("multi_match", query="hej", fields=["*"], lenient=True),
                     es_dsl.Q(
-                        "nested",
-                        path="infT",
-                        query=es_dsl.Q(
-                            "multi_match", query="hej", fields=["infT.*"], lenient=True
-                        ),
+                        "multi_match", query="hej", fields=["*"], lenient=True, type="phrase"
                     ),
-                ],
-            ),
-        ),
-        (
-            'freergxp|"1i.*2"',
-            es_dsl.Q(
-                "bool",
-                should=[
-                    es_dsl.Q("query_string", query="/1i.*2/", fields=["*"], lenient=True),
                     es_dsl.Q(
                         "nested",
                         path="infT",
                         query=es_dsl.Q(
-                            "query_string", query="/1i.*2/", fields=["infT.*"], lenient=True
+                            "multi_match",
+                            query="hej",
+                            fields=["infT.*"],
+                            lenient=True,
+                            type="phrase",
                         ),
                     ),
                 ],
             ),
         ),
         ("missing|test", es_dsl.Q("bool", must_not=es_dsl.Q("exists", field="test"))),
-        ('startswith|pos|"nn"', es_dsl.Q("regexp", pos="nn.*")),
-        ('endswith|pos|"nn"', es_dsl.Q("regexp", pos=".*nn")),
-        ('contains|pos|"nn"', es_dsl.Q("regexp", pos=".*nn.*")),
+        (
+            'startswith|pos|"nn"',
+            get_regexp_object("pos", "nn.*"),
+        ),
+        ('endswith|pos|"nn"', get_regexp_object("pos", ".*nn")),
+        (
+            'contains|pos|"nn"',
+            get_regexp_object("pos", ".*nn.*"),
+        ),
         ('gt|val|"lok"', es_dsl.Q("range", val={"gt": "lok"})),
         ("gte|val|2", es_dsl.Q("range", val={"gte": 2})),
         ('lt|val|"lok"', es_dsl.Q("range", val={"lt": "lok"})),
         ('lte|val|"lok"', es_dsl.Q("range", val={"lte": "lok"})),
-        ('equals|pos|"vb"', es_dsl.Q("match", pos=get_match_object("vb"))),
-        ('regexp|kjh|"lk.*k"', es_dsl.Q("regexp", kjh="lk.*k")),
-        ('not(regexp|kjh|"lk.*k")', ~es_dsl.Q("regexp", kjh="lk.*k")),
+        ('equals|pos|"vb"', es_dsl.Q("match_phrase", pos="vb")),
+        ('regexp|kjh|"lk.*k"', get_regexp_object("kjh", "lk.*k")),
+        ('not(regexp|kjh|"lk.*k")', ~get_regexp_object("kjh", "lk.*k")),
         (
             'and(regexp|baseform|"g[oe]t"||equals|pos|"nn")',
-            es_dsl.Q("regexp", baseform="g[oe]t")
-            & es_dsl.Q("match", pos=get_match_object("nn")),
+            get_regexp_object("baseform", "g[oe]t") & es_dsl.Q("match_phrase", pos="nn"),
         ),
         (
             'and(regexp|baseform|"g[oe]t"||equals|pos|"nn"||regexp|pos|"n.*")',
-            es_dsl.Q("regexp", baseform="g[oe]t")
-            & es_dsl.Q("match", pos=get_match_object("nn"))
-            & es_dsl.Q("regexp", pos="n.*"),
+            get_regexp_object("baseform", "g[oe]t")
+            & es_dsl.Q("match_phrase", pos="nn")
+            & get_regexp_object("pos", "n.*"),
         ),
         (
             'or(regexp|baseform|"g[oe]t"||equals|pos|"nn")',
-            es_dsl.Q("regexp", baseform="g[oe]t")
-            | es_dsl.Q("match", pos=get_match_object("nn")),
+            get_regexp_object("baseform", "g[oe]t") | es_dsl.Q("match_phrase", pos="nn"),
         ),
         (
             'or(regexp|baseform|"g[oe]t"||equals|pos|"nn"||regexp|pos|"n.*")',
-            es_dsl.Q("regexp", baseform="g[oe]t")
-            | es_dsl.Q("match", pos=get_match_object("nn"))
-            | es_dsl.Q("regexp", pos="n.*"),
+            get_regexp_object("baseform", "g[oe]t")
+            | es_dsl.Q("match_phrase", pos="nn")
+            | get_regexp_object("pos", "n.*"),
         ),
         (
             'equals|baseform|"t|est"',
-            es_dsl.Q("match", baseform=get_match_object("t|est")),
+            es_dsl.Q("match_phrase", baseform="t|est"),
         ),
         (
             'equals|baseform|"|test"',
-            es_dsl.Q("match", baseform=get_match_object("|test")),
+            es_dsl.Q("match_phrase", baseform="|test"),
         ),
         (
             'equals|baseform|"test|"',
-            es_dsl.Q("match", baseform=get_match_object("test|")),
+            es_dsl.Q("match_phrase", baseform="test|"),
         ),
         (
             'and(equals|ortografi|"ständigt förknippad")',
-            es_dsl.Q("match", ortografi=get_match_object("ständigt förknippad")),
+            es_dsl.Q("match_phrase", ortografi="ständigt förknippad"),
         ),
         (
             'and(equals|ortografi|"(ständigt) förknippad")',
-            es_dsl.Q("match", ortografi=get_match_object("(ständigt) förknippad")),
+            es_dsl.Q("match_phrase", ortografi="(ständigt) förknippad"),
         ),
         (
             'and(equals|ortografi|"(ständigt förknippad")',
-            es_dsl.Q("match", ortografi=get_match_object("(ständigt förknippad")),
+            es_dsl.Q("match_phrase", ortografi="(ständigt förknippad"),
         ),
         # escaped quotes
         (
             'and(equals|baseform|"att \\"vara\\"")',
-            es_dsl.Q("match", baseform=get_match_object('att "vara"')),
+            es_dsl.Q("match_phrase", baseform='att "vara"'),
         ),
         # no quotes work
         (
             "and(equals|baseform|noquotes)",
-            es_dsl.Q("match", baseform=get_match_object("noquotes")),
+            es_dsl.Q("match_phrase", baseform="noquotes"),
         ),
-        (
-            r'and(regexp|name|"\s")',
-            es_dsl.Q("regexp", name="\\s"),
-        ),
+        (r'and(regexp|name|"\s")', get_regexp_object("name", "\\s")),
         (
             "infT(and(equals|wf|a||equals|msd|s))",
             es_dsl.Q(
                 "nested",
                 path="infT",
                 query=(
-                    es_dsl.Q("match", infT__wf=get_match_object("a"))
-                    & es_dsl.Q("match", infT__msd=get_match_object("s"))
+                    es_dsl.Q("match_phrase", infT__wf="a")
+                    & es_dsl.Q("match_phrase", infT__msd="s")
                 ),
             ),
         ),
@@ -162,7 +158,7 @@ def get_match_object(query_str):
             es_dsl.Q(
                 "nested",
                 path="t1.infT",
-                query=es_dsl.Q("match", t1__infT__wf=get_match_object("word")),
+                query=es_dsl.Q("match_phrase", t1__infT__wf="word"),
             ),
         ),
         (
@@ -170,7 +166,7 @@ def get_match_object(query_str):
             es_dsl.Q(
                 "nested",
                 path="t1.infT",
-                query=es_dsl.Q("match", t1__infT__wf=get_match_object("word")),
+                query=es_dsl.Q("match_phrase", t1__infT__wf="word"),
             ),
         ),
     ],
@@ -221,8 +217,8 @@ def test_es_query(parser, q, expected):
             es_dsl.Q(
                 "bool",
                 must_not=[
-                    es_dsl.Q("match", ordklass=get_match_object("substantiv")),
-                    es_dsl.Q("match", ordklass=get_match_object("verb")),
+                    es_dsl.Q("match_phrase", ordklass="substantiv"),
+                    es_dsl.Q("match_phrase", ordklass="verb"),
                 ],
             ),
         ),
