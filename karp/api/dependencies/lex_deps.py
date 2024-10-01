@@ -32,8 +32,9 @@ def get_resource_repository(
 
 def get_resource_queries(
     resources: ResourceRepository = Depends(inject_from_req(ResourceRepository)),
+    plugins: Plugins = Depends(inject_from_req(Plugins)),
 ) -> ResourceQueries:
-    return ResourceQueries(resources)
+    return ResourceQueries(resources, plugins)
 
 
 def get_entry_queries(
