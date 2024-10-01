@@ -30,7 +30,7 @@ class ResourceQueries:
             return ResourceDto.from_resource(result)
 
     def by_id(self, entity_id: UniqueId, version: Optional[int] = None) -> ResourceDto:
-        result = self._resources.by_id(resource_id, version=version)
+        result = self._resources.by_id(entity_id, version=version)
         return ResourceDto.from_resource(result)
 
     def by_id_optional(
