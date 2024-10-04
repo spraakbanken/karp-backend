@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 def transform(resource_config, src_entry: EntryDto) -> IndexEntry:
-    entry = create_empty_object()
+    entry = {}
     for mapped_name, field in mapping_repo.internal_fields.items():
-        assign_field(entry, field.name, getattr(src_entry, mapped_name))
+        entry[field.name] = getattr(src_entry, mapped_name)
     _transform_to_index_entry(
         src_entry.entry,
         entry,
@@ -33,26 +33,26 @@ def _transform_to_index_entry(
             if field_name in _src_entry:
                 for subfield in _src_entry[field_name]:
                     if field_conf.type == "object":
-                        subfield_content = create_empty_object()
+                        subfield_content = {}
                         _transform_to_index_entry(
                             subfield,
                             subfield_content,
                             field_conf.fields.items(),
                         )
-                        add_to_list_field(field_content, subfield_content)
+                        field_content.append(subfield_content)
                     else:
-                        add_to_list_field(field_content, subfield)
-                assign_field(_index_entry, field_name, field_content)
+                        field_content.append(subfield)
+                _index_entry[field_name] = field_content
 
         elif field_conf.type == "object":
-            field_content = create_empty_object()
+            field_content = {}
             if field_name in _src_entry:
                 _transform_to_index_entry(
                     _src_entry[field_name],
                     field_content,
                     field_conf.fields.items(),
                 )
-                assign_field(_index_entry, field_name, field_content)
+                _index_entry[field_name] = field_content
 
         elif field_conf.type in (
             "integer",
@@ -63,16 +63,4 @@ def _transform_to_index_entry(
         ):
             if field_name in _src_entry:
                 field_content = _src_entry[field_name]
-                assign_field(_index_entry, field_name, field_content)
-
-
-def create_empty_object() -> typing.Dict:
-    return {}
-
-
-def assign_field(_index_entry: typing.Dict, field_name: str, part):
-    _index_entry[field_name] = part
-
-
-def add_to_list_field(elems: typing.List, elem):
-    elems.append(elem)
+                _index_entry[field_name] = field_content
