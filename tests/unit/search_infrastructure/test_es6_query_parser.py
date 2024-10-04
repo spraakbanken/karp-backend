@@ -7,6 +7,7 @@ from karp.search.domain.query_dsl.karp_query_v6_model import (
     KarpQueryV6ModelBuilderSemantics,
 )
 from karp.search.infrastructure.es import EsQueryBuilder
+from karp.search.infrastructure.es.mapping_repo import Field
 
 
 @pytest.fixture(scope="session")
@@ -23,11 +24,14 @@ class MappingRepo:
     def __init__(self):
         pass
 
-    def is_nested(self, resource_id, field):
+    def is_nested(self, _, field):
         return field.endswith("infT")
 
     def get_nested_fields(self, _):
         return ["infT"]
+
+    def get_field(self, _, field_name):
+        return Field(path=[field_name], type="text")
 
 
 def es_query_builder():

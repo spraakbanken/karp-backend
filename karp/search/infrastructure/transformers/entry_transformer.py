@@ -3,15 +3,15 @@ import typing
 
 from karp.lex.domain.dtos import EntryDto
 from karp.search.domain.index_entry import IndexEntry
+from karp.search.infrastructure.es import mapping_repo
 
 logger = logging.getLogger(__name__)
 
 
 def transform(resource_config, src_entry: EntryDto) -> IndexEntry:
     entry = create_empty_object()
-    assign_field(entry, "_entry_version", src_entry.version)
-    assign_field(entry, "_last_modified", src_entry.last_modified)
-    assign_field(entry, "_last_modified_by", src_entry.last_modified_by)
+    for mapped_name, field in mapping_repo.internal_fields.items():
+        assign_field(entry, field.name, getattr(src_entry, mapped_name))
     _transform_to_index_entry(
         src_entry.entry,
         entry,
