@@ -385,7 +385,7 @@ class KarpQueryV6Parser(Parser):
                 'expecting one of: '
                 '<integer_value> <quoted_string_value>'
                 '<string_value> <unquoted_string_value>'
-                '\\d+'
+                '\\d+$'
             )
 
     @tatsumasu('StringValue')
@@ -428,7 +428,7 @@ class KarpQueryV6Parser(Parser):
 
     @tatsumasu('int')
     def _integer_value_(self):  # noqa
-        self._pattern('\\d+')
+        self._pattern('\\d+$')
 
     @tatsumasu('Identifier')
     def _identifier_(self):  # noqa

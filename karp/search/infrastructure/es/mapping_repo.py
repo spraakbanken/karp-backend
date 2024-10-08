@@ -59,6 +59,15 @@ class Field:
         return None
 
 
+# these fields are searchable using the keys as identifiers, prefixed by "@"
+internal_fields = {
+    "last_modified_by": Field(path=["_last_modified_by"], type="keyword"),
+    "last_modified": Field(path=["_last_modified"], type="date"),
+    "version": Field(path=["_entry_version"], type="integer"),
+    "resource": Field(path=["_resource_id"], type="keyword"),
+}
+
+
 class EsMappingRepository:
     @inject
     def __init__(self, es: elasticsearch.Elasticsearch, resource_repo: ResourceRepository):
@@ -100,6 +109,20 @@ class EsMappingRepository:
         for field_name, field_def in self.fields[resource_id].items():
             if field_def.type == "nested":
                 yield field_name
+
+    def get_field(self, resource_ids, field_name):
+        if field_name == "@id":
+            return Field(path=["_id"], type="keyword")
+        if field_name[0] == "@":
+            return internal_fields[field_name[1:]]
+
+        # check that field_name is defined with the same type in all given resources
+        fields = [self.fields[resource_id][field_name] for resource_id in resource_ids]
+        if fields.count(fields[0]) != len(fields):
+            raise ValueError(
+                f"Resources: {resource_ids} have different settings for field: {field_name}"
+            )
+        return fields[0]
 
     def _update_field_mapping(self, aliases: List[Tuple[str, str]]):
         """

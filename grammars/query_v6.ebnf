@@ -141,7 +141,7 @@ quoted_string_value::QuotedStringValue
 
 integer_value::int
     =
-    /\d+/
+    /\d+$/
     ;
 
 # for simplicity, add |,(,) as not allowed here, even though it shouldn't matter. should be possible to name  field "myfield|"

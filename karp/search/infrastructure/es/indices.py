@@ -9,6 +9,7 @@ from injector import inject
 from karp.lex.domain.entities import Entry
 from karp.lex.domain.value_objects import Field, ResourceConfig
 from karp.search.domain.index_entry import IndexEntry
+from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
 
 from .mapping_repo import EsMappingRepository
 
@@ -40,10 +41,8 @@ class EsIndex:
         else:
             raise Exception("This should never happen")
         properties = mapping["properties"]
-        disabled_property = {"enabled": False}
-        properties["_entry_version"] = disabled_property
-        properties["_last_modified"] = disabled_property
-        properties["_last_modified_by"] = disabled_property
+        for field in es_mapping_repo.internal_fields.values():
+            properties[field.name] = {"type": field.type}
 
         body = {
             "settings": settings,
