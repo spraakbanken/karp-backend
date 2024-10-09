@@ -149,10 +149,10 @@ class EsQueryBuilder(NodeWalker):
         if "*" in field_name:
             field = Field(path=[field_name], type="any")
         else:
-            field = self.mapping_repo.get_field(self.resources, field_name)
-        # Add the current path to field, for example query path(equals|field|val)
-        # must yield an es-query in field "path.field"
-        return self.path + field.name, field
+            # Add the current path to field, for example query path(equals|field|val)
+            # must yield an es-query in field "path.field"
+            field = self.mapping_repo.get_field(self.resources, self.path + field_name)
+        return field.name, field
 
     def walk_object(self, node):
         return node
