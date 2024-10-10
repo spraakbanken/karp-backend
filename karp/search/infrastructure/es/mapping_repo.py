@@ -28,10 +28,6 @@ class Field:
         return ".".join(self.path)
 
     @property
-    def lastname(self) -> str:
-        return self.path[-1]
-
-    @property
     def parent(self) -> Optional[str]:
         if self.path:
             return ".".join(self.path[:-1])
@@ -140,7 +136,6 @@ class EsMappingRepository:
                     if field.sort_form in self.fields[alias]:
                         sort_form = self.fields[alias][field.sort_form]
                         self.sortable_fields[alias][field.name] = sort_form
-                        self.sortable_fields[alias][field.lastname] = sort_form
 
     @staticmethod
     def _get_fields_from_mapping(
