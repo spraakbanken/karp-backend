@@ -23,7 +23,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown")
+app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown", pretty_exceptions_enable=False)
 
 
 def create_app():
