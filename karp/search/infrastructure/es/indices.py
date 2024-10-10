@@ -3,11 +3,13 @@ from datetime import datetime
 from typing import Dict, Iterable, Optional
 
 import elasticsearch
+import elasticsearch.helpers
 from elasticsearch.exceptions import NotFoundError
 from injector import inject
 
 from karp.lex.domain.entities import Entry
 from karp.lex.domain.value_objects import Field, ResourceConfig
+from karp.main.errors import KarpError
 from karp.search.domain.index_entry import IndexEntry
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
 
@@ -92,7 +94,15 @@ class EsIndex:
                 }
             )
 
-        elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
+        try:
+            elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
+        except elasticsearch.helpers.BulkIndexError as e:
+            message = [
+                "Error inserting data into Elasticsearch. The following errors occured (terminated at 400 characters):"
+            ]
+            for error in e.errors:
+                message.append(str(error["index"])[0:400])
+                raise KarpError("\n".join(message)) from None
 
     def delete_entry(
         self,
