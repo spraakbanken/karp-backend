@@ -32,9 +32,7 @@ def create_app():
     @app.callback()
     def set_app_context(
         ctx: typer.Context,
-        version: Optional[bool] = typer.Option(
-            None, "--version", callback=version_callback, is_eager=True
-        ),
+        version: Optional[bool] = typer.Option(None, "--version", callback=version_callback, is_eager=True),
     ):
         if ctx.invoked_subcommand is None:
             ctx.obj = {}

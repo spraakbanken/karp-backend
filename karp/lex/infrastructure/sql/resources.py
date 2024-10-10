@@ -27,9 +27,7 @@ class ResourceRepository(repository.Repository):
     def __init__(self, session: Session):
         self._session = session
 
-    def by_resource_id(
-        self, resource_id: str, *, version: Optional[int] = None
-    ) -> entities.Resource:
+    def by_resource_id(self, resource_id: str, *, version: Optional[int] = None) -> entities.Resource:
         if resource := self.by_resource_id_optional(resource_id, version=version):
             return resource
         else:

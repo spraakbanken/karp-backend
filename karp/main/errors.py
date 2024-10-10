@@ -14,9 +14,7 @@ class ClientErrorCodes(enum.IntEnum):
 
 
 class KarpError(Exception):
-    def __init__(
-        self, message: str, code: Optional[int] = None, http_return_code: int = 400
-    ) -> None:
+    def __init__(self, message: str, code: Optional[int] = None, http_return_code: int = 400) -> None:
         super().__init__(message)
         self.message = message
         self.code = code or ClientErrorCodes.UNKNOWN_ERROR

@@ -23,9 +23,7 @@ class ResourcePermissionQueries:
                 protected = "WRITE"
             else:
                 protected = "READ"
-            resource_permissions.append(
-                ResourcePermissionDto(resource_id=resource.resource_id, protected=protected)
-            )
+            resource_permissions.append(ResourcePermissionDto(resource_id=resource.resource_id, protected=protected))
 
         return resource_permissions
 

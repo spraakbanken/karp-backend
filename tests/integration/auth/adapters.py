@@ -11,9 +11,7 @@ from karp.foundation.timings import utc_now
 
 AUTH_JWT_AUDIENCE = "spraakbanken:auth"
 
-PRIVATE_KEY_PATH = os.environ.get(
-    "TEST_AUTH_JWT_PRIVATE_KEY_PATH", "assets/testing/private_key.pem"
-)
+PRIVATE_KEY_PATH = os.environ.get("TEST_AUTH_JWT_PRIVATE_KEY_PATH", "assets/testing/private_key.pem")
 
 jwt_private_key = pathlib.Path(PRIVATE_KEY_PATH).read_text()
 

@@ -128,9 +128,7 @@ class BaseHistoryEntry:
     op = Column(Enum(EntryOp), nullable=False)
     discarded = Column(Boolean, default=False)
 
-    __table_args__ = (
-        UniqueConstraint("entity_id", "version", name="id_version_unique_constraint"),
-    )
+    __table_args__ = (UniqueConstraint("entity_id", "version", name="id_version_unique_constraint"),)
 
     @classmethod
     def from_entity(cls, entry: entities.Entry):

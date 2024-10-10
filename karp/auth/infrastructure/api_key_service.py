@@ -62,7 +62,5 @@ class APIKeyService:
             }
 
     def _get_api_key(self, api_key):
-        rows = self.session.execute(
-            select(ApiKeyModel).where(ApiKeyModel.api_key == api_key)
-        ).one()
+        rows = self.session.execute(select(ApiKeyModel).where(ApiKeyModel.api_key == api_key)).one()
         return rows[0]

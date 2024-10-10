@@ -36,11 +36,7 @@ class EntrySchema:
     def from_resource_config(cls, resource_config: ResourceConfig) -> "EntrySchema":
         """Create EntrySchema from resource config."""
 
-        return cls(
-            json_schema=create_entry_json_schema(
-                resource_config.fields, resource_config.additional_properties
-            )
-        )
+        return cls(json_schema=create_entry_json_schema(resource_config.fields, resource_config.additional_properties))
 
 
 def json_schema_type(in_type: str) -> str:
@@ -48,9 +44,7 @@ def json_schema_type(in_type: str) -> str:
     return "string" if in_type == "long_string" else in_type
 
 
-def create_entry_json_schema(
-    fields: dict[str, Field], additionalProperties: bool
-) -> dict[str, Any]:
+def create_entry_json_schema(fields: dict[str, Field], additionalProperties: bool) -> dict[str, Any]:
     """Create json_schema from fields definition.
 
     Args:

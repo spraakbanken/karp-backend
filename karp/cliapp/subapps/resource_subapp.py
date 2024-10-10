@@ -131,10 +131,7 @@ def list_resources(
         result = resources.get_all_resources()
     typer.echo(
         tabulate(
-            [
-                [resource.resource_id, resource.version, resource.is_published]
-                for resource in result
-            ],
+            [[resource.resource_id, resource.version, resource.is_published] for resource in result],
             headers=["resource_id", "version", "published"],
         )
     )
@@ -146,9 +143,7 @@ def list_resources(
 def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
     resources = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
     resource = resources.by_resource_id(resource_id, version=version)
-    typer.echo(
-        tabulate(((key, value) for key, value in resource.dict().items() if key != "config"))
-    )
+    typer.echo(tabulate(((key, value) for key, value in resource.dict().items() if key != "config")))
     typer.echo()
     typer.echo(resource.config.config_str)
 

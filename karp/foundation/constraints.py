@@ -9,9 +9,7 @@ class ConstraintsError(ValueError):
 
 def length_ge(attribute, value, limit: int):
     if len(value) < limit:
-        raise ConstraintsError(
-            f"'{attribute}' has to have a length of at least {limit}. Got {attribute}='{value}'"
-        )
+        raise ConstraintsError(f"'{attribute}' has to have a length of at least {limit}. Got {attribute}='{value}'")
     return value
 
 

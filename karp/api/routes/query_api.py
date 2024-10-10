@@ -120,9 +120,7 @@ def query(
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned. See [Query DSL](#section/Query-DSL)",
     ),
-    from_: int = Query(
-        0, alias="from", description="Specify which entry should be the first returned."
-    ),
+    from_: int = Query(0, alias="from", description="Specify which entry should be the first returned."),
     size: int = Query(25, description="Number of entries in page."),
     sort: List[str] = Query(
         [],

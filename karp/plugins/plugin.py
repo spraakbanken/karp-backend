@@ -98,11 +98,7 @@ class Plugins:
         batch = list(batch)
         if not batch:
             return []
-        result = list(
-            self._get_plugin(config.plugin).generate_batch(
-                config.params | item for item in batch
-            )
-        )
+        result = list(self._get_plugin(config.plugin).generate_batch(config.params | item for item in batch))
         if len(result) != len(batch):
             raise AssertionError("batch result had wrong length")
         return result
@@ -162,9 +158,7 @@ def find_virtual_fields(resource_config: ResourceConfig) -> dict[str, Field]:
     return result
 
 
-def transform_entry(
-    plugins: Plugins, resource_config: ResourceConfig, entry_dto: "EntryDto"
-) -> "EntryDto":
+def transform_entry(plugins: Plugins, resource_config: ResourceConfig, entry_dto: "EntryDto") -> "EntryDto":
     """
     Given an entry, calculate all the virtual fields.
     """
@@ -181,9 +175,7 @@ def transform_entries(
 
     cached_results = {}
     for batch in batch_items(entry_dtos):
-        new_entries = transform_list(
-            plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results
-        )
+        new_entries = transform_list(plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results)
         for entry_dto, new_entry in zip(batch, new_entries):
             entry_dto = entry_dto.model_copy(deep=True)
             entry_dto.entry = new_entry
@@ -358,9 +350,7 @@ def untransform_entry(resource_config: ResourceConfig, entry_dto: "EntryDto") ->
     return next(untransform_entries(resource_config, [entry_dto]))
 
 
-def untransform_entries(
-    resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"]
-) -> Iterator["EntryDto"]:
+def untransform_entries(resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"]) -> Iterator["EntryDto"]:
     """
     Remove all the virtual fields from a list of entries.
     """

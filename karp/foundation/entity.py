@@ -50,9 +50,7 @@ class Entity:
         """The time this entity was last modified."""
         return self._last_modified_by
 
-    def _ensure_timestamp(
-        self, timestamp: Optional[Union[float, datetime.datetime, str]]
-    ) -> float:
+    def _ensure_timestamp(self, timestamp: Optional[Union[float, datetime.datetime, str]]) -> float:
         if isinstance(timestamp, datetime.datetime):
             return timestamp.timestamp()
         elif isinstance(timestamp, str):
@@ -61,9 +59,7 @@ class Entity:
 
     def _check_not_discarded(self):
         if self._discarded:
-            raise self.DiscardedEntityError(
-                f"Attempt to use {self!r}, entity_id = {self.entity_id}"
-            )
+            raise self.DiscardedEntityError(f"Attempt to use {self!r}, entity_id = {self.entity_id}")
 
     def _increment_version(self):
         self._version += 1

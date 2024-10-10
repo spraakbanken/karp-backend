@@ -197,9 +197,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def injector_middleware(request: Request, call_next):
-        response: Response = JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         # Create a new session per request
         with new_session(app_context.injector) as injector:
             request.state.session = injector.get(Session)
@@ -211,9 +209,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def _logging_middleware(request: Request, call_next) -> Response:
-        response: Response = JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         start_time = time.time()
         try:
             response = await call_next(request)

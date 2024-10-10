@@ -96,9 +96,7 @@ class Resource(Entity):
         self.config = config
         return True
 
-    def _update_metadata(
-        self, timestamp: Optional[float], user: str, message: str, version: Optional[int]
-    ):
+    def _update_metadata(self, timestamp: Optional[float], user: str, message: str, version: Optional[int]):
         self._check_not_discarded()
         self._validate_version(version)
         self._last_modified = self._ensure_timestamp(timestamp)
