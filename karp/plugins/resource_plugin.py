@@ -1,8 +1,7 @@
-from injector import Injector, inject
+from injector import inject
 
 from karp.foundation.json import get_path
 from karp.lex.application import EntryQueries, ResourceQueries
-from karp.search.domain import QueryRequest
 
 from .plugin import Plugin
 

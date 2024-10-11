@@ -1,14 +1,13 @@
 import logging
 from datetime import datetime
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable
 
 import elasticsearch
 import elasticsearch.helpers
 from elasticsearch.exceptions import NotFoundError
 from injector import inject
 
-from karp.lex.domain.entities import Entry
-from karp.lex.domain.value_objects import Field, ResourceConfig
+from karp.lex.domain.value_objects import ResourceConfig
 from karp.main.errors import KarpError
 from karp.search.domain.index_entry import IndexEntry
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo

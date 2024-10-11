@@ -1,9 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from copy import deepcopy
-from pprint import pp
-from typing import Callable, Dict, Iterable, Iterator, Optional, Type, Union
+from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
 import methodtools
 from frozendict import deepfreeze
@@ -21,6 +19,7 @@ from karp.foundation.json import (
     make_path,
     set_path,
 )
+from karp.lex.domain.dtos import EntryDto, ResourceDto
 from karp.lex.domain.value_objects import Field, ResourceConfig
 
 logger = logging.getLogger(__name__)
@@ -82,7 +81,7 @@ class Plugins:
     @methodtools.lru_cache(maxsize=None)
     def _get_plugin(self, name: str) -> Plugin:
         if not name:
-            raise PluginException(f'Resource config has "virtual": "true" but no "plugin" field')
+            raise PluginException('Resource config has "virtual": "true" but no "plugin" field')
         return self.injector.get(find_plugin(name))
 
     def output_config(self, config: Field) -> Field:

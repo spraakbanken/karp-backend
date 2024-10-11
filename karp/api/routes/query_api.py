@@ -3,9 +3,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
-from karp import auth, search
+from karp import auth
 from karp.auth.application import ResourcePermissionQueries
-from karp.lex import EntryDto
 from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 from karp.search.domain import QueryRequest

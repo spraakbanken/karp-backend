@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Generator, Iterable, Iterator
+from typing import Any, Generator, Iterable
 
 from injector import inject
 from sqlalchemy.orm import Session

@@ -2,7 +2,7 @@ import enum
 import typing
 from typing import Any, Optional
 
-from karp.foundation import constraints, timings
+from karp.foundation import timings
 from karp.foundation.entity import Entity
 from karp.foundation.value_objects import unique_id
 from karp.lex.domain import errors

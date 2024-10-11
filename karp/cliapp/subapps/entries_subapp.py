@@ -1,7 +1,6 @@
 import collections.abc  # noqa: I001
 import logging
 from pathlib import Path
-import sys
 from typing import Iterable, Optional
 
 

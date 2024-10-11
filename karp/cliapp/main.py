@@ -1,6 +1,5 @@
 import logging  # noqa: I001
 from typing import Optional
-import sys
 import code
 
 from sqlalchemy.engine import Engine

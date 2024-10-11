@@ -191,7 +191,7 @@ def update_entry(
     except errors.UpdateConflict as err:
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return responses.JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj)
-    except Exception as err:
+    except Exception:
         logger.exception(
             "error occured",
             extra={"resource_id": resource_id, "entry_id": entry_id.str, "data": data},

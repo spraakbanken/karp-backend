@@ -3,12 +3,10 @@ from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
 import typer
-from json_arrays import jsonlib
 from tabulate import tabulate
 
 from karp.cliapp.typer_injector import inject_from_ctx
 from karp.cliapp.utility import cli_error_handler, cli_timer
-from karp.foundation.value_objects import UniqueIdStr, unique_id
 from karp.lex.application import ResourceQueries
 from karp.lex.domain.value_objects import ResourceConfig
 from karp.resource_commands import ResourceCommands
@@ -49,7 +47,7 @@ def create(
 
     else:
         typer.echo(f"The config file {config_path} was not found.", err=True)
-        typer.echo(f"Could not create the resource.", err=True)
+        typer.echo("Could not create the resource.", err=True)
         raise typer.Exit(1)
 
 
@@ -114,7 +112,7 @@ def reindex(ctx: typer.Context, resource_id: str, remove_old_index: Optional[boo
 def reindex_all(ctx: typer.Context):
     search_commands = inject_from_ctx(SearchCommands, ctx)
     search_commands.reindex_all_resources()
-    typer.echo(f"Successfully reindexed all resrouces")
+    typer.echo("Successfully reindexed all resrouces")
 
 
 @subapp.command("list")
@@ -162,11 +160,11 @@ def unpublish(
         resource_id=resource_id, user="local admin", version=version, keep_index=keep_index
     )
     if unpublished:
-        typer.echo(f"Resource unpublished")
+        typer.echo("Resource unpublished")
         if keep_index:
-            typer.echo(f"Elasticsearch index kept")
+            typer.echo("Elasticsearch index kept")
     else:
-        typer.echo(f"Resource already unpublished")
+        typer.echo("Resource already unpublished")
 
 
 @subapp.command()
@@ -181,11 +179,11 @@ def delete(ctx: typer.Context, resource_id: str, force: Optional[bool] = False):
     if force:
         deleted = resource_commands.delete_resource(resource_id=resource_id)
         if deleted:
-            typer.echo(f"Resource deleted")
+            typer.echo("Resource deleted")
         else:
-            typer.echo(f"Resource already deleted")
+            typer.echo("Resource already deleted")
     else:
-        typer.echo(f"Resource not deleted")
+        typer.echo("Resource not deleted")
 
 
 def init_app(app):

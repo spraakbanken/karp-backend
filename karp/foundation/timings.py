@@ -1,7 +1,6 @@
 """Time utilities."""
 
 import math
-import struct
 from datetime import datetime, timezone
 
 

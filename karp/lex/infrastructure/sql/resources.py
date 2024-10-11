@@ -1,11 +1,11 @@
 import logging
 import typing
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import methodtools
 import sqlalchemy as sa
 from injector import inject
-from sqlalchemy import Engine, and_, func, sql, text
+from sqlalchemy import and_, func, sql
 from sqlalchemy.orm import Session
 
 from karp.foundation import repository

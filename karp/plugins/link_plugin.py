@@ -1,4 +1,4 @@
-from injector import Injector, inject
+from injector import inject
 
 from karp.lex.application import ResourceQueries
 from karp.search.domain import QueryRequest

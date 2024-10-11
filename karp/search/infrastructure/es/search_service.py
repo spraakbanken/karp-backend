@@ -1,6 +1,6 @@
 import logging
 from itertools import groupby
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Iterable, Optional
 
 import elasticsearch
 import elasticsearch.helpers
