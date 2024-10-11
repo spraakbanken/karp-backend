@@ -128,7 +128,7 @@ def test_regex(
 
 
 def test_path_parameter(fa_data_client):
-    query = f"/query/places?path=entry._municipality.code"
+    query = "/query/places?path=entry._municipality.code"
     response = fa_data_client.get(query)
     response_data = response.json()
     # there are different number of hits if running in isolation or

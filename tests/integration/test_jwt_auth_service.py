@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
+
 from karp.auth.domain.errors import (
     AuthError,
     ExpiredToken,

@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import pytest
+
 from karp.foundation.value_objects import UniqueId, make_unique_id
 
 

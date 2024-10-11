@@ -4,13 +4,14 @@ lint.select = [
   "BLE",
   "C4",
   "E",
+  "F",
   "I",
   "RUF",
   "S",
   "YTT",
 ]
 
-lint.ignore = ["E501","ANN001","ANN101", "ANN102","B008","D203","D213","D104", "F841", "RUF100","RUF005"]
+lint.ignore = ["E402", "E501","ANN001","ANN101", "ANN102","B008","D203","D213","D104", "F841", "RUF100","RUF005"]
 
 line-length = 120
 

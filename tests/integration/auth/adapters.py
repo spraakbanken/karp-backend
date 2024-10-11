@@ -1,12 +1,12 @@
 """Unit tests for JWTAuthenticator"""
 
-from datetime import timedelta  # noqa: I001
-from typing import Dict, Optional
 import os
+import pathlib
+from datetime import timedelta
+from typing import Dict, Optional
 
 import jwt
 
-import pathlib
 from karp.foundation.timings import utc_now
 
 AUTH_JWT_AUDIENCE = "spraakbanken:auth"
@@ -22,7 +22,7 @@ def create_access_token(
     scope: Optional[Dict] = None,
     priv_key: Optional[str] = None,
     audience: str = AUTH_JWT_AUDIENCE,
-    expires_in: int = None,
+    expires_in: Optional[int] = None,
 ) -> str:
     priv_key = priv_key or jwt_private_key
     expires_in = expires_in or 60
