@@ -294,8 +294,8 @@ def transform_list(
     # Decide what order to compute the virtual fields in
     try:
         order = list(TopologicalSorter(dependencies).static_order())
-    except CycleError:
-        raise PluginError(f"virtual fields form a cycle: {e.args[1]}") from None
+    except CycleError as e:
+        raise PluginException(f"virtual fields form a cycle: {e.args[1]}") from None
 
     # Expand each field in turn
     for field_name in order:
