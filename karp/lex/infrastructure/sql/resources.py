@@ -94,9 +94,6 @@ class ResourceRepository(repository.Repository):
     def remove_resource_table(self, resource):
         EntryRepository(self._session, resource).drop_table()
 
-    def remove(self, resource: Resource):
-        self._session.delete(resource)
-
     def _save(self, resource: Resource):
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)

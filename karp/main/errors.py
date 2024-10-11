@@ -1,7 +1,5 @@
 import enum
-from typing import IO, Optional
-
-NoIndexModuleConfigured = 10
+from typing import Optional
 
 
 class ClientErrorCodes(enum.IntEnum):
@@ -19,12 +17,3 @@ class KarpError(Exception):
         self.message = message
         self.code = code or ClientErrorCodes.UNKNOWN_ERROR
         self.http_return_code = http_return_code
-
-
-class UpdateConflict(KarpError):
-    def __init__(self, diff):
-        super().__init__(
-            "Version conflict. Please update entry.",
-            code=ClientErrorCodes.VERSION_CONFLICT,
-        )
-        self.error_obj = {"diff": diff, "errorCode": self.code, "error": self.message}

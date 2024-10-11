@@ -13,7 +13,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exception_handlers import http_exception_handler
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 import logging
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -22,7 +21,6 @@ from asgi_matomo import MatomoMiddleware
 
 from karp import main
 from karp.foundation import errors as foundation_errors
-from karp.foundation.value_objects import unique_id
 from karp.auth import errors as auth_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main.errors import ClientErrorCodes

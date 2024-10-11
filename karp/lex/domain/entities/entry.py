@@ -25,8 +25,6 @@ class EntryStatus(enum.Enum):
 
 
 class Entry(Entity):
-    DiscardedEntityError = errors.DiscardedEntityError
-
     def __init__(
         self,
         *,

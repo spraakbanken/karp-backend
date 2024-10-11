@@ -1,15 +1,12 @@
 import datetime
 from typing import Optional, Union
 
-from karp.foundation import errors
-from karp.foundation.errors import ConsistencyError
+from karp.foundation.errors import ConsistencyError, DiscardedEntityError
 from karp.foundation.timings import monotonic_utc_now
 from karp.foundation.value_objects import UniqueId
 
 
 class Entity:
-    DiscardedEntityError = errors.DiscardedEntityError
-
     def __init__(
         self,
         id: UniqueId,  # noqa: A002
@@ -59,7 +56,7 @@ class Entity:
 
     def _check_not_discarded(self):
         if self._discarded:
-            raise self.DiscardedEntityError(f"Attempt to use {self!r}, entity_id = {self.entity_id}")
+            raise DiscardedEntityError(f"Attempt to use {self!r}, entity_id = {self.entity_id}")
 
     def _increment_version(self):
         self._version += 1
