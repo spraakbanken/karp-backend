@@ -35,9 +35,7 @@ class JWTAuthService:
         logger.debug("authenticate called", extra={"credentials": credentials})
 
         try:
-            jwt_decoded = jwt.decode(
-                credentials, key=self._jwt_key, algorithms=["RS256"], leeway=5
-            )
+            jwt_decoded = jwt.decode(credentials, key=self._jwt_key, algorithms=["RS256"], leeway=5)
             payload = JWTPayload(
                 sub=jwt_decoded["sub"],
                 levels=jwt_decoded["levels"],

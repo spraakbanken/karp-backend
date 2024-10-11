@@ -1,6 +1,5 @@
 import logging  # noqa: I001
 from typing import Optional
-import sys
 import code
 
 from sqlalchemy.engine import Engine
@@ -23,7 +22,7 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown")
+app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown", pretty_exceptions_enable=False)
 
 
 def create_app():
@@ -32,9 +31,7 @@ def create_app():
     @app.callback()
     def set_app_context(
         ctx: typer.Context,
-        version: Optional[bool] = typer.Option(
-            None, "--version", callback=version_callback, is_eager=True
-        ),
+        version: Optional[bool] = typer.Option(None, "--version", callback=version_callback, is_eager=True),
     ):
         if ctx.invoked_subcommand is None:
             ctx.obj = {}

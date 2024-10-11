@@ -1,5 +1,5 @@
 import abc  # noqa: I001
-from typing import Generic, TypeVar, Optional, Type
+from typing import Optional, Type
 
 from karp.foundation.value_objects import UniqueId
 from .errors import NotFoundError

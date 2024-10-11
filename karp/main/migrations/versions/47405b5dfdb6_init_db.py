@@ -38,9 +38,7 @@ def upgrade():
         sa.Column("discarded", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("history_id"),
         sa.UniqueConstraint("entity_id", "version", name="entity_id_version_unique_constraint"),
-        sa.UniqueConstraint(
-            "table_name", "version", name="table_name_version_unique_constraint"
-        ),
+        sa.UniqueConstraint("table_name", "version", name="table_name_version_unique_constraint"),
     )
 
 

@@ -74,8 +74,7 @@ class EsMappingRepository:
         resources = resource_repo.get_published_resources()
 
         self.default_sort: Dict[str, str] = {
-            resource.resource_id: resource.config.sort or resource.config.id
-            for resource in resources
+            resource.resource_id: resource.config.sort or resource.config.id for resource in resources
         }
 
         aliases = self._get_all_aliases()
@@ -115,9 +114,7 @@ class EsMappingRepository:
         # check that field_name is defined with the same type in all given resources
         fields = [self.fields[resource_id][field_name] for resource_id in resource_ids]
         if fields.count(fields[0]) != len(fields):
-            raise ValueError(
-                f"Resources: {resource_ids} have different settings for field: {field_name}"
-            )
+            raise ValueError(f"Resources: {resource_ids} have different settings for field: {field_name}")
         return fields[0]
 
     def _update_field_mapping(self, aliases: List[Tuple[str, str]]):
@@ -128,9 +125,7 @@ class EsMappingRepository:
         mapping: Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]] = self.es.indices.get_mapping()
         for alias, index in aliases:
             if "mappings" in mapping[index] and "properties" in mapping[index]["mappings"]:
-                self.fields[alias] = self._get_fields_from_mapping(
-                    mapping[index]["mappings"]["properties"]
-                )
+                self.fields[alias] = self._get_fields_from_mapping(mapping[index]["mappings"]["properties"])
                 self.sortable_fields[alias] = {}
                 for field in self.fields[alias].values():
                     if field.sort_form in self.fields[alias]:
@@ -157,20 +152,14 @@ class EsMappingRepository:
             fields[field.name] = field
 
             # Add all recursive fields too
-            res1 = EsMappingRepository._get_fields_from_mapping(
-                prop_value.get("properties", {}), prop_path
-            )
-            res2 = EsMappingRepository._get_fields_from_mapping(
-                prop_value.get("fields", {}), prop_path, True
-            )
+            res1 = EsMappingRepository._get_fields_from_mapping(prop_value.get("properties", {}), prop_path)
+            res2 = EsMappingRepository._get_fields_from_mapping(prop_value.get("fields", {}), prop_path, True)
             fields.update(res1)
             fields.update(res2)
 
         return fields
 
-    def _get_index_mappings(
-        self, index: Optional[str] = None
-    ) -> Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]]:
+    def _get_index_mappings(self, index: Optional[str] = None) -> Dict[str, Dict[str, Dict[str, Dict[str, Dict]]]]:
         kwargs = {"index": index} if index is not None else {}
         return self.es.indices.get_mapping(**kwargs)
 
@@ -208,9 +197,7 @@ class EsMappingRepository:
         g = groupby(map(_translate_unless_none, resources))
         sort_field = next(g)[0]
         if next(g, False):
-            raise KarpError(
-                message="Resources do not share default sort field, set sort field explicitly"
-            )
+            raise KarpError(message="Resources do not share default sort field, set sort field explicitly")
         return sort_field
 
     def translate_sort_fields(
@@ -234,9 +221,7 @@ class EsMappingRepository:
                 if sort_order:
                     field = self._translate_sort_field(resource_id, sort_value)
                     translated_sort_fields.append({field: {"order": sort_order}})
-                translated_sort_fields.append(
-                    self._translate_sort_field(resource_id, sort_value)
-                )
+                translated_sort_fields.append(self._translate_sort_field(resource_id, sort_value))
 
         return translated_sort_fields
 
@@ -244,6 +229,4 @@ class EsMappingRepository:
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value].name
         else:
-            raise UnsupportedField(
-                f"You can't sort by field '{sort_value}' for resource '{resource_id}'"
-            )
+            raise UnsupportedField(f"You can't sort by field '{sort_value}' for resource '{resource_id}'")

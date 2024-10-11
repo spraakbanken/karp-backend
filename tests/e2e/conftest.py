@@ -42,9 +42,7 @@ def apply_migrations():
 
 
 @pytest.fixture(name="app", scope="session")
-def fixture_app(
-    apply_migrations: None, init_search_service: None
-) -> Generator[FastAPI, None, None]:
+def fixture_app(apply_migrations: None, init_search_service: None) -> Generator[FastAPI, None, None]:
     from karp.api.main import create_app
 
     yield create_app()
@@ -78,9 +76,7 @@ def create_and_publish_resource(
 
         resource_commands.create_resource(resource_config, "")
 
-        resource_commands.publish_resource(
-            user="", resource_id=resource_id, version=1, message=""
-        )
+        resource_commands.publish_resource(user="", resource_id=resource_id, version=1, message="")
 
 
 @pytest.fixture(scope="session", name="fa_data_client")
@@ -105,9 +101,7 @@ def fixture_fa_data_client(  # noqa: ANN201
     return fa_client
 
 
-auth_levels: typing.Dict[str, int] = {
-    level.value: (idx + 1) * 10 for idx, level in enumerate(auth.PermissionLevel)
-}
+auth_levels: typing.Dict[str, int] = {level.value: (idx + 1) * 10 for idx, level in enumerate(auth.PermissionLevel)}
 
 
 def create_bearer_token(

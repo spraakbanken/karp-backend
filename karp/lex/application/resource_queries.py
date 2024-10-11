@@ -27,9 +27,7 @@ class ResourceQueries:
         result = self._resources.by_resource_id(resource_id, version=version)
         return self._from_resource(result)
 
-    def by_resource_id_optional(
-        self, resource_id: str, version: Optional[int] = None
-    ) -> Optional[ResourceDto]:
+    def by_resource_id_optional(self, resource_id: str, version: Optional[int] = None) -> Optional[ResourceDto]:
         result = self._resources.by_resource_id_optional(resource_id, version=version)
         if result is not None:
             return self._from_resource(result)
@@ -38,9 +36,7 @@ class ResourceQueries:
         result = self._resources.by_id(entity_id, version=version)
         return self._from_resource(result)
 
-    def by_id_optional(
-        self, entity_id: UniqueId, version: Optional[int] = None
-    ) -> Optional[ResourceDto]:
+    def by_id_optional(self, entity_id: UniqueId, version: Optional[int] = None) -> Optional[ResourceDto]:
         result = self._resources.by_id_optional(entity_id, version=version)
         if result is not None:
             return self._from_resource(result)
