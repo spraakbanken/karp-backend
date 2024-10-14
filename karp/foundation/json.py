@@ -260,7 +260,7 @@ def expand_path(path: Union[str, Path], data, prefix=None, expand_arrays=True) -
     elif not path:
         yield prefix
 
-    elif isinstance(data, Dict) and path[0] not in data:
+    elif not isinstance(data, Dict) or path[0] not in data:
         # Skip if the field doesn't exist
         pass
 
