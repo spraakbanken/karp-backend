@@ -8,6 +8,14 @@ Testing make_path:
 >>> make_path(['SOLemman', 's_nr'])
 ['SOLemman', 's_nr']
 
+Testing path_str:
+
+>>> path_str(['SOLemman', 0, 's_nr'])
+'SOLemman.0.s_nr'
+
+>>> path_str('SOLemman.0.s_nr')
+'SOLemman.0.s_nr'
+
 Testing get_path:
 
 >>> get_path(['SOLemman', 's_nr'], {'SOLemman': {'s_nr': 5}})

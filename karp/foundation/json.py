@@ -19,6 +19,19 @@ def make_path(path: Union[str, Path]) -> Path:
         raise AssertionError(f"path of wrong type {type(path)}")
 
 
+def path_str(path: Union[str, Path]) -> str:
+    """
+    Convert a path (e.g. ["SOLemman", "s_nr"]) into a string (e.g. "SOLemman.s_nr").
+    """
+
+    if isinstance(path, str):
+        return path
+    elif isinstance(path, list):
+        return ".".join(map(str, path))
+    else:
+        raise AssertionError(f"path of wrong type {type(path)}")
+
+
 def get_path(path: Union[str, Path], data):
     """
     Look up a path in a JSON object, returning the value stored at that path.
