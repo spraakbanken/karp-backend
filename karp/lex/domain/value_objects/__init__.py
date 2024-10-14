@@ -3,4 +3,4 @@
 from .entry_schema import EntrySchema
 from .resource_config import Field, ResourceConfig
 
-__all__ = ["ResourceConfig", "Field"]
+__all__ = ["ResourceConfig", "EntrySchema", "Field"]

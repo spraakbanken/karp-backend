@@ -39,9 +39,7 @@ class SearchCommands:
 
         # create and add data to new index without touching the old alias
         index_name = self.index.create_index(resource_id, resource_config, create_alias=False)
-        self.index.add_entries(
-            index_name, self._transform(resource, self.entry_queries.all_entries(resource_id))
-        )
+        self.index.add_entries(index_name, self._transform(resource, self.entry_queries.all_entries(resource_id)))
 
         if remove_old_index:
             self.index.delete_index(resource_id)

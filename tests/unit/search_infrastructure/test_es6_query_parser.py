@@ -57,9 +57,7 @@ def get_regexp_object(field, val):
             es_dsl.Q(
                 "bool",
                 should=[
-                    es_dsl.Q(
-                        "multi_match", query="hej", fields=["*"], lenient=True, type="phrase"
-                    ),
+                    es_dsl.Q("multi_match", query="hej", fields=["*"], lenient=True, type="phrase"),
                     es_dsl.Q(
                         "nested",
                         path="infT",
@@ -151,10 +149,7 @@ def get_regexp_object(field, val):
             es_dsl.Q(
                 "nested",
                 path="infT",
-                query=(
-                    es_dsl.Q("match_phrase", infT__wf="a")
-                    & es_dsl.Q("match_phrase", infT__msd="s")
-                ),
+                query=(es_dsl.Q("match_phrase", infT__wf="a") & es_dsl.Q("match_phrase", infT__msd="s")),
             ),
         ),
         (

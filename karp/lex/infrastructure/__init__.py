@@ -1,9 +1,4 @@
-import logging  # noqa: I001
-
-from sqlalchemy.orm import Session
-
-from .sql import ResourceRepository, EntryRepository
-
+from .sql import EntryRepository, ResourceRepository
 
 __all__ = [
     "ResourceRepository",

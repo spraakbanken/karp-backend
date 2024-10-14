@@ -7,7 +7,6 @@ import pydantic
 from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
 from karp.lex.domain.entities import Entry, Resource
-from karp.lex.domain.entities.entry import EntryOp
 from karp.lex.domain.value_objects import ResourceConfig
 
 

@@ -1,7 +1,7 @@
 """Utilities for working with JSON objects."""
 
 from itertools import takewhile
-from typing import Dict, Iterator, Tuple, Union
+from typing import Dict, Iterator, Union
 
 Path = list[Union[str, int]]
 
@@ -15,6 +15,19 @@ def make_path(path: Union[str, Path]) -> Path:
         return path.split(".")
     elif isinstance(path, list):
         return path
+    else:
+        raise AssertionError(f"path of wrong type {type(path)}")
+
+
+def path_str(path: Union[str, Path]) -> str:
+    """
+    Convert a path (e.g. ["SOLemman", "s_nr"]) into a string (e.g. "SOLemman.s_nr").
+    """
+
+    if isinstance(path, str):
+        return path
+    elif isinstance(path, list):
+        return ".".join(map(str, path))
     else:
         raise AssertionError(f"path of wrong type {type(path)}")
 
@@ -247,7 +260,7 @@ def expand_path(path: Union[str, Path], data, prefix=None, expand_arrays=True) -
     elif not path:
         yield prefix
 
-    elif isinstance(data, Dict) and path[0] not in data:
+    elif not isinstance(data, Dict) or path[0] not in data:
         # Skip if the field doesn't exist
         pass
 

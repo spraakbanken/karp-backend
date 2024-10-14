@@ -1,7 +1,6 @@
 import collections.abc  # noqa: I001
 import logging
 from pathlib import Path
-import sys
 from typing import Iterable, Optional
 
 
@@ -18,7 +17,6 @@ from karp.lex.domain.value_objects import entry_schema, ResourceConfig
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.cliapp.typer_injector import inject_from_ctx
 from karp.lex.application import ResourceQueries, EntryQueries
-from karp.plugins.plugin import untransform_entries
 
 logger = logging.getLogger(__name__)
 
@@ -108,18 +106,16 @@ def export_entries(
     ctx: typer.Context,
     resource_id: str,
     output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
-    include_virtual_fields: bool = True,
+    expand_plugins: bool = True,
 ):
     resource_queries = inject_from_ctx(ResourceQueries, ctx=ctx)
     entry_queries = inject_from_ctx(EntryQueries, ctx=ctx)
     resource = resource_queries.by_resource_id(resource_id)
-    entries = entry_queries.all_entries(resource_id=resource_id)
+    entries = entry_queries.all_entries(resource_id=resource_id, expand_plugins=expand_plugins)
     logger.debug(
         "exporting entries",
         extra={"resource_id": resource_id, "type(all_entries)": type(entries)},
     )
-    if not include_virtual_fields:
-        entries = untransform_entries(resource.config, entries)
 
     json_arrays.dump(
         (entry.dict() for entry in entries),
@@ -234,9 +230,7 @@ def validate_entries(
     entries: Iterable[dict] = json_arrays.load_from_file(path, use_stdin_as_default=True)
     if as_import:
         entries = (import_entry["entry"] for import_entry in entries)
-    with json_arrays.sink_from_file(
-        err_output, use_stderr_as_default=True
-    ) as error_sink, json_arrays.sink_from_file(
+    with json_arrays.sink_from_file(err_output, use_stderr_as_default=True) as error_sink, json_arrays.sink_from_file(
         output, use_stdout_as_default=True
     ) as correct_sink:
         error_counter = Counter(error_sink)

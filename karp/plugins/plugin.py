@@ -1,9 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
-from collections import defaultdict
 from copy import deepcopy
-from pprint import pp
-from typing import Callable, Dict, Iterable, Iterator, Optional, Type, Union
+from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
 import methodtools
 from frozendict import deepfreeze
@@ -21,6 +19,7 @@ from karp.foundation.json import (
     make_path,
     set_path,
 )
+from karp.lex.domain.dtos import EntryDto, ResourceDto
 from karp.lex.domain.value_objects import Field, ResourceConfig
 
 logger = logging.getLogger(__name__)
@@ -82,7 +81,7 @@ class Plugins:
     @methodtools.lru_cache(maxsize=None)
     def _get_plugin(self, name: str) -> Plugin:
         if not name:
-            raise PluginException(f'Resource config has "virtual": "true" but no "plugin" field')
+            raise PluginException('Resource config has "virtual": "true" but no "plugin" field')
         return self.injector.get(find_plugin(name))
 
     def output_config(self, config: Field) -> Field:
@@ -98,11 +97,7 @@ class Plugins:
         batch = list(batch)
         if not batch:
             return []
-        result = list(
-            self._get_plugin(config.plugin).generate_batch(
-                config.params | item for item in batch
-            )
-        )
+        result = list(self._get_plugin(config.plugin).generate_batch(config.params | item for item in batch))
         if len(result) != len(batch):
             raise AssertionError("batch result had wrong length")
         return result
@@ -162,9 +157,7 @@ def find_virtual_fields(resource_config: ResourceConfig) -> dict[str, Field]:
     return result
 
 
-def transform_entry(
-    plugins: Plugins, resource_config: ResourceConfig, entry_dto: "EntryDto"
-) -> "EntryDto":
+def transform_entry(plugins: Plugins, resource_config: ResourceConfig, entry_dto: "EntryDto") -> "EntryDto":
     """
     Given an entry, calculate all the virtual fields.
     """
@@ -181,9 +174,7 @@ def transform_entries(
 
     cached_results = {}
     for batch in batch_items(entry_dtos):
-        new_entries = transform_list(
-            plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results
-        )
+        new_entries = transform_list(plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results)
         for entry_dto, new_entry in zip(batch, new_entries):
             entry_dto = entry_dto.model_copy(deep=True)
             entry_dto.entry = new_entry
@@ -302,8 +293,8 @@ def transform_list(
     # Decide what order to compute the virtual fields in
     try:
         order = list(TopologicalSorter(dependencies).static_order())
-    except CycleError:
-        raise PluginError(f"virtual fields form a cycle: {e.args[1]}") from None
+    except CycleError as e:
+        raise PluginException(f"virtual fields form a cycle: {e.args[1]}") from None
 
     # Expand each field in turn
     for field_name in order:
@@ -358,9 +349,7 @@ def untransform_entry(resource_config: ResourceConfig, entry_dto: "EntryDto") ->
     return next(untransform_entries(resource_config, [entry_dto]))
 
 
-def untransform_entries(
-    resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"]
-) -> Iterator["EntryDto"]:
+def untransform_entries(resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"]) -> Iterator["EntryDto"]:
     """
     Remove all the virtual fields from a list of entries.
     """

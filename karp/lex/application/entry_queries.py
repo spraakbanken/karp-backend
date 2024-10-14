@@ -34,33 +34,35 @@ class EntryQueries:
         self.resources = resources
         self.plugins = plugins
 
-    def _to_dtos(
-        self, resource_id, entries: typing.Iterable[Entry]
-    ) -> typing.Iterator[EntryDto]:
+    def _to_dtos(self, resource_id, entries: typing.Iterable[Entry], expand_plugins=True) -> typing.Iterator[EntryDto]:
         resource = self.resources.by_resource_id(resource_id)
-        return plugins.transform_entries(
-            self.plugins, resource.config, (EntryDto.from_entry(entry) for entry in entries)
-        )
+        result = (EntryDto.from_entry(entry) for entry in entries)
+        if expand_plugins:
+            return plugins.transform_entries(self.plugins, resource.config, result)
+        else:
+            return result
 
-    def _to_dto(self, entry: Entry) -> EntryDto:
-        return next(self._to_dtos(entry.resource_id, [entry]))
+    def _to_dto(self, entry: Entry, **kwargs) -> EntryDto:
+        return next(self._to_dtos(entry.resource_id, [entry], **kwargs))
 
     def by_id(
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
+        **kwargs,
     ) -> EntryDto:
         entries = self.resources.entries_by_resource_id(resource_id)
-        return self._to_dto(entries.by_id(UniqueId.validate(id)))
+        return self._to_dto(entries.by_id(UniqueId.validate(id)), **kwargs)
 
     def by_id_optional(
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
+        **kwargs,
     ) -> typing.Optional[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
         if entry := entries.by_id_optional(UniqueId.validate(id)):
-            return self._to_dto(entry)
+            return self._to_dto(entry, **kwargs)
         return None
 
     def transform_entry_body(
@@ -71,19 +73,20 @@ class EntryQueries:
         resource = self.resources.by_resource_id(resource_id)
         return plugins.transform(self.plugins, resource.config, entry_body)
 
-    def all_entries(self, resource_id: str) -> typing.Iterable[EntryDto]:
+    def all_entries(self, resource_id: str, **kwargs) -> typing.Iterable[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
-        return self._to_dtos(resource_id, entries.all_entries())
+        return self._to_dtos(resource_id, entries.all_entries(), **kwargs)
 
     def get_entry_history(
         self,
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
         version: typing.Optional[int],
+        **kwargs,
     ) -> EntryDto:
         entries = self.resources.entries_by_resource_id(resource_id)
         result = entries.by_id(UniqueId.validate(id), version=version)
-        return self._to_dto(result)
+        return self._to_dto(result, **kwargs)
 
     def get_history(
         self,

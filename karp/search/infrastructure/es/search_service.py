@@ -1,6 +1,6 @@
 import logging
 from itertools import groupby
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Iterable, Optional
 
 import elasticsearch
 import elasticsearch.helpers
@@ -33,9 +33,7 @@ class EsQueryBuilder(NodeWalker):
     def walk__equals(self, node):
         (field_path, field) = self.walk(node.field)
         if field.type != "text":
-            return self.wrap_nested(
-                field_path, es_dsl.Q("match", **{field_path: {"query": self.walk(node.arg)}})
-            )
+            return self.wrap_nested(field_path, es_dsl.Q("match", **{field_path: {"query": self.walk(node.arg)}}))
         return self.match_text(field_path, self.walk(node.arg), phrase=True)
 
     def walk__freetext(self, node):
@@ -69,9 +67,7 @@ class EsQueryBuilder(NodeWalker):
 
     def walk__missing(self, node):
         field_path, _ = self.walk(node.field)
-        return self.wrap_nested(
-            field_path, es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=field_path))
-        )
+        return self.wrap_nested(field_path, es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=field_path)))
 
     def walk_range(self, node):
         field_path, _ = self.walk(node.field)
@@ -125,12 +121,7 @@ class EsQueryBuilder(NodeWalker):
         else:
             # TODO move these checks into mapping_repo
             # check that all the resources have the same nested settings for the field
-            g = groupby(
-                [
-                    self.mapping_repo.is_nested(resource_id, self.path + path)
-                    for resource_id in self.resources
-                ]
-            )
+            g = groupby([self.mapping_repo.is_nested(resource_id, self.path + path) for resource_id in self.resources])
             is_nested = next(g)[0]
             if next(g, False):
                 raise errors.IncompleteQuery(
@@ -260,9 +251,7 @@ class EsSearchService:
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
-        return [
-            self._build_result(query, response) for query, response in zip(queries, responses)
-        ]
+        return [self._build_result(query, response) for query, response in zip(queries, responses)]
 
     def search_with_query(self, query: QueryRequest):
         logger.info("search_with_query called", extra={"query": query})
@@ -280,9 +269,7 @@ class EsSearchService:
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
                 logger.info("Parse error", extra={"err": err})
-                raise errors.IncompleteQuery(
-                    failing_query=query.q, error_description=str(err)
-                ) from err
+                raise errors.IncompleteQuery(failing_query=query.q, error_description=str(err)) from err
 
         s = es_dsl.Search(using=self.es, index=resources)
         s = self.add_runtime_mappings(s, field_names)
@@ -324,9 +311,7 @@ class EsSearchService:
                 base_field = field.removesuffix(".length")
                 mappings[field] = {
                     "type": "long",
-                    "script": {
-                        "source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"
-                    },
+                    "script": {"source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"},
                 }
 
         if mappings:
@@ -347,10 +332,7 @@ class EsSearchService:
         s = s[:0]
 
         # if field is analyzed, do aggregation on the "raw" multi-field
-        if (
-            field in self.mapping_repo.fields[resource_id]
-            and self.mapping_repo.fields[resource_id][field].analyzed
-        ):
+        if field in self.mapping_repo.fields[resource_id] and self.mapping_repo.fields[resource_id][field].analyzed:
             agg_field = field + ".raw"
         else:
             agg_field = field
@@ -408,7 +390,4 @@ class EsSearchService:
 
         else:
             field_values = agg_response.field_values
-            return [
-                {"value": bucket["key"], "count": bucket["doc_count"]}
-                for bucket in field_values.buckets
-            ]
+            return [{"value": bucket["key"], "count": bucket["doc_count"]} for bucket in field_values.buckets]

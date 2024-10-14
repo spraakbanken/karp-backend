@@ -6,7 +6,7 @@ from typing import List
 from injector import inject
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.orm.exc import NoResultFound
 
 from karp.auth.domain.errors import ApiKeyError
 from karp.auth.domain.user import User
@@ -62,7 +62,5 @@ class APIKeyService:
             }
 
     def _get_api_key(self, api_key):
-        rows = self.session.execute(
-            select(ApiKeyModel).where(ApiKeyModel.api_key == api_key)
-        ).one()
+        rows = self.session.execute(select(ApiKeyModel).where(ApiKeyModel.api_key == api_key)).one()
         return rows[0]

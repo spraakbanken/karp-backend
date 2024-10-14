@@ -4,6 +4,7 @@ import time
 
 import typer
 
+from karp.lex.domain.errors import LexDomainError
 from karp.main.errors import KarpError
 
 logger = logging.getLogger("karp")
@@ -16,7 +17,10 @@ def cli_error_handler(func):
             return func(*args, **kwargs)
         except KarpError as e:
             logger.error(e.message)
-            raise typer.Exit(e.code)  # noqa: B904
+            raise typer.Exit(e.code) from None
+        except LexDomainError as e:
+            logger.error(str(e))
+            raise typer.Exit(1) from None
 
     return func_wrapper
 

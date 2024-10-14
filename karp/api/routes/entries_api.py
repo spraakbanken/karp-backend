@@ -5,7 +5,6 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
-    Query,
     status,
 )
 from starlette import responses
@@ -48,9 +47,7 @@ def get_history_for_entry(
         )
     if resource_id not in published_resources:
         raise ResourceNotFound(resource_id)
-    logger.debug(
-        "getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id}
-    )
+    logger.debug("getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id})
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
 
@@ -193,10 +190,8 @@ def update_entry(
         )
     except errors.UpdateConflict as err:
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
-        return responses.JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj
-        )
-    except Exception as err:
+        return responses.JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj)
+    except Exception:
         logger.exception(
             "error occured",
             extra={"resource_id": resource_id, "entry_id": entry_id.str, "data": data},
