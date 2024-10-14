@@ -3,9 +3,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
-from karp import auth, search
+from karp import auth
 from karp.auth.application import ResourcePermissionQueries
-from karp.lex import EntryDto
 from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 from karp.search.domain import QueryRequest
@@ -120,9 +119,7 @@ def query(
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned. See [Query DSL](#section/Query-DSL)",
     ),
-    from_: int = Query(
-        0, alias="from", description="Specify which entry should be the first returned."
-    ),
+    from_: int = Query(0, alias="from", description="Specify which entry should be the first returned."),
     size: int = Query(25, description="Number of entries in page."),
     sort: List[str] = Query(
         [],

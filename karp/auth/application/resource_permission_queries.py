@@ -1,7 +1,6 @@
 import typing
 
 from karp.auth.application.resources import ResourcePermissionDto
-from karp.auth.domain import errors
 from karp.auth.domain.user import User
 from karp.foundation.value_objects.permission_level import PermissionLevel
 from karp.lex.infrastructure import ResourceRepository
@@ -23,9 +22,7 @@ class ResourcePermissionQueries:
                 protected = "WRITE"
             else:
                 protected = "READ"
-            resource_permissions.append(
-                ResourcePermissionDto(resource_id=resource.resource_id, protected=protected)
-            )
+            resource_permissions.append(ResourcePermissionDto(resource_id=resource.resource_id, protected=protected))
 
         return resource_permissions
 

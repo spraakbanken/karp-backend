@@ -1,7 +1,7 @@
 """Utilities for working with JSON objects."""
 
 from itertools import takewhile
-from typing import Dict, Iterator, Tuple, Union
+from typing import Dict, Iterator, Union
 
 Path = list[Union[str, int]]
 

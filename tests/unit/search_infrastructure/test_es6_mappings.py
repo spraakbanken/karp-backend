@@ -115,9 +115,7 @@ class TestCreateEsMapping:
         assert mapping["properties"][field] == expected_property
 
     def test_sort(self):  # noqa: ANN201
-        data = ResourceConfig(
-            resource_id="", config_str="", fields={"name": Field(type="string")}, sort=["name"]
-        )
+        data = ResourceConfig(resource_id="", config_str="", fields={"name": Field(type="string")}, sort=["name"])
 
         mapping = create_es_mapping(data)
 

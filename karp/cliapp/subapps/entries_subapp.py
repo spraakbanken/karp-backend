@@ -1,7 +1,6 @@
 import collections.abc  # noqa: I001
 import logging
 from pathlib import Path
-import sys
 from typing import Iterable, Optional
 
 
@@ -231,9 +230,7 @@ def validate_entries(
     entries: Iterable[dict] = json_arrays.load_from_file(path, use_stdin_as_default=True)
     if as_import:
         entries = (import_entry["entry"] for import_entry in entries)
-    with json_arrays.sink_from_file(
-        err_output, use_stderr_as_default=True
-    ) as error_sink, json_arrays.sink_from_file(
+    with json_arrays.sink_from_file(err_output, use_stderr_as_default=True) as error_sink, json_arrays.sink_from_file(
         output, use_stdout_as_default=True
     ) as correct_sink:
         error_counter = Counter(error_sink)

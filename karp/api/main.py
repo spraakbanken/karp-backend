@@ -1,34 +1,25 @@
+import logging
 import time
 import traceback
 from typing import Any
 
-try:
-    from importlib.metadata import entry_points
-except ImportError:
-    # used if python < 3.8
-    from importlib_metadata import entry_points  # type: ignore
-
-from fastapi import FastAPI, Request, Response, status, HTTPException  # noqa: I001
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.exception_handlers import http_exception_handler
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
-import logging
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
 from asgi_matomo import MatomoMiddleware
+from fastapi import FastAPI, HTTPException, Request, Response, status  # noqa: I001
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from karp import main
-from karp.foundation import errors as foundation_errors
-from karp.foundation.value_objects import unique_id
-from karp.auth import errors as auth_errors
-from karp.lex.domain import errors as lex_errors
-from karp.main.errors import ClientErrorCodes
-from karp.main import config, new_session
 from karp.api.routes import router as api_router
-
+from karp.auth import errors as auth_errors
+from karp.foundation import errors as foundation_errors
+from karp.lex.domain import errors as lex_errors
+from karp.main import config, new_session
+from karp.main.errors import ClientErrorCodes
 
 querying_description = """
 ## Query DSL
@@ -197,9 +188,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def injector_middleware(request: Request, call_next):
-        response: Response = JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         # Create a new session per request
         with new_session(app_context.injector) as injector:
             request.state.session = injector.get(Session)
@@ -211,9 +200,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def _logging_middleware(request: Request, call_next) -> Response:
-        response: Response = JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         start_time = time.time()
         try:
             response = await call_next(request)
