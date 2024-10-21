@@ -253,6 +253,14 @@ def expand_path(path: Union[str, Path], data, prefix=None, expand_arrays=True) -
         else:
             return False
 
+    def field_present():
+        if isinstance(data, Dict) and path[0] in data:
+            return True
+        elif isinstance(data, list) and path[0] in range(len(data)):
+            return True
+        else:
+            return False
+
     if isinstance(data, list) and should_descend_into_array():
         for i, item in enumerate(data):
             yield from expand_path(path, item, prefix + [i], expand_arrays)
@@ -260,7 +268,7 @@ def expand_path(path: Union[str, Path], data, prefix=None, expand_arrays=True) -
     elif not path:
         yield prefix
 
-    elif not isinstance(data, Dict) or path[0] not in data:
+    elif not field_present():
         # Skip if the field doesn't exist
         pass
 
