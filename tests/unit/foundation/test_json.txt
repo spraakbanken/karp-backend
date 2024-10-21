@@ -85,8 +85,12 @@ Testing expand_path:
 >>> for path in expand_path('SOLemman.s_nr', doc): print(path)
 ['SOLemman', 0, 's_nr']
 ['SOLemman', 1, 's_nr']
+>>> for path in expand_path(['SOLemman', 0, 's_nr'], doc): print(path)
+['SOLemman', 0, 's_nr']
 >>> for path in expand_path('SOLemman', doc, expand_arrays=False): print(path)
 ['SOLemman']
 >>> for path in expand_path('SOLemman.s_nr', doc, expand_arrays=False): print(path)
 ['SOLemman', 0, 's_nr']
 ['SOLemman', 1, 's_nr']
+>>> for path in expand_path(['SOLemman', 0, 's_nr'], doc, expand_arrays=False): print(path)
+['SOLemman', 0, 's_nr']
