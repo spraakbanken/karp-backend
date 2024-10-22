@@ -19,6 +19,7 @@ from karp.auth.infrastructure import APIKeyService
 import readline
 import rlcompleter
 from pathlib import Path
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,11 @@ def repl(
         "es_search_service": inject_from_ctx(EsSearchService, ctx),
         "api_key_service": inject_from_ctx(APIKeyService, ctx),
     }
+
+    module = sys.__class__
+    karp_api = module("karp_api")
+    karp_api.__dict__.update(locals)
+    sys.modules["karp_api"] = karp_api
 
     banner = ["The following objects are available:"]
     for name, obj in locals.items():
