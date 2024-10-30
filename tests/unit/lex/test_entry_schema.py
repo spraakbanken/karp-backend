@@ -1,10 +1,9 @@
 import pytest
-
 from karp.lex.domain.value_objects.entry_schema import (
     EntrySchema,
     create_entry_json_schema,
 )
-from karp.lex.domain.value_objects.resource_config import Field, ResourceConfig
+from karp.lex.domain.value_objects.resource_config import ResourceConfig, Field
 
 
 @pytest.fixture()

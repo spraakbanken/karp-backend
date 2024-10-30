@@ -1,8 +1,8 @@
 from typer.testing import CliRunner
-
-from karp.cliapp.main import create_app
 from karp.lex.application import ResourceQueries
+
 from karp.main import AppContext
+from karp.cliapp.main import create_app
 
 runner = CliRunner()
 cliapp = create_app()

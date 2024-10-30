@@ -659,7 +659,7 @@ class TestPreviewEntry:
         }
 
         response = fa_data_client.post(
-            "/entries/places/preview",
+            f"/entries/places/preview",
             json={"entry": entry},
             headers=write_token.as_header(),
         )

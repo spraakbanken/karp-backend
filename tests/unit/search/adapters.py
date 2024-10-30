@@ -3,9 +3,10 @@ from typing import Dict, Iterable, Optional
 
 from injector import Injector, Module, provider, singleton
 
+from karp.search.infrastructure.es import EsIndex
 from karp.foundation.timings import utc_now
 from karp.search.domain.index_entry import IndexEntry
-from karp.search.infrastructure.es import EsIndex
+from karp.lex.domain.entities import Entry
 
 
 @dataclasses.dataclass
@@ -29,7 +30,7 @@ class InMemoryIndex(EsIndex):
     def create_index(self, resource_id: str, config, create_alias=True):
         self.indices[resource_id] = InMemoryIndex.Index(config=config, created_at=utc_now())
 
-    def publish_index(self, alias_name: str, index_name: Optional[str] = None):
+    def publish_index(self, alias_name: str, index_name: str = None):  # noqa: ANN201
         self.indices[alias_name].published = True
 
     def add_entries(  # noqa: ANN201

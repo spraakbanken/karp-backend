@@ -1,5 +1,5 @@
-import pytest
 from injector import Injector
+import pytest
 
 from . import adapters
 
