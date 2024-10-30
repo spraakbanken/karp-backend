@@ -66,8 +66,8 @@ class EsQueryBuilder(NodeWalker):
         return self.wrap_nested(field_path, es_dsl.Q("exists", field=field_path))
 
     def walk__missing(self, node):
-        field_path, _ = self.walk(node.field)
-        return self.wrap_nested(field_path, es_dsl.Q("bool", must_not=es_dsl.Q("exists", field=field_path)))
+        q = self.walk__exists(node)
+        return es_dsl.Q("bool", must_not=q)
 
     def walk_range(self, node):
         field_path, _ = self.walk(node.field)
@@ -108,20 +108,20 @@ class EsQueryBuilder(NodeWalker):
         return self.wrap_nested(field_path + ".TODO", query)
 
     def wrap_nested(self, field_path, query):
-        path, *leaf = field_path.rsplit(".", 1)
-
-        # if leaf is empty, the field is not a path, and cannot be nested
-        if not leaf:
-            return query
-
+        """
+        field_path is a string representing the field to be search in, which may be a path separated by "."
+        query is the ES (DSL) query to be wrapped
+        """
         # if self.path is set and the current field is part of the current path, no nesting added at this level
         # TODO ugly, refactor
-        if self.path and (path + ".") == self.path:
+        if self.path and (field_path + ".") == self.path:
             pass
         else:
             # TODO move these checks into mapping_repo
             # check that all the resources have the same nested settings for the field
-            g = groupby([self.mapping_repo.is_nested(resource_id, self.path + path) for resource_id in self.resources])
+            g = groupby(
+                [self.mapping_repo.is_nested(resource_id, self.path + field_path) for resource_id in self.resources]
+            )
             is_nested = next(g)[0]
             if next(g, False):
                 raise errors.IncompleteQuery(
@@ -130,7 +130,11 @@ class EsQueryBuilder(NodeWalker):
                 )
 
             if is_nested:
-                query = es_dsl.Q("nested", path=path, query=query)
+                query = es_dsl.Q("nested", path=field_path, query=query)
+
+        path, *last_elem = field_path.rsplit(".", 1)
+        if not last_elem:
+            return query
 
         # check if there are most nested fields in the remaining path
         return self.wrap_nested(path, query)
