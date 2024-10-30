@@ -5,7 +5,7 @@ from .plugin import Plugin
 
 umlauts = {"a": "ä", "o": "ö", "u": "ö", "å": "ä", "y": "ö"}
 
-umlauts_ö: {"å": "ö", "y": "ö", "o": "ö"}
+umlauts_ö = {"å": "ö", "y": "ö", "o": "ö"}
 
 delimiters = "%+="
 vowels = "aouåeiyäö"
