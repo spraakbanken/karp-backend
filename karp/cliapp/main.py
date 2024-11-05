@@ -57,7 +57,7 @@ def repl(
     ctx: typer.Context,
     script: Optional[Path] = typer.Argument(
         None,
-        help="optional script file to run before entering REPL",
+        help="optional script file to run instead of entering REPL",
     ),
 ):
     """Start a Python REPL with the Karp API available."""
@@ -102,9 +102,12 @@ def repl(
 
     console = code.InteractiveConsole(locals)
     if script is not None:
+        path = script.absolute().parent
+        sys.path.append(str(path))
         with open(script) as file:
             console.runsource(file.read(), filename=str(script), symbol="exec")
-    console.interact(banner, exitmsg)
+    else:
+        console.interact(banner, exitmsg)
 
 
 cliapp = create_app()
