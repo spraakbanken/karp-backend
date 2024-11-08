@@ -104,8 +104,7 @@ class EsQueryBuilder(NodeWalker):
         self.path = field_path + "."
         query = self.walk(node.exp)
         self.path = ""
-        # add ".TODO" to path since wrap_nested splits, refactor!
-        return self.wrap_nested(field_path + ".TODO", query)
+        return self.wrap_nested(field_path, query)
 
     def wrap_nested(self, field_path, query):
         """
