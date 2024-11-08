@@ -80,9 +80,23 @@ class EsMappingRepository:
         aliases = self._get_all_aliases()
         self._update_field_mapping(aliases)
 
-    def is_nested(self, resource_id, field):
-        fields = self.fields[resource_id]
-        return field in fields and fields[field].type == "nested"
+    def is_nested(self, resource_ids, field):
+        """
+        Checks if field is nested (collection: true and type: object)
+        Raises exception if the field is configured differently in resources
+        """
+
+        def is_nested_single_resource(resource_id):
+            fields = self.fields[resource_id]
+            return field in fields and fields[field].type == "nested"
+
+        # TODO this cannot be the clearest way to achieve checking if all elements in a list are the same...
+        g = groupby([is_nested_single_resource(resource_id) for resource_id in resource_ids])
+        is_nested = next(g)[0]
+        # if there is a next value for interator, not all values are the same
+        if next(g, False):
+            raise ValueError(f"is_nested on {field} is inconclusive for resources: {resource_ids}")
+        return is_nested
 
     def get_nest_levels(self, resource_id, field):
         """

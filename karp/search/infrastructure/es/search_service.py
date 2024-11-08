@@ -113,17 +113,14 @@ class EsQueryBuilder(NodeWalker):
         """
         # if self.path is set and the current field is part of the current path, no nesting added at this level
         if field_path + "." != self.path:
-            # TODO move these checks into mapping_repo
-            # check that all the resources have the same nested settings for the field
-            g = groupby(
-                [self.mapping_repo.is_nested(resource_id, self.path + field_path) for resource_id in self.resources]
-            )
-            is_nested = next(g)[0]
-            if next(g, False):
+            field = self.path + field_path
+            try:
+                is_nested = self.mapping_repo.is_nested(self.resources, field)
+            except ValueError:
                 raise errors.IncompleteQuery(
                     self._q,
-                    f"Resources: {self.resources} have different settings for field: {self.path + field_path}",
-                )
+                    f"Resources: {self.resources} have different settings for field: {field}",
+                ) from None
 
             if is_nested:
                 query = es_dsl.Q("nested", path=field_path, query=query)
