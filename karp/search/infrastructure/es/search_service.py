@@ -113,10 +113,7 @@ class EsQueryBuilder(NodeWalker):
         query is the ES (DSL) query to be wrapped
         """
         # if self.path is set and the current field is part of the current path, no nesting added at this level
-        # TODO ugly, refactor
-        if self.path and (field_path + ".") == self.path:
-            pass
-        else:
+        if field_path + "." != self.path:
             # TODO move these checks into mapping_repo
             # check that all the resources have the same nested settings for the field
             g = groupby(
