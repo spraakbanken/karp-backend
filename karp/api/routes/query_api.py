@@ -36,7 +36,7 @@ def get_entries_by_id(
         pattern=r"^\w(,\w)*",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -69,7 +69,7 @@ def query_stats(
             will be returned. See [Query DSL](#section/Query-DSL)""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -136,7 +136,7 @@ def query(
         If the selected field is an array, the result will also be wrapped in an array.""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):

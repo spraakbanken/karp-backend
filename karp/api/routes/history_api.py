@@ -29,7 +29,7 @@ def get_diff(
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
     if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
@@ -65,7 +65,7 @@ def get_history(
     from_version: Optional[int] = Query(None),
     current_page: int = Query(0),
     page_size: int = Query(100),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
     if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):

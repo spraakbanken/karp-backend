@@ -36,7 +36,7 @@ def get_history_for_entry(
     entry_id: UniqueIdStr,
     version: Optional[int] = None,
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ) -> EntryDto:
@@ -61,7 +61,7 @@ def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -110,7 +110,7 @@ def preview_entry(
     resource_id: str,
     data: schemas.EntryPreview,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_queries: EntryQueries = Depends(inject_from_req(EntryQueries)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -145,7 +145,7 @@ def update_entry(
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -209,7 +209,7 @@ def delete_entry(
     entry_id: UniqueId,
     version: int,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):

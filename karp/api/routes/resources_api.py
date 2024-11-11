@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @router.get("/permissions", response_model=list[ResourcePermissionDto])
 def list_resource_permissions(
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
 ):
     return resource_permissions.get_resource_permissions()
 
