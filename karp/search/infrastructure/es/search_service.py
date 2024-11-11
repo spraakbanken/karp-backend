@@ -1,6 +1,5 @@
 import logging
-from itertools import groupby
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 import elasticsearch
 import elasticsearch.helpers
@@ -317,9 +316,8 @@ class EsSearchService:
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
 
-    def search_ids(self, resource_id: str, entry_ids: str):
-        entries = entry_ids.split(",")
-        query = es_dsl.Q("terms", _id=entries)
+    def search_ids(self, resource_id: str, entry_ids: List[str]):
+        query = es_dsl.Q("terms", _id=entry_ids)
         logger.debug("query", extra={"query": query})
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
         logger.debug("s", extra={"es_query s": s.to_dict()})

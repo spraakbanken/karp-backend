@@ -48,7 +48,7 @@ def get_entries_by_id(
         )
     if resource_id not in published_resources:
         raise ResourceNotFound(resource_id)
-    return search_service.search_ids(resource_id, entry_ids)
+    return search_service.search_ids(resource_id, entry_ids.split(","))
 
 
 @router.get(
