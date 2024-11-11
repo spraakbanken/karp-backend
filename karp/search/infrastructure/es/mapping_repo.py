@@ -194,9 +194,6 @@ class EsMappingRepository:
                     index_names.append((alias, index))
         return index_names
 
-    def check_resource_is_published(self, resource_id):
-        return resource_id in self.default_sort
-
     def get_default_sort(self, resources: List[str]) -> Optional[str]:
         """
         Returns the default sort field for the resources. Throws an error
