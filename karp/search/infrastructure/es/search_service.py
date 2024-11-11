@@ -217,6 +217,33 @@ def _format_result(response, path: Optional[str] = None):
     return result
 
 
+def _build_result(query, response):
+    result = _format_result(response, path=query.path)
+    if query.lexicon_stats:
+        result["distribution"] = {}
+        for bucket in response.aggregations.distribution.buckets:
+            key = bucket["key"]
+            result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
+    return result
+
+
+def _add_runtime_mappings(s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
+    # When a query uses a field of the form "f.length", add a
+    # runtime_mapping so it gets interpreted as "the length of the field f".
+    mappings = {}
+    for field in field_names:
+        if field.endswith(".length"):
+            base_field = field.removesuffix(".length")
+            mappings[field] = {
+                "type": "long",
+                "script": {"source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"},
+            }
+
+    if mappings:
+        s = s.extra(runtime_mappings=mappings)
+    return s
+
+
 class EsSearchService:
     @inject
     def __init__(
@@ -231,11 +258,11 @@ class EsSearchService:
 
     def query(self, query: QueryRequest):
         logger.info("query called", extra={"request": query})
-        return self.search_with_query(query)
+        return self._search_with_query(query)
 
     def query_stats(self, resources, q):
         query = QueryRequest(resources=resources, q=q, size=0)
-        return self.search_with_query(query)
+        return self._search_with_query(query)
 
     def multi_query(self, queries: list[QueryRequest]):
         # ES fails on a multi-search with an empty request list
@@ -248,13 +275,13 @@ class EsSearchService:
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
-        return [self._build_result(query, response) for query, response in zip(queries, responses)]
+        return [_build_result(query, response) for query, response in zip(queries, responses)]
 
-    def search_with_query(self, query: QueryRequest):
+    def _search_with_query(self, query: QueryRequest):
         logger.info("search_with_query called", extra={"query": query})
         s = self._build_search(query, query.resources)
         response = s.execute()
-        return self._build_result(query, response)
+        return _build_result(query, response)
 
     def _build_search(self, query, resources):
         field_names = set()
@@ -269,7 +296,7 @@ class EsSearchService:
                 raise errors.IncompleteQuery(failing_query=query.q, error_description=str(err)) from err
 
         s = es_dsl.Search(using=self.es, index=resources)
-        s = self.add_runtime_mappings(s, field_names)
+        s = _add_runtime_mappings(s, field_names)
         s = s.extra(track_total_hits=True)  # get accurate hits numbers
         if es_query is not None:
             s = s.query(es_query)
@@ -288,31 +315,6 @@ class EsSearchService:
                     s = s.sort(new_s)
 
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
-        return s
-
-    def _build_result(self, query, response):
-        result = _format_result(response, path=query.path)
-        if query.lexicon_stats:
-            result["distribution"] = {}
-            for bucket in response.aggregations.distribution.buckets:
-                key = bucket["key"]
-                result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
-        return result
-
-    def add_runtime_mappings(self, s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
-        # When a query uses a field of the form "f.length", add a
-        # runtime_mapping so it gets interpreted as "the length of the field f".
-        mappings = {}
-        for field in field_names:
-            if field.endswith(".length"):
-                base_field = field.removesuffix(".length")
-                mappings[field] = {
-                    "type": "long",
-                    "script": {"source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"},
-                }
-
-        if mappings:
-            s = s.extra(runtime_mappings=mappings)
         return s
 
     def search_ids(self, resource_id: str, entry_ids: str):
