@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 settings = {
     "number_of_shards": 1,
     "number_of_replicas": 1,
+    # turns off refreshing, needs to be combined with explicitly making refreshes when adding/deleting
     "refresh_interval": -1,
     "analysis": {
         "analyzer": {
