@@ -11,10 +11,8 @@ from tatsu.walkers import NodeWalker
 from karp.foundation.json import get_path
 from karp.main.errors import KarpError
 from karp.search.domain import QueryRequest, errors
-from karp.search.domain.query_dsl.karp_query_v6_model import (
-    KarpQueryV6ModelBuilderSemantics,
-)
-from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
+from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
+from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
 from karp.search.infrastructure.es.mapping_repo import EsMappingRepository, Field
 
@@ -253,7 +251,7 @@ class EsSearchService:
         self.es: elasticsearch.Elasticsearch = es
         self.mapping_repo = mapping_repo
         self.field_name_collector = EsFieldNameCollector()
-        self.parser = KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
+        self.parser = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
 
     def query(self, query: QueryRequest):
         logger.info("query called", extra={"request": query})

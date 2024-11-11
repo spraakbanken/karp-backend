@@ -2,17 +2,15 @@ import pytest  # noqa: I001
 
 import elasticsearch_dsl as es_dsl
 
-from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
-from karp.search.domain.query_dsl.karp_query_v6_model import (
-    KarpQueryV6ModelBuilderSemantics,
-)
+from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
+from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
 from karp.search.infrastructure.es import EsQueryBuilder
 from karp.search.infrastructure.es.mapping_repo import Field
 
 
 @pytest.fixture(scope="session")
-def parser() -> KarpQueryV6Parser:
-    return KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
+def parser() -> KarpQueryParser:
+    return KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
 
 
 class MappingRepo:

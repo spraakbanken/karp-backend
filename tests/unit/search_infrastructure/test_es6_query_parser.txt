@@ -1,5 +1,5 @@
 >>> from tests.unit.search_infrastructure.test_es6_query_parser import *
->>> parser2 = KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
+>>> parser2 = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
 
 >>> def parse(q): return es_query_builder().walk(parser2.parse(q))
 
