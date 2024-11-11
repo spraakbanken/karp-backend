@@ -122,8 +122,6 @@ class EsIndex:
     def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
         index_to_es = []
         for entry in entries:
-            if not isinstance(entry, IndexEntry):
-                raise Exception("Will this happen?")
             index_to_es.append(
                 {
                     "_index": resource_id,
