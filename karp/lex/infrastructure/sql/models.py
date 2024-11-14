@@ -153,9 +153,23 @@ class ApiKeyModel(Base):
     permissions = Column(JSON, nullable=False)
 
 
-# Dynamic models
+class IndexJob(Base):
+    """
+    Table for schedling indexing jobs to Elasticsearch
+    if op == "REINDEX", entry_id and body == None
+    if op == "ADD", entry_id and body must be set
+    if op == "DELETE", entry_id must be set, body == None
+    """
+
+    __tablename__ = "index_job"
+    id = Column(Integer, primary_key=True)
+    resource_id = Column(String(32), nullable=False)
+    op = Column(Enum("ADD", "DELETE", "REINDEX"), nullable=False)
+    entry_id = Column(ULIDType, nullable=True)
+    body = Column(JSON, nullable=True)
 
 
+# Dynamic model
 @functools.cache
 def get_or_create_entry_history_model(
     resource_id: str,

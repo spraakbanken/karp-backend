@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import elasticsearch
 from injector import inject
 
+from karp.lex.domain import entities
 from karp.lex.infrastructure import ResourceRepository
 from karp.main.errors import KarpError
 from karp.search.domain.errors import UnsupportedField

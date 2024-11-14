@@ -2,13 +2,12 @@ import logging
 import typing
 
 from karp.lex.domain.dtos import EntryDto
-from karp.search.domain.index_entry import IndexEntry
 from karp.search.infrastructure.es import mapping_repo
 
 logger = logging.getLogger(__name__)
 
 
-def transform(resource_config, src_entry: EntryDto) -> IndexEntry:
+def transform(resource_config, src_entry: EntryDto) -> tuple[str, dict]:
     entry = {}
     for mapped_name, field in mapping_repo.internal_fields.items():
         entry[field.name] = getattr(src_entry, mapped_name)
@@ -17,7 +16,7 @@ def transform(resource_config, src_entry: EntryDto) -> IndexEntry:
         entry,
         resource_config.fields.items(),
     )
-    return IndexEntry(id=str(src_entry.id), entry=entry)
+    return str(src_entry.id), entry
 
 
 def _transform_to_index_entry(

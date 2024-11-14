@@ -32,30 +32,22 @@ def bootstrap_app() -> AppContext:
         "tracking.matomo.idsite": env("TRACKING_MATOMO_IDSITE", None),
         "tracking.matomo.url": env("TRACKING_MATOMO_URL", None),
         "tracking.matomo.token": env("TRACKING_MATOMO_TOKEN", None),
+        # TODO if None, just start without Elasticsearch?
+        "elasticsearch_host": env("ELASTICSEARCH_HOST"),
     }
 
     engine = _create_db_engine(DATABASE_URL)
+    es = Elasticsearch(env("ELASTICSEARCH_HOST"))
 
     def configure_dependency_injection(binder):
         binder.bind(Engine, engine)
-        binder.install(ElasticSearchMod(env("ELASTICSEARCH_HOST")))
+        binder.bind(Elasticsearch, es)
         jwt_pubkey_path = env("AUTH_JWT_PUBKEY_PATH", None)
         if jwt_pubkey_path is not None:
             binder.bind(JWTAuthService, JWTAuthService(Path(jwt_pubkey_path)))
 
     injector = Injector(configure_dependency_injection)
     return AppContext(injector, settings)
-
-
-class ElasticSearchMod(Module):
-    def __init__(self, url):
-        self._url = url
-
-    @provider
-    @singleton
-    def es(self) -> Elasticsearch:
-        logger.info("Creating ES client url=%s", self._url)
-        return Elasticsearch(self._url)
 
 
 def _create_db_engine(db_url: URL) -> Engine:

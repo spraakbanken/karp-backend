@@ -13,6 +13,7 @@ from karp.lex.domain.entities import Resource
 from karp.lex.domain.entities.entry import Entry
 
 from . import models
+from .models import IndexJob
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,11 @@ class EntryRepository(Repository):
     def _save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
         self._session.add(entry_dto)
+        # TODO add comment here
+        if entry_dto.discarded:
+            self._session.add(IndexJob(resource_id=entry.resource_id, entry_id=entry.id, op="DELETE"))
+        else:
+            self._session.add(IndexJob(resource_id=entry.resource_id, entry_id=entry.id, op="ADD", body=entry.body))
 
     def entity_ids(self) -> List[str]:
         stmt = self._stmt_latest_not_discarded()

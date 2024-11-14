@@ -9,7 +9,6 @@ from injector import inject
 
 from karp.lex.domain.value_objects import ResourceConfig
 from karp.main.errors import KarpError
-from karp.search.domain.index_entry import IndexEntry
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
 
 from .mapping_repo import EsMappingRepository
@@ -120,17 +119,8 @@ class EsIndex:
         except NotFoundError:
             pass
 
-    def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
-        index_to_es = []
-        for entry in entries:
-            index_to_es.append(
-                {
-                    "_index": resource_id,
-                    "_id": entry.id,
-                    "_source": entry.entry,
-                }
-            )
-
+    def update_index(self, index_to_es: Iterable[dict]):
+        # TODO the error message was previously intended for the API, but should now be handled by indexing worker, update
         try:
             elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
         except elasticsearch.helpers.BulkIndexError as e:
@@ -140,24 +130,6 @@ class EsIndex:
             for error in e.errors:
                 message.append(str(error["index"])[0:400])
                 raise KarpError("\n".join(message)) from None
-
-    def delete_entries(
-        self,
-        resource_id: str,
-        *,
-        entry_ids: Iterable[str],
-    ):
-        index_to_es = []
-        for entry_id in entry_ids:
-            index_to_es.append(
-                {
-                    "_op_type": "delete",
-                    "_index": resource_id,
-                    "_id": str(entry_id),
-                }
-            )
-
-        elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
 
 def _create_es_mapping(config):

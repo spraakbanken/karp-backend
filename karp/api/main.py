@@ -1,6 +1,10 @@
+import asyncio
 import logging
+import threading
 import time
 import traceback
+from concurrent.futures import ProcessPoolExecutor
+from contextlib import asynccontextmanager
 from typing import Any
 
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -11,6 +15,7 @@ from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from karp import main
@@ -20,6 +25,7 @@ from karp.foundation import errors as foundation_errors
 from karp.lex.domain import errors as lex_errors
 from karp.main import config, new_session
 from karp.main.errors import ClientErrorCodes
+from karp.search import index_worker
 
 querying_description = """
 ## Query DSL
@@ -94,6 +100,24 @@ logger = logging.getLogger(__name__)
 def create_app() -> FastAPI:
     app_context = main.bootstrap_app()
 
+    @asynccontextmanager
+    async def lifespan(_):
+        def handle_task_result(done_task: asyncio.Task):
+            try:
+                done_task.result()
+            except Exception as e:
+                logger.error(f"Indexing job failed, {e}")
+
+        if es_conf := app_context.settings["elasticsearch_host"]:
+            # Don't remove saving a reference to the task - it might not complete unless it is saved due to GC
+            engine = app_context.injector.get(Engine)
+            task = asyncio.create_task(index_worker.start(es_conf, engine))
+            task.add_done_callback(handle_task_result)
+
+        yield
+
+        task.cancel()
+
     app = FastAPI(
         title=f"{config.PROJECT_NAME} API",
         description="""Karp is Språkbanken's tool for editing structural data.\n\nThe
@@ -103,6 +127,7 @@ def create_app() -> FastAPI:
         docs_url=None,
         version=config.VERSION,
         openapi_tags=tags_metadata,
+        lifespan=lifespan,
     )
 
     app.state.app_context = app_context

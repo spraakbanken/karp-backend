@@ -3,10 +3,8 @@ from typing import Dict, Iterable, Optional
 
 from injector import Injector, Module, provider, singleton
 
-from karp.search.infrastructure.es import EsIndex
 from karp.foundation.timings import utc_now
-from karp.search.domain.index_entry import IndexEntry
-from karp.lex.domain.entities import Entry
+from karp.search.infrastructure.es import EsIndex
 
 
 @dataclasses.dataclass
@@ -19,7 +17,7 @@ class InMemoryIndex(EsIndex):
     class Index:
         config: Dict
         created_at: float
-        entries: Dict[str, IndexEntry] = dataclasses.field(default_factory=dict)
+        entries: Dict[str, tuple[str, dict]] = dataclasses.field(default_factory=dict)
         created: bool = True
         published: bool = False
 
@@ -34,10 +32,10 @@ class InMemoryIndex(EsIndex):
         self.indices[alias_name].published = True
 
     def add_entries(  # noqa: ANN201
-        self, resource_id: str, entries: Iterable[IndexEntry]
+        self, resource_id: str, entries: Iterable[tuple[str, dict]]
     ):
-        for entry in entries:
-            self.indices[resource_id].entries[entry.id] = entry
+        for _id, entry in entries:
+            self.indices[resource_id].entries[_id] = entry
 
     def delete_entry(
         self,

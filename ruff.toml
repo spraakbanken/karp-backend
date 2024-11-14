@@ -21,3 +21,5 @@ lint.unfixable = ["B"]
 [lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "tests/*" = ["S101"]
+# ok to use except Exception in top level fiels
+"karp/api/main.py" = ["BLE001"]
