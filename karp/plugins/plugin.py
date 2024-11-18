@@ -321,11 +321,13 @@ def transform_list(
                     break
 
                 val = get_path(path, bodies[i])
-                # Skip field if include_if value is False
-                if k == "include_if":
+
+                # Skip field if include value is False
+                if k == "include":
                     if not val:
                         field_params = None
                         break
+
                 else:
                     field_params[k] = val
 

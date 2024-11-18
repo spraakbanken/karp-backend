@@ -198,22 +198,17 @@ class InflectionPlugin(Plugin):
                     "type": "object",
                     "fields": {
                         "linenumber": {"type": "number"},
-                        "row": {
+                        "preform": {
+                            "collection": True,
                             "type": "object",
                             "fields": {
-                                "preform": {
-                                    "collection": True,
-                                    "type": "object",
-                                    "fields": {
-                                        "prescript": {"type": "string"},
-                                        "form": {"type": "string"},
-                                        "tag": {"type": "string"},
-                                    },
-                                },
-                                "postscript": {"type": "string"},
-                                "extra": {"type": "string"},
+                                "prescript": {"type": "string"},
+                                "form": {"type": "string"},
+                                "tag": {"type": "string"},
                             },
                         },
+                        "postscript": {"type": "string"},
+                        "extra": {"type": "string"},
                     },
                 },
             },
@@ -273,11 +268,9 @@ class InflectionPlugin(Plugin):
 
                 row = {
                     "linenumber": hr["linenumber"],
-                    "row": {
-                        "preform": preforms,
-                        "postscript": hr["postscript"],
-                        "extra": hr["extra"],
-                    },
+                    "preform": preforms,
+                    "postscript": hr["postscript"],
+                    "extra": hr["extra"],
                 }
 
                 rows.append(row)
