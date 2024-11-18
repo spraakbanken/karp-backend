@@ -5,7 +5,7 @@ from .plugin import Plugin
 
 umlauts = {"a": "ä", "o": "ö", "u": "ö", "å": "ä", "y": "ö"}
 
-umlauts_ö: {"å": "ö", "y": "ö", "o": "ö"}
+umlauts_ö = {"å": "ö", "y": "ö", "o": "ö"}
 
 delimiters = "%+="
 vowels = "aouåeiyäö"
@@ -42,8 +42,10 @@ def ek(s):
             # found doubled m,n or r
             s = drop_index(i, s)
             break
+        #   print(s)
         elif is_consonant(s[i + 1]):
             pass
+
     return s
 
 
@@ -196,22 +198,17 @@ class InflectionPlugin(Plugin):
                     "type": "object",
                     "fields": {
                         "linenumber": {"type": "number"},
-                        "row": {
+                        "preform": {
+                            "collection": True,
                             "type": "object",
                             "fields": {
-                                "preform": {
-                                    "collection": True,
-                                    "type": "object",
-                                    "fields": {
-                                        "prescript": {"type": "string"},
-                                        "form": {"type": "string"},
-                                        "tag": {"type": "string"},
-                                    },
-                                },
-                                "postscript": {"type": "string"},
-                                "extra": {"type": "string"},
+                                "prescript": {"type": "string"},
+                                "form": {"type": "string"},
+                                "tag": {"type": "string"},
                             },
                         },
+                        "postscript": {"type": "string"},
+                        "extra": {"type": "string"},
                     },
                 },
             },
@@ -220,7 +217,10 @@ class InflectionPlugin(Plugin):
         return config
 
     def generate(self, lemma, table):
-        definitioner = table["definition"]
+        if "definition" in table.keys():
+            definitioner = table["definition"]
+        else:
+            definitioner = []
         tabellrader = defaultdict(list)
 
         for defi in definitioner:
@@ -268,11 +268,9 @@ class InflectionPlugin(Plugin):
 
                 row = {
                     "linenumber": hr["linenumber"],
-                    "row": {
-                        "preform": preforms,
-                        "postscript": hr["postscript"],
-                        "extra": hr["extra"],
-                    },
+                    "preform": preforms,
+                    "postscript": hr["postscript"],
+                    "extra": hr["extra"],
                 }
 
                 rows.append(row)
