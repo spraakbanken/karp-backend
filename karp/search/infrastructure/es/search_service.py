@@ -1,6 +1,5 @@
 import logging
-from itertools import groupby
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 import elasticsearch
 import elasticsearch.helpers
@@ -12,10 +11,8 @@ from tatsu.walkers import NodeWalker
 from karp.foundation.json import get_path
 from karp.main.errors import KarpError
 from karp.search.domain import QueryRequest, errors
-from karp.search.domain.query_dsl.karp_query_v6_model import (
-    KarpQueryV6ModelBuilderSemantics,
-)
-from karp.search.domain.query_dsl.karp_query_v6_parser import KarpQueryV6Parser
+from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
+from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
 from karp.search.infrastructure.es.mapping_repo import EsMappingRepository, Field
 
@@ -104,8 +101,7 @@ class EsQueryBuilder(NodeWalker):
         self.path = field_path + "."
         query = self.walk(node.exp)
         self.path = ""
-        # add ".TODO" to path since wrap_nested splits, refactor!
-        return self.wrap_nested(field_path + ".TODO", query)
+        return self.wrap_nested(field_path, query)
 
     def wrap_nested(self, field_path, query):
         """
@@ -113,21 +109,15 @@ class EsQueryBuilder(NodeWalker):
         query is the ES (DSL) query to be wrapped
         """
         # if self.path is set and the current field is part of the current path, no nesting added at this level
-        # TODO ugly, refactor
-        if self.path and (field_path + ".") == self.path:
-            pass
-        else:
-            # TODO move these checks into mapping_repo
-            # check that all the resources have the same nested settings for the field
-            g = groupby(
-                [self.mapping_repo.is_nested(resource_id, self.path + field_path) for resource_id in self.resources]
-            )
-            is_nested = next(g)[0]
-            if next(g, False):
+        if field_path + "." != self.path:
+            field = self.path + field_path
+            try:
+                is_nested = self.mapping_repo.is_nested(self.resources, field)
+            except ValueError:
                 raise errors.IncompleteQuery(
                     self._q,
-                    f"Resources: {self.resources} have different settings for field: {self.path + field_path}",
-                )
+                    f"Resources: {self.resources} have different settings for field: {field}",
+                ) from None
 
             if is_nested:
                 query = es_dsl.Q("nested", path=field_path, query=query)
@@ -224,6 +214,33 @@ def _format_result(response, path: Optional[str] = None):
     return result
 
 
+def _build_result(query, response):
+    result = _format_result(response, path=query.path)
+    if query.lexicon_stats:
+        result["distribution"] = {}
+        for bucket in response.aggregations.distribution.buckets:
+            key = bucket["key"]
+            result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
+    return result
+
+
+def _add_runtime_mappings(s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
+    # When a query uses a field of the form "f.length", add a
+    # runtime_mapping so it gets interpreted as "the length of the field f".
+    mappings = {}
+    for field in field_names:
+        if field.endswith(".length"):
+            base_field = field.removesuffix(".length")
+            mappings[field] = {
+                "type": "long",
+                "script": {"source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"},
+            }
+
+    if mappings:
+        s = s.extra(runtime_mappings=mappings)
+    return s
+
+
 class EsSearchService:
     @inject
     def __init__(
@@ -234,15 +251,15 @@ class EsSearchService:
         self.es: elasticsearch.Elasticsearch = es
         self.mapping_repo = mapping_repo
         self.field_name_collector = EsFieldNameCollector()
-        self.parser = KarpQueryV6Parser(semantics=KarpQueryV6ModelBuilderSemantics())
+        self.parser = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
 
     def query(self, query: QueryRequest):
         logger.info("query called", extra={"request": query})
-        return self.search_with_query(query)
+        return self._search_with_query(query)
 
     def query_stats(self, resources, q):
         query = QueryRequest(resources=resources, q=q, size=0)
-        return self.search_with_query(query)
+        return self._search_with_query(query)
 
     def multi_query(self, queries: list[QueryRequest]):
         # ES fails on a multi-search with an empty request list
@@ -255,13 +272,13 @@ class EsSearchService:
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
-        return [self._build_result(query, response) for query, response in zip(queries, responses)]
+        return [_build_result(query, response) for query, response in zip(queries, responses)]
 
-    def search_with_query(self, query: QueryRequest):
+    def _search_with_query(self, query: QueryRequest):
         logger.info("search_with_query called", extra={"query": query})
         s = self._build_search(query, query.resources)
         response = s.execute()
-        return self._build_result(query, response)
+        return _build_result(query, response)
 
     def _build_search(self, query, resources):
         field_names = set()
@@ -276,7 +293,7 @@ class EsSearchService:
                 raise errors.IncompleteQuery(failing_query=query.q, error_description=str(err)) from err
 
         s = es_dsl.Search(using=self.es, index=resources)
-        s = self.add_runtime_mappings(s, field_names)
+        s = _add_runtime_mappings(s, field_names)
         s = s.extra(track_total_hits=True)  # get accurate hits numbers
         if es_query is not None:
             s = s.query(es_query)
@@ -297,34 +314,8 @@ class EsSearchService:
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
 
-    def _build_result(self, query, response):
-        result = _format_result(response, path=query.path)
-        if query.lexicon_stats:
-            result["distribution"] = {}
-            for bucket in response.aggregations.distribution.buckets:
-                key = bucket["key"]
-                result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
-        return result
-
-    def add_runtime_mappings(self, s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
-        # When a query uses a field of the form "f.length", add a
-        # runtime_mapping so it gets interpreted as "the length of the field f".
-        mappings = {}
-        for field in field_names:
-            if field.endswith(".length"):
-                base_field = field.removesuffix(".length")
-                mappings[field] = {
-                    "type": "long",
-                    "script": {"source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"},
-                }
-
-        if mappings:
-            s = s.extra(runtime_mappings=mappings)
-        return s
-
-    def search_ids(self, resource_id: str, entry_ids: str):
-        entries = entry_ids.split(",")
-        query = es_dsl.Q("terms", _id=entries)
+    def search_ids(self, resource_id: str, entry_ids: List[str]):
+        query = es_dsl.Q("terms", _id=entry_ids)
         logger.debug("query", extra={"query": query})
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
         logger.debug("s", extra={"es_query s": s.to_dict()})

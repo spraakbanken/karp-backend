@@ -17,8 +17,6 @@ class ResourceOp(enum.Enum):
 
 
 class Resource(Entity):
-    resource_type: str = "resource"
-
     def __init__(
         self,
         *,

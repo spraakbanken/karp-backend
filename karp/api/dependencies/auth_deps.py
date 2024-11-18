@@ -33,7 +33,7 @@ def bearer_scheme(authorization=Header(None)):
     return HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
 
 
-def get_resource_permissions(
+def get_resource_permission_queries(
     resources: ResourceRepository = Depends(lex_deps.get_resource_repository),
 ) -> ResourcePermissionQueries:
     return ResourcePermissionQueries(resources)

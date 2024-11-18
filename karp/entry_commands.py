@@ -34,16 +34,13 @@ class EntryCommands:
         self.deleted_entries = defaultdict(list)
         self.in_transaction = False
 
-    def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
-        if not isinstance(resource_id, str):
-            raise ValueError(f"'resource_id' must be of type 'str', were '{type(resource_id)}'")
-
+    def _get_resource(self, resource_id: str) -> Resource:
         result = self.resources.by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)
         return result
 
-    def _get_entries(self, resource_id: unique_id.UniqueId) -> EntryRepository:
+    def _get_entries(self, resource_id: str) -> EntryRepository:
         result = self.resources.entries_by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)

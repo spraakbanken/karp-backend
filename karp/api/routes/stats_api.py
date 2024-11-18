@@ -37,7 +37,7 @@ def get_field_values(
     resource_id: str,
     field: str,
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: typing.List[str] = Depends(deps.get_published_resources),
 ):
