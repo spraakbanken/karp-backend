@@ -1,8 +1,10 @@
 import logging
+import typing
 
 from injector import inject
 
 import karp.plugins as plugins
+from karp.lex import EntryDto
 from karp.lex.application import EntryQueries, ResourceQueries
 from karp.plugins import Plugins
 from karp.search.infrastructure.es.indices import EsIndex
@@ -26,11 +28,11 @@ class SearchCommands:
         self.entry_queries = entry_queries
         self.plugins = plugins
 
-    def _transform(self, resource, entries):
+    def _transform(self, resource, entries: typing.Iterable[EntryDto]):
         # TODO: make _transform only live in one place
         config = plugins.transform_config(self.plugins, resource.config)
         entries = plugins.transform_entries(self.plugins, config, entries)
-        return (entry_transformer.transform(config, entry) for entry in entries)
+        return (entry_transformer.transform(entry) for entry in entries)
 
     def reindex_resource(self, resource_id, remove_old_index):
         logger.info("Reindexing resource '%s'", resource_id)
