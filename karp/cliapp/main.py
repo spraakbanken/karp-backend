@@ -59,6 +59,7 @@ def repl(
         None,
         help="optional script file to run instead of entering REPL",
     ),
+    args: list[str] = typer.Argument(help="list of args to pass to script file"),
 ):
     """Start a Python REPL with the Karp API available."""
 
@@ -104,6 +105,7 @@ def repl(
     if script is not None:
         path = script.absolute().parent
         sys.path.append(str(path))
+        sys.argv = [str(script)] + args
         with open(script) as file:
             console.runsource(file.read(), filename=str(script), symbol="exec")
     else:
