@@ -1,34 +1,25 @@
+import logging
 import time
 import traceback
 from typing import Any
 
-try:
-    from importlib.metadata import entry_points
-except ImportError:
-    # used if python < 3.8
-    from importlib_metadata import entry_points  # type: ignore
-
-from fastapi import FastAPI, Request, Response, status, HTTPException  # noqa: I001
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.exception_handlers import http_exception_handler
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
-import logging
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
 from asgi_matomo import MatomoMiddleware
+from fastapi import FastAPI, HTTPException, Request, Response, status  # noqa: I001
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from karp import main
-from karp.foundation import errors as foundation_errors
-from karp.foundation.value_objects import unique_id
-from karp.auth import errors as auth_errors
-from karp.lex.domain import errors as lex_errors
-from karp.main.errors import ClientErrorCodes
-from karp.main import config, new_session
 from karp.api.routes import router as api_router
-
+from karp.auth import errors as auth_errors
+from karp.foundation import errors as foundation_errors
+from karp.lex.domain import errors as lex_errors
+from karp.main import config, new_session
+from karp.main.errors import ClientErrorCodes
 
 querying_description = """
 ## Query DSL
@@ -42,8 +33,6 @@ querying_description = """
 - `exists|<field>` Find all entries that has the field <field>.
 
 - `freetext|<string>` Search in all fields for <string> and similar values.
-
-- `freergxp|<regex.*>` Search in all fields for the regex <regex.*>.
 
 - `gt|<field>|<value>` Find all entries where <field> is greater than <value>.
 
@@ -67,6 +56,15 @@ The logical operators can be used both at top-level and lower-levels.
 - `and(<expression1>||<expression2>||...)` Find all entries that matches <expression1> AND <expression2>.
 
 - `or(<expression1>||<expression2>||...)` Find all entries that matches <expression1> OR <expression2>.
+
+### Sub-queries - searching in collections of objects
+
+Used for fields with setting `collection: true` and that contain other fields (collection of objects). Boolean queries
+such as: `and(equals|my_field.x|1||equals|my_field.y|3)` will find entries where objects in `my_field` 
+match `equals|x|1` or `equals|y|3`, or both. To find entries where an individual object in `my_field` matches a boolean query, 
+wrap the query with the sub-query notation: `my_field(and(equals|x|1||equals|y|3))`.
+
+- `<field>(expression)` Do `<expression>` on objects inside `<field>`. `<field>` must be a collection. 
 
 ### Regular expressions
 Always matches complete tokens.
@@ -190,9 +188,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def injector_middleware(request: Request, call_next):
-        response: Response = JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         # Create a new session per request
         with new_session(app_context.injector) as injector:
             request.state.session = injector.get(Session)
@@ -204,9 +200,7 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def _logging_middleware(request: Request, call_next) -> Response:
-        response: Response = JSONResponse(
-            status_code=500, content={"detail": "Internal server error"}
-        )
+        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         start_time = time.time()
         try:
             response = await call_next(request)

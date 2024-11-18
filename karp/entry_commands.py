@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Generator, Iterable, Iterator
+from typing import Any, Generator, Iterable
 
 from injector import inject
 from sqlalchemy.orm import Session
@@ -34,16 +34,13 @@ class EntryCommands:
         self.deleted_entries = defaultdict(list)
         self.in_transaction = False
 
-    def _get_resource(self, resource_id: unique_id.UniqueId) -> Resource:
-        if not isinstance(resource_id, str):
-            raise ValueError(f"'resource_id' must be of type 'str', were '{type(resource_id)}'")
-
+    def _get_resource(self, resource_id: str) -> Resource:
         result = self.resources.by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)
         return result
 
-    def _get_entries(self, resource_id: unique_id.UniqueId) -> EntryRepository:
+    def _get_entries(self, resource_id: str) -> EntryRepository:
         result = self.resources.entries_by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)
@@ -52,16 +49,12 @@ class EntryCommands:
     def _transform(self, config, entry: EntryDto) -> IndexEntry:
         return next(self._transform_entries(config, [entry]))
 
-    def _transform_entries(
-        self, config, entries: Iterable[EntryDto]
-    ) -> Generator[IndexEntry, Any, None]:
+    def _transform_entries(self, config, entries: Iterable[EntryDto]) -> Generator[IndexEntry, Any, None]:
         config = plugins.transform_config(self.plugins, config)
         entries = plugins.transform_entries(self.plugins, config, entries)
         return (entry_transformer.transform(config, entry) for entry in entries)
 
-    def add_entries_in_chunks(
-        self, resource_id, chunk_size, entries, user, message, timestamp=None
-    ):
+    def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message, timestamp=None):
         """
         Add entries to DB and INDEX (if present and resource is active).
 
@@ -104,9 +97,7 @@ class EntryCommands:
         return created_db_entries
 
     def add_entries(self, resource_id, entries, user, message, timestamp=None):
-        return self.add_entries_in_chunks(
-            resource_id, 0, entries, user, message, timestamp=timestamp
-        )
+        return self.add_entries_in_chunks(resource_id, 0, entries, user, message, timestamp=timestamp)
 
     def import_entries(self, resource_id, entries, user, message):
         return self.import_entries_in_chunks(resource_id, 0, entries, user, message)
@@ -185,9 +176,7 @@ class EntryCommands:
 
         return EntryDto.from_entry(current_db_entry)
 
-    def delete_entry(
-        self, resource_id, _id, user, version, message="Entry deleted", timestamp=None
-    ):
+    def delete_entry(self, resource_id, _id, user, version, message="Entry deleted", timestamp=None):
         resource = self._get_resource(resource_id)
         entries = self._get_entries(resource_id)
         entry = entries.by_id(_id)

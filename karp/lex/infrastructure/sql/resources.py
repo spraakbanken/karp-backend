@@ -1,11 +1,11 @@
 import logging
 import typing
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import methodtools
 import sqlalchemy as sa
 from injector import inject
-from sqlalchemy import Engine, and_, func, sql, text
+from sqlalchemy import and_, func, sql
 from sqlalchemy.orm import Session
 
 from karp.foundation import repository
@@ -27,9 +27,7 @@ class ResourceRepository(repository.Repository):
     def __init__(self, session: Session):
         self._session = session
 
-    def by_resource_id(
-        self, resource_id: str, *, version: Optional[int] = None
-    ) -> entities.Resource:
+    def by_resource_id(self, resource_id: str, *, version: Optional[int] = None) -> entities.Resource:
         if resource := self.by_resource_id_optional(resource_id, version=version):
             return resource
         else:
@@ -95,9 +93,6 @@ class ResourceRepository(repository.Repository):
 
     def remove_resource_table(self, resource):
         EntryRepository(self._session, resource).drop_table()
-
-    def remove(self, resource: Resource):
-        self._session.delete(resource)
 
     def _save(self, resource: Resource):
         resource_dto = ResourceModel.from_entity(resource)

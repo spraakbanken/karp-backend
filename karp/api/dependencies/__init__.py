@@ -7,7 +7,7 @@ from karp.api.dependencies.auth_deps import (
     get_auth_service,
     get_user,
     get_user_optional,
-    get_resource_permissions,
+    get_resource_permission_queries,
 )
 
 __all__ = [
@@ -16,6 +16,6 @@ __all__ = [
     "get_auth_service",
     "get_user",
     "get_user_optional",
-    "get_resource_permissions",
+    "get_resource_permission_queries",
     "get_published_resources",
 ]

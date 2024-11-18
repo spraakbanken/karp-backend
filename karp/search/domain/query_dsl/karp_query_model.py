@@ -11,8 +11,8 @@
 
 from __future__ import annotations
 
-from typing import Any
 from dataclasses import dataclass
+from typing import Any
 
 from tatsu.objectmodel import Node
 from tatsu.semantics import ModelBuilderSemantics
@@ -23,13 +23,16 @@ class ModelBase(Node):
     pass
 
 
-class KarpQueryV6ModelBuilderSemantics(ModelBuilderSemantics):
+class KarpQueryModelBuilderSemantics(ModelBuilderSemantics):
     def __init__(self, context=None, types=None):
-        types = [
-            t for t in globals().values()
-            if type(t) is type and issubclass(t, ModelBase)
-        ] + (types or [])
+        types = [t for t in globals().values() if type(t) is type and issubclass(t, ModelBase)] + (types or [])
         super().__init__(context=context, types=types)
+
+
+@dataclass(eq=False)
+class SubQuery(ModelBase):
+    exp: Any = None
+    field: Any = None
 
 
 @dataclass(eq=False)
@@ -134,3 +137,7 @@ class StringValue(ModelBase):
 class QuotedStringValue(ModelBase):
     pass
 
+
+@dataclass(eq=False)
+class Identifier(ModelBase):
+    pass

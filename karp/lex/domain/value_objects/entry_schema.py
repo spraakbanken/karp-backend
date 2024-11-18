@@ -28,29 +28,18 @@ class EntrySchema:
         try:
             self._compiled_schema(json_obj)
         except fastjsonschema.JsonSchemaException as e:
-            logger.warning("Entry not valid", extra={"entry": json_obj, "error_message": str(e)})
-            raise errors.InvalidEntry() from e
+            logger.warning(f'Entry not valid: {(str(json_obj)[:100] + "...")[:100]}, exception: {e!s}')
+            raise errors.InvalidEntry() from None
         return json_obj
 
     @classmethod
     def from_resource_config(cls, resource_config: ResourceConfig) -> "EntrySchema":
         """Create EntrySchema from resource config."""
 
-        return cls(
-            json_schema=create_entry_json_schema(
-                resource_config.fields, resource_config.additional_properties
-            )
-        )
+        return cls(json_schema=create_entry_json_schema(resource_config.fields, resource_config.additional_properties))
 
 
-def json_schema_type(in_type: str) -> str:
-    """Translate type to json-schema type."""
-    return "string" if in_type == "long_string" else in_type
-
-
-def create_entry_json_schema(
-    fields: dict[str, Field], additionalProperties: bool
-) -> dict[str, Any]:
+def create_entry_json_schema(fields: dict[str, Field], additionalProperties: bool) -> dict[str, Any]:
     """Create json_schema from fields definition.
 
     Args:
@@ -79,7 +68,7 @@ def create_entry_json_schema(
 
         if parent_field_def.type != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
-            schema_type = json_schema_type(parent_field_def.type)
+            schema_type = "string" if parent_field_def.type == "long_string" else parent_field_def.type
             result: dict[str, Any] = {"type": schema_type}
         else:
             result = {"type": "object", "properties": {}}

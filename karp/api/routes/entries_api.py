@@ -5,7 +5,6 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
-    Query,
     status,
 )
 from starlette import responses
@@ -37,7 +36,7 @@ def get_history_for_entry(
     entry_id: UniqueIdStr,
     version: Optional[int] = None,
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ) -> EntryDto:
@@ -48,9 +47,7 @@ def get_history_for_entry(
         )
     if resource_id not in published_resources:
         raise ResourceNotFound(resource_id)
-    logger.debug(
-        "getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id}
-    )
+    logger.debug("getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id})
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
 
@@ -64,7 +61,7 @@ def add_entry(
     resource_id: str,
     data: schemas.EntryAdd,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -103,6 +100,41 @@ def add_entry(
     return {"newID": new_entry.id}
 
 
+# must go before update_entry otherwise it thinks this is an
+# update requests with entry_id="preview"
+@router.post(
+    "/{resource_id}/preview",
+    response_model=schemas.EntryPreviewResponse,
+)
+def preview_entry(
+    resource_id: str,
+    data: schemas.EntryPreview,
+    user: User = Depends(deps.get_user),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
+    entry_queries: EntryQueries = Depends(inject_from_req(EntryQueries)),
+    published_resources: List[str] = Depends(deps.get_published_resources),
+):
+    if not resource_permissions.has_permission(PermissionLevel.read, user, [resource_id]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
+        )
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
+
+    logger.info(
+        "previewing entry",
+        extra={
+            "resource_id": resource_id,
+            "data": data,
+            "user": user.identifier,
+        },
+    )
+
+    result = entry_queries.transform_entry_body(resource_id, data.entry)
+    return schemas.EntryPreviewResponse(entry=result)
+
+
 @router.post(
     "/{resource_id}/{entry_id}",
     response_model=schemas.EntryAddResponse,
@@ -113,7 +145,7 @@ def update_entry(
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -158,10 +190,8 @@ def update_entry(
         )
     except errors.UpdateConflict as err:
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
-        return responses.JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj
-        )
-    except Exception as err:
+        return responses.JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj)
+    except Exception:
         logger.exception(
             "error occured",
             extra={"resource_id": resource_id, "entry_id": entry_id.str, "data": data},
@@ -179,7 +209,7 @@ def delete_entry(
     entry_id: UniqueId,
     version: int,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):

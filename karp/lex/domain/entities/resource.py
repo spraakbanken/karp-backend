@@ -1,13 +1,11 @@
-"""LexicalResource."""
-
 import enum
 import typing
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Optional
 
 from karp.foundation import timings
 from karp.foundation.entity import Entity
-from karp.foundation.value_objects import PermissionLevel, unique_id
-from karp.lex.domain import constraints, errors
+from karp.foundation.value_objects import unique_id
+from karp.lex.domain import errors
 from karp.lex.domain.entities import Entry, create_entry
 from karp.lex.domain.value_objects import EntrySchema, ResourceConfig
 
@@ -19,9 +17,6 @@ class ResourceOp(enum.Enum):
 
 
 class Resource(Entity):
-    DiscardedEntityError = errors.DiscardedEntityError
-    resource_type: str = "resource"
-
     def __init__(
         self,
         *,
@@ -96,9 +91,7 @@ class Resource(Entity):
         self.config = config
         return True
 
-    def _update_metadata(
-        self, timestamp: Optional[float], user: str, message: str, version: Optional[int]
-    ):
+    def _update_metadata(self, timestamp: Optional[float], user: str, message: str, version: Optional[int]):
         self._check_not_discarded()
         self._validate_version(version)
         self._last_modified = self._ensure_timestamp(timestamp)
@@ -182,7 +175,13 @@ class Resource(Entity):
         )
 
 
-# ===== Factories =====
+def valid_resource_id(name: str) -> str:
+    limit = 2
+    if len(name) < limit:
+        errors.InvalidResourceId(f"'resource_id' has to have a length of at least {limit}")
+    if " " in name:
+        errors.InvalidResourceId("whitespace not allowed")
+    return name
 
 
 def create_resource(
@@ -194,7 +193,7 @@ def create_resource(
     message: typing.Optional[str] = None,
 ) -> Resource:
     resource_id = config.resource_id
-    constraints.valid_resource_id(resource_id)
+    valid_resource_id(resource_id)
 
     id = id or unique_id.make_unique_id()  # noqa: A001
     table_name = f"{resource_id}_{id}"

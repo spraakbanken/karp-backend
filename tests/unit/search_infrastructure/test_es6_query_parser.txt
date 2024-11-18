@@ -1,0 +1,19 @@
+>>> from tests.unit.search_infrastructure.test_es6_query_parser import *
+>>> parser2 = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
+
+>>> def parse(q): return es_query_builder().walk(parser2.parse(q))
+
+Testing that semantically equivalent queries are parsed to the same structure
+
+>>> parse("equals|infT.wf|word") == parse("infT(equals|wf|word)")
+True
+
+>>> parse("equals|t1.infT.wf|word") == parse("t1(infT(equals|wf|word))")
+True
+
+>>> parse("t1(equals|infT.wf|word)") == parse("t1(infT(equals|wf|word))")
+True
+
+>>> parse("t1.infT(equals|wf|word)") == parse("t1(infT(equals|wf|word))")
+True
+

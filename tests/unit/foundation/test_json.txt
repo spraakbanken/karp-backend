@@ -8,6 +8,14 @@ Testing make_path:
 >>> make_path(['SOLemman', 's_nr'])
 ['SOLemman', 's_nr']
 
+Testing path_str:
+
+>>> path_str(['SOLemman', 0, 's_nr'])
+'SOLemman.0.s_nr'
+
+>>> path_str('SOLemman.0.s_nr')
+'SOLemman.0.s_nr'
+
 Testing get_path:
 
 >>> get_path(['SOLemman', 's_nr'], {'SOLemman': {'s_nr': 5}})
@@ -77,8 +85,12 @@ Testing expand_path:
 >>> for path in expand_path('SOLemman.s_nr', doc): print(path)
 ['SOLemman', 0, 's_nr']
 ['SOLemman', 1, 's_nr']
+>>> for path in expand_path(['SOLemman', 0, 's_nr'], doc): print(path)
+['SOLemman', 0, 's_nr']
 >>> for path in expand_path('SOLemman', doc, expand_arrays=False): print(path)
 ['SOLemman']
 >>> for path in expand_path('SOLemman.s_nr', doc, expand_arrays=False): print(path)
 ['SOLemman', 0, 's_nr']
 ['SOLemman', 1, 's_nr']
+>>> for path in expand_path(['SOLemman', 0, 's_nr'], doc, expand_arrays=False): print(path)
+['SOLemman', 0, 's_nr']

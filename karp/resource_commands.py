@@ -17,9 +17,7 @@ logger = logging.getLogger(__name__)
 
 class ResourceCommands:
     @inject
-    def __init__(
-        self, session: Session, resources: ResourceRepository, index: EsIndex, plugins: Plugins
-    ):
+    def __init__(self, session: Session, resources: ResourceRepository, index: EsIndex, plugins: Plugins):
         self.session: Session = session
         self.resources: ResourceRepository = resources
         self.index: EsIndex = index

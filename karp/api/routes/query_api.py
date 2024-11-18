@@ -3,9 +3,8 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
-from karp import auth, search
+from karp import auth
 from karp.auth.application import ResourcePermissionQueries
-from karp.lex import EntryDto
 from karp.lex.domain.errors import ResourceNotFound
 from karp.main import errors as karp_errors
 from karp.search.domain import QueryRequest
@@ -37,7 +36,7 @@ def get_entries_by_id(
         pattern=r"^\w(,\w)*",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -49,7 +48,7 @@ def get_entries_by_id(
         )
     if resource_id not in published_resources:
         raise ResourceNotFound(resource_id)
-    return search_service.search_ids(resource_id, entry_ids)
+    return search_service.search_ids(resource_id, entry_ids.split(","))
 
 
 @router.get(
@@ -70,7 +69,7 @@ def query_stats(
             will be returned. See [Query DSL](#section/Query-DSL)""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
@@ -120,9 +119,7 @@ def query(
         title="query",
         description="The query. If missing, all entries in chosen resource(s) will be returned. See [Query DSL](#section/Query-DSL)",
     ),
-    from_: int = Query(
-        0, alias="from", description="Specify which entry should be the first returned."
-    ),
+    from_: int = Query(0, alias="from", description="Specify which entry should be the first returned."),
     size: int = Query(25, description="Number of entries in page."),
     sort: List[str] = Query(
         [],
@@ -139,7 +136,7 @@ def query(
         If the selected field is an array, the result will also be wrapped in an array.""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permissions),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):

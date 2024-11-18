@@ -50,12 +50,12 @@ install-dev:
 init-db:
 	${INVENV} alembic upgrade head
 
-build-parser: karp/search/domain/query_dsl/karp_query_v6_parser.py karp/search/domain/query_dsl/karp_query_v6_model.py
+build-parser: karp/search/domain/query_dsl/karp_query_parser.py karp/search/domain/query_dsl/karp_query_model.py
 
-karp/search/domain/query_dsl/karp_query_v6_parser.py: grammars/query_v6.ebnf
+karp/search/domain/query_dsl/karp_query_parser.py: grammars/query.ebnf
 	${INVENV} tatsu $< > $@
 
-karp/search/domain/query_dsl/karp_query_v6_model.py: grammars/query_v6.ebnf
+karp/search/domain/query_dsl/karp_query_model.py: grammars/query.ebnf
 	${INVENV} tatsu --object-model $< > $@
 
 .PHONY: serve

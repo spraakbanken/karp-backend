@@ -1,5 +1,5 @@
-from sqlalchemy import types  # noqa: I001
 import ulid
+from sqlalchemy import types
 
 
 class ULIDType(types.TypeDecorator):

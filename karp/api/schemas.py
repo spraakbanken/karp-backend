@@ -1,9 +1,6 @@
-import typing
-from enum import Enum
 from typing import Dict, Optional, Union
 
 import pydantic
-import ulid
 
 from karp.foundation import alias_generators
 from karp.foundation.value_objects import unique_id
@@ -27,8 +24,16 @@ class EntryUpdate(EntryAdd):
     version: int
 
 
+class EntryPreview(BaseModel):
+    entry: Dict
+
+
 class EntryAddResponse(BaseModel):
     newID: unique_id.UniqueIdStr
+
+
+class EntryPreviewResponse(BaseModel):
+    entry: Dict
 
 
 class ResourcePublic(BaseModel):

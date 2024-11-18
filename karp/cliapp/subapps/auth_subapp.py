@@ -36,10 +36,7 @@ def list_api_keys(
     result = api_key_service.list_keys()
     typer.echo(
         tabulate(
-            [
-                [api_key["api_key"], api_key["username"], api_key["permissions"]]
-                for api_key in result
-            ],
+            [[api_key["api_key"], api_key["username"], api_key["permissions"]] for api_key in result],
             headers=["API key", "Username", "Permission object"],
         )
     )

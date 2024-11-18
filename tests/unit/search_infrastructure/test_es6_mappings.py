@@ -1,15 +1,15 @@
-from typing import Dict, Optional  # noqa: I001
+from typing import Dict, Optional
 
 import pytest
 
-from karp.search.infrastructure.es.indices import create_es_mapping
-from karp.lex.domain.value_objects import ResourceConfig, Field
+from karp.lex.domain.value_objects import Field, ResourceConfig
+from karp.search.infrastructure.es.indices import _create_es_mapping
 
 
 class TestCreateEsMapping:
-    def test_minimal_valid_input(self):  # noqa: ANN201
+    def test_minimal_valid_input(self):
         data = ResourceConfig(resource_id="", config_str="", fields={})
-        mapping = create_es_mapping(data)
+        mapping = _create_es_mapping(data)
 
         assert mapping["properties"] == {}
 
@@ -36,11 +36,9 @@ class TestCreateEsMapping:
             ),
         ],
     )
-    def test_standard_types(  # noqa: ANN201
-        self, field: str, field_def: Field, expected_property: Optional[Dict]
-    ):
+    def test_standard_types(self, field: str, field_def: Field, expected_property: Optional[Dict]):
         data = ResourceConfig(resource_id="", config_str="", fields={field: field_def})
-        mapping = create_es_mapping(data)
+        mapping = _create_es_mapping(data)
         assert field in mapping["properties"]
         assert mapping["properties"][field] == expected_property
 
@@ -62,8 +60,28 @@ class TestCreateEsMapping:
                                     "language": "sv",
                                 },
                             },
-                        }
-                    }
+                        },
+                    },
+                },
+            ),
+            (
+                "name",
+                Field(type="object", collection=True, fields={"first": {"type": "string"}}),
+                {
+                    "type": "nested",
+                    "properties": {
+                        "first": {
+                            "type": "text",
+                            "fields": {
+                                "raw": {"type": "keyword"},
+                                "sort": {
+                                    "index": False,
+                                    "type": "icu_collation_keyword",
+                                    "language": "sv",
+                                },
+                            },
+                        },
+                    },
                 },
             ),
             ("name", Field(type="number"), {"type": "double"}),
@@ -85,21 +103,17 @@ class TestCreateEsMapping:
             ),
         ],
     )
-    def test_complex_types(  # noqa: ANN201
-        self, field: str, field_def: Field, expected_property: Optional[Dict]
-    ):
+    def test_complex_types(self, field: str, field_def: Field, expected_property: Optional[Dict]):
         data = ResourceConfig(resource_id="", config_str="", fields={field: field_def})
-        mapping = create_es_mapping(data)
+        mapping = _create_es_mapping(data)
         assert field in mapping["properties"]
         expected_property = expected_property or field_def.model_dump()
         assert mapping["properties"][field] == expected_property
 
-    def test_sort(self):  # noqa: ANN201
-        data = ResourceConfig(
-            resource_id="", config_str="", fields={"name": Field(type="string")}, sort=["name"]
-        )
+    def test_sort(self):
+        data = ResourceConfig(resource_id="", config_str="", fields={"name": Field(type="string")}, sort=["name"])
 
-        mapping = create_es_mapping(data)
+        mapping = _create_es_mapping(data)
 
         expected = {
             "dynamic": False,
@@ -112,50 +126,6 @@ class TestCreateEsMapping:
                             "index": False,
                             "type": "icu_collation_keyword",
                             "language": "sv",
-                        },
-                    },
-                }
-            },
-            "settings": {
-                "analysis": {
-                    "analyzer": {
-                        "default": {
-                            "char_filter": [
-                                "compound",
-                                "swedish_aa",
-                                "swedish_ae",
-                                "swedish_oe",
-                            ],
-                            "filter": ["swedish_folding", "lowercase"],
-                            "tokenizer": "standard",
-                        },
-                    },
-                    "char_filter": {
-                        "compound": {
-                            "pattern": "-",
-                            "replacement": "",
-                            "type": "pattern_replace",
-                        },
-                        "swedish_aa": {
-                            "pattern": "[Ǻǻ]",
-                            "replacement": "å",
-                            "type": "pattern_replace",
-                        },
-                        "swedish_ae": {
-                            "pattern": "[æÆǞǟ]",
-                            "replacement": "ä",
-                            "type": "pattern_replace",
-                        },
-                        "swedish_oe": {
-                            "pattern": "[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]",
-                            "replacement": "ö",
-                            "type": "pattern_replace",
-                        },
-                    },
-                    "filter": {
-                        "swedish_folding": {
-                            "type": "icu_folding",
-                            "unicode_set_filter": "[^åäöÅÄÖ]",
                         },
                     },
                 }

@@ -68,9 +68,7 @@ def test_error(problem_config: dict):  # noqa: ANN201
 
 
 def test_create_json_schema(json_schema_config):  # noqa: ANN201
-    json_schema = create_entry_json_schema(
-        ResourceConfig.from_dict(json_schema_config).fields, True
-    )
+    json_schema = create_entry_json_schema(ResourceConfig.from_dict(json_schema_config).fields, True)
     assert json_schema["type"] == "object"
 
 

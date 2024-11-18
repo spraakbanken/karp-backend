@@ -42,7 +42,5 @@ def add_entries(  # noqa: ANN201
                 json={"entry": entry},
                 headers=access_token.as_header(),
             )
-            assert (
-                response.status_code == 201
-            ), f"Response(status_code={response.status_code}, json={response.json()})"
+            assert response.status_code == 201, f"Response(status_code={response.status_code}, json={response.json()})"
     return client

@@ -10,19 +10,14 @@ lint.select = [
   "YTT",
 ]
 
-lint.ignore = ["E501","ANN001","ANN101", "ANN102","B008","D203","D213","D104", "RUF100","RUF005"]
+lint.ignore = ["E501","ANN001","ANN101", "ANN102","B008","D203","D213","D104", "F841", "RUF100","RUF005"]
 
-line-length = 97
+line-length = 120
 
 # Avoid trying to fix flake8-bugbear (`B`) violations.
 lint.unfixable = ["B"]
 
-exclude = [
-  "query_dsl",
-]
-
 # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
 [lint.per-file-ignores]
 "__init__.py" = ["E402"]
-"bases/karp/karp_v6_api/routes/resources_api.py" = ["B008"]
 "tests/*" = ["S101"]

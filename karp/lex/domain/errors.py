@@ -1,6 +1,3 @@
-"""Lex domain errors."""
-
-from typing import Dict  # noqa: I001
 from karp.foundation.errors import NotFoundError
 
 
@@ -10,10 +7,6 @@ class LexDomainError(Exception):
     def __init__(self, *args: object, **kwargs) -> None:
         super().__init__(*args)
         self.extras = kwargs or {}
-
-
-class DiscardedEntityError(LexDomainError):
-    pass
 
 
 class EntryNotFound(NotFoundError, LexDomainError):
@@ -27,7 +20,6 @@ class EntryNotFound(NotFoundError, LexDomainError):
     ) -> None:
         NotFoundError.__init__(self, entity_id, *args)
         LexDomainError.__init__(self, **kwargs)
-        # super().__init__(entity_id, *args, **kwargs)
 
 
 class ResourceNotFound(NotFoundError, LexDomainError):
@@ -47,10 +39,6 @@ class IntegrityError(LexDomainError):
     pass
 
 
-class RepositoryError(LexDomainError):
-    pass
-
-
 class InvalidEntry(LexDomainError):
     pass
 
@@ -63,19 +51,11 @@ class UpdateConflict(LexDomainError):
         self.error_obj = {"diff": diff, "error": str(self)}
 
 
-class LexValueError(ValueError, LexDomainError):
-    pass
-
-
-class InvalidResourceId(LexValueError):
+class InvalidResourceId(ValueError, LexDomainError):
     pass
 
 
 class InvalidEntrySchema(ValueError, LexDomainError):
-    pass
-
-
-class NoSuchEntryRepository(ValueError, LexDomainError):
     pass
 
 

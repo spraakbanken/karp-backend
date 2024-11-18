@@ -1,18 +1,70 @@
 import logging
 from datetime import datetime
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable
 
 import elasticsearch
+import elasticsearch.helpers
 from elasticsearch.exceptions import NotFoundError
 from injector import inject
 
-from karp.lex.domain.entities import Entry
-from karp.lex.domain.value_objects import Field, ResourceConfig
+from karp.lex.domain.value_objects import ResourceConfig
+from karp.main.errors import KarpError
 from karp.search.domain.index_entry import IndexEntry
+from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
 
 from .mapping_repo import EsMappingRepository
 
 logger = logging.getLogger(__name__)
+
+# settings are the same in all indices
+settings = {
+    "number_of_shards": 1,
+    "number_of_replicas": 1,
+    # turns off refreshing, needs to be combined with explicitly making refreshes when adding/deleting
+    "refresh_interval": -1,
+    "analysis": {
+        "analyzer": {
+            "default": {
+                "char_filter": [
+                    "compound",
+                    "swedish_aa",
+                    "swedish_ae",
+                    "swedish_oe",
+                ],
+                "filter": ["swedish_folding", "lowercase"],
+                "tokenizer": "standard",
+            }
+        },
+        "char_filter": {
+            "compound": {
+                "pattern": "-",
+                "replacement": "",
+                "type": "pattern_replace",
+            },
+            "swedish_aa": {
+                "pattern": "[Ǻǻ]",
+                "replacement": "å",
+                "type": "pattern_replace",
+            },
+            "swedish_ae": {
+                "pattern": "[æÆǞǟ]",
+                "replacement": "ä",
+                "type": "pattern_replace",
+            },
+            "swedish_oe": {
+                "pattern": "[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]",
+                "replacement": "ö",
+                "type": "pattern_replace",
+            },
+        },
+        "filter": {
+            "swedish_folding": {
+                "type": "icu_folding",
+                "unicode_set_filter": "[^åäöÅÄÖ]",
+            },
+        },
+    },
+}
 
 
 class EsIndex:
@@ -25,26 +77,13 @@ class EsIndex:
         self.es = es
         self.mapping_repo = mapping_repo
 
-    def create_index(self, resource_id: str, config, create_alias=True):
+    def create_index(self, resource_id: str, config: ResourceConfig, create_alias=True):
         logger.info("creating es mapping")
-        mapping = create_es_mapping(config)
+        mapping = _create_es_mapping(config)
 
-        settings = {
-            "number_of_shards": 1,
-            "number_of_replicas": 1,
-            "refresh_interval": -1,
-        }
-        if "settings" in mapping:
-            settings |= mapping["settings"]
-            del mapping["settings"]
-        else:
-            raise Exception("This should never happen")
         properties = mapping["properties"]
-        properties["freetext"] = {"type": "text"}
-        disabled_property = {"enabled": False}
-        properties["_entry_version"] = disabled_property
-        properties["_last_modified"] = disabled_property
-        properties["_last_modified_by"] = disabled_property
+        for field in es_mapping_repo.internal_fields.values():
+            properties[field.name] = {"type": field.type}
 
         body = {
             "settings": settings,
@@ -84,8 +123,6 @@ class EsIndex:
     def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
         index_to_es = []
         for entry in entries:
-            if not isinstance(entry, IndexEntry):
-                raise Exception("Will this happen?")
             index_to_es.append(
                 {
                     "_index": resource_id,
@@ -94,15 +131,15 @@ class EsIndex:
                 }
             )
 
-        elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
-
-    def delete_entry(
-        self,
-        resource_id: str,
-        *,
-        entry_id: str,
-    ):
-        return self.delete_entries(resource_id, entry_ids=[entry_id])
+        try:
+            elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
+        except elasticsearch.helpers.BulkIndexError as e:
+            message = [
+                "Error inserting data into Elasticsearch. The following errors occured (terminated at 400 characters):"
+            ]
+            for error in e.errors:
+                message.append(str(error["index"])[0:400])
+                raise KarpError("\n".join(message)) from None
 
     def delete_entries(
         self,
@@ -150,6 +187,8 @@ def _create_es_mapping(config):
                 }
         else:
             result = {"properties": {}}
+            if parent_field_def.collection:
+                result["type"] = "nested"
 
             for child_field_name, child_field_def in parent_field_def.fields.items():
                 recursive_field(result, child_field_name, child_field_def)
@@ -161,52 +200,3 @@ def _create_es_mapping(config):
         recursive_field(es_mapping, field_name, field_def)
 
     return es_mapping
-
-
-def create_es_mapping(config: ResourceConfig) -> Dict:
-    mapping = _create_es_mapping(config)
-    mapping["settings"] = {
-        "analysis": {
-            "analyzer": {
-                "default": {
-                    "char_filter": [
-                        "compound",
-                        "swedish_aa",
-                        "swedish_ae",
-                        "swedish_oe",
-                    ],
-                    "filter": ["swedish_folding", "lowercase"],
-                    "tokenizer": "standard",
-                }
-            },
-            "char_filter": {
-                "compound": {
-                    "pattern": "-",
-                    "replacement": "",
-                    "type": "pattern_replace",
-                },
-                "swedish_aa": {
-                    "pattern": "[Ǻǻ]",
-                    "replacement": "å",
-                    "type": "pattern_replace",
-                },
-                "swedish_ae": {
-                    "pattern": "[æÆǞǟ]",
-                    "replacement": "ä",
-                    "type": "pattern_replace",
-                },
-                "swedish_oe": {
-                    "pattern": "[ØøŒœØ̈ø̈ȪȫŐőÕõṌṍṎṏȬȭǾǿǬǭŌōṒṓṐṑ]",
-                    "replacement": "ö",
-                    "type": "pattern_replace",
-                },
-            },
-            "filter": {
-                "swedish_folding": {
-                    "type": "icu_folding",
-                    "unicode_set_filter": "[^åäöÅÄÖ]",
-                },
-            },
-        }
-    }
-    return mapping

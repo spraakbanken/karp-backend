@@ -128,9 +128,7 @@ class TestAddEntry:
         assert "newID" in response_data
         new_id = unique_id.parse(response_data["newID"])
 
-        entries = get_entries(
-            fa_data_client.app.state.app_context.injector, resource_id="places"
-        )
+        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
         assert new_id in entries.entity_ids()
 
     def test_add_with_valid_data_and_entity_id_returns_201(
@@ -160,9 +158,7 @@ class TestAddEntry:
         assert "newID" in response_data
         new_id = response_data["newID"]
 
-        entries = get_entries(
-            fa_data_client.app.state.app_context.injector, resource_id="places"
-        )
+        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
         assert new_id in entries.entity_ids()
 
     def test_add_fails_with_invalid_entry(
@@ -170,9 +166,7 @@ class TestAddEntry:
         fa_data_client,
         write_token: AccessToken,
     ):
-        response = fa_data_client.put(
-            "/entries/places", json={"entry": {}}, headers=write_token.as_header()
-        )
+        response = fa_data_client.put("/entries/places", json={"entry": {}}, headers=write_token.as_header())
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         response_data = response.json()
@@ -228,15 +222,11 @@ class TestDeleteEntry:
         )
 
         entity_id = response.json()["newID"]
-        response = fa_data_client.delete(
-            f"/entries/places/{entity_id}/1", headers=write_token.as_header()
-        )
+        response = fa_data_client.delete(f"/entries/places/{entity_id}/1", headers=write_token.as_header())
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        entries = get_entries(
-            fa_data_client.app.state.app_context.injector, resource_id="places"
-        )
+        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
         assert entries.by_id(entity_id).discarded
         assert entity_id not in entries.entity_ids()
 
@@ -247,9 +237,7 @@ class TestDeleteEntry:
     ):
         entry_id = make_unique_id()
 
-        response = fa_data_client.delete(
-            f"/entries/places/{entry_id}/3", headers=write_token.as_header()
-        )
+        response = fa_data_client.delete(f"/entries/places/{entry_id}/3", headers=write_token.as_header())
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -257,10 +245,7 @@ class TestDeleteEntry:
 
         assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_FOUND
 
-        assert (
-            response_data["error"]
-            == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
-        )
+        assert response_data["error"] == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
 
 
 class TestDeleteEntryRest:
@@ -287,15 +272,11 @@ class TestDeleteEntryRest:
         )
 
         entity_id = response.json()["newID"]
-        response = fa_data_client.delete(
-            f"/entries/places/{entity_id}/1", headers=write_token.as_header()
-        )
+        response = fa_data_client.delete(f"/entries/places/{entity_id}/1", headers=write_token.as_header())
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        entries = get_entries(
-            fa_data_client.app.state.app_context.injector, resource_id="places"
-        )
+        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
         assert entries.by_id(entity_id).discarded
         assert entity_id not in entries.entity_ids()
 
@@ -306,9 +287,7 @@ class TestDeleteEntryRest:
     ):
         entry_id = "00000000000000000000000000"
 
-        response = fa_data_client.delete(
-            f"/entries/places/{entry_id}/2", headers=write_token.as_header()
-        )
+        response = fa_data_client.delete(f"/entries/places/{entry_id}/2", headers=write_token.as_header())
 
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
@@ -316,10 +295,7 @@ class TestDeleteEntryRest:
 
         assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_FOUND
 
-        assert (
-            response_data["error"]
-            == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
-        )
+        assert response_data["error"] == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
 
 
 class TestUpdateEntry:
@@ -349,10 +325,7 @@ class TestUpdateEntry:
         response_data = response.json()
         assert response_data["errorCode"] == ClientErrorCodes.ENTRY_NOT_FOUND
 
-        assert (
-            response_data["error"]
-            == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
-        )
+        assert response_data["error"] == f"Entry '{entry_id}' not found in resource 'places' (version=latest)"
 
     def test_update_wo_changes_succeeds(
         self,
@@ -497,9 +470,7 @@ class TestUpdateEntry:
         response_data = response.json()
         assert response_data["newID"] == entity_id
 
-        entries = get_entries(
-            fa_data_client.app.state.app_context.injector, resource_id="places"
-        )
+        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
         assert entries.by_id(entity_id).body["population"] == 5
         assert entity_id in entries.entity_ids()
 
@@ -569,9 +540,7 @@ class TestUpdateEntry:
         print(f"{response.json()=}")
         assert str(entry_id + 1) == response_data["newID"]
 
-        entries = get_entries(
-            fa_data_client.app.state.app_context.injector, resource_id="places"
-        )
+        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
         entry_ids = entries.entry_ids()
         assert str(entry_id) not in entry_ids
         assert str(entry_id + 1) in entry_ids
@@ -594,9 +563,7 @@ class TestUpdateEntry:
 
         after_add = utc_now()
 
-        entries = get_entries(
-            fa_data_client.app.state.app_context.injector, resource_id="places"
-        )
+        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
         entity_id = ids[0]
         entry = entries.by_id(entity_id)
         assert entry.last_modified > before_add
@@ -618,9 +585,7 @@ class TestUpdateEntry:
 
         after_update = utc_now()
 
-        entries = get_entries(
-            fa_data_client.app.state.app_context.injector, resource_id="places"
-        )
+        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
         entry = entries.by_id(entity_id)
         assert entry.last_modified > after_add
         assert entry.last_modified < after_update
@@ -676,3 +641,31 @@ class TestGetEntry:
         assert entry.id == entry_places_209_id
         assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 5
+
+
+class TestPreviewEntry:
+    def test_preview_entry(
+        self,
+        fa_data_client,
+        write_token: AccessToken,
+    ):
+        entry = {
+            "code": 100,
+            "name": "preview",
+            "population": 5,
+            "area": 50000,
+            "density": 5,
+            "municipality": [2, 3],
+        }
+
+        response = fa_data_client.post(
+            f"/entries/places/preview",
+            json={"entry": entry},
+            headers=write_token.as_header(),
+        )
+        assert response.status_code == status.HTTP_200_OK
+        response_data = response.json()["entry"]
+
+        assert response_data["municipality"] == [m["code"] for m in response_data["_municipality"]]
+        del response_data["_municipality"]
+        assert response_data == entry

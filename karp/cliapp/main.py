@@ -1,6 +1,5 @@
 import logging  # noqa: I001
 from typing import Optional
-import sys
 import code
 
 from sqlalchemy.engine import Engine
@@ -20,10 +19,11 @@ from karp.auth.infrastructure import APIKeyService
 import readline
 import rlcompleter
 from pathlib import Path
+import sys
 
 logger = logging.getLogger(__name__)
 
-app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown")
+app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown", pretty_exceptions_enable=False)
 
 
 def create_app():
@@ -32,9 +32,7 @@ def create_app():
     @app.callback()
     def set_app_context(
         ctx: typer.Context,
-        version: Optional[bool] = typer.Option(
-            None, "--version", callback=version_callback, is_eager=True
-        ),
+        version: Optional[bool] = typer.Option(None, "--version", callback=version_callback, is_eager=True),
     ):
         if ctx.invoked_subcommand is None:
             ctx.obj = {}
@@ -59,8 +57,9 @@ def repl(
     ctx: typer.Context,
     script: Optional[Path] = typer.Argument(
         None,
-        help="optional script file to run before entering REPL",
+        help="optional script file to run instead of entering REPL",
     ),
+    args: list[str] = typer.Argument(help="list of args to pass to script file"),
 ):
     """Start a Python REPL with the Karp API available."""
 
@@ -78,6 +77,11 @@ def repl(
         "es_search_service": inject_from_ctx(EsSearchService, ctx),
         "api_key_service": inject_from_ctx(APIKeyService, ctx),
     }
+
+    module = sys.__class__
+    karp_api = module("karp_api")
+    karp_api.__dict__.update(locals)
+    sys.modules["karp_api"] = karp_api
 
     banner = ["The following objects are available:"]
     for name, obj in locals.items():
@@ -99,9 +103,13 @@ def repl(
 
     console = code.InteractiveConsole(locals)
     if script is not None:
+        path = script.absolute().parent
+        sys.path.append(str(path))
+        sys.argv = [str(script)] + args
         with open(script) as file:
             console.runsource(file.read(), filename=str(script), symbol="exec")
-    console.interact(banner, exitmsg)
+    else:
+        console.interact(banner, exitmsg)
 
 
 cliapp = create_app()

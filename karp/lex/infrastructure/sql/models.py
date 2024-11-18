@@ -28,7 +28,6 @@ class ResourceModel(Base):
     history_id = Column(Integer, primary_key=True)
     entity_id = Column(ULIDType, nullable=False)
     resource_id = Column(String(32), nullable=False)
-    resource_type = Column(String(32), nullable=False)
     version = Column(Integer, nullable=False)
     name = Column(String(64), nullable=False)
     table_name = Column(String(64), nullable=False)
@@ -102,7 +101,6 @@ class ResourceModel(Base):
             history_id=None,
             entity_id=resource.entity_id,
             resource_id=resource.resource_id,
-            resource_type=resource.resource_type,
             version=resource.version,
             name=resource.name,
             config_str=resource.config_str,
@@ -128,9 +126,7 @@ class BaseHistoryEntry:
     op = Column(Enum(EntryOp), nullable=False)
     discarded = Column(Boolean, default=False)
 
-    __table_args__ = (
-        UniqueConstraint("entity_id", "version", name="id_version_unique_constraint"),
-    )
+    __table_args__ = (UniqueConstraint("entity_id", "version", name="id_version_unique_constraint"),)
 
     @classmethod
     def from_entity(cls, entry: entities.Entry):
