@@ -6,24 +6,43 @@ import sqlalchemy as sa
 from sqlalchemy import Engine, sql
 from sqlalchemy.orm.session import Session
 
-from karp.foundation.repository import Repository
 from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import errors
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.entities.entry import Entry
 
+from ...domain.errors import EntryNotFound
 from . import models
 
 logger = logging.getLogger(__name__)
 
 
-class EntryRepository(Repository):
+class EntryRepository:
     def __init__(self, session: Session, resource: Resource):
         self._session = session
         self._name = resource.resource_id
         self._config = resource.config
         self.resource = resource
         self.history_model = models.get_or_create_entry_history_model(resource.table_name)
+
+    def by_id(
+        self,
+        id: UniqueId,  # noqa: A002
+        *,
+        version: Optional[int] = None,
+    ):
+        if entity := self._by_id(id, version=version):
+            return entity
+        raise EntryNotFound(f"Entry with id={id} is not found in resouce {self.resource.resource_id}")
+
+    def by_id_optional(
+        self,
+        id: UniqueId,  # noqa: A002
+        *,
+        version: Optional[int] = None,
+        **kwargs,
+    ) -> Optional:
+        return self._by_id(id, version=version)
 
     @property
     def name(self) -> str:
@@ -48,7 +67,7 @@ class EntryRepository(Repository):
     def drop_table(self):
         self.history_model.__table__.drop(bind=self._engine, checkfirst=True)
 
-    def _save(self, entry: Entry):
+    def save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
         self._session.add(entry_dto)
 

@@ -8,7 +8,6 @@ from injector import inject
 from sqlalchemy import and_, func, sql
 from sqlalchemy.orm import Session
 
-from karp.foundation import repository
 from karp.foundation.value_objects import UniqueId
 from karp.lex.domain import entities
 from karp.lex.domain.entities.resource import Resource
@@ -20,18 +19,36 @@ from .models import ResourceModel
 logger = logging.getLogger(__name__)
 
 
-class ResourceRepository(repository.Repository):
-    EntityNotFound = ResourceNotFound
-
+class ResourceRepository:
     @inject
     def __init__(self, session: Session):
         self._session = session
+
+    def by_id(
+        self,
+        id: UniqueId,  # noqa: A002
+        *,
+        version: Optional[int] = None,
+        **kwargs,
+    ):
+        if entity := self._by_id(id, version=version):
+            return entity
+        raise ResourceNotFound(f"Entity with id={id} is not found")
+
+    def by_id_optional(
+        self,
+        id: UniqueId,  # noqa: A002
+        *,
+        version: Optional[int] = None,
+        **kwargs,
+    ) -> Optional:
+        return self._by_id(id, version=version)
 
     def by_resource_id(self, resource_id: str, *, version: Optional[int] = None) -> entities.Resource:
         if resource := self.by_resource_id_optional(resource_id, version=version):
             return resource
         else:
-            raise self.EntityNotFound(f"Entity with resource_id='{resource_id}' can't be found.")
+            raise ResourceNotFound(f"Resource with resource_id='{resource_id}' can't be found.")
 
     def by_resource_id_optional(
         self, resource_id: str, *, version: Optional[int] = None
@@ -94,7 +111,7 @@ class ResourceRepository(repository.Repository):
     def remove_resource_table(self, resource):
         EntryRepository(self._session, resource).drop_table()
 
-    def _save(self, resource: Resource):
+    def save(self, resource: Resource):
         resource_dto = ResourceModel.from_entity(resource)
         self._session.add(resource_dto)
         # If resource was discarded, drop the table containing all data entries.

@@ -3,10 +3,10 @@ from typing import Dict, Iterable, Optional
 
 from injector import Injector, Module, provider, singleton
 
-from karp.search.infrastructure.es import EsIndex
 from karp.foundation.timings import utc_now
-from karp.search.domain.index_entry import IndexEntry
 from karp.lex.domain.entities import Entry
+from karp.search.domain.index_entry import IndexEntry
+from karp.search.infrastructure.es import EsIndex
 
 
 @dataclasses.dataclass
@@ -50,12 +50,6 @@ class InMemoryIndex(EsIndex):
         if not isinstance(entry_id, str):
             entry_id = str(entry_id)
         del self.indices[resource_id].entries[entry_id]
-
-    def _save(self, _notused):  # noqa: ANN202
-        pass
-
-    def _by_id(self, id) -> None:  # noqa: A002
-        return None
 
 
 class InMemorySearchInfrastructure(Module):

@@ -32,15 +32,6 @@ class ResourceQueries:
         if result is not None:
             return self._from_resource(result)
 
-    def by_id(self, entity_id: UniqueId, version: Optional[int] = None) -> ResourceDto:
-        result = self._resources.by_id(entity_id, version=version)
-        return self._from_resource(result)
-
-    def by_id_optional(self, entity_id: UniqueId, version: Optional[int] = None) -> Optional[ResourceDto]:
-        result = self._resources.by_id_optional(entity_id, version=version)
-        if result is not None:
-            return self._from_resource(result)
-
     def get_published_resources(self) -> Iterable[ResourceDto]:
         return map(self._from_resource, self._resources.get_published_resources())
 
