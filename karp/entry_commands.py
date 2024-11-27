@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Dict, Generator, Iterable, List, Tuple
+from typing import Any, Dict, Generator, Iterable, Tuple
 
 import sqlalchemy
 from injector import inject

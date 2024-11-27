@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Dict, Iterable
+from typing import Iterable
 
 import elasticsearch
 import elasticsearch.helpers

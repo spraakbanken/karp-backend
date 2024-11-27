@@ -11,7 +11,6 @@ from injector import Injector, inject
 from karp.foundation.batch import batch_items
 from karp.foundation.entry_points import entry_points
 from karp.foundation.json import (
-    del_path,
     expand_path,
     get_path,
     has_path,

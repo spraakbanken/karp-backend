@@ -3,7 +3,6 @@ from typing import Iterable, Optional
 from injector import inject
 
 from karp import plugins
-from karp.foundation.value_objects.unique_id import UniqueId
 from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.entities import Resource
 from karp.lex.infrastructure.sql import ResourceRepository
