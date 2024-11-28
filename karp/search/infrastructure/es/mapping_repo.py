@@ -80,7 +80,7 @@ class EsMappingRepository:
         aliases = self._get_all_aliases()
         self._update_field_mapping(aliases)
 
-    def is_nested(self, resource_ids, field):
+    def is_nested(self, resource_ids: list[str], field):
         """
         Checks if field is nested (collection: true and type: object)
         Raises exception if the field is configured differently in resources
@@ -98,7 +98,7 @@ class EsMappingRepository:
             raise ValueError(f"is_nested on {field} is inconclusive for resources: {resource_ids}")
         return is_nested
 
-    def get_nest_levels(self, resource_id, field):
+    def get_nest_levels(self, resource_id: str, field):
         """
         Given a dot-separated path ("apa.bepa.cepa") it will check if any of the fields in the path is
         nested and return those, path included, otherwise return [].
@@ -110,7 +110,7 @@ class EsMappingRepository:
         parts = field.split(".")[0:-1]
         for part in parts:
             subfield = ".".join([subfield, part]) if subfield else part
-            if self.is_nested(resource_id, subfield):
+            if self.is_nested([resource_id], subfield):
                 nest_levels.append(subfield)
         return nest_levels
 
