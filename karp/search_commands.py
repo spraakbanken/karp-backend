@@ -49,6 +49,6 @@ class SearchCommands:
         # now when the data adding is done, point alias to the new index
         self.index.create_alias(resource_id, index_name)
 
-    def reindex_all_resources(self):
+    def reindex_all_resources(self, remove_old_index):
         for resource in self.resource_queries.get_all_resources():
-            self.reindex_resource(resource.resource_id)
+            self.reindex_resource(resource.resource_id, remove_old_index)
