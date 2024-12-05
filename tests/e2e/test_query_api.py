@@ -72,6 +72,14 @@ def test_query_no_q_with_highlight(fa_data_client):
         assert "highlight" not in entry
 
 
+def test_subfield_query(fa_data_client):
+    entries = get_json(fa_data_client, "/query/places?q=equals|name|Alvik")
+    assert len(entries["hits"]) == 1
+
+    entries = get_json(fa_data_client, "/query/places?q=_municipality(freetext|Alvik)")
+    assert len(entries["hits"]) == 0
+
+
 def test_query_no_q(
     fa_data_client,
     read_token: AccessToken,
