@@ -135,6 +135,10 @@ def query(
         For example, to fetch only the field `baseform` in the entry, use: `?path=entry.baseform`
         If the selected field is an array, the result will also be wrapped in an array.""",
     ),
+    highlight: bool = Query(
+        False,
+        description="Adds which fields the query matched and a small hit context with <em>-tags for the actual hit",
+    ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
@@ -164,6 +168,7 @@ def query(
         sort=sort,
         path=path,
         lexicon_stats=lexicon_stats,
+        highlight=highlight,
     )
     try:
         logger.debug(f"{search_service=}")

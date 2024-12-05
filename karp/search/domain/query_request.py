@@ -13,6 +13,7 @@ class QueryRequest(pydantic.BaseModel):
     from_: int = 0
     size: int = 25
     lexicon_stats: bool = True
+    highlight: bool = False
     sort: List[str] = pydantic.Field(default_factory=list)
     path: typing.Optional[str] = None
 
