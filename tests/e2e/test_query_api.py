@@ -48,6 +48,30 @@ class TestQuery:
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
+def test_query_with_highlight(fa_data_client):
+    entries = get_json(fa_data_client, "/query/places?q=freetext|Norsjö&highlight=true")
+    assert len(entries["hits"]) > 0
+    for entry in entries["hits"]:
+        assert "highlight" in entry
+
+
+def test_query_without_highlight(fa_data_client):
+    # test that default is false and that false can be set manually
+    urls = ["/query/places?q=freetext|Norsjö", "/query/places?q=freetext|Norsjö&highlight=false"]
+    for url in urls:
+        entries = get_json(fa_data_client, url)
+        assert len(entries["hits"]) > 0
+        for entry in entries["hits"]:
+            assert "highlight" not in entry
+
+
+def test_query_no_q_with_highlight(fa_data_client):
+    entries = get_json(fa_data_client, "/query/places?highlight=true")
+    assert len(entries["hits"]) > 0
+    for entry in entries["hits"]:
+        assert "highlight" not in entry
+
+
 def test_query_no_q(
     fa_data_client,
     read_token: AccessToken,

@@ -669,3 +669,71 @@ class TestPreviewEntry:
         assert response_data["municipality"] == [m["code"] for m in response_data["_municipality"]]
         del response_data["_municipality"]
         assert response_data == entry
+
+
+def create(client, token, entry_id, entry=None):
+    if not entry:
+        entry = {
+            "code": 203,
+            "name": "add203",
+            "municipality": [2, 3],
+        }
+    body = {"entry": entry}
+    response = client.put(
+        f"/entries/places/{entry_id}",
+        json=body,
+        headers=token.as_header(),
+    )
+    return response.status_code
+
+
+def delete(client, token, entry_id):
+    response = client.delete(
+        f"/entries/places/{entry_id}/1",
+        headers=token.as_header(),
+    )
+    return response.status_code
+
+
+def test_add_with_id_many_times(
+    fa_data_client,
+    write_token: AccessToken,
+):
+    entry_id = fa_data_client.get("/entries/create_id").json()["newID"]
+
+    try:
+        for _ in range(0, 10):
+            status_code = create(fa_data_client, write_token, entry_id)
+            assert status_code == 201
+    finally:
+        # delete it after the test is done to not affect other tests
+        delete(fa_data_client, write_token, entry_id)
+
+
+def test_add_with_id_many_times_changes(
+    fa_data_client,
+    write_token: AccessToken,
+):
+    entry_id = fa_data_client.get("/entries/create_id").json()["newID"]
+    entry = {"code": 203, "name": "add203", "municipality": [1]}
+    try:
+        # first create it
+        status_code = create(fa_data_client, write_token, entry_id, entry=entry)
+        assert status_code == 201
+        for i in range(0, 3):
+            # then try to create it again with different body, should not work
+            entry["name"] = entry["name"] + str(i)
+            status_code = create(fa_data_client, write_token, entry_id, entry=entry)
+            assert status_code == 400
+    finally:
+        # delete it after the test is done to not affect other tests
+        delete(fa_data_client, write_token, entry_id)
+
+
+# assert response.status_code == 201
+# response_data = response.json()
+# assert "newID" in response_data
+# new_id = unique_id.parse(response_data["newID"])
+#
+# entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+# assert new_id in entries.entity_ids()

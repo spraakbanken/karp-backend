@@ -109,9 +109,9 @@ def reindex(ctx: typer.Context, resource_id: str, remove_old_index: Optional[boo
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex_all(ctx: typer.Context):
+def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = False):
     search_commands = inject_from_ctx(SearchCommands, ctx)
-    search_commands.reindex_all_resources()
+    search_commands.reindex_all_resources(remove_old_index=remove_old_index)
     typer.echo("Successfully reindexed all resrouces")
 
 

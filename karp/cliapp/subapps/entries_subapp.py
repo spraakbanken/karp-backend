@@ -12,6 +12,7 @@ import typer
 from tqdm import tqdm
 
 from karp.entry_commands import EntryCommands
+from karp.foundation.value_objects import unique_id
 from karp.lex.domain.value_objects import entry_schema, ResourceConfig
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
@@ -40,6 +41,7 @@ def add_entries_to_resource(
     user = user or "local admin"
     message = message or "imported through cli"
     entries = tqdm(json_arrays.load_from_file(data), desc="Adding", unit=" entries")
+    entries = ((unique_id.make_unique_id(), entry) for entry in entries)
     if chunked:
         entry_commands.add_entries_in_chunks(
             resource_id=resource_id,

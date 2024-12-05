@@ -59,9 +59,12 @@ def repl(
         None,
         help="optional script file to run instead of entering REPL",
     ),
-    args: list[str] = typer.Argument(help="list of args to pass to script file"),
+    args: list[str] = typer.Argument(None, help="list of args to pass to script file"),
 ):
     """Start a Python REPL with the Karp API available."""
+
+    if not args:
+        args = []
 
     locals = {  # noqa: A001
         "ctx": ctx,

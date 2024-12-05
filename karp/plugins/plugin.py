@@ -11,7 +11,6 @@ from injector import Injector, inject
 from karp.foundation.batch import batch_items
 from karp.foundation.entry_points import entry_points
 from karp.foundation.json import (
-    del_path,
     expand_path,
     get_path,
     has_path,
@@ -341,46 +340,3 @@ def transform_list(
             set_path(pos, result, bodies[i])
 
     return bodies
-
-
-def untransform_entry(resource_config: ResourceConfig, entry_dto: "EntryDto") -> "EntryDto":
-    """
-    Remove all the virtual fields from an entry.
-    """
-
-    return next(untransform_entries(resource_config, [entry_dto]))
-
-
-def untransform_entries(resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"]) -> Iterator["EntryDto"]:
-    """
-    Remove all the virtual fields from a list of entries.
-    """
-
-    entry_dtos = list(entry_dtos)
-    new_bodies = untransform_list(resource_config, (entry_dto.entry for entry_dto in entry_dtos))
-    for entry_dto, new_body in zip(entry_dtos, new_bodies):
-        entry_dto = entry_dto.model_copy(deep=True)
-        entry_dto.entry = new_body
-        yield entry_dto
-
-
-def untransform(resource_config: ResourceConfig, body: Dict) -> Dict:
-    """
-    Remove all the virtual fields from a dict.
-    """
-
-    return next(untransform_list(resource_config, [body]))
-
-
-def untransform_list(resource_config: ResourceConfig, bodies: Iterable[Dict]) -> Iterable[Dict]:
-    """
-    Remove all the virtual fields from a list of dicts.
-    """
-
-    virtual_fields = find_virtual_fields(resource_config)
-    for body in bodies:
-        body = deepcopy(body)
-        for field in virtual_fields:
-            for path in expand_path(field, body, expand_arrays=False):
-                del_path(path, body)
-        yield body

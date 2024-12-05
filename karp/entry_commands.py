@@ -1,13 +1,15 @@
 from collections import defaultdict
-from typing import Any, Generator, Iterable
+from typing import Any, Dict, Generator, Iterable, Tuple
 
+import sqlalchemy
 from injector import inject
 from sqlalchemy.orm import Session
 
 from karp import plugins
 from karp.foundation.timings import utc_now
-from karp.foundation.value_objects import unique_id
+from karp.foundation.value_objects import UniqueId, unique_id
 from karp.lex import EntryDto
+from karp.lex.domain import errors
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure import EntryRepository, ResourceRepository
@@ -52,9 +54,17 @@ class EntryCommands:
     def _transform_entries(self, config, entries: Iterable[EntryDto]) -> Generator[IndexEntry, Any, None]:
         config = plugins.transform_config(self.plugins, config)
         entries = plugins.transform_entries(self.plugins, config, entries)
-        return (entry_transformer.transform(config, entry) for entry in entries)
+        return (entry_transformer.transform(entry) for entry in entries)
 
-    def add_entries_in_chunks(self, resource_id, chunk_size, entries, user, message, timestamp=None):
+    def add_entries_in_chunks(
+        self,
+        resource_id: str,
+        chunk_size: int,
+        entries: Iterable[Tuple[UniqueId, Dict]],
+        user: str,
+        message: str,
+        timestamp: float | None = None,
+    ) -> list[EntryDto]:
         """
         Add entries to DB and INDEX (if present and resource is active).
 
@@ -76,12 +86,12 @@ class EntryCommands:
         resource = self._get_resource(resource_id)
 
         entry_table = self._get_entries(resource_id)
-        for i, entry_raw in enumerate(entries):
+        for i, (entry_id, entry_raw) in enumerate(entries):
             entry = resource.create_entry_from_dict(
                 entry_raw,
                 user=user,
                 message=message,
-                id=unique_id.make_unique_id(),
+                id=entry_id,
                 timestamp=timestamp,
             )
             entry_table.save(entry)
@@ -96,7 +106,14 @@ class EntryCommands:
 
         return created_db_entries
 
-    def add_entries(self, resource_id, entries, user, message, timestamp=None):
+    def add_entries(
+        self,
+        resource_id: str,
+        entries: Iterable[Tuple[UniqueId, Dict]],
+        user: str,
+        message: str,
+        timestamp: float | None = None,
+    ):
         return self.add_entries_in_chunks(resource_id, 0, entries, user, message, timestamp=timestamp)
 
     def import_entries(self, resource_id, entries, user, message):
@@ -145,8 +162,8 @@ class EntryCommands:
 
         return created_db_entries
 
-    def add_entry(self, resource_id, entry, user, message, timestamp=None):
-        result = self.add_entries(resource_id, [entry], user, message, timestamp=timestamp)
+    def add_entry(self, resource_id, entry_id, entry, user, message, timestamp=None):
+        result = self.add_entries(resource_id, [(entry_id, entry)], user, message, timestamp=timestamp)
         assert len(result) == 1  # noqa: S101
         return result[0]
 
@@ -198,7 +215,12 @@ class EntryCommands:
         if self.in_transaction:
             return
 
-        self.session.commit()
+        try:
+            self.session.commit()
+        except sqlalchemy.exc.IntegrityError as e:
+            self.session.rollback()
+            raise errors.IntegrityError(str(e)) from None
+
         for resource_id, entry_dtos in self.added_entries.items():
             resource = self._get_resource(resource_id)
             index_entries = self._transform_entries(resource.config, entry_dtos)

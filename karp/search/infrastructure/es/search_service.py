@@ -194,7 +194,7 @@ class EsFieldNameCollector(NodeWalker):
         return set()
 
 
-def _format_result(response, path: Optional[str] = None):
+def _format_result(response, path: Optional[str] = None, highlight: bool = False):
     def format_entry(entry):
         dict_entry = entry.to_dict()
 
@@ -202,6 +202,8 @@ def _format_result(response, path: Optional[str] = None):
             "id": entry.meta.id,
             "entry": dict_entry,
         }
+        if highlight and hasattr(entry.meta, "highlight"):
+            res["highlight"] = entry.meta.highlight.to_dict()
         for mapped_name, field in es_mapping_repo.internal_fields.items():
             res[mapped_name] = dict_entry.pop(field.name, None)
 
@@ -215,7 +217,7 @@ def _format_result(response, path: Optional[str] = None):
 
 
 def _build_result(query, response):
-    result = _format_result(response, path=query.path)
+    result = _format_result(response, path=query.path, highlight=query.highlight)
     if query.lexicon_stats:
         result["distribution"] = {}
         for bucket in response.aggregations.distribution.buckets:
@@ -302,6 +304,8 @@ class EsSearchService:
 
         if query.lexicon_stats:
             s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
+        if query.highlight:
+            s = s.highlight("*")
         if query.size != 0:
             # if no hits are returned, no sorting is needed
             if query.sort:

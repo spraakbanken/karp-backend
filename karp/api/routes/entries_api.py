@@ -51,11 +51,25 @@ def get_history_for_entry(
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
 
+@router.get(
+    "/create_id",
+    status_code=status.HTTP_200_OK,
+    tags=["Editing"],
+    description="""
+    Create an ID (ULID) to be used as input for `add/<resource_id>/<entry_id>`. 
+    """,
+)
+def create_id():
+    return schemas.EntryAddResponse(newID=unique_id.make_unique_id().str)
+
+
 @router.put(
     "/{resource_id}",
     status_code=status.HTTP_201_CREATED,
     response_model=schemas.EntryAddResponse,
     tags=["Editing"],
+    deprecated=True,
+    description="Depracated, use `add/<resource_id>/<entry_id>` instead.",
 )
 def add_entry(
     resource_id: str,
@@ -63,6 +77,40 @@ def add_entry(
     user: User = Depends(deps.get_user),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
+    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
+    published_resources: List[str] = Depends(deps.get_published_resources),
+):
+    entry_id = unique_id.make_unique_id()
+    return add_entry(
+        resource_id, entry_id, data, user, resource_permissions, entry_commands, entry_queries, published_resources
+    )
+
+
+@router.put(
+    "/{resource_id}/{entry_id}",
+    status_code=status.HTTP_201_CREATED,
+    response_model=schemas.EntryAddResponse,
+    tags=["Editing"],
+    description="""
+    Add a new entry. For data consistency reasons, first generate an ID (ULID), for example using the `create_id` API 
+    call. If the request fails, use the same ID to try again, this ensures that the entry body is not added several 
+    times. Answers:
+    
+    - 201 created if the entry exists with the same body, at version 1
+    - 400 
+        - if the entry_id exists, but the body is different
+        - if the entry_id  is not valid
+        - if the entry is not valid according to resource settings
+    """,
+)
+def add_entry(
+    resource_id: str,
+    entry_id: UniqueIdStr,
+    data: schemas.EntryAdd,
+    user: User = Depends(deps.get_user),
+    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
+    entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
+    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
@@ -74,20 +122,23 @@ def add_entry(
         raise ResourceNotFound(resource_id)
     logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
-        new_entry = entry_commands.add_entry(
+        entry_commands.add_entry(
             resource_id=resource_id,
+            entry_id=entry_id,
             user=user.identifier,
             message=data.message,
             entry=data.entry,
         )
     except errors.IntegrityError as exc:
-        return responses.JSONResponse(
-            status_code=400,
-            content={
-                "error": str(exc),
-                "errorCode": karp_errors.ClientErrorCodes.DB_INTEGRITY_ERROR,
-            },
-        )
+        existing_entry = entry_queries.by_id_optional(resource_id, entry_id, expand_plugins=False)
+        if not existing_entry or existing_entry.version != 1 or existing_entry.entry != data.entry:
+            return responses.JSONResponse(
+                status_code=400,
+                content={
+                    "error": str(exc),
+                    "errorCode": karp_errors.ClientErrorCodes.DB_INTEGRITY_ERROR,
+                },
+            )
     except errors.InvalidEntry as exc:
         return responses.JSONResponse(
             status_code=400,
@@ -97,7 +148,7 @@ def add_entry(
             },
         )
 
-    return {"newID": new_entry.id}
+    return schemas.EntryAddResponse(newID=entry_id)
 
 
 # must go before update_entry otherwise it thinks this is an

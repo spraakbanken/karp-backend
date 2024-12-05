@@ -4,6 +4,7 @@ lint.select = [
   "BLE",
   "C4",
   "E",
+  "F401",
   "I",
   "RUF",
   "S",
