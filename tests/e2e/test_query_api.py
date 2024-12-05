@@ -94,7 +94,7 @@ def test_query_no_q(
 
     names = extract_names(entries)
 
-    expected_total = 22
+    expected_total = 23
     print(f"entries = {entries}")
     assert entries["total"] == expected_total
     assert len(names) == expected_total
@@ -112,7 +112,7 @@ def test_query_stats(
         headers=read_token.as_header(),
     )
 
-    assert entries["distribution"] == {"municipalities": 3, "places": 22}
+    assert entries["distribution"] == {"municipalities": 3, "places": 23}
 
 
 @pytest.mark.parametrize(
