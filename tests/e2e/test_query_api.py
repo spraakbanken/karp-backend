@@ -80,6 +80,16 @@ def test_subfield_query(fa_data_client):
     assert len(entries["hits"]) == 0
 
 
+def test_subfield_query2(fa_data_client):
+    # there is one place in test data called "Piteå" that does not have municipality "Piteå kommun".
+    entries = get_json(fa_data_client, "/query/places?q=freetext|Piteå")
+    assert entries["total"] == 15
+
+    # in this query, we should not get the place with name=Piteå, since we search in "_municipality"
+    entries = get_json(fa_data_client, "/query/places?q=_municipality(freetext|Piteå)")
+    assert entries["total"] == 14
+
+
 def test_query_no_q(
     fa_data_client,
     read_token: AccessToken,
