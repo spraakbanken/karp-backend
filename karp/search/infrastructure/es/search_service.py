@@ -39,7 +39,7 @@ class EsQueryBuilder(NodeWalker):
 
         nested_fields = set()
         for resource_id in self.resources:
-            nested_fields.update(self.mapping_repo.get_nested_fields(resource_id))
+            nested_fields.update(self.mapping_repo.get_nested_fields(resource_id, self.path))
 
         for nested_field in nested_fields:
             # adding the field name for nested fields will trigger match to generate es_dsl.Q("nested", ...) where needed
