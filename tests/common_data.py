@@ -87,6 +87,15 @@ PLACES = [
         "municipality": [2],
         "larger_place": 1,  # Grund test
     },
+    {
+        "code": 10,
+        "name": "Piteå",
+        "area": 7312,
+        "population": 641,
+        "density": 12,
+        "municipality": [2],
+        "larger_place": 1,  # Grund test
+    },
 ]
 
 
