@@ -305,7 +305,15 @@ class EsSearchService:
         if query.lexicon_stats:
             s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
         if query.highlight:
-            s = s.highlight("*")
+            # only highlight the fields that are used in query
+            for field in field_names:
+                # add the actual field
+                s = s.highlight(field)
+                # also highlight any fields in "subobject" (will not match anything if field is a leaf)
+                s = s.highlight(field + ".*")
+            if not field_names:
+                # i.e. freetext
+                s = s.highlight("*")
         if query.size != 0:
             # if no hits are returned, no sorting is needed
             if query.sort:
