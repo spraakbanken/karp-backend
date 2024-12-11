@@ -83,6 +83,9 @@ class EsQueryBuilder(NodeWalker):
         return es_dsl.Q("bool", must_not=must_nots)
 
     def walk__or(self, node):
+        if not node.ast:
+            return es_dsl.Q("match_none")
+
         result = self.walk(node.ast[0])
         for n in node.ast[1:]:
             result = result | self.walk(n)
@@ -90,6 +93,9 @@ class EsQueryBuilder(NodeWalker):
         return result
 
     def walk__and(self, node):
+        if not node.ast:
+            return es_dsl.Q("match_all")
+
         result = self.walk(node.ast[0])
         for n in node.ast[1:]:
             result = result & self.walk(n)

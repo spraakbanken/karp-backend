@@ -147,7 +147,7 @@ class KarpQueryParser(Parser):
         def block1():
             self._expression_()
 
-        self._positive_gather(block1, sep1)
+        self._gather(block1, sep1)
         self.name_last_node("@")
         self._token(")")
 
@@ -301,7 +301,7 @@ class KarpQueryParser(Parser):
         def block1():
             self._expression_()
 
-        self._positive_gather(block1, sep1)
+        self._gather(block1, sep1)
         self.name_last_node("@")
         self._token(")")
 

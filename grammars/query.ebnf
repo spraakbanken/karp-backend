@@ -42,7 +42,7 @@ sub_query::SubQuery
 
 and::And
     =
-    'and' '(' @:'||'.{expression}+ ')'
+    'and' '(' @:'||'.{expression}* ')'
     ;
 
 contains::Contains
@@ -107,7 +107,7 @@ not::Not
 
 or::Or
     =
-    'or' '(' @:'||'.{expression}+ ')'
+    'or' '(' @:'||'.{expression}* ')'
     ;
 
 regexp::Regexp
