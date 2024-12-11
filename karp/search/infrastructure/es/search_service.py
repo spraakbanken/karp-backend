@@ -11,7 +11,7 @@ from tatsu.walkers import NodeWalker
 from karp.foundation.json import get_path
 from karp.main.errors import KarpError
 from karp.search.domain import QueryRequest, errors
-from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
+from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics, ModelBase
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
 from karp.search.infrastructure.es.mapping_repo import EsMappingRepository, Field
@@ -293,7 +293,10 @@ class EsSearchService:
         es_query = None
         if query.q:
             try:
-                model = self.parser.parse(query.q)
+                if isinstance(query.q, ModelBase):
+                    model = query.q
+                else:
+                    model = self.parser.parse(query.q)
                 es_query = EsQueryBuilder(resources, self.mapping_repo, query.q).walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
