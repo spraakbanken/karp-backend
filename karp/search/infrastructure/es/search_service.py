@@ -276,7 +276,14 @@ class EsSearchService:
 
         logger.info(f"multi_query called for {len(queries)} requests")
 
-        ms = es_dsl.MultiSearch(using=self.es)
+        # Workaround: MultiSearch.add takes linear time in the size of
+        # the query
+        class WorkaroundMultiSearch(es_dsl.MultiSearch):
+            def add(self, search):
+                self._searches.append(search)
+                return self
+
+        ms = WorkaroundMultiSearch(using=self.es)
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
