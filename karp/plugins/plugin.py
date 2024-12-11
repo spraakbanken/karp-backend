@@ -172,7 +172,7 @@ def transform_entries(
     """
 
     cached_results = {}
-    for batch in batch_items(entry_dtos):
+    for batch in batch_items(entry_dtos, max_batch_size=10000):
         new_entries = transform_list(plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results)
         for entry_dto, new_entry in zip(batch, new_entries):
             entry_dto = entry_dto.model_copy(deep=True)
