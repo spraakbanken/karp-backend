@@ -114,19 +114,20 @@ class EsQueryBuilder(NodeWalker):
         field_path is a string representing the field to be search in, which may be a path separated by "."
         query is the ES (DSL) query to be wrapped
         """
-        # if self.path is set and the current field is part of the current path, no nesting added at this level
-        if field_path + "." != self.path:
-            field = self.path + field_path
-            try:
-                is_nested = self.mapping_repo.is_nested(self.resources, field)
-            except ValueError:
-                raise errors.IncompleteQuery(
-                    self._q,
-                    f"Resources: {self.resources} have different settings for field: {field}",
-                ) from None
+        # if field_path and self.path is the same, no extra nesting needed
+        if field_path + "." == self.path:
+            return query
 
-            if is_nested:
-                query = es_dsl.Q("nested", path=field_path, query=query)
+        try:
+            is_nested = self.mapping_repo.is_nested(self.resources, field_path)
+        except ValueError:
+            raise errors.IncompleteQuery(
+                self._q,
+                f"Resources: {self.resources} have different settings for field: {field_path}",
+            ) from None
+
+        if is_nested:
+            query = es_dsl.Q("nested", path=field_path, query=query)
 
         path, *last_elem = field_path.rsplit(".", 1)
         if not last_elem:
