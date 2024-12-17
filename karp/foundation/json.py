@@ -12,7 +12,10 @@ def make_path(path: Union[str, Path]) -> Path:
     """
 
     if isinstance(path, str):
-        return path.split(".")
+        if path:
+            return path.split(".")
+        else:
+            return []
     elif isinstance(path, list):
         return path
     else:

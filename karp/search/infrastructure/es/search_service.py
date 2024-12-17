@@ -11,7 +11,7 @@ from tatsu.walkers import NodeWalker
 from karp.foundation.json import get_path
 from karp.main.errors import KarpError
 from karp.search.domain import QueryRequest, errors
-from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
+from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics, ModelBase
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
 from karp.search.infrastructure.es.mapping_repo import EsMappingRepository, Field
@@ -39,7 +39,7 @@ class EsQueryBuilder(NodeWalker):
 
         nested_fields = set()
         for resource_id in self.resources:
-            nested_fields.update(self.mapping_repo.get_nested_fields(resource_id))
+            nested_fields.update(self.mapping_repo.get_nested_fields(resource_id, self.path))
 
         for nested_field in nested_fields:
             # adding the field name for nested fields will trigger match to generate es_dsl.Q("nested", ...) where needed
@@ -83,6 +83,9 @@ class EsQueryBuilder(NodeWalker):
         return es_dsl.Q("bool", must_not=must_nots)
 
     def walk__or(self, node):
+        if not node.ast:
+            return es_dsl.Q("match_none")
+
         result = self.walk(node.ast[0])
         for n in node.ast[1:]:
             result = result | self.walk(n)
@@ -90,6 +93,9 @@ class EsQueryBuilder(NodeWalker):
         return result
 
     def walk__and(self, node):
+        if not node.ast:
+            return es_dsl.Q("match_all")
+
         result = self.walk(node.ast[0])
         for n in node.ast[1:]:
             result = result & self.walk(n)
@@ -108,19 +114,20 @@ class EsQueryBuilder(NodeWalker):
         field_path is a string representing the field to be search in, which may be a path separated by "."
         query is the ES (DSL) query to be wrapped
         """
-        # if self.path is set and the current field is part of the current path, no nesting added at this level
-        if field_path + "." != self.path:
-            field = self.path + field_path
-            try:
-                is_nested = self.mapping_repo.is_nested(self.resources, field)
-            except ValueError:
-                raise errors.IncompleteQuery(
-                    self._q,
-                    f"Resources: {self.resources} have different settings for field: {field}",
-                ) from None
+        # if field_path and self.path is the same, no extra nesting needed
+        if field_path + "." == self.path:
+            return query
 
-            if is_nested:
-                query = es_dsl.Q("nested", path=field_path, query=query)
+        try:
+            is_nested = self.mapping_repo.is_nested(self.resources, field_path)
+        except ValueError:
+            raise errors.IncompleteQuery(
+                self._q,
+                f"Resources: {self.resources} have different settings for field: {field_path}",
+            ) from None
+
+        if is_nested:
+            query = es_dsl.Q("nested", path=field_path, query=query)
 
         path, *last_elem = field_path.rsplit(".", 1)
         if not last_elem:
@@ -270,7 +277,14 @@ class EsSearchService:
 
         logger.info(f"multi_query called for {len(queries)} requests")
 
-        ms = es_dsl.MultiSearch(using=self.es)
+        # Workaround: MultiSearch.add takes linear time in the size of
+        # the query
+        class WorkaroundMultiSearch(es_dsl.MultiSearch):
+            def add(self, search):
+                self._searches.append(search)
+                return self
+
+        ms = WorkaroundMultiSearch(using=self.es)
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
@@ -287,7 +301,10 @@ class EsSearchService:
         es_query = None
         if query.q:
             try:
-                model = self.parser.parse(query.q)
+                if isinstance(query.q, ModelBase):
+                    model = query.q
+                else:
+                    model = self.parser.parse(query.q)
                 es_query = EsQueryBuilder(resources, self.mapping_repo, query.q).walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:

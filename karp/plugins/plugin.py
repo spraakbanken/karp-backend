@@ -172,7 +172,7 @@ def transform_entries(
     """
 
     cached_results = {}
-    for batch in batch_items(entry_dtos):
+    for batch in batch_items(entry_dtos, max_batch_size=10000):
         new_entries = transform_list(plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results)
         for entry_dto, new_entry in zip(batch, new_entries):
             entry_dto = entry_dto.model_copy(deep=True)
@@ -226,26 +226,32 @@ def transform_list(
 
         # First compute all needed plugin invocations (we use a dict to remove
         # duplicates - can't use a set because flat_field_params isn't hashable)
+
+        outer_cache_key = config.model_dump_json()
+        if outer_cache_key not in cached_results:
+            cached_results[outer_cache_key] = {}
+        inner_cached_results = cached_results[outer_cache_key]
+
         batch_dict = {}
         for field_params in batch:
             for flat_field_params in select_from_dict(field_params):
                 key = deepfreeze(flat_field_params)
-                if key not in cached_results:
+                if key not in inner_cached_results:
                     batch_dict[key] = flat_field_params
 
         # Execute the batch query and store the results into cached_results
         batch_result_list = plugins.generate_batch(config, batch_dict.values())
-        cached_results |= dict(zip(batch_dict, batch_result_list))
+        inner_cached_results |= dict(zip(batch_dict, batch_result_list))
 
         # Now look up the results
         for field_params in batch:
             if any(isinstance(value, list) for value in field_params.values()):
                 yield [
-                    cached_results[deepfreeze(flat_field_params)]
+                    inner_cached_results[deepfreeze(flat_field_params)]
                     for flat_field_params in select_from_dict(field_params)
                 ]
             else:
-                yield cached_results[deepfreeze(field_params)]
+                yield inner_cached_results[deepfreeze(field_params)]
 
     def select_from_dict(d: Dict) -> Iterator[Dict]:
         """Flatten a dict-of-lists into an iterator-of-dicts.

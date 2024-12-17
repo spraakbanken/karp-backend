@@ -75,7 +75,7 @@ def configure_logging() -> None:
     dictConfig(
         {
             "version": 1,
-            "disable_existing_loggers": True,
+            "disable_existing_loggers": False,
             "filters": {
                 "correlation_id": {
                     "()": asgi_correlation_id.CorrelationIdFilter,
@@ -87,13 +87,6 @@ def configure_logging() -> None:
                     "class": "logging.Formatter",
                     "format": "%(levelname)s:\t\b%(asctime)s %(name)s:%(lineno)d [%(correlation_id)s] %(message)s",
                 },
-                "json": {
-                    "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
-                    "format": "%(asctime)s %(levelname)s %(name)s %(process)d %(funcName)s %(lineno)d %(message)s",
-                },
-                "standard": {
-                    "format": "%(asctime)s-%(levelname)s-%(name)s-%(process)d::%(module)s|%(lineno)s:: %(message)s",
-                },
             },
             "handlers": {
                 "console": {
@@ -101,11 +94,6 @@ def configure_logging() -> None:
                     "filters": ["correlation_id"],
                     "formatter": "console",
                     "stream": "ext://sys.stderr",
-                },
-                "json": {
-                    "class": "logging.StreamHandler",
-                    "filters": ["correlation_id"],
-                    "formatter": "json",
                 },
             },
             "loggers": {
@@ -117,6 +105,7 @@ def configure_logging() -> None:
                 # third-party package loggers
                 "sqlalchemy": {"level": "WARNING", "handlers": ["console"]},
                 "uvicorn": {"level": "INFO", "handlers": ["console"]},
+                # "elasticsearch": {"level": "DEBUG", "handlers": ["console"]},
             },
         }
     )

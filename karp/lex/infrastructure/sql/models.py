@@ -1,5 +1,6 @@
 import functools
 
+import methodtools
 from sqlalchemy import (
     JSON,
     Column,
@@ -76,6 +77,7 @@ class ResourceModel(Base):
             self.discarded,
         )
 
+    @methodtools.lru_cache(maxsize=None)
     def to_entity(self) -> entities.Resource:
         # Only needed to handle resources that were created/updated
         # before ResourceConfig had resource_id and resource_name fields

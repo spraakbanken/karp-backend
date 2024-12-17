@@ -5,6 +5,9 @@ Testing make_path:
 >>> make_path('SOLemman.s_nr')
 ['SOLemman', 's_nr']
 
+>>> make_path('')
+[]
+
 >>> make_path(['SOLemman', 's_nr'])
 ['SOLemman', 's_nr']
 

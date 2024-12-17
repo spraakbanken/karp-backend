@@ -25,7 +25,7 @@ class MappingRepo:
     def is_nested(self, _, field):
         return field.endswith("infT")
 
-    def get_nested_fields(self, _):
+    def get_nested_fields(self, _, __):
         return ["infT"]
 
     def get_field(self, _, field_name):

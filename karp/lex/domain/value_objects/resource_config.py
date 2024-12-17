@@ -39,7 +39,7 @@ class ResourceConfig(BaseModel):
         # This can be removed once PyYAML supports YAML 1.2.
         config_str = config_str.replace("\t", " ")
 
-        config_dict = yaml.safe_load(config_str)
+        config_dict = yaml.load(config_str, Loader=yaml.CSafeLoader)
         config_dict["config_str"] = config_str
         if extra:
             config_dict.update(extra)
@@ -52,7 +52,7 @@ class ResourceConfig(BaseModel):
 
     @classmethod
     def from_dict(cls, config_dict):
-        config_str = yaml.dump(config_dict)
+        config_str = yaml.dump(config_dict, Dumper=yaml.CDumper)
         return cls.from_str(config_str)
 
     def nested_fields(self):

@@ -114,9 +114,9 @@ class EsMappingRepository:
                 nest_levels.append(subfield)
         return nest_levels
 
-    def get_nested_fields(self, resource_id):
+    def get_nested_fields(self, resource_id, path):
         for field_name, field_def in self.fields[resource_id].items():
-            if field_def.type == "nested":
+            if field_def.type == "nested" and field_name.startswith(path):
                 yield field_name
 
     def get_field(self, resource_ids, field_name):
