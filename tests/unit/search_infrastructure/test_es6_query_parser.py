@@ -22,11 +22,19 @@ class MappingRepo:
     def __init__(self):
         pass
 
+    def get_fields_as_tree(self, _, __):
+        return {
+            "infT": {
+                "def": Field(path=["infT"], type="nested"),
+                "children": {
+                    "field1": {"def": Field(path=["infT.field1"], type="text"), "children": {}},
+                    "field2": {"def": Field(path=["infT.field1"], type="boolean"), "children": {}},
+                },
+            }
+        }
+
     def is_nested(self, _, field):
         return field.endswith("infT")
-
-    def get_nested_fields(self, _, __):
-        return ["infT"]
 
     def get_field(self, _, field_name):
         return Field(path=[field_name], type="text")
@@ -53,21 +61,15 @@ def get_regexp_object(field, val):
         (
             'freetext|"hej"',
             es_dsl.Q(
-                "bool",
-                should=[
-                    es_dsl.Q("multi_match", query="hej", fields=["*"], lenient=True, type="phrase"),
-                    es_dsl.Q(
-                        "nested",
-                        path="infT",
-                        query=es_dsl.Q(
-                            "multi_match",
-                            query="hej",
-                            fields=["infT.*"],
-                            lenient=True,
-                            type="phrase",
-                        ),
-                    ),
-                ],
+                "nested",
+                path="infT",
+                query=es_dsl.Q(
+                    "bool",
+                    should=[
+                        es_dsl.Q("match_phrase", **{"infT.field1": "hej"}),
+                        es_dsl.Q("match", **{"infT.field2": {"query": "hej", "lenient": True}}),
+                    ],
+                ),
             ),
         ),
         ("missing|test", es_dsl.Q("bool", must_not=es_dsl.Q("exists", field="test"))),

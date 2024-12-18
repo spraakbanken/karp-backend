@@ -23,7 +23,7 @@ class EsQueryBuilder(NodeWalker):
     def __init__(self, resources, mapping_repo, q=None):
         super().__init__()
         self._q = q
-        self.path = ""
+        self.path = [""]
         self.resources = resources
         self.mapping_repo = mapping_repo
 
@@ -35,16 +35,34 @@ class EsQueryBuilder(NodeWalker):
 
     def walk__freetext(self, node):
         value = self.walk(node.arg)
-        query = self.match_text(self.path + "*", value)
 
-        nested_fields = set()
-        for resource_id in self.resources:
-            nested_fields.update(self.mapping_repo.get_nested_fields(resource_id, self.path))
+        # using * to include all fields would include unanalyzed .raw fields, so we must list fields explicitly
+        tree = self.mapping_repo.get_fields_as_tree(self.resources, self.path)
 
-        for nested_field in nested_fields:
-            # adding the field name for nested fields will trigger match to generate es_dsl.Q("nested", ...) where needed
-            query = query | self.match_text(nested_field + ".*", value)
-        return query
+        def recurse(tree: dict, path: str):
+            queries = []
+            for key, obj in tree.items():
+                full_field = path + "." + key if path else key
+                if not obj["children"]:
+                    # a leaf, add concrete query
+                    if obj["def"].type == "text":
+                        query = es_dsl.Q("match_phrase", **{full_field: value})
+                    else:
+                        query = es_dsl.Q("match", **{full_field: {"query": value, "lenient": True}})
+                else:
+                    # has children, recurse with new path
+                    self.path.append(full_field + ".")
+                    query = recurse(obj["children"], full_field)
+                    self.path.pop()
+
+                queries.append(self.wrap_nested(full_field, query))
+
+            if len(queries) > 1:
+                return es_dsl.Q("bool", should=queries)
+            return queries[0]
+
+        # generate query recursively beginning with an empty path
+        return recurse(tree, "")
 
     def walk__regexp(self, node):
         return self.regexp(node.field, self.walk(node.arg))
@@ -104,9 +122,9 @@ class EsQueryBuilder(NodeWalker):
 
     def walk__sub_query(self, node):
         (field_path, _) = self.walk(node.field)
-        self.path = field_path + "."
+        self.path.append(field_path + ".")
         query = self.walk(node.exp)
-        self.path = ""
+        self.path.pop()
         return self.wrap_nested(field_path, query)
 
     def wrap_nested(self, field_path, query):
@@ -115,7 +133,7 @@ class EsQueryBuilder(NodeWalker):
         query is the ES (DSL) query to be wrapped
         """
         # if field_path and self.path is the same, no extra nesting needed
-        if field_path + "." == self.path:
+        if field_path + "." == self.path[-1]:
             return query
 
         try:
@@ -143,7 +161,7 @@ class EsQueryBuilder(NodeWalker):
         else:
             # Add the current path to field, for example query path(equals|field|val)
             # must yield an es-query in field "path.field"
-            field = self.mapping_repo.get_field(self.resources, self.path + field_name)
+            field = self.mapping_repo.get_field(self.resources, self.path[-1] + field_name)
         return field.name, field
 
     def walk_object(self, node):
