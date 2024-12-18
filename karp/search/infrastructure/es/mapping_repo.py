@@ -114,11 +114,6 @@ class EsMappingRepository:
                 nest_levels.append(subfield)
         return nest_levels
 
-    def get_nested_fields(self, resource_id, path):
-        for field_name, field_def in self.fields[resource_id].items():
-            if field_def.type == "nested" and field_name.startswith(path):
-                yield field_name
-
     def get_field(self, resource_ids, field_name):
         if field_name == "@id":
             return Field(path=["_id"], type="keyword")
@@ -193,6 +188,41 @@ class EsMappingRepository:
                     index = groups[1]
                     index_names.append((alias, index))
         return index_names
+
+    def get_fields_as_tree(self, resource_ids: [str], path: str) -> dict[str, any]:
+        """
+        Create a dict that represents all fields on path as a tree
+        sort of:
+        field1.field2, field1.field3 ->
+        field1 {
+            field2: ...
+            field3: ...
+        }
+        """
+        tree = {}
+        for resource_id in resource_ids:
+            for field_name, field_def in self.fields[resource_id].items():
+                # only include fields in the given path
+                if field_name.startswith(path[-1]):
+                    parts = field_name.split(".")
+                    current = tree
+
+                    for part in parts[:-1]:
+                        if part not in current:
+                            current[part] = {"def": field_def, "children": {}}
+                        current = current[part]["children"]
+
+                    if parts[-1] in ["raw", "sort"]:
+                        continue
+
+                    # check that the types are the same for leafs
+                    if parts[-1] not in current:
+                        current[parts[-1]] = {"def": field_def, "children": {}}
+                    else:
+                        node = current[parts[-1]]
+                        if node["def"] != field_def or node["children"]:
+                            raise ValueError(f"Type of {field_name} is inconclusive for resources: {resource_ids}")
+        return tree
 
     def get_default_sort(self, resources: List[str]) -> Optional[str]:
         """
