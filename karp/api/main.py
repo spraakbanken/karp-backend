@@ -17,9 +17,12 @@ from karp import main
 from karp.api.routes import router as api_router
 from karp.auth import errors as auth_errors
 from karp.foundation import errors as foundation_errors
+from karp.lex.application.resource_queries import ResourceQueries
 from karp.lex.domain import errors as lex_errors
 from karp.main import config, new_session
+from karp.main.app import with_new_session
 from karp.main.errors import ClientErrorCodes
+from karp.plugins.plugin import Plugins
 
 querying_description = """
 ## Query DSL
@@ -116,6 +119,10 @@ def create_app() -> FastAPI:
     )
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
+    # add all plugin API routes
+    plugins = app_context.injector.get(Plugins)
+    resource_queries = with_new_session(app_context.injector).get(ResourceQueries)
+    plugins.register_routes(resource_queries.get_published_resources())
     app.include_router(api_router)
 
     from karp.main.errors import KarpError

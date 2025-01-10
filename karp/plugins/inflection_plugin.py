@@ -1,5 +1,15 @@
 import re
 from collections import defaultdict
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from karp import auth
+from karp.api import dependencies as deps
+from karp.api.dependencies.fastapi_injector import inject_from_req
+from karp.auth.application.resource_permission_queries import ResourcePermissionQueries
+from karp.search.domain.query_request import QueryRequest
+from karp.search.infrastructure.es.search_service import EsSearchService
 
 from .plugin import Plugin
 
@@ -187,6 +197,41 @@ def apply_rules(s, rules):
 
 
 class InflectionPlugin(Plugin):
+    def create_router(self, resource_id: str, params: dict[str, str]) -> APIRouter:
+        router = APIRouter()
+
+        @router.get(
+            "/generate_inflection_table/{lemma}/{inflection_class}",
+            summary="Given a lemma and an inflection class, generate an inflection table.",
+        )
+        def generate_inflection_table(
+            lemma: str,
+            inflection_class: str,
+            user: auth.User = Depends(deps.get_user_optional),
+            resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
+            search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
+        ) -> list[Any]:
+            # user must have READ access to the resource publishing this route
+            if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Not enough permissions",
+                )
+
+            # fetch the rules
+            res = search_service.query(
+                QueryRequest(
+                    resources=[resource_id],
+                    q=f"equals|{params["target"]}|{inflection_class}",
+                )
+            )
+            rules = res["hits"][0]["entry"]
+
+            # use the given lemma and rules to produce a table
+            return self.generate(lemma, rules)
+
+        return router
+
     def output_config(self):  # noqa
         config = {
             "collection": True,
