@@ -26,6 +26,7 @@ class ResourceConfig(BaseModel):
     resource_id: str
     resource_name: Optional[str] = None
     fields: dict[str, "Field"]
+    plugins: dict[str, dict[str, str]] = {}
     sort: Optional[str | list[str]] = None  # TODO what does it mean if it's a list?
     protected: dict[str, bool] = {}
     id: Optional[str] = None
