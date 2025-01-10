@@ -200,5 +200,11 @@ def fixture_init_search_service():
     if not env("TEST_ES_HOME"):
         raise RuntimeError("must set ES_HOME to run tests that use elasticsearch")
     es_port = int(os.environ.get("TEST_ELASTICSEARCH_PORT", "9202"))
-    with elasticsearch_test.ElasticsearchTest(port=es_port, es_path=env("TEST_ES_HOME")):
+    es_test = elasticsearch_test.ElasticsearchTest(port=es_port, es_path=env("TEST_ES_HOME"))
+    # if there is an instance running with this configuration, use it
+    if es_test.is_started():
         yield
+    # else, start it
+    else:
+        with es_test:
+            yield
