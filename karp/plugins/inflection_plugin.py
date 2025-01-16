@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -200,35 +200,84 @@ class InflectionPlugin(Plugin):
     def create_router(self, resource_id: str, params: dict[str, str]) -> APIRouter:
         router = APIRouter()
 
+        def find_match(
+            lemma: str, include_wordforms: list[list[str]], exclude_wordforms: list[list[str]], rules: list[dict]
+        ):
+            """
+            Generate tables for lemma from each rule
+            If wordforms are given, check that each wordform (and optionally tag) is in the table
+            Return the matching tables + rule name
+            """
+            final_res = []
+            for rule in rules:
+                table = self.generate(lemma, rule)
+                forms = []
+                for table_elem in table:
+                    for row in table_elem["rows"]:
+                        for preform in row["preform"]:
+                            forms.append([preform["form"], preform["tag"]])
+
+                matching = True
+                for wordforms, test in (
+                    # matching = False if form NOT in table
+                    (include_wordforms, lambda x, y: x not in y),
+                    # matching = False if form IS in table
+                    (exclude_wordforms, lambda x, y: x in y),
+                ):
+                    for wordform in wordforms:
+                        # wordform can either be just a form or a list of [form, tag]
+                        if len(wordform) > 1:
+                            tmp_forms = forms
+                        else:
+                            tmp_forms = [form[0] for form in forms]
+                            wordform = wordform[0]
+                        if test(wordform, tmp_forms):
+                            matching = False
+                            break
+
+                if matching:
+                    final_res.append({"name": rule["name"], "inflectiontable": table})
+            return final_res
+
+        def parse_wordforms(wordforms: str | None):
+            """
+            Parse query param for wordforms "wf1|tag1,wf2,wf3|tag"
+            """
+            return [wf.split("|") for wf in wordforms.split(",")] if wordforms else []
+
         @router.get(
-            "/generate_inflection_table/{lemma}/{inflection_class}",
+            "/generate_inflection_table",
             summary="Given a lemma and an inflection class, generate an inflection table.",
         )
         def generate_inflection_table(
             lemma: str,
-            inflection_class: str,
+            inflection_class: Optional[str] = None,
+            wordforms: Optional[str] = None,
+            exclude_wordforms: Optional[str] = None,
             user: auth.User = Depends(deps.get_user_optional),
             resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
             search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
         ) -> list[Any]:
             # user must have READ access to the resource publishing this route
             if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Not enough permissions",
-                )
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+
+            if inflection_class:
+                # TODO maybe remove the parameter and just use name
+                q = f"equals|{params['target']}|{inflection_class}"
+            else:
+                q = None
 
             # fetch the rules
-            res = search_service.query(
-                QueryRequest(
-                    resources=[resource_id],
-                    q=f"equals|{params['target']}|{inflection_class}",
-                )
-            )
-            rules = res["hits"][0]["entry"]
+            # TODO q should be optional
+            if q:
+                res = search_service.query(QueryRequest(resources=[resource_id], q=q))
+            else:
+                res = search_service.query(QueryRequest(resources=[resource_id], size=9999))
+            rules = [hit["entry"] for hit in res["hits"]]
 
             # use the given lemma and rules to produce a table
-            return self.generate(lemma, rules)
+            return find_match(lemma, parse_wordforms(wordforms), parse_wordforms(exclude_wordforms), rules)
 
         return router
 
