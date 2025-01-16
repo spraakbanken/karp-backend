@@ -140,7 +140,7 @@ class EsQueryBuilder(NodeWalker):
             is_nested = self.mapping_repo.is_nested(self.resources, field_path)
         except ValueError:
             raise errors.IncompleteQuery(
-                self._q,
+                str(self._q),
                 f"Resources: {self.resources} have different settings for field: {field_path}",
             ) from None
 
@@ -327,7 +327,7 @@ class EsSearchService:
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
                 logger.info("Parse error", extra={"err": err})
-                raise errors.IncompleteQuery(failing_query=query.q, error_description=str(err)) from err
+                raise errors.IncompleteQuery(failing_query=str(query.q), error_description=str(err)) from err
 
         s = es_dsl.Search(using=self.es, index=resources)
         s = _add_runtime_mappings(s, field_names)

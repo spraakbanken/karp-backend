@@ -4,6 +4,7 @@ from copy import deepcopy
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
 import methodtools
+from fastapi import APIRouter
 from frozendict import deepfreeze
 from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
@@ -42,6 +43,9 @@ class Plugin(ABC):
         if len(result) != 1:
             raise AssertionError("generate_batch returned wrong number of results")
         return result[0]
+
+    def create_router(self, resource_id: str, params: dict[str, str]) -> APIRouter:
+        raise NotImplementedError()
 
 
 plugin_registry: dict[str, Callable[[], Type[Plugin]]] = {}
@@ -82,6 +86,17 @@ class Plugins:
         if not name:
             raise PluginException('Resource config has "virtual": "true" but no "plugin" field')
         return self.injector.get(find_plugin(name))
+
+    def register_routes(self, resources: Iterable[ResourceDto]):
+        """
+        Check if any resource has declared a plugin on top-level and register that plugin's routes
+        """
+        from karp.api.routes import router
+
+        for resource in resources:
+            for plugin_name, plugin_params in resource.config.plugins.items():
+                inner_router = self._get_plugin(plugin_name).create_router(resource.resource_id, plugin_params)
+                router.include_router(inner_router, prefix=f"/{resource.resource_id}/{plugin_name}")
 
     def output_config(self, config: Field) -> Field:
         result = self._get_plugin(config.plugin).output_config(**config.params)
