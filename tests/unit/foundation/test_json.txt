@@ -97,3 +97,105 @@ Testing expand_path:
 ['SOLemman', 1, 's_nr']
 >>> for path in expand_path(['SOLemman', 0, 's_nr'], doc, expand_arrays=False): print(path)
 ['SOLemman', 0, 's_nr']
+
+Testing rename_field:
+
+>>> doc = {
+...     'SOLemman': [
+...        {'lexem': {'kc_nr': 1, 'more': [2]}},
+...        {'lexem': {'kc_nr': 3, 'more': [4]}},
+...     ]}
+
+Fields can be renamed to another name at the same level:
+
+>>> rename_field('SOLemman.lexem.more', 'SOLemman.lexem.more_renamed', doc)
+>>> doc
+{'SOLemman': [{'lexem': {'kc_nr': 1, 'more_renamed': [2]}}, {'lexem': {'kc_nr': 3, 'more_renamed': [4]}}]}
+
+Renaming to an existing name should fail:
+
+>>> rename_field('SOLemman.lexem.more_renamed', 'SOLemman.lexem.kc_nr', doc)
+Traceback (most recent call last):
+  ...
+ValueError: new field already exists
+
+Fields can be moved to a higher level:
+
+>>> rename_field('SOLemman.lexem.more_renamed', 'SOLemman.more_renamed', doc)
+>>> doc
+{'SOLemman': [{'lexem': {'kc_nr': 1}, 'more_renamed': [2]}, {'lexem': {'kc_nr': 3}, 'more_renamed': [4]}]}
+
+or a lower level:
+
+>>> rename_field('SOLemman.more_renamed', 'SOLemman.lexem.more_renamed', doc)
+>>> doc
+{'SOLemman': [{'lexem': {'kc_nr': 1, 'more_renamed': [2]}}, {'lexem': {'kc_nr': 3, 'more_renamed': [4]}}]}
+
+Renaming a field to a parent or child should fail:
+
+>>> rename_field('SOLemman.lexem', 'SOLemman', doc)
+Traceback (most recent call last):
+  ...
+ValueError: new field already exists
+
+>>> rename_field('SOLemman.lexem', 'SOLemman.lexem.new', doc)
+Traceback (most recent call last):
+  ...
+ValueError: old and new fields overlap
+
+The parent of the new field must exist:
+
+>>> rename_field('SOLemman.lexem.more_renamed', 'SOLemman.lexem.a.b', doc)
+Traceback (most recent call last):
+  ...
+ValueError: parent of new field does not exist
+
+Fields can be "renamed" to have the same name as before:
+
+>>> rename_field('SOLemman.lexem.more', 'SOLemman.lexem.more', doc)
+>>> doc
+{'SOLemman': [{'lexem': {'kc_nr': 1, 'more_renamed': [2]}}, {'lexem': {'kc_nr': 3, 'more_renamed': [4]}}]}
+
+Non-existent fields can be renamed:
+
+>>> rename_field('SOLemman.lexem.non.existent', 'something_else', doc)
+>>> doc
+{'SOLemman': [{'lexem': {'kc_nr': 1, 'more_renamed': [2]}}, {'lexem': {'kc_nr': 3, 'more_renamed': [4]}}]}
+
+A rename can fail if it is ambiguous:
+
+>>> doc = {
+...     'SOLemman': [
+...        {'lexem': {'kc_nr': 1, 'more': [2]}},
+...        {'lexem': {'kc_nr': 3, 'more': [4]}},
+...     ],
+...     'SAOLLemman': [
+...        {'l_nr': 1}
+...     ]}
+>>> rename_field('SOLemman.lexem.kc_nr', 'SAOLLemman.kc_nr', doc)
+Traceback (most recent call last):
+  ...
+ValueError: parent of new field is ambiguous
+>>> rename_field('SAOLLemman.l_nr', 'SOLemman.lexem.l_nr', doc)
+Traceback (most recent call last):
+  ...
+ValueError: parent of new field is ambiguous
+
+Testing add_default_value:
+
+>>> doc = {
+...     'SOLemman': [
+...        {'lexem': {'visas': False, 'more': [2]}},
+...        {'lexem': {'more': [4]}},
+...     ]}
+
+>>> add_default_value('SOLemman.visas', True, doc)
+>>> doc
+{'SOLemman': [{'lexem': {'visas': False, 'more': [2]}, 'visas': True}, {'lexem': {'more': [4]}, 'visas': True}]}
+
+Default values for collections should do nothing:
+
+>>> add_default_value('SOLemman', {}, doc)
+>>> add_default_value('SOLemman.lexem.more', {}, doc)
+>>> doc
+{'SOLemman': [{'lexem': {'visas': False, 'more': [2]}, 'visas': True}, {'lexem': {'more': [4]}, 'visas': True}]}

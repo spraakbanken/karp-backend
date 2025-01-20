@@ -289,3 +289,57 @@ def has_path(path: Union[str, Path], data) -> bool:
         return True
     except StopIteration:
         return False
+
+
+def rename_field(old_name, new_name, data):
+    """
+    Rename or move a field. Example:
+
+    >>> doc = {
+    ...     'SOLemman': [
+    ...        {'lexem': {'kc_nr': 1, 'more': [2]}},
+    ...        {'lexem': {'kc_nr': 3, 'more': [4]}},
+    ...     ]}
+
+    >>> rename_field('SOLemman.lexem', 'SOLemman.more_renamed', doc)
+    >>> doc
+    {'SOLemman': [{'lexem': {'kc_nr': 1}, 'more_renamed': [2]}, {'lexem': {'kc_nr': 3}, 'more_renamed': [4]}]}
+    """
+
+    old_name = make_path(old_name)
+    new_name = make_path(new_name)
+
+    if old_name == new_name:
+        return
+
+    for old_path in expand_path(old_name, data, expand_arrays=False):
+        new_path = localise_path(new_name, old_path)
+
+        # Path must not exist but parent of path must exist once
+        if has_path(new_path, data):
+            raise ValueError("new field already exists")
+        new_path_parents = list(expand_path(new_path[:-1], data))
+        if len(new_path_parents) == 0:
+            raise ValueError("parent of new field does not exist")
+        if new_path_parents != [new_path[:-1]]:
+            raise ValueError("parent of new field is ambiguous")
+
+        # Make sure that old path is not inside new path and vice versa
+        if old_path[: len(new_path)] == new_path or new_path[: len(old_path)] == old_path:
+            raise ValueError("old and new fields overlap")
+
+        value = get_path(old_path, data)
+        del_path(old_path, data)
+        set_path(new_path, value, data)
+
+
+def add_default_value(field, default_value, data):
+    """
+    Update a field to have a default value.
+    """
+
+    field = make_path(field)
+
+    for path in expand_path(field[:-1], data):
+        if not has_path(path + [field[-1]], data):
+            set_path(path + [field[-1]], default_value, data)
