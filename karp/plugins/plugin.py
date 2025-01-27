@@ -1,6 +1,8 @@
 import logging
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from copy import deepcopy
+from functools import wraps
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
 import methodtools
@@ -47,6 +49,64 @@ class Plugin(ABC):
 
     def create_router(self, resource_id: str, params: dict[str, str]) -> APIRouter:
         raise NotImplementedError()
+
+
+def group_batch_by(*args):
+    """
+    A decorator to help with writing generate_batch. Collects batches
+    into "sub-batches" and invokes generate_batch once on each sub-batch.
+
+    Example: if batch items look like this:
+        {"resource": "salex", "field": "ortografi", "other": "xx"}
+    Then you can define:
+        @group_batch_by("resource", "field")
+        def generate_batch(self, resource, field, batch):
+          ...
+    The batch will be split into sub-batches, one sub-batch for each
+    combination of "resource" and "field". Notice that "resource" and
+    "field" become parameters to generate_batch. These fields are also
+    removed from "batch", so the batch items will look like this:
+        {"other": "xx"}
+    """
+
+    def batch_key(batch_item):
+        return {arg: batch_item[arg] for arg in args}
+
+    def batch_rest(batch_item):
+        return {arg: batch_item[arg] for arg in batch_item if arg not in args}
+
+    def inner(function):
+        @wraps(function)
+        def generate_batch(self, batch):
+            batch = list(batch)
+
+            # split the batch into sub-batches that all have the same key
+            unfrozen_keys = {}
+            sub_batches = defaultdict(dict)
+            for i, item in enumerate(batch):
+                frozen_key = str(batch_key(item))
+                if frozen_key not in unfrozen_keys:
+                    unfrozen_keys[frozen_key] = batch_key(item)
+
+                sub_batches[frozen_key][i] = batch_rest(item)
+
+            # run the plugin on all sub-batches
+            results = {}
+            for frozen_key, items in sub_batches.items():
+                key = unfrozen_keys[frozen_key]
+                sub_batch_results = list(function(self, **key, batch=list(items.values())))
+
+                if len(sub_batch_results) != len(items):
+                    raise AssertionError("size mismatch")
+
+                for i, result in zip(items, sub_batch_results):
+                    results[i] = result
+
+            return [results[i] for i in range(len(batch))]
+
+        return generate_batch
+
+    return inner
 
 
 plugin_registry: dict[str, Callable[[], Type[Plugin]]] = {}
