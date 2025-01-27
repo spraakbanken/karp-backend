@@ -209,6 +209,7 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
                 plugin=config.plugin,
                 params=config.params,
                 field_params=config.field_params,
+                flatten_params=config.flatten_params or result.flatten_params,
             )
             return result
 
@@ -311,7 +312,7 @@ def transform_list(
 
         batch_dict = {}
         for field_params in batch:
-            for flat_field_params in select_from_dict(field_params):
+            for flat_field_params in select_from_dict(field_params) if config.flatten_params else [field_params]:
                 key = deepfreeze(flat_field_params)
                 if key not in inner_cached_results:
                     batch_dict[key] = flat_field_params
@@ -322,7 +323,7 @@ def transform_list(
 
         # Now look up the results
         for field_params in batch:
-            if any(isinstance(value, list) for value in field_params.values()):
+            if config.flatten_params and any(isinstance(value, list) for value in field_params.values()):
                 yield [
                     inner_cached_results[deepfreeze(flat_field_params)]
                     for flat_field_params in select_from_dict(field_params)
