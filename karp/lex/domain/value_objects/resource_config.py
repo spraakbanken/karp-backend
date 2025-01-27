@@ -116,6 +116,7 @@ class Field(BaseModel):
     fields: Optional[dict[str, "Field"]] = None
     hidden: bool = False  # only for virtual fields at the moment
     flatten_params: bool = False
+    allow_missing_params: bool = False
     skip_raw: Optional[bool] = False  # for strings only
     additional_properties: bool = True
 

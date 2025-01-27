@@ -210,6 +210,7 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
                 params=config.params,
                 field_params=config.field_params,
                 flatten_params=config.flatten_params or result.flatten_params,
+                allow_missing_params=config.allow_missing_params or result.allow_missing_params,
             )
             return result
 
@@ -359,9 +360,10 @@ def transform_list(
         dependencies[field_name] = set()
 
         # Dependencies through field_params
-        for target_name in config.field_params.values():
-            if target_name in virtual_fields:
-                dependencies[field_name].add(target_name)
+        for target_list in config.field_params.values():
+            for target_name in flatten_list(target_list):
+                if target_name in virtual_fields:
+                    dependencies[field_name].add(target_name)
 
         # Dependencies through one field being a child of another
         # (can happen when a virtual field creates its own virtual subfields)
@@ -394,27 +396,37 @@ def transform_list(
         # Generate a batch of all needed field_params values
         batch = []
         batch_occurrences = []
+
         for i, pos in occurrences:
             field_params = {}
             for k, v in virtual_fields[field_name].field_params.items():
-                path = localise_path(v, pos)
-                # If the path does not exist, skip this field
-                if not has_path(path, bodies[i]):
-                    field_params = None
-                    break
 
-                val = get_path(path, bodies[i])
+                def get_field_param(param):
+                    if isinstance(param, list):
+                        result = [get_field_param(p) for p in param]
+                        if not virtual_fields[field_name].allow_missing_params:  # noqa: B023
+                            result = [val for val in result if val is not None]
+                        return result
+                    else:
+                        path = localise_path(param, pos)  # noqa: B023
+                        if not has_path(path, bodies[i]):  # noqa: B023
+                            return None
+                        else:
+                            return get_path(path, bodies[i])  # noqa: B023
+
+                val = get_field_param(v)
 
                 # Skip field if include_if value is False
                 if k == "include_if":
                     if not val:
-                        field_params = None
                         break
 
                 else:
+                    if not virtual_fields[field_name].allow_missing_params and val is None:
+                        break
                     field_params[k] = val
 
-            if field_params is not None:
+            else:
                 batch_occurrences.append((i, pos))
                 batch.append(field_params)
 
@@ -431,3 +443,11 @@ def transform_list(
                     del_path(path, body)
 
     return bodies
+
+
+def flatten_list(x):
+    if isinstance(x, list):
+        for y in x:
+            yield from flatten_list(y)
+    else:
+        yield x
