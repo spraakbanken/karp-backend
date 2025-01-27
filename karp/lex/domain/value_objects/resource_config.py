@@ -112,7 +112,7 @@ class Field(BaseModel):
     virtual: bool = False
     plugin: Optional[str] = None
     params: dict[str, Any] = {}
-    field_params: dict[str, str] = {}
+    field_params: dict[str, str | list[str]] = {}
     fields: Optional[dict[str, "Field"]] = None
     hidden: bool = False  # only for virtual fields at the moment
     flatten_params: bool = False
