@@ -114,6 +114,7 @@ class Field(BaseModel):
     params: dict[str, Any] = {}
     field_params: dict[str, str] = {}
     fields: Optional[dict[str, "Field"]] = None
+    hidden: bool = False  # only for virtual fields at the moment
     skip_raw: Optional[bool] = False  # for strings only
     additional_properties: bool = True
 

@@ -12,6 +12,7 @@ from injector import Injector, inject
 from karp.foundation.batch import batch_items
 from karp.foundation.entry_points import entry_points
 from karp.foundation.json import (
+    del_path,
     expand_path,
     get_path,
     has_path,
@@ -144,6 +145,7 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
                 collection=config.collection or result.collection,
                 required=config.required or result.required,
                 virtual=True,
+                hidden=config.hidden or result.hidden,
                 plugin=config.plugin,
                 params=config.params,
                 field_params=config.field_params,
@@ -359,5 +361,12 @@ def transform_list(
         batch_result = generate_batch(virtual_fields[field_name], batch)
         for (i, pos), result in zip(batch_occurrences, batch_result):
             set_path(pos, result, bodies[i])
+
+    # Delete any hidden fields
+    for field_name, config in virtual_fields.items():
+        if config.hidden:
+            for body in bodies:
+                for path in expand_path(field_name, body):
+                    del_path(path, body)
 
     return bodies
