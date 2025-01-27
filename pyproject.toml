@@ -29,6 +29,8 @@ karp-cli = "karp.cliapp.main:cliapp"
 "inflection" = "karp.plugins.inflection_plugin:InflectionPlugin"
 "salex_forward_references" = "karp.plugins.salex_references_plugin:SalexForwardReferencesPlugin"
 "salex_backward_references" = "karp.plugins.salex_references_plugin:SalexBackwardReferencesPlugin"
+"salex_all_backward_references" = "karp.plugins.salex_references_plugin:SalexAllBackwardReferencesPlugin"
+"salex_subset_references" = "karp.plugins.salex_references_plugin:SalexSubsetReferencesPlugin"
 "salex_old_references" = "karp.plugins.salex_references_plugin:SalexReferencesPluginOld"
 
 [tool.poetry.urls]

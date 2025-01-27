@@ -55,12 +55,11 @@ ref_fields = {
 }
 
 
-def find_ids(entry, prefix):
+def find_ids(entry):
     for field, kind in id_fields.items():
-        if field.startswith(prefix):
-            for path in json.expand_path(field, entry):
-                ref = json.get_path(path, entry)
-                yield kind, ref
+        for path in json.expand_path(field, entry):
+            ref = json.get_path(path, entry)
+            yield kind, ref
 
 
 def parse_ref(path, kind, ref):
@@ -84,6 +83,8 @@ def parse_ref(path, kind, ref):
 
 
 def find_refs(entry):
+    regexp = re.compile(r"(?<=refid=)[a-zA-Z0-9]*")
+
     for field, kind in ref_fields.items():
         for path in json.expand_path(field, entry):
             ref = json.get_path(path, entry)
@@ -101,7 +102,7 @@ def find_refs(entry):
 
             if not isinstance(value, str):
                 continue
-            results = re.findall(r"(?<=refid=)[a-zA-Z0-9]*", value)
+            results = regexp.findall(value)
             for ref in results:
                 result = parse_ref(path, None, ref)
                 if result:
@@ -130,6 +131,58 @@ class SalexForwardReferencesPlugin(Plugin):
 
 
 # A plugin that finds all references to a given item.
+# Designed to be used together with SalexForwardReferencesPlugin.
+class SalexAllBackwardReferencesPlugin(Plugin):
+    @inject
+    def __init__(self, search_service: EsSearchService):
+        self.search_service = search_service
+
+    def output_config(self, resource, field, **kwargs):
+        return {
+            "type": "object",
+            "collection": "true",
+            "fields": {"from": {"type": "string"}, "to": {"type": "string"}},
+        }
+
+    @group_batch_by("resource", "field")
+    def generate_batch(self, resource, field, batch):
+        # collect all the ids and run one multi_query to find all of them
+        item_ids = [
+            {format_ref(kind, id) for kind, id in find_ids(item["entry"])}  # noqa: A001
+            for item in batch
+        ]
+        all_ids = list(set.union(*item_ids))
+
+        requests = [
+            QueryRequest(resources=[resource], q=Equals(field=Identifier(ast=field), arg=id), lexicon_stats=False)
+            for id in all_ids  # noqa: A001
+        ]
+        try:
+            query_results = self.search_service.multi_query(requests)
+        except KeyError:
+            # can happen if forward references field hasn't been indexed yet
+            query_results = []
+
+        def get_result(ref, entry):
+            return {"from": entry["entry"].get("ortografi", "?"), "to": ref}
+
+        id_references = {
+            id: [get_result(id, entry) for entry in entries["hits"]]
+            for id, entries in zip(all_ids, query_results)  # noqa: A001
+        }
+
+        # now collect the results
+        result = []
+        for ids in item_ids:
+            references = []
+            for id in ids:  # noqa: A001
+                references += id_references.get(id, [])
+            result.append(references)
+
+        return result
+
+
+# A plugin that finds all references to a given ID.
 # Designed to be used together with SalexForwardReferencesPlugin.
 class SalexBackwardReferencesPlugin(Plugin):
     @inject
@@ -182,6 +235,20 @@ class SalexBackwardReferencesPlugin(Plugin):
             result.append(references)
 
         return result
+
+
+# Pick out only those references starting with a given prefix
+class SalexSubsetReferencesPlugin(Plugin):
+    def output_config(self, **kwargs):
+        # return {
+        # "type": "object",
+        # "collection": "true",
+        # "fields": {"id": {"type": "string"}, "ref": {"type": "string"}, "ortografi": {"type": "string"}},
+        # }
+        return {"type": "string", "collection": True}
+
+    def generate(self, references, prefix):
+        return [entry["from"] for entry in references if entry["to"].startswith(prefix)]
 
 
 # an old attempt, a bit slow
