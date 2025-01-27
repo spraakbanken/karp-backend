@@ -375,6 +375,12 @@ def transform_list(
                 if field_path[: len(ancestor_path)] == ancestor_path:
                     dependencies[field_name].add(ancestor_name)
 
+    # Check that all fields exist
+    for targets in dependencies.values():
+        for field_name in targets:
+            if field_name not in resource_config.nested_fields():
+                raise PluginException(f"field {field_name} not found")
+
     # Decide what order to compute the virtual fields in
     try:
         order = list(TopologicalSorter(dependencies).static_order())
