@@ -121,15 +121,14 @@ class EsIndex:
             pass
 
     def add_entries(self, resource_id: str, entries: Iterable[IndexEntry]):
-        index_to_es = []
-        for entry in entries:
-            index_to_es.append(
-                {
-                    "_index": resource_id,
-                    "_id": entry.id,
-                    "_source": entry.entry,
-                }
-            )
+        index_to_es = (
+            {
+                "_index": resource_id,
+                "_id": entry.id,
+                "_source": entry.entry,
+            }
+            for entry in entries
+        )
 
         try:
             elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
@@ -147,15 +146,14 @@ class EsIndex:
         *,
         entry_ids: Iterable[str],
     ):
-        index_to_es = []
-        for entry_id in entry_ids:
-            index_to_es.append(
-                {
-                    "_op_type": "delete",
-                    "_index": resource_id,
-                    "_id": str(entry_id),
-                }
-            )
+        index_to_es = (
+            {
+                "_op_type": "delete",
+                "_index": resource_id,
+                "_id": str(entry_id),
+            }
+            for entry in entries
+        )
 
         elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
 
