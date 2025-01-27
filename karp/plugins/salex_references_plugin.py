@@ -30,14 +30,14 @@ id_names = {LNR: "lnr", XNR: "xnr", KCNR: "kcnr", INR: "inr", SAOL_LNR: "lnr", S
 
 id_fields = {
     "so.l_nr": LNR,
-    "so.varianter.l_nr": LNR,
-    "so.vnomen.l_nr": LNR,
-    "so.förkortningar.l_nr": LNR,
     "so.huvudbetydelser.x_nr": XNR,
     "so.huvudbetydelser.underbetydelser.kc_nr": KCNR,
     "so.huvudbetydelser.idiom.i_nr": INR,
+    "so.variantformer.l_nr": LNR,
+    "so.vnomen.l_nr": LNR,
+    "so.förkortningar.l_nr": LNR,
     "saol.id": SAOL_LNR,
-    "saol.alt.id": SAOL_LNR,
+    "saol.variantformer.id": SAOL_LNR,
     "saol.huvudbetydelser.id": SAOL_XNR,
 }
 
@@ -50,14 +50,17 @@ ref_fields = {
     "so.vnomen.hänvisning": None,
     "so.relaterade_verb.refid": LNR,
     "saol.moderverb": SAOL_LNR,
+    # "saol.enbartDigitalaHänvisningar.hänvisning": None, this is in +refid(...) form
+    # "saol.huvudbetydelser.hänvisning": None, this is in +refid(...) form
 }
 
 
-def find_ids(entry):
+def find_ids(entry, prefix):
     for field, kind in id_fields.items():
-        for path in json.expand_path(field, entry):
-            ref = json.get_path(path, entry)
-            yield kind, ref
+        if field.startswith(prefix):
+            for path in json.expand_path(field, entry):
+                ref = json.get_path(path, entry)
+                yield kind, ref
 
 
 def parse_ref(path, kind, ref):
@@ -109,10 +112,18 @@ def format_ref(kind, ref):
     return f"{id_namespaces[kind]}.{id_names[kind]}{ref}"
 
 
+def flatten_list(x):
+    if isinstance(x, list):
+        for y in x:
+            yield from flatten_list(y)
+    else:
+        yield x
+
+
 # A plugin that finds all references from a given item
 class SalexForwardReferencesPlugin(Plugin):
     def output_config(self, **kwargs):
-        return {"type": "string", "collection": "true"}
+        return {"type": "string", "collection": True}
 
     def generate(self, entry):
         return [format_ref(kind, ref) for kind, ref in find_refs(entry)]
@@ -126,26 +137,35 @@ class SalexBackwardReferencesPlugin(Plugin):
         self.search_service = search_service
 
     def output_config(self, resource, field, **kwargs):
-        return {
-            "type": "object",
-            "collection": "true",
-            "fields": {"id": {"type": "str"}, "ref": {"type": "str"}, "ortografi": {"type": "str"}},
-        }
+        # return {
+        # "type": "object",
+        # "collection": "true",
+        # "fields": {"id": {"type": "string"}, "ref": {"type": "string"}, "ortografi": {"type": "string"}},
+        # }
+        return {"type": "string", "collection": True}
 
     @group_batch_by("resource", "field")
     def generate_batch(self, resource, field, batch):
         # collect all the ids and run one multi_query to find all of them
-        item_ids = [{format_ref(kind, id) for kind, id in find_ids(item["entry"])} for item in batch]  # noqa: A001
+        item_ids = [
+            {format_ref(Id[item["kind"]], id) for id in flatten_list(item["id"])}  # noqa: A001
+            for item in batch
+        ]
         all_ids = list(set.union(*item_ids))
 
         requests = [
             QueryRequest(resources=[resource], q=Equals(field=Identifier(ast=field), arg=id), lexicon_stats=False)
             for id in all_ids  # noqa: A001
         ]
-        query_results = self.search_service.multi_query(requests)
+        try:
+            query_results = self.search_service.multi_query(requests)
+        except KeyError:
+            # can happen if forward references field hasn't been indexed yet
+            query_results = []
 
         def get_result(ref, entry):
-            return {"id": entry["id"], "ref": ref, "ortografi": entry["entry"].get("ortografi", "")}
+            # return {"id": entry["id"], "ref": ref, "ortografi": entry["entry"].get("ortografi", "")}
+            return entry["entry"].get("ortografi", "?")
 
         id_references = {
             id: [get_result(id, entry) for entry in entries["hits"]]
@@ -154,10 +174,11 @@ class SalexBackwardReferencesPlugin(Plugin):
 
         # now collect the results
         result = []
-        for ids in item_ids:
+        for ids, item in zip(item_ids, batch):
             references = []
             for id in ids:  # noqa: A001
                 references += id_references.get(id, [])
+            references += list(flatten_list(item.get("nested", [])))
             result.append(references)
 
         return result
@@ -171,7 +192,7 @@ class SalexReferencesPluginOld(Plugin):
         self.search_service = search_service
 
     def output_config(self, resource):
-        return {"type": "string", "collection": "true"}
+        return {"type": "string", "collection": True}
 
     def generate_batch(self, batch):
         def equals(field, id):  # noqa: A002
