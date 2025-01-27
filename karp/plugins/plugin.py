@@ -1,4 +1,5 @@
 import logging
+import pickle
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
@@ -7,7 +8,6 @@ from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
 import methodtools
 from fastapi import APIRouter
-from frozendict import deepfreeze
 from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
 
@@ -314,7 +314,7 @@ def transform_list(
 
         def cache_key(flat_field_params):
             if config.cache_plugin_expansion:
-                return deepfreeze(flat_field_params)
+                return pickle.dumps(flat_field_params)
             else:
                 return id(flat_field_params)
 
