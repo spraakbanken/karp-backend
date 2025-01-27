@@ -197,7 +197,12 @@ class SalexBackwardReferencesPlugin(Plugin):
         # "collection": "true",
         # "fields": {"id": {"type": "string"}, "ref": {"type": "string"}, "ortografi": {"type": "string"}},
         # }
-        return {"type": "string", "collection": True}
+        return {
+            "type": "string",
+            "collection": True,
+            "allow_missing_params": True,
+            "flatten_params": False,
+        }
 
     @group_batch_by("resource", "field")
     def generate_batch(self, resource, field, batch):
@@ -235,7 +240,7 @@ class SalexBackwardReferencesPlugin(Plugin):
             references = []
             for id in ids:  # noqa: A001
                 references += id_references.get(id, [])
-            references += list(flatten_list(item.get("nested", [])))
+            references += [x for x in flatten_list(item.get("nested", [])) if x is not None]
             result.append(references)
 
         return result
