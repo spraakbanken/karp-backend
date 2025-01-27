@@ -154,7 +154,9 @@ class SalexAllBackwardReferencesPlugin(Plugin):
         all_ids = list(set.union(*item_ids))
 
         requests = [
-            QueryRequest(resources=[resource], q=Equals(field=Identifier(ast=field), arg=id), lexicon_stats=False)
+            QueryRequest(
+                resources=[resource], q=Equals(field=Identifier(ast=field), arg=id), lexicon_stats=False, size=None
+            )
             for id in all_ids  # noqa: A001
         ]
         try:
@@ -207,7 +209,9 @@ class SalexBackwardReferencesPlugin(Plugin):
         all_ids = list(set.union(*item_ids))
 
         requests = [
-            QueryRequest(resources=[resource], q=Equals(field=Identifier(ast=field), arg=id), lexicon_stats=False)
+            QueryRequest(
+                resources=[resource], q=Equals(field=Identifier(ast=field), arg=id), lexicon_stats=False, size=None
+            )
             for id in all_ids  # noqa: A001
         ]
         try:
@@ -284,7 +288,7 @@ class SalexReferencesPluginOld(Plugin):
                 if kind in id_names:
                     conditions.append(freetext(f"{id_names[kind]}{id})"))
 
-            return QueryRequest(resources=[resource], q=or_(conditions), lexicon_stats=False)
+            return QueryRequest(resources=[resource], q=or_(conditions), lexicon_stats=False, size=None)
 
         requests = [make_request(**d) for d in batch]
         results = self.search_service.multi_query(requests)

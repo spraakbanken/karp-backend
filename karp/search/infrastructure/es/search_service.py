@@ -335,7 +335,10 @@ class EsSearchService:
         if es_query is not None:
             s = s.query(es_query)
 
-        s = s[query.from_ : query.from_ + query.size]
+        if query.size:
+            s = s[query.from_ : query.from_ + query.size]
+        else:
+            s = s[query.from_ :]
 
         if query.lexicon_stats:
             s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
