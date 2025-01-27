@@ -142,6 +142,7 @@ class SalexAllBackwardReferencesPlugin(Plugin):
             "type": "object",
             "collection": "true",
             "fields": {"from": {"type": "string"}, "to": {"type": "string"}},
+            "cache_plugin_expansion": False,
         }
 
     @group_batch_by("resource", "field")
@@ -202,6 +203,7 @@ class SalexBackwardReferencesPlugin(Plugin):
             "collection": True,
             "allow_missing_params": True,
             "flatten_params": False,
+            "cache_plugin_expansion": False,
         }
 
     @group_batch_by("resource", "field")

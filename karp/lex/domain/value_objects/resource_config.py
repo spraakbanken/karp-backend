@@ -117,6 +117,7 @@ class Field(BaseModel):
     hidden: bool = False  # only for virtual fields at the moment
     flatten_params: bool = False
     allow_missing_params: bool = False
+    cache_plugin_expansion: bool = True
     skip_raw: Optional[bool] = False  # for strings only
     additional_properties: bool = True
 

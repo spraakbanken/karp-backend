@@ -211,6 +211,7 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
                 field_params=config.field_params,
                 flatten_params=config.flatten_params or result.flatten_params,
                 allow_missing_params=config.allow_missing_params or result.allow_missing_params,
+                cache_plugin_expansion=config.cache_plugin_expansion and result.cache_plugin_expansion,
             )
             return result
 
@@ -311,26 +312,33 @@ def transform_list(
             cached_results[outer_cache_key] = {}
         inner_cached_results = cached_results[outer_cache_key]
 
+        def cache_key(flat_field_params):
+            if config.cache_plugin_expansion:
+                return deepfreeze(flat_field_params)
+            else:
+                return id(flat_field_params)
+
         batch_dict = {}
         for field_params in batch:
             for flat_field_params in select_from_dict(field_params) if config.flatten_params else [field_params]:
-                key = deepfreeze(flat_field_params)
+                key = cache_key(flat_field_params)
                 if key not in inner_cached_results:
                     batch_dict[key] = flat_field_params
 
         # Execute the batch query and store the results into cached_results
         batch_result_list = plugins.generate_batch(config, batch_dict.values())
-        inner_cached_results |= dict(zip(batch_dict, batch_result_list))
+        results = dict(zip(batch_dict, batch_result_list))
+
+        if config.cache_plugin_expansion:
+            inner_cached_results |= results
+            results = inner_cached_results
 
         # Now look up the results
         for field_params in batch:
             if config.flatten_params and any(isinstance(value, list) for value in field_params.values()):
-                yield [
-                    inner_cached_results[deepfreeze(flat_field_params)]
-                    for flat_field_params in select_from_dict(field_params)
-                ]
+                yield [results[cache_key(flat_field_params)] for flat_field_params in select_from_dict(field_params)]
             else:
-                yield inner_cached_results[deepfreeze(field_params)]
+                yield results[cache_key(field_params)]
 
     def select_from_dict(d: Dict) -> Iterator[Dict]:
         """Flatten a dict-of-lists into an iterator-of-dicts.
