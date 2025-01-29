@@ -453,7 +453,7 @@ def transform_list(
     for field_name, config in virtual_fields.items():
         if config.hidden:
             for body in bodies:
-                for path in expand_path(field_name, body):
+                for path in expand_path(field_name, body, expand_arrays=False):
                     del_path(path, body)
 
     return bodies
