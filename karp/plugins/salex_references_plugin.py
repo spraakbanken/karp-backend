@@ -1,6 +1,7 @@
 # TODO: make this into a general-purpose plugin
 
 import re
+from collections import defaultdict
 from enum import Enum, global_enum
 
 from injector import inject
@@ -11,6 +12,19 @@ from karp.search.domain.query_dsl.karp_query_model import Equals, Identifier
 from karp.search.infrastructure import EsSearchService
 
 from .plugin import Plugin, group_batch_by
+
+
+def entry_is_visible(entry):
+    return not isinstance(entry, dict) or entry.get("visas", True)
+
+
+def is_visible(path, entry, test=entry_is_visible):
+    path = json.make_path(path)
+    for i in range(len(path) + 1):
+        if not test(json.get_path(path[:i], entry)):
+            return False
+
+    return True
 
 
 @global_enum
@@ -89,7 +103,7 @@ def find_refs(entry):
             ref = json.get_path(path, entry)
             result = parse_ref(path, kind, ref)
             if result:
-                yield result
+                yield path, result
 
     for path in json.all_paths(entry):
         field = json.path_str(path)
@@ -101,11 +115,12 @@ def find_refs(entry):
 
             if not isinstance(value, str):
                 continue
+
             results = regexp.findall(value)
             for ref in results:
                 result = parse_ref(path, None, ref)
                 if result:
-                    yield result
+                    yield path, result
 
 
 def format_ref(kind, ref):
@@ -123,64 +138,24 @@ def flatten_list(x):
 # A plugin that finds all references from a given item
 class SalexForwardReferencesPlugin(Plugin):
     def output_config(self, **kwargs):
-        return {"type": "string", "collection": True, "cache_plugin_expansion": False}
-
-    def generate(self, entry):
-        return [format_ref(kind, ref) for kind, ref in find_refs(entry)]
-
-
-# A plugin that finds all references to a given item.
-# Designed to be used together with SalexForwardReferencesPlugin.
-class SalexAllBackwardReferencesPlugin(Plugin):
-    @inject
-    def __init__(self, search_service: EsSearchService):
-        self.search_service = search_service
-
-    def output_config(self, resource, field, **kwargs):
         return {
             "type": "object",
-            "collection": "true",
-            "fields": {"from": {"type": "string"}, "to": {"type": "string"}},
+            "collection": True,
+            "cache_plugin_expansion": False,
+            "fields": {"visas": {"type": "boolean"}, "ref": {"type": "string"}},
         }
 
-    @group_batch_by("resource", "field")
-    def generate_batch(self, resource, field, batch):
-        # collect all the ids and run one multi_query to find all of them
-        item_ids = [
-            {format_ref(kind, id) for kind, id in find_ids(item["entry"])}  # noqa: A001
-            for item in batch
-        ]
-        all_ids = list(set.union(*item_ids))
+    def generate(self, entry):
+        # maps kind, ref to visas
+        refs = defaultdict(lambda: False)
+        for path, (kind, ref) in find_refs(entry):
+            print("===> found", path, kind, ref)
+            # a ref with visas: True overrides one with visas: False
+            # but not the other way round
+            visible = is_visible(path, entry)
+            refs[kind, ref] = refs[kind, ref] or visible
 
-        requests = [
-            QueryRequest(
-                resources=[resource], q=Equals(field=Identifier(ast=field), arg=id), lexicon_stats=False, size=None
-            )
-            for id in all_ids  # noqa: A001
-        ]
-        try:
-            query_results = self.search_service.multi_query(requests)
-        except KeyError:
-            # can happen if forward references field hasn't been indexed yet
-            query_results = []
-
-        def get_result(ref, entry):
-            return {"from": entry["entry"].get("ortografi", "?"), "to": ref}
-
-        id_references = {
-            id: [get_result(id, entry) for entry in entries["hits"]]
-            for id, entries in zip(all_ids, query_results)  # noqa: A001
-        }
-
-        # now collect the results
-        result = []
-        for ids in item_ids:
-            references = []
-            for id in ids:  # noqa: A001
-                references += id_references.get(id, [])
-            result.append(references)
-
-        return result
+        return [{"visas": visible, "ref": format_ref(kind, ref)} for (kind, ref), visible in refs.items()]
 
 
 # A plugin that finds all references to a given ID.
@@ -191,16 +166,17 @@ class SalexBackwardReferencesPlugin(Plugin):
         self.search_service = search_service
 
     def output_config(self, resource, field, **kwargs):
-        # return {
-        # "type": "object",
-        # "collection": "true",
-        # "fields": {"id": {"type": "string"}, "ref": {"type": "string"}, "ortografi": {"type": "string"}},
-        # }
         return {
-            "type": "string",
+            "type": "object",
             "collection": True,
             "allow_missing_params": True,
             "flatten_params": False,
+            "fields": {
+                "id": {"type": "string"},
+                "ortografi": {"type": "string"},
+                "homografNr": {"type": "integer"},
+                "visas": {"type": "boolean"},
+            },
         }
 
     @group_batch_by("resource", "field")
@@ -214,7 +190,10 @@ class SalexBackwardReferencesPlugin(Plugin):
 
         requests = [
             QueryRequest(
-                resources=[resource], q=Equals(field=Identifier(ast=field), arg=id), lexicon_stats=False, size=None
+                resources=[resource],
+                q=Equals(field=Identifier(ast=field + ".ref"), arg=id),
+                lexicon_stats=False,
+                size=None,
             )
             for id in all_ids  # noqa: A001
         ]
@@ -224,9 +203,26 @@ class SalexBackwardReferencesPlugin(Plugin):
             # can happen if forward references field hasn't been indexed yet
             query_results = []
 
-        def get_result(ref, entry):
-            # return {"id": entry["id"], "ref": ref, "ortografi": entry["entry"].get("ortografi", "")}
-            return entry["entry"].get("ortografi", "?")
+        def get_result(id, entry):  # noqa: A002
+            result = {"id": entry["id"], "ortografi": entry["entry"].get("ortografi", "?")}
+
+            if id.startswith("so."):
+                homografNr = entry["entry"].get("so", {}).get("homografNr")
+            elif id.startswith("saol."):
+                homografNr = entry["entry"].get("saol", {}).get("homografNr")
+            else:
+                raise AssertionError(f"ref doesn't start with so or saol: {id}")
+            if homografNr is not None:
+                result["homografNr"] = homografNr
+
+            # To calculate "visas", we must get the list of references and find the appropriate one
+            refs = json.get_path(field, entry["entry"])
+            matches = [x for x in refs if x["ref"] == id]
+            if len(matches) != 1:
+                raise AssertionError(f"inconsistent search result, got {len(matches)} matches")
+            result["visas"] = matches[0]["visas"]
+
+            return result
 
         id_references = {
             id: [get_result(id, entry) for entry in entries["hits"]]
