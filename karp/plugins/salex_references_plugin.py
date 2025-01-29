@@ -6,9 +6,8 @@ from enum import Enum, global_enum
 from injector import inject
 
 from karp.foundation import json
-from karp.lex.application import ResourceQueries
 from karp.search.domain import QueryRequest
-from karp.search.domain.query_dsl.karp_query_model import Equals, Freetext, Identifier, Or
+from karp.search.domain.query_dsl.karp_query_model import Equals, Identifier
 from karp.search.infrastructure import EsSearchService
 
 from .plugin import Plugin, group_batch_by
@@ -244,61 +243,3 @@ class SalexBackwardReferencesPlugin(Plugin):
             result.append(references)
 
         return result
-
-
-# Pick out only those references starting with a given prefix
-class SalexSubsetReferencesPlugin(Plugin):
-    def output_config(self, **kwargs):
-        # return {
-        # "type": "object",
-        # "collection": "true",
-        # "fields": {"id": {"type": "string"}, "ref": {"type": "string"}, "ortografi": {"type": "string"}},
-        # }
-        return {"type": "string", "collection": True, "flatten_params": False}
-
-    def generate(self, references, prefix):
-        return [entry["from"] for entry in references if entry["to"].startswith(prefix)]
-
-
-# an old attempt, a bit slow
-class SalexReferencesPluginOld(Plugin):
-    @inject
-    def __init__(self, resources: ResourceQueries, search_service: EsSearchService):
-        self.resources = resources
-        self.search_service = search_service
-
-    def output_config(self, resource):
-        return {"type": "string", "collection": True}
-
-    def generate_batch(self, batch):
-        def equals(field, id):  # noqa: A002
-            return Equals(field=Identifier(ast=field), arg=id)
-
-        def or_(queries):
-            return Or(ast=queries)
-
-        def freetext(text):
-            return Freetext(arg=text)
-
-        def make_request(resource, so, saol):
-            conditions = []
-            entry = {"so": so, "saol": saol}
-            for kind, id in find_ids(entry):  # noqa: A001
-                for field, kind2 in ref_fields.items():
-                    if kind == kind2:
-                        conditions.append(equals(field, id))
-                    elif kind2 is None and kind in id_names:
-                        conditions.append(equals(field, f"{id_names[kind]}{id}"))
-
-                if kind in id_names:
-                    conditions.append(freetext(f"{id_names[kind]}{id})"))
-
-            return QueryRequest(resources=[resource], q=or_(conditions), lexicon_stats=False, size=None)
-
-        requests = [make_request(**d) for d in batch]
-        results = self.search_service.multi_query(requests)
-
-        for result in results:
-            hits = result["hits"]
-
-            yield [hit["entry"].get("ortografi", "") for hit in hits]
