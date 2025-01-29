@@ -152,7 +152,7 @@ class EsIndex:
                 "_index": resource_id,
                 "_id": str(entry_id),
             }
-            for entry in entries
+            for entry_id in entry_ids
         )
 
         elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
