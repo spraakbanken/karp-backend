@@ -141,7 +141,6 @@ class SalexForwardReferencesPlugin(Plugin):
         # maps kind, ref to visas
         refs = defaultdict(lambda: False)
         for path, (kind, ref) in find_refs(entry):
-            print("===> found", path, kind, ref)
             # a ref with visas: True overrides one with visas: False
             # but not the other way round
             visible = is_visible(path, entry)
