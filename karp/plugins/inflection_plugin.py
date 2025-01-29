@@ -306,6 +306,7 @@ class InflectionPlugin(Plugin):
                     },
                 },
             },
+            "cache_plugin_expansion": False,
         }
 
         return config

@@ -1,6 +1,6 @@
 import logging
 import typing
-from typing import List
+from typing import List, Optional
 
 import pydantic
 
@@ -15,7 +15,7 @@ class QueryRequest(pydantic.BaseModel):
     resources: typing.List[str]
     q: str | ModelBase = ""
     from_: int = 0
-    size: int = 25
+    size: Optional[int] = 25
     lexicon_stats: bool = True
     highlight: bool = False
     sort: List[str] = pydantic.Field(default_factory=list)

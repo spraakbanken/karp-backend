@@ -1,17 +1,20 @@
 import logging
+import pickle
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from copy import deepcopy
+from functools import wraps
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
 import methodtools
 from fastapi import APIRouter
-from frozendict import deepfreeze
 from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
 
 from karp.foundation.batch import batch_items
 from karp.foundation.entry_points import entry_points
 from karp.foundation.json import (
+    del_path,
     expand_path,
     get_path,
     has_path,
@@ -46,6 +49,64 @@ class Plugin(ABC):
 
     def create_router(self, resource_id: str, params: dict[str, str]) -> APIRouter:
         raise NotImplementedError()
+
+
+def group_batch_by(*args):
+    """
+    A decorator to help with writing generate_batch. Collects batches
+    into "sub-batches" and invokes generate_batch once on each sub-batch.
+
+    Example: if batch items look like this:
+        {"resource": "salex", "field": "ortografi", "other": "xx"}
+    Then you can define:
+        @group_batch_by("resource", "field")
+        def generate_batch(self, resource, field, batch):
+          ...
+    The batch will be split into sub-batches, one sub-batch for each
+    combination of "resource" and "field". Notice that "resource" and
+    "field" become parameters to generate_batch. These fields are also
+    removed from "batch", so the batch items will look like this:
+        {"other": "xx"}
+    """
+
+    def batch_key(batch_item):
+        return {arg: batch_item[arg] for arg in args}
+
+    def batch_rest(batch_item):
+        return {arg: batch_item[arg] for arg in batch_item if arg not in args}
+
+    def inner(function):
+        @wraps(function)
+        def generate_batch(self, batch):
+            batch = list(batch)
+
+            # split the batch into sub-batches that all have the same key
+            unfrozen_keys = {}
+            sub_batches = defaultdict(dict)
+            for i, item in enumerate(batch):
+                frozen_key = str(batch_key(item))
+                if frozen_key not in unfrozen_keys:
+                    unfrozen_keys[frozen_key] = batch_key(item)
+
+                sub_batches[frozen_key][i] = batch_rest(item)
+
+            # run the plugin on all sub-batches
+            results = {}
+            for frozen_key, items in sub_batches.items():
+                key = unfrozen_keys[frozen_key]
+                sub_batch_results = list(function(self, **key, batch=list(items.values())))
+
+                if len(sub_batch_results) != len(items):
+                    raise AssertionError("size mismatch")
+
+                for i, result in zip(items, sub_batch_results):
+                    results[i] = result
+
+            return [results[i] for i in range(len(batch))]
+
+        return generate_batch
+
+    return inner
 
 
 plugin_registry: dict[str, Callable[[], Type[Plugin]]] = {}
@@ -144,9 +205,13 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
                 collection=config.collection or result.collection,
                 required=config.required or result.required,
                 virtual=True,
+                hidden=config.hidden or result.hidden,
                 plugin=config.plugin,
                 params=config.params,
                 field_params=config.field_params,
+                flatten_params=config.flatten_params or result.flatten_params,
+                allow_missing_params=config.allow_missing_params or result.allow_missing_params,
+                cache_plugin_expansion=config.cache_plugin_expansion and result.cache_plugin_expansion,
             )
             return result
 
@@ -247,26 +312,33 @@ def transform_list(
             cached_results[outer_cache_key] = {}
         inner_cached_results = cached_results[outer_cache_key]
 
+        def cache_key(flat_field_params):
+            if config.cache_plugin_expansion:
+                return pickle.dumps(flat_field_params)
+            else:
+                return id(flat_field_params)
+
         batch_dict = {}
         for field_params in batch:
-            for flat_field_params in select_from_dict(field_params):
-                key = deepfreeze(flat_field_params)
+            for flat_field_params in select_from_dict(field_params) if config.flatten_params else [field_params]:
+                key = cache_key(flat_field_params)
                 if key not in inner_cached_results:
                     batch_dict[key] = flat_field_params
 
         # Execute the batch query and store the results into cached_results
         batch_result_list = plugins.generate_batch(config, batch_dict.values())
-        inner_cached_results |= dict(zip(batch_dict, batch_result_list))
+        results = dict(zip(batch_dict, batch_result_list))
+
+        if config.cache_plugin_expansion:
+            inner_cached_results |= results
+            results = inner_cached_results
 
         # Now look up the results
         for field_params in batch:
-            if any(isinstance(value, list) for value in field_params.values()):
-                yield [
-                    inner_cached_results[deepfreeze(flat_field_params)]
-                    for flat_field_params in select_from_dict(field_params)
-                ]
+            if config.flatten_params and any(isinstance(value, list) for value in field_params.values()):
+                yield [results[cache_key(flat_field_params)] for flat_field_params in select_from_dict(field_params)]
             else:
-                yield inner_cached_results[deepfreeze(field_params)]
+                yield results[cache_key(field_params)]
 
     def select_from_dict(d: Dict) -> Iterator[Dict]:
         """Flatten a dict-of-lists into an iterator-of-dicts.
@@ -296,9 +368,10 @@ def transform_list(
         dependencies[field_name] = set()
 
         # Dependencies through field_params
-        for target_name in config.field_params.values():
-            if target_name in virtual_fields:
-                dependencies[field_name].add(target_name)
+        for target_list in config.field_params.values():
+            for target_name in flatten_list(target_list):
+                if target_name in virtual_fields:
+                    dependencies[field_name].add(target_name)
 
         # Dependencies through one field being a child of another
         # (can happen when a virtual field creates its own virtual subfields)
@@ -309,6 +382,12 @@ def transform_list(
 
                 if field_path[: len(ancestor_path)] == ancestor_path:
                     dependencies[field_name].add(ancestor_name)
+
+    # Check that all fields exist
+    for targets in dependencies.values():
+        for field_name in targets:
+            if field_name not in resource_config.nested_fields():
+                raise PluginException(f"field {field_name} not found")
 
     # Decide what order to compute the virtual fields in
     try:
@@ -331,27 +410,37 @@ def transform_list(
         # Generate a batch of all needed field_params values
         batch = []
         batch_occurrences = []
+
         for i, pos in occurrences:
             field_params = {}
             for k, v in virtual_fields[field_name].field_params.items():
-                path = localise_path(v, pos)
-                # If the path does not exist, skip this field
-                if not has_path(path, bodies[i]):
-                    field_params = None
-                    break
 
-                val = get_path(path, bodies[i])
+                def get_field_param(param):
+                    if isinstance(param, list):
+                        result = [get_field_param(p) for p in param]
+                        if not virtual_fields[field_name].allow_missing_params:  # noqa: B023
+                            result = [val for val in result if val is not None]
+                        return result
+                    else:
+                        path = localise_path(param, pos)  # noqa: B023
+                        if not has_path(path, bodies[i]):  # noqa: B023
+                            return None
+                        else:
+                            return get_path(path, bodies[i])  # noqa: B023
+
+                val = get_field_param(v)
 
                 # Skip field if include_if value is False
                 if k == "include_if":
                     if not val:
-                        field_params = None
                         break
 
                 else:
+                    if not virtual_fields[field_name].allow_missing_params and val is None:
+                        break
                     field_params[k] = val
 
-            if field_params is not None:
+            else:
                 batch_occurrences.append((i, pos))
                 batch.append(field_params)
 
@@ -360,4 +449,19 @@ def transform_list(
         for (i, pos), result in zip(batch_occurrences, batch_result):
             set_path(pos, result, bodies[i])
 
+    # Delete any hidden fields
+    for field_name, config in virtual_fields.items():
+        if config.hidden:
+            for body in bodies:
+                for path in expand_path(field_name, body, expand_arrays=False):
+                    del_path(path, body)
+
     return bodies
+
+
+def flatten_list(x):
+    if isinstance(x, list):
+        for y in x:
+            yield from flatten_list(y)
+    else:
+        yield x

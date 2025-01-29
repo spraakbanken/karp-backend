@@ -9,6 +9,7 @@ fields:
     plugin: link
     field_params: {id: municipality}
     params: {resource: municipalities, target: code}
+    flatten_params: true
   larger_place: {type: integer}
   population: {type: integer}
   area: {type: integer}
