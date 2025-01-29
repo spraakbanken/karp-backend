@@ -11,7 +11,7 @@ from karp.search.domain import QueryRequest
 from karp.search.domain.query_dsl.karp_query_model import Equals, Identifier
 from karp.search.infrastructure import EsSearchService
 
-from .plugin import Plugin, group_batch_by
+from .plugin import Plugin, flatten_list, group_batch_by
 
 
 def entry_is_visible(entry):
@@ -127,14 +127,6 @@ def format_ref(kind, ref):
     return f"{id_namespaces[kind]}.{id_names[kind]}{ref}"
 
 
-def flatten_list(x):
-    if isinstance(x, list):
-        for y in x:
-            yield from flatten_list(y)
-    else:
-        yield x
-
-
 # A plugin that finds all references from a given item
 class SalexForwardReferencesPlugin(Plugin):
     def output_config(self, **kwargs):
@@ -176,6 +168,7 @@ class SalexBackwardReferencesPlugin(Plugin):
                 "ortografi": {"type": "string"},
                 "homografNr": {"type": "integer"},
                 "visas": {"type": "boolean"},
+                "subobject": {"type": "boolean"},
             },
         }
 
@@ -204,7 +197,7 @@ class SalexBackwardReferencesPlugin(Plugin):
             query_results = []
 
         def get_result(id, entry):  # noqa: A002
-            result = {"id": entry["id"], "ortografi": entry["entry"].get("ortografi", "?")}
+            result = {"id": entry["id"], "ortografi": entry["entry"].get("ortografi", "?"), "subobject": False}
 
             if id.startswith("so."):
                 homografNr = entry["entry"].get("so", {}).get("homografNr")
@@ -235,7 +228,9 @@ class SalexBackwardReferencesPlugin(Plugin):
             references = []
             for id in ids:  # noqa: A001
                 references += id_references.get(id, [])
-            references += [x for x in flatten_list(item.get("nested", [])) if x is not None]
+            for ref in flatten_list(item.get("nested", [])):
+                if ref is not None:
+                    references.append(ref | {"subobject": True})
             result.append(references)
 
         return result
