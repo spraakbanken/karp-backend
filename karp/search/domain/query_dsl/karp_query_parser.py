@@ -14,9 +14,12 @@ from __future__ import annotations
 import sys
 
 from tatsu.buffering import Buffer
+from tatsu.parsing import Parser
+from tatsu.parsing import tatsumasu
+from tatsu.parsing import leftrec, nomemo, isname # noqa
 from tatsu.infos import ParserConfig
-from tatsu.parsing import Parser, isname, leftrec, nomemo, tatsumasu  # noqa
-from tatsu.util import generic_main, re  # noqa
+from tatsu.util import re, generic_main  # noqa
+
 
 KEYWORDS = {}  # type: ignore
 
@@ -31,7 +34,7 @@ class KarpQueryBuffer(Buffer):
             comments_re=None,
             eol_comments_re=None,
             ignorecase=False,
-            namechars="",
+            namechars='',
             parseinfo=False,
         )
         config = config.replace(**settings)
@@ -48,10 +51,10 @@ class KarpQueryParser(Parser):
             comments_re=None,
             eol_comments_re=None,
             ignorecase=False,
-            namechars="",
+            namechars='',
             parseinfo=False,
             keywords=KEYWORDS,
-            start="start",
+            start='start',
         )
         config = config.replace(**settings)
         super().__init__(config=config)
@@ -71,47 +74,140 @@ class KarpQueryParser(Parser):
             with self._option():
                 self._sub_query_()
             self._error(
-                "expecting one of: "
-                "<and> <contains> <endswith> <equals>"
-                "<exists> <freetext> <gt> <gte>"
-                "<identifier> <logical_expression> <lt>"
-                "<lte> <missing> <not> <or>"
-                "<query_expression> <regexp> <startswith>"
-                "<sub_query>"
+                'expecting one of: '
+                '<and> <binary_query_expression>'
+                '<identifier> <logical_expression> <not>'
+                '<or> <query_expression> <sub_query>'
+                '<unary_query_expression>'
             )
 
     @tatsumasu()
     def _query_expression_(self):  # noqa
         with self._choice():
             with self._option():
-                self._contains_()
+                self._unary_query_expression_()
             with self._option():
-                self._endswith_()
+                self._binary_query_expression_()
+            self._error(
+                'expecting one of: '
+                '<any_arg_expr> <binary_query_expression>'
+                '<field_query> <freetext> <text_arg_expr>'
+                '<unary_query_expression>'
+            )
+
+    @tatsumasu()
+    def _unary_query_expression_(self):  # noqa
+        with self._choice():
             with self._option():
-                self._equals_()
-            with self._option():
-                self._exists_()
+                self._field_query_()
             with self._option():
                 self._freetext_()
-            with self._option():
-                self._gt_()
-            with self._option():
-                self._gte_()
-            with self._option():
-                self._lt_()
-            with self._option():
-                self._lte_()
-            with self._option():
-                self._missing_()
-            with self._option():
-                self._regexp_()
-            with self._option():
-                self._startswith_()
             self._error(
-                "expecting one of: "
-                "'contains' 'endswith' 'equals' 'exists'"
-                "'freetext' 'gt' 'gte' 'lt' 'lte'"
-                "'missing' 'regexp' 'startswith'"
+                'expecting one of: '
+                "'exists' 'freetext' 'missing'"
+                '<field_query>'
+            )
+
+    @tatsumasu('FieldQuery')
+    def _field_query_(self):  # noqa
+        with self._group():
+            with self._choice():
+                with self._option():
+                    self._token('exists')
+                with self._option():
+                    self._token('missing')
+                self._error(
+                    'expecting one of: '
+                    "'exists' 'missing'"
+                )
+        self.name_last_node('op')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+
+        self._define(
+            ['field', 'op'],
+            []
+        )
+
+    @tatsumasu('BinaryQueryExpression')
+    def _binary_query_expression_(self):  # noqa
+        with self._choice():
+            with self._option():
+                self._text_arg_expr_()
+            with self._option():
+                self._any_arg_expr_()
+            self._error(
+                'expecting one of: '
+                '<any_arg_expr> <any_arg_op>'
+                '<text_arg_expr> <text_value_op>'
+            )
+
+    @tatsumasu()
+    def _text_arg_expr_(self):  # noqa
+        self._text_value_op_()
+        self.name_last_node('op')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._string_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field', 'op'],
+            []
+        )
+
+    @tatsumasu()
+    def _text_value_op_(self):  # noqa
+        with self._choice():
+            with self._option():
+                self._token('contains')
+            with self._option():
+                self._token('endswith')
+            with self._option():
+                self._token('regexp')
+            with self._option():
+                self._token('startswith')
+            self._error(
+                'expecting one of: '
+                "'contains' 'endswith' 'regexp'"
+                "'startswith'"
+            )
+
+    @tatsumasu()
+    def _any_arg_expr_(self):  # noqa
+        self._any_arg_op_()
+        self.name_last_node('op')
+        self._token('|')
+        self._identifier_()
+        self.name_last_node('field')
+        self._token('|')
+        self._any_value_()
+        self.name_last_node('arg')
+
+        self._define(
+            ['arg', 'field', 'op'],
+            []
+        )
+
+    @tatsumasu()
+    def _any_arg_op_(self):  # noqa
+        with self._choice():
+            with self._option():
+                self._token('equals')
+            with self._option():
+                self._token('gt')
+            with self._option():
+                self._token('gte')
+            with self._option():
+                self._token('lt')
+            with self._option():
+                self._token('lte')
+            self._error(
+                'expecting one of: '
+                "'equals' 'gt' 'gte' 'lt' 'lte'"
             )
 
     @tatsumasu()
@@ -123,211 +219,78 @@ class KarpQueryParser(Parser):
                 self._or_()
             with self._option():
                 self._not_()
-            self._error("expecting one of: " "'and' 'not' 'or'")
+            self._error(
+                'expecting one of: '
+                "'and' 'not' 'or'"
+            )
 
-    @tatsumasu("SubQuery")
+    @tatsumasu('SubQuery')
     def _sub_query_(self):  # noqa
         self._identifier_()
-        self.name_last_node("field")
-        self._token("(")
+        self.name_last_node('field')
+        self._token('(')
         self._expression_()
-        self.name_last_node("exp")
-        self._token(")")
+        self.name_last_node('exp')
+        self._token(')')
 
-        self._define(["exp", "field"], [])
+        self._define(
+            ['exp', 'field'],
+            []
+        )
 
-    @tatsumasu("And")
+    @tatsumasu('And')
     def _and_(self):  # noqa
-        self._token("and")
-        self._token("(")
+        self._token('and')
+        self._token('(')
 
         def sep1():
-            self._token("||")
+            self._token('||')
 
         def block1():
             self._expression_()
-
         self._gather(block1, sep1)
-        self.name_last_node("@")
-        self._token(")")
+        self.name_last_node('@')
+        self._token(')')
 
-    @tatsumasu("Contains")
-    def _contains_(self):  # noqa
-        self._token("contains")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._string_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field"], [])
-
-    @tatsumasu("Endswith")
-    def _endswith_(self):  # noqa
-        self._token("endswith")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._string_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field"], [])
-
-    @tatsumasu("Equals")
-    def _equals_(self):  # noqa
-        self._token("equals")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._any_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field"], [])
-
-    @tatsumasu("Exists")
-    def _exists_(self):  # noqa
-        self._token("exists")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-
-        self._define(["field"], [])
-
-    @tatsumasu("Freergxp")
-    def _freergxp_(self):  # noqa
-        self._token("freergxp")
-        self._token("|")
-        self._string_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg"], [])
-
-    @tatsumasu("Freetext")
+    @tatsumasu('Freetext')
     def _freetext_(self):  # noqa
-        self._token("freetext")
-        self._token("|")
+        self._token('freetext')
+        self._token('|')
         self._string_value_()
-        self.name_last_node("arg")
+        self.name_last_node('arg')
 
-        self._define(["arg"], [])
+        self._define(
+            ['arg'],
+            []
+        )
 
-    @tatsumasu("Gt")
-    def _gt_(self):  # noqa
-        self._token("gt")
-        self.name_last_node("op")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._any_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Gte")
-    def _gte_(self):  # noqa
-        self._token("gte")
-        self.name_last_node("op")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._any_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Lt")
-    def _lt_(self):  # noqa
-        self._token("lt")
-        self.name_last_node("op")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._any_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Lte")
-    def _lte_(self):  # noqa
-        self._token("lte")
-        self.name_last_node("op")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._any_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field", "op"], [])
-
-    @tatsumasu("Missing")
-    def _missing_(self):  # noqa
-        self._token("missing")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-
-        self._define(["field"], [])
-
-    @tatsumasu("Not")
+    @tatsumasu('Not')
     def _not_(self):  # noqa
-        self._token("not")
-        self._token("(")
+        self._token('not')
+        self._token('(')
 
         def sep1():
-            self._token("||")
+            self._token('||')
 
         def block1():
             self._expression_()
-
         self._positive_gather(block1, sep1)
-        self.name_last_node("@")
-        self._token(")")
+        self.name_last_node('@')
+        self._token(')')
 
-    @tatsumasu("Or")
+    @tatsumasu('Or')
     def _or_(self):  # noqa
-        self._token("or")
-        self._token("(")
+        self._token('or')
+        self._token('(')
 
         def sep1():
-            self._token("||")
+            self._token('||')
 
         def block1():
             self._expression_()
-
         self._gather(block1, sep1)
-        self.name_last_node("@")
-        self._token(")")
-
-    @tatsumasu("Regexp")
-    def _regexp_(self):  # noqa
-        self._token("regexp")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._string_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field"], [])
-
-    @tatsumasu("Startswith")
-    def _startswith_(self):  # noqa
-        self._token("startswith")
-        self._token("|")
-        self._identifier_()
-        self.name_last_node("field")
-        self._token("|")
-        self._string_value_()
-        self.name_last_node("arg")
-
-        self._define(["arg", "field"], [])
+        self.name_last_node('@')
+        self._token(')')
 
     @tatsumasu()
     def _any_value_(self):  # noqa
@@ -337,51 +300,57 @@ class KarpQueryParser(Parser):
             with self._option():
                 self._string_value_()
             self._error(
-                "expecting one of: "
-                "<integer_value> <quoted_string_value>"
-                "<string_value> <unquoted_string_value>"
-                "\\d+$"
+                'expecting one of: '
+                '<integer_value> <quoted_string_value>'
+                '<string_value> <unquoted_string_value>'
+                '\\d+$'
             )
 
-    @tatsumasu("StringValue")
+    @tatsumasu('StringValue')
     def _string_value_(self):  # noqa
         with self._choice():
             with self._option():
                 self._unquoted_string_value_()
             with self._option():
                 self._quoted_string_value_()
-            self._error("expecting one of: " "'\"' <quoted_string_value>" '<unquoted_string_value> [^|)("]+')
+            self._error(
+                'expecting one of: '
+                '\'"\' <quoted_string_value>'
+                '<unquoted_string_value> [^|)("]+'
+            )
 
     @tatsumasu()
     def _unquoted_string_value_(self):  # noqa
         self._pattern('[^|)("]+')
-        self.name_last_node("@")
+        self.name_last_node('@')
 
-    @tatsumasu("QuotedStringValue")
+    @tatsumasu('QuotedStringValue')
     def _quoted_string_value_(self):  # noqa
         self._token('"')
 
         def block1():
             with self._choice():
                 with self._option():
-                    self._pattern("(?s)\\s+")
+                    self._pattern('(?s)\\s+')
                 with self._option():
                     self._token('\\"')
                 with self._option():
                     self._pattern('[^"]')
-                self._error("expecting one of: " "'\\\\\"' (?s)\\s+ [^\"]")
-
+                self._error(
+                    'expecting one of: '
+                    '\'\\\\"\' (?s)\\s+ [^"]'
+                )
         self._closure(block1)
-        self.name_last_node("@")
+        self.name_last_node('@')
         self._token('"')
 
-    @tatsumasu("int")
+    @tatsumasu('int')
     def _integer_value_(self):  # noqa
-        self._pattern("\\d+$")
+        self._pattern('\\d+$')
 
-    @tatsumasu("Identifier")
+    @tatsumasu('Identifier')
     def _identifier_(self):  # noqa
-        self._pattern("[^|)(]+")
+        self._pattern('[^|)(]+')
 
 
 class KarpQuerySemantics:
@@ -394,6 +363,27 @@ class KarpQuerySemantics:
     def query_expression(self, ast):  # noqa
         return ast
 
+    def unary_query_expression(self, ast):  # noqa
+        return ast
+
+    def field_query(self, ast):  # noqa
+        return ast
+
+    def binary_query_expression(self, ast):  # noqa
+        return ast
+
+    def text_arg_expr(self, ast):  # noqa
+        return ast
+
+    def text_value_op(self, ast):  # noqa
+        return ast
+
+    def any_arg_expr(self, ast):  # noqa
+        return ast
+
+    def any_arg_op(self, ast):  # noqa
+        return ast
+
     def logical_expression(self, ast):  # noqa
         return ast
 
@@ -403,49 +393,13 @@ class KarpQuerySemantics:
     def and_(self, ast):  # noqa
         return ast
 
-    def contains(self, ast):  # noqa
-        return ast
-
-    def endswith(self, ast):  # noqa
-        return ast
-
-    def equals(self, ast):  # noqa
-        return ast
-
-    def exists(self, ast):  # noqa
-        return ast
-
-    def freergxp(self, ast):  # noqa
-        return ast
-
     def freetext(self, ast):  # noqa
-        return ast
-
-    def gt(self, ast):  # noqa
-        return ast
-
-    def gte(self, ast):  # noqa
-        return ast
-
-    def lt(self, ast):  # noqa
-        return ast
-
-    def lte(self, ast):  # noqa
-        return ast
-
-    def missing(self, ast):  # noqa
         return ast
 
     def not_(self, ast):  # noqa
         return ast
 
     def or_(self, ast):  # noqa
-        return ast
-
-    def regexp(self, ast):  # noqa
-        return ast
-
-    def startswith(self, ast):  # noqa
         return ast
 
     def any_value(self, ast):  # noqa
@@ -468,20 +422,24 @@ class KarpQuerySemantics:
 
 
 def main(filename, **kwargs):
-    if not filename or filename == "-":
+    if not filename or filename == '-':
         text = sys.stdin.read()
     else:
         with open(filename) as f:
             text = f.read()
     parser = KarpQueryParser()
-    return parser.parse(text, filename=filename, **kwargs)
+    return parser.parse(
+        text,
+        filename=filename,
+        **kwargs
+    )
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import json
-
     from tatsu.util import asjson
 
-    ast = generic_main(main, KarpQueryParser, name="KarpQuery")
+    ast = generic_main(main, KarpQueryParser, name='KarpQuery')
     data = asjson(ast)
     print(json.dumps(data, indent=2))
+

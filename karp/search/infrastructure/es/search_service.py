@@ -27,12 +27,6 @@ class EsQueryBuilder(NodeWalker):
         self.resources = resources
         self.mapping_repo = mapping_repo
 
-    def walk__equals(self, node):
-        (field_path, field) = self.walk(node.field)
-        if field.type != "text":
-            return self.wrap_nested(field_path, es_dsl.Q("match", **{field_path: {"query": self.walk(node.arg)}}))
-        return self.match_text(field_path, self.walk(node.arg), phrase=True)
-
     def walk__freetext(self, node):
         value = self.walk(node.arg)
 
@@ -64,38 +58,6 @@ class EsQueryBuilder(NodeWalker):
         # generate query recursively beginning with an empty path
         return recurse(tree, "")
 
-    def walk__regexp(self, node):
-        return self.regexp(node.field, self.walk(node.arg))
-
-    def walk__contains(self, node):
-        return self.regexp(node.field, f".*{self.walk(node.arg)}.*")
-
-    def walk__startswith(self, node):
-        return self.regexp(node.field, f"{self.walk(node.arg)}.*")
-
-    def walk__endswith(self, node):
-        return self.regexp(node.field, f".*{self.walk(node.arg)}")
-
-    def walk__exists(self, node):
-        field_path, _ = self.walk(node.field)
-        return self.wrap_nested(field_path, es_dsl.Q("exists", field=field_path))
-
-    def walk__missing(self, node):
-        q = self.walk__exists(node)
-        return es_dsl.Q("bool", must_not=q)
-
-    def walk_range(self, node):
-        field_path, _ = self.walk(node.field)
-        return self.wrap_nested(
-            field_path,
-            es_dsl.Q("range", **{field_path: {self.walk(node.op): self.walk(node.arg)}}),
-        )
-
-    walk__gt = walk_range
-    walk__gte = walk_range
-    walk__lt = walk_range
-    walk__lte = walk_range
-
     def walk__not(self, node):
         must_nots = [self.walk(expr) for expr in node.ast]
         return es_dsl.Q("bool", must_not=must_nots)
@@ -119,6 +81,26 @@ class EsQueryBuilder(NodeWalker):
             result = result & self.walk(n)
 
         return result
+
+    def walk__field_query(self, node):
+        """
+        handles exists or misssing
+        """
+        field_path, _ = self.walk(node.field)
+        exists_q = self.wrap_nested(field_path, es_dsl.Q("exists", field=field_path))
+        if node.op == "missing":
+            return es_dsl.Q("bool", must_not=exists_q)
+        return exists_q
+
+    def walk__binary_query_expression(self, node):
+        """
+        coordinating value output with field config, keyword fields should not lowercase arguments
+        """
+        field_path, field = self.walk(node.field)
+        arg = self.walk(node.arg)
+        if isinstance(arg, str) and field.type != "keyword":
+            arg = arg.lower()
+        return self.binary_query(node.op, field_path, field, arg)
 
     def walk__sub_query(self, node):
         (field_path, _) = self.walk(node.field)
@@ -168,7 +150,7 @@ class EsQueryBuilder(NodeWalker):
         return node
 
     def walk__string_value(self, node):
-        return self.walk(node.ast).lower()
+        return self.walk(node.ast)
 
     def walk__quoted_string_value(self, node):
         return "".join([part.replace('\\"', '"') for part in node.ast])
@@ -179,8 +161,23 @@ class EsQueryBuilder(NodeWalker):
     def multi_fields(self, field):
         return field.split(",")
 
-    def regexp(self, field_node, regexp):
-        (field_path, field) = self.walk(field_node)
+    def binary_query(self, op, field_path, field, arg):
+        if op == "equals":
+            if field.type != "text":
+                return self.wrap_nested(field_path, es_dsl.Q("match", **{field_path: {"query": arg}}))
+            return self.match_text(field_path, self.walk(arg), phrase=True)
+        elif op == "regexp":
+            return self.regexp(field_path, field, arg)
+        elif op == "contains":
+            return self.regexp(field_path, field, f".*{arg}.*")
+        elif op == "startswith":
+            return self.regexp(field_path, field, f"{arg}.*")
+        elif op == "endswith":
+            return self.regexp(field_path, field, f".*{arg}")
+        elif op in ["gt", "gte", "lt", "lte"]:
+            return self.wrap_nested(field_path, es_dsl.Q("range", **{field_path: {op: arg}}))
+
+    def regexp(self, field_path, field, regexp):
         if field.type not in ["text", "keyword"]:
             raise ValueError("Query type only allowed on text and keyword")
         q = es_dsl.Q(

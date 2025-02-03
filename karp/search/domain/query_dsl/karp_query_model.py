@@ -11,8 +11,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
+from dataclasses import dataclass
 
 from tatsu.objectmodel import Node
 from tatsu.semantics import ModelBuilderSemantics
@@ -25,8 +25,22 @@ class ModelBase(Node):
 
 class KarpQueryModelBuilderSemantics(ModelBuilderSemantics):
     def __init__(self, context=None, types=None):
-        types = [t for t in globals().values() if type(t) is type and issubclass(t, ModelBase)] + (types or [])
+        types = [
+            t for t in globals().values()
+            if type(t) is type and issubclass(t, ModelBase)
+        ] + (types or [])
         super().__init__(context=context, types=types)
+
+
+@dataclass(eq=False)
+class FieldQuery(ModelBase):
+    field: Any = None
+    op: Any = None
+
+
+@dataclass(eq=False)
+class BinaryQueryExpression(ModelBase):
+    pass
 
 
 @dataclass(eq=False)
@@ -41,69 +55,8 @@ class And(ModelBase):
 
 
 @dataclass(eq=False)
-class Contains(ModelBase):
-    arg: Any = None
-    field: Any = None
-
-
-@dataclass(eq=False)
-class Endswith(ModelBase):
-    arg: Any = None
-    field: Any = None
-
-
-@dataclass(eq=False)
-class Equals(ModelBase):
-    arg: Any = None
-    field: Any = None
-
-
-@dataclass(eq=False)
-class Exists(ModelBase):
-    field: Any = None
-
-
-@dataclass(eq=False)
-class Freergxp(ModelBase):
-    arg: Any = None
-
-
-@dataclass(eq=False)
 class Freetext(ModelBase):
     arg: Any = None
-
-
-@dataclass(eq=False)
-class Gt(ModelBase):
-    arg: Any = None
-    field: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Gte(ModelBase):
-    arg: Any = None
-    field: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Lt(ModelBase):
-    arg: Any = None
-    field: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Lte(ModelBase):
-    arg: Any = None
-    field: Any = None
-    op: Any = None
-
-
-@dataclass(eq=False)
-class Missing(ModelBase):
-    field: Any = None
 
 
 @dataclass(eq=False)
@@ -114,18 +67,6 @@ class Not(ModelBase):
 @dataclass(eq=False)
 class Or(ModelBase):
     pass
-
-
-@dataclass(eq=False)
-class Regexp(ModelBase):
-    arg: Any = None
-    field: Any = None
-
-
-@dataclass(eq=False)
-class Startswith(ModelBase):
-    arg: Any = None
-    field: Any = None
 
 
 @dataclass(eq=False)
@@ -141,3 +82,4 @@ class QuotedStringValue(ModelBase):
 @dataclass(eq=False)
 class Identifier(ModelBase):
     pass
+
