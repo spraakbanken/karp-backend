@@ -19,20 +19,25 @@ class ResourceQueries:
         self._resources = resources
         self._plugins = plugins
 
-    def _from_resource(self, resource: Resource) -> ResourceDto:
-        return plugins.transform_resource(self._plugins, ResourceDto.from_resource(resource))
+    def _from_resource(self, resource: Resource, expand_plugins=True) -> ResourceDto:
+        if expand_plugins:
+            return plugins.transform_resource(self._plugins, ResourceDto.from_resource(resource))
+        else:
+            return ResourceDto.from_resource(resource)
 
-    def by_resource_id(self, resource_id: str, version: Optional[int] = None) -> ResourceDto:
+    def by_resource_id(self, resource_id: str, version: Optional[int] = None, **kwargs) -> ResourceDto:
         result = self._resources.by_resource_id(resource_id, version=version)
-        return self._from_resource(result)
+        return self._from_resource(result, **kwargs)
 
-    def by_resource_id_optional(self, resource_id: str, version: Optional[int] = None) -> Optional[ResourceDto]:
+    def by_resource_id_optional(
+        self, resource_id: str, version: Optional[int] = None, **kwargs
+    ) -> Optional[ResourceDto]:
         result = self._resources.by_resource_id_optional(resource_id, version=version)
         if result is not None:
-            return self._from_resource(result)
+            return self._from_resource(result, **kwargs)
 
-    def get_published_resources(self) -> Iterable[ResourceDto]:
-        return map(self._from_resource, self._resources.get_published_resources())
+    def get_published_resources(self, **kwargs) -> Iterable[ResourceDto]:
+        return [self._from_resource(r, **kwargs) for r in self._resources.get_published_resources()]
 
-    def get_all_resources(self) -> Iterable[ResourceDto]:
-        return map(self._from_resource, self._resources.get_all_resources())
+    def get_all_resources(self, **kwargs) -> Iterable[ResourceDto]:
+        return [self._from_resource(r, **kwargs) for r in self._resources.get_all_resources()]
