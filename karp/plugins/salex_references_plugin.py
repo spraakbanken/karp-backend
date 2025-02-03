@@ -7,11 +7,11 @@ from enum import Enum, global_enum
 from injector import inject
 
 from karp.foundation import json
+from karp.lex.application import SearchQueries
 from karp.search.domain import QueryRequest
 from karp.search.domain.query_dsl.karp_query_model import Identifier, TextArgExpression
-from karp.search.infrastructure import EsSearchService
 
-from .plugin import Plugin, flatten_list, group_batch_by
+from .plugin import INDEXED, Plugin, flatten_list, group_batch_by
 
 
 def entry_is_visible(entry):
@@ -153,8 +153,8 @@ class SalexForwardReferencesPlugin(Plugin):
 # Designed to be used together with SalexForwardReferencesPlugin.
 class SalexBackwardReferencesPlugin(Plugin):
     @inject
-    def __init__(self, search_service: EsSearchService):
-        self.search_service = search_service
+    def __init__(self, search_queries: SearchQueries):
+        self.search_queries = search_queries
 
     def output_config(self, resource, field, **kwargs):
         return {
@@ -162,6 +162,7 @@ class SalexBackwardReferencesPlugin(Plugin):
             "collection": True,
             "allow_missing_params": True,
             "flatten_params": False,
+            "searchable": False,
             "fields": {
                 "id": {"type": "string"},
                 "ortografi": {"type": "string"},
@@ -189,11 +190,7 @@ class SalexBackwardReferencesPlugin(Plugin):
             )
             for id in all_ids  # noqa: A001
         ]
-        try:
-            query_results = self.search_service.multi_query(requests)
-        except KeyError:
-            # can happen if forward references field hasn't been indexed yet
-            query_results = []
+        query_results = self.search_queries.multi_query(requests, expand_plugins=INDEXED)
 
         def get_result(id, entry):  # noqa: A002
             result = {"id": entry["id"], "ortografi": entry["entry"].get("ortografi", "?")}
