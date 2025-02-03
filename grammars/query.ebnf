@@ -14,18 +14,53 @@ expression
 
 query_expression
     =
-    | contains
-    | endswith
-    | equals
-    | exists
+    | unary_query_expression
+    | binary_query_expression
+    ;
+
+# exists and missing take identifiers but freetext takes value
+unary_query_expression
+    =
+    | field_query
     | freetext
-    | gt
-    | gte
-    | lt
-    | lte
-    | missing
-    | regexp
-    | startswith
+    ;
+
+field_query::FieldQuery =
+    op:('exists' | 'missing') '|' field:identifier
+    ;
+
+# all these take an identifier, then value
+binary_query_expression::BinaryQueryExpression
+    =
+    | text_arg_expr
+    | any_arg_expr
+    ;
+
+text_arg_expr
+    =
+    op:text_value_op '|' field:identifier '|' arg:string_value
+    ;
+
+text_value_op
+    =
+    | 'contains'
+    | 'endswith'
+    | 'regexp'
+    | 'startswith'
+    ;
+
+any_arg_expr
+    =
+    op:any_arg_op '|' field:identifier '|' arg:any_value
+    ;
+
+any_arg_op
+    =
+    | 'equals'
+    | 'gt'
+    | 'gte'
+    | 'lt'
+    | 'lte'
     ;
 
 logical_expression
@@ -45,59 +80,10 @@ and::And
     'and' '(' @:'||'.{expression}* ')'
     ;
 
-contains::Contains
-    =
-    'contains' '|' field:identifier '|' arg:string_value
-    ;
-
-endswith::Endswith
-    =
-    'endswith' '|' field:identifier '|' arg:string_value
-    ;
-
-equals::Equals
-    =
-    'equals' '|' field:identifier '|' arg:any_value
-    ;
-
-exists::Exists
-    =
-    'exists' '|' field:identifier
-    ;
-
-freergxp::Freergxp
-    =
-    'freergxp' '|' arg:string_value
-    ;
 
 freetext::Freetext
     =
     'freetext' '|' arg:string_value
-    ;
-
-gt::Gt
-    =
-    op:'gt' '|' field:identifier '|' arg:any_value
-    ;
-
-gte::Gte
-    =
-    op:'gte' '|' field:identifier '|' arg:any_value
-    ;
-
-lt::Lt
-    =
-    op:'lt' '|' field:identifier '|' arg:any_value
-    ;
-
-lte::Lte
-    =
-    op:'lte' '|' field:identifier '|' arg:any_value
-    ;
-
-missing::Missing
-    =
-    'missing' '|' field:identifier
     ;
 
 not::Not
@@ -108,16 +94,6 @@ not::Not
 or::Or
     =
     'or' '(' @:'||'.{expression}* ')'
-    ;
-
-regexp::Regexp
-    =
-    'regexp' '|' field:identifier '|' arg:string_value
-    ;
-
-startswith::Startswith
-    =
-    'startswith' '|' field:identifier '|' arg:string_value
     ;
 
 any_value

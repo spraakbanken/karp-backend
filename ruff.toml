@@ -18,7 +18,11 @@ line-length = 120
 # Avoid trying to fix flake8-bugbear (`B`) violations.
 lint.unfixable = ["B"]
 
+extend-exclude = ["karp/search/domain/query_dsl/karp_query_parser.py", "karp/search/domain/query_dsl/karp_query_model.py"]
+
 # Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
 [lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "tests/*" = ["S101"]
+
+
