@@ -39,8 +39,17 @@ class FieldQuery(ModelBase):
 
 
 @dataclass(eq=False)
-class BinaryQueryExpression(ModelBase):
-    pass
+class TextArgExpression(ModelBase):
+    arg: Any = None
+    field: Any = None
+    op: Any = None
+
+
+@dataclass(eq=False)
+class AnyArgExpression(ModelBase):
+    arg: Any = None
+    field: Any = None
+    op: Any = None
 
 
 @dataclass(eq=False)
