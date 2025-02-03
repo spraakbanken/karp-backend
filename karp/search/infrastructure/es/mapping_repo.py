@@ -78,6 +78,8 @@ class EsMappingRepository:
         }
 
         aliases = self._get_all_aliases()
+        self.aliases = dict(aliases)
+        self.reverse_aliases = {index: alias for alias, index in aliases}
         self._update_field_mapping(aliases)
 
     def is_nested(self, resource_ids: list[str], field):

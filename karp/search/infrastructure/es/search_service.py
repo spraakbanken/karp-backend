@@ -228,38 +228,6 @@ class EsFieldNameCollector(NodeWalker):
         return set()
 
 
-def _format_result(response, path: Optional[str] = None, highlight: bool = False):
-    def format_entry(entry):
-        dict_entry = entry.to_dict()
-
-        res = {
-            "id": entry.meta.id,
-            "entry": dict_entry,
-        }
-        if highlight and hasattr(entry.meta, "highlight"):
-            res["highlight"] = entry.meta.highlight.to_dict()
-        for mapped_name, field in es_mapping_repo.internal_fields.items():
-            res[mapped_name] = dict_entry.pop(field.name, None)
-
-        return get_path(path, res) if path else res
-
-    result = {
-        "total": response.hits.total.value,
-        "hits": [format_entry(entry) for entry in response],
-    }
-    return result
-
-
-def _build_result(query, response):
-    result = _format_result(response, path=query.path, highlight=query.highlight)
-    if query.lexicon_stats:
-        result["distribution"] = {}
-        for bucket in response.aggregations.distribution.buckets:
-            key = bucket["key"]
-            result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
-    return result
-
-
 def _add_runtime_mappings(s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
     # When a query uses a field of the form "f.length", add a
     # runtime_mapping so it gets interpreted as "the length of the field f".
@@ -315,13 +283,13 @@ class EsSearchService:
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
-        return [_build_result(query, response) for query, response in zip(queries, responses)]
+        return [self._build_result(query, response) for query, response in zip(queries, responses)]
 
     def _search_with_query(self, query: QueryRequest):
         logger.info("search_with_query called", extra={"query": query})
         s = self._build_search(query, query.resources)
         response = s.execute()
-        return _build_result(query, response)
+        return self._build_result(query, response)
 
     def _build_search(self, query, resources):
         field_names = set()
@@ -373,13 +341,44 @@ class EsSearchService:
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
 
+    def _format_result(self, response, path: Optional[str] = None, highlight: bool = False):
+        def format_entry(entry):
+            dict_entry = entry.to_dict()
+
+            res = {
+                "resource": self.mapping_repo.reverse_aliases[entry.meta.index],
+                "id": entry.meta.id,
+                "entry": dict_entry,
+            }
+            if highlight and hasattr(entry.meta, "highlight"):
+                res["highlight"] = entry.meta.highlight.to_dict()
+            for mapped_name, field in es_mapping_repo.internal_fields.items():
+                res[mapped_name] = dict_entry.pop(field.name, None)
+
+            return get_path(path, res) if path else res
+
+        result = {
+            "total": response.hits.total.value,
+            "hits": [format_entry(entry) for entry in response],
+        }
+        return result
+
+    def _build_result(self, query, response):
+        result = self._format_result(response, path=query.path, highlight=query.highlight)
+        if query.lexicon_stats:
+            result["distribution"] = {}
+            for bucket in response.aggregations.distribution.buckets:
+                key = bucket["key"]
+                result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
+        return result
+
     def search_ids(self, resource_id: str, entry_ids: List[str]):
         query = es_dsl.Q("terms", _id=entry_ids)
         logger.debug("query", extra={"query": query})
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
         logger.debug("s", extra={"es_query s": s.to_dict()})
         response = s.execute()
-        return _format_result(response)
+        return self._format_result(response)
 
     def statistics(self, resource_id: str, field: str) -> Iterable:
         s = es_dsl.Search(using=self.es, index=resource_id)
