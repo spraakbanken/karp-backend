@@ -92,7 +92,7 @@ class EsQueryBuilder(NodeWalker):
             return es_dsl.Q("bool", must_not=exists_q)
         return exists_q
 
-    def walk__binary_query_expression(self, node):
+    def binary_query_expression(self, node):
         """
         coordinating value output with field config, keyword fields should not lowercase arguments
         """
@@ -101,6 +101,18 @@ class EsQueryBuilder(NodeWalker):
         if isinstance(arg, str) and field.type != "keyword":
             arg = arg.lower()
         return self.binary_query(node.op, field_path, field, arg)
+
+    def walk__text_arg_expression(self, node):
+        """
+        Added node type TextArgExpression to enable faster scripting
+        """
+        return self.binary_query_expression(node)
+
+    def walk__any_arg_expression(self, node):
+        """
+        Added node type AnyArgExpression to enable faster scripting
+        """
+        return self.binary_query_expression(node)
 
     def walk__sub_query(self, node):
         (field_path, _) = self.walk(node.field)

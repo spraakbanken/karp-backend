@@ -8,7 +8,7 @@ from injector import inject
 
 from karp.foundation import json
 from karp.search.domain import QueryRequest
-from karp.search.domain.query_dsl.karp_query_model import Equals, Identifier
+from karp.search.domain.query_dsl.karp_query_model import Identifier, TextArgExpression
 from karp.search.infrastructure import EsSearchService
 
 from .plugin import Plugin, flatten_list, group_batch_by
@@ -183,7 +183,7 @@ class SalexBackwardReferencesPlugin(Plugin):
         requests = [
             QueryRequest(
                 resources=[resource],
-                q=Equals(field=Identifier(ast=field + ".ref"), arg=id),
+                q=TextArgExpression(op="equals", field=Identifier(ast=field + ".ref"), arg=id),
                 lexicon_stats=False,
                 size=None,
             )

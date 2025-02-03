@@ -30,13 +30,13 @@ field_query::FieldQuery =
     ;
 
 # all these take an identifier, then value
-binary_query_expression::BinaryQueryExpression
+binary_query_expression
     =
     | text_arg_expr
     | any_arg_expr
     ;
 
-text_arg_expr
+text_arg_expr::TextArgExpression
     =
     op:text_value_op '|' field:identifier '|' arg:string_value
     ;
@@ -49,7 +49,7 @@ text_value_op
     | 'startswith'
     ;
 
-any_arg_expr
+any_arg_expr::AnyArgExpression
     =
     op:any_arg_op '|' field:identifier '|' arg:any_value
     ;

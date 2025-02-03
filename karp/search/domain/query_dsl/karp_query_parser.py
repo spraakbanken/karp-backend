@@ -130,7 +130,7 @@ class KarpQueryParser(Parser):
             []
         )
 
-    @tatsumasu('BinaryQueryExpression')
+    @tatsumasu()
     def _binary_query_expression_(self):  # noqa
         with self._choice():
             with self._option():
@@ -143,7 +143,7 @@ class KarpQueryParser(Parser):
                 '<text_arg_expr> <text_value_op>'
             )
 
-    @tatsumasu()
+    @tatsumasu('TextArgExpression')
     def _text_arg_expr_(self):  # noqa
         self._text_value_op_()
         self.name_last_node('op')
@@ -176,7 +176,7 @@ class KarpQueryParser(Parser):
                 "'startswith'"
             )
 
-    @tatsumasu()
+    @tatsumasu('AnyArgExpression')
     def _any_arg_expr_(self):  # noqa
         self._any_arg_op_()
         self.name_last_node('op')
