@@ -37,10 +37,7 @@ class EntryQueries:
     def _to_dtos(self, resource_id, entries: typing.Iterable[Entry], expand_plugins=True) -> typing.Iterator[EntryDto]:
         resource = self.resources.by_resource_id(resource_id)
         result = (EntryDto.from_entry(entry) for entry in entries)
-        if expand_plugins:
-            return plugins.transform_entries(self.plugins, resource.config, result)
-        else:
-            return result
+        return plugins.transform_entries(self.plugins, resource.config, result, expand_plugins=expand_plugins)
 
     def _to_dto(self, entry: Entry, **kwargs) -> EntryDto:
         return next(self._to_dtos(entry.resource_id, [entry], **kwargs))

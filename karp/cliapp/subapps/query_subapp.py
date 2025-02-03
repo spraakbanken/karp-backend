@@ -6,7 +6,7 @@ import typer
 
 from karp import search
 from karp.cliapp.typer_injector import inject_from_ctx
-from karp.search.infrastructure.es import EsSearchService
+from karp.lex.application import SearchQueries
 
 
 subapp = typer.Typer()
@@ -18,10 +18,10 @@ def resource(
     resource_id: str,
     output: Optional[Path] = typer.Option(None, help="Path to write to. Defaults to stdout."),
 ):
-    search_service = inject_from_ctx(EsSearchService, ctx)
+    search_queries = inject_from_ctx(SearchQueries, ctx)
     query_request = search.QueryRequest(resource_ids=[resource_id])
     json_arrays.dump_to_file(
-        search_service.query(query_request),
+        search_queries.query(query_request),
         output,
         use_stdout_as_default=True,
     )

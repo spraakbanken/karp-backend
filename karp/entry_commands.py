@@ -52,8 +52,7 @@ class EntryCommands:
         return next(self._transform_entries(config, [entry]))
 
     def _transform_entries(self, config, entries: Iterable[EntryDto]) -> Generator[IndexEntry, Any, None]:
-        config = plugins.transform_config(self.plugins, config)
-        entries = plugins.transform_entries(self.plugins, config, entries)
+        entries = plugins.transform_entries(self.plugins, config, entries, expand_plugins=plugins.INDEXED)
         return (entry_transformer.transform(entry) for entry in entries)
 
     def add_entries_in_chunks(

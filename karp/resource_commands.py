@@ -37,7 +37,7 @@ class ResourceCommands:
         )
 
         self.resources.save(resource)
-        config = plugins.transform_config(self.plugins, resource.config)
+        config = plugins.transform_config(self.plugins, resource.config, expand_plugins=plugins.INDEXED)
         self.index.create_index(resource.resource_id, config)
         self.session.commit()
         return ResourceDto.from_resource(resource)

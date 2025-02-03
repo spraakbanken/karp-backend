@@ -3,6 +3,8 @@ import pickle
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
+from dataclasses import dataclass
+from enum import IntEnum, global_enum
 from functools import wraps
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
@@ -178,27 +180,79 @@ class Plugins:
         return result
 
 
+@global_enum
+class ExpansionPhase(IntEnum):
+    """
+    Virtual fields can be declared as searchable (in which case they are added
+    to ElasticSearch) or non-searchable (in which case they are computed later,
+    when the entry is returned e.g. via the API).
+
+    To support this, the plugin expansion is run twice.
+    Searchable fields are expanded before adding an entry to ElasticSearch,
+    and non-searchable fields are expanded after fetching a result from ElasticSearch.
+
+    This class keeps track of how much an entry has been expanded.
+    """
+
+    UNEXPANDED = 0  # virtual fields have not been expanded
+    INDEXED = 1  # searchable fields have been expanded
+    EXPANDED = 2  # all fields have been expanded
+
+
+def field_phase(field: Field) -> ExpansionPhase:
+    return INDEXED if field.searchable else EXPANDED
+
+
+@dataclass(frozen=True)
+class ExpansionPhases:
+    start: ExpansionPhase = UNEXPANDED  # how far the entry has been expanded so far
+    end: ExpansionPhase = EXPANDED  # how far we want to expand the entry
+
+    def __post_init__(self):
+        if self.start > self.end:
+            raise PluginException(f"start phase {self.start} comes after end phase {self.end}")
+
+
+def expansion_phases(expand_plugins: bool | ExpansionPhase | ExpansionPhases, start=UNEXPANDED):
+    if isinstance(expand_plugins, ExpansionPhases):
+        return expand_plugins
+
+    elif isinstance(expand_plugins, ExpansionPhase):
+        return ExpansionPhases(start, expand_plugins)
+
+    elif isinstance(expand_plugins, bool):
+        if expand_plugins:
+            return ExpansionPhases(start, EXPANDED)
+        else:
+            return ExpansionPhases(start, start)
+
+    else:
+        raise PluginException(f"invalid value for expand_plugins: {expand_plugins}")
+
+
 # TODO: maybe a more descriptive name like expand instead of transform?
 
 
-def transform_resource(plugins: Plugins, resource_dto: "ResourceDto") -> "ResourceDto":
+def transform_resource(plugins: Plugins, resource_dto: "ResourceDto", expand_plugins=True) -> "ResourceDto":
     """Given a resource with virtual fields, expand the config
     by adding the output_config for each virtual field."""
 
     result = resource_dto.model_copy(deep=True)
-    result.config = transform_config(plugins, result.config)
+    result.config = transform_config(plugins, result.config, expand_plugins)
     return result
 
 
-def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> ResourceConfig:
+def transform_config(plugins: Plugins, resource_config: ResourceConfig, expand_plugins=True) -> ResourceConfig:
     """Given a resource config with virtual fields, expand the config
     by adding the output_config for each virtual field."""
+
+    phases = expansion_phases(expand_plugins)
 
     def _transform_fields(config: dict[str, Field]) -> dict[str, Field]:
         return {k: _transform_field(v) for k, v in config.items()}
 
     def _transform_field(config: Field):
-        if config.virtual:
+        if config.virtual and phases.start < field_phase(config) <= phases.end:
             result = _transform_field(plugins.output_config(config))
             # take some values from the input config too
             result = result.update(
@@ -212,6 +266,7 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
                 flatten_params=config.flatten_params or result.flatten_params,
                 allow_missing_params=config.allow_missing_params or result.allow_missing_params,
                 cache_plugin_expansion=config.cache_plugin_expansion and result.cache_plugin_expansion,
+                searchable=config.searchable and result.searchable,
             )
             return result
 
@@ -220,8 +275,11 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig) -> Resou
 
         return config
 
-    result = resource_config.update(fields=_transform_fields(resource_config.fields))
-    return result
+    if phases.start == phases.end:
+        return resource_config
+    else:
+        result = resource_config.update(fields=_transform_fields(resource_config.fields))
+        return result
 
 
 def find_virtual_fields(resource_config: ResourceConfig) -> dict[str, Field]:
@@ -236,16 +294,18 @@ def find_virtual_fields(resource_config: ResourceConfig) -> dict[str, Field]:
     return result
 
 
-def transform_entry(plugins: Plugins, resource_config: ResourceConfig, entry_dto: "EntryDto") -> "EntryDto":
+def transform_entry(
+    plugins: Plugins, resource_config: ResourceConfig, entry_dto: "EntryDto", expand_plugins=True
+) -> "EntryDto":
     """
     Given an entry, calculate all the virtual fields.
     """
 
-    return next(iter(transform_entries(plugins, resource_config, [entry_dto])))
+    return next(iter(transform_entries(plugins, resource_config, [entry_dto], expand_plugins)))
 
 
 def transform_entries(
-    plugins: Plugins, resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"]
+    plugins: Plugins, resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"], expand_plugins=True
 ) -> Iterator["EntryDto"]:
     """
     Given a list of entries, calculate all the virtual fields.
@@ -253,19 +313,21 @@ def transform_entries(
 
     cached_results = {}
     for batch in batch_items(entry_dtos, max_batch_size=10000):
-        new_entries = transform_list(plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results)
+        new_entries = transform_list(
+            plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results, expand_plugins
+        )
         for entry_dto, new_entry in zip(batch, new_entries):
             entry_dto = entry_dto.model_copy(deep=True)
             entry_dto.entry = new_entry
             yield entry_dto
 
 
-def transform(plugins: Plugins, resource_config: ResourceConfig, body: Dict) -> Dict:
+def transform(plugins: Plugins, resource_config: ResourceConfig, body: Dict, expand_plugins=True) -> Dict:
     """
     Given an entry body, calculate all the virtual fields.
     """
 
-    return next(iter(transform_list(plugins, resource_config, [body])))
+    return next(iter(transform_list(plugins, resource_config, [body], expand_plugins=expand_plugins)))
 
 
 def transform_list(
@@ -273,6 +335,7 @@ def transform_list(
     resource_config: ResourceConfig,
     bodies: list[Dict],
     cached_results: Optional[Dict] = None,
+    expand_plugins: bool | ExpansionPhase | ExpansionPhases = True,
 ) -> list[Dict]:
     """
     Given a list of entry bodies, calculate all the virtual fields.
@@ -288,10 +351,15 @@ def transform_list(
 
     # TODO: support references to collections which should be passed in as lists
 
+    phases = expansion_phases(expand_plugins)
+
+    if phases.start == phases.end:
+        return bodies
+
     if cached_results is None:
         cached_results = {}
 
-    resource_config = transform_config(plugins, resource_config)
+    resource_config = transform_config(plugins, resource_config, phases.end)
     bodies = deepcopy(bodies)
     virtual_fields = find_virtual_fields(resource_config)
 
@@ -363,6 +431,9 @@ def transform_list(
     # Compute dependencies for the fields
     dependencies: Dict[str, set[str]] = {}
     for field_name, config in virtual_fields.items():
+        if not (phases.start < field_phase(config) <= phases.end):
+            continue  # no need to run this plugin right now
+
         # In order for the virtual field to appear in the topological sort (below),
         # it must exist in the dependencies graph, even if it has no dependencies
         dependencies[field_name] = set()
@@ -383,11 +454,14 @@ def transform_list(
                 if field_path[: len(ancestor_path)] == ancestor_path:
                     dependencies[field_name].add(ancestor_name)
 
-    # Check that all fields exist
-    for targets in dependencies.values():
+    # Check that all fields exist and have an appropriate phase
+    for source, targets in dependencies.items():
         for field_name in targets:
             if field_name not in resource_config.nested_fields():
                 raise PluginException(f"field {field_name} not found")
+            field_config = resource_config.field_config(field_name)
+            if field_phase(field_config) > phases.end:
+                raise PluginException(f"field {field_name} required for field {source} at earlier phase")
 
     # Decide what order to compute the virtual fields in
     try:

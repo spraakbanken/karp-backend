@@ -10,12 +10,13 @@ from karp.main import bootstrap_app, with_new_session, config
 from karp.cliapp import subapps
 from .typer_injector import inject_from_ctx
 from karp.lex.infrastructure import ResourceRepository
-from karp.lex.application import ResourceQueries, EntryQueries
+from karp.lex.application import ResourceQueries, EntryQueries, SearchQueries
 from karp.entry_commands import EntryCommands
 from karp.resource_commands import ResourceCommands
 from karp.search_commands import SearchCommands
 from karp.search.infrastructure import EsSearchService
 from karp.auth.infrastructure import APIKeyService
+from karp.search.domain import QueryRequest
 import readline
 import rlcompleter
 from pathlib import Path
@@ -73,12 +74,14 @@ def repl(
         "session": inject_from_ctx(Session, ctx),
         "resource_queries": inject_from_ctx(ResourceQueries, ctx),
         "entry_queries": inject_from_ctx(EntryQueries, ctx),
+        "search_queries": inject_from_ctx(SearchQueries, ctx),
         "resource_commands": inject_from_ctx(ResourceCommands, ctx),
         "entry_commands": inject_from_ctx(EntryCommands, ctx),
         "search_commands": inject_from_ctx(SearchCommands, ctx),
         "resources": inject_from_ctx(ResourceRepository, ctx),
         "es_search_service": inject_from_ctx(EsSearchService, ctx),
         "api_key_service": inject_from_ctx(APIKeyService, ctx),
+        "QueryRequest": QueryRequest,
     }
 
     module = sys.__class__

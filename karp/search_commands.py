@@ -1,10 +1,8 @@
 import logging
-import typing
 
 from injector import inject
 
 import karp.plugins as plugins
-from karp.lex import EntryDto
 from karp.lex.application import EntryQueries, ResourceQueries
 from karp.plugins import Plugins
 from karp.search.infrastructure.es.indices import EsIndex
@@ -28,20 +26,14 @@ class SearchCommands:
         self.entry_queries = entry_queries
         self.plugins = plugins
 
-    def _transform(self, resource, entries: typing.Iterable[EntryDto]):
-        # TODO: make _transform only live in one place
-        config = plugins.transform_config(self.plugins, resource.config)
-        entries = plugins.transform_entries(self.plugins, config, entries)
-        return (entry_transformer.transform(entry) for entry in entries)
-
     def reindex_resource(self, resource_id, remove_old_index):
         logger.info("Reindexing resource '%s'", resource_id)
-        resource = self.resource_queries.by_resource_id(resource_id)
-        resource_config = plugins.transform_config(self.plugins, resource.config)
+        resource = self.resource_queries.by_resource_id(resource_id, expand_plugins=plugins.INDEXED)
 
         # create and add data to new index without touching the old alias
-        index_name = self.index.create_index(resource_id, resource_config, create_alias=False)
-        self.index.add_entries(index_name, self._transform(resource, self.entry_queries.all_entries(resource_id)))
+        index_name = self.index.create_index(resource_id, resource.config, create_alias=False)
+        all_entries = self.entry_queries.all_entries(resource_id, expand_plugins=plugins.INDEXED)
+        self.index.add_entries(index_name, (entry_transformer.transform(entry) for entry in all_entries))
 
         if remove_old_index:
             self.index.delete_index(resource_id)

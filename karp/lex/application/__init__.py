@@ -4,5 +4,8 @@ from .entry_queries import (
 from .resource_queries import (
     ResourceQueries,
 )
+from .search_queries import (
+    SearchQueries,
+)
 
-__all__ = ["EntryQueries", "ResourceQueries"]
+__all__ = ["EntryQueries", "ResourceQueries", "SearchQueries"]

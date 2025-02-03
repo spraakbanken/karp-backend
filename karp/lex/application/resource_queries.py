@@ -20,10 +20,9 @@ class ResourceQueries:
         self._plugins = plugins
 
     def _from_resource(self, resource: Resource, expand_plugins=True) -> ResourceDto:
-        if expand_plugins:
-            return plugins.transform_resource(self._plugins, ResourceDto.from_resource(resource))
-        else:
-            return ResourceDto.from_resource(resource)
+        return plugins.transform_resource(
+            self._plugins, ResourceDto.from_resource(resource), expand_plugins=expand_plugins
+        )
 
     def by_resource_id(self, resource_id: str, version: Optional[int] = None, **kwargs) -> ResourceDto:
         result = self._resources.by_resource_id(resource_id, version=version)

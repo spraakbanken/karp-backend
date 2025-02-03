@@ -12,7 +12,7 @@ from karp.search.domain.errors import IncompleteQuery
 
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.search.infrastructure.es import EsSearchService
+from karp.lex.application import SearchQueries
 from .. import schemas
 
 
@@ -37,7 +37,7 @@ def get_entries_by_id(
     ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
+    search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
@@ -48,7 +48,7 @@ def get_entries_by_id(
         )
     if resource_id not in published_resources:
         raise ResourceNotFound(resource_id)
-    return search_service.search_ids(resource_id, entry_ids.split(","))
+    return search_queries.search_ids(resource_id, entry_ids.split(","))
 
 
 @router.get(
@@ -70,7 +70,7 @@ def query_stats(
     ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
+    search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     resource_list = resources.split(",")
@@ -82,7 +82,7 @@ def query_stats(
     if any(resource not in published_resources for resource in resource_list):
         raise ResourceNotFound(resource_list)
     try:
-        response = search_service.query_stats(resource_list, q)
+        response = search_queries.query_stats(resource_list, q)
     except karp_errors.KarpError as err:
         logger.exception(
             "Error occured when calling '/query/stats'",
@@ -141,7 +141,7 @@ def query(
     ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    search_service: EsSearchService = Depends(inject_from_req(EsSearchService)),
+    search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     """
@@ -171,8 +171,8 @@ def query(
         highlight=highlight,
     )
     try:
-        logger.debug(f"{search_service=}")
-        response = search_service.query(query_request)
+        logger.debug(f"{search_queries=}")
+        response = search_queries.query(query_request)
 
     except karp_errors.KarpError as err:
         logger.exception(
