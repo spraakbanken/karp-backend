@@ -76,7 +76,7 @@ class SearchQueries:
 
     def search_ids(self, resource_id: str, entry_ids: List[str], **kwargs):
         result = self.search.search_ids(resource_id, entry_ids)
-        return self._transform_result(result, **kwargs)
+        return self._transform_result(None, result, **kwargs)
 
     def statistics(self, resource_id: str, field: str) -> Iterable:
         return self.search.statistics(resource_id, field)
