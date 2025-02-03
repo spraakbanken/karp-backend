@@ -196,7 +196,7 @@ class SalexBackwardReferencesPlugin(Plugin):
             query_results = []
 
         def get_result(id, entry):  # noqa: A002
-            result = {"id": entry["id"], "ortografi": entry["entry"].get("ortografi", "?"), "subobject": False}
+            result = {"id": entry["id"], "ortografi": entry["entry"].get("ortografi", "?")}
 
             if id.startswith("so."):
                 homografNr = entry["entry"].get("so", {}).get("homografNr")
@@ -214,6 +214,7 @@ class SalexBackwardReferencesPlugin(Plugin):
                 raise AssertionError(f"inconsistent search result, got {len(matches)} matches")
             result["visas"] = matches[0]["visas"]
 
+            result["subobject"] = False  # put this here so it comes last in the JSON
             return result
 
         id_references = {
