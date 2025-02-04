@@ -20,9 +20,10 @@ lint.unfixable = ["B"]
 
 extend-exclude = ["karp/search/domain/query_dsl/karp_query_parser.py", "karp/search/domain/query_dsl/karp_query_model.py"]
 
-# Ignore `E402` (import violations) in all `__init__.py` files, and in `path/to/file.py`.
+# Ignore `E402` (import violations) in all `__init__.py` files
 [lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "tests/*" = ["S101"]
-
+"repl_scripts/*" = ["A001"]
+"tests/conftest.py" = ["E402", "F401"]
 

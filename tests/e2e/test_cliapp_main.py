@@ -1,6 +1,7 @@
-from karp.main import config
 from typer.testing import CliRunner
+
 from karp.cliapp.main import create_app
+from karp.main import config
 
 runner = CliRunner()
 cliapp = create_app()
