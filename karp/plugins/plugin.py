@@ -36,7 +36,7 @@ class PluginException(Exception):
 
 class Plugin(ABC):
     @abstractmethod
-    def output_config(**kwargs) -> dict[str, Field]:
+    def output_config(self, **kwargs) -> dict[str, Field]:
         raise NotImplementedError
 
     # Either generate or generate_batch should be implemented
