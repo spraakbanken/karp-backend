@@ -247,7 +247,8 @@ class InflectionPlugin(Plugin):
 
         @router.get(
             "/generate_inflection_table",
-            summary="Given a lemma and an inflection class, generate an inflection table.",
+            summary="Generate inflection table",
+            description="Given a lemma and an inflection class, generate an inflection table.",
         )
         def generate_inflection_table(
             lemma: str,

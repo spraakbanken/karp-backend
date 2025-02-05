@@ -156,10 +156,13 @@ class Plugins:
         """
         from karp.api.routes import router
 
+        routes_added = False
         for resource in resources:
             for plugin_name, plugin_params in resource.config.plugins.items():
                 inner_router = self._get_plugin(plugin_name).create_router(resource.resource_id, plugin_params)
-                router.include_router(inner_router, prefix=f"/{resource.resource_id}/{plugin_name}")
+                router.include_router(inner_router, prefix=f"/{resource.resource_id}/{plugin_name}", tags=["Plugins"])
+                routes_added = True
+        return routes_added
 
     def output_config(self, config: Field) -> Field:
         result = self._get_plugin(config.plugin).output_config(**config.params)
