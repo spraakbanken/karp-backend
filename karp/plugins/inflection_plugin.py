@@ -24,6 +24,15 @@ alphabet = "abcdefghijklmnopqrstuvwxyzåäö"
 consonants = "".join([c for c in alphabet if c not in "aouåeiyäö"])
 
 
+class RuleNotPossible(Exception):
+    """
+    Rules should raise this exception when it was not possible to perform the rule, for example
+    because a IndexError will/have occurred.
+    """
+
+    pass
+
+
 def fv(s):
     # if only one vowel - do not remove it
     if len([c for c in s if c in vowels]) <= 1:
@@ -114,10 +123,13 @@ def always(c):
 
 
 def remove_last(cond, s):
-    if cond(s[-1]):
-        return s[:-1]
-    else:
-        return s
+    try:
+        if cond(s[-1]):
+            return s[:-1]
+        else:
+            return s
+    except IndexError:
+        raise RuleNotPossible() from None
 
 
 def drop_index(i, s):
@@ -210,7 +222,12 @@ class InflectionPlugin(Plugin):
             """
             final_res = []
             for rule in rules:
-                table = self.generate(lemma, rule)
+                try:
+                    table = self.generate(lemma, rule)
+                except RuleNotPossible:
+                    # Exception thrown when executing the rule, counts as not matching
+                    continue
+
                 forms = []
                 for table_elem in table:
                     for row in table_elem["rows"]:
@@ -247,7 +264,8 @@ class InflectionPlugin(Plugin):
 
         @router.get(
             "/generate_inflection_table",
-            summary="Given a lemma and an inflection class, generate an inflection table.",
+            summary="Generate inflection table",
+            description="Given a lemma and an inflection class, generate an inflection table.",
         )
         def generate_inflection_table(
             lemma: str,

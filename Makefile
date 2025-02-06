@@ -94,11 +94,11 @@ integration-tests: clean-pyc
 
 .PHONY: lint
 lint:
-	${INVENV} ruff check ${flags} karp
+	${INVENV} ruff check ${flags} .
 
 .PHONY: lint-fix
 lint-fix:
-	${INVENV} ruff check ${flags} karp --fix
+	${INVENV} ruff check ${flags} . --fix
 
 .PHONY: fmt
 fmt:

@@ -1,7 +1,8 @@
 # Does a search and replace on all text fields in a resource.
 
-from karp.foundation import json
 import sys
+
+from karp.foundation import json
 
 entry_commands.start_transaction()
 

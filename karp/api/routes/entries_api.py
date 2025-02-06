@@ -153,10 +153,7 @@ def add_entry(
 
 # must go before update_entry otherwise it thinks this is an
 # update requests with entry_id="preview"
-@router.post(
-    "/{resource_id}/preview",
-    response_model=schemas.EntryPreviewResponse,
-)
+@router.post("/{resource_id}/preview", response_model=schemas.EntryPreviewResponse, tags=["Editing"])
 def preview_entry(
     resource_id: str,
     data: schemas.EntryPreview,

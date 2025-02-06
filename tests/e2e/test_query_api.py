@@ -125,6 +125,28 @@ def test_query_stats(
     assert entries["distribution"] == {"municipalities": 3, "places": 23}
 
 
+def test_equals(
+    fa_data_client,
+    read_token: AccessToken,
+):
+    """
+    Goal of this test is to do equals on texts, integers and floats. Extend if new types are available.
+    """
+    all_entries = get_json(fa_data_client, "/query/municipalities?size=1000", headers=read_token.as_header())
+
+    for entry in all_entries["hits"]:
+        body = entry["entry"]
+        for key in ["code", "name", "population.density.total"]:
+            val = body
+            for elem in key.split("."):
+                val = val[elem]
+            # search for the found in the same field
+            query = f"/query/municipalities?q=equals|{key}|{val}"
+            cmp_entries = get_json(fa_data_client, query, headers=read_token.as_header())
+            # check that the ID of the outer entry is found in the query
+            assert entry["id"] in [cmp_entry["id"] for cmp_entry in cmp_entries["hits"]]
+
+
 @pytest.mark.parametrize(
     "field,value",
     [

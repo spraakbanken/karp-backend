@@ -22,7 +22,7 @@ def create_access_token(
     scope: Optional[Dict] = None,
     priv_key: Optional[str] = None,
     audience: str = AUTH_JWT_AUDIENCE,
-    expires_in: int = None,
+    expires_in: int | None = None,
 ) -> str:
     priv_key = priv_key or jwt_private_key
     expires_in = expires_in or 60

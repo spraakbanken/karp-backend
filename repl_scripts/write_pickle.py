@@ -1,7 +1,7 @@
 # Exports a resource as pickle and jsonl.
 
-import pickle
 import json
+import pickle
 
 resource_name = sys.argv[1]
 pickle_name = sys.argv[2]

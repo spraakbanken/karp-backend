@@ -24,9 +24,16 @@ from karp.main.app import with_new_session
 from karp.main.errors import ClientErrorCodes
 from karp.plugins.plugin import Plugins
 
-querying_description = """
-## Query DSL
-### Query operators
+searching_description = """
+Searching is the main way to get data from Karp. If a query string is given, an actual search will be done, otherwise all
+entries in the resource will be returned.
+
+- Use [`/query`](#tag/Searching/operation/query_query__resources__get) to be given all the matching entries
+- Use [`/query/stats`](#tag/Searching/operation/query_stats_query_stats__resources__get) to only be given the count of matches in each given resource
+
+### Query language
+
+#### Query operators
 - `contains|<field>|<string>` Find all entries where the field <field> contains <string>. More premissive than equals.
 
 - `endswith|<field>|<string>` Find all entries where the field <field> ends with <string>
@@ -51,7 +58,7 @@ querying_description = """
 
 - `startswith|<field>|<string>` Find all entries where <field>starts with <string>.
 
-### Logical Operators
+#### Logical Operators
 The logical operators can be used both at top-level and lower-levels.
 
 - `not(<expression1>||<expression2>||...)` Find all entries that doesn't match the expression <expression>.
@@ -60,7 +67,7 @@ The logical operators can be used both at top-level and lower-levels.
 
 - `or(<expression1>||<expression2>||...)` Find all entries that matches <expression1> OR <expression2>.
 
-### Sub-queries - searching in collections of objects
+#### Sub-queries - searching in collections of objects
 
 Used for fields with setting `collection: true` and that contain other fields (collection of objects). Boolean queries
 such as: `and(equals|my_field.x|1||equals|my_field.y|3)` will find entries where objects in `my_field` 
@@ -69,10 +76,10 @@ wrap the query with the sub-query notation: `my_field(and(equals|x|1||equals|y|3
 
 - `<field>(expression)` Do `<expression>` on objects inside `<field>`. `<field>` must be a collection. 
 
-### Regular expressions
+#### Regular expressions
 Always matches complete tokens.
 
-###  Examples
+####  Examples
 - `not(missing|pos)`
 - `and(freergxp|str.*ng||regexp|pos|str.*ng)`
 - `and(missing|pos||equals|wf||or|blomma|äpple`
@@ -82,8 +89,8 @@ Always matches complete tokens.
 
 tags_metadata = [
     {
-        "name": "Querying",
-        "description": querying_description,
+        "name": "Searching",
+        "description": searching_description,
     },
     {"name": "Editing"},
     {"name": "Statistics"},
@@ -122,7 +129,16 @@ def create_app() -> FastAPI:
     # add all plugin API routes
     plugins = app_context.injector.get(Plugins)
     resource_queries = with_new_session(app_context.injector).get(ResourceQueries)
-    plugins.register_routes(resource_queries.get_published_resources())
+    plugin_routes_added = plugins.register_routes(resource_queries.get_published_resources())
+
+    if plugin_routes_added:
+        app.openapi_tags.append(
+            {
+                "name": "Plugins",
+                "description": "API calls here are not part of Karp's basic functionality and may be tailored for a specific resource.",
+            }
+        )
+
     app.include_router(api_router)
 
     from karp.main.errors import KarpError

@@ -25,7 +25,7 @@ router.include_router(
 router.include_router(
     query_api.router,
     prefix="/query",
-    tags=["Querying"],
+    tags=["Searching"],
 )
 router.include_router(
     resources_api.router,

@@ -27,6 +27,7 @@ router = APIRouter()
     description="Returns a list of entries matching the given ids",
     name="Get entries by id",
     response_model=schemas.EntriesByIdResponse,
+    openapi_extra={"x-openapi-router-order": 3},
 )
 def get_entries_by_id(
     resource_id: str = Path(..., description="The resource to perform operation on"),
@@ -53,8 +54,10 @@ def get_entries_by_id(
 
 @router.get(
     "/stats/{resources}",
-    name="Hits per resource, no entries in result",
+    summary="Get statistics for search",
+    description="Same as `/query`, but without returning the hits.",
     response_model=schemas.QueryStatsResponse,
+    openapi_extra={"x-openapi-router-order": 2},
 )
 def query_stats(
     resources: str = Path(
@@ -104,9 +107,9 @@ def query_stats(
 
 @router.get(
     "/{resources}",
-    name="Query",
-    responses={200: {"content": {"application/json": {}}}},
+    summary="Search",
     response_model=schemas.QueryResponse,
+    openapi_extra={"x-openapi-router-order": 1},
 )
 def query(
     resources: str = Path(
@@ -117,7 +120,7 @@ def query(
     q: Optional[str] = Query(
         None,
         title="query",
-        description="The query. If missing, all entries in chosen resource(s) will be returned. See [Query DSL](#section/Query-DSL)",
+        description="The query. If missing, all entries in chosen resource(s) will be returned. See [Searching](#section/Searching)",
     ),
     from_: int = Query(0, alias="from", description="Specify which entry should be the first returned."),
     size: int = Query(25, description="Number of entries in page."),
@@ -137,7 +140,7 @@ def query(
     ),
     highlight: bool = Query(
         False,
-        description="Adds which fields the query matched and a small hit context with <em>-tags for the actual hit",
+        description="Adds which fields the query matched and a small hit context with `<em>` wrapped around the match.",
     ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
