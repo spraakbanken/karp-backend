@@ -22,7 +22,7 @@ def make_path(path: Union[str, Path]) -> Path:
         raise AssertionError(f"path of wrong type {type(path)}")
 
 
-def path_str(path: Union[str, Path]) -> str:
+def path_str(path: Union[str, Path], strip_positions=False) -> str:
     """
     Convert a path (e.g. ["SOLemman", "s_nr"]) into a string (e.g. "SOLemman.s_nr").
     """
@@ -30,6 +30,8 @@ def path_str(path: Union[str, Path]) -> str:
     if isinstance(path, str):
         return path
     elif isinstance(path, list):
+        if strip_positions:
+            path = [p for p in path if not isinstance(p, int)]
         return ".".join(map(str, path))
     else:
         raise AssertionError(f"path of wrong type {type(path)}")
