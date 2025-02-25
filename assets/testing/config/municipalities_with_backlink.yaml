@@ -1,0 +1,16 @@
+resource_id: municipalities
+resource_name: Municipalities with backlinks from places
+fields:
+  name: {type: string, required: true}
+  code: {type: integer, required: true}
+  _places:
+    virtual: true
+    plugin: backlink
+    params:
+      resource: places
+      target: municipality
+      field: code # place code
+    field_params:
+      id: code # municipality code
+sort: name
+id: code

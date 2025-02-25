@@ -24,6 +24,7 @@ karp-cli = "karp.cliapp.main:cliapp"
 
 [tool.poetry.plugins."karp.plugin"]
 "link" = "karp.plugins.link_plugin:LinkPlugin"
+"backlink" = "karp.plugins.backlink_plugin:BacklinkPlugin"
 "resource" = "karp.plugins.resource_plugin:ResourcePlugin"
 "copy" = "karp.plugins.copy_plugin:CopyPlugin"
 "inflection" = "karp.plugins.inflection_plugin:InflectionPlugin"

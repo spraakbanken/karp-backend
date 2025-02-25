@@ -13,12 +13,17 @@ lint.select = [
 
 lint.ignore = ["E501","ANN001","ANN101", "ANN102","B008","D203","D213","D104", "F841", "RUF100","RUF005"]
 
+
 line-length = 120
 
 # Avoid trying to fix flake8-bugbear (`B`) violations.
 lint.unfixable = ["B"]
 
 extend-exclude = ["karp/search/domain/query_dsl/karp_query_parser.py", "karp/search/domain/query_dsl/karp_query_model.py"]
+
+[lint.flake8-builtins]
+# This makes it okay to use given names even though it shadows built-in id without totally ignoring the A001 rule
+builtins-ignorelist = ["id"]
 
 # Ignore `E402` (import violations) in all `__init__.py` files
 [lint.per-file-ignores]
