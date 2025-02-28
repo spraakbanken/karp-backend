@@ -15,5 +15,6 @@ fields:
   area: {type: integer}
   density: {type: integer}
   code: {type: integer, required: true}
+  str_collection: {type: string, collection: true}
 sort: name
 id: code

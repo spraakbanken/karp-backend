@@ -23,6 +23,7 @@ class EsQueryBuilder(NodeWalker):
     def __init__(self, resources, mapping_repo):
         super().__init__()
         self.path = [""]
+        self.length_mappings = set()
         self.resources = resources
         self.mapping_repo = mapping_repo
 
@@ -140,15 +141,25 @@ class EsQueryBuilder(NodeWalker):
         return self.wrap_nested(path, query)
 
     def walk__identifier(self, node):
-        field_name = node.ast
-        if "*" in field_name:
-            field = Field(path=[field_name], type="any")
+        field_path: str = node.ast
+        is_length = field_path.endswith(".length")
+        if "*" in field_path:
+            field_obj = Field(path=[field_path], type="any")
+            return field_obj.name, field_obj
         else:
             # Add the current path to field, for example query path(equals|field|val)
             # must yield an es-query in field "path.field"
-            full_field_name = self.path[-1] + field_name
-            field = self.mapping_repo.get_field(self.resources, full_field_name)
-        return field.name, field
+            field_obj = self.mapping_repo.get_field(self.resources, self.path[-1] + field_path.removesuffix(".length"))
+            # if the field query has ".length" appended, and the field is text, we must query raw
+            if is_length:
+                if field_obj.type == "text":
+                    mapping = field_obj.name + ".raw.length"
+                else:
+                    mapping = field_obj.name + ".length"
+                self.length_mappings.add(mapping)
+            else:
+                mapping = field_obj.name
+            return mapping, field_obj
 
     def walk_object(self, node):
         return node
@@ -295,19 +306,22 @@ class EsSearchService:
     def _build_search(self, query, resources: list[str]):
         field_names = set()
         es_query = None
+        builder = None
         if query.q:
             try:
                 if isinstance(query.q, ModelBase):
                     model = query.q
                 else:
                     model = self.parser.parse(query.q)
-                es_query = EsQueryBuilder(resources, self.mapping_repo).walk(model)
+                builder = EsQueryBuilder(resources, self.mapping_repo)
+                es_query = builder.walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
                 raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
         s = es_dsl.Search(using=self.es, index=resources)
-        s = _add_runtime_mappings(s, field_names)
+        if builder:
+            s = _add_runtime_mappings(s, builder.length_mappings)
         s = s.extra(track_total_hits=True)  # get accurate hits numbers
         if es_query is not None:
             s = s.query(es_query)

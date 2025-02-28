@@ -203,4 +203,39 @@ def test_path_parameter(fa_data_client):
     assert [2, 3] in response_data["hits"]
 
 
+def test_length(fa_data_client):
+    found = {"municipality": False, "str_collection": False}
+    for op in ["equals", "lt", "lte", "gt", "gte"]:
+        for length in range(0, 10):
+            for field in (
+                "municipality",
+                "str_collection",
+            ):  # _municipality.name should work when .length on nested is implemented
+                query = f"/query/places?q={op}|{field}.length|{length}"
+                response = fa_data_client.get(query)
+                response_data = response.json()
+                for hit in response_data["hits"]:
+                    found[field] = True
+                    value = hit["entry"]
+                    for field_part in field.split("."):
+                        # length returns 0 when value is missing
+                        if field_part in value:
+                            value = value[field_part]
+                        else:
+                            value = []
+                    actual_length = len(value)
+                    if op == "equals":
+                        assert actual_length == length
+                    if op == "lt":
+                        assert actual_length < length
+                    if op == "lte":
+                        assert actual_length <= length
+                    if op == "gt":
+                        assert actual_length > length
+                    if op == "gte":
+                        assert actual_length >= length
+    # we expect to find at least one result per field
+    all(found.values())
+
+
 # TODO: test that we can search for virtual fields
