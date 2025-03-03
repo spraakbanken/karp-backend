@@ -109,6 +109,7 @@ def repl(
 
     console = code.InteractiveConsole(locals)
     if script is not None:
+        locals["__file__"] = str(script)
         path = script.absolute().parent
         sys.path.append(str(path))
         sys.argv = [str(script)] + args
