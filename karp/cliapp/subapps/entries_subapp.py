@@ -151,6 +151,7 @@ def batch_entries(
             cmd["_id"] = cmd["id"]
             del cmd["id"]
         if command_type == "add_entry":
+            cmd["entry_id"] = cmd.get("entry_id") or unique_id.make_unique_id()
             entry_commands.add_entry(**cmd)
         elif command_type == "update_entry":
             entry_commands.update_entry(**cmd)
