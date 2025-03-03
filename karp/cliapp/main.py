@@ -107,11 +107,12 @@ def repl(
         readline.parse_and_bind("tab: complete")
     readline.set_completer(rlcompleter.Completer(locals).complete)
 
+    sys.path.insert(0, "")
     console = code.InteractiveConsole(locals)
     if script is not None:
         locals["__file__"] = str(script)
         path = script.absolute().parent
-        sys.path.append(str(path))
+        sys.path.insert(0, str(path))
         sys.argv = [str(script)] + args
         with open(script) as file:
             console.runsource(file.read(), filename=str(script), symbol="exec")
