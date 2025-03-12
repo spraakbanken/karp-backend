@@ -213,7 +213,11 @@ class InflectionPlugin(Plugin):
         router = APIRouter()
 
         def find_match(
-            lemma: str, include_wordforms: list[list[str]], exclude_wordforms: list[list[str]], rules: list[dict]
+            lemma: str,
+            include_wordforms: list[list[str]],
+            exclude_wordforms: list[list[str]],
+            rules: list[dict],
+            kind: Optional[str],
         ):
             """
             Generate tables for lemma from each rule
@@ -223,7 +227,7 @@ class InflectionPlugin(Plugin):
             final_res = []
             for rule in rules:
                 try:
-                    table = self.generate(lemma, rule)
+                    table = self.generate(lemma, rule, kind)
                 except RuleNotPossible:
                     # Exception thrown when executing the rule, counts as not matching
                     continue
@@ -272,6 +276,7 @@ class InflectionPlugin(Plugin):
             inflection_class: Optional[str] = None,
             wordforms: Optional[str] = None,
             exclude_wordforms: Optional[str] = None,
+            kind: Optional[str] = None,
             user: auth.User = Depends(deps.get_user_optional),
             resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
             search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
@@ -295,7 +300,7 @@ class InflectionPlugin(Plugin):
             rules = [hit["entry"] for hit in res["hits"]]
 
             # use the given lemma and rules to produce a table
-            return find_match(lemma, parse_wordforms(wordforms), parse_wordforms(exclude_wordforms), rules)
+            return find_match(lemma, parse_wordforms(wordforms), parse_wordforms(exclude_wordforms), rules, kind)
 
         return router
 
@@ -329,12 +334,18 @@ class InflectionPlugin(Plugin):
 
         return config
 
-    def generate(self, lemma, table):
+    def generate(self, lemma, table, kind):
         if "definition" in table.keys():
             definitioner = table["definition"]
         else:
             definitioner = []
         tabellrader = defaultdict(list)
+        particles = []
+        moderverb = lemma
+        if kind in ["partikelverb", "reflexivt_verb"]:
+            splts = lemma.split(" ")
+            moderverb = splts[0]
+            particles = splts[1:]
 
         for defi in definitioner:
             if defi["prescript"] is None:
@@ -342,8 +353,23 @@ class InflectionPlugin(Plugin):
             rownr = defi["row"]
             rules = defi["rules"]
 
-            inflected_form = apply_rules(lemma, rules)
+            inflected_form = apply_rules(moderverb, rules)
+
             heading = defi["heading"]
+            tagg = defi["tagg"]
+            if kind == "reflexivt_verb" or "sig" in particles:
+                if any([tagg.startswith(s) for s in ["AP0", "AF0"]]) or tagg.endswith("P") or tagg == "V0M0A":
+                    # No particip, passiv or imperativ for reflexive verbs
+                    continue
+
+            if particles:
+                if "particip" in heading:
+                    inflected_form = "".join(particles) + inflected_form
+                # elif 'passiv' in defi["postscript"] :
+                #  inflected_form  = ' '.join([inflected_form] + particles) + " (" + ''.join(particles) + inflected_form + ")"
+
+                else:
+                    inflected_form = " ".join([inflected_form] + particles)
 
             if tabellrader[heading] and tabellrader[heading][-1]["linenumber"] == rownr:
                 last_row = tabellrader[heading].pop()
