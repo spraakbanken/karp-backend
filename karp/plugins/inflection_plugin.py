@@ -358,7 +358,7 @@ class InflectionPlugin(Plugin):
             heading = defi["heading"]
             tagg = defi["tagg"]
             if kind == "reflexivt_verb" or "sig" in particles:
-                if any([tagg.startswith(s) for s in ["AP0", "AF0"]]) or tagg.endswith("P") or tagg == "V0M0A":
+                if any(tagg.startswith(s) for s in ["AP0", "AF0"]) or tagg.endswith("P") or tagg == "V0M0A":
                     # No particip, passiv or imperativ for reflexive verbs
                     continue
 
