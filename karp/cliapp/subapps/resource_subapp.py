@@ -37,13 +37,14 @@ def create(
     config_path: Path,
 ):
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
-    if config_path.is_file():
+
+    if config_path.is_dir():
+        typer.Abort("not supported yet")
+
+    elif config_path.exists():
         config = ResourceConfig.from_path(config_path)
         resource_commands.create_resource(config, user="local admin")
         print(f"Created resource '{config.resource_id}'")
-
-    elif config_path.is_dir():
-        typer.Abort("not supported yet")
 
     else:
         typer.echo(f"The config file {config_path} was not found.", err=True)

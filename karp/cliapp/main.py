@@ -1,5 +1,5 @@
 import logging  # noqa: I001
-from typing import Optional
+from typing import Optional, Annotated
 import code
 
 from sqlalchemy.engine import Engine
@@ -56,6 +56,14 @@ def version_callback(value: bool):
 @app.command("repl")
 def repl(
     ctx: typer.Context,
+    interactive: Annotated[
+        bool,
+        typer.Option(
+            "--interactive",
+            "-i",
+            help="enter a REPL after running the script",
+        ),
+    ] = False,
     script: Optional[Path] = typer.Argument(
         None,
         help="optional script file to run instead of entering REPL",
@@ -107,15 +115,17 @@ def repl(
         readline.parse_and_bind("tab: complete")
     readline.set_completer(rlcompleter.Completer(locals).complete)
 
+    sys.path.insert(0, "")
     console = code.InteractiveConsole(locals)
     if script is not None:
         locals["__file__"] = str(script)
         path = script.absolute().parent
-        sys.path.append(str(path))
+        sys.path.insert(0, str(path))
         sys.argv = [str(script)] + args
         with open(script) as file:
             console.runsource(file.read(), filename=str(script), symbol="exec")
-    else:
+
+    if script is None or interactive:
         console.interact(banner, exitmsg)
 
 
