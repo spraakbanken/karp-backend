@@ -232,7 +232,12 @@ def validate_entries(
 
     entries: Iterable[dict] = json_arrays.load_from_file(path, use_stdin_as_default=True)
     if as_import:
-        entries = (import_entry["entry"] for import_entry in entries)
+        # ignore deletes, which do not have an entry field
+        entries = (
+            import_entry["entry"]
+            for import_entry in entries
+            if not ("cmdtype" in import_entry and import_entry["cmdtype"] == "delete_entry")
+        )
     with json_arrays.sink_from_file(err_output, use_stderr_as_default=True) as error_sink, json_arrays.sink_from_file(
         output, use_stdout_as_default=True
     ) as correct_sink:
