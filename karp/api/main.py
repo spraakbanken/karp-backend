@@ -1,6 +1,7 @@
+import io
 import logging
-import time
 import traceback
+from contextlib import redirect_stdout
 from typing import Any
 
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -223,24 +224,31 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def _logging_middleware(request: Request, call_next) -> Response:
-        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
-        start_time = time.time()
+        response: Response | None = None
         try:
             response = await call_next(request)
         finally:
-            process_time = time.time() - start_time
-            logger.info(
-                "processed a request",
-                extra={
-                    "status_code": response.status_code,
-                    "process_time": process_time,
-                },
-            )
+            if not response:
+                response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         return response
 
     if app_context.settings["tracking.matomo.url"]:
+
+        class MatomoAdapterMiddleware(MatomoMiddleware):
+            """
+            Silence printouts from MatomoMiddleware
+            """
+
+            async def startup(self) -> None:
+                with redirect_stdout(io.StringIO()):
+                    await super().startup()
+
+            async def shutdown(self) -> None:
+                with redirect_stdout(io.StringIO()):
+                    await super().shutdown()
+
         app.add_middleware(
-            MatomoMiddleware,
+            MatomoAdapterMiddleware,
             idsite=app_context.settings["tracking.matomo.idsite"],
             matomo_url=app_context.settings["tracking.matomo.url"],
             access_token=app_context.settings["tracking.matomo.token"],

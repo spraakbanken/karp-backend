@@ -258,7 +258,7 @@ class EsSearchService:
         self.parser = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
 
     def query(self, query: QueryRequest):
-        logger.info("query called", extra={"request": query})
+        logger.debug("query called", extra={"request": query})
         return self._search_with_query(query)
 
     def query_stats(self, resources, q):
@@ -270,7 +270,7 @@ class EsSearchService:
         if not queries:
             return []
 
-        logger.info(f"multi_query called for {len(queries)} requests")
+        logger.debug(f"multi_query called for {len(queries)} requests")
 
         # Workaround: MultiSearch.add takes linear time in the size of
         # the query
@@ -286,7 +286,7 @@ class EsSearchService:
         return [self._build_result(query, response) for query, response in zip(queries, responses)]
 
     def _search_with_query(self, query: QueryRequest):
-        logger.info("search_with_query called", extra={"query": query})
+        logger.debug("search_with_query called", extra={"query": query})
         s = self._build_search(query, query.resources)
         response = s.execute()
         return self._build_result(query, response)
