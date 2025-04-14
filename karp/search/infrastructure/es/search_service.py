@@ -9,8 +9,8 @@ from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
 from karp.foundation.json import get_path
-from karp.main.errors import KarpError
-from karp.search.domain import QueryRequest, errors
+from karp.main.errors import KarpError, QueryParserError
+from karp.search.domain import QueryRequest
 from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics, ModelBase
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
@@ -130,15 +130,7 @@ class EsQueryBuilder(NodeWalker):
         if field_path + "." == self.path[-1]:
             return query
 
-        try:
-            is_nested = self.mapping_repo.is_nested(self.resources, field_path)
-        except ValueError:
-            raise errors.IncompleteQuery(
-                str(self._q),
-                f"Resources: {self.resources} have different settings for field: {field_path}",
-            ) from None
-
-        if is_nested:
+        if self.mapping_repo.is_nested(self.resources, field_path):
             query = es_dsl.Q("nested", path=field_path, query=query)
 
         path, *last_elem = field_path.rsplit(".", 1)
@@ -155,7 +147,8 @@ class EsQueryBuilder(NodeWalker):
         else:
             # Add the current path to field, for example query path(equals|field|val)
             # must yield an es-query in field "path.field"
-            field = self.mapping_repo.get_field(self.resources, self.path[-1] + field_name)
+            full_field_name = self.path[-1] + field_name
+            field = self.mapping_repo.get_field(self.resources, full_field_name)
         return field.name, field
 
     def walk_object(self, node):
@@ -303,8 +296,7 @@ class EsSearchService:
                 es_query = EsQueryBuilder(resources, self.mapping_repo, query.q).walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
-                logger.info("Parse error", extra={"err": err})
-                raise errors.IncompleteQuery(failing_query=str(query.q), error_description=str(err)) from err
+                raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
         s = es_dsl.Search(using=self.es, index=resources)
         s = _add_runtime_mappings(s, field_names)

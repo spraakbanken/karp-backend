@@ -8,8 +8,7 @@ import elasticsearch
 from injector import inject
 
 from karp.lex.infrastructure import ResourceRepository
-from karp.main.errors import KarpError
-from karp.search.domain.errors import UnsupportedField
+from karp.main.errors import FieldDoesNotExist, IncompatibleResources, SortError
 
 logger = logging.getLogger("karp")
 
@@ -97,7 +96,7 @@ class EsMappingRepository:
         is_nested = next(g)[0]
         # if there is a next value for interator, not all values are the same
         if next(g, False):
-            raise ValueError(f"is_nested on {field} is inconclusive for resources: {resource_ids}")
+            raise IncompatibleResources(field=field)
         return is_nested
 
     def get_nest_levels(self, resource_id: str, field):
@@ -123,9 +122,16 @@ class EsMappingRepository:
             return internal_fields[field_name[1:]]
 
         # check that field_name is defined with the same type in all given resources
-        fields = [self.fields[resource_id][field_name] for resource_id in resource_ids]
+        # assume that resource_ids exist
+        fields = [self.fields[resource_id].get(field_name) for resource_id in resource_ids]
+        if None in fields:
+            # the field does not exist in at least one of the selected resources
+            raise FieldDoesNotExist(
+                resource_ids=[resource_id for resource_id, field in zip(resource_ids, fields) if not field],
+                field=field_name,
+            )
         if fields.count(fields[0]) != len(fields):
-            raise ValueError(f"Resources: {resource_ids} have different settings for field: {field_name}")
+            raise IncompatibleResources(field=field_name)
         return fields[0]
 
     def _update_field_mapping(self, aliases: List[Tuple[str, str]]):
@@ -240,7 +246,7 @@ class EsMappingRepository:
         g = groupby(map(_translate_unless_none, resources))
         sort_field = next(g)[0]
         if next(g, False):
-            raise KarpError(message="Resources do not share default sort field, set sort field explicitly")
+            raise SortError(resource_ids=resources)
         return sort_field
 
     def translate_sort_fields(
@@ -272,4 +278,4 @@ class EsMappingRepository:
         if sort_value in self.sortable_fields[resource_id]:
             return self.sortable_fields[resource_id][sort_value].name
         else:
-            raise UnsupportedField(f"You can't sort by field '{sort_value}' for resource '{resource_id}'")
+            raise SortError(resource_ids=[resource_id], sort_value=sort_value)

@@ -8,7 +8,11 @@ class ClientErrorCodes(enum.IntEnum):
     ENTRY_NOT_VALID = 32
     VERSION_CONFLICT = 33
     DB_INTEGRITY_ERROR = 61
-    SEARCH_INCOMPLETE_QUERY = 81
+
+    QUERY_PARSE_ERROR = 81
+    SORT_ERROR = 82
+    INCOMPATIBLE_RESOURCES = 83
+    FIELD_DOES_NOT_EXIST = 84
 
 
 class KarpError(Exception):
@@ -17,3 +21,42 @@ class KarpError(Exception):
         self.message = message
         self.code = code or ClientErrorCodes.UNKNOWN_ERROR
         self.http_return_code = http_return_code
+
+
+class UserError(Exception):
+    def __init__(self, message: str | dict, code: enum.IntEnum | None = None):
+        super().__init__()
+        self.message = message
+        self.code = code
+
+
+class QueryParserError(UserError):
+    def __init__(self, failing_query: str, error_description: str) -> None:
+        super().__init__(
+            message={"failing_query": failing_query, "error_description": error_description},
+            code=ClientErrorCodes.QUERY_PARSE_ERROR,
+        )
+
+
+class SortError(UserError):
+    def __init__(self, resource_ids: list[str], sort_value: str | None = None):
+        super().__init__(
+            message=f"You can't sort by field '{sort_value}' for resource '{", ".join(resource_ids)}'",
+            code=ClientErrorCodes.SORT_ERROR,
+        )
+
+
+class FieldDoesNotExist(UserError):
+    def __init__(self, resource_ids: list[str], field: str):
+        super().__init__(
+            message=f'Field "{field}" does not exist in resource(s): "{", ".join(resource_ids)}"',
+            code=ClientErrorCodes.FIELD_DOES_NOT_EXIST,
+        )
+
+
+class IncompatibleResources(UserError):
+    def __init__(self, field: str):
+        super().__init__(
+            message=f'Resources have different settings for field: "{field}"',
+            code=ClientErrorCodes.INCOMPATIBLE_RESOURCES,
+        )

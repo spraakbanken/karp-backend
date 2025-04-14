@@ -22,7 +22,7 @@ from karp.lex.application.resource_queries import ResourceQueries
 from karp.lex.domain import errors as lex_errors
 from karp.main import config, new_session
 from karp.main.app import with_new_session
-from karp.main.errors import ClientErrorCodes
+from karp.main.errors import ClientErrorCodes, UserError
 from karp.plugins.plugin import Plugins
 
 searching_description = """
@@ -151,6 +151,11 @@ def create_app() -> FastAPI:
             status_code=exc.http_return_code,
             content={"error": exc.message, "errorCode": exc.code},
         )
+
+    @app.exception_handler(UserError)
+    async def _user_error_handler(request: Request, exc: UserError):
+        # Don't log exceptions from UserError
+        return JSONResponse(status_code=400, content={"error": exc.message})
 
     @app.exception_handler(foundation_errors.NotFoundError)
     async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):

@@ -6,9 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from karp import auth
 from karp.auth.application import ResourcePermissionQueries
 from karp.lex.domain.errors import ResourceNotFound
-from karp.main import errors as karp_errors
 from karp.search.domain import QueryRequest
-from karp.search.domain.errors import IncompleteQuery
 
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
@@ -84,24 +82,7 @@ def query_stats(
         )
     if any(resource not in published_resources for resource in resource_list):
         raise ResourceNotFound(resource_list)
-    try:
-        response = search_queries.query_stats(resource_list, q)
-    except karp_errors.KarpError as err:
-        logger.exception(
-            "Error occured when calling '/query/stats'",
-            extra={"resources": resources, "q": q, "error_message": err.message},
-        )
-        raise
-    except IncompleteQuery as err:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "errorCode": karp_errors.ClientErrorCodes.SEARCH_INCOMPLETE_QUERY,
-                "message": "Error in query",
-                "failing_query": err.failing_query,
-                "error_description": err.error_description,
-            },
-        ) from None
+    response = search_queries.query_stats(resource_list, q)
     return response
 
 
@@ -173,24 +154,6 @@ def query(
         lexicon_stats=lexicon_stats,
         highlight=highlight,
     )
-    try:
-        logger.debug(f"{search_queries=}")
-        response = search_queries.query(query_request)
-
-    except karp_errors.KarpError as err:
-        logger.exception(
-            "Error occured when calling 'query' with",
-            extra={"resources": resources, "q": q, "error_message": err.message},
-        )
-        raise
-    except IncompleteQuery as err:
-        raise HTTPException(  # noqa: B904
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "errorCode": karp_errors.ClientErrorCodes.SEARCH_INCOMPLETE_QUERY,
-                "message": "Error in query",
-                "failing_query": err.failing_query,
-                "error_description": err.error_description,
-            },
-        )
+    logger.debug(f"{search_queries=}")
+    response = search_queries.query(query_request)
     return response
