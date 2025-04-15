@@ -60,13 +60,13 @@ def get_history_for_entry(
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ) -> EntryDto:
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
     logger.debug("getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id})
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
@@ -134,13 +134,13 @@ def add_entry_with_id(
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
     logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
         entry_commands.add_entry(
@@ -189,13 +189,13 @@ def preview_entry(
     published_resources: List[str] = Depends(deps.get_published_resources),
     responses=crud_responses,
 ):
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     if not resource_permissions.has_permission(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
 
     logger.info(
         "previewing entry",
@@ -225,13 +225,13 @@ def update_entry(
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
 
     logger.info(
         "updating entry",
@@ -299,13 +299,13 @@ def delete_entry(
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     """Delete a entry from a resource."""
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
     if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
     try:
         entry_commands.delete_entry(
             resource_id=resource_id,
