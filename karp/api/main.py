@@ -155,7 +155,7 @@ def create_app() -> FastAPI:
     @app.exception_handler(UserError)
     async def _user_error_handler(request: Request, exc: UserError):
         # Don't log exceptions from UserError
-        return JSONResponse(status_code=400, content={"error": exc.message})
+        return JSONResponse(status_code=400, content=exc.to_dict())
 
     @app.exception_handler(foundation_errors.NotFoundError)
     async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):

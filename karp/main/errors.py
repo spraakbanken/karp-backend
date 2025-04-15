@@ -29,11 +29,24 @@ class UserError(Exception):
         self.message = message
         self.code = code
 
+    def to_dict(self):
+        if isinstance(self.message, dict):
+            r = self.message
+        else:
+            r = {"message": self.message}
+        if self.code:
+            r["errorCode"] = int(self.code)
+        return {"detail": r}
+
 
 class QueryParserError(UserError):
     def __init__(self, failing_query: str, error_description: str) -> None:
         super().__init__(
-            message={"failing_query": failing_query, "error_description": error_description},
+            message={
+                "failing_query": failing_query,
+                "error_description": error_description,
+                "message": "Error in query",
+            },
             code=ClientErrorCodes.QUERY_PARSE_ERROR,
         )
 
