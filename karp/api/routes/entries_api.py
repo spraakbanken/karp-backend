@@ -46,6 +46,11 @@ crud_responses: dict[int | str, dict[str, str]] = {
 # /entries/<resources>/<entry_id> can have 404 and 403 but not 400 with error code
 history_responses: dict[int | str, dict[str, str]] = {key: val for key, val in crud_responses.items() if key != 400}
 
+preview_responses = {
+    403: {"description": "User does not have read access to resource"},
+    404: {"description": "Resource do not exist"},
+}
+
 
 def check_resource(
     published_resources: list[str],
@@ -132,9 +137,8 @@ def add_entry(
     
 - `201 Created` if the entry exists with the same body, at version 1
 - `400` 
-    - if the `entry_id` exists, but the body is different
-    - if the `entry_id`  is not valid
-    - if the entry is not valid according to resource settings
+    - if the `entry_id` exists, but the body is different (error code 61)
+    - if the entry is not valid according to resource settings (errror code 32)
     """,
     responses=crud_responses,
 )
@@ -186,7 +190,7 @@ def add_entry_with_id(
     "/{resource_id}/preview",
     response_model=schemas.EntryPreviewResponse,
     tags=["Editing"],
-    responses=crud_responses,
+    responses=preview_responses,
 )
 def preview_entry(
     resource_id: str,
