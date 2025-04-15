@@ -81,7 +81,7 @@ def add_entry(
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     entry_id = unique_id.make_unique_id()
-    return add_entry(
+    return add_entry_with_id(
         resource_id, entry_id, data, user, resource_permissions, entry_commands, entry_queries, published_resources
     )
 
@@ -103,7 +103,7 @@ def add_entry(
         - if the entry is not valid according to resource settings
     """,
 )
-def add_entry(
+def add_entry_with_id(
     resource_id: str,
     entry_id: UniqueIdStr,
     data: schemas.EntryAdd,
