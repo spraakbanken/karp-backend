@@ -96,12 +96,15 @@ def add_entry(
     call. If the request fails, use the same ID to try again, this ensures that the entry body is not added several 
     times. Answers:
     
-    - 201 created if the entry exists with the same body, at version 1
-    - 400 
-        - if the entry_id exists, but the body is different
-        - if the entry_id  is not valid
-        - if the entry is not valid according to resource settings
+- `201 Created` if the entry exists with the same body, at version 1
+- `400` 
+    - if the `entry_id` exists, but the body is different
+    - if the `entry_id`  is not valid
+    - if the entry is not valid according to resource settings
     """,
+    responses={
+        400: {"description": "Error code 32: Entry not valid, Error code 61: Database integrity error"},
+    },
 )
 def add_entry_with_id(
     resource_id: str,
@@ -143,7 +146,7 @@ def add_entry_with_id(
         return responses.JSONResponse(
             status_code=400,
             content={
-                "error": str(exc),
+                "error": exc.extras["reason"],
                 "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_VALID,
             },
         )
@@ -187,6 +190,9 @@ def preview_entry(
     "/{resource_id}/{entry_id}",
     response_model=schemas.EntryAddResponse,
     tags=["Editing"],
+    responses={
+        400: {"description": "Error code 30: Entry not found, 32: Entry not valid, 33: Version conflict"},
+    },
 )
 def update_entry(
     resource_id: str,
@@ -239,6 +245,14 @@ def update_entry(
     except errors.UpdateConflict as err:
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return responses.JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj)
+    except errors.InvalidEntry as exc:
+        return responses.JSONResponse(
+            status_code=400,
+            content={
+                "error": exc.extras["reason"],
+                "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_VALID,
+            },
+        )
     except Exception:
         logger.exception(
             "error occured",
