@@ -197,6 +197,9 @@ class EntryCommands:
         entries = self._get_entries(resource_id)
         entry = entries.by_id(_id)
 
+        if entry.discarded:
+            return
+
         resource.discard_entry(
             entry=entry,
             version=version,
