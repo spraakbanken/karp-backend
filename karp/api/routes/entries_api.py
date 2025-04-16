@@ -44,7 +44,8 @@ crud_responses: dict[int | str, dict[str, str]] = {
 }
 
 # /entries/<resources>/<entry_id> can have 404 and 403 but not 400 with error code
-history_responses: dict[int | str, dict[str, str]] = {key: val for key, val in crud_responses.items() if key != 400}
+history_responses: dict[int | str, dict[str, str]] = crud_responses.copy()
+history_responses.pop(400)
 
 preview_responses = {
     403: {"description": "User does not have read access to resource"},
