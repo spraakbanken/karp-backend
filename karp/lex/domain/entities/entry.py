@@ -64,9 +64,9 @@ class Entry(Entity):
         timestamp: Optional[float] = None,
     ):
         self._check_not_discarded()
+        self._check_version(version)
         if self._body == body:
             return
-        self._check_version(version)
         self._body = self._update_field(body, user, timestamp)
         self._message = message or "Entry updated"
         self._op = EntryOp.UPDATED

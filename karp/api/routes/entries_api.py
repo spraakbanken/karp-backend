@@ -16,7 +16,7 @@ from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.auth import User
 from karp.auth.application import ResourcePermissionQueries
 from karp.entry_commands import EntryCommands
-from karp.foundation.value_objects import PermissionLevel, UniqueId, unique_id
+from karp.foundation.value_objects import UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex import EntryDto
 from karp.lex.application import EntryQueries
@@ -28,9 +28,55 @@ router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
+# add, update and delete can result in these errors (but not all error codes)
+crud_responses: dict[int | str, dict[str, str]] = {
+    400: {
+        "description": """
+### Error codes
+- 30: Entry not found
+- 32: Entry not valid
+- 33: Version conflict
+- 61: Database integrity error
+"""
+    },
+    403: {"description": "User does not have write access to resource"},
+    404: {"description": "Resource do not exist"},
+}
 
-@router.get("/{resource_id}/{entry_id}", summary="Get entry", tags=["History"])
-@router.get("/{resource_id}/{entry_id}/{version}", summary="Get entry history", tags=["History"])
+# /entries/<resources>/<entry_id> can have 404 and 403 but not 400 with error code
+history_responses: dict[int | str, dict[str, str]] = crud_responses.copy()
+history_responses.pop(400)
+
+preview_responses = {
+    403: {"description": "User does not have read access to resource"},
+    404: {"description": "Resource do not exist"},
+}
+
+
+def check_resource(
+    published_resources: list[str],
+    resource_permissions: ResourcePermissionQueries,
+    resource_id: str,
+    user: auth.User,
+    level: auth.PermissionLevel = auth.PermissionLevel.write,
+):
+    """
+    Helper function for each route in CRUD-part of API. Checks that resource exists and that the user has write
+    permissions, unless level is given.
+    """
+    if resource_id not in published_resources:
+        raise ResourceNotFound(resource_id)
+    if not resource_permissions.has_permission(level, user, [resource_id]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions",
+        )
+
+
+@router.get("/{resource_id}/{entry_id}", summary="Get entry", tags=["History"], responses=history_responses)
+@router.get(
+    "/{resource_id}/{entry_id}/{version}", summary="Get entry history", tags=["History"], responses=history_responses
+)
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
@@ -40,13 +86,7 @@ def get_history_for_entry(
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ) -> EntryDto:
-    if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
+    check_resource(published_resources, resource_permissions, resource_id, user)
     logger.debug("getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id})
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
@@ -59,7 +99,7 @@ def get_history_for_entry(
     Create an ID (ULID) to be used as input for `add/<resource_id>/<entry_id>`. 
     """,
 )
-def create_id():
+def create_id() -> schemas.EntryAddResponse:
     return schemas.EntryAddResponse(newID=unique_id.make_unique_id().str)
 
 
@@ -69,7 +109,7 @@ def create_id():
     response_model=schemas.EntryAddResponse,
     tags=["Editing"],
     deprecated=True,
-    description="Depracated, use `add/<resource_id>/<entry_id>` instead.",
+    description="Deprecated, use `add/<resource_id>/<entry_id>` instead.",
 )
 def add_entry(
     resource_id: str,
@@ -81,7 +121,7 @@ def add_entry(
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     entry_id = unique_id.make_unique_id()
-    return add_entry(
+    return add_entry_with_id(
         resource_id, entry_id, data, user, resource_permissions, entry_commands, entry_queries, published_resources
     )
 
@@ -96,14 +136,14 @@ def add_entry(
     call. If the request fails, use the same ID to try again, this ensures that the entry body is not added several 
     times. Answers:
     
-    - 201 created if the entry exists with the same body, at version 1
-    - 400 
-        - if the entry_id exists, but the body is different
-        - if the entry_id  is not valid
-        - if the entry is not valid according to resource settings
+- `201 Created` if the entry exists with the same body, at version 1
+- `400` 
+    - if the `entry_id` exists, but the body is different (error code 61)
+    - if the entry is not valid according to resource settings (errror code 32)
     """,
+    responses=crud_responses,
 )
-def add_entry(
+def add_entry_with_id(
     resource_id: str,
     entry_id: UniqueIdStr,
     data: schemas.EntryAdd,
@@ -113,13 +153,7 @@ def add_entry(
     entry_queries: EntryQueries = Depends(deps.get_entry_queries),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
-    if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
+    check_resource(published_resources, resource_permissions, resource_id, user)
     logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
         entry_commands.add_entry(
@@ -143,7 +177,7 @@ def add_entry(
         return responses.JSONResponse(
             status_code=400,
             content={
-                "error": str(exc),
+                "error": exc.extras["reason"],
                 "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_VALID,
             },
         )
@@ -153,7 +187,12 @@ def add_entry(
 
 # must go before update_entry otherwise it thinks this is an
 # update requests with entry_id="preview"
-@router.post("/{resource_id}/preview", response_model=schemas.EntryPreviewResponse, tags=["Editing"])
+@router.post(
+    "/{resource_id}/preview",
+    response_model=schemas.EntryPreviewResponse,
+    tags=["Editing"],
+    responses=preview_responses,
+)
 def preview_entry(
     resource_id: str,
     data: schemas.EntryPreview,
@@ -162,13 +201,7 @@ def preview_entry(
     entry_queries: EntryQueries = Depends(inject_from_req(EntryQueries)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
-    if not resource_permissions.has_permission(PermissionLevel.read, user, [resource_id]):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
+    check_resource(published_resources, resource_permissions, resource_id, user, level=auth.PermissionLevel.read)
 
     logger.info(
         "previewing entry",
@@ -187,6 +220,7 @@ def preview_entry(
     "/{resource_id}/{entry_id}",
     response_model=schemas.EntryAddResponse,
     tags=["Editing"],
+    responses=crud_responses,
 )
 def update_entry(
     resource_id: str,
@@ -197,13 +231,7 @@ def update_entry(
     entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
-    if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
+    check_resource(published_resources, resource_permissions, resource_id, user)
 
     logger.info(
         "updating entry",
@@ -239,6 +267,14 @@ def update_entry(
     except errors.UpdateConflict as err:
         err.error_obj["errorCode"] = karp_errors.ClientErrorCodes.VERSION_CONFLICT
         return responses.JSONResponse(status_code=status.HTTP_400_BAD_REQUEST, content=err.error_obj)
+    except errors.InvalidEntry as exc:
+        return responses.JSONResponse(
+            status_code=400,
+            content={
+                "error": exc.extras["reason"],
+                "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_VALID,
+            },
+        )
     except Exception:
         logger.exception(
             "error occured",
@@ -251,6 +287,7 @@ def update_entry(
     "/{resource_id}/{entry_id}/{version}",
     status_code=status.HTTP_204_NO_CONTENT,
     tags=["Editing"],
+    responses=crud_responses,
 )
 def delete_entry(
     resource_id: str,
@@ -262,13 +299,7 @@ def delete_entry(
     published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     """Delete a entry from a resource."""
-    if not resource_permissions.has_permission(PermissionLevel.write, user, [resource_id]):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
-    if resource_id not in published_resources:
-        raise ResourceNotFound(resource_id)
+    check_resource(published_resources, resource_permissions, resource_id, user)
     try:
         entry_commands.delete_entry(
             resource_id=resource_id,

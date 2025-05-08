@@ -22,7 +22,15 @@ from karp.lex.application import ResourceQueries, EntryQueries
 logger = logging.getLogger(__name__)
 
 
-subapp = typer.Typer()
+subapp = typer.Typer(name="entries", help="Commands for modifying/validating entries")
+
+# common options
+resource_option = typer.Argument(help="The ID of an existing resource", show_default=False)
+data_option = typer.Argument(help="A path to a JSONL data file", show_default=False)
+chunked_option = typer.Option(False, help="use to avoid loading the whole file into memory")
+chunk_size_option = typer.Option(1000, help="Number of entries per chunk (only if `--chunked`)")
+user_option = typer.Option(None, help="Username for edit in history", show_default=False)
+message_option = typer.Option(None, help="Message for edit in history", show_default=False)
 
 
 @subapp.command("add")
@@ -30,13 +38,22 @@ subapp = typer.Typer()
 @cli_timer
 def add_entries_to_resource(
     ctx: typer.Context,
-    resource_id: str,
-    data: Path,
-    chunked: bool = False,
-    chunk_size: int = 1000,
-    user: Optional[str] = typer.Option(None),
-    message: Optional[str] = typer.Option(None),
+    resource_id: str = resource_option,
+    data: Path = data_option,
+    chunked: bool = chunked_option,
+    chunk_size: int = chunk_size_option,
+    user: Optional[str] = user_option,
+    message: Optional[str] = message_option,
 ):
+    """
+    Adds new entries from a JSONL file to Karp
+
+    > Example data row
+
+    `{"field1":"val", "field2":["val1","val2"]}`
+
+    - assigns new IDs to each entry
+    """
     entry_commands = inject_from_ctx(EntryCommands, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
@@ -65,13 +82,26 @@ def add_entries_to_resource(
 @cli_timer
 def import_entries_to_resource(
     ctx: typer.Context,
-    resource_id: str,
-    data: Path,
-    chunked: bool = False,
-    chunk_size: int = 1000,
-    user: Optional[str] = typer.Option(None),
-    message: Optional[str] = typer.Option(None),
+    resource_id: str = resource_option,
+    data: Path = data_option,
+    chunked: bool = chunked_option,
+    chunk_size: int = chunk_size_option,
+    user: Optional[str] = user_option,
+    message: Optional[str] = message_option,
 ):
+    """
+    Import entries from a JSONL file with entries and metadata (id, last_modified_by, message etc.)
+
+    > Example data row
+
+    `{"id":"01HBRBSYPXW6H09ETH69RRFFH5","last_modified":1744801582.805294,"resource":"my_resource","entry":{"field1":"val", "field2":["val1","val2"]}}`
+
+    - accepts version, but will not use it, have max one version of each entry in data file
+
+    - will use `id` from entry metadata, but generate a new one if missing
+
+    - will use `user`/`message` from entry metadata, but fall back to user/message given as CLI option
+    """
     entry_commands = inject_from_ctx(EntryCommands, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
@@ -94,22 +124,26 @@ def import_entries_to_resource(
     typer.echo(f"Successfully imported entries to {resource_id}")
 
 
-@subapp.command("update")
-@cli_error_handler
-@cli_timer
-def update_entries(resource_id: str, data: Path):
-    raise NotImplementedError("")
-
-
 @subapp.command("export")
 @cli_error_handler
 @cli_timer
 def export_entries(
     ctx: typer.Context,
-    resource_id: str,
-    output: typer.FileBinaryWrite = typer.Option(..., "--output", "-o"),
-    expand_plugins: bool = True,
+    resource_id: str = resource_option,
+    output: typer.FileBinaryWrite = typer.Option(
+        ..., "--output", "-o", help="Path to the file where the export will be saved", show_default=False
+    ),
+    expand_plugins: bool = typer.Option(True, help="includes/exludes fields populated by plugins"),
 ):
+    """
+    Export all entries in a resource (latest versions)
+
+    - --expand-plugins (default) can make the export incompatible with import
+
+    - used to get the latest versions of entries, will not include any history information
+
+    - useful for dumping data for batch processesing (see `karp-cli entires batch --help`)
+    """
     resource_queries = inject_from_ctx(ResourceQueries, ctx=ctx)
     entry_queries = inject_from_ctx(EntryQueries, ctx=ctx)
     resource = resource_queries.by_resource_id(resource_id)
@@ -130,16 +164,20 @@ def export_entries(
 @cli_timer
 def batch_entries(
     ctx: typer.Context,
-    data: Path,
+    data: Path = data_option,
 ):
-    """Run entry-commands in batch.
+    """Run entry commands in batch.
 
     This command expects a list with dicts with the key `cmd` that is a serialized
-    command that defines `cmdtype`.
+    command that defines `cmdtype`. Available commands: `add_entry`, `update_entry`, `delete_entry`
 
-    > Example:
+    - Edits that lead to conflicts will be blocked
 
-    > `[{"cmd": {"cmdtype": "add_entry","resource_id": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
+    - Use `karp-cli entries validate ...` to check the validity of your data file before running this
+
+    > Example data row:
+
+    `[{"cmd": {"cmdtype": "add_entry","resource_id": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
     """
     logger.info("run entries command in batch")
     entry_commands = inject_from_ctx(EntryCommands, ctx)  # type: ignore[type-abstract]
@@ -182,16 +220,15 @@ class Counter(collections.abc.Generator):
 @cli_timer
 def validate_entries(
     ctx: typer.Context,
-    path: Optional[Path] = typer.Argument(None),
+    path: Optional[Path] = data_option,
     config_path: Optional[Path] = typer.Option(
-        None,
-        "--config",
-        "-c",
-        help="resource config",
+        None, "--config", "-c", help="Path to a resource config (used if `--resource-id` not given)"
     ),
-    resource_id_raw: Optional[str] = typer.Option(None, "--resource_id"),
-    as_import: bool = typer.Option(False, "--as-import"),
-    output: Optional[Path] = typer.Option(None, "--output", "-o", help="file to write to"),
+    resource_id_raw: Optional[str] = typer.Option(
+        None, "--resource_id", help="The ID of an existing resource (used if `--config` not given)", show_default=False
+    ),
+    as_import: bool = typer.Option(False, "--as-import", help="Set this to validate import format, not add format"),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="If set, writes to file, else stdout"),
 ):
     """Validate entries without adding or importing them.
 
@@ -261,7 +298,3 @@ def validate_entries(
 
     if error_code:
         raise typer.Exit(error_code)
-
-
-def init_app(app):
-    app.add_typer(subapp, name="entries")

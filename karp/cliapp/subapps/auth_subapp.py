@@ -7,10 +7,10 @@ from karp.auth.infrastructure import APIKeyService
 from karp.cliapp.typer_injector import inject_from_ctx
 from karp.foundation.value_objects import PermissionLevel
 
-subapp = typer.Typer()
+subapp = typer.Typer(help="Show, add or remove API keys", deprecated=True)
 
 
-@subapp.command()
+@subapp.command(help="Create a new API key")
 def create_api_key(
     ctx: typer.Context,
     resources: List[str],
@@ -22,13 +22,13 @@ def create_api_key(
     typer.echo(key)
 
 
-@subapp.command()
+@subapp.command(help="Deletes an API key")
 def delete_api_key(ctx: typer.Context, api_key: str):
     api_key_service = inject_from_ctx(APIKeyService, ctx)
     api_key_service.delete_api_key(api_key)
 
 
-@subapp.command()
+@subapp.command(help="Lists the current an API keys")
 def list_api_keys(
     ctx: typer.Context,
 ):
@@ -40,7 +40,3 @@ def list_api_keys(
             headers=["API key", "Username", "Permission object"],
         )
     )
-
-
-def init_app(app: typer.Typer) -> None:
-    app.add_typer(subapp, name="auth")

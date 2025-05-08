@@ -71,6 +71,18 @@ def _create_db_engine(db_url: URL) -> Engine:
     return create_engine(db_url, echo=engine_echo, future=True, **kwargs)
 
 
+class NoStackTraceHandler(logging.StreamHandler):
+    """
+    Use this if a library does logger.exception and we don't want to see the stack trace
+    """
+
+    def emit(self, record):
+        if record.exc_info:
+            record.msg = record.getMessage() + f" ({record.exc_info[0]!s})"
+            record.exc_info = None
+        super().emit(record)
+
+
 def configure_logging() -> None:
     dictConfig(
         {
@@ -93,7 +105,13 @@ def configure_logging() -> None:
                     "class": "logging.StreamHandler",
                     "filters": ["correlation_id"],
                     "formatter": "console",
-                    "stream": "ext://sys.stderr",
+                    "stream": "ext://sys.stdout",
+                },
+                # This handler does not print stacktraces
+                "nostack": {
+                    "class": "karp.main.app.NoStackTraceHandler",
+                    "filters": ["correlation_id"],
+                    "formatter": "console",
                 },
             },
             "loggers": {
@@ -105,7 +123,7 @@ def configure_logging() -> None:
                 # third-party package loggers
                 "sqlalchemy": {"level": "WARNING", "handlers": ["console"]},
                 "uvicorn": {"level": "INFO", "handlers": ["console"]},
-                # "elasticsearch": {"level": "DEBUG", "handlers": ["console"]},
+                "asgi_matomo": {"level": "WARNING", "handlers": ["nostack"]},
             },
         }
     )

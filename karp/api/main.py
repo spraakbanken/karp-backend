@@ -1,6 +1,7 @@
+import io
 import logging
-import time
 import traceback
+from contextlib import redirect_stdout
 from typing import Any
 
 from asgi_correlation_id import CorrelationIdMiddleware
@@ -21,7 +22,7 @@ from karp.lex.application.resource_queries import ResourceQueries
 from karp.lex.domain import errors as lex_errors
 from karp.main import config, new_session
 from karp.main.app import with_new_session
-from karp.main.errors import ClientErrorCodes
+from karp.main.errors import ClientErrorCodes, UserError
 from karp.plugins.plugin import Plugins
 
 searching_description = """
@@ -108,8 +109,8 @@ def create_app() -> FastAPI:
         title=f"{config.PROJECT_NAME} API",
         description="""Karp is Språkbanken's tool for editing structural data.\n\nThe
         main goal of Karp is to be great for working with **lexical** data, but will work with 
-        other data as well.\n\n[Read more here](https://spraakbanken.gu.se/en/tools/karp)""",
-        redoc_url="/",
+        other data as well.\n\n[Read more here](https://github.com/spraakbanken/karp-backend/blob/release/docs/index.md)""",
+        redoc_url=None,
         docs_url=None,
         version=config.VERSION,
         openapi_tags=tags_metadata,
@@ -150,6 +151,11 @@ def create_app() -> FastAPI:
             status_code=exc.http_return_code,
             content={"error": exc.message, "errorCode": exc.code},
         )
+
+    @app.exception_handler(UserError)
+    async def _user_error_handler(request: Request, exc: UserError):
+        # Don't log exceptions from UserError
+        return JSONResponse(status_code=400, content=exc.to_dict())
 
     @app.exception_handler(foundation_errors.NotFoundError)
     async def _entity_not_found(request: Request, exc: foundation_errors.NotFoundError):
@@ -223,24 +229,31 @@ def create_app() -> FastAPI:
 
     @app.middleware("http")
     async def _logging_middleware(request: Request, call_next) -> Response:
-        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
-        start_time = time.time()
+        response: Response | None = None
         try:
             response = await call_next(request)
         finally:
-            process_time = time.time() - start_time
-            logger.info(
-                "processed a request",
-                extra={
-                    "status_code": response.status_code,
-                    "process_time": process_time,
-                },
-            )
+            if not response:
+                response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
         return response
 
     if app_context.settings["tracking.matomo.url"]:
+
+        class MatomoAdapterMiddleware(MatomoMiddleware):
+            """
+            Silence printouts from MatomoMiddleware
+            """
+
+            async def startup(self) -> None:
+                with redirect_stdout(io.StringIO()):
+                    await super().startup()
+
+            async def shutdown(self) -> None:
+                with redirect_stdout(io.StringIO()):
+                    await super().shutdown()
+
         app.add_middleware(
-            MatomoMiddleware,
+            MatomoAdapterMiddleware,
             idsite=app_context.settings["tracking.matomo.idsite"],
             matomo_url=app_context.settings["tracking.matomo.url"],
             access_token=app_context.settings["tracking.matomo.token"],

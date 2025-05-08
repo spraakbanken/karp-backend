@@ -47,7 +47,7 @@ class ResourceConfig(BaseModel):
         return cls.model_validate(config_dict)
 
     @classmethod
-    def from_path(cls, path):
+    def from_path(cls, path) -> "ResourceConfig":
         with open(path) as fp:
             return cls.from_str(fp.read())
 

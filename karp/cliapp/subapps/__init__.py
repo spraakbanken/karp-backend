@@ -1,17 +1,13 @@
 import typer
 
-from karp.cliapp.subapps import (
-    auth_subapp,
-    database_subapp,
-    entries_subapp,
-    query_subapp,
-    resource_subapp,
-)
+from karp.cliapp.subapps.auth_subapp import subapp as auth_subapp
+from karp.cliapp.subapps.database_subapp import subapp as database_subapp
+from karp.cliapp.subapps.entries_subapp import subapp as entries_subapp
+from karp.cliapp.subapps.resource_subapp import subapp as resource_subapp
 
 
 def add_subapps(app: typer.Typer) -> None:
-    auth_subapp.init_app(app)
-    database_subapp.init_app(app)
-    entries_subapp.init_app(app)
-    query_subapp.init_app(app)
-    resource_subapp.init_app(app)
+    app.add_typer(auth_subapp)
+    app.add_typer(database_subapp)
+    app.add_typer(entries_subapp)
+    app.add_typer(resource_subapp)
