@@ -2,7 +2,9 @@ import logging  # noqa: I001
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
+
 import typer
+from typer.core import TyperGroup
 from tabulate import tabulate
 
 from karp.cliapp.typer_injector import inject_from_ctx
@@ -15,7 +17,14 @@ from karp.search_commands import SearchCommands
 logger = logging.getLogger("karp")
 
 
-subapp = typer.Typer()
+class OrderCommands(TyperGroup):
+    """This class makes the help page show the commands in the order they are defined"""
+
+    def list_commands(self, *_):
+        return list(self.commands)
+
+
+subapp = typer.Typer(cls=OrderCommands, name="resource", help="Commands for creating, updating or removing resources")
 
 
 T = TypeVar("T")
@@ -29,17 +38,28 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
         return choices[int(number)]
 
 
+config_option = typer.Argument(help="A path to a resource config file", show_default=False)
+resource_option = typer.Argument(help="The ID of an existing resource", show_default=False)
+version_option = typer.Argument(None, help="The version to do this operation on")
+remove_old_index_option = typer.Option(False, help="If set, will remove the old index when the new one is completed.")
+
+
 @subapp.command()
 @cli_error_handler
 @cli_timer
 def create(
     ctx: typer.Context,
-    config_path: Path,
+    config_path: Path = config_option,
 ):
+    """
+    Create a new resource from a configuration file
+
+    - create does not publish a resource
+    """
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
 
     if config_path.is_dir():
-        typer.Abort("not supported yet")
+        typer.Abort("Config needs to be a JSON or YAML file")
 
     elif config_path.exists():
         config = ResourceConfig.from_path(config_path)
@@ -57,13 +77,18 @@ def create(
 @cli_timer
 def update(
     ctx: typer.Context,
-    config: Path,
+    config: Path = config_option,
     version: Optional[int] = typer.Option(None, "-v", "--version"),
     message: Optional[str] = typer.Option(None, "-m", "--message"),
     user: Optional[str] = typer.Option(None, "-u", "--user"),
 ):
-    """Update resource config."""
+    """Update an existing resource
 
+    - this changes the configuration and will affect future edits, but it does not check that the current
+    entries in resource are valid with the new configration.
+
+    - for some changes, `karp-cli resource reindex <resource_id>` is needed
+    """
     config = ResourceConfig.from_path(config)
     resource_id = config.resource_id
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
@@ -87,7 +112,12 @@ def update(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def publish(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
+def publish(ctx: typer.Context, resource_id: str = resource_option, version: Optional[int] = version_option):
+    """
+    Publish a resource
+
+    Makes the resource available from search and edit.
+    """
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     resource_commands.publish_resource(
         resource_id=resource_id,
@@ -101,7 +131,20 @@ def publish(ctx: typer.Context, resource_id: str, version: Optional[int] = None)
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex(ctx: typer.Context, resource_id: str, remove_old_index: Optional[bool] = False):
+def reindex(
+    ctx: typer.Context,
+    resource_id: str = resource_option,
+    remove_old_index: Optional[bool] = remove_old_index_option,
+):
+    """
+    Recreate the search index for a resource
+
+    - Needed for some changes in the configuration and if the data is outdated (edits made when Elasticsearch was down)
+
+    - Deletes the old index after reindexing.
+
+    - Edits made during reindex may be lost (from index, not Karp)
+    """
     search_commands = inject_from_ctx(SearchCommands, ctx)
     search_commands.reindex_resource(resource_id=resource_id, remove_old_index=remove_old_index)
     typer.echo(f"Successfully reindexed all data in {resource_id}")
@@ -110,7 +153,10 @@ def reindex(ctx: typer.Context, resource_id: str, remove_old_index: Optional[boo
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = False):
+def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = remove_old_index_option):
+    """
+    Reindexes all resources in Karp, see `karp-cli resource reindex -help` for more details
+    """
     search_commands = inject_from_ctx(SearchCommands, ctx)
     search_commands.reindex_all_resources(remove_old_index=remove_old_index)
     typer.echo("Successfully reindexed all resrouces")
@@ -121,8 +167,13 @@ def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = False):
 @cli_timer
 def list_resources(
     ctx: typer.Context,
-    show_published: Optional[bool] = typer.Option(True, "--show-published/--show-all"),
+    show_published: Optional[bool] = typer.Option(
+        True, "--show-published/--show-all", help="Either show only published or all resources"
+    ),
 ):
+    """
+    Lists (latest version of) resources, by default only published ones
+    """
     resources = inject_from_ctx(ResourceQueries, ctx)
     if show_published:
         result = resources.get_published_resources()
@@ -139,7 +190,12 @@ def list_resources(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def show(ctx: typer.Context, resource_id: str, version: Optional[int] = None):
+def show(ctx: typer.Context, resource_id: str = resource_option, version: Optional[int] = version_option):
+    """
+    Show metadata and config for a resource, supports showing old versions
+
+    Useful for checking what the config is and how it has changed.
+    """
     resources = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
     resource = resources.by_resource_id(resource_id, version=version)
     typer.echo(tabulate(((key, value) for key, value in resource.dict().items() if key != "config")))
@@ -154,8 +210,14 @@ def unpublish(
     ctx: typer.Context,
     resource_id: str,
     version: Optional[int] = None,
-    keep_index: Optional[bool] = False,
+    keep_index: bool = False,
 ):
+    """
+    Unpublish resource
+
+    Makes the resources unavailable for search and editing. By default the search index
+    is removed.
+    """
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     unpublished = resource_commands.unpublish_resource(
         resource_id=resource_id, user="local admin", version=version, keep_index=keep_index
@@ -171,7 +233,14 @@ def unpublish(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def delete(ctx: typer.Context, resource_id: str, force: Optional[bool] = False):
+def delete(
+    ctx: typer.Context,
+    resource_id: str = resource_option,
+    force: Optional[bool] = typer.Option(False, help="To prompt the user before removal or not"),
+):
+    """
+    Completely delete resource, nothing will be saved
+    """
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     if not force:
         force = typer.confirm(
@@ -185,7 +254,3 @@ def delete(ctx: typer.Context, resource_id: str, force: Optional[bool] = False):
             typer.echo("Resource already deleted")
     else:
         typer.echo("Resource not deleted")
-
-
-def init_app(app):
-    app.add_typer(subapp, name="resource")

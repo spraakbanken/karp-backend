@@ -109,8 +109,8 @@ def create_app() -> FastAPI:
         title=f"{config.PROJECT_NAME} API",
         description="""Karp is Språkbanken's tool for editing structural data.\n\nThe
         main goal of Karp is to be great for working with **lexical** data, but will work with 
-        other data as well.\n\n[Read more here](https://spraakbanken.gu.se/en/tools/karp)""",
-        redoc_url="/",
+        other data as well.\n\n[Read more here](https://github.com/spraakbanken/karp-backend/blob/release/docs/index.md)""",
+        redoc_url=None,
         docs_url=None,
         version=config.VERSION,
         openapi_tags=tags_metadata,
