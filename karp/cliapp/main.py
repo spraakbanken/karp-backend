@@ -8,7 +8,7 @@ import typer
 
 from karp.main import bootstrap_app, with_new_session, config
 from karp.cliapp import subapps
-from .typer_injector import inject_from_ctx
+from karp.cliapp.typer_injector import inject_from_ctx
 from karp.lex.infrastructure import ResourceRepository
 from karp.lex.application import ResourceQueries, EntryQueries, SearchQueries
 from karp.entry_commands import EntryCommands
