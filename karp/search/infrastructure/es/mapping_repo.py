@@ -266,11 +266,23 @@ class EsMappingRepository:
             sort_order = None
             if "|" in sort_value:
                 sort_value, sort_order = sort_value.split("|", 1)
+
+            field_context = {}
+            if "." in sort_value:
+                # check if parent is nested (it could be nesting on another level, but we don't support it yet)
+                path, _ = sort_value.rsplit(".", 1)
+                if self.is_nested(resources, path):
+                    field_context["nested"] = {"path": path}
+
+            if sort_order:
+                field_context["order"] = sort_order
+
             for resource_id in resources:
-                if sort_order:
-                    field = self._translate_sort_field(resource_id, sort_value)
-                    translated_sort_fields.append({field: {"order": sort_order}})
-                translated_sort_fields.append(self._translate_sort_field(resource_id, sort_value))
+                field = self._translate_sort_field(resource_id, sort_value)
+                if field_context:
+                    translated_sort_fields.append({field: field_context})
+                else:
+                    translated_sort_fields.append(field)
 
         return translated_sort_fields
 
