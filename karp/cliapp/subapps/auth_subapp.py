@@ -7,7 +7,7 @@ from karp.auth.infrastructure import APIKeyService
 from karp.cliapp.typer_injector import inject_from_ctx
 from karp.foundation.value_objects import PermissionLevel
 
-subapp = typer.Typer(help="Show, add or remove API keys", deprecated=True)
+subapp = typer.Typer(name="auth", help="Show, add or remove API keys", deprecated=True)
 
 
 @subapp.command(help="Create a new API key")
