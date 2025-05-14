@@ -1,20 +1,10 @@
-import logging  # noqa: I001
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
-
 import typer
 from typer.core import TyperGroup
-from tabulate import tabulate
 
-from karp.cliapp.typer_injector import inject_from_ctx
 from karp.cliapp.utility import cli_error_handler, cli_timer
-from karp.lex.application import ResourceQueries
-from karp.lex.domain.value_objects import ResourceConfig
-from karp.resource_commands import ResourceCommands
-from karp.search_commands import SearchCommands
-
-logger = logging.getLogger("karp")
 
 
 class OrderCommands(TyperGroup):
@@ -56,6 +46,10 @@ def create(
 
     - create does not publish a resource
     """
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.lex.domain.value_objects import ResourceConfig
+    from karp.resource_commands import ResourceCommands
+
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
 
     if config_path.is_dir():
@@ -89,6 +83,11 @@ def update(
 
     - for some changes, `karp-cli resource reindex <resource_id>` is needed
     """
+
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.lex.domain.value_objects import ResourceConfig
+    from karp.resource_commands import ResourceCommands
+
     config = ResourceConfig.from_path(config)
     resource_id = config.resource_id
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
@@ -118,6 +117,9 @@ def publish(ctx: typer.Context, resource_id: str = resource_option, version: Opt
 
     Makes the resource available from search and edit.
     """
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.resource_commands import ResourceCommands
+
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     resource_commands.publish_resource(
         resource_id=resource_id,
@@ -145,6 +147,9 @@ def reindex(
 
     - Edits made during reindex may be lost (from index, not Karp)
     """
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.search_commands import SearchCommands
+
     search_commands = inject_from_ctx(SearchCommands, ctx)
     search_commands.reindex_resource(resource_id=resource_id, remove_old_index=remove_old_index)
     typer.echo(f"Successfully reindexed all data in {resource_id}")
@@ -157,6 +162,9 @@ def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = remove_ol
     """
     Reindexes all resources in Karp, see `karp-cli resource reindex -help` for more details
     """
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.search_commands import SearchCommands
+
     search_commands = inject_from_ctx(SearchCommands, ctx)
     search_commands.reindex_all_resources(remove_old_index=remove_old_index)
     typer.echo("Successfully reindexed all resrouces")
@@ -174,6 +182,11 @@ def list_resources(
     """
     Lists (latest version of) resources, by default only published ones
     """
+    from tabulate import tabulate
+
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.lex.application import ResourceQueries
+
     resources = inject_from_ctx(ResourceQueries, ctx)
     if show_published:
         result = resources.get_published_resources()
@@ -196,6 +209,11 @@ def show(ctx: typer.Context, resource_id: str = resource_option, version: Option
 
     Useful for checking what the config is and how it has changed.
     """
+    from tabulate import tabulate
+
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.lex.application import ResourceQueries
+
     resources = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
     resource = resources.by_resource_id(resource_id, version=version)
     typer.echo(tabulate(((key, value) for key, value in resource.dict().items() if key != "config")))
@@ -218,6 +236,9 @@ def unpublish(
     Makes the resources unavailable for search and editing. By default the search index
     is removed.
     """
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.resource_commands import ResourceCommands
+
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     unpublished = resource_commands.unpublish_resource(
         resource_id=resource_id, user="local admin", version=version, keep_index=keep_index
@@ -241,6 +262,9 @@ def delete(
     """
     Completely delete resource, nothing will be saved
     """
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.resource_commands import ResourceCommands
+
     resource_commands = inject_from_ctx(ResourceCommands, ctx)
     if not force:
         force = typer.confirm(

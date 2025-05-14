@@ -9,7 +9,6 @@ from functools import wraps
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
 import methodtools
-from fastapi import APIRouter
 from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
 
@@ -49,7 +48,7 @@ class Plugin(ABC):
             raise AssertionError("generate_batch returned wrong number of results")
         return result[0]
 
-    def create_router(self, resource_id: str, params: dict[str, str]) -> APIRouter:
+    def create_router(self, resource_id: str, params: dict[str, str]):
         raise NotImplementedError()
 
 

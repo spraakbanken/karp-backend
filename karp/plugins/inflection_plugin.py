@@ -2,8 +2,6 @@ import re
 from collections import defaultdict
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
-
 from karp import auth
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
@@ -209,7 +207,10 @@ def apply_rules(s, rules):
 
 
 class InflectionPlugin(Plugin):
-    def create_router(self, resource_id: str, params: dict[str, str]) -> APIRouter:
+    def create_router(self, resource_id: str, params: dict[str, str]):
+        # imported here to avoid importing FastAPI in the CLI import tree; this shaves off 200 ms from the cold start of the CLI
+        from fastapi import APIRouter, Depends, HTTPException, status
+
         router = APIRouter()
 
         def find_match(

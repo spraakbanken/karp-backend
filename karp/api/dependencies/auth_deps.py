@@ -9,10 +9,10 @@ from fastapi.security import utils as security_utils
 from karp import auth
 from karp.auth.application.resource_permission_queries import ResourcePermissionQueries
 from karp.auth.domain.errors import AuthError
+from karp.auth.infrastructure.api_key_service import APIKeyService
 from karp.auth.infrastructure.jwt_auth_service import JWTAuthService
 from karp.lex.infrastructure import ResourceRepository
 
-from ...auth.infrastructure import APIKeyService
 from . import lex_deps
 from .fastapi_injector import inject_from_req
 

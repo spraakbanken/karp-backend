@@ -4,15 +4,15 @@ import time
 
 import typer
 
-from karp.lex.domain.errors import LexDomainError
-from karp.main.errors import KarpError
-
-logger = logging.getLogger("karp")
-
 
 def cli_error_handler(func):
     @functools.wraps(func)
     def func_wrapper(*args, **kwargs):
+        from karp.lex.domain.errors import LexDomainError
+        from karp.main.errors import KarpError
+
+        logger = logging.getLogger("karp")
+
         try:
             return func(*args, **kwargs)
         except KarpError as e:

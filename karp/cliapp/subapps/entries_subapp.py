@@ -1,23 +1,10 @@
-import collections.abc  # noqa: I001
 import logging
 from pathlib import Path
 from typing import Iterable, Optional
 
-
-import json_arrays
-import json_arrays.jsonlib
-from sb_json_tools import jt_val
 import typer
 
-from tqdm import tqdm
-
-from karp.entry_commands import EntryCommands
-from karp.foundation.value_objects import unique_id
-from karp.lex.domain.value_objects import entry_schema, ResourceConfig
-
 from karp.cliapp.utility import cli_error_handler, cli_timer
-from karp.cliapp.typer_injector import inject_from_ctx
-from karp.lex.application import ResourceQueries, EntryQueries
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +41,13 @@ def add_entries_to_resource(
 
     - assigns new IDs to each entry
     """
+    import json_arrays
+    from tqdm import tqdm
+
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.entry_commands import EntryCommands
+    from karp.foundation.value_objects import unique_id
+
     entry_commands = inject_from_ctx(EntryCommands, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
@@ -102,6 +96,12 @@ def import_entries_to_resource(
 
     - will use `user`/`message` from entry metadata, but fall back to user/message given as CLI option
     """
+    import json_arrays
+    from tqdm import tqdm
+
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.entry_commands import EntryCommands
+
     entry_commands = inject_from_ctx(EntryCommands, ctx)
     user = user or "local admin"
     message = message or "imported through cli"
@@ -144,9 +144,12 @@ def export_entries(
 
     - useful for dumping data for batch processesing (see `karp-cli entires batch --help`)
     """
-    resource_queries = inject_from_ctx(ResourceQueries, ctx=ctx)
+    import json_arrays
+
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.lex.application import EntryQueries
+
     entry_queries = inject_from_ctx(EntryQueries, ctx=ctx)
-    resource = resource_queries.by_resource_id(resource_id)
     entries = entry_queries.all_entries(resource_id=resource_id, expand_plugins=expand_plugins)
     logger.debug(
         "exporting entries",
@@ -179,6 +182,12 @@ def batch_entries(
 
     `[{"cmd": {"cmdtype": "add_entry","resource_id": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
     """
+    import json_arrays
+
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.entry_commands import EntryCommands
+    from karp.foundation.value_objects import unique_id
+
     logger.info("run entries command in batch")
     entry_commands = inject_from_ctx(EntryCommands, ctx)  # type: ignore[type-abstract]
     entry_commands.start_transaction()
@@ -196,23 +205,6 @@ def batch_entries(
         elif command_type == "delete_entry":
             entry_commands.delete_entry(**cmd)
     entry_commands.commit()
-
-
-class Counter(collections.abc.Generator):
-    def __init__(self, sink) -> None:
-        self._counter: int = 0
-        self._sink = sink
-
-    @property
-    def counter(self) -> int:
-        return self._counter
-
-    def send(self, value):
-        self._counter += 1
-        self._sink.send(value)
-
-    def throw(self, typ=None, val=None, tb=None):
-        raise StopIteration
 
 
 @subapp.command("validate")
@@ -238,6 +230,33 @@ def validate_entries(
     By default, this command supposes that the entries are in raw mode (like `add` works),
     to use the format the `import` uses please add the `--as-import` flag.
     """
+    import collections.abc
+
+    import json_arrays
+    import json_arrays.jsonlib
+    from sb_json_tools import jt_val
+    from tqdm import tqdm
+
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.lex.application import ResourceQueries
+    from karp.lex.domain.value_objects import ResourceConfig, entry_schema
+
+    class Counter(collections.abc.Generator):
+        def __init__(self, sink) -> None:
+            self._counter: int = 0
+            self._sink = sink
+
+        @property
+        def counter(self) -> int:
+            return self._counter
+
+        def send(self, value):
+            self._counter += 1
+            self._sink.send(value)
+
+        def throw(self, typ=None, val=None, tb=None):
+            raise StopIteration
+
     typer.echo(f"reading from {path or 'stdin'} ...", err=True)
 
     if not output and path:
