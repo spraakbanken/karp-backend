@@ -1,7 +1,5 @@
 import typer
 
-from karp.main.migrations.use_cases import run_migrations_down, run_migrations_up
-
 subapp = typer.Typer(name="db", help="Initialize or upgrade database using `karp-cli db up`")
 
 
@@ -15,6 +13,8 @@ def migrations_up(
     It is generally safe to run this command any time, if the database is already
     upd to date, the command will do nothing.
     """
+    from karp.main.migrations.use_cases import run_migrations_up
+
     run_migrations_up()
 
 
@@ -23,4 +23,6 @@ def migrations_down(
     ctx: typer.Context,
 ):
     "Downgrades the database to a previous version. WARNING: untested"
+    from karp.main.migrations.use_cases import run_migrations_down
+
     run_migrations_down()

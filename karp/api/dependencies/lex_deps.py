@@ -7,7 +7,7 @@ from karp.api.dependencies.db_deps import (
     get_session,
 )
 from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.auth.infrastructure import APIKeyService
+from karp.auth.infrastructure.api_key_service import APIKeyService
 from karp.lex.application import (
     EntryQueries,
     ResourceQueries,

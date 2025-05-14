@@ -1,40 +1,25 @@
-import logging  # noqa: I001
-from typing import Optional, Annotated
-import code
+import sys
+from pathlib import Path
+from typing import Annotated, Optional
 
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
 import typer
 
-from karp.main import bootstrap_app, with_new_session, config
 from karp.cliapp import subapps
-from karp.cliapp.typer_injector import inject_from_ctx
-from karp.lex.infrastructure import ResourceRepository
-from karp.lex.application import ResourceQueries, EntryQueries, SearchQueries
-from karp.entry_commands import EntryCommands
-from karp.resource_commands import ResourceCommands
-from karp.search_commands import SearchCommands
-from karp.search.infrastructure import EsSearchService
-from karp.auth.infrastructure import APIKeyService
-from karp.search.domain import QueryRequest
-import readline
-import rlcompleter
-from pathlib import Path
-import sys
-
-logger = logging.getLogger(__name__)
 
 app = typer.Typer(help="Karp CLI", rich_markup_mode="markdown", pretty_exceptions_enable=False)
 
 
 def create_app():
-    app_context = bootstrap_app()
-
     @app.callback()
     def set_app_context(
         ctx: typer.Context,
         version: Optional[bool] = typer.Option(None, "--version", callback=version_callback, is_eager=True),
     ):
+        if "--help" in sys.argv:
+            return
+        from karp.main import bootstrap_app, with_new_session
+
+        app_context = bootstrap_app()
         if ctx.invoked_subcommand is None:
             ctx.obj = {}
         else:
@@ -49,6 +34,8 @@ def create_app():
 
 def version_callback(value: bool):
     if value:
+        from karp.main import config
+
         typer.echo(f"{config.PROJECT_NAME} CLI {config.VERSION}")
         raise typer.Exit()
 
@@ -71,6 +58,22 @@ def repl(
     args: list[str] = typer.Argument(None, help="list of args to pass to script file"),
 ):
     """Start a Python REPL with the Karp API available."""
+    import code
+    import readline
+    import rlcompleter
+
+    from sqlalchemy.engine import Engine
+    from sqlalchemy.orm import Session
+
+    from karp.auth.infrastructure.api_key_service import APIKeyService
+    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp.entry_commands import EntryCommands
+    from karp.lex.application import EntryQueries, ResourceQueries, SearchQueries
+    from karp.lex.infrastructure import ResourceRepository
+    from karp.resource_commands import ResourceCommands
+    from karp.search.domain import QueryRequest
+    from karp.search.infrastructure import EsSearchService
+    from karp.search_commands import SearchCommands
 
     if not args:
         args = []
