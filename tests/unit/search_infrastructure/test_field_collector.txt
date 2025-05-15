@@ -1,0 +1,18 @@
+>>> from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
+>>> from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
+>>> from karp.search.infrastructure.es.search_service import EsFieldNameCollector
+>>> from tests.unit.search_infrastructure.test_es6_query_parser import es_query_builder
+>>> parser2 = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
+>>> field_name_collector = EsFieldNameCollector()
+
+>>> def parse(q): return es_query_builder().walk(parser2.parse(q))
+
+>>> def collect(q): return sorted(list(field_name_collector.walk(parser2.parse(q))))
+
+Testing that FieldNameCollector find the correct fields
+
+>>> collect("and(equals|apa|1||equals|bepa|2)")
+['apa', 'bepa']
+
+>>> collect("parent(and(equals|sense.length|1||equals|sense.field|value))")
+['parent.sense.field', 'parent.sense.length']

@@ -207,14 +207,23 @@ class EsQueryBuilder(NodeWalker):
 
 
 class EsFieldNameCollector(NodeWalker):
-    # Return a set of all field names occurring in the given query
+    """
+    Return a set of all field names occurring in the given query
     # TODO: support multi-fields too
+    """
+
     def walk_Node(self, node):
-        result = set().union(*(self.walk(child) for child in node.children()))
-        # TODO maybe a bit too automagic?
-        if hasattr(node, "field"):
+        result = set()
+        if isinstance(node.ast, list):
+            result = result.union(*(self.walk(child) for child in node.ast))
+        elif hasattr(node, "field"):
             result.add(node.field.ast)
         return result
+
+    def walk__sub_query(self, node):
+        fields = self.walk(node.exp)
+        identifier = node.field.ast
+        return {identifier + "." + field for field in fields}
 
     def walk_object(self, _obj):
         return set()
@@ -283,7 +292,7 @@ class EsSearchService:
         response = s.execute()
         return self._build_result(query, response)
 
-    def _build_search(self, query, resources):
+    def _build_search(self, query, resources: list[str]):
         field_names = set()
         es_query = None
         if query.q:
