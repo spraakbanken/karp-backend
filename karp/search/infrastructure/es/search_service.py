@@ -20,9 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 class EsQueryBuilder(NodeWalker):
-    def __init__(self, resources, mapping_repo, q=None):
+    def __init__(self, resources, mapping_repo):
         super().__init__()
-        self._q = q
         self.path = [""]
         self.resources = resources
         self.mapping_repo = mapping_repo
@@ -293,7 +292,7 @@ class EsSearchService:
                     model = query.q
                 else:
                     model = self.parser.parse(query.q)
-                es_query = EsQueryBuilder(resources, self.mapping_repo, query.q).walk(model)
+                es_query = EsQueryBuilder(resources, self.mapping_repo).walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
                 raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
