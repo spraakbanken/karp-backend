@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, List, Optional
+from typing import Iterable
 
 import elasticsearch
 import elasticsearch.helpers
@@ -333,7 +333,7 @@ class EsSearchService:
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
 
-    def _format_result(self, response, path: Optional[str] = None, highlight: bool = False):
+    def _format_result(self, response, path: str | None = None, highlight: bool = False):
         def format_entry(entry):
             dict_entry = entry.to_dict()
 
@@ -364,7 +364,7 @@ class EsSearchService:
                 result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
         return result
 
-    def search_ids(self, resource_id: str, entry_ids: List[str]):
+    def search_ids(self, resource_id: str, entry_ids: list[str]):
         query = es_dsl.Q("terms", _id=entry_ids)
         logger.debug("query", extra={"query": query})
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)
