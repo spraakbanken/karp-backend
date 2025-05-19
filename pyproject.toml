@@ -30,6 +30,8 @@ karp-cli = "karp.cliapp.main:cliapp"
 "inflection" = "karp.plugins.inflection_plugin:InflectionPlugin"
 "salex_forward_references" = "karp.plugins.salex_references_plugin:SalexForwardReferencesPlugin"
 "salex_backward_references" = "karp.plugins.salex_references_plugin:SalexBackwardReferencesPlugin"
+"salex_id_info" = "karp.plugins.salex_references_plugin:SalexIdInfoPlugin"
+"salex_reference_info" = "karp.plugins.salex_references_plugin:SalexReferenceInfoPlugin"
 
 [tool.poetry.urls]
 "Bug Tracker" = "https://github.com/spraakbanken/karp-backend/issues"
