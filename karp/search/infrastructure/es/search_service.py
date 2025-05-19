@@ -329,7 +329,10 @@ class EsSearchService:
         if query.size:
             s = s[query.from_ : query.from_ + query.size]
         else:
-            s = s[query.from_ :]
+            # Elasticsearch defaults to only 10 results if size is unspecified
+            # TODO: how can we return all results? By default it only allows
+            # from + size <= 10000
+            s = s[query.from_ : 10000]
 
         if query.lexicon_stats:
             s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))

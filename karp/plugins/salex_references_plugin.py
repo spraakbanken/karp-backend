@@ -10,7 +10,7 @@ from injector import inject
 from karp.foundation import json
 from karp.lex.application import SearchQueries
 from karp.search.domain import QueryRequest
-from karp.search.domain.query_dsl.karp_query_model import Identifier, Or, TextArgExpression
+from karp.search.domain.query_dsl.karp_query_model import Identifier, TextArgExpression
 
 from .plugin import INDEXED, Plugin, flatten_list, group_batch_by
 
@@ -349,22 +349,28 @@ class SalexReferenceInfoPlugin(Plugin):
     @group_batch_by("resource", "prefix", "field")
     def generate_batch(self, resource, prefix, field, batch):
         prefix = prefix or ""
-        # collect all the ids and run one query to find all of them
+        # collect all the ids and run one multi_query to find all of them
+        # It would make more sense to run a single query, but that doesn't work
+        # as ES can't return more than 10000 results
         all_ids = {ref for item in batch for ref in item["references"]}
 
-        request = QueryRequest(
-            resources=[resource],
-            q=Or(ast=[TextArgExpression(op="equals", field=Identifier(ast=field + ".id"), arg=id) for id in all_ids]),
-            lexicon_stats=False,
-            size=None,
-        )
-        query_result = self.search_queries.query(request, expand_plugins=INDEXED)
+        requests = [
+            QueryRequest(
+                resources=[resource],
+                q=TextArgExpression(op="equals", field=Identifier(ast=field + ".id"), arg=id),
+                lexicon_stats=False,
+                size=None,
+            )
+            for id in all_ids  # noqa: A001
+        ]
+        query_results = self.search_queries.multi_query(requests, expand_plugins=INDEXED)
 
         # Now collect all info for all returned id numbers
         all_id_info = {}
-        for entry in query_result["hits"]:
-            for id_info in json.get_path(field, entry["entry"]):
-                all_id_info[id_info["id"]] = id_info
+        for query_result in query_results:
+            for entry in query_result["hits"]:
+                for id_info in json.get_path(field, entry["entry"]):
+                    all_id_info[id_info["id"]] = id_info
 
         # now collect the results
         def get_result(item):
