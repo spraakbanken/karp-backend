@@ -75,7 +75,7 @@ def find_ids(entry):
             yield kind, ref
 
 
-def parse_ref(path, kind, ref):
+def parse_ref(entry, path, kind, ref):
     saol = path[0] == "saol"
 
     if kind is None:
@@ -89,7 +89,7 @@ def parse_ref(path, kind, ref):
             ref = ref[4:]
             kind = KCNR
         else:
-            print("unknown reference", ref)
+            print("unknown reference", entry["ortografi"], path, ref)
             return
 
     return kind, ref
@@ -101,7 +101,7 @@ def find_refs(entry):
     for field, kind in ref_fields.items():
         for path in json.expand_path(field, entry):
             ref = json.get_path(path, entry)
-            result = parse_ref(path, kind, ref)
+            result = parse_ref(entry, path, kind, ref)
             if result:
                 yield path, result
 
@@ -118,7 +118,7 @@ def find_refs(entry):
 
             results = regexp.findall(value)
             for ref in results:
-                result = parse_ref(path, None, ref)
+                result = parse_ref(entry, path, None, ref)
                 if result:
                     yield path, result
 
