@@ -1,5 +1,5 @@
 import logging
-from typing import Iterable, List, Optional
+from typing import Iterable
 
 import elasticsearch
 import elasticsearch.helpers
@@ -20,10 +20,10 @@ logger = logging.getLogger(__name__)
 
 
 class EsQueryBuilder(NodeWalker):
-    def __init__(self, resources, mapping_repo, q=None):
+    def __init__(self, resources, mapping_repo):
         super().__init__()
-        self._q = q
         self.path = [""]
+        self.length_mappings = set()
         self.resources = resources
         self.mapping_repo = mapping_repo
 
@@ -141,15 +141,25 @@ class EsQueryBuilder(NodeWalker):
         return self.wrap_nested(path, query)
 
     def walk__identifier(self, node):
-        field_name = node.ast
-        if "*" in field_name:
-            field = Field(path=[field_name], type="any")
+        field_path: str = node.ast
+        is_length = field_path.endswith(".length")
+        if "*" in field_path:
+            field_obj = Field(path=[field_path], type="any")
+            return field_obj.name, field_obj
         else:
             # Add the current path to field, for example query path(equals|field|val)
             # must yield an es-query in field "path.field"
-            full_field_name = self.path[-1] + field_name
-            field = self.mapping_repo.get_field(self.resources, full_field_name)
-        return field.name, field
+            field_obj = self.mapping_repo.get_field(self.resources, self.path[-1] + field_path.removesuffix(".length"))
+            # if the field query has ".length" appended, and the field is text, we must query raw
+            if is_length:
+                if field_obj.type == "text":
+                    mapping = field_obj.name + ".raw.length"
+                else:
+                    mapping = field_obj.name + ".length"
+                self.length_mappings.add(mapping)
+            else:
+                mapping = field_obj.name
+            return mapping, field_obj
 
     def walk_object(self, node):
         return node
@@ -208,14 +218,23 @@ class EsQueryBuilder(NodeWalker):
 
 
 class EsFieldNameCollector(NodeWalker):
-    # Return a set of all field names occurring in the given query
+    """
+    Return a set of all field names occurring in the given query
     # TODO: support multi-fields too
+    """
+
     def walk_Node(self, node):
-        result = set().union(*(self.walk(child) for child in node.children()))
-        # TODO maybe a bit too automagic?
-        if hasattr(node, "field"):
+        result = set()
+        if isinstance(node.ast, list):
+            result = result.union(*(self.walk(child) for child in node.ast))
+        elif hasattr(node, "field"):
             result.add(node.field.ast)
         return result
+
+    def walk__sub_query(self, node):
+        fields = self.walk(node.exp)
+        identifier = node.field.ast
+        return {identifier + "." + field for field in fields}
 
     def walk_object(self, _obj):
         return set()
@@ -284,22 +303,25 @@ class EsSearchService:
         response = s.execute()
         return self._build_result(query, response)
 
-    def _build_search(self, query, resources):
+    def _build_search(self, query, resources: list[str]):
         field_names = set()
         es_query = None
+        builder = None
         if query.q:
             try:
                 if isinstance(query.q, ModelBase):
                     model = query.q
                 else:
                     model = self.parser.parse(query.q)
-                es_query = EsQueryBuilder(resources, self.mapping_repo, query.q).walk(model)
+                builder = EsQueryBuilder(resources, self.mapping_repo)
+                es_query = builder.walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
                 raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
         s = es_dsl.Search(using=self.es, index=resources)
-        s = _add_runtime_mappings(s, field_names)
+        if builder:
+            s = _add_runtime_mappings(s, builder.length_mappings)
         s = s.extra(track_total_hits=True)  # get accurate hits numbers
         if es_query is not None:
             s = s.query(es_query)
@@ -307,7 +329,10 @@ class EsSearchService:
         if query.size:
             s = s[query.from_ : query.from_ + query.size]
         else:
-            s = s[query.from_ :]
+            # Elasticsearch defaults to only 10 results if size is unspecified
+            # TODO: how can we return all results? By default it only allows
+            # from + size <= 10000
+            s = s[query.from_ : 10000]
 
         if query.lexicon_stats:
             s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
@@ -333,7 +358,7 @@ class EsSearchService:
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
 
-    def _format_result(self, response, path: Optional[str] = None, highlight: bool = False):
+    def _format_result(self, response, path: str | None = None, highlight: bool = False):
         def format_entry(entry):
             dict_entry = entry.to_dict()
 
@@ -364,7 +389,7 @@ class EsSearchService:
                 result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
         return result
 
-    def search_ids(self, resource_id: str, entry_ids: List[str]):
+    def search_ids(self, resource_id: str, entry_ids: list[str]):
         query = es_dsl.Q("terms", _id=entry_ids)
         logger.debug("query", extra={"query": query})
         s = es_dsl.Search(using=self.es, index=resource_id).query(query)

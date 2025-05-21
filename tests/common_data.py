@@ -8,6 +8,7 @@ CONFIG_PLACES = {
         "area": {"type": "number"},
         "density": {"type": "number"},
         "code": {"type": "number", "required": True},
+        "str_collection": {"type": "string", "collection": True},
     },
     "sort": "name",
     "id": "code",
@@ -22,7 +23,8 @@ PLACES = [
         "area": 6312,
         "density": 6312,
         "municipality": [1],
-        "larger_place": 7,  # Alhamn
+        "larger_place": 7,  # Alhamn,
+        "str_collection": ["str1", "str2"],
     },
     {
         "code": 2,
