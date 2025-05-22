@@ -15,7 +15,7 @@ def create_app():
         ctx: typer.Context,
         version: Optional[bool] = typer.Option(None, "--version", callback=version_callback, is_eager=True),
     ):
-        if "--help" in sys.argv:
+        if "--help" in sys.argv and "repl" not in sys.argv:
             return
         from karp.main import bootstrap_app, with_new_session
 
