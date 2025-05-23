@@ -21,6 +21,7 @@ from karp.foundation.json import (
     has_path,
     localise_path,
     make_path,
+    path_str,
     set_path,
 )
 from karp.lex.domain.dtos import EntryDto, ResourceDto
@@ -443,8 +444,12 @@ def transform_list(
         # Dependencies through field_params
         for target_list in config.field_params.values():
             for target_name in flatten_list(target_list):
-                if target_name in virtual_fields:
-                    dependencies[field_name].add(target_name)
+                # This covers the case when a field_param is a subfield of a virtual field
+                path = make_path(target_name)
+                for i in range(len(path) + 1):
+                    sub_target_name = path_str(path[:i])
+                    if sub_target_name in virtual_fields:
+                        dependencies[field_name].add(sub_target_name)
 
         # Dependencies through one field being a child of another
         # (can happen when a virtual field creates its own virtual subfields)
