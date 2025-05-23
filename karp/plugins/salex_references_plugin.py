@@ -297,6 +297,7 @@ class SalexIdInfoPlugin(Plugin):
             "type": "object",
             "collection": True,
             "additional_properties": True,
+            "cache_plugin_expansion": False,
             "fields": {"id": {"type": "string"}},
         }
 
