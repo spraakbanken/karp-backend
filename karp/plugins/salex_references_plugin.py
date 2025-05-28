@@ -353,7 +353,7 @@ class SalexReferenceInfoPlugin(Plugin):
         # collect all the ids and run one multi_query to find all of them
         # It would make more sense to run a single query, but that doesn't work
         # as ES can't return more than 10000 results
-        all_ids = {ref for item in batch for ref in item["references"]}
+        all_ids = {ref["ref"] for item in batch for ref in item["references"] if ref["visas"]}
 
         requests = [
             QueryRequest(
@@ -376,7 +376,7 @@ class SalexReferenceInfoPlugin(Plugin):
         # now collect the results
         def get_result(item):
             result = []
-            for id in set(item["references"]):
+            for id in {ref["ref"] for ref in item["references"] if ref["visas"]}:
                 if id.startswith(prefix) and id in all_id_info:
                     id_info = deepcopy(all_id_info[id])
                     id_info["id"] = id[len(prefix) :]  # strip prefix
