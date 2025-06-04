@@ -77,7 +77,7 @@ all_tests := ${all_test_dirs}
 test: unit-tests
 
 .PHONY: all-tests
-all-tests: clean-pyc
+all-tests: clean-pyc type-check
 	${INVENV} pytest -vv tests
 
 .PHONY: unit-tests
@@ -106,7 +106,7 @@ fmt:
 
 .PHONY: type-check
 type-check:
-	${INVENV} mypy --config-file mypy.ini -p karp
+	${INENV} basedpyright
 
 .PHONY: tags
 tags:

@@ -1,7 +1,11 @@
 {
+    
     "include": [
-        "karp"
+        "karp",
+        "tests"
     ],
+    "ignore": ["karp/plugins/salex_references_plugin.py", "karp/plugins/plugin.py"],
     "reportMissingImports": "information",
-    "reportGeneralTypeIssues": "none"
+    "reportGeneralTypeIssues": "none",
+    "typeCheckingMode": "off"
 }

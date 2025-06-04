@@ -124,6 +124,15 @@ export ELASTICSEARCH_HOST=http://localhost:9200
 - MariaDB
 - Elasticsearch
 
+### Type checking
+
+Run type checking with `make type-check` or just `basedpyright`.
+
+We use [basedpyright](https://docs.basedpyright.com/) which is like [Pyright](https://microsoft.github.io/pyright/), but without a NodeJS dependency.
+
+Currently actual type checking is only done on selected files, but basedpyright provides
+"syntax and sematic errors" for all files.
+
 ### Testing
 
 The tests are organized in unit, integration and end-to-end tests.
@@ -132,53 +141,26 @@ The tests are organized in unit, integration and end-to-end tests.
 
 These test should have no infrastructure dependencies and should run fast.
 
-Run them by:
-
-- From repo root:
-  - `make test` (or `make unit-tests`)
-  - `make unit-tests-w-coverage` or `make cov-report=xml unit-tests-w-coverage`
-  - `make test-w-coverage tests/unit`
-  - `make unit-tests-w-coverage` or `make cov_report=xml unit-tests-w-coverage`
-  - `make all_tests="tests/unit" test-w-coverage`
+Run them by: `make test` (or `make unit-tests`)
 
 #### Integration tests
 
 These test have some infrastructure dependencies and should run slower.
 
-Run them by:
-
-- From repo root:
-  - `make integration-tests`
-  - `make integration-tests-w-coverage` or `make cov-report=xml integration-tests-w-coverage`
-  - `make test-w-coverage tests/integration`
-  - `make integration-tests-w-coverage` or `make cov_report=xml integration-tests-w-coverage`
-  - `make all_tests=tests/integration test-w-coverage`
+Run them by: `make integration-tests`
 
 #### End-to-end tests
 
 These test have all infrastructure dependencies and should run slowest.
 
-Run them by:
-
-- From repo root:
-  - `make e2e-tests`
-  - `make e2e-tests-w-coverage` or `make cov-report=xml e2e-tests-w-coverage`
-  - `make test-w-coverage tests/e2e`
-  - `make e2e-tests-w-coverage` or `make cov_report=xml e2e-tests-w-coverage`
-  - `make all_tests=tests/e2e test-w-coverage`
+Run them by: `make e2e-tests`
 
 #### All tests
 
-These test have all infrastructure dependencies and should run slowest.
+These test have all infrastructure dependencies and should run slowest. They 
+also start with a type checking pass.
 
-Run them by:
-
-- From repo root:
-  - `make all-tests`
-  - `make test-w-coverage` or `make cov-report=xml test-w-coverage`
-  - `make all-tests-w-coverage`
-  - `make test-w-coverage` or `make cov_report=xml test-w-coverage`
-  - `make all-tests-w-coverage`
+Run them by: `make all-tests`
 
 ### Linting and formatting
 
@@ -192,8 +174,6 @@ Usual commands for `ruff` is:
 
 - `ruff --fix <path>` tries to fix linting problems.
 - `ruff --add-noqa <path>` add noqa:s (silence lint) to each line that needs
-
-### Version handling
 
 ### Version handling
 

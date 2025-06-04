@@ -1,3 +1,4 @@
+# pyright: standard
 import logging
 import re
 from dataclasses import dataclass
@@ -7,6 +8,7 @@ from typing import Any
 import elasticsearch
 from injector import inject
 
+from karp.lex.domain.entities.resource import Resource
 from karp.lex.infrastructure import ResourceRepository
 from karp.main.errors import FieldDoesNotExist, IncompatibleResources, SortError
 
@@ -70,9 +72,11 @@ class EsMappingRepository:
 
         self.fields: dict[str, dict[str, Field]] = {}
         self.sortable_fields: dict[str, dict[str, Field]] = {}
-        resources = resource_repo.get_published_resources()
+        resources: list[Resource] = resource_repo.get_published_resources()
 
-        self.default_sort: dict[str, str] = {
+        # TODO ResourceConfig model allows for sort or id to be None also sort to be list[str] and this
+        # code does not account for that, set dict-values to Any for now
+        self.default_sort: dict[str, Any] = {
             resource.resource_id: resource.config.sort or resource.config.id for resource in resources
         }
 
@@ -139,7 +143,7 @@ class EsMappingRepository:
         Create a field mapping based on the mappings of elasticsearch.
         """
 
-        mapping: dict[str, dict[str, dict[str, dict[str, dict]]]] = self.es.indices.get_mapping()
+        mapping: dict[str, dict[str, dict[str, dict[str, dict]]]] = self.es.indices.get_mapping().body
         for alias, index in aliases:
             if "mappings" in mapping[index] and "properties" in mapping[index]["mappings"]:
                 self.fields[alias] = self._get_fields_from_mapping(mapping[index]["mappings"]["properties"])
@@ -177,8 +181,7 @@ class EsMappingRepository:
         return fields
 
     def _get_index_mappings(self, index: str | None = None) -> dict[str, dict[str, dict[str, dict[str, dict]]]]:
-        kwargs = {"index": index} if index is not None else {}
-        return self.es.indices.get_mapping(**kwargs)
+        return self.es.indices.get_mapping(index=index).body
 
     def _get_all_aliases(self) -> list[tuple[str, str]]:
         """
@@ -197,7 +200,7 @@ class EsMappingRepository:
                     index_names.append((alias, index))
         return index_names
 
-    def get_fields_as_tree(self, resource_ids: [str], path: str) -> dict[str, any]:
+    def get_fields_as_tree(self, resource_ids: list[str], path: str) -> dict[str, Any]:
         """
         Create a dict that represents all fields on path as a tree
         sort of:
