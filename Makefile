@@ -1,16 +1,10 @@
 .DEFAULT: test
 
-PLATFORM := ${shell uname -o}
-
-
 ifeq (${VIRTUAL_ENV},)
   INVENV = poetry run
 else
   INVENV =
 endif
-
-${info Platform: ${PLATFORM}}
-
 
 .PHONY: help
 help:
