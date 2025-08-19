@@ -1,7 +1,7 @@
 """Utilities for working with JSON objects."""
 
 from itertools import takewhile
-from typing import Dict, Iterator, Union
+from typing import Callable, Dict, Iterator, Union
 
 Path = list[Union[str, int]]
 
@@ -107,6 +107,34 @@ def del_path(path: Union[str, Path], data):
         data = data[component]
 
     del data[path[-1]]
+
+
+def filter_paths(pred: Callable[[Path, object], bool], data):
+    """
+    Keep only paths which match a given predicate.
+    """
+
+    def inner(path, data):
+        if isinstance(data, dict):
+            to_delete = set()
+            for key, value in data.items():
+                if pred(path + [key], value):
+                    inner(path + [key], value)
+                else:
+                    to_delete.add(key)
+            for key in to_delete:
+                del data[key]
+
+        elif isinstance(data, list):
+            new_data = []
+            for i, value in enumerate(data):
+                if pred(path + [i], value):
+                    inner(path + [i], value)
+                    new_data.append(value)
+            data.clear()
+            data.extend(new_data)
+
+    inner([], data)
 
 
 def localise_path(path1, path2: Union[str, Path]) -> Path:

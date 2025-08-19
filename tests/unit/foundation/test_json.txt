@@ -50,6 +50,13 @@ Testing del_path:
 >>> doc
 {'SOLemman': [{'lexem': [{'kc_nr': 1}, {}]}, {'lexem': [{'kc_nr': 3}, {'kc_nr': 4}]}]}
 
+Testing filter_paths:
+>>> pred = lambda _, value: value != "delete"
+>>> filter_paths_doc = {"x": ["delete", "delete", 1, 2, "delete"], "y": [3, "delete", 4]}
+>>> filter_paths(pred, filter_paths_doc)
+>>> filter_paths_doc
+{'x': [1, 2], 'y': [3, 4]}
+
 Testing localise_path:
 
 >>> localise_path('SOLemman.s_nr', ['SOLemman', 0])
