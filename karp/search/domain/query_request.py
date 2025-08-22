@@ -4,6 +4,7 @@ from typing import List, Optional
 
 import pydantic
 
+from karp.search.domain.highlight_param import HighlightParam
 from karp.search.domain.query_dsl.karp_query_model import ModelBase
 
 logger = logging.getLogger(__name__)
@@ -17,7 +18,7 @@ class QueryRequest(pydantic.BaseModel):
     from_: int = 0
     size: Optional[int] = 25
     lexicon_stats: bool = True
-    highlight: bool = False
+    highlight: HighlightParam = HighlightParam.false
     sort: List[str] = pydantic.Field(default_factory=list)
     path: typing.Optional[str] = None
 

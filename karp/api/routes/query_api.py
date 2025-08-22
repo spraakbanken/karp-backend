@@ -4,15 +4,15 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from karp import auth
-from karp.auth.application import ResourcePermissionQueries
-from karp.lex.domain.errors import ResourceNotFound
-from karp.search.domain import QueryRequest
-
 from karp.api import dependencies as deps
 from karp.api.dependencies.fastapi_injector import inject_from_req
+from karp.auth.application import ResourcePermissionQueries
 from karp.lex.application import SearchQueries
-from .. import schemas
+from karp.lex.domain.errors import ResourceNotFound
+from karp.search.domain import QueryRequest
+from karp.search.domain.highlight_param import HighlightParam
 
+from .. import schemas
 
 logger = logging.getLogger(__name__)
 
@@ -119,9 +119,11 @@ def query(
         For example, to fetch only the field `baseform` in the entry, use: `?path=entry.baseform`
         If the selected field is an array, the result will also be wrapped in an array.""",
     ),
-    highlight: bool = Query(
-        False,
-        description="Adds which fields the query matched and a small hit context with `<em>` wrapped around the match.",
+    highlight: HighlightParam = Query(
+        HighlightParam.false,
+        description="""Adds which fields the query matched and a small hit context with `<em>` wrapped around the match.
+                        For compatibility reasons the values are true/new/false. true gives an older version of the highlight and
+                        new gives the future format, which includes indices for lists.""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
     resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),

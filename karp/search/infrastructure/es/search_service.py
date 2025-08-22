@@ -1,4 +1,6 @@
 import logging
+import re
+from collections import defaultdict
 from typing import Iterable
 
 import elasticsearch
@@ -11,6 +13,7 @@ from tatsu.walkers import NodeWalker
 from karp.foundation.json import get_path
 from karp.main.errors import KarpError, QueryParserError
 from karp.search.domain import QueryRequest
+from karp.search.domain.highlight_param import HighlightParam
 from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics, ModelBase
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
@@ -20,12 +23,13 @@ logger = logging.getLogger(__name__)
 
 
 class EsQueryBuilder(NodeWalker):
-    def __init__(self, resources, mapping_repo):
+    def __init__(self, resources, mapping_repo, highlight=False):
         super().__init__()
         self.path = [""]
         self.length_mappings = set()
         self.resources = resources
         self.mapping_repo = mapping_repo
+        self.highlight = highlight
 
     def walk__freetext(self, node):
         value = self.walk(node.arg)
@@ -131,7 +135,10 @@ class EsQueryBuilder(NodeWalker):
             return query
 
         if self.mapping_repo.is_nested(self.resources, field_path):
-            query = es_dsl.Q("nested", path=field_path, query=query)
+            inner_hits = {}
+            if self.highlight:
+                inner_hits = {"inner_hits": {"_source": False, "highlight": {"fields": {"*": {}}}}}
+            query = es_dsl.Q("nested", path=field_path, query=query, **inner_hits)
 
         path, *last_elem = field_path.rsplit(".", 1)
         if not last_elem:
@@ -257,6 +264,10 @@ def _add_runtime_mappings(s: es_dsl.Search, field_names: set[str]) -> es_dsl.Sea
     return s
 
 
+def remove_indices_from_path(path: str) -> str:
+    return re.sub(r"\[.*?\]", "", path)
+
+
 class EsSearchService:
     @inject
     def __init__(
@@ -313,7 +324,9 @@ class EsSearchService:
                     model = query.q
                 else:
                     model = self.parser.parse(query.q)
-                builder = EsQueryBuilder(resources, self.mapping_repo)
+                builder = EsQueryBuilder(
+                    resources, self.mapping_repo, highlight=query.highlight != HighlightParam.false
+                )
                 es_query = builder.walk(model)
                 field_names = self.field_name_collector.walk(model)
             except tatsu_exc.FailedParse as err:
@@ -358,7 +371,42 @@ class EsSearchService:
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
 
-    def _format_result(self, response, path: str | None = None, highlight: bool = False):
+    def _format_result(self, response, path: str | None = None, highlight: HighlightParam = HighlightParam.false):
+        def format_nested_highlight(result_tree) -> dict[str, list[str]]:
+            """
+            recursively find the innermost inner_hits which contain highlights and list index values
+            """
+            final_highlights = {}
+            for key, inner_hit_outer in result_tree.meta.inner_hits.items():
+                for inner_hit in inner_hit_outer.hits:
+                    # just move through to the tree until the innermost inner_hit is found
+                    if hasattr(inner_hit.meta, "inner_hits"):
+                        final_highlights.update(format_nested_highlight(inner_hit))
+                    else:
+
+                        def get_path(path, obj):
+                            """
+                            the nested field of the inner_hit is a recursive structure
+                            this function returns the actual path with indices
+                            and also the path without indices, which is needed to match
+                            the correct highlight to the correct path with indices
+                            """
+                            if path:
+                                path = path + "."
+                            path = path + obj.field + f"[{obj.offset}]"
+                            if hasattr(obj, "_nested"):
+                                return get_path(path, obj._nested)
+                            return path
+
+                        path = get_path("", inner_hit.meta.nested)
+
+                        for key, hit_highlights in inner_hit.meta.highlight.items():
+                            # this finds the final fields needed to complete the path to the matching field
+                            extra_fields = key.split(remove_indices_from_path(path))[1]
+                            final_highlights[path + extra_fields] = hit_highlights
+
+            return final_highlights
+
         def format_entry(entry):
             dict_entry = entry.to_dict()
 
@@ -367,8 +415,31 @@ class EsSearchService:
                 "id": entry.meta.id,
                 "entry": dict_entry,
             }
-            if highlight and hasattr(entry.meta, "highlight"):
+            if highlight != HighlightParam.false and hasattr(entry.meta, "highlight"):
                 res["highlight"] = entry.meta.highlight.to_dict()
+                # group the inner_hits by the path without indices
+                inner_hits_highlights = defaultdict(dict)
+                for highlight_path, highlight_item in format_nested_highlight(entry).items():
+                    # for now, remove the "global" highlighting and replace with the one from inner_hits
+                    path_wo_indices = remove_indices_from_path(highlight_path)
+                    inner_hits_highlights[path_wo_indices][highlight_path] = highlight_item
+
+                # remove duplicates from the outer highlighting
+                for path_wo_indices in inner_hits_highlights.keys():
+                    res["highlight"].pop(path_wo_indices, None)
+
+                # for compatibility reasons, if HighlightParam.true, use older format without indices
+                # this can be removed when frontend has updated to use the new format with indices.
+                if highlight == HighlightParam.true:
+                    for path_wo_indices, val in inner_hits_highlights.items():
+                        # flatten for path_wo_indices
+                        res["highlight"][path_wo_indices] = [
+                            inner_highlight for inner_highlights in val.values() for inner_highlight in inner_highlights
+                        ]
+                else:
+                    for val in inner_hits_highlights.values():
+                        res["highlight"].update(val)
+
             for mapped_name, field in es_mapping_repo.internal_fields.items():
                 res[mapped_name] = dict_entry.pop(field.name, None)
 
