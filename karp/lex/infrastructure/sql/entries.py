@@ -41,7 +41,7 @@ class EntryRepository:
         *,
         version: Optional[int] = None,
         **kwargs,
-    ) -> Optional:
+    ) -> Optional[Entry]:
         return self._by_id(id, version=version)
 
     @property

@@ -41,7 +41,7 @@ class ResourceRepository:
         *,
         version: Optional[int] = None,
         **kwargs,
-    ) -> Optional:
+    ) -> Optional[Resource]:
         return self._by_id(id, version=version)
 
     def by_resource_id(self, resource_id: str, *, version: Optional[int] = None) -> entities.Resource:
