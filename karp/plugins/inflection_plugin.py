@@ -365,7 +365,10 @@ class InflectionPlugin(Plugin):
 
             if particles:
                 if "particip" in heading:
-                    inflected_form = "".join(particles) + inflected_form
+                    prefix = "".join(particles)
+                    if len(prefix) > 1 and prefix[-2:] == (2 * inflected_form[0]):
+                        prefix = prefix[:-1]
+                    inflected_form = prefix + inflected_form
                 # elif 'passiv' in defi["postscript"] :
                 #  inflected_form  = ' '.join([inflected_form] + particles) + " (" + ''.join(particles) + inflected_form + ")"
 
