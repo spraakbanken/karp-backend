@@ -134,6 +134,7 @@ def export_entries(
         ..., "--output", "-o", help="Path to the file where the export will be saved", show_default=False
     ),
     expand_plugins: bool = typer.Option(True, help="includes/exludes fields populated by plugins"),
+    entry_only: bool = typer.Option(False, help="omits/includes history information about each entry"),
 ):
     """
     Export all entries in a resource (latest versions)
@@ -156,10 +157,14 @@ def export_entries(
         extra={"resource_id": resource_id, "type(all_entries)": type(entries)},
     )
 
-    json_arrays.dump(
-        (entry.dict() for entry in entries),
-        output,
-    )
+    def gen(entries):
+        for entry in entries:
+            entry = entry.dict()
+            if entry_only:
+                entry = entry["entry"]
+            yield entry
+
+    json_arrays.dump(gen(entries), output)
 
 
 @subapp.command("batch")
