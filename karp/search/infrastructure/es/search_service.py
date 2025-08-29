@@ -417,28 +417,32 @@ class EsSearchService:
             }
             if highlight != HighlightParam.false and hasattr(entry.meta, "highlight"):
                 res["highlight"] = entry.meta.highlight.to_dict()
-                # group the inner_hits by the path without indices
-                inner_hits_highlights = defaultdict(dict)
-                for highlight_path, highlight_item in format_nested_highlight(entry).items():
-                    # for now, remove the "global" highlighting and replace with the one from inner_hits
-                    path_wo_indices = remove_indices_from_path(highlight_path)
-                    inner_hits_highlights[path_wo_indices][highlight_path] = highlight_item
 
-                # remove duplicates from the outer highlighting
-                for path_wo_indices in inner_hits_highlights.keys():
-                    res["highlight"].pop(path_wo_indices, None)
+                if hasattr(entry.meta, "inner_hits"):
+                    # group the inner_hits by the path without indices
+                    inner_hits_highlights = defaultdict(dict)
+                    for highlight_path, highlight_item in format_nested_highlight(entry).items():
+                        # for now, remove the "global" highlighting and replace with the one from inner_hits
+                        path_wo_indices = remove_indices_from_path(highlight_path)
+                        inner_hits_highlights[path_wo_indices][highlight_path] = highlight_item
 
-                # for compatibility reasons, if HighlightParam.true, use older format without indices
-                # this can be removed when frontend has updated to use the new format with indices.
-                if highlight == HighlightParam.true:
-                    for path_wo_indices, val in inner_hits_highlights.items():
-                        # flatten for path_wo_indices
-                        res["highlight"][path_wo_indices] = [
-                            inner_highlight for inner_highlights in val.values() for inner_highlight in inner_highlights
-                        ]
-                else:
-                    for val in inner_hits_highlights.values():
-                        res["highlight"].update(val)
+                    # remove duplicates from the outer highlighting
+                    for path_wo_indices in inner_hits_highlights.keys():
+                        res["highlight"].pop(path_wo_indices, None)
+
+                    # for compatibility reasons, if HighlightParam.true, use older format without indices
+                    # this can be removed when frontend has updated to use the new format with indices.
+                    if highlight == HighlightParam.true:
+                        for path_wo_indices, val in inner_hits_highlights.items():
+                            # flatten for path_wo_indices
+                            res["highlight"][path_wo_indices] = [
+                                inner_highlight
+                                for inner_highlights in val.values()
+                                for inner_highlight in inner_highlights
+                            ]
+                    else:
+                        for val in inner_hits_highlights.values():
+                            res["highlight"].update(val)
 
             for mapped_name, field in es_mapping_repo.internal_fields.items():
                 res[mapped_name] = dict_entry.pop(field.name, None)
