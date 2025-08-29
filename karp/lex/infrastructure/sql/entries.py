@@ -126,22 +126,42 @@ class EntryRepository:
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
-    def all_entries(self) -> typing.Iterable[Entry]:
-        stmt = self._stmt_latest_not_discarded()
+    def all_entries(self, last_modified: int | None = None) -> typing.Iterable[Entry]:
+        stmt = self._stmt_latest_not_discarded(last_modified=last_modified)
         query = self._session.execute(stmt).scalars()
 
         return (self._history_row_to_entry(db_entry) for db_entry in query)
 
-    # TODO Rename this here and in `entity_ids` and `all_entries`
-    def _stmt_latest_not_discarded(self):
+    def deleted_entries(self, last_modified: int | None = None) -> typing.Iterable[str]:
+        stmt = self._stmt_latest_discarded(last_modified=last_modified)
+        query = self._session.execute(stmt).scalars()
+        return (db_entry.entity_id for db_entry in query)
+
+    def get_max_last_modified(self):
+        stmt = sql.select(sa.func.max(self.history_model.last_modified))
+        return next(self._session.execute(stmt).scalars())
+
+    def _stmt_latest_not_discarded(self, last_modified: int | None = None):
+        return self._stmt_latest(last_modified=last_modified, discarded=False)
+
+    def _stmt_latest_discarded(self, last_modified: int | None = None):
+        return self._stmt_latest(last_modified=last_modified, discarded=True)
+
+    def _stmt_latest(self, last_modified: int | None = None, discarded: bool = False):
+        """
+        For each entry id, fetch the latest version, either discarded och non-discarded entries
+        """
         subq = self._subq_for_latest()
+        and_params = [
+            self.history_model.entity_id == subq.c.entity_id,
+            self.history_model.history_id == subq.c.history_id,
+            self.history_model.discarded == discarded,
+        ]
+        if last_modified:
+            and_params.append(self.history_model.last_modified > last_modified)
         return sql.select(self.history_model).join(
             subq,
-            sa.and_(
-                self.history_model.entity_id == subq.c.entity_id,
-                self.history_model.history_id == subq.c.history_id,
-                self.history_model.discarded == False,  # noqa: E712
-            ),
+            sa.and_(*and_params),
         )
 
     def _subq_for_latest(self) -> sql.Subquery:

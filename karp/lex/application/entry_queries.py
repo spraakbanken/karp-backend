@@ -70,9 +70,17 @@ class EntryQueries:
         resource = self.resources.by_resource_id(resource_id)
         return plugins.transform(self.plugins, resource.config, entry_body)
 
-    def all_entries(self, resource_id: str, **kwargs) -> typing.Iterable[EntryDto]:
+    def all_entries(self, resource_id: str, last_modified: int | None = None, **kwargs) -> typing.Iterable[EntryDto]:
         entries = self.resources.entries_by_resource_id(resource_id)
-        return self._to_dtos(resource_id, entries.all_entries(), **kwargs)
+        return self._to_dtos(resource_id, entries.all_entries(last_modified=last_modified), **kwargs)
+
+    def deleted_entries(self, resource_id: str, last_modified: int | None = None) -> typing.Iterable[str]:
+        entries = self.resources.entries_by_resource_id(resource_id)
+        return entries.deleted_entries(last_modified=last_modified)
+
+    def get_max_last_modified(self, resource_id: str):
+        entries = self.resources.entries_by_resource_id(resource_id)
+        return entries.get_max_last_modified()
 
     def get_entry_history(
         self,

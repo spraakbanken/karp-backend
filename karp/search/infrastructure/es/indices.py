@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Iterable
+from typing import Any, Iterable
 
 import elasticsearch
 import elasticsearch.helpers
@@ -140,12 +140,7 @@ class EsIndex:
                 message.append(str(error["index"])[0:400])
                 raise KarpError("\n".join(message)) from None
 
-    def delete_entries(
-        self,
-        resource_id: str,
-        *,
-        entry_ids: Iterable[str],
-    ):
+    def delete_entries(self, resource_id: str, *, entry_ids: Iterable[str], raise_on_error=True) -> dict[str, Any]:
         index_to_es = (
             {
                 "_op_type": "delete",
@@ -154,8 +149,8 @@ class EsIndex:
             }
             for entry_id in entry_ids
         )
-
-        elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True)
+        _, errors = elasticsearch.helpers.bulk(self.es, index_to_es, refresh=True, raise_on_error=raise_on_error)
+        return [error["delete"] for error in errors]
 
 
 def _create_es_mapping(config):
