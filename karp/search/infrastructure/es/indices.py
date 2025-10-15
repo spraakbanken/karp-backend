@@ -22,6 +22,7 @@ settings = {
     "number_of_replicas": 1,
     # turns off refreshing, needs to be combined with explicitly making refreshes when adding/deleting
     "refresh_interval": -1,
+    "mapping": {"nested_fields": {"limit": 100}},
     "analysis": {
         "analyzer": {
             "default": {
