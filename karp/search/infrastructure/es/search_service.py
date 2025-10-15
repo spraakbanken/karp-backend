@@ -382,7 +382,8 @@ class EsSearchService:
                     # just move through to the tree until the innermost inner_hit is found
                     if hasattr(inner_hit.meta, "inner_hits"):
                         final_highlights.update(format_nested_highlight(inner_hit))
-                    else:
+
+                    if hasattr(inner_hit.meta, "nested"):
 
                         def get_path(path, obj):
                             """
