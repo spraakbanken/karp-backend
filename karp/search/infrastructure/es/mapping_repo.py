@@ -3,7 +3,7 @@ import logging
 import re
 from dataclasses import dataclass
 from itertools import groupby
-from typing import Any
+from typing import Any, Iterable
 
 import elasticsearch
 from injector import inject
@@ -118,6 +118,30 @@ class EsMappingRepository:
             if self.is_nested([resource_id], subfield):
                 nest_levels.append(subfield)
         return nest_levels
+
+    def get_non_nested_children(self, resources, field_path) -> Iterable[str]:
+        """
+        Return each field under field_path that is not a nested. Check every given resource
+        and make sure that the fields are the same.
+        """
+        res = {resource: [] for resource in resources}
+        for resource in resources:
+            for name in self.fields[resource]:
+                # find fields that are children of field_path but not children of other nesteds
+                if name.startswith(field_path + ".") and name != field_path:
+                    nest_levels = self.get_nest_levels(resource, name)
+                    skip = False
+                    for nested in nest_levels:
+                        if nested == field_path or field_path.startswith(nested):
+                            # ignore prefixes
+                            continue
+                        if name.startswith(nested) or name == nested:
+                            skip = True
+                    if not skip:
+                        res[resource].append(name)
+        if not all(x == res[resources[0]] for x in res.values()):
+            raise IncompatibleResources(field="N/A, turn off highlighting for query to succeed.")
+        return res[resources[0]]
 
     def get_field(self, resource_ids, field_name):
         if field_name == "@id":
