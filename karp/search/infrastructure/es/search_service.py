@@ -137,7 +137,10 @@ class EsQueryBuilder(NodeWalker):
         if self.mapping_repo.is_nested(self.resources, field_path):
             inner_hits = {}
             if self.highlight:
-                inner_hits = {"inner_hits": {"_source": False, "highlight": {"fields": {"*": {}}}}}
+                inner_hits = {"inner_hits": {"_source": False, "highlight": {"fields": {}}}}
+                non_nested_children = self.mapping_repo.get_non_nested_children(self.resources, field_path)
+                for field in non_nested_children:
+                    inner_hits["inner_hits"]["highlight"]["fields"][field] = {}
             query = es_dsl.Q("nested", path=field_path, query=query, **inner_hits)
 
         path, *last_elem = field_path.rsplit(".", 1)
@@ -401,7 +404,7 @@ class EsSearchService:
 
                         path = get_path("", inner_hit.meta.nested)
 
-                        for key, hit_highlights in inner_hit.meta.highlight.items():
+                        for key, hit_highlights in getattr(inner_hit.meta, "highlight", {}).items():
                             # this finds the final fields needed to complete the path to the matching field
                             extra_fields = key.split(remove_indices_from_path(path))[1]
                             final_highlights[path + extra_fields] = hit_highlights
