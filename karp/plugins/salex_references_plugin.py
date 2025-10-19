@@ -3,6 +3,7 @@
 import re
 from collections import defaultdict
 from copy import deepcopy
+from dataclasses import dataclass
 from enum import Enum, global_enum
 
 from injector import inject
@@ -16,27 +17,30 @@ from .plugin import INDEXED, Plugin, flatten_list, group_batch_by
 
 
 def entry_is_visible(entry):
-    return not isinstance(entry, dict) or entry.get("visas", True)
+    return entry.get("visas", True)
+
+
+def entry_is_visible_in_printed_book(entry):
+    return entry_is_visible(entry) and not entry.get("endastDigitalt", False)
 
 
 def is_visible(path, entry, test=entry_is_visible):
     path = json.make_path(path)
     for i in range(len(path) + 1):
-        if not test(json.get_path(path[:i], entry)):
+        subpath = json.get_path(path[:i], entry)
+        if isinstance(subpath, dict) and not test(subpath):
             return False
 
     return True
 
 
 def trim_invisible(data, test=entry_is_visible):
-    paths = list(json.all_paths(data))  # compute up front since we will be modifying data
-    for path in paths:
-        if not json.has_path(path, data):
-            continue  # already deleted
-
-        value = json.get_path(path, data)
+    def pred(path, value):
         if isinstance(value, dict) and not test(value):
-            json.del_path(path, data)
+            return False
+        return True
+
+    return json.filter_paths(pred, data)
 
 
 def visible_part(data, test=entry_is_visible):
@@ -72,6 +76,12 @@ id_fields = {
     "saol.huvudbetydelser.id": SAOL_XNR,
 }
 
+
+@dataclass
+class FixedValue:
+    value: object
+
+
 standard_info = {
     "ortografi": "ortografi",
     "ordklass": "ordklass",
@@ -91,6 +101,8 @@ ids_info = {
     "so.variantformer.l_nr": so_info
     | {
         "ortografi": "so.variantformer.ortografi",
+        "homografNr": "so.variantformer.homografNr",
+        "ingångstyp": FixedValue("variant"),
     },
     "so.vnomen.l_nr": so_info
     | {
@@ -106,6 +118,8 @@ ids_info = {
     "saol.variantformer.id": saol_info
     | {
         "ortografi": "saol.variantformer.ortografi",
+        "homografNr": "so.variantformer.homografNr",
+        "ingångstyp": FixedValue("variant"),
     },
     "saol.huvudbetydelser.id": saol_hb_info,
 }
@@ -319,11 +333,14 @@ class SalexIdInfoPlugin(Plugin):
                 prefix = id_namespaces[id_fields[field]] + "." + id_names[id_fields[field]]
                 id_info = {"id": prefix + id}
                 for key, value_field in info.items():
-                    value_path = json.localise_path(value_field, path)
-                    if json.has_path(value_path, entry):
-                        value = json.get_path(value_path, entry)
+                    if isinstance(value_field, FixedValue):
+                        value = value_field.value
                     else:
-                        value = None
+                        value_path = json.localise_path(value_field, path)
+                        if json.has_path(value_path, entry):
+                            value = json.get_path(value_path, entry)
+                        else:
+                            value = None
                     id_info[key] = value
 
                 result.append(id_info)
