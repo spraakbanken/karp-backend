@@ -5,10 +5,11 @@ from sqlalchemy.orm import Session
 
 from karp import plugins
 from karp.foundation.timings import utc_now
-from karp.lex.domain import entities
+from karp.lex.domain import entities, errors
 from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex.infrastructure import ResourceRepository
+from karp.main.errors import KarpError
 from karp.plugins import Plugins
 from karp.search.infrastructure.es.indices import EsIndex
 
@@ -35,6 +36,12 @@ class ResourceCommands:
             created_at=utc_now(),
             created_by=user,
         )
+
+        # check an entry schema can be generated from the config
+        try:
+            _ = resource.entry_schema
+        except errors.InvalidEntrySchema as e:
+            raise KarpError("Cannot create entry schema from the given config.") from None
 
         self.resources.save(resource)
         config = plugins.transform_config(self.plugins, resource.config, expand_plugins=plugins.INDEXED)
