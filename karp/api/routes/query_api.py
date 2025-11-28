@@ -105,7 +105,7 @@ def query(
     ),
     from_: int = Query(0, alias="from", description="Specify which entry should be the first returned."),
     size: int = Query(25, description="Number of entries in page."),
-    sort: List[str] = Query(
+    sort: str = Query(
         [],
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         # pattern is only supported for str, not list[str]
@@ -134,6 +134,7 @@ def query(
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.
 
     """
+    sort = sort.split(",") if sort else ()
     logger.debug(
         "Called 'query' called with",
         extra={"resources": resources, "from": from_, "size": size},
