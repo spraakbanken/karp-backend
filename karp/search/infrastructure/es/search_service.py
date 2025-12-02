@@ -1,5 +1,6 @@
 import logging
 import re
+import uuid
 from collections import defaultdict
 from typing import Iterable
 
@@ -137,7 +138,7 @@ class EsQueryBuilder(NodeWalker):
         if self.mapping_repo.is_nested(self.resources, field_path):
             inner_hits = {}
             if self.highlight:
-                inner_hits = {"inner_hits": {"_source": False, "highlight": {"fields": {}}}}
+                inner_hits = {"inner_hits": {"_source": False, "highlight": {"fields": {}}, "name": uuid.uuid4()}}
                 non_nested_children = self.mapping_repo.get_non_nested_children(self.resources, field_path)
                 for field in non_nested_children:
                     inner_hits["inner_hits"]["highlight"]["fields"][field] = {}
