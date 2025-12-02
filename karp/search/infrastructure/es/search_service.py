@@ -421,7 +421,7 @@ class EsSearchService:
                 "entry": dict_entry,
             }
             if highlight != HighlightParam.false:
-                res["highlight"] = entry.meta.highlight.to_dict() if hasattr(entry.meta, "highlight") else {}
+                highlight_res = entry.meta.highlight.to_dict() if hasattr(entry.meta, "highlight") else {}
 
                 if hasattr(entry.meta, "inner_hits"):
                     # group the inner_hits by the path without indices
@@ -433,22 +433,24 @@ class EsSearchService:
 
                     # remove duplicates from the outer highlighting
                     for path_wo_indices in inner_hits_highlights.keys():
-                        res["highlight"].pop(path_wo_indices, None)
+                        highlight_res.pop(path_wo_indices, None)
 
                     # for compatibility reasons, if HighlightParam.true, use older format without indices
                     # this can be removed when frontend has updated to use the new format with indices.
                     if highlight == HighlightParam.true:
                         for path_wo_indices, val in inner_hits_highlights.items():
                             # flatten for path_wo_indices
-                            res["highlight"][path_wo_indices] = [
+                            highlight_res[path_wo_indices] = [
                                 inner_highlight
                                 for inner_highlights in val.values()
                                 for inner_highlight in inner_highlights
                             ]
                     else:
                         for val in inner_hits_highlights.values():
-                            res["highlight"].update(val)
-
+                            highlight_res.update(val)
+                if highlight_res:
+                    # only add key if there are highlights
+                    res["highlight"] = highlight_res
             for mapped_name, field in es_mapping_repo.internal_fields.items():
                 res[mapped_name] = dict_entry.pop(field.name, None)
 
