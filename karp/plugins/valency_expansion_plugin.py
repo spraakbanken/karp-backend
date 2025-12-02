@@ -5,7 +5,7 @@ from .plugin import Plugin
 
 class ValencyPlugin(Plugin):
     def cleanup(self, val):
-        val = re.sub(r"\[caps \/", "/[caps ", val) # "det[caps /något" --> "det/[caps något] 
+        val = re.sub(r"\[caps \/", "/[caps ", val)  # "det[caps /något" --> "det/[caps något]
         val = re.sub(r"  +", " ", val)  # "    "  -->  " "
         val = re.sub(r" \] ?", r"] ", val)  # "[caps någon ]enar"  -->  "[caps någon] enar"
         val = re.sub(r" ?/ ?", "/", val)  # "någon /några" --> någon/några"
@@ -51,9 +51,9 @@ class ValencyPlugin(Plugin):
             # replace back all temporary symbols
             exp = exp.replace("{#", "(").replace("#}", ")").replace("{%", "[").replace("%}", "]").replace("_", " ")
             # this turns "(" and ")" back into "[caps (]"
-            #exp = re.sub(r"([\(\)])", r"[caps \1]", exp)
+            # exp = re.sub(r"([\(\)])", r"[caps \1]", exp)
             if not valens == exp:
                 expansions.append({"exp_valens": exp})
-        if len(expansions) == 1 : 
-          return []
+        if len(expansions) == 1:
+            return []
         return expansions
