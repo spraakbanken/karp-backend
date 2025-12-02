@@ -420,8 +420,8 @@ class EsSearchService:
                 "id": entry.meta.id,
                 "entry": dict_entry,
             }
-            if highlight != HighlightParam.false and hasattr(entry.meta, "highlight"):
-                res["highlight"] = entry.meta.highlight.to_dict()
+            if highlight != HighlightParam.false:
+                res["highlight"] = entry.meta.highlight.to_dict() if hasattr(entry.meta, "highlight") else {}
 
                 if hasattr(entry.meta, "inner_hits"):
                     # group the inner_hits by the path without indices
