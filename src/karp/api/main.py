@@ -34,7 +34,18 @@ entries in the resource will be returned.
 
 ### Query language
 
+#### Search strings
+
+In the examples below, `<string>` can be either:
+
+- any characters except `"`, `|`, `(` or `)`
+- any characters, enclosed in double quotes, but any `"` inside the quotes must be escaped with `\`, for example: `equals|field|"A \"good\" example"`
+
+In addition to these rules, characters that are part of the URI syntax, such as `?` and `&` needs to be encoded. For example, the whole query can be
+encoded using Javascript's `encodeURIComponent`.
+
 #### Query operators
+
 - `contains|<field>|<string>` Find all entries where the field <field> contains <string>. More premissive than equals.
 
 - `endswith|<field>|<string>` Find all entries where the field <field> ends with <string>
