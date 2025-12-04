@@ -19,7 +19,7 @@ line-length = 120
 # Avoid trying to fix flake8-bugbear (`B`) violations.
 lint.unfixable = ["B"]
 
-extend-exclude = ["karp/search/domain/query_dsl/karp_query_parser.py", "karp/search/domain/query_dsl/karp_query_model.py"]
+extend-exclude = ["src/karp/search/domain/query_dsl/karp_query_parser.py", "src/karp/search/domain/query_dsl/karp_query_model.py"]
 
 [lint.flake8-builtins]
 # This makes it okay to use given names even though it shadows built-in id without totally ignoring the A001 rule

@@ -127,7 +127,6 @@ def register_plugin_entry_point(entry_point):
 
     plugin_registry[entry_point.name] = load_plugin
 
-
 for entry_point in entry_points("karp.plugin"):
     register_plugin_entry_point(entry_point)
 

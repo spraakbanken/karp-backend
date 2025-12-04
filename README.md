@@ -58,9 +58,18 @@ We use [MariaDB](https://mariadb.org/) for storage and [Elasticsearch][es-downlo
 
 ## Development
 
-This project uses [poetry](https://python-poetry.org).
+This project uses [uv](https://docs.astral.sh/uv/).
 
-A Makefile is provided to simplify tasks.
+A Makefile is provided to simplify tasks. 
+
+If `uv` is pre-installed, `make` will assume that everything is setup as the user wants and just invoke `uv`.
+
+If `uv` is *not* pre-installed, but the user has activated a virtualenv, `make`-invokations will:
+- install `uv`
+- if env. variable `UV_PROJECT_ENVIRONMENT` is not set, will be set to `$VIRTUAL_ENV`
+And then proceed as normally.
+
+If neither `uv` is available or a virtual environment activated, the user must set up either manually to be able to use `make`.
 
 ### Getting started
 
@@ -82,9 +91,7 @@ A Makefile is provided to simplify tasks.
    ```
 5. Activate the virtual environment by running: `poetry shell`
 6. Run `karp-cli db up` to initialize database
-7. Run `make serve` or `make serve-w-reload` to start development server
-
-   or `poetry shell` and then `uvicorn --factory karp.karp_v6_api.main:create_app`
+7. Run `make serve` or `make serve-w-reload` or `(uv run) uvicorn --factory karp.karp_v6_api.main:create_app` to start a development server.
 
 8. To setup Elasticsearch, [download][es-download] Elasticsearch 8.x and run the
    following commands from the `elasticsearch-8.XXX` directory:
@@ -100,12 +107,11 @@ export ELASTICSEARCH_HOST=http://localhost:9200
 
 ## Create test resources
 
-1. `poetry shell` and then:
-2. `karp-cli resource create assets/testing/config/places.yaml`
-3. `karp-cli entries add places assets/testing/data/places.jsonl`
-4. Do the same for `municipalities`
-5. `karp-cli resource publish places 1`
-6. `karp-cli resource publish municipalities 1`
+1. `(uv run) karp-cli resource create assets/testing/config/places.yaml`
+2. `(uv run) karp-cli entries add places assets/testing/data/places.jsonl`
+3. Do the same for `municipalities`
+4. `(uv run) karp-cli resource publish places 1`
+5. `(uv run) karp-cli resource publish municipalities 1`
 
 ## Technologies
 
@@ -130,8 +136,7 @@ Run type checking with `make type-check` or just `basedpyright`.
 
 We use [basedpyright](https://docs.basedpyright.com/) which is like [Pyright](https://microsoft.github.io/pyright/), but without a NodeJS dependency.
 
-Currently actual type checking is only done on selected files, but basedpyright provides
-"syntax and sematic errors" for all files.
+Currently actual type checking is only done on selected files, but basedpyright provides "syntax and sematic errors" for all files.
 
 ### Testing
 
@@ -179,6 +184,6 @@ Usual commands for `ruff` is:
 
 Update version in the following files:
 - [`pyproj.toml`](pyproject.toml)
-- [`karp.main.config`](karp/main/config.py)
+- [`karp.main.config`](src/karp/main/config.py)
 
 [es-download]: https://www.elastic.co/downloads/elasticsearch
