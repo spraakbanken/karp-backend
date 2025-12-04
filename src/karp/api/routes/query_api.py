@@ -105,8 +105,8 @@ def query(
     ),
     from_: int = Query(0, alias="from", description="Specify which entry should be the first returned."),
     size: int = Query(25, description="Number of entries in page."),
-    sort: str = Query(
-        [],
+    sort: str | None = Query(
+        None,
         description="The `field` to sort by. If missing, default order for each resource will be used.",
         # pattern is only supported for str, not list[str]
         # pattern=r"^[a-zA-Z0-9_\-]+(\|asc|desc)?",
