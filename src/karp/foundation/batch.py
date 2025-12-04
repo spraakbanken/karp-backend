@@ -27,5 +27,5 @@ def batch_items(items: Iterable, max_batch_size=None) -> Iterator[list]:
             if max_batch_size is not None:
                 n = min(n, max_batch_size)
 
-    for _, group in groupby(zip(batch_numbers(), items), key=lambda pair: pair[0]):
+    for _, group in groupby(zip(batch_numbers(), items, strict=False), key=lambda pair: pair[0]):
         yield [item for _, item in group]

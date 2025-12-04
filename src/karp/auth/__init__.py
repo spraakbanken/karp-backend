@@ -3,7 +3,7 @@ from karp.auth.domain.user import User
 from karp.foundation.value_objects import PermissionLevel
 
 __all__ = [
-    "errors",
-    "User",
     "PermissionLevel",
+    "User",
+    "errors",
 ]

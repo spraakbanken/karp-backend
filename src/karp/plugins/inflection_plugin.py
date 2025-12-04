@@ -179,7 +179,7 @@ def get_first_step(rules):
         return "=", rules[1:]
     else:
         # the start position of the next rule
-        pos = re.match("[" + delimiters + "]" "[^" + delimiters + "]+", rules).end()
+        pos = re.match("[" + delimiters + "][^" + delimiters + "]+", rules).end()
         return rules[0:pos], rules[pos:]
 
 

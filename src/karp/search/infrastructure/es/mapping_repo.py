@@ -155,7 +155,9 @@ class EsMappingRepository:
         if None in fields:
             # the field does not exist in at least one of the selected resources
             raise FieldDoesNotExist(
-                resource_ids=[resource_id for resource_id, field in zip(resource_ids, fields) if not field],
+                resource_ids=[
+                    resource_id for resource_id, field in zip(resource_ids, fields, strict=False) if not field
+                ],
                 field=field_name,
             )
         if fields.count(fields[0]) != len(fields):

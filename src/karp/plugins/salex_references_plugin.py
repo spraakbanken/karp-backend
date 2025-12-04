@@ -287,12 +287,12 @@ class SalexBackwardReferencesPlugin(Plugin):
 
         id_references = {
             id: [get_result(id, entry) for entry in entries["hits"]]
-            for id, entries in zip(all_ids, query_results)  # noqa: A001
+            for id, entries in zip(all_ids, query_results, strict=False)  # noqa: A001
         }
 
         # now collect the results
         result = []
-        for ids, item in zip(item_ids, batch):
+        for ids, item in zip(item_ids, batch, strict=False):
             references = []
             for id in ids:  # noqa: A001
                 references += id_references.get(id, [])

@@ -6,10 +6,10 @@ from copy import deepcopy
 from dataclasses import dataclass
 from enum import IntEnum, global_enum
 from functools import wraps
+from graphlib import CycleError, TopologicalSorter
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type
 
 import methodtools
-from graphlib import CycleError, TopologicalSorter
 from injector import Injector, inject
 
 from karp.foundation.batch import batch_items
@@ -101,7 +101,7 @@ def group_batch_by(*args):
                 if len(sub_batch_results) != len(items):
                     raise AssertionError("size mismatch")
 
-                for i, result in zip(items, sub_batch_results):
+                for i, result in zip(items, sub_batch_results, strict=False):
                     results[i] = result
 
             return [results[i] for i in range(len(batch))]
@@ -126,6 +126,7 @@ def register_plugin_entry_point(entry_point):
         return cls
 
     plugin_registry[entry_point.name] = load_plugin
+
 
 for entry_point in entry_points("karp.plugin"):
     register_plugin_entry_point(entry_point)
@@ -318,7 +319,7 @@ def transform_entries(
         new_entries = transform_list(
             plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results, expand_plugins
         )
-        for entry_dto, new_entry in zip(batch, new_entries):
+        for entry_dto, new_entry in zip(batch, new_entries, strict=False):
             entry_dto = entry_dto.model_copy(deep=True)
             entry_dto.entry = new_entry
             yield entry_dto
@@ -397,7 +398,7 @@ def transform_list(
 
         # Execute the batch query and store the results into cached_results
         batch_result_list = plugins.generate_batch(config, batch_dict.values())
-        results = dict(zip(batch_dict, batch_result_list))
+        results = dict(zip(batch_dict, batch_result_list, strict=False))
 
         if config.cache_plugin_expansion:
             inner_cached_results |= results
@@ -526,7 +527,7 @@ def transform_list(
 
         # Execute the plugin on the batch and store the result
         batch_result = generate_batch(virtual_fields[field_name], batch)
-        for (i, pos), result in zip(batch_occurrences, batch_result):
+        for (i, pos), result in zip(batch_occurrences, batch_result, strict=False):
             set_path(pos, result, bodies[i])
 
     # Delete any hidden fields

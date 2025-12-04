@@ -12,10 +12,10 @@ from .domain.value_objects import (
 __all__ = [
     # dtos
     "EntryDto",
-    "GetHistoryDto",
-    "HistoryDto",
     # value objects
     "EntrySchema",
-    "ResourceConfig",
     "Field",
+    "GetHistoryDto",
+    "HistoryDto",
+    "ResourceConfig",
 ]

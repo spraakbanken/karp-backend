@@ -8,10 +8,10 @@ from karp.lex.domain.entities.resource import Resource, ResourceOp, create_resou
 
 __all__ = [
     "Entry",
-    "EntryStatus",
-    "create_entry",
     "EntryOp",
+    "EntryStatus",
     "Resource",
-    "create_resource",
     "ResourceOp",
+    "create_entry",
+    "create_resource",
 ]

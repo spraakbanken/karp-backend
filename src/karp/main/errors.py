@@ -54,7 +54,7 @@ class QueryParserError(UserError):
 class SortError(UserError):
     def __init__(self, resource_ids: list[str], sort_value: str | None = None):
         super().__init__(
-            message=f"You can't sort by field '{sort_value}' for resource '{", ".join(resource_ids)}'",
+            message=f"You can't sort by field '{sort_value}' for resource '{', '.join(resource_ids)}'",
             code=ClientErrorCodes.SORT_ERROR,
         )
 

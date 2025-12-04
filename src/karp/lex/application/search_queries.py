@@ -47,7 +47,7 @@ class SearchQueries:
             config = self.resources.by_resource_id(resource).config
             hits = [results[i].result["hits"][j]["entry"] for i, j in hit_ids]
             hits = transform_list(self.plugins, config, hits, expand_plugins=phases)
-            for (i, j), hit in zip(hit_ids, hits):
+            for (i, j), hit in zip(hit_ids, hits, strict=False):
                 results[i].result["hits"][j]["entry"] = hit
 
         # Handle path field
@@ -72,7 +72,7 @@ class SearchQueries:
         for q in queries:
             q.path = None
         results = self.search.multi_query(queries)
-        return self._transform_results([_Result(p, r) for p, r in zip(paths, results)], **kwargs)
+        return self._transform_results([_Result(p, r) for p, r in zip(paths, results, strict=False)], **kwargs)
 
     def search_ids(self, resource_id: str, entry_ids: List[str], **kwargs):
         result = self.search.search_ids(resource_id, entry_ids)

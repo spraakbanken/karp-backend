@@ -69,7 +69,8 @@ class BacklinkPlugin(Plugin):
         query_results = self.search_queries.multi_query(requests, expand_plugins=INDEXED)
 
         id_references = {
-            id: [entry["entry"][field] for entry in entries["hits"]] for id, entries in zip(all_ids, query_results)
+            id: [entry["entry"][field] for entry in entries["hits"]]
+            for id, entries in zip(all_ids, query_results, strict=False)
         }
 
         # now collect the results

@@ -33,7 +33,7 @@ class APIKeyService:
     def create_api_key(self, username, resources: List[str], level: str):
         api_key = _generate_api_key()
         num_level = levels[level]
-        permissions = {resource: num_level for resource in resources}
+        permissions = dict.fromkeys(resources, num_level)
         new_key = ApiKeyModel(username=username, api_key=api_key, permissions=permissions)
         self.session.add(new_key)
         self.session.commit()

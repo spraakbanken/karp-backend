@@ -11,11 +11,11 @@ from karp.api.dependencies.auth_deps import (
 )
 
 __all__ = [
-    "get_entry_queries",
-    "get_resource_queries",
     "get_auth_service",
+    "get_entry_queries",
+    "get_published_resources",
+    "get_resource_permission_queries",
+    "get_resource_queries",
     "get_user",
     "get_user_optional",
-    "get_resource_permission_queries",
-    "get_published_resources",
 ]

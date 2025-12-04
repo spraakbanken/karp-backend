@@ -24,7 +24,7 @@ def choose_from(choices: List[T], choice_fmt: Callable[[T], str]) -> T:
     for i, choice in enumerate(choices):
         typer.echo(f"{i}) {choice_fmt(choice)}")
     while True:
-        number = typer.prompt(f"Choose from above with (0-{len(choices)-1}):")
+        number = typer.prompt(f"Choose from above with (0-{len(choices) - 1}):")
         return choices[int(number)]
 
 
