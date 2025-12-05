@@ -1,10 +1,10 @@
 {
     
     "include": [
-        "karp",
+        "src",
         "tests"
     ],
-    "ignore": ["karp/plugins/salex_references_plugin.py", "karp/plugins/plugin.py"],
+    "ignore": ["src/karp/plugins/salex_references_plugin.py", "src/karp/plugins/plugin.py"],
     "reportMissingImports": "information",
     "reportUndefinedVariable": "warning",
     "reportInvalidTypeForm": "error",

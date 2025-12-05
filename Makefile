@@ -1,10 +1,7 @@
 .DEFAULT: test
 
-ifeq (${VIRTUAL_ENV},)
-  INVENV = poetry run
-else
-  INVENV =
-endif
+UV = uv run
+UV_EXISTS := $(shell command -v uv 2>/dev/null)
 
 .PHONY: help
 help:
@@ -34,31 +31,45 @@ help:
 	@echo "tags"
 	@echo "   generate tags file"
 
-install:
-	poetry install --only=main
+.PHONY: ensure-uv
+ensure-uv:
+ifeq ($(UV_EXISTS),)
+	ifeq (${VIRTUAL_ENV},)
+		@echo "Set up either uv or a virtual environment to install with this Makefile. See README.md"
+		@false
+	else
+		pip install uv
+		export UV_PROJECT_ENVIRONMENT=$VIRTUAL_ENV
+	endif
+else
+	@:
+endif
+
+install: ensure-uv
+	uv sync --no-dev
 
 dev: install-dev
-install-dev:
-	poetry install
+install-dev: ensure-uv
+	uv sync
 
 init-db:
-	${INVENV} alembic upgrade head
+	${UV} alembic upgrade head
 
-build-parser: karp/search/domain/query_dsl/karp_query_parser.py karp/search/domain/query_dsl/karp_query_model.py
+build-parser: src/karp/search/domain/query_dsl/karp_query_parser.py src/karp/search/domain/query_dsl/karp_query_model.py
 
-karp/search/domain/query_dsl/karp_query_parser.py: grammars/query.ebnf
-	${INVENV} tatsu $< > $@
+src/karp/search/domain/query_dsl/karp_query_parser.py: grammars/query.ebnf
+	${UV} tatsu $< > $@
 
-karp/search/domain/query_dsl/karp_query_model.py: grammars/query.ebnf
-	${INVENV} tatsu --object-model $< > $@
+src/karp/search/domain/query_dsl/karp_query_model.py: grammars/query.ebnf
+	${UV} tatsu --object-model $< > $@
 
 .PHONY: serve
 serve: install-dev
-	${INVENV} uvicorn --factory karp.api.main:create_app
+	${UV} uvicorn --factory karp.api.main:create_app
 
 .PHONY: serve-w-reload
 serve-w-reload: install-dev
-	${INVENV} uvicorn --reload --factory karp.api.main:create_app
+	${UV} uvicorn --reload --factory karp.api.main:create_app
 
 unit_test_dirs := tests/unit
 e2e_test_dirs := tests/e2e
@@ -72,35 +83,35 @@ test: unit-tests
 
 .PHONY: all-tests
 all-tests: clean-pyc type-check
-	${INVENV} pytest -vv tests
+	${UV} pytest -vv tests
 
 .PHONY: unit-tests
 unit-tests:
-	${INVENV} pytest -vv tests/unit
+	${UV} pytest -vv tests/unit
 
 .PHONY: e2e-tests
 e2e-tests: clean-pyc
-	${INVENV} pytest -vv tests/e2e
+	${UV} pytest -vv tests/e2e
 
 .PHONY: integration-tests
 integration-tests: clean-pyc
-	${INVENV} pytest -vv tests/integration
+	${UV} pytest -vv tests/integration
 
 .PHONY: lint
 lint:
-	${INVENV} ruff check ${flags} .
+	${UV} ruff check ${flags} .
 
 .PHONY: lint-fix
 lint-fix:
-	${INVENV} ruff check ${flags} . --fix
+	${UV} ruff check ${flags} . --fix
 
 .PHONY: fmt
 fmt:
-	${INVENV} ruff format .
+	${UV} ruff format .
 
 .PHONY: type-check
 type-check:
-	${INENV} basedpyright
+	${UV} basedpyright
 
 .PHONY: tags
 tags:
