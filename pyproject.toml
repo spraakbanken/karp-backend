@@ -33,6 +33,7 @@ dependencies = [
     "uvicorn==0.38.0",
     "methodtools==0.4.7",
     "PyYAML==6.0.1",
+    "sentence_transformers==3.1.1"
 ]
 
 [dependency-groups]
@@ -60,6 +61,7 @@ karp-cli = "karp.cliapp.main:cliapp"
 "salex_backward_references" = "karp.plugins.salex_references_plugin:SalexBackwardReferencesPlugin"
 "salex_id_info" = "karp.plugins.salex_references_plugin:SalexIdInfoPlugin"
 "salex_reference_info" = "karp.plugins.salex_references_plugin:SalexReferenceInfoPlugin"
+"salex_bertvectors" = "karp.plugins.salex_bertvector_plugin:BertVectorPlugin"
 
 [tool.uv]
 package = true
