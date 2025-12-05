@@ -176,16 +176,17 @@ def batch_entries(
 ):
     """Run entry commands in batch.
 
-    This command expects a list with dicts with the key `cmd` that is a serialized
-    command that defines `cmdtype`. Available commands: `add_entry`, `update_entry`, `delete_entry`
+    Available commands: `add_entry`, `update_entry`, `delete_entry`
 
     - Edits that lead to conflicts will be blocked
 
     - Use `karp-cli entries validate ...` to check the validity of your data file before running this
 
+    - Commands can either be given as one per row (JSONL) or as an array of commands (JSON).
+
     > Example data row:
 
-    `[{"cmd": {"cmdtype": "add_entry","resource_id": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}}]`
+    `{"cmdtype": "add_entry","resource_id": "resource_a","entry": {"baseform": "sko"},"message": "add sko","user": "alice@example.com"}`
     """
     import json_arrays
 
