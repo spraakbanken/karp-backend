@@ -49,7 +49,6 @@ class BertVectorPlugin(Plugin):
             texten = ortografi + " " + böjning + " " + get_text(betydelse)
             texten = " ".join([texten] + [get_text(bet) for bet in betydelse.get("underbetydelser", [])])
             texten = clean_tags(clean_refs(texten))
-            print(texten)
             bertembedding = np.array(
                 kbmodel.encode(texten)
             ).tolist()  # tolist() avoids "np.float_" issue in elasticsearch
