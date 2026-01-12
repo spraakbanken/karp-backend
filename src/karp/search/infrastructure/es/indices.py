@@ -160,6 +160,7 @@ def _create_es_mapping(config):
     fields = config.fields
 
     def recursive_field(parent_schema, parent_field_name, parent_field_def):
+        source_exclude_fields = []
         if parent_field_def.type != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
@@ -185,12 +186,21 @@ def _create_es_mapping(config):
                 result["type"] = "nested"
 
             for child_field_name, child_field_def in parent_field_def.fields.items():
-                recursive_field(result, child_field_name, child_field_def)
+                child_source_exclude_fields = recursive_field(result, child_field_name, child_field_def)
+                for elem in child_source_exclude_fields:
+                    source_exclude_fields.append(parent_field_name + "." + elem)
+
+        if not parent_field_def.store:
+            source_exclude_fields.append(parent_field_name)
 
         parent_schema["properties"][parent_field_name] = result
 
+        return source_exclude_fields
+
+    es_mapping["_source"] = {"excludes": []}
     for field_name, field_def in fields.items():
         logger.info(f"creating mapping for field '{field_name}'")
-        recursive_field(es_mapping, field_name, field_def)
+        source_exclude_fields = recursive_field(es_mapping, field_name, field_def)
+        es_mapping["_source"]["excludes"].extend(source_exclude_fields)
 
     return es_mapping

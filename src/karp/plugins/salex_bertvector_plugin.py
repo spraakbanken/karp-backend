@@ -40,11 +40,11 @@ def get_text(entry):
 
 
 class BertVectorPlugin(Plugin):
-    def output_config(self):  # noqa
-        config = {"collection": True, "type": "float", "cache_plugin_expansion": False}
+    def output_config(self, config):
+        config = {"collection": True, "type": "float", "cache_plugin_expansion": False, **config}
         return config
 
-    def generate(self, ortografi, visas, böjning, betydelse):
+    def generate(self, ortografi, visas, böjning, betydelse, **kwargs):
         if visas and entry_is_visible(betydelse):
             texten = ortografi + " " + böjning + " " + get_text(betydelse)
             texten = " ".join([texten] + [get_text(bet) for bet in betydelse.get("underbetydelser", [])])
