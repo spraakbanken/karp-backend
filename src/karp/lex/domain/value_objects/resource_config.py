@@ -109,6 +109,7 @@ class Field(BaseModel):
     type: Optional[str] = None  # required except for virtual fields
     required: bool = False
     collection: bool = False
+    store: bool = True
     virtual: bool = False
     plugin: Optional[str] = None
     params: dict[str, Any] = {}
