@@ -116,6 +116,7 @@ class TestCreateEsMapping:
         mapping = _create_es_mapping(data)
 
         expected = {
+            "_source": {"excludes": []},
             "dynamic": False,
             "properties": {
                 "name": {
