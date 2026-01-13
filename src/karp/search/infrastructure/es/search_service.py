@@ -370,7 +370,7 @@ class EsSearchService:
             else:
                 new_s = self.mapping_repo.get_default_sort(resources)
                 if new_s:
-                    s = s.sort(new_s)
+                    s = s.sort(*new_s)
 
         logger.debug("s = %s", extra={"es_query s": s.to_dict()})
         return s
