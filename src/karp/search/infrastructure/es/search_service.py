@@ -7,11 +7,11 @@ from typing import Iterable
 import elasticsearch
 import elasticsearch.helpers
 import elasticsearch_dsl as es_dsl
-from injector import inject
 from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
 from karp.foundation.json import get_path
+from karp.globals import es
 from karp.main.errors import KarpError, QueryParserError
 from karp.search.domain import QueryRequest
 from karp.search.domain.highlight_param import HighlightParam
@@ -36,7 +36,7 @@ class EsQueryBuilder(NodeWalker):
         value = self.walk(node.arg)
 
         # using * to include all fields would include unanalyzed .raw fields, so we must list fields explicitly
-        tree = self.mapping_repo.get_fields_as_tree(self.resources, self.path)
+        tree = self.mapping_repo.get_fields_as_tree(tuple(self.resources), tuple(self.path))
 
         def recurse(tree: dict, path: str):
             queries = []
@@ -135,11 +135,11 @@ class EsQueryBuilder(NodeWalker):
         if field_path + "." == self.path[-1]:
             return query
 
-        if self.mapping_repo.is_nested(self.resources, field_path):
+        if self.mapping_repo.is_nested(tuple(self.resources), field_path):
             inner_hits = {}
             if self.highlight:
                 inner_hits = {"inner_hits": {"_source": False, "highlight": {"fields": {}}, "name": uuid.uuid4()}}
-                non_nested_children = self.mapping_repo.get_non_nested_children(self.resources, field_path)
+                non_nested_children = self.mapping_repo.get_non_nested_children(tuple(self.resources), field_path)
                 for field in non_nested_children:
                     inner_hits["inner_hits"]["highlight"]["fields"][field] = {}
             query = es_dsl.Q("nested", path=field_path, query=query, **inner_hits)
@@ -160,7 +160,9 @@ class EsQueryBuilder(NodeWalker):
         else:
             # Add the current path to field, for example query path(equals|field|val)
             # must yield an es-query in field "path.field"
-            field_obj = self.mapping_repo.get_field(self.resources, self.path[-1] + field_path.removesuffix(".length"))
+            field_obj = self.mapping_repo.get_field(
+                tuple(self.resources), self.path[-1] + field_path.removesuffix(".length")
+            )
             # if the field query has ".length" appended, and the field is text, we must query raw
             if is_length:
                 if field_obj.type == "text":
@@ -273,14 +275,8 @@ def remove_indices_from_path(path: str) -> str:
 
 
 class EsSearchService:
-    @inject
-    def __init__(
-        self,
-        es: elasticsearch.Elasticsearch,
-        mapping_repo: EsMappingRepository,
-    ):
-        self.es: elasticsearch.Elasticsearch = es
-        self.mapping_repo = mapping_repo
+    def __init__(self):
+        self.mapping_repo = EsMappingRepository()
         self.field_name_collector = EsFieldNameCollector()
         self.parser = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
 
@@ -306,7 +302,7 @@ class EsSearchService:
                 self._searches.append(search)
                 return self
 
-        ms = WorkaroundMultiSearch(using=self.es)
+        ms = WorkaroundMultiSearch(using=es)
         for query in queries:
             ms = ms.add(self._build_search(query, query.resources))
         responses = ms.execute()
@@ -336,7 +332,7 @@ class EsSearchService:
             except tatsu_exc.FailedParse as err:
                 raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
-        s = es_dsl.Search(using=self.es, index=resources)
+        s = es_dsl.Search(using=es, index=resources)
         if builder:
             s = _add_runtime_mappings(s, builder.length_mappings)
         s = s.extra(track_total_hits=True)  # get accurate hits numbers
@@ -366,9 +362,9 @@ class EsSearchService:
         if query.size != 0:
             # if no hits are returned, no sorting is needed
             if query.sort:
-                s = s.sort(*self.mapping_repo.translate_sort_fields(resources, query.sort))
+                s = s.sort(*self.mapping_repo.translate_sort_fields(tuple(resources), tuple(query.sort)))
             else:
-                new_s = self.mapping_repo.get_default_sort(resources)
+                new_s = self.mapping_repo.get_default_sort(tuple(resources))
                 if new_s:
                     s = s.sort(*new_s)
 
@@ -474,13 +470,13 @@ class EsSearchService:
     def search_ids(self, resource_id: str, entry_ids: list[str]):
         query = es_dsl.Q("terms", _id=entry_ids)
         logger.debug("query", extra={"query": query})
-        s = es_dsl.Search(using=self.es, index=resource_id).query(query)
+        s = es_dsl.Search(using=es, index=resource_id).query(query)
         logger.debug("s", extra={"es_query s": s.to_dict()})
         response = s.execute()
         return self._format_result(response)
 
     def statistics(self, resource_id: str, field: str) -> Iterable:
-        s = es_dsl.Search(using=self.es, index=resource_id)
+        s = es_dsl.Search(using=es, index=resource_id)
         s = s[:0]
 
         # if field is analyzed, do aggregation on the "raw" multi-field

@@ -4,9 +4,8 @@ from typing import Any, Optional
 
 from karp import auth
 from karp.api import dependencies as deps
-from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.auth.application.resource_permission_queries import ResourcePermissionQueries
-from karp.lex.application import SearchQueries
+from karp.auth.application import resource_permission_queries as resource_permissions
+from karp.lex.application import search_queries
 from karp.search.domain.query_request import QueryRequest
 
 from .plugin import Plugin
@@ -279,8 +278,6 @@ class InflectionPlugin(Plugin):
             exclude_wordforms: Optional[str] = None,
             kind: Optional[str] = None,
             user: auth.User = Depends(deps.get_user_optional),
-            resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-            search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
         ) -> list[Any]:
             # user must have READ access to the resource publishing this route
             if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):

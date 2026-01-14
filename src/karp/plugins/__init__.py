@@ -5,7 +5,6 @@ from .plugin import (
     ExpansionPhase,
     ExpansionPhases,
     Plugin,
-    Plugins,
     expansion_phases,
     register_plugin,
     transform,
@@ -18,7 +17,6 @@ from .plugin import (
 
 __all__ = [
     "Plugin",
-    "Plugins",
     "ExpansionPhases",
     expansion_phases,
     "ExpansionPhase",

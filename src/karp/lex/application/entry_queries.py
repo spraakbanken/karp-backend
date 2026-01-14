@@ -15,163 +15,154 @@ from karp.lex.application.dtos import (
     HistoryDto,
 )
 from karp.foundation.value_objects import UniqueId, UniqueIdStr
-from ..infrastructure.sql import ResourceRepository
-from injector import inject
+from ..infrastructure.sql import resource_repository
 from karp import plugins
-from karp.plugins import Plugins
 
 logger = logging.getLogger(__name__)
 
 
-class EntryQueries:
-    @inject
-    def __init__(
-        self,
-        resources: ResourceRepository,
-        plugins: Plugins,
-    ) -> None:
-        super().__init__()
-        self.resources = resources
-        self.plugins = plugins
+def _to_dtos(resource_id, entries: typing.Iterable[Entry], expand_plugins=True) -> typing.Iterator[EntryDto]:
+    resource = resource_repository.by_resource_id(resource_id)
+    result = (EntryDto.from_entry(entry) for entry in entries)
+    return plugins.transform_entries(resource.config, result, expand_plugins=expand_plugins)
 
-    def _to_dtos(self, resource_id, entries: typing.Iterable[Entry], expand_plugins=True) -> typing.Iterator[EntryDto]:
-        resource = self.resources.by_resource_id(resource_id)
-        result = (EntryDto.from_entry(entry) for entry in entries)
-        return plugins.transform_entries(self.plugins, resource.config, result, expand_plugins=expand_plugins)
 
-    def _to_dto(self, entry: Entry, **kwargs) -> EntryDto:
-        return next(self._to_dtos(entry.resource_id, [entry], **kwargs))
+def _to_dto(entry: Entry, **kwargs) -> EntryDto:
+    return next(_to_dtos(entry.resource_id, [entry], **kwargs))
 
-    def by_id(
-        self,
-        resource_id: str,
-        id: UniqueIdStr,  # noqa: A002
-        **kwargs,
-    ) -> EntryDto:
-        entries = self.resources.entries_by_resource_id(resource_id)
-        return self._to_dto(entries.by_id(UniqueId.validate(id)), **kwargs)
 
-    def by_id_optional(
-        self,
-        resource_id: str,
-        id: UniqueIdStr,  # noqa: A002
-        **kwargs,
-    ) -> typing.Optional[EntryDto]:
-        entries = self.resources.entries_by_resource_id(resource_id)
-        if entry := entries.by_id_optional(UniqueId.validate(id)):
-            return self._to_dto(entry, **kwargs)
-        return None
+def by_id(
+    resource_id: str,
+    id: UniqueIdStr,  # noqa: A002
+    **kwargs,
+) -> EntryDto:
+    entries = resource_repository.entries_by_resource_id(resource_id)
+    return _to_dto(entries.by_id(UniqueId.validate(id)), **kwargs)
 
-    def transform_entry_body(
-        self,
-        resource_id: str,
-        entry_body: dict,
-    ) -> dict:
-        resource = self.resources.by_resource_id(resource_id)
-        return plugins.transform(self.plugins, resource.config, entry_body)
 
-    def all_entries(self, resource_id: str, last_modified: int | None = None, **kwargs) -> typing.Iterable[EntryDto]:
-        entries = self.resources.entries_by_resource_id(resource_id)
-        return self._to_dtos(resource_id, entries.all_entries(last_modified=last_modified), **kwargs)
+def by_id_optional(
+    resource_id: str,
+    id: UniqueIdStr,  # noqa: A002
+    **kwargs,
+) -> typing.Optional[EntryDto]:
+    entries = resource_repository.entries_by_resource_id(resource_id)
+    if entry := entries.by_id_optional(UniqueId.validate(id)):
+        return _to_dto(entry, **kwargs)
+    return None
 
-    def deleted_entries(self, resource_id: str, last_modified: int | None = None) -> typing.Iterable[str]:
-        entries = self.resources.entries_by_resource_id(resource_id)
-        return entries.deleted_entries(last_modified=last_modified)
 
-    def get_max_last_modified(self, resource_id: str):
-        entries = self.resources.entries_by_resource_id(resource_id)
-        return entries.get_max_last_modified()
+def transform_entry_body(
+    resource_id: str,
+    entry_body: dict,
+) -> dict:
+    resource = resource_repository.by_resource_id(resource_id)
+    return plugins.transform(resource.config, entry_body)
 
-    def get_entry_history(
-        self,
-        resource_id: str,
-        id: UniqueIdStr,  # noqa: A002
-        version: typing.Optional[int],
-    ) -> EntryDto:
-        entries = self.resources.entries_by_resource_id(resource_id)
-        result = entries.by_id(UniqueId.validate(id), version=version)
-        return self._to_dto(result, expand_plugins=False)
 
-    def get_history(
-        self,
-        request: EntryHistoryRequest,
-    ) -> GetHistoryDto:
-        logger.info("querying history", extra={"request": request})
-        entries = self.resources.entries_by_resource_id(request.resource_id)
-        paged_query, total = entries.get_history(
-            entry_id=request.entry_id,
-            user_id=request.user_id,
-            from_date=request.from_date,
-            to_date=request.to_date,
-            from_version=request.from_version,
-            to_version=request.to_version,
-            offset=request.current_page * request.page_size,
-            limit=request.page_size,
-        )
-        result = []
-        previous_body: dict[str, typing.Any] = {}
-        for history_entry in paged_query:
-            # TODO fix this, we should get the diff in another way, probably store the diffs directly in the database
-            # entry_version = history_entry.version
-            # if entry_version > 1:
-            #     previous_entry = entries.by_entry_id(
-            #         history_entry.entry_id, version=entry_version - 1
-            #     )
-            #     previous_body = previous_entry.body
-            # else:
-            #     previous_body = {}
-            history_diff = jsondiff.compare(previous_body, history_entry.body)
-            logger.debug("diff", extra={"diff": history_diff})
-            result.append(
-                HistoryDto(
-                    timestamp=history_entry.last_modified,
-                    message=history_entry.message or "",
-                    id=history_entry.entity_id,
-                    version=history_entry.version,
-                    op=history_entry.op,
-                    userId=history_entry.last_modified_by,
-                    diff=history_diff,
-                    entry=history_entry.body,
-                )
+def all_entries(resource_id: str, last_modified: int | None = None, **kwargs) -> typing.Iterable[EntryDto]:
+    entries = resource_repository.entries_by_resource_id(resource_id)
+    return _to_dtos(resource_id, entries.all_entries(last_modified=last_modified), **kwargs)
+
+
+def deleted_entries(resource_id: str, last_modified: int | None = None) -> typing.Iterable[str]:
+    entries = resource_repository.entries_by_resource_id(resource_id)
+    return entries.deleted_entries(last_modified=last_modified)
+
+
+def get_max_last_modified(resource_id: str):
+    entries = resource_repository.entries_by_resource_id(resource_id)
+    return entries.get_max_last_modified()
+
+
+def get_entry_history(
+    resource_id: str,
+    id: UniqueIdStr,  # noqa: A002
+    version: typing.Optional[int],
+) -> EntryDto:
+    entries = resource_repository.entries_by_resource_id(resource_id)
+    result = entries.by_id(UniqueId.validate(id), version=version)
+    return _to_dto(result, expand_plugins=False)
+
+
+def get_history(
+    request: EntryHistoryRequest,
+) -> GetHistoryDto:
+    logger.info("querying history", extra={"request": request})
+    entries = resource_repository.entries_by_resource_id(request.resource_id)
+    paged_query, total = entries.get_history(
+        entry_id=request.entry_id,
+        user_id=request.user_id,
+        from_date=request.from_date,
+        to_date=request.to_date,
+        from_version=request.from_version,
+        to_version=request.to_version,
+        offset=request.current_page * request.page_size,
+        limit=request.page_size,
+    )
+    result = []
+    previous_body: dict[str, typing.Any] = {}
+    for history_entry in paged_query:
+        # TODO fix this, we should get the diff in another way, probably store the diffs directly in the database
+        # entry_version = history_entry.version
+        # if entry_version > 1:
+        #     previous_entry = entries.by_entry_id(
+        #         history_entry.entry_id, version=entry_version - 1
+        #     )
+        #     previous_body = previous_entry.body
+        # else:
+        #     previous_body = {}
+        history_diff = jsondiff.compare(previous_body, history_entry.body)
+        logger.debug("diff", extra={"diff": history_diff})
+        result.append(
+            HistoryDto(
+                timestamp=history_entry.last_modified,
+                message=history_entry.message or "",
+                id=history_entry.entity_id,
+                version=history_entry.version,
+                op=history_entry.op,
+                userId=history_entry.last_modified_by,
+                diff=history_diff,
+                entry=history_entry.body,
             )
-            previous_body = history_entry.body
-
-        return GetHistoryDto(history=result, total=total)
-
-    def get_entry_diff(
-        self,
-        request: EntryDiffRequest,
-    ) -> EntryDiffDto:
-        entries = self.resources.entries_by_resource_id(request.resource_id)
-        db_entry = entries.by_id(request.id)
-
-        if request.from_version:
-            obj1 = entries.by_id(db_entry.id, version=request.from_version)
-        elif request.from_date is not None:
-            obj1 = entries.by_id(db_entry.id, after_date=request.from_date)
-        else:
-            obj1 = entries.by_id(db_entry.id, oldest_first=True)
-
-        obj1_body = obj1.body if obj1 else None
-
-        if request.to_version:
-            obj2 = entries.by_id(db_entry.id, version=request.to_version)
-            obj2_body = obj2.body
-        elif request.to_date is not None:
-            obj2 = entries.by_id(db_entry.id, before_date=request.to_date)
-            obj2_body = obj2.body
-        elif request.entry is not None:
-            obj2 = None
-            obj2_body = request.entry
-        else:
-            obj2 = db_entry
-            obj2_body = db_entry.body
-
-        if obj1_body is None or obj2_body is None:
-            raise errors.DiffImposible("diff impossible!")
-
-        return EntryDiffDto(
-            diff=jsondiff.compare(obj1_body, obj2_body),
-            fromVersion=obj1.version,
-            toVersion=obj2.version if obj2 else None,
         )
+        previous_body = history_entry.body
+
+    return GetHistoryDto(history=result, total=total)
+
+
+def get_entry_diff(
+    request: EntryDiffRequest,
+) -> EntryDiffDto:
+    entries = resource_repository.entries_by_resource_id(request.resource_id)
+    db_entry = entries.by_id(request.id)
+
+    if request.from_version:
+        obj1 = entries.by_id(db_entry.id, version=request.from_version)
+    elif request.from_date is not None:
+        obj1 = entries.by_id(db_entry.id, after_date=request.from_date)
+    else:
+        obj1 = entries.by_id(db_entry.id, oldest_first=True)
+
+    obj1_body = obj1.body if obj1 else None
+
+    if request.to_version:
+        obj2 = entries.by_id(db_entry.id, version=request.to_version)
+        obj2_body = obj2.body
+    elif request.to_date is not None:
+        obj2 = entries.by_id(db_entry.id, before_date=request.to_date)
+        obj2_body = obj2.body
+    elif request.entry is not None:
+        obj2 = None
+        obj2_body = request.entry
+    else:
+        obj2 = db_entry
+        obj2_body = db_entry.body
+
+    if obj1_body is None or obj2_body is None:
+        raise errors.DiffImposible("diff impossible!")
+
+    return EntryDiffDto(
+        diff=jsondiff.compare(obj1_body, obj2_body),
+        fromVersion=obj1.version,
+        toVersion=obj2.version if obj2 else None,
+    )

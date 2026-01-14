@@ -4,9 +4,7 @@ subapp = typer.Typer(name="db", help="Initialize or upgrade database using `karp
 
 
 @subapp.command(name="up")
-def migrations_up(
-    ctx: typer.Context,
-):
+def migrations_up(ctx: typer.Context):
     """
     Initalizes the database with the needed tables or upgrades existing tables.
 
@@ -19,9 +17,7 @@ def migrations_up(
 
 
 @subapp.command(name="down")
-def migrations_down(
-    ctx: typer.Context,
-):
+def migrations_down(ctx: typer.Context):
     "Downgrades the database to a previous version. WARNING: untested"
     from karp.main.migrations.use_cases import run_migrations_down
 

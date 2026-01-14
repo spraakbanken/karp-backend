@@ -7,23 +7,22 @@ from typing import Any
 from asgi_correlation_id import CorrelationIdMiddleware
 from asgi_correlation_id.context import correlation_id
 from asgi_matomo import MatomoMiddleware
-from fastapi import FastAPI, HTTPException, Request, Response, status  # noqa: I001
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import Session
 
 from karp import main
 from karp.api.routes import router as api_router
 from karp.auth import errors as auth_errors
 from karp.foundation import errors as foundation_errors
-from karp.lex.application.resource_queries import ResourceQueries
+from karp.globals import new_session
+from karp.lex.application import resource_queries
 from karp.lex.domain import errors as lex_errors
-from karp.main import config, new_session
-from karp.main.app import with_new_session
+from karp.main import config
 from karp.main.errors import ClientErrorCodes, UserError
-from karp.plugins.plugin import Plugins
+from karp.plugins import plugin
 
 searching_description = """
 Searching is the main way to get data from Karp. If a query string is given, an actual search will be done, otherwise all
@@ -139,9 +138,9 @@ def create_app() -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
     # add all plugin API routes
-    plugins = app_context.injector.get(Plugins)
-    resource_queries = with_new_session(app_context.injector).get(ResourceQueries)
-    plugin_routes_added = plugins.register_routes(resource_queries.get_published_resources())
+    with new_session():
+        published_resources = resource_queries.get_published_resources()
+    plugin_routes_added = plugin.register_routes(published_resources)
 
     if plugin_routes_added:
         app.openapi_tags.append(
@@ -227,16 +226,10 @@ def create_app() -> FastAPI:
         )
 
     @app.middleware("http")
-    async def injector_middleware(request: Request, call_next):
-        response: Response = JSONResponse(status_code=500, content={"detail": "Internal server error"})
+    async def session_ctx_middleware(request: Request, call_next):
         # Create a new session per request
-        with new_session(app_context.injector) as injector:
-            request.state.session = injector.get(Session)
-            request.state.injector = injector
-
-            response = await call_next(request)
-
-        return response
+        with new_session():
+            return await call_next(request)
 
     @app.middleware("http")
     async def _logging_middleware(request: Request, call_next) -> Response:

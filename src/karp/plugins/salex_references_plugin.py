@@ -6,10 +6,8 @@ from copy import deepcopy
 from dataclasses import dataclass
 from enum import Enum, global_enum
 
-from injector import inject
-
 from karp.foundation import json
-from karp.lex.application import SearchQueries
+from karp.lex.application import search_queries
 from karp.search.domain import QueryRequest
 from karp.search.domain.query_dsl.karp_query_model import Identifier, TextArgExpression
 
@@ -223,10 +221,6 @@ class SalexForwardReferencesPlugin(Plugin):
 # A plugin that finds all references to a given ID.
 # Designed to be used together with SalexForwardReferencesPlugin.
 class SalexBackwardReferencesPlugin(Plugin):
-    @inject
-    def __init__(self, search_queries: SearchQueries):
-        self.search_queries = search_queries
-
     def output_config(self, resource, field, **kwargs):
         return {
             "type": "object",
@@ -261,7 +255,7 @@ class SalexBackwardReferencesPlugin(Plugin):
             )
             for id in all_ids  # noqa: A001
         ]
-        query_results = self.search_queries.multi_query(requests, expand_plugins=INDEXED)
+        query_results = search_queries.multi_query(requests, expand_plugins=INDEXED)
 
         def get_result(id, entry):  # noqa: A002
             result = {"id": entry["id"], "ortografi": entry["entry"].get("ortografi", "?")}
@@ -351,10 +345,6 @@ class SalexIdInfoPlugin(Plugin):
 # A plugin that collects information about reference targets.
 # Designed to be used together with SalexIdInfoPlugin
 class SalexReferenceInfoPlugin(Plugin):
-    @inject
-    def __init__(self, search_queries: SearchQueries):
-        self.search_queries = search_queries
-
     def output_config(self, **kwargs):
         return {
             "searchable": False,
@@ -381,7 +371,7 @@ class SalexReferenceInfoPlugin(Plugin):
             )
             for id in all_ids  # noqa: A001
         ]
-        query_results = self.search_queries.multi_query(requests, expand_plugins=INDEXED)
+        query_results = search_queries.multi_query(requests, expand_plugins=INDEXED)
 
         # Now collect all info for all returned id numbers
         all_id_info = {}

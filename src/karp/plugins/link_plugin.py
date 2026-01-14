@@ -1,19 +1,12 @@
-from injector import inject
-
-from karp.lex.application import ResourceQueries, SearchQueries
+from karp.lex.application import resource_queries, search_queries
 from karp.search.domain import QueryRequest
 
 from .plugin import Plugin
 
 
 class LinkPlugin(Plugin):
-    @inject
-    def __init__(self, resources: ResourceQueries, search_queries: SearchQueries):
-        self.resources = resources
-        self.search_queries = search_queries
-
     def output_config(self, resource, target):
-        resource_dto = self.resources.by_resource_id_optional(resource)
+        resource_dto = resource_queries.by_resource_id_optional(resource)
         if resource_dto:
             return {"type": "object", "fields": resource_dto.config.fields}
         else:
@@ -25,7 +18,7 @@ class LinkPlugin(Plugin):
             return QueryRequest(resources=[resource], q=f'equals|{target}|"{id}"', lexicon_stats=False)
 
         requests = [make_request(**d) for d in batch]
-        results = self.search_queries.multi_query(requests)
+        results = search_queries.multi_query(requests)
 
         for result in results:
             hits = result["hits"]

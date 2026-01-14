@@ -3,6 +3,8 @@ from typing import Dict, List  # noqa: I001
 import pytest
 from fastapi import status
 
+from karp.globals import new_session
+from karp.lex.infrastructure.sql import resource_repository
 from karp.main.errors import ClientErrorCodes
 from karp.foundation.timings import utc_now
 from karp.foundation.value_objects import (
@@ -10,15 +12,12 @@ from karp.foundation.value_objects import (
     unique_id,
 )
 from karp.lex.domain.dtos import EntryDto
-from karp.lex.infrastructure import ResourceRepository
-from karp.main import new_session
 from tests.e2e.conftest import AccessToken
 
 
-def get_entries(injector, resource_id: str):
-    with new_session(injector) as injector:
-        resources = injector.get(ResourceRepository)
-        return resources.entries_by_resource_id("places")
+def get_entries(resource_id: str):
+    with new_session():
+        return resource_repository.entries_by_resource_id("places")
 
 
 def init(
@@ -128,7 +127,7 @@ class TestAddEntry:
         assert "newID" in response_data
         new_id = unique_id.parse(response_data["newID"])
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+        entries = get_entries(resource_id="places")
         assert new_id in entries.entity_ids()
 
     def test_add_with_valid_data_and_entity_id_returns_201(
@@ -158,7 +157,7 @@ class TestAddEntry:
         assert "newID" in response_data
         new_id = response_data["newID"]
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+        entries = get_entries(resource_id="places")
         assert new_id in entries.entity_ids()
 
     def test_add_fails_with_invalid_entry(
@@ -226,7 +225,7 @@ class TestDeleteEntry:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+        entries = get_entries(resource_id="places")
         assert entries.by_id(entity_id).discarded
         assert entity_id not in entries.entity_ids()
 
@@ -276,7 +275,7 @@ class TestDeleteEntryRest:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+        entries = get_entries(resource_id="places")
         assert entries.by_id(entity_id).discarded
         assert entity_id not in entries.entity_ids()
 
@@ -470,7 +469,7 @@ class TestUpdateEntry:
         response_data = response.json()
         assert response_data["newID"] == entity_id
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+        entries = get_entries(resource_id="places")
         assert entries.by_id(entity_id).body["population"] == 5
         assert entity_id in entries.entity_ids()
 
@@ -540,7 +539,7 @@ class TestUpdateEntry:
         print(f"{response.json()=}")
         assert str(entry_id + 1) == response_data["newID"]
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+        entries = get_entries(resource_id="places")
         entry_ids = entries.entry_ids()
         assert str(entry_id) not in entry_ids
         assert str(entry_id + 1) in entry_ids
@@ -563,7 +562,7 @@ class TestUpdateEntry:
 
         after_add = utc_now()
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+        entries = get_entries(resource_id="places")
         entity_id = ids[0]
         entry = entries.by_id(entity_id)
         assert entry.last_modified > before_add
@@ -585,7 +584,7 @@ class TestUpdateEntry:
 
         after_update = utc_now()
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
+        entries = get_entries(resource_id="places")
         entry = entries.by_id(entity_id)
         assert entry.last_modified > after_add
         assert entry.last_modified < after_update
@@ -728,12 +727,3 @@ def test_add_with_id_many_times_changes(
     finally:
         # delete it after the test is done to not affect other tests
         delete(fa_data_client, write_token, entry_id)
-
-
-# assert response.status_code == 201
-# response_data = response.json()
-# assert "newID" in response_data
-# new_id = unique_id.parse(response_data["newID"])
-#
-# entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-# assert new_id in entries.entity_ids()
