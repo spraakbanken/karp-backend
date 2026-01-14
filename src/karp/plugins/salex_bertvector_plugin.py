@@ -1,8 +1,8 @@
 import re
 
-from elasticsearch import Elasticsearch
-from injector import inject
 from sentence_transformers import SentenceTransformer
+
+from karp.globals import es
 
 from .plugin import Plugin
 
@@ -41,10 +41,6 @@ def get_text(entry):
 
 
 class NearestNeighboursPlugin(Plugin):
-    @inject
-    def __init__(self, es: Elasticsearch):
-        self.es = es
-
     def output_config(self, **resource):
         config = {
             "collection": True,
@@ -79,7 +75,7 @@ class NearestNeighboursPlugin(Plugin):
         }
         # https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-knn-query#knn-query-filtering
 
-        res = self.es.search(size=11, query=query, index=resource)
+        res = es.search(size=11, query=query, index=resource)
 
         hits = []
         for item in res["hits"]["hits"]:

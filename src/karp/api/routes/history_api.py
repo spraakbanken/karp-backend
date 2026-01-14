@@ -4,11 +4,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from karp import auth
 from karp.api import dependencies as deps
-from karp.auth.application import ResourcePermissionQueries
+from karp.auth.application import resource_permission_queries as resource_permissions
 from karp.auth.domain.user import User
 from karp.foundation.value_objects import unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
-from karp.lex.application import EntryQueries
+from karp.lex.application import entry_queries
 from karp.lex.application.dtos import (
     EntryDiffDto,
     EntryDiffRequest,
@@ -29,8 +29,6 @@ def get_diff(
     from_date: Optional[float] = None,
     to_date: Optional[float] = None,
     entry: Optional[Dict] = None,
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
     if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(
@@ -65,8 +63,6 @@ def get_history(
     from_version: Optional[int] = Query(None),
     current_page: int = Query(0),
     page_size: int = Query(100),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
 ):
     if not resource_permissions.has_permission(auth.PermissionLevel.write, user, [resource_id]):
         raise HTTPException(

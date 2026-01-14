@@ -11,11 +11,11 @@ from fastapi import (
 
 from karp import auth
 from karp.api import dependencies as deps
-from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.auth.application import ResourcePermissionQueries
+from karp.auth.application import resource_permission_queries as resource_permissions
 from karp.foundation.value_objects import PermissionLevel
-from karp.lex.application import SearchQueries
+from karp.lex.application import search_queries
 from karp.lex.domain.errors import ResourceNotFound
+from karp.lex.infrastructure.sql import resource_repository
 
 logger = logging.getLogger(__name__)
 
@@ -37,16 +37,13 @@ def get_field_values(
     resource_id: str,
     field: str,
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
-    published_resources: typing.List[str] = Depends(deps.get_published_resources),
 ):
     if not resource_permissions.has_permission(PermissionLevel.read, user, [resource_id]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if resource_id not in published_resources:
+    if resource_id not in resource_repository.get_published_resource_ids():
         raise ResourceNotFound(resource_id)
     logger.debug(f"calling statistics ... from {search_queries=}")
     return search_queries.statistics(resource_id, field)

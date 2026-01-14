@@ -1,10 +1,7 @@
 import logging
 from typing import Any
 
-from injector import inject
-
-from karp.lex.application import SearchQueries
-from karp.lex.application.resource_queries import ResourceQueries
+from karp.lex.application import resource_queries, search_queries
 from karp.search.domain import QueryRequest
 from karp.search.domain.query_dsl.karp_query_model import Identifier, TextArgExpression
 
@@ -24,17 +21,12 @@ class BacklinkPlugin(Plugin):
     This plugin adds the link data during fetching in the API and is not available for search.
     """
 
-    @inject
-    def __init__(self, resources: ResourceQueries, search_queries: SearchQueries):
-        self.search_queries = search_queries
-        self.resources = resources
-
     def output_config(self, resource, field, *args, **kwargs):
         """
         Note that currently the relationship is assumed to be one-to-many or many-to-many
         """
         # lookup <field> in the <resource> and check its type
-        resource_dto = self.resources.by_resource_id_optional(resource, expand_plugins=False)
+        resource_dto = resource_queries.by_resource_id_optional(resource, expand_plugins=False)
         if not resource_dto:
             logger.warning(
                 f'The linked resource "{resource}", does not exist. '
@@ -66,7 +58,7 @@ class BacklinkPlugin(Plugin):
             )
             for id in all_ids
         ]
-        query_results = self.search_queries.multi_query(requests, expand_plugins=INDEXED)
+        query_results = search_queries.multi_query(requests, expand_plugins=INDEXED)
 
         id_references = {
             id: [entry["entry"][field] for entry in entries["hits"]]

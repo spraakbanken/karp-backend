@@ -4,7 +4,7 @@ import elasticsearch_dsl as es_dsl
 
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
-from karp.search.infrastructure.es import EsQueryBuilder
+from karp.search.infrastructure.es.search_service import EsQueryBuilder
 from karp.search.infrastructure.es.mapping_repo import Field
 
 

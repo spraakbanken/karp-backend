@@ -1,14 +1,14 @@
 import logging  # noqa: I001
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from karp import auth
 from karp.api import dependencies as deps
-from karp.api.dependencies.fastapi_injector import inject_from_req
-from karp.auth.application import ResourcePermissionQueries
-from karp.lex.application import SearchQueries
+from karp.auth.application import resource_permission_queries as resource_permissions
+from karp.lex.application import search_queries
 from karp.lex.domain.errors import ResourceNotFound
+from karp.lex.infrastructure.sql import resource_repository
 from karp.search.domain import QueryRequest
 from karp.search.domain.highlight_param import HighlightParam
 
@@ -35,9 +35,6 @@ def get_entries_by_id(
         pattern=r"^\w(,\w)*",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
-    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     logger.debug("karp_v6_api.views.get_entries_by_id")
     if not resource_permissions.has_permission(auth.PermissionLevel.read, user, [resource_id]):
@@ -45,7 +42,7 @@ def get_entries_by_id(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if resource_id not in published_resources:
+    if resource_id not in resource_repository.get_published_resource_ids():
         raise ResourceNotFound(resource_id)
     return search_queries.search_ids(resource_id, entry_ids.split(","))
 
@@ -70,9 +67,6 @@ def query_stats(
             will be returned. See [Query DSL](#section/Query-DSL)""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
-    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     resource_list = resources.split(",")
     if not resource_permissions.has_permission(auth.PermissionLevel.read, user, resource_list):
@@ -80,7 +74,7 @@ def query_stats(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if any(resource not in published_resources for resource in resource_list):
+    if any(resource not in resource_repository.get_published_resource_ids() for resource in resource_list):
         raise ResourceNotFound(resource_list)
     response = search_queries.query_stats(resource_list, q)
     return response
@@ -126,9 +120,6 @@ def query(
                         new gives the future format, which includes indices for lists.""",
     ),
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    search_queries: SearchQueries = Depends(inject_from_req(SearchQueries)),
-    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     """
     Returns a list of entries matching the given query in the given resources. The results are mixed from the given resources.
@@ -145,7 +136,7 @@ def query(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
-    if any(resource not in published_resources for resource in resource_list):
+    if any(resource not in resource_repository.get_published_resource_ids() for resource in resource_list):
         raise ResourceNotFound(resource_list)
     query_request = QueryRequest(
         resources=resource_list,

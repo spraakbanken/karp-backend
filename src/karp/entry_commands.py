@@ -2,48 +2,36 @@ from collections import defaultdict
 from typing import Any, Dict, Generator, Iterable, Tuple
 
 import sqlalchemy
-from injector import inject
-from sqlalchemy.orm import Session
 
 from karp import plugins
 from karp.foundation.timings import utc_now
 from karp.foundation.value_objects import UniqueId, unique_id
+from karp.globals import session
 from karp.lex import EntryDto
 from karp.lex.domain import errors
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
-from karp.lex.infrastructure import EntryRepository, ResourceRepository
-from karp.plugins import Plugins
+from karp.lex.infrastructure.sql import resource_repository
+from karp.lex.infrastructure.sql.entries import EntryRepository
 from karp.search.domain.index_entry import IndexEntry
-from karp.search.infrastructure.es.indices import EsIndex
+from karp.search.infrastructure.es import indices as es_index
 from karp.search.infrastructure.transformers import entry_transformer
 
 
 class EntryCommands:
-    @inject
-    def __init__(
-        self,
-        session: Session,
-        resources: ResourceRepository,
-        index: EsIndex,
-        plugins: Plugins,
-    ):
-        self.session = session
-        self.resources: ResourceRepository = resources
-        self.index = index
-        self.plugins = plugins
+    def __init__(self):
         self.added_entries = defaultdict(list)
         self.deleted_entries = defaultdict(list)
         self.in_transaction = False
 
     def _get_resource(self, resource_id: str) -> Resource:
-        result = self.resources.by_resource_id(resource_id)
+        result = resource_repository.by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)
         return result
 
     def _get_entries(self, resource_id: str) -> EntryRepository:
-        result = self.resources.entries_by_resource_id(resource_id)
+        result = resource_repository.entries_by_resource_id(resource_id)
         if not result:
             raise ResourceNotFound(resource_id)
         return result
@@ -52,7 +40,7 @@ class EntryCommands:
         return next(self._transform_entries(config, [entry]))
 
     def _transform_entries(self, config, entries: Iterable[EntryDto]) -> Generator[IndexEntry, Any, None]:
-        entries = plugins.transform_entries(self.plugins, config, entries, expand_plugins=plugins.INDEXED)
+        entries = plugins.transform_entries(config, entries, expand_plugins=plugins.INDEXED)
         return (entry_transformer.transform(entry) for entry in entries)
 
     def add_entries_in_chunks(
@@ -218,19 +206,19 @@ class EntryCommands:
             return
 
         try:
-            self.session.commit()
+            session.commit()
         except sqlalchemy.exc.IntegrityError as e:
-            self.session.rollback()
+            session.rollback()
             raise errors.IntegrityError(str(e)) from None
 
         for resource_id, entry_dtos in self.added_entries.items():
             resource = self._get_resource(resource_id)
             index_entries = self._transform_entries(resource.config, entry_dtos)
-            self.index.add_entries(resource.resource_id, index_entries)
+            es_index.add_entries(resource.resource_id, index_entries)
         self.added_entries.clear()
 
         for resource_id, entry_ids in self.deleted_entries.items():
-            self.index.delete_entries(resource_id, entry_ids=entry_ids)
+            es_index.delete_entries(resource_id, entry_ids=entry_ids)
         self.deleted_entries.clear()
 
     def start_transaction(self):
