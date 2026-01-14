@@ -2,7 +2,6 @@
 
 import os
 import typing
-from dataclasses import replace
 from typing import Any, Generator, Optional, Tuple
 
 import elasticsearch_test
@@ -10,11 +9,12 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from karp import auth
+# TODO do not reorder these, fix deps
+from karp.main.config import env  # isort: skip
+from karp.globals import new_session  # isort: skip
+from karp import auth, resource_commands  # isort: skip
+
 from karp.lex.domain.value_objects import ResourceConfig
-from karp.main import AppContext, new_session
-from karp.main.config import env
-from karp.resource_commands import ResourceCommands
 from tests import common_data, utils
 from tests.integration.auth.adapters import create_access_token
 
@@ -46,32 +46,18 @@ def fixture_app(apply_migrations: None, init_search_service: None) -> Generator[
     app = None  # noqa: F841
 
 
-@pytest.fixture(name="app_context", scope="function")
-def fixture_app_context(app: FastAPI) -> AppContext:
-    context = app.state.app_context
-    with new_session(context.injector) as injector:
-        return replace(context, injector=injector)
-
-
 @pytest.fixture(name="fa_client", scope="session")
 def fixture_client(app: FastAPI) -> Generator[TestClient, None, None]:
     with TestClient(app) as client:
         yield client
 
 
-def create_and_publish_resource(
-    client: TestClient,
-    *,
-    path_to_config: str,
-) -> Tuple[bool, Optional[dict[str, Any]]]:
+def create_and_publish_resource(*, path_to_config: str) -> Tuple[bool, Optional[dict[str, Any]]]:
     resource_config = ResourceConfig.from_path(path_to_config)
     resource_id = resource_config.resource_id
 
-    with new_session(client.app.state.app_context.injector) as injector:
-        resource_commands = injector.get(ResourceCommands)
-
+    with new_session():
         resource_commands.create_resource(resource_config, "")
-
         resource_commands.publish_resource(user="", resource_id=resource_id, version=1, message="")
 
 
@@ -80,14 +66,8 @@ def fixture_fa_data_client(  # noqa: ANN201
     fa_client,
     admin_token: AccessToken,
 ):
-    create_and_publish_resource(
-        fa_client,
-        path_to_config="assets/testing/config/municipalities.yaml",
-    )
-    create_and_publish_resource(
-        fa_client,
-        path_to_config="assets/testing/config/places.yaml",
-    )
+    create_and_publish_resource(path_to_config="assets/testing/config/municipalities.yaml")
+    create_and_publish_resource(path_to_config="assets/testing/config/places.yaml")
     utils.add_entries(
         fa_client,
         {"municipalities": common_data.MUNICIPALITIES, "places": common_data.PLACES},

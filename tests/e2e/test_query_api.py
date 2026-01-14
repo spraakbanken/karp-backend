@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 import pytest
 from fastapi import status
 
-from karp.lex.application import EntryQueries
+from karp.lex.application import entry_queries
 from tests.e2e.conftest import AccessToken
 from tests.utils import get_json
 
@@ -90,11 +90,7 @@ def test_subfield_query2(fa_data_client):
     assert entries["total"] == 14
 
 
-def test_query_no_q(
-    fa_data_client,
-    read_token: AccessToken,
-    app_context,
-):
+def test_query_no_q(fa_data_client, read_token: AccessToken):
     resource = "places"
     entries = get_json(
         fa_data_client,
@@ -154,14 +150,8 @@ def test_equals(
         ("name", "Grund"),
     ],
 )
-def test_contains(
-    fa_data_client,
-    field: str,
-    value,
-    app_context,
-):
+def test_contains(fa_data_client, field: str, value):
     query = f'/query/places?q=contains|{field}|"{value}"'
-    entry_queries = app_context.injector.get(EntryQueries)  # type: ignore [misc]
     expected_result = []
     analyzed_value = value.lower()
     for entry in entry_queries.all_entries("places"):
@@ -176,13 +166,7 @@ def test_contains(
         ("name", "a.*", 6),
     ],
 )
-def test_regex(
-    fa_data_client,
-    field: str,
-    value,
-    hit_count,
-    app_context,
-):
+def test_regex(fa_data_client, field: str, value, hit_count):
     query = f'/query/places?q=regexp|{field}|"{value}"'
     response = fa_data_client.get(query)
     response_data = response.json()

@@ -1,16 +1,11 @@
 """Handle calls and json convertions."""
 
-from typing import Dict  # noqa: I001
 from fastapi import status
+
 from tests.e2e.conftest import AccessToken
 
 
-def get_json(  # noqa: ANN201
-    client,
-    path: str,
-    expected_status_code: int = status.HTTP_200_OK,
-    **kwargs,  # noqa: ANN003
-):
+def get_json(client, path: str, expected_status_code: int = status.HTTP_200_OK, **kwargs):
     """Call the get on the client with the given path.
 
     Assert that the status_code is ok.
@@ -30,11 +25,7 @@ def get_json(  # noqa: ANN201
     return response_json
 
 
-def add_entries(  # noqa: ANN201
-    client,
-    entries: Dict,
-    access_token: AccessToken,
-):
+def add_entries(client, entries: dict, access_token: AccessToken):
     for resource, _entries in entries.items():
         for entry in _entries:
             response = client.put(

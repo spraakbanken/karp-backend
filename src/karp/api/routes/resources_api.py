@@ -1,14 +1,12 @@
 import logging
 import typing
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter
 
-from karp.api import dependencies as deps
-from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.api.schemas import ResourceProtected, ResourcePublic
-from karp.auth.application import ResourcePermissionQueries
+from karp.auth.application import resource_permission_queries as resource_permissions
 from karp.auth.application.resources import ResourcePermissionDto
-from karp.lex.application import ResourceQueries
+from karp.lex.application import resource_queries
 from karp.lex.domain.dtos import ResourceDto
 
 router = APIRouter()
@@ -16,9 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @router.get("/permissions", response_model=list[ResourcePermissionDto])
-def list_resource_permissions(
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-):
+def list_resource_permissions():
     return resource_permissions.get_resource_permissions()
 
 
@@ -26,10 +22,8 @@ def list_resource_permissions(
     "/",
     response_model=list[ResourceProtected],
 )
-def get_all_resources(
-    resources: ResourceQueries = Depends(inject_from_req(ResourceQueries)),
-) -> typing.List[ResourceDto]:
-    return list(resources.get_all_resources())
+def get_all_resources() -> typing.List[ResourceDto]:
+    return list(resource_queries.get_all_resources())
 
 
 @router.get(
@@ -38,6 +32,5 @@ def get_all_resources(
 )
 def get_resource_by_resource_id(
     resource_id: str,
-    resource_queries: ResourceQueries = Depends(deps.get_resource_queries),
 ) -> ResourcePublic:
     return resource_queries.by_resource_id(resource_id)

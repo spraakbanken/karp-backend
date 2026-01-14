@@ -1,5 +1,5 @@
 import logging
-from typing import List, Optional
+from typing import Optional
 
 from fastapi import (
     APIRouter,
@@ -12,16 +12,16 @@ from starlette import responses
 from karp import auth
 from karp.api import dependencies as deps
 from karp.api import schemas
-from karp.api.dependencies.fastapi_injector import inject_from_req
 from karp.auth import User
-from karp.auth.application import ResourcePermissionQueries
+from karp.auth.application import resource_permission_queries as resource_permissions
 from karp.entry_commands import EntryCommands
 from karp.foundation.value_objects import UniqueId, unique_id
 from karp.foundation.value_objects.unique_id import UniqueIdStr
 from karp.lex import EntryDto
-from karp.lex.application import EntryQueries
+from karp.lex.application import entry_queries
 from karp.lex.domain import errors
 from karp.lex.domain.errors import ResourceNotFound
+from karp.lex.infrastructure.sql import resource_repository
 from karp.main import errors as karp_errors
 
 router = APIRouter()
@@ -53,18 +53,12 @@ preview_responses = {
 }
 
 
-def check_resource(
-    published_resources: list[str],
-    resource_permissions: ResourcePermissionQueries,
-    resource_id: str,
-    user: auth.User,
-    level: auth.PermissionLevel = auth.PermissionLevel.write,
-):
+def check_resource(resource_id: str, user: auth.User, level: auth.PermissionLevel = auth.PermissionLevel.write):
     """
     Helper function for each route in CRUD-part of API. Checks that resource exists and that the user has write
     permissions, unless level is given.
     """
-    if resource_id not in published_resources:
+    if resource_id not in resource_repository.get_published_resource_ids():
         raise ResourceNotFound(resource_id)
     if not resource_permissions.has_permission(level, user, [resource_id]):
         raise HTTPException(
@@ -82,11 +76,8 @@ def get_history_for_entry(
     entry_id: UniqueIdStr,
     version: Optional[int] = None,
     user: auth.User = Depends(deps.get_user_optional),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
-    published_resources: List[str] = Depends(deps.get_published_resources),
 ) -> EntryDto:
-    check_resource(published_resources, resource_permissions, resource_id, user)
+    check_resource(resource_id, user)
     logger.debug("getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id})
     return entry_queries.get_entry_history(resource_id, entry_id, version=version)
 
@@ -111,19 +102,9 @@ def create_id() -> schemas.EntryAddResponse:
     deprecated=True,
     description="Deprecated, use `add/<resource_id>/<entry_id>` instead.",
 )
-def add_entry(
-    resource_id: str,
-    data: schemas.EntryAdd,
-    user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
-    published_resources: List[str] = Depends(deps.get_published_resources),
-):
+def add_entry(resource_id: str, data: schemas.EntryAdd, user: User = Depends(deps.get_user)):
     entry_id = unique_id.make_unique_id()
-    return add_entry_with_id(
-        resource_id, entry_id, data, user, resource_permissions, entry_commands, entry_queries, published_resources
-    )
+    return add_entry_with_id(resource_id, entry_id, data, user)
 
 
 @router.put(
@@ -144,18 +125,12 @@ def add_entry(
     responses=crud_responses,
 )
 def add_entry_with_id(
-    resource_id: str,
-    entry_id: UniqueIdStr,
-    data: schemas.EntryAdd,
-    user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    entry_queries: EntryQueries = Depends(deps.get_entry_queries),
-    published_resources: List[str] = Depends(deps.get_published_resources),
+    resource_id: str, entry_id: UniqueIdStr, data: schemas.EntryAdd, user: User = Depends(deps.get_user)
 ):
-    check_resource(published_resources, resource_permissions, resource_id, user)
+    check_resource(resource_id, user)
     logger.info("adding entry", extra={"resource_id": resource_id, "data": data})
     try:
+        entry_commands = EntryCommands()
         entry_commands.add_entry(
             resource_id=resource_id,
             entry_id=entry_id,
@@ -193,15 +168,8 @@ def add_entry_with_id(
     tags=["Editing"],
     responses=preview_responses,
 )
-def preview_entry(
-    resource_id: str,
-    data: schemas.EntryPreview,
-    user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    entry_queries: EntryQueries = Depends(inject_from_req(EntryQueries)),
-    published_resources: List[str] = Depends(deps.get_published_resources),
-):
-    check_resource(published_resources, resource_permissions, resource_id, user, level=auth.PermissionLevel.read)
+def preview_entry(resource_id: str, data: schemas.EntryPreview, user: User = Depends(deps.get_user)):
+    check_resource(resource_id, user, level=auth.PermissionLevel.read)
 
     logger.info(
         "previewing entry",
@@ -227,11 +195,8 @@ def update_entry(
     entry_id: UniqueId,
     data: schemas.EntryUpdate,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
-    check_resource(published_resources, resource_permissions, resource_id, user)
+    check_resource(resource_id, user)
 
     logger.info(
         "updating entry",
@@ -243,6 +208,7 @@ def update_entry(
         },
     )
     try:
+        entry_commands = EntryCommands()
         entry = entry_commands.update_entry(
             resource_id=resource_id,
             _id=unique_id.parse(entry_id),
@@ -294,13 +260,11 @@ def delete_entry(
     entry_id: UniqueId,
     version: int,
     user: User = Depends(deps.get_user),
-    resource_permissions: ResourcePermissionQueries = Depends(deps.get_resource_permission_queries),
-    entry_commands: EntryCommands = Depends(inject_from_req(EntryCommands)),
-    published_resources: List[str] = Depends(deps.get_published_resources),
 ):
     """Delete a entry from a resource."""
-    check_resource(published_resources, resource_permissions, resource_id, user)
+    check_resource(resource_id, user)
     try:
+        entry_commands = EntryCommands()
         entry_commands.delete_entry(
             resource_id=resource_id,
             _id=unique_id.parse(entry_id),

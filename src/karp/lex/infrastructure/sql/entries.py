@@ -4,9 +4,9 @@ from typing import Dict, List, Optional
 
 import sqlalchemy as sa
 from sqlalchemy import Engine, sql
-from sqlalchemy.orm.session import Session
 
 from karp.foundation.value_objects import UniqueId
+from karp.globals import session
 from karp.lex.domain import errors
 from karp.lex.domain.entities import Resource
 from karp.lex.domain.entities.entry import Entry
@@ -18,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class EntryRepository:
-    def __init__(self, session: Session, resource: Resource):
-        self._session = session
+    def __init__(self, resource: Resource):
         self._name = resource.resource_id
         self._config = resource.config
         self.resource = resource
@@ -54,12 +53,12 @@ class EntryRepository:
 
     @property
     def _engine(self):
-        result = self._session.get_bind()
+        result = session.get_bind()
         assert isinstance(result, Engine)  # noqa: S101
         return result
 
     def create_table(self):
-        # We bind to self._engine instead of self._session because CREATE TABLE
+        # We bind to self._engine instead of session because CREATE TABLE
         # automatically commits the transaction, which we don't want
         # (using self._engine makes it run in its own transaction)
         self.history_model.__table__.create(bind=self._engine, checkfirst=True)
@@ -69,13 +68,13 @@ class EntryRepository:
 
     def save(self, entry: Entry):
         entry_dto = self.history_model.from_entity(entry)
-        self._session.add(entry_dto)
+        session.add(entry_dto)
 
     def entity_ids(self) -> List[str]:
         stmt = self._stmt_latest_not_discarded()
         stmt = stmt.order_by(self.history_model.last_modified.desc())
-        query = self._session.execute(stmt).scalars()
-        # query = self._session.query(self.history_model).filter_by(discarded=False)
+        query = session.execute(stmt).scalars()
+        # query = session.query(self.history_model).filter_by(discarded=False)
         return [row.entity_id for row in query.all()]
 
     def by_id(
@@ -107,7 +106,7 @@ class EntryRepository:
         before_date: Optional[float] = None,
         oldest_first: bool = False,
     ) -> Optional[Entry]:
-        query = self._session.query(self.history_model)
+        query = session.query(self.history_model)
         query = query.filter_by(entity_id=id)
         if version:
             query = query.filter_by(version=version)
@@ -128,18 +127,18 @@ class EntryRepository:
 
     def all_entries(self, last_modified: int | None = None) -> typing.Iterable[Entry]:
         stmt = self._stmt_latest_not_discarded(last_modified=last_modified)
-        query = self._session.execute(stmt).scalars()
+        query = session.execute(stmt).scalars()
 
         return (self._history_row_to_entry(db_entry) for db_entry in query)
 
     def deleted_entries(self, last_modified: int | None = None) -> typing.Iterable[str]:
         stmt = self._stmt_latest_discarded(last_modified=last_modified)
-        query = self._session.execute(stmt).scalars()
+        query = session.execute(stmt).scalars()
         return (db_entry.entity_id for db_entry in query)
 
     def get_max_last_modified(self):
         stmt = sql.select(sa.func.max(self.history_model.last_modified))
-        return next(self._session.execute(stmt).scalars())
+        return next(session.execute(stmt).scalars())
 
     def _stmt_latest_not_discarded(self, last_modified: int | None = None):
         return self._stmt_latest(last_modified=last_modified, discarded=False)
@@ -185,7 +184,7 @@ class EntryRepository:
         offset: int = 0,
         limit: int = 100,
     ):
-        query = self._session.query(self.history_model)
+        query = session.query(self.history_model)
         if user_id:
             query = query.filter_by(last_modified_by=user_id)
         if entry_id:
