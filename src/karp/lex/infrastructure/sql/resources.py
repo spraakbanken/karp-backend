@@ -24,26 +24,6 @@ class ResourceRepository:
     def __init__(self, session: Session):
         self._session = session
 
-    def by_id(
-        self,
-        id: UniqueId,  # noqa: A002
-        *,
-        version: Optional[int] = None,
-        **kwargs,
-    ):
-        if entity := self._by_id(id, version=version):
-            return entity
-        raise ResourceNotFound(f"Entity with id={id} is not found")
-
-    def by_id_optional(
-        self,
-        id: UniqueId,  # noqa: A002
-        *,
-        version: Optional[int] = None,
-        **kwargs,
-    ) -> Optional[Resource]:
-        return self._by_id(id, version=version)
-
     def by_resource_id(self, resource_id: str, *, version: Optional[int] = None) -> entities.Resource:
         if resource := self.by_resource_id_optional(resource_id, version=version):
             return resource
