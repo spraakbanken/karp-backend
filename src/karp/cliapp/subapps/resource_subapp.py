@@ -171,12 +171,12 @@ def list_resources(
     """
     from tabulate import tabulate
 
-    from karp.lex.application import resource_queries
+    from karp.lex.infrastructure.sql import resource_repository
 
     if show_published:
-        result = resource_queries.get_published_resources()
+        result = resource_repository.get_published_resources()
     else:
-        result = resource_queries.get_all_resources()
+        result = resource_repository.get_all_resources()
     typer.echo(
         tabulate(
             [[resource.resource_id, resource.version, resource.is_published] for resource in result],
