@@ -136,7 +136,7 @@ def add_entry(
     call. If the request fails, use the same ID to try again, this ensures that the entry body is not added several 
     times. Answers:
     
-- `201 Created` if the entry exists with the same body, at version 1
+- `201 Created` if the entry was created or already exists with the same body, at version 1
 - `400` 
     - if the `entry_id` exists, but the body is different (error code 61)
     - if the entry is not valid according to resource settings (errror code 32)
