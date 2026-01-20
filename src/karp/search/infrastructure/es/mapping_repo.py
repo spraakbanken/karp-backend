@@ -6,9 +6,9 @@ from itertools import groupby
 from typing import Any, Iterable
 
 import elasticsearch
+import methodtools
 from injector import inject
 
-from karp.lex.domain.entities.resource import Resource
 from karp.lex.infrastructure import ResourceRepository
 from karp.main.errors import FieldDoesNotExist, IncompatibleResources, SortError
 
@@ -72,13 +72,7 @@ class EsMappingRepository:
 
         self.fields: dict[str, dict[str, Field]] = {}
         self.sortable_fields: dict[str, dict[str, Field]] = {}
-        resources: list[Resource] = resource_repo.get_published_resources()
-
-        # TODO ResourceConfig model allows for sort or id to be None also sort to be list[str] and this
-        # code does not account for that, set dict-values to Any for now
-        self.default_sort: dict[str, Any] = {
-            resource.resource_id: resource.config.sort or resource.config.id for resource in resources
-        }
+        self.resource_repo = resource_repo
 
         aliases = self._get_all_aliases()
         self.aliases = dict(aliases)
@@ -261,7 +255,20 @@ class EsMappingRepository:
                             raise ValueError(f"Type of {field_name} is inconclusive for resources: {resource_ids}")
         return tree
 
-    def get_default_sort(self, resources: list[str]) -> str | None:
+    @methodtools.lru_cache(maxsize=None)
+    def _load_sort(self, resource_id: str) -> list[str] | None:
+        resource = self.resource_repo.by_resource_id(resource_id)
+        # TODO ResourceConfig model allows for sort or id to be None also sort to be list[str] and this
+        # code does not account for that, set dict-values to Any for now
+        sort = resource.config.sort or resource.config.id
+        if sort is None:
+            return None
+        elif not isinstance(sort, list):
+            return [sort]
+        else:
+            return sort
+
+    def get_default_sort(self, resources: list[str]) -> list[str] | None:
         """
         Returns the default sort field for the resources. Throws an error
         if the resources have different sort fields, or if those sort  fields
@@ -269,8 +276,10 @@ class EsMappingRepository:
         """
 
         def _translate_unless_none(resource):
-            maybe_sort_field1 = self.default_sort.get(resource)
-            return maybe_sort_field1 and self._translate_sort_field(resource, maybe_sort_field1)
+            maybe_sort_fields = self._load_sort(resource)
+            return maybe_sort_fields and [
+                self._translate_sort_field(resource, sort_field) for sort_field in maybe_sort_fields
+            ]
 
         g = groupby(map(_translate_unless_none, resources))
         sort_field = next(g)[0]

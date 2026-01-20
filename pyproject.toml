@@ -62,6 +62,7 @@ karp-cli = "karp.cliapp.main:cliapp"
 "salex_id_info" = "karp.plugins.salex_references_plugin:SalexIdInfoPlugin"
 "salex_reference_info" = "karp.plugins.salex_references_plugin:SalexReferenceInfoPlugin"
 "salex_bertvectors" = "karp.plugins.salex_bertvector_plugin:BertVectorPlugin"
+"npegl_segmentation" = "karp.plugins.npegl_segmentation_plugin:NpeglSegmentationPlugin"
 
 [tool.uv]
 package = true
