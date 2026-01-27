@@ -55,7 +55,7 @@ class ElasticSearchMod(Module):
     @singleton
     def es(self) -> Elasticsearch:
         logger.info("Creating ES client url=%s", self._url)
-        return Elasticsearch(self._url, timeout=300)
+        return Elasticsearch(self._url, request_timeout=300)
 
 
 def _create_db_engine(db_url: URL) -> Engine:
