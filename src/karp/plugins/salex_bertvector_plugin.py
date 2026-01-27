@@ -1,9 +1,9 @@
 import re
 
-import numpy as np
-from sentence_transformers import SentenceTransformer
-from injector import inject
 from elasticsearch import Elasticsearch
+from injector import inject
+from sentence_transformers import SentenceTransformer
+
 from .plugin import Plugin
 
 kbmodel = SentenceTransformer("KBLab/sentence-bert-swedish-cased")
@@ -41,66 +41,64 @@ def get_text(entry):
 
 
 class NearestNeighboursPlugin(Plugin):
-  
-       @inject
-       def __init__(self, es : Elasticsearch):
-            self.es = es
- 
-       def output_config(self,**resource) : 
-            config = {"collection" : True,
-                      "type" : "string"
-                  #    "flatten_params": False,                
-            }
-            return config
-            
-       def generate(self,ordklass,bertvector,resource) : 
-                
-                query = {
-                         "nested" : {
-                            "path" : "so.huvudbetydelser",
-                            "query" : {
-                                 "knn": {
-                                    "query_vector": bertvector,
-                                    "field": "so.huvudbetydelser._bertvector",
-                                    "k" : 10,
-               
-                                    "num_candidates" : 500,
-                    
-                                   "filter": {
-                                        "match": {
-                                            "ordklass": ordklass,
-                                        }
-                                    }
-                                }
-                            },
-                                "inner_hits": {
-                                    "_source" : False,
-                                    "size" : 1,
-                                    "fields"  : ["so.huvudbetydelser.x_nr"],  
-                                 }
-                           }
-                        }
-                # https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-knn-query#knn-query-filtering
+    @inject
+    def __init__(self, es: Elasticsearch):
+        self.es = es
 
-                res = self.es.search(size=11, query=query,index=resource) 
-               
-                hits = []
-                for item in (res['hits']['hits']) : 
-                  orto = item['_source']['ortografi']
-                  homonr = ""
-                  if 'homografNr' in item['_source'].keys() : 
-                    homonr = str(item['_source']['homografNr'])   
-                     
-                  for item2 in item['inner_hits']['so.huvudbetydelser']['hits']['hits'] : 
-                    #https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrieve-inner-hits
-                      num = item2['_nested']['offset']
-                      score = item2['_score']
-                      hbet = item2['fields']['so.huvudbetydelser'][0] 
-                      hits.append((homonr,orto,"xnr" + hbet['x_nr'][0],score))
-                return hits[1:]
+    def output_config(self, **resource):
+        config = {
+            "collection": True,
+            "type": "string",
+            #    "flatten_params": False,
+        }
+        return config
+
+    def generate(self, ordklass, bertvector, resource):
+        query = {
+            "nested": {
+                "path": "so.huvudbetydelser",
+                "query": {
+                    "knn": {
+                        "query_vector": bertvector,
+                        "field": "so.huvudbetydelser._bertvector",
+                        "k": 10,
+                        "num_candidates": 500,
+                        "filter": {
+                            "match": {
+                                "ordklass": ordklass,
+                            }
+                        },
+                    }
+                },
+                "inner_hits": {
+                    "_source": False,
+                    "size": 1,
+                    "fields": ["so.huvudbetydelser.x_nr"],
+                },
+            }
+        }
+        # https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-knn-query#knn-query-filtering
+
+        res = self.es.search(size=11, query=query, index=resource)
+
+        hits = []
+        for item in res["hits"]["hits"]:
+            orto = item["_source"]["ortografi"]
+            homonr = ""
+            if "homografNr" in item["_source"].keys():
+                homonr = str(item["_source"]["homografNr"])
+
+            for item2 in item["inner_hits"]["so.huvudbetydelser"]["hits"]["hits"]:
+                # https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrieve-inner-hits
+                num = item2["_nested"]["offset"]
+                score = item2["_score"]
+                hbet = item2["fields"]["so.huvudbetydelser"][0]
+                hits.append((homonr, orto, "xnr" + hbet["x_nr"][0], score))
+        return hits[1:]
+
 
 class BertVectorPlugin(Plugin):
-    def output_config(self,config):
+    def output_config(self, config):
         config = {**config, "collection": True, "type": "dense_vector", "flatten_params": False}
         return config
 
@@ -111,4 +109,3 @@ class BertVectorPlugin(Plugin):
             texten = clean_tags(clean_refs(texten))
             bertembedding = kbmodel.encode(texten)
             return bertembedding
-     
