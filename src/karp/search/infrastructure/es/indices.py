@@ -172,6 +172,8 @@ def _create_es_mapping(config):
                 mapped_type = "boolean"
             elif parent_field_def.type == "string":
                 mapped_type = "text"
+            elif parent_field_def.type == "dense_vector":
+                mapped_type = "dense_vector"
             else:
                 mapped_type = "keyword"
             result = {"type": mapped_type}
