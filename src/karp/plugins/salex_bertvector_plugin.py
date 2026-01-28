@@ -2,11 +2,8 @@ import re
 
 from elasticsearch import Elasticsearch
 from injector import inject
-from sentence_transformers import SentenceTransformer
 
 from .plugin import Plugin
-
-kbmodel = SentenceTransformer("KBLab/sentence-bert-swedish-cased")
 
 
 def entry_is_visible(entry):
@@ -98,6 +95,11 @@ class NearestNeighboursPlugin(Plugin):
 
 
 class BertVectorPlugin(Plugin):
+    def __init__(self):
+        from sentence_transformers import SentenceTransformer
+
+        self.kbmodel = SentenceTransformer("KBLab/sentence-bert-swedish-cased")
+
     def output_config(self, config):
         config = {**config, "collection": True, "type": "dense_vector", "flatten_params": False}
         return config
@@ -107,5 +109,5 @@ class BertVectorPlugin(Plugin):
             texten = ortografi + " " + böjning + " " + get_text(betydelse)
             texten = " ".join([texten] + [get_text(bet) for bet in betydelse.get("underbetydelser", [])])
             texten = clean_tags(clean_refs(texten))
-            bertembedding = kbmodel.encode(texten)
+            bertembedding = self.kbmodel.encode(texten)
             return bertembedding
