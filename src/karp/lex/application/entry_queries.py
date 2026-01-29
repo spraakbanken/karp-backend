@@ -87,11 +87,10 @@ class EntryQueries:
         resource_id: str,
         id: UniqueIdStr,  # noqa: A002
         version: typing.Optional[int],
-        **kwargs,
     ) -> EntryDto:
         entries = self.resources.entries_by_resource_id(resource_id)
         result = entries.by_id(UniqueId.validate(id), version=version)
-        return self._to_dto(result, **kwargs)
+        return self._to_dto(result, expand_plugins=False)
 
     def get_history(
         self,
