@@ -5,9 +5,9 @@
         "tests"
     ],
     "ignore": ["src/karp/plugins/salex_references_plugin.py", "src/karp/plugins/plugin.py"],
-    "reportMissingImports": "information",
-    "reportUndefinedVariable": "warning",
+    "reportMissingImports": "error",
+    "reportUndefinedVariable": "error",
     "reportInvalidTypeForm": "error",
-    "reportGeneralTypeIssues": "none",
+    //"reportGeneralTypeIssues": "error",
     "typeCheckingMode": "off"
 }
