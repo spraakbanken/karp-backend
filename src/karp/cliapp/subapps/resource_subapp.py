@@ -134,9 +134,10 @@ def reindex(
 
     - Needed for some changes in the configuration and if the data is outdated (edits made when Elasticsearch was down)
 
-    - Deletes the old index after reindexing.
+    - If remove-old-index, deletes the old index after reindexing, default is to keep the old index (--no-remove-old-index)
 
-    - Edits made during reindex may be lost (from index, not Karp)
+    - Will first fetch all entries and reindex. Then fetch entries that are edited since last fetch. Do this in a loop until no new changes are seen.
+      There is a very small risk that something will be edited in the short time during which the index alias is being pointed to new new index.
     """
     from karp import search_commands
 
@@ -149,7 +150,7 @@ def reindex(
 @cli_timer
 def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = remove_old_index_option):
     """
-    Reindexes all resources in Karp, see `karp-cli resource reindex -help` for more details
+    Reindexes all resources in Karp, see `karp-cli resource reindex --help` for more details
     """
     from karp import search_commands
 
