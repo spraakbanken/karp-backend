@@ -67,5 +67,4 @@ karp-cli = "karp.cliapp.main:cliapp"
 "npegl_segmentation" = "karp.plugins.npegl_segmentation_plugin:NpeglSegmentationPlugin"
 
 [tool.uv]
-exclude-newer = "90 days"
 package = true
