@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from typing import Iterable, List
 
 from karp.foundation.json import get_path
-from karp.globals import es_search_service
 from karp.lex.infrastructure.sql import resource_repository
 from karp.plugins import INDEXED, expansion_phases, transform_list
 from karp.search.domain import QueryRequest
+from karp.search.infrastructure.es import search_service
 
 
 @dataclass
@@ -54,12 +54,12 @@ def _transform_results(results, expand_plugins=True):
 def query(query: QueryRequest, **kwargs):
     path = query.path
     query.path = None  # we need the full path to expand plugins
-    result = es_search_service.query(query)
+    result = search_service.query(query)
     return _transform_result(path, result, **kwargs)
 
 
 def query_stats(resources, q):
-    return es_search_service.query_stats(resources, q)
+    return search_service.query_stats(resources, q)
 
 
 def multi_query(queries: list[QueryRequest], **kwargs):
@@ -67,14 +67,14 @@ def multi_query(queries: list[QueryRequest], **kwargs):
     paths = [q.path for q in queries]
     for q in queries:
         q.path = None
-    results = es_search_service.multi_query(queries)
+    results = search_service.multi_query(queries)
     return _transform_results([_Result(p, r) for p, r in zip(paths, results, strict=False)], **kwargs)
 
 
 def search_ids(resource_id: str, entry_ids: List[str], **kwargs):
-    result = es_search_service.search_ids(resource_id, entry_ids)
+    result = search_service.search_ids(resource_id, entry_ids)
     return _transform_result(None, result, **kwargs)
 
 
 def statistics(resource_id: str, field: str) -> Iterable:
-    return es_search_service.statistics(resource_id, field)
+    return search_service.statistics(resource_id, field)

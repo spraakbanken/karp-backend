@@ -2,10 +2,10 @@ import pytest  # noqa: I001
 
 import elasticsearch_dsl as es_dsl
 
+from karp.globals import es
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
 from karp.search.infrastructure.es.search_service import EsQueryBuilder
-from karp.search.infrastructure.es.mapping_repo import Field
 
 
 @pytest.fixture(scope="session")
@@ -13,36 +13,56 @@ def parser() -> KarpQueryParser:
     return KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
 
 
-class MappingRepo:
-    """
-    For these query parser tests, infT means that the field is nested, no matter
-    where in the hierachy it appears
-    """
+def es_query_builder():
+    class MockAliases:
+        def aliases(self, *_args, **_kwargs):
+            return "r r\n1"
 
-    def __init__(self):
-        pass
+    class MockIndices:
+        def get_mapping(self):
+            return MockBody()
 
-    def get_fields_as_tree(self, _, __):
-        return {
-            "infT": {
-                "def": Field(path=["infT"], type="nested"),
-                "children": {
-                    "field1": {"def": Field(path=["infT.field1"], type="text"), "children": {}},
-                    "field2": {"def": Field(path=["infT.field1"], type="boolean"), "children": {}},
+    class MockBody:
+        def __init__(self):
+            infT = {
+                "type": "nested",
+                "properties": {
+                    "wf": {"type": "text"},
+                    "msd": {"type": "text"},
+                    "variant": {"type": "boolean"},
                 },
             }
-        }
+            self.body = {
+                "r": {
+                    "mappings": {
+                        "properties": {
+                            "t1": {
+                                "type": "object",
+                                "properties": {"infT": infT},
+                            },
+                            "infT": infT,
+                            "ordklass": {"type": "text"},
+                            "pos": {"type": "text"},
+                            "vb": {"type": "text"},
+                            "ortografi": {"type": "text"},
+                            "name": {"type": "text"},
+                            "baseform": {"type": "text"},
+                            "kjh": {"type": "text"},
+                            "val": {"type": "text"},
+                            "test": {"type": "text"},
+                        }
+                    }
+                }
+            }
 
-    def is_nested(self, _, field):
-        return field.endswith("infT")
+    class MockEs:
+        def __init__(self):
+            self.cat = MockAliases()
+            self.indices = MockIndices()
 
-    def get_field(self, _, field_name):
-        return Field(path=[field_name], type="text")
-
-
-def es_query_builder():
-    mapping_repo = MappingRepo()
-    return EsQueryBuilder("r", mapping_repo)
+    es_obj = MockEs()
+    es.ctx_var.set(es_obj)
+    return EsQueryBuilder("r")
 
 
 def get_regexp_object(field, val):
@@ -59,15 +79,16 @@ def get_regexp_object(field, val):
     [
         ("exists|test", es_dsl.Q("exists", field="test")),
         (
-            'freetext|"hej"',
+            'infT(freetext|"hej")',
             es_dsl.Q(
                 "nested",
                 path="infT",
                 query=es_dsl.Q(
                     "bool",
                     should=[
-                        es_dsl.Q("match_phrase", **{"infT.field1": "hej"}),
-                        es_dsl.Q("match", **{"infT.field2": {"query": "hej", "lenient": True}}),
+                        es_dsl.Q("match_phrase", **{"infT.wf": "hej"}),
+                        es_dsl.Q("match_phrase", **{"infT.msd": "hej"}),
+                        es_dsl.Q("match", **{"infT.variant": {"query": "hej", "lenient": True}}),
                     ],
                 ),
             ),
