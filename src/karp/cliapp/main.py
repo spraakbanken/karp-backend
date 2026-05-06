@@ -64,7 +64,6 @@ def repl(
     from karp.entry_commands import EntryCommands
     from karp.globals import _engine_ctx_var
     from karp.search.domain import QueryRequest
-    from karp.search.infrastructure.es.search_service import EsSearchService
 
     if not args:
         args = []
@@ -73,7 +72,6 @@ def repl(
         "ctx": ctx,
         "engine": _engine_ctx_var.get(),
         "entry_commands": EntryCommands(),
-        "es_search_service": EsSearchService(),
         "QueryRequest": QueryRequest,
     }
 

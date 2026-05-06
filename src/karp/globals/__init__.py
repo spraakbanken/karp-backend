@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from karp.main.config import DATABASE_URL, env
 
-__all__ = ["es", "es_search_service", "session"]
+__all__ = ["es", "session"]
 
 
 class Proxy[T]:
@@ -36,8 +36,7 @@ class Proxy[T]:
 _engine_ctx_var: ContextVar[Engine] = ContextVar("engine")
 es: Proxy[Elasticsearch] = Proxy(ContextVar("es"))
 
-# session and es_search_service are recreated for each request / CLI invocation
-es_search_service: Proxy = Proxy(ContextVar("es_search_service"))  # TODO typing, circular dep. issue
+# session is created for each request / CLI invocation
 session: Proxy[Session] = Proxy(ContextVar("session"))
 
 
@@ -53,17 +52,11 @@ def create_es():
 @contextmanager
 def new_session():
     """
-    Creates a db session and an instance of EsSearchService.
-
-    # TODO refactor: ESSearchService and the classes used in it does not need to be classes and can be modules. Restart is required after schema changes etc.
+    Creates a db session.
     """
 
     session_obj = Session(bind=_engine_ctx_var.get(), close_resets_only=False)
     session_token = session.set(session_obj)
-
-    from karp.search.infrastructure.es.search_service import EsSearchService
-
-    es_token = es_search_service.set(EsSearchService())
 
     # use session.begin()??
     try:
@@ -74,7 +67,6 @@ def new_session():
     finally:
         session.close()
         session.reset(session_token)
-        es_search_service.reset(es_token)
 
 
 def _create_db_engine(db_url: URL) -> Engine:

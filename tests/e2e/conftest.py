@@ -15,6 +15,7 @@ from karp.globals import new_session  # isort: skip
 from karp import auth, resource_commands  # isort: skip
 
 from karp.lex.domain.value_objects import ResourceConfig
+from karp.search.infrastructure.es import mapping_repo
 from tests import common_data, utils
 from tests.integration.auth.adapters import create_access_token
 
@@ -50,6 +51,21 @@ def fixture_app(apply_migrations: None, init_search_service: None) -> Generator[
 def fixture_client(app: FastAPI) -> Generator[TestClient, None, None]:
     with TestClient(app) as client:
         yield client
+
+
+@pytest.fixture(autouse=True, scope="function")
+def reset_caches():
+    """
+    The resources are recreated multiple times during the test run and indices will change name.
+    Because the names are cached in mapping_repo on module level, we have to manually reset the
+    caches to make all tests pass in the same run.
+    """
+    yield
+    for func in dir(mapping_repo):
+        func = getattr(mapping_repo, func)
+        clear_fun = getattr(func, "cache_clear", None)
+        if clear_fun:
+            clear_fun()
 
 
 def create_and_publish_resource(*, path_to_config: str) -> Tuple[bool, Optional[dict[str, Any]]]:
