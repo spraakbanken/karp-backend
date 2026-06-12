@@ -63,6 +63,7 @@ def repl(
 
     from karp.entry_commands import EntryCommands
     from karp.globals import _engine_ctx_var
+    from karp.lex.application import entry_queries, resource_queries
     from karp.search.domain import QueryRequest
 
     if not args:
@@ -73,6 +74,8 @@ def repl(
         "engine": _engine_ctx_var.get(),
         "entry_commands": EntryCommands(),
         "QueryRequest": QueryRequest,
+        "resource_queries": resource_queries,
+        "entry_queries": entry_queries,
     }
 
     module = sys.__class__
