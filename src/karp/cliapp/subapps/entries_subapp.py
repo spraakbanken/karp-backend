@@ -44,11 +44,10 @@ def add_entries_to_resource(
     import json_arrays
     from tqdm import tqdm
 
-    from karp.cliapp.typer_injector import inject_from_ctx
     from karp.entry_commands import EntryCommands
     from karp.foundation.value_objects import unique_id
 
-    entry_commands = inject_from_ctx(EntryCommands, ctx)
+    entry_commands = EntryCommands()
     user = user or "local admin"
     message = message or "imported through cli"
     entries = tqdm(json_arrays.load_from_file(data), desc="Adding", unit=" entries")
@@ -99,10 +98,9 @@ def import_entries_to_resource(
     import json_arrays
     from tqdm import tqdm
 
-    from karp.cliapp.typer_injector import inject_from_ctx
     from karp.entry_commands import EntryCommands
 
-    entry_commands = inject_from_ctx(EntryCommands, ctx)
+    entry_commands = EntryCommands()
     user = user or "local admin"
     message = message or "imported through cli"
     entries = tqdm(json_arrays.load_from_file(data), desc="Importing", unit=" entries")
@@ -147,10 +145,8 @@ def export_entries(
     """
     import json_arrays
 
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.lex.application import EntryQueries
+    from karp.lex.application import entry_queries
 
-    entry_queries = inject_from_ctx(EntryQueries, ctx=ctx)
     entries = entry_queries.all_entries(resource_id=resource_id, expand_plugins=expand_plugins)
     logger.debug(
         "exporting entries",
@@ -190,12 +186,11 @@ def batch_entries(
     """
     import json_arrays
 
-    from karp.cliapp.typer_injector import inject_from_ctx
     from karp.entry_commands import EntryCommands
     from karp.foundation.value_objects import unique_id
 
     logger.info("run entries command in batch")
-    entry_commands = inject_from_ctx(EntryCommands, ctx)  # type: ignore[type-abstract]
+    entry_commands = EntryCommands()
     entry_commands.start_transaction()
     for cmd in json_arrays.load_from_file(data):
         command_type = cmd["cmdtype"]
@@ -243,8 +238,7 @@ def validate_entries(
     from sb_json_tools import jt_val
     from tqdm import tqdm
 
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.lex.application import ResourceQueries
+    from karp.lex.application import resource_queries
     from karp.lex.domain.value_objects import ResourceConfig, entry_schema
 
     class Counter(collections.abc.Generator):
@@ -277,8 +271,7 @@ def validate_entries(
     if config_path:
         config = ResourceConfig.from_dict(json_arrays.jsonlib.load_from_file(config_path))
     elif resource_id_raw:
-        repo = inject_from_ctx(ResourceQueries, ctx=ctx)
-        if resource := repo.by_resource_id(resource_id_raw):
+        if resource := resource_queries.by_resource_id(resource_id_raw):
             config = resource.config
         else:
             typer.echo(f"Can't find resource '{resource_id_raw}'", err=True)

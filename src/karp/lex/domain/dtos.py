@@ -27,7 +27,7 @@ class EntityDto(IdMixin, BaseModel):
     last_modified: float
     last_modified_by: str
     message: str | None = None
-    discarded: bool = False
+    discarded: bool
 
 
 class EntryDto(EntityDto):
@@ -44,6 +44,7 @@ class EntryDto(EntityDto):
             lastModified=entry.last_modified,
             lastModifiedBy=entry.last_modified_by,
             message=entry.message,
+            discarded=entry._discarded,
         )
 
 

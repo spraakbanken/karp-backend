@@ -46,11 +46,8 @@ def create(
 
     - create does not publish a resource
     """
-    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp import resource_commands
     from karp.lex.domain.value_objects import ResourceConfig
-    from karp.resource_commands import ResourceCommands
-
-    resource_commands = inject_from_ctx(ResourceCommands, ctx)
 
     if config_path.is_dir():
         typer.Abort("Config needs to be a JSON or YAML file")
@@ -84,13 +81,11 @@ def update(
     - for some changes, `karp-cli resource reindex <resource_id>` is needed
     """
 
-    from karp.cliapp.typer_injector import inject_from_ctx
+    from karp import resource_commands
     from karp.lex.domain.value_objects import ResourceConfig
-    from karp.resource_commands import ResourceCommands
 
     config = ResourceConfig.from_path(config)
     resource_id = config.resource_id
-    resource_commands = inject_from_ctx(ResourceCommands, ctx)
     try:
         resource_commands.update_resource(
             resource_id=resource_id,
@@ -117,10 +112,8 @@ def publish(ctx: typer.Context, resource_id: str = resource_option, version: Opt
 
     Makes the resource available from search and edit.
     """
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.resource_commands import ResourceCommands
+    from karp import resource_commands
 
-    resource_commands = inject_from_ctx(ResourceCommands, ctx)
     resource_commands.publish_resource(
         resource_id=resource_id,
         message=f"Publish '{resource_id}",
@@ -134,23 +127,20 @@ def publish(ctx: typer.Context, resource_id: str = resource_option, version: Opt
 @cli_error_handler
 @cli_timer
 def reindex(
-    ctx: typer.Context,
-    resource_id: str = resource_option,
-    remove_old_index: Optional[bool] = remove_old_index_option,
+    ctx: typer.Context, resource_id: str = resource_option, remove_old_index: Optional[bool] = remove_old_index_option
 ):
     """
     Recreate the search index for a resource
 
     - Needed for some changes in the configuration and if the data is outdated (edits made when Elasticsearch was down)
 
-    - Deletes the old index after reindexing.
+    - If remove-old-index, deletes the old index after reindexing, default is to keep the old index (--no-remove-old-index)
 
-    - Edits made during reindex may be lost (from index, not Karp)
+    - Will first fetch all entries and reindex. Then fetch entries that are edited since last fetch. Do this in a loop until no new changes are seen.
+      There is a very small risk that something will be edited in the short time during which the index alias is being pointed to new new index.
     """
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.search_commands import SearchCommands
+    from karp import search_commands
 
-    search_commands = inject_from_ctx(SearchCommands, ctx)
     search_commands.reindex_resource(resource_id=resource_id, remove_old_index=remove_old_index)
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
@@ -160,12 +150,10 @@ def reindex(
 @cli_timer
 def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = remove_old_index_option):
     """
-    Reindexes all resources in Karp, see `karp-cli resource reindex -help` for more details
+    Reindexes all resources in Karp, see `karp-cli resource reindex --help` for more details
     """
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.search_commands import SearchCommands
+    from karp import search_commands
 
-    search_commands = inject_from_ctx(SearchCommands, ctx)
     search_commands.reindex_all_resources(remove_old_index=remove_old_index)
     typer.echo("Successfully reindexed all resrouces")
 
@@ -184,14 +172,12 @@ def list_resources(
     """
     from tabulate import tabulate
 
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.lex.application import ResourceQueries
+    from karp.lex.infrastructure.sql import resource_repository
 
-    resources = inject_from_ctx(ResourceQueries, ctx)
     if show_published:
-        result = resources.get_published_resources()
+        result = resource_repository.get_published_resources()
     else:
-        result = resources.get_all_resources()
+        result = resource_repository.get_all_resources()
     typer.echo(
         tabulate(
             [[resource.resource_id, resource.version, resource.is_published] for resource in result],
@@ -211,11 +197,9 @@ def show(ctx: typer.Context, resource_id: str = resource_option, version: Option
     """
     from tabulate import tabulate
 
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.lex.application import ResourceQueries
+    from karp.lex.application import resource_queries
 
-    resources = inject_from_ctx(ResourceQueries, ctx)  # type: ignore [misc]
-    resource = resources.by_resource_id(resource_id, version=version)
+    resource = resource_queries.by_resource_id(resource_id, version=version)
     typer.echo(tabulate(((key, value) for key, value in resource.dict().items() if key != "config")))
     typer.echo()
     typer.echo(resource.config.config_str)
@@ -236,10 +220,8 @@ def unpublish(
     Makes the resources unavailable for search and editing. By default the search index
     is removed.
     """
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.resource_commands import ResourceCommands
+    from karp import resource_commands
 
-    resource_commands = inject_from_ctx(ResourceCommands, ctx)
     unpublished = resource_commands.unpublish_resource(
         resource_id=resource_id, user="local admin", version=version, keep_index=keep_index
     )
@@ -262,10 +244,8 @@ def delete(
     """
     Completely delete resource, nothing will be saved
     """
-    from karp.cliapp.typer_injector import inject_from_ctx
-    from karp.resource_commands import ResourceCommands
+    from karp import resource_commands
 
-    resource_commands = inject_from_ctx(ResourceCommands, ctx)
     if not force:
         force = typer.confirm(
             "This will delete every row, table and index for this resource permanently. Are you sure?"

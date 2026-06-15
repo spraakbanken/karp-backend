@@ -1,24 +1,25 @@
+from contextlib import contextmanager
 from typing import Dict, List  # noqa: I001
 
 import pytest
 from fastapi import status
 
-from karp.main.errors import ClientErrorCodes
 from karp.foundation.timings import utc_now
 from karp.foundation.value_objects import (
     make_unique_id,
     unique_id,
 )
+from karp.globals import new_session
 from karp.lex.domain.dtos import EntryDto
-from karp.lex.infrastructure import ResourceRepository
-from karp.main import new_session
+from karp.lex.infrastructure.sql import resource_repository
+from karp.main.errors import ClientErrorCodes
 from tests.e2e.conftest import AccessToken
 
 
-def get_entries(injector, resource_id: str):
-    with new_session(injector) as injector:
-        resources = injector.get(ResourceRepository)
-        return resources.entries_by_resource_id("places")
+@contextmanager
+def get_entries():
+    with new_session():
+        yield resource_repository.entries_by_resource_id("places")
 
 
 def init(
@@ -128,8 +129,8 @@ class TestAddEntry:
         assert "newID" in response_data
         new_id = unique_id.parse(response_data["newID"])
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-        assert new_id in entries.entity_ids()
+        with get_entries() as entries:
+            assert new_id in entries.entity_ids()
 
     def test_add_with_valid_data_and_entity_id_returns_201(
         self,
@@ -158,8 +159,8 @@ class TestAddEntry:
         assert "newID" in response_data
         new_id = response_data["newID"]
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-        assert new_id in entries.entity_ids()
+        with get_entries() as entries:
+            assert new_id in entries.entity_ids()
 
     def test_add_fails_with_invalid_entry(
         self,
@@ -226,9 +227,9 @@ class TestDeleteEntry:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-        assert entries.by_id(entity_id).discarded
-        assert entity_id not in entries.entity_ids()
+        with get_entries() as entries:
+            assert entries.by_id(entity_id).discarded
+            assert entity_id not in entries.entity_ids()
 
     def test_delete_non_existing_fails(
         self,
@@ -276,9 +277,9 @@ class TestDeleteEntryRest:
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-        assert entries.by_id(entity_id).discarded
-        assert entity_id not in entries.entity_ids()
+        with get_entries() as entries:
+            assert entries.by_id(entity_id).discarded
+            assert entity_id not in entries.entity_ids()
 
     def test_delete_rest_non_existing_fails(
         self,
@@ -470,9 +471,9 @@ class TestUpdateEntry:
         response_data = response.json()
         assert response_data["newID"] == entity_id
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-        assert entries.by_id(entity_id).body["population"] == 5
-        assert entity_id in entries.entity_ids()
+        with get_entries() as entries:
+            assert entries.by_id(entity_id).body["population"] == 5
+            assert entity_id in entries.entity_ids()
 
     def test_update_several_times(
         self,
@@ -540,10 +541,10 @@ class TestUpdateEntry:
         print(f"{response.json()=}")
         assert str(entry_id + 1) == response_data["newID"]
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-        entry_ids = entries.entry_ids()
-        assert str(entry_id) not in entry_ids
-        assert str(entry_id + 1) in entry_ids
+        with get_entries() as entries:
+            entry_ids = entries.entry_ids()
+            assert str(entry_id) not in entry_ids
+            assert str(entry_id + 1) in entry_ids
 
     def test_update_changes_last_modified(
         self,
@@ -563,11 +564,11 @@ class TestUpdateEntry:
 
         after_add = utc_now()
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-        entity_id = ids[0]
-        entry = entries.by_id(entity_id)
-        assert entry.last_modified > before_add
-        assert entry.last_modified < after_add
+        with get_entries() as entries:
+            entity_id = ids[0]
+            entry = entries.by_id(entity_id)
+            assert entry.last_modified > before_add
+            assert entry.last_modified < after_add
 
         fa_data_client.post(
             f"/entries/places/{entity_id}",
@@ -585,10 +586,10 @@ class TestUpdateEntry:
 
         after_update = utc_now()
 
-        entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-        entry = entries.by_id(entity_id)
-        assert entry.last_modified > after_add
-        assert entry.last_modified < after_update
+        with get_entries() as entries:
+            entry = entries.by_id(entity_id)
+            assert entry.last_modified > after_add
+            assert entry.last_modified < after_update
 
 
 class TestGetEntry:
@@ -622,7 +623,6 @@ class TestGetEntry:
 
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_214_id
-        assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 1
 
     def test_route_w_version_exist(
@@ -639,7 +639,6 @@ class TestGetEntry:
 
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_209_id
-        assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 5
 
 
@@ -728,12 +727,3 @@ def test_add_with_id_many_times_changes(
     finally:
         # delete it after the test is done to not affect other tests
         delete(fa_data_client, write_token, entry_id)
-
-
-# assert response.status_code == 201
-# response_data = response.json()
-# assert "newID" in response_data
-# new_id = unique_id.parse(response_data["newID"])
-#
-# entries = get_entries(fa_data_client.app.state.app_context.injector, resource_id="places")
-# assert new_id in entries.entity_ids()

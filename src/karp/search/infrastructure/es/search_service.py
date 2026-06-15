@@ -7,36 +7,38 @@ from typing import Iterable
 import elasticsearch
 import elasticsearch.helpers
 import elasticsearch_dsl as es_dsl
-from injector import inject
 from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
+import karp.search.infrastructure.es.mapping_repo as mapping_repo
 from karp.foundation.json import get_path
+from karp.globals import es
 from karp.main.errors import KarpError, QueryParserError
 from karp.search.domain import QueryRequest
 from karp.search.domain.highlight_param import HighlightParam
 from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics, ModelBase
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
-from karp.search.infrastructure.es.mapping_repo import EsMappingRepository, Field
+from karp.search.infrastructure.es.mapping_repo import Field
 
 logger = logging.getLogger(__name__)
 
+parser = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
+
 
 class EsQueryBuilder(NodeWalker):
-    def __init__(self, resources, mapping_repo, highlight=False):
+    def __init__(self, resources, highlight=False):
         super().__init__()
         self.path = [""]
         self.length_mappings = set()
         self.resources = resources
-        self.mapping_repo = mapping_repo
         self.highlight = highlight
 
     def walk__freetext(self, node):
         value = self.walk(node.arg)
 
         # using * to include all fields would include unanalyzed .raw fields, so we must list fields explicitly
-        tree = self.mapping_repo.get_fields_as_tree(self.resources, self.path)
+        tree = mapping_repo.get_fields_as_tree(tuple(self.resources), tuple(self.path))
 
         def recurse(tree: dict, path: str):
             queries = []
@@ -135,11 +137,11 @@ class EsQueryBuilder(NodeWalker):
         if field_path + "." == self.path[-1]:
             return query
 
-        if self.mapping_repo.is_nested(self.resources, field_path):
+        if mapping_repo.is_nested(tuple(self.resources), field_path):
             inner_hits = {}
             if self.highlight:
                 inner_hits = {"inner_hits": {"_source": False, "highlight": {"fields": {}}, "name": uuid.uuid4()}}
-                non_nested_children = self.mapping_repo.get_non_nested_children(self.resources, field_path)
+                non_nested_children = mapping_repo.get_non_nested_children(tuple(self.resources), field_path)
                 for field in non_nested_children:
                     inner_hits["inner_hits"]["highlight"]["fields"][field] = {}
             query = es_dsl.Q("nested", path=field_path, query=query, **inner_hits)
@@ -160,7 +162,9 @@ class EsQueryBuilder(NodeWalker):
         else:
             # Add the current path to field, for example query path(equals|field|val)
             # must yield an es-query in field "path.field"
-            field_obj = self.mapping_repo.get_field(self.resources, self.path[-1] + field_path.removesuffix(".length"))
+            field_obj = mapping_repo.get_field(
+                tuple(self.resources), self.path[-1] + field_path.removesuffix(".length")
+            )
             # if the field query has ".length" appended, and the field is text, we must query raw
             if is_length:
                 if field_obj.type == "text":
@@ -272,274 +276,268 @@ def remove_indices_from_path(path: str) -> str:
     return re.sub(r"\[.*?\]", "", path)
 
 
-class EsSearchService:
-    @inject
-    def __init__(
-        self,
-        es: elasticsearch.Elasticsearch,
-        mapping_repo: EsMappingRepository,
-    ):
-        self.es: elasticsearch.Elasticsearch = es
-        self.mapping_repo = mapping_repo
-        self.field_name_collector = EsFieldNameCollector()
-        self.parser = KarpQueryParser(semantics=KarpQueryModelBuilderSemantics())
+def query(query: QueryRequest):
+    logger.debug("query called", extra={"request": query})
+    return _search_with_query(query)
 
-    def query(self, query: QueryRequest):
-        logger.debug("query called", extra={"request": query})
-        return self._search_with_query(query)
 
-    def query_stats(self, resources, q):
-        query = QueryRequest(resources=resources, q=q, size=0)
-        return self._search_with_query(query)
+def query_stats(resources, q):
+    query = QueryRequest(resources=resources, q=q, size=0)
+    return _search_with_query(query)
 
-    def multi_query(self, queries: list[QueryRequest]):
-        # ES fails on a multi-search with an empty request list
-        if not queries:
-            return []
 
-        logger.debug(f"multi_query called for {len(queries)} requests")
+def multi_query(queries: list[QueryRequest]):
+    # ES fails on a multi-search with an empty request list
+    if not queries:
+        return []
 
-        # Workaround: MultiSearch.add takes linear time in the size of
-        # the query
-        class WorkaroundMultiSearch(es_dsl.MultiSearch):
-            def add(self, search):
-                self._searches.append(search)
-                return self
+    logger.debug(f"multi_query called for {len(queries)} requests")
 
-        ms = WorkaroundMultiSearch(using=self.es)
-        for query in queries:
-            ms = ms.add(self._build_search(query, query.resources))
-        responses = ms.execute()
-        return [self._build_result(query, response) for query, response in zip(queries, responses, strict=False)]
+    # Workaround: MultiSearch.add takes linear time in the size of
+    # the query
+    class WorkaroundMultiSearch(es_dsl.MultiSearch):
+        def add(self, search):
+            self._searches.append(search)
+            return self
 
-    def _search_with_query(self, query: QueryRequest):
-        logger.debug("search_with_query called", extra={"query": query})
-        s = self._build_search(query, query.resources)
-        response = s.execute()
-        return self._build_result(query, response)
+    ms = WorkaroundMultiSearch(using=es)
+    for query in queries:
+        ms = ms.add(_build_search(query, query.resources))
+    responses = ms.execute()
+    return [_build_result(query, response) for query, response in zip(queries, responses, strict=False)]
 
-    def _build_search(self, query, resources: list[str]):
-        field_names = set()
-        es_query = None
-        builder = None
-        if query.q:
-            try:
-                if isinstance(query.q, ModelBase):
-                    model = query.q
-                else:
-                    model = self.parser.parse(query.q)
-                builder = EsQueryBuilder(
-                    resources, self.mapping_repo, highlight=query.highlight != HighlightParam.false
-                )
-                es_query = builder.walk(model)
-                field_names = self.field_name_collector.walk(model)
-            except tatsu_exc.FailedParse as err:
-                raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
-        s = es_dsl.Search(using=self.es, index=resources)
-        if builder:
-            s = _add_runtime_mappings(s, builder.length_mappings)
-        s = s.extra(track_total_hits=True)  # get accurate hits numbers
-        if es_query is not None:
-            s = s.query(es_query)
+def _search_with_query(query: QueryRequest):
+    logger.debug("search_with_query called", extra={"query": query})
+    s = _build_search(query, query.resources)
+    response = s.execute()
+    return _build_result(query, response)
 
-        if query.size:
-            s = s[query.from_ : query.from_ + query.size]
-        else:
-            # Elasticsearch defaults to only 10 results if size is unspecified
-            # TODO: how can we return all results? By default it only allows
-            # from + size <= 10000
-            s = s[query.from_ : 10000]
 
-        if query.lexicon_stats:
-            s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
-        if query.highlight:
-            # only highlight the fields that are used in query
-            for field in field_names:
-                # add the actual field
-                s = s.highlight(field)
-                # also highlight any fields in "subobject" (will not match anything if field is a leaf)
-                s = s.highlight(field + ".*")
-            if not field_names:
-                # i.e. freetext
-                s = s.highlight("*")
-        if query.size != 0:
-            # if no hits are returned, no sorting is needed
-            if query.sort:
-                s = s.sort(*self.mapping_repo.translate_sort_fields(resources, query.sort))
-            else:
-                new_s = self.mapping_repo.get_default_sort(resources)
-                if new_s:
-                    s = s.sort(*new_s)
-
-        logger.debug("s = %s", extra={"es_query s": s.to_dict()})
-        return s
-
-    def _format_result(self, response, path: str | None = None, highlight: HighlightParam = HighlightParam.false):
-        def format_nested_highlight(result_tree) -> dict[str, list[str]]:
-            """
-            recursively find the innermost inner_hits which contain highlights and list index values
-            """
-            final_highlights = {}
-            for key, inner_hit_outer in result_tree.meta.inner_hits.items():
-                for inner_hit in inner_hit_outer.hits:
-                    # just move through to the tree until the innermost inner_hit is found
-                    if hasattr(inner_hit.meta, "inner_hits"):
-                        final_highlights.update(format_nested_highlight(inner_hit))
-
-                    if hasattr(inner_hit.meta, "nested"):
-
-                        def get_path(path, obj):
-                            """
-                            the nested field of the inner_hit is a recursive structure
-                            this function returns the actual path with indices
-                            and also the path without indices, which is needed to match
-                            the correct highlight to the correct path with indices
-                            """
-                            if path:
-                                path = path + "."
-                            path = path + obj.field + f"[{obj.offset}]"
-                            if hasattr(obj, "_nested"):
-                                return get_path(path, obj._nested)
-                            return path
-
-                        path = get_path("", inner_hit.meta.nested)
-
-                        for key, hit_highlights in getattr(inner_hit.meta, "highlight", {}).items():
-                            # this finds the final fields needed to complete the path to the matching field
-                            extra_fields = key.split(remove_indices_from_path(path))[1]
-                            final_highlights[path + extra_fields] = hit_highlights
-
-            return final_highlights
-
-        def format_entry(entry):
-            dict_entry = entry.to_dict()
-
-            res = {
-                "resource": self.mapping_repo.reverse_aliases[entry.meta.index],
-                "id": entry.meta.id,
-                "entry": dict_entry,
-            }
-            if highlight != HighlightParam.false:
-                highlight_res = entry.meta.highlight.to_dict() if hasattr(entry.meta, "highlight") else {}
-
-                if hasattr(entry.meta, "inner_hits"):
-                    # group the inner_hits by the path without indices
-                    inner_hits_highlights = defaultdict(dict)
-                    for highlight_path, highlight_item in format_nested_highlight(entry).items():
-                        # for now, remove the "global" highlighting and replace with the one from inner_hits
-                        path_wo_indices = remove_indices_from_path(highlight_path)
-                        inner_hits_highlights[path_wo_indices][highlight_path] = highlight_item
-
-                    # remove duplicates from the outer highlighting
-                    for path_wo_indices in inner_hits_highlights.keys():
-                        highlight_res.pop(path_wo_indices, None)
-
-                    # for compatibility reasons, if HighlightParam.true, use older format without indices
-                    # this can be removed when frontend has updated to use the new format with indices.
-                    if highlight == HighlightParam.true:
-                        for path_wo_indices, val in inner_hits_highlights.items():
-                            # flatten for path_wo_indices
-                            highlight_res[path_wo_indices] = [
-                                inner_highlight
-                                for inner_highlights in val.values()
-                                for inner_highlight in inner_highlights
-                            ]
-                    else:
-                        for val in inner_hits_highlights.values():
-                            highlight_res.update(val)
-                if highlight_res:
-                    # only add key if there are highlights
-                    res["highlight"] = highlight_res
-            for mapped_name, field in es_mapping_repo.internal_fields.items():
-                res[mapped_name] = dict_entry.pop(field.name, None)
-
-            return get_path(path, res) if path else res
-
-        result = {
-            "total": response.hits.total.value,
-            "hits": [format_entry(entry) for entry in response],
-        }
-        return result
-
-    def _build_result(self, query, response):
-        result = self._format_result(response, path=query.path, highlight=query.highlight)
-        if query.lexicon_stats:
-            result["distribution"] = {}
-            for bucket in response.aggregations.distribution.buckets:
-                key = bucket["key"]
-                result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
-        return result
-
-    def search_ids(self, resource_id: str, entry_ids: list[str]):
-        query = es_dsl.Q("terms", _id=entry_ids)
-        logger.debug("query", extra={"query": query})
-        s = es_dsl.Search(using=self.es, index=resource_id).query(query)
-        logger.debug("s", extra={"es_query s": s.to_dict()})
-        response = s.execute()
-        return self._format_result(response)
-
-    def statistics(self, resource_id: str, field: str) -> Iterable:
-        s = es_dsl.Search(using=self.es, index=resource_id)
-        s = s[:0]
-
-        # if field is analyzed, do aggregation on the "raw" multi-field
-        if field in self.mapping_repo.fields[resource_id] and self.mapping_repo.fields[resource_id][field].analyzed:
-            agg_field = field + ".raw"
-        else:
-            agg_field = field
-        logger.debug(
-            "Doing aggregations on resource_id: {resource_id}, on field {field}".format(
-                resource_id=resource_id, field=field
-            )
-        )
-
-        # use an Elasticsearch instance configured to fail at less than 66000 buckets
-        # If there are more buckets than that, the ES-lib will raise an exception that we
-        # can catch and inform the user.
-        max_buckets = 66000
-
-        # if the aggregation field is in a field with type "nested", it needs a special aggregation
-        # nested-aggregations counts occurrence of the "sub-documents" and not parent document, this
-        # is why the "parent_doc_count" aggregation is needed for its values and sorting
-        nest_levels = self.mapping_repo.get_nest_levels(resource_id, field)
-        if nest_levels:
-            name = "field_values"
-            agg = es_dsl.A(
-                "terms",
-                field=agg_field,
-                size=max_buckets,
-                order=[{"parent_doc_count": "desc"}],
-                # empty reverse_nested means merge on top-level, same result no matter how many levels of nesting there is
-                aggs={"parent_doc_count": es_dsl.A("reverse_nested")},
-            )
-            # add innermost nesting level first
-            for level in reversed(nest_levels):
-                agg = es_dsl.A("nested", path=level, aggs={name: agg})
-                name = level
-            s.aggs.bucket(name, agg)
-        else:
-            s.aggs.bucket("field_values", es_dsl.A("terms", field=agg_field, size=max_buckets))
-
+def _build_search(query, resources: list[str]):
+    field_names = set()
+    es_query = None
+    builder = None
+    if query.q:
         try:
-            response = s.execute()
-        except elasticsearch.BadRequestError as e:
-            if e.body["error"]["caused_by"]["type"] == "too_many_buckets_exception":
-                raise KarpError("Too many unique values for statistics") from None
+            if isinstance(query.q, ModelBase):
+                model = query.q
             else:
-                raise e
-        logger.debug("Elasticsearch response", extra={"response": response})
-        agg_response = response.aggregations
-        if nest_levels:
-            # unwrap the doc_count from the "parent_doc_count" aggregation
-            for level in nest_levels:
-                agg_response = agg_response[level]
-            field_values = agg_response["field_values"]
-            return [
-                {"value": bucket["key"], "count": bucket["parent_doc_count"]["doc_count"]}
-                for bucket in field_values.buckets
-            ]
+                model = parser.parse(query.q)
+            builder = EsQueryBuilder(resources, highlight=query.highlight != HighlightParam.false)
+            es_query = builder.walk(model)
+            field_name_collector = EsFieldNameCollector()
+            field_names = field_name_collector.walk(model)
+        except tatsu_exc.FailedParse as err:
+            raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
+    s = es_dsl.Search(using=es, index=resources)
+    if builder:
+        s = _add_runtime_mappings(s, builder.length_mappings)
+    s = s.extra(track_total_hits=True)  # get accurate hits numbers
+    if es_query is not None:
+        s = s.query(es_query)
+
+    if query.size:
+        s = s[query.from_ : query.from_ + query.size]
+    else:
+        # Elasticsearch defaults to only 10 results if size is unspecified
+        # TODO: how can we return all results? By default it only allows
+        # from + size <= 10000
+        s = s[query.from_ : 10000]
+
+    if query.lexicon_stats:
+        s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
+    if query.highlight:
+        # only highlight the fields that are used in query
+        for field in field_names:
+            # add the actual field
+            s = s.highlight(field)
+            # also highlight any fields in "subobject" (will not match anything if field is a leaf)
+            s = s.highlight(field + ".*")
+        if not field_names:
+            # i.e. freetext
+            s = s.highlight("*")
+    if query.size != 0:
+        # if no hits are returned, no sorting is needed
+        if query.sort:
+            s = s.sort(*mapping_repo.translate_sort_fields(tuple(resources), tuple(query.sort)))
         else:
-            field_values = agg_response.field_values
-            return [{"value": bucket["key"], "count": bucket["doc_count"]} for bucket in field_values.buckets]
+            new_s = mapping_repo.get_default_sort(tuple(resources))
+            if new_s:
+                s = s.sort(*new_s)
+
+    logger.debug("s = %s", extra={"es_query s": s.to_dict()})
+    return s
+
+
+def _format_result(response, path: str | None = None, highlight: HighlightParam = HighlightParam.false):
+    def format_nested_highlight(result_tree) -> dict[str, list[str]]:
+        """
+        recursively find the innermost inner_hits which contain highlights and list index values
+        """
+        final_highlights = {}
+        for key, inner_hit_outer in result_tree.meta.inner_hits.items():
+            for inner_hit in inner_hit_outer.hits:
+                # just move through to the tree until the innermost inner_hit is found
+                if hasattr(inner_hit.meta, "inner_hits"):
+                    final_highlights.update(format_nested_highlight(inner_hit))
+
+                if hasattr(inner_hit.meta, "nested"):
+
+                    def get_path(path, obj):
+                        """
+                        the nested field of the inner_hit is a recursive structure
+                        this function returns the actual path with indices
+                        and also the path without indices, which is needed to match
+                        the correct highlight to the correct path with indices
+                        """
+                        if path:
+                            path = path + "."
+                        path = path + obj.field + f"[{obj.offset}]"
+                        if hasattr(obj, "_nested"):
+                            return get_path(path, obj._nested)
+                        return path
+
+                    path = get_path("", inner_hit.meta.nested)
+
+                    for key, hit_highlights in getattr(inner_hit.meta, "highlight", {}).items():
+                        # this finds the final fields needed to complete the path to the matching field
+                        extra_fields = key.split(remove_indices_from_path(path))[1]
+                        final_highlights[path + extra_fields] = hit_highlights
+
+        return final_highlights
+
+    def format_entry(entry):
+        dict_entry = entry.to_dict()
+
+        res = {
+            "resource": mapping_repo.get_reverse_aliases()[entry.meta.index],
+            "id": entry.meta.id,
+            "entry": dict_entry,
+        }
+        if highlight != HighlightParam.false:
+            highlight_res = entry.meta.highlight.to_dict() if hasattr(entry.meta, "highlight") else {}
+
+            if hasattr(entry.meta, "inner_hits"):
+                # group the inner_hits by the path without indices
+                inner_hits_highlights = defaultdict(dict)
+                for highlight_path, highlight_item in format_nested_highlight(entry).items():
+                    # for now, remove the "global" highlighting and replace with the one from inner_hits
+                    path_wo_indices = remove_indices_from_path(highlight_path)
+                    inner_hits_highlights[path_wo_indices][highlight_path] = highlight_item
+
+                # remove duplicates from the outer highlighting
+                for path_wo_indices in inner_hits_highlights.keys():
+                    highlight_res.pop(path_wo_indices, None)
+
+                # for compatibility reasons, if HighlightParam.true, use older format without indices
+                # this can be removed when frontend has updated to use the new format with indices.
+                if highlight == HighlightParam.true:
+                    for path_wo_indices, val in inner_hits_highlights.items():
+                        # flatten for path_wo_indices
+                        highlight_res[path_wo_indices] = [
+                            inner_highlight for inner_highlights in val.values() for inner_highlight in inner_highlights
+                        ]
+                else:
+                    for val in inner_hits_highlights.values():
+                        highlight_res.update(val)
+            if highlight_res:
+                # only add key if there are highlights
+                res["highlight"] = highlight_res
+        for mapped_name, field in es_mapping_repo.internal_fields.items():
+            res[mapped_name] = dict_entry.pop(field.name, None)
+
+        return get_path(path, res) if path else res
+
+    result = {
+        "total": response.hits.total.value,
+        "hits": [format_entry(entry) for entry in response],
+    }
+    return result
+
+
+def _build_result(query, response):
+    result = _format_result(response, path=query.path, highlight=query.highlight)
+    if query.lexicon_stats:
+        result["distribution"] = {}
+        for bucket in response.aggregations.distribution.buckets:
+            key = bucket["key"]
+            result["distribution"][key.rsplit("_", 1)[0]] = bucket["doc_count"]
+    return result
+
+
+def search_ids(resource_id: str, entry_ids: list[str]):
+    query = es_dsl.Q("terms", _id=entry_ids)
+    logger.debug("query", extra={"query": query})
+    s = es_dsl.Search(using=es, index=resource_id).query(query)
+    logger.debug("s", extra={"es_query s": s.to_dict()})
+    response = s.execute()
+    return _format_result(response)
+
+
+def statistics(resource_id: str, field: str) -> Iterable:
+    s = es_dsl.Search(using=es, index=resource_id)
+    s = s[:0]
+
+    # if field is analyzed, do aggregation on the "raw" multi-field
+    field_setting = mapping_repo.get_field((resource_id,), field, allow_missing=True)
+    if field_setting and field_setting.analyzed:
+        agg_field = field + ".raw"
+    else:
+        agg_field = field
+    logger.debug(
+        "Doing aggregations on resource_id: {resource_id}, on field {field}".format(
+            resource_id=resource_id, field=field
+        )
+    )
+
+    # use an Elasticsearch instance configured to fail at less than 66000 buckets
+    # If there are more buckets than that, the ES-lib will raise an exception that we
+    # can catch and inform the user.
+    max_buckets = 66000
+
+    # if the aggregation field is in a field with type "nested", it needs a special aggregation
+    # nested-aggregations counts occurrence of the "sub-documents" and not parent document, this
+    # is why the "parent_doc_count" aggregation is needed for its values and sorting
+    nest_levels = mapping_repo.get_nest_levels(resource_id, field)
+    if nest_levels:
+        name = "field_values"
+        agg = es_dsl.A(
+            "terms",
+            field=agg_field,
+            size=max_buckets,
+            order=[{"parent_doc_count": "desc"}],
+            # empty reverse_nested means merge on top-level, same result no matter how many levels of nesting there is
+            aggs={"parent_doc_count": es_dsl.A("reverse_nested")},
+        )
+        # add innermost nesting level first
+        for level in reversed(nest_levels):
+            agg = es_dsl.A("nested", path=level, aggs={name: agg})
+            name = level
+        s.aggs.bucket(name, agg)
+    else:
+        s.aggs.bucket("field_values", es_dsl.A("terms", field=agg_field, size=max_buckets))
+
+    try:
+        response = s.execute()
+    except elasticsearch.BadRequestError as e:
+        if e.body["error"]["caused_by"]["type"] == "too_many_buckets_exception":
+            raise KarpError("Too many unique values for statistics") from None
+        else:
+            raise e
+    logger.debug("Elasticsearch response", extra={"response": response})
+    agg_response = response.aggregations
+    if nest_levels:
+        # unwrap the doc_count from the "parent_doc_count" aggregation
+        for level in nest_levels:
+            agg_response = agg_response[level]
+        field_values = agg_response["field_values"]
+        return [
+            {"value": bucket["key"], "count": bucket["parent_doc_count"]["doc_count"]}
+            for bucket in field_values.buckets
+        ]
+
+    else:
+        field_values = agg_response.field_values
+        return [{"value": bucket["key"], "count": bucket["doc_count"]} for bucket in field_values.buckets]

@@ -1,3 +1,4 @@
+import functools
 import logging
 import pickle
 from abc import ABC, abstractmethod
@@ -8,9 +9,6 @@ from enum import IntEnum, global_enum
 from functools import wraps
 from graphlib import CycleError, TopologicalSorter
 from typing import Callable, Dict, Iterable, Iterator, Optional, Type
-
-import methodtools
-from injector import Injector, inject
 
 from karp.foundation.batch import batch_items
 from karp.foundation.entry_points import entry_points
@@ -139,48 +137,42 @@ def find_plugin(name: str) -> Type[Plugin]:
         raise PluginException(f"Plugin {name} not found")
 
 
-class Plugins:
-    @inject
-    def __init__(self, injector: Injector):
-        self.injector = injector
+def output_config(config: Field) -> Field:
+    result = _get_plugin(config.plugin).output_config(**config.params)
+    return Field.model_validate(dict(result))
 
-    @methodtools.lru_cache(maxsize=None)
-    def _get_plugin(self, name: str) -> Plugin:
-        if not name:
-            raise PluginException('Resource config has "virtual": "true" but no "plugin" field')
-        return self.injector.get(find_plugin(name))
 
-    def register_routes(self, resources: Iterable[ResourceDto]):
-        """
-        Check if any resource has declared a plugin on top-level and register that plugin's routes
-        """
-        from karp.api.routes import router
+@functools.lru_cache(maxsize=None)
+def _get_plugin(name: str) -> Plugin:
+    if not name:
+        raise PluginException('Resource config has "virtual": "true" but no "plugin" field')
+    return find_plugin(name)()
 
-        routes_added = False
-        for resource in resources:
-            for plugin_name, plugin_params in resource.config.plugins.items():
-                inner_router = self._get_plugin(plugin_name).create_router(resource.resource_id, plugin_params)
-                router.include_router(inner_router, prefix=f"/{resource.resource_id}/{plugin_name}", tags=["Plugins"])
-                routes_added = True
-        return routes_added
 
-    def output_config(self, config: Field) -> Field:
-        result = self._get_plugin(config.plugin).output_config(**config.params)
-        return Field.model_validate(dict(result))
+def _generate_batch_outer(config: Field, batch: Iterable) -> Iterable[Dict]:
+    # TODO: turn into {"error": "plugin failed"} or whatever
+    batch = list(batch)
+    if not batch:
+        return []
+    result = list(_get_plugin(config.plugin).generate_batch(config.params | item for item in batch))
+    if len(result) != len(batch):
+        raise AssertionError("batch result had wrong length")
+    return result
 
-    def generate(self, config: Field, **kwargs) -> Dict:
-        # TODO: turn into {"error": "plugin failed"} or whatever
-        return self._get_plugin(config.plugin).generate(**config.params, **kwargs)
 
-    def generate_batch(self, config: Field, batch) -> Iterable[Dict]:
-        # TODO: turn into {"error": "plugin failed"} or whatever
-        batch = list(batch)
-        if not batch:
-            return []
-        result = list(self._get_plugin(config.plugin).generate_batch(config.params | item for item in batch))
-        if len(result) != len(batch):
-            raise AssertionError("batch result had wrong length")
-        return result
+def register_routes(resources: Iterable[ResourceDto]):
+    """
+    Check if any resource has declared a plugin on top-level and register that plugin's routes
+    """
+    from karp.api.routes import router
+
+    routes_added = False
+    for resource in resources:
+        for plugin_name, plugin_params in resource.config.plugins.items():
+            inner_router = _get_plugin(plugin_name).create_router(resource.resource_id, plugin_params)
+            router.include_router(inner_router, prefix=f"/{resource.resource_id}/{plugin_name}", tags=["Plugins"])
+            routes_added = True
+    return routes_added
 
 
 @global_enum
@@ -236,16 +228,16 @@ def expansion_phases(expand_plugins: bool | ExpansionPhase | ExpansionPhases, st
 # TODO: maybe a more descriptive name like expand instead of transform?
 
 
-def transform_resource(plugins: Plugins, resource_dto: "ResourceDto", expand_plugins=True) -> "ResourceDto":
+def transform_resource(resource_dto: "ResourceDto", expand_plugins=True) -> "ResourceDto":
     """Given a resource with virtual fields, expand the config
     by adding the output_config for each virtual field."""
 
     result = resource_dto.model_copy(deep=True)
-    result.config = transform_config(plugins, result.config, expand_plugins)
+    result.config = transform_config(result.config, expand_plugins)
     return result
 
 
-def transform_config(plugins: Plugins, resource_config: ResourceConfig, expand_plugins=True) -> ResourceConfig:
+def transform_config(resource_config: ResourceConfig, expand_plugins=True) -> ResourceConfig:
     """Given a resource config with virtual fields, expand the config
     by adding the output_config for each virtual field."""
 
@@ -256,7 +248,7 @@ def transform_config(plugins: Plugins, resource_config: ResourceConfig, expand_p
 
     def _transform_field(config: Field):
         if config.virtual and phases.start < field_phase(config) <= phases.end:
-            result = _transform_field(plugins.output_config(config))
+            result = _transform_field(output_config(config))
             # take some values from the input config too
             result = result.update(
                 collection=config.collection or result.collection,
@@ -297,18 +289,16 @@ def find_virtual_fields(resource_config: ResourceConfig) -> dict[str, Field]:
     return result
 
 
-def transform_entry(
-    plugins: Plugins, resource_config: ResourceConfig, entry_dto: "EntryDto", expand_plugins=True
-) -> "EntryDto":
+def transform_entry(resource_config: ResourceConfig, entry_dto: "EntryDto", expand_plugins=True) -> "EntryDto":
     """
     Given an entry, calculate all the virtual fields.
     """
 
-    return next(iter(transform_entries(plugins, resource_config, [entry_dto], expand_plugins)))
+    return next(iter(transform_entries(resource_config, [entry_dto], expand_plugins)))
 
 
 def transform_entries(
-    plugins: Plugins, resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"], expand_plugins=True
+    resource_config: ResourceConfig, entry_dtos: Iterable["EntryDto"], expand_plugins=True
 ) -> Iterator["EntryDto"]:
     """
     Given a list of entries, calculate all the virtual fields.
@@ -317,7 +307,7 @@ def transform_entries(
     cached_results = {}
     for batch in batch_items(entry_dtos, max_batch_size=10000):
         new_entries = transform_list(
-            plugins, resource_config, [entry_dto.entry for entry_dto in batch], cached_results, expand_plugins
+            resource_config, [entry_dto.entry for entry_dto in batch], cached_results, expand_plugins
         )
         for entry_dto, new_entry in zip(batch, new_entries, strict=False):
             entry_dto = entry_dto.model_copy(deep=True)
@@ -325,16 +315,15 @@ def transform_entries(
             yield entry_dto
 
 
-def transform(plugins: Plugins, resource_config: ResourceConfig, body: Dict, expand_plugins=True) -> Dict:
+def transform(resource_config: ResourceConfig, body: Dict, expand_plugins=True) -> Dict:
     """
     Given an entry body, calculate all the virtual fields.
     """
 
-    return next(iter(transform_list(plugins, resource_config, [body], expand_plugins=expand_plugins)))
+    return next(iter(transform_list(resource_config, [body], expand_plugins=expand_plugins)))
 
 
 def transform_list(
-    plugins: Plugins,
     resource_config: ResourceConfig,
     bodies: list[Dict],
     cached_results: Optional[Dict] = None,
@@ -362,7 +351,7 @@ def transform_list(
     if cached_results is None:
         cached_results = {}
 
-    resource_config = transform_config(plugins, resource_config, phases.end)
+    resource_config = transform_config(resource_config, phases.end)
     bodies = deepcopy(bodies)
     virtual_fields = find_virtual_fields(resource_config)
 
@@ -371,7 +360,7 @@ def transform_list(
 
         nonlocal cached_results
 
-        # In the simple case we can just call plugins.generate_batch.
+        # In the simple case we can just call _generate_batch_outer.
         # But here the tricky bit is: If any field_param is a list,
         # we should invoke the plugin once per list element.
 
@@ -397,7 +386,7 @@ def transform_list(
                     batch_dict[key] = flat_field_params
 
         # Execute the batch query and store the results into cached_results
-        batch_result_list = plugins.generate_batch(config, batch_dict.values())
+        batch_result_list = _generate_batch_outer(config, batch_dict.values())
         results = dict(zip(batch_dict, batch_result_list, strict=False))
 
         if config.cache_plugin_expansion:
