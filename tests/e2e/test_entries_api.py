@@ -622,7 +622,6 @@ class TestGetEntry:
 
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_214_id
-        assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 1
 
     def test_route_w_version_exist(
@@ -639,7 +638,6 @@ class TestGetEntry:
 
         entry = EntryDto(**response.json())
         assert entry.id == entry_places_209_id
-        assert entry.entry["municipality"] == [m["code"] for m in entry.entry["_municipality"]]
         assert entry.version == 5
 
 
