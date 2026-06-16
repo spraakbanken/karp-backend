@@ -1,17 +1,17 @@
-lint.select = [
-  "A",
-  "B",
-  "BLE",
-  "C4",
-  "E",
-  "F401",
-  "I",
-  "RUF",
-  "S",
-  "YTT",
-]
+lint.select = ["A", "B", "BLE", "C4", "E", "F401", "I", "RUF", "S", "YTT"]
 
-lint.ignore = ["E501","ANN001","B008","D203","D213","D104", "F841", "RUF100","RUF005"]
+lint.ignore = [
+  "E501",
+  "ANN001",
+  "B008",
+  "D203",
+  "D213",
+  "D104",
+  "F841",
+  "RUF100",
+  "RUF005",
+  "S310", # checks if urls are audited before running urlopen
+]
 
 
 line-length = 120
@@ -19,7 +19,10 @@ line-length = 120
 # Avoid trying to fix flake8-bugbear (`B`) violations.
 lint.unfixable = ["B"]
 
-extend-exclude = ["src/karp/search/domain/query_dsl/karp_query_parser.py", "src/karp/search/domain/query_dsl/karp_query_model.py"]
+extend-exclude = [
+  "src/karp/search/domain/query_dsl/karp_query_parser.py",
+  "src/karp/search/domain/query_dsl/karp_query_model.py",
+]
 
 [lint.flake8-builtins]
 # This makes it okay to use given names even though it shadows built-in id without totally ignoring the A001 rule
@@ -31,4 +34,3 @@ builtins-ignorelist = ["id"]
 "tests/*" = ["S101"]
 "repl_scripts/*" = ["A001"]
 "tests/conftest.py" = ["E402", "F401"]
-
