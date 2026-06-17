@@ -85,7 +85,7 @@ def create_index(resource_id: str, config: ResourceConfig, call_create_alias=Tru
     logger.debug("creating index", extra={"index_name": index_name, "body": body})
     result = os_client.indices.create(index=index_name, body=body)
 
-    if create_alias:
+    if call_create_alias:
         # create an alias so we can interact with the index using resource_id
         create_alias(resource_id, index_name)
 
