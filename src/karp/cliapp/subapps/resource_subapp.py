@@ -1,3 +1,4 @@
+from collections import defaultdict
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
@@ -166,24 +167,90 @@ def list_resources(
     show_published: Optional[bool] = typer.Option(
         True, "--show-published/--show-all", help="Either show only published or all resources"
     ),
+    show_current_index: Optional[bool] = typer.Option(
+        True, "--show-current-index/--show-all-indices", help="Shows current or all indices associated with resource."
+    ),
 ):
     """
-    Lists (latest version of) resources, by default only published ones
+    Lists (latest version of) resources, by default only published ones. Current index or all indices associated with
+    the resource are listed, along with index size.
     """
     from tabulate import tabulate
 
+    from karp.globals import es
     from karp.lex.infrastructure.sql import resource_repository
+
+    warnings = []
+    headers = ["resource_id", "version"]
 
     if show_published:
         result = resource_repository.get_published_resources()
     else:
+        # only show published column when showing all
+        headers.append("published")
         result = resource_repository.get_all_resources()
+
+    def _get_sizes_for_indices():
+        sizes = {}
+        cat_indices = es.cat.indices(h="index,store.size", format="json")
+        for row in cat_indices:
+            sizes[row["index"]] = row["store.size"]
+        return sizes
+
+    def _get_alias_to_index():
+        res = {}
+        aliases = es.indices.get_alias()
+        for index, alias_body in aliases.items():
+            if alias_body["aliases"]:
+                alias = list(alias_body["aliases"].keys())
+                if len(alias) > 1:
+                    warnings.append(f"Index {index} has multiple aliases: {', '.join(alias)}")
+                res[alias[0]] = index
+        return res
+
+    headers.append("index")
+    headers.append("size")
+    sizes = _get_sizes_for_indices()
+    resource_id_to_indices = {}
+
+    aliases = _get_alias_to_index()
+
+    if not show_current_index:
+        # only populate resource_id_to_indices if showing all indices
+        import re
+
+        resource_id_to_indices = defaultdict(list)
+        for index in sizes.keys():
+            derived_alias = re.split(r"_[0-9]{4}-[0-9]{2}", index)[0]
+            resource_id_to_indices[derived_alias].append(index)
+
+    rows = []
+    for resource in result:
+        row = [resource.resource_id, resource.version]
+        if not show_published:
+            # only show published column when showing all
+            row.append("published" if resource.is_published else "unpublished")
+        if show_current_index:
+            row.append(aliases.get(resource.resource_id, "missing"))
+            rows.append(row)
+        else:
+            # adds one row to tabulation for each index
+            orig_row_len = len(row)
+            for index in resource_id_to_indices.get(resource.resource_id, ("missing",)):
+                row.append(index + (" (current)" if aliases.get(resource.resource_id) == index else ""))
+                row.append(sizes.get(index, "-"))
+                rows.append(row)
+
+                row = [""] * orig_row_len
+
     typer.echo(
         tabulate(
-            [[resource.resource_id, resource.version, resource.is_published] for resource in result],
-            headers=["resource_id", "version", "published"],
+            rows,
+            headers=headers,
         )
     )
+    for warning in warnings:
+        typer.echo(f"WARNING: {warning}")
 
 
 @subapp.command()
