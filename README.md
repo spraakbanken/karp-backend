@@ -104,6 +104,17 @@ If neither `uv` is available or a virtual environment activated, the user must s
 export ELASTICSEARCH_HOST=http://localhost:9200
 ```
 
+## Web server
+
+The default web server, used in Makefile, is Gunicorn. It is started with the flag `--preload`.
+This flag causes the master process to create the app before forking workers. This gives faster
+reload times, but makes it so that the master must be restarted more often, for example on code changes.
+It is especially important when using memory intensive resources, such as a language model (currently
+only done in plugins).
+
+The reason we want fast reload times is that the workers must be reloaded on every
+`reindex` and `publish` to clear caches.
+
 ## Create test resources
 
 1. `(uv run) karp-cli resource create assets/testing/config/places.yaml`
