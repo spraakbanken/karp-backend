@@ -177,7 +177,7 @@ def list_resources(
     """
     from tabulate import tabulate
 
-    from karp.globals import es
+    from karp.globals import os_client
     from karp.lex.infrastructure.sql import resource_repository
 
     warnings = []
@@ -192,14 +192,14 @@ def list_resources(
 
     def _get_sizes_for_indices():
         sizes = {}
-        cat_indices = es.cat.indices(h="index,store.size", format="json")
+        cat_indices = os_client.cat.indices(h="index,store.size", format="json")
         for row in cat_indices:
             sizes[row["index"]] = row["store.size"]
         return sizes
 
     def _get_alias_to_index():
         res = {}
-        aliases = es.indices.get_alias()
+        aliases = os_client.indices.get_alias()
         for index, alias_body in aliases.items():
             if alias_body["aliases"]:
                 alias = list(alias_body["aliases"].keys())

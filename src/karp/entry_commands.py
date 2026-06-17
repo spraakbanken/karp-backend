@@ -14,7 +14,7 @@ from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure.sql import resource_repository
 from karp.lex.infrastructure.sql.entries import EntryRepository
 from karp.search.domain.index_entry import IndexEntry
-from karp.search.infrastructure.es import indices as es_index
+from karp.search.infrastructure.opensearch import indices as es_index
 from karp.search.infrastructure.transformers import entry_transformer
 
 

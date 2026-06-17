@@ -3,7 +3,7 @@ import logging
 import karp.plugins as plugins
 from karp.globals import session
 from karp.lex.application import entry_queries, resource_queries
-from karp.search.infrastructure.es import indices as es_index
+from karp.search.infrastructure.opensearch import indices as es_index
 from karp.search.infrastructure.transformers import entry_transformer
 
 logger = logging.getLogger(__name__)

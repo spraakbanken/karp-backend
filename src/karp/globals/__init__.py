@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from contextvars import ContextVar
 
-from elasticsearch import Elasticsearch
+from opensearchpy import OpenSearch
 from sqlalchemy import pool
 from sqlalchemy.engine import URL, Engine, create_engine
 from sqlalchemy.orm import Session
@@ -32,9 +32,11 @@ class Proxy[T]:
         return getattr(self._obj, name)
 
 
-# engine and es are created once per FastAPI worker / CLI invocation
+# engine and os_client are created once per FastAPI instance / CLI invocation
+# SQLAlchemy engine
 _engine_ctx_var: ContextVar[Engine] = ContextVar("engine")
-es: Proxy[Elasticsearch] = Proxy(ContextVar("es"))
+# OpenSearch client
+os_client: Proxy[OpenSearch] = Proxy(ContextVar("os_client"))
 
 # session is created for each request / CLI invocation
 session: Proxy[Session] = Proxy(ContextVar("session"))
@@ -45,8 +47,8 @@ def create_db_engine():
 
 
 def create_es():
-    es_obj = Elasticsearch(env("ELASTICSEARCH_HOST"), request_timeout=300)
-    es.ctx_var.set(es_obj)
+    os_client_instance = OpenSearch(env("OPENSEARCH_HOST"), request_timeout=300)
+    os_client.ctx_var.set(os_client_instance)
 
 
 @contextmanager

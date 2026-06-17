@@ -3,7 +3,7 @@ from typing import Dict, Optional
 import pytest
 
 from karp.lex.domain.value_objects import Field, ResourceConfig
-from karp.search.infrastructure.es.indices import _create_es_mapping
+from karp.search.infrastructure.opensearch.indices import _create_es_mapping
 
 
 class TestCreateEsMapping:

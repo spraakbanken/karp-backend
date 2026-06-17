@@ -1,11 +1,10 @@
 import pytest  # noqa: I001
 
-import elasticsearch_dsl as es_dsl
-
-from karp.globals import es
+import opensearchpy
+from karp.globals import os_client
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
 from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics
-from karp.search.infrastructure.es.search_service import EsQueryBuilder
+from karp.search.infrastructure.opensearch.search_service import EsQueryBuilder
 
 
 @pytest.fixture(scope="session")
@@ -20,10 +19,6 @@ def es_query_builder():
 
     class MockIndices:
         def get_mapping(self):
-            return MockBody()
-
-    class MockBody:
-        def __init__(self):
             infT = {
                 "type": "nested",
                 "properties": {
@@ -32,7 +27,7 @@ def es_query_builder():
                     "variant": {"type": "boolean"},
                 },
             }
-            self.body = {
+            return {
                 "r": {
                     "mappings": {
                         "properties": {
@@ -61,12 +56,12 @@ def es_query_builder():
             self.indices = MockIndices()
 
     es_obj = MockEs()
-    es.ctx_var.set(es_obj)
+    os_client.ctx_var.set(es_obj)
     return EsQueryBuilder("r")
 
 
 def get_regexp_object(field, val):
-    return es_dsl.Q(
+    return opensearchpy.Q(
         "query_string",
         query=f"/{val}/",
         fields=[field],
@@ -77,23 +72,23 @@ def get_regexp_object(field, val):
 @pytest.mark.parametrize(
     "q,expected",
     [
-        ("exists|test", es_dsl.Q("exists", field="test")),
+        ("exists|test", opensearchpy.Q("exists", field="test")),
         (
             'infT(freetext|"hej")',
-            es_dsl.Q(
+            opensearchpy.Q(
                 "nested",
                 path="infT",
-                query=es_dsl.Q(
+                query=opensearchpy.Q(
                     "bool",
                     should=[
-                        es_dsl.Q("match_phrase", **{"infT.wf": "hej"}),
-                        es_dsl.Q("match_phrase", **{"infT.msd": "hej"}),
-                        es_dsl.Q("match", **{"infT.variant": {"query": "hej", "lenient": True}}),
+                        opensearchpy.Q("match_phrase", **{"infT.wf": "hej"}),
+                        opensearchpy.Q("match_phrase", **{"infT.msd": "hej"}),
+                        opensearchpy.Q("match", **{"infT.variant": {"query": "hej", "lenient": True}}),
                     ],
                 ),
             ),
         ),
-        ("missing|test", es_dsl.Q("bool", must_not=es_dsl.Q("exists", field="test"))),
+        ("missing|test", opensearchpy.Q("bool", must_not=opensearchpy.Q("exists", field="test"))),
         (
             'startswith|pos|"nn"',
             get_regexp_object("pos", "nn.*"),
@@ -103,90 +98,90 @@ def get_regexp_object(field, val):
             'contains|pos|"nn"',
             get_regexp_object("pos", ".*nn.*"),
         ),
-        ('gt|val|"lok"', es_dsl.Q("range", val={"gt": "lok"})),
-        ("gte|val|2", es_dsl.Q("range", val={"gte": 2})),
-        ('lt|val|"lok"', es_dsl.Q("range", val={"lt": "lok"})),
-        ('lte|val|"lok"', es_dsl.Q("range", val={"lte": "lok"})),
-        ('equals|pos|"vb"', es_dsl.Q("match_phrase", pos="vb")),
+        ('gt|val|"lok"', opensearchpy.Q("range", val={"gt": "lok"})),
+        ("gte|val|2", opensearchpy.Q("range", val={"gte": 2})),
+        ('lt|val|"lok"', opensearchpy.Q("range", val={"lt": "lok"})),
+        ('lte|val|"lok"', opensearchpy.Q("range", val={"lte": "lok"})),
+        ('equals|pos|"vb"', opensearchpy.Q("match_phrase", pos="vb")),
         ('regexp|kjh|"lk.*k"', get_regexp_object("kjh", "lk.*k")),
         ('not(regexp|kjh|"lk.*k")', ~get_regexp_object("kjh", "lk.*k")),
         (
             'and(regexp|baseform|"g[oe]t"||equals|pos|"nn")',
-            get_regexp_object("baseform", "g[oe]t") & es_dsl.Q("match_phrase", pos="nn"),
+            get_regexp_object("baseform", "g[oe]t") & opensearchpy.Q("match_phrase", pos="nn"),
         ),
         (
             'and(regexp|baseform|"g[oe]t"||equals|pos|"nn"||regexp|pos|"n.*")',
             get_regexp_object("baseform", "g[oe]t")
-            & es_dsl.Q("match_phrase", pos="nn")
+            & opensearchpy.Q("match_phrase", pos="nn")
             & get_regexp_object("pos", "n.*"),
         ),
         (
             'or(regexp|baseform|"g[oe]t"||equals|pos|"nn")',
-            get_regexp_object("baseform", "g[oe]t") | es_dsl.Q("match_phrase", pos="nn"),
+            get_regexp_object("baseform", "g[oe]t") | opensearchpy.Q("match_phrase", pos="nn"),
         ),
         (
             'or(regexp|baseform|"g[oe]t"||equals|pos|"nn"||regexp|pos|"n.*")',
             get_regexp_object("baseform", "g[oe]t")
-            | es_dsl.Q("match_phrase", pos="nn")
+            | opensearchpy.Q("match_phrase", pos="nn")
             | get_regexp_object("pos", "n.*"),
         ),
         (
             'equals|baseform|"t|est"',
-            es_dsl.Q("match_phrase", baseform="t|est"),
+            opensearchpy.Q("match_phrase", baseform="t|est"),
         ),
         (
             'equals|baseform|"|test"',
-            es_dsl.Q("match_phrase", baseform="|test"),
+            opensearchpy.Q("match_phrase", baseform="|test"),
         ),
         (
             'equals|baseform|"test|"',
-            es_dsl.Q("match_phrase", baseform="test|"),
+            opensearchpy.Q("match_phrase", baseform="test|"),
         ),
         (
             'and(equals|ortografi|"ständigt förknippad")',
-            es_dsl.Q("match_phrase", ortografi="ständigt förknippad"),
+            opensearchpy.Q("match_phrase", ortografi="ständigt förknippad"),
         ),
         (
             'and(equals|ortografi|"(ständigt) förknippad")',
-            es_dsl.Q("match_phrase", ortografi="(ständigt) förknippad"),
+            opensearchpy.Q("match_phrase", ortografi="(ständigt) förknippad"),
         ),
         (
             'and(equals|ortografi|"(ständigt förknippad")',
-            es_dsl.Q("match_phrase", ortografi="(ständigt förknippad"),
+            opensearchpy.Q("match_phrase", ortografi="(ständigt förknippad"),
         ),
         # escaped quotes
         (
             'and(equals|baseform|"att \\"vara\\"")',
-            es_dsl.Q("match_phrase", baseform='att "vara"'),
+            opensearchpy.Q("match_phrase", baseform='att "vara"'),
         ),
         # no quotes work
         (
             "and(equals|baseform|noquotes)",
-            es_dsl.Q("match_phrase", baseform="noquotes"),
+            opensearchpy.Q("match_phrase", baseform="noquotes"),
         ),
         (r'and(regexp|name|"\s")', get_regexp_object("name", "\\s")),
         (
             "infT(and(equals|wf|a||equals|msd|s))",
-            es_dsl.Q(
+            opensearchpy.Q(
                 "nested",
                 path="infT",
-                query=(es_dsl.Q("match_phrase", infT__wf="a") & es_dsl.Q("match_phrase", infT__msd="s")),
+                query=(opensearchpy.Q("match_phrase", infT__wf="a") & opensearchpy.Q("match_phrase", infT__msd="s")),
             ),
         ),
         (
             "t1(equals|infT.wf|word)",
-            es_dsl.Q(
+            opensearchpy.Q(
                 "nested",
                 path="t1.infT",
-                query=es_dsl.Q("match_phrase", t1__infT__wf="word"),
+                query=opensearchpy.Q("match_phrase", t1__infT__wf="word"),
             ),
         ),
         (
             "t1(infT(equals|wf|word))",
-            es_dsl.Q(
+            opensearchpy.Q(
                 "nested",
                 path="t1.infT",
-                query=es_dsl.Q("match_phrase", t1__infT__wf="word"),
+                query=opensearchpy.Q("match_phrase", t1__infT__wf="word"),
             ),
         ),
     ],
@@ -204,41 +199,41 @@ def test_es_query(parser, q, expected):
     [
         (
             "and(exists|pos||exists|vb)",
-            es_dsl.Q(
+            opensearchpy.Q(
                 "bool",
                 must=[
-                    es_dsl.Q("exists", field="pos"),
-                    es_dsl.Q("exists", field="vb"),
+                    opensearchpy.Q("exists", field="pos"),
+                    opensearchpy.Q("exists", field="vb"),
                 ],
             ),
         ),
         (
             "or(exists|pos||exists|vb)",
-            es_dsl.Q(
+            opensearchpy.Q(
                 "bool",
                 should=[
-                    es_dsl.Q("exists", field="pos"),
-                    es_dsl.Q("exists", field="vb"),
+                    opensearchpy.Q("exists", field="pos"),
+                    opensearchpy.Q("exists", field="vb"),
                 ],
             ),
         ),
         (
             "and(not(exists|pos)||not(exists|vb))",
-            es_dsl.Q(
+            opensearchpy.Q(
                 "bool",
                 must_not=[
-                    es_dsl.Q("exists", field="pos"),
-                    es_dsl.Q("exists", field="vb"),
+                    opensearchpy.Q("exists", field="pos"),
+                    opensearchpy.Q("exists", field="vb"),
                 ],
             ),
         ),
         (
             'not(equals|ordklass|"substantiv"||equals|ordklass|"verb")',
-            es_dsl.Q(
+            opensearchpy.Q(
                 "bool",
                 must_not=[
-                    es_dsl.Q("match_phrase", ordklass="substantiv"),
-                    es_dsl.Q("match_phrase", ordklass="verb"),
+                    opensearchpy.Q("match_phrase", ordklass="substantiv"),
+                    opensearchpy.Q("match_phrase", ordklass="verb"),
                 ],
             ),
         ),

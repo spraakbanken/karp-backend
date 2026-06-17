@@ -1,6 +1,6 @@
 # Installation
 
-Karp uses MariaDB for storage of data and Elasticsearch for searching. The generated Elasticserch
+Karp uses MariaDB for storage of data and OpenSearch for searching. The generated OpenSearch
 indices are transient and may be genererad from scratch if needed.
 
 Running the Karp backend or CLI requires Python.

@@ -4,22 +4,20 @@ import uuid
 from collections import defaultdict
 from typing import Iterable
 
-import elasticsearch
-import elasticsearch.helpers
-import elasticsearch_dsl as es_dsl
+import opensearchpy
 from tatsu import exceptions as tatsu_exc
 from tatsu.walkers import NodeWalker
 
-import karp.search.infrastructure.es.mapping_repo as mapping_repo
+import karp.search.infrastructure.opensearch.mapping_repo as mapping_repo
 from karp.foundation.json import get_path
-from karp.globals import es
+from karp.globals import os_client
 from karp.main.errors import KarpError, QueryParserError
 from karp.search.domain import QueryRequest
 from karp.search.domain.highlight_param import HighlightParam
 from karp.search.domain.query_dsl.karp_query_model import KarpQueryModelBuilderSemantics, ModelBase
 from karp.search.domain.query_dsl.karp_query_parser import KarpQueryParser
-from karp.search.infrastructure.es import mapping_repo as es_mapping_repo
-from karp.search.infrastructure.es.mapping_repo import Field
+from karp.search.infrastructure.opensearch import mapping_repo as es_mapping_repo
+from karp.search.infrastructure.opensearch.mapping_repo import Field
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +28,6 @@ class EsQueryBuilder(NodeWalker):
     def __init__(self, resources, highlight=False):
         super().__init__()
         self.path = [""]
-        self.length_mappings = set()
         self.resources = resources
         self.highlight = highlight
 
@@ -47,9 +44,9 @@ class EsQueryBuilder(NodeWalker):
                 if not obj["children"]:
                     # a leaf, add concrete query
                     if obj["def"].type == "text":
-                        query = es_dsl.Q("match_phrase", **{full_field: value})
+                        query = opensearchpy.Q("match_phrase", **{full_field: value})
                     else:
-                        query = es_dsl.Q("match", **{full_field: {"query": value, "lenient": True}})
+                        query = opensearchpy.Q("match", **{full_field: {"query": value, "lenient": True}})
                 else:
                     # has children, recurse with new path
                     self.path.append(full_field + ".")
@@ -59,7 +56,7 @@ class EsQueryBuilder(NodeWalker):
                 queries.append(self.wrap_nested(full_field, query))
 
             if len(queries) > 1:
-                return es_dsl.Q("bool", should=queries)
+                return opensearchpy.Q("bool", should=queries)
             return queries[0]
 
         # generate query recursively beginning with an empty path
@@ -67,11 +64,11 @@ class EsQueryBuilder(NodeWalker):
 
     def walk__not(self, node):
         must_nots = [self.walk(expr) for expr in node.ast]
-        return es_dsl.Q("bool", must_not=must_nots)
+        return opensearchpy.Q("bool", must_not=must_nots)
 
     def walk__or(self, node):
         if not node.ast:
-            return es_dsl.Q("match_none")
+            return opensearchpy.Q("match_none")
 
         result = self.walk(node.ast[0])
         for n in node.ast[1:]:
@@ -81,7 +78,7 @@ class EsQueryBuilder(NodeWalker):
 
     def walk__and(self, node):
         if not node.ast:
-            return es_dsl.Q("match_all")
+            return opensearchpy.Q("match_all")
 
         result = self.walk(node.ast[0])
         for n in node.ast[1:]:
@@ -94,9 +91,9 @@ class EsQueryBuilder(NodeWalker):
         handles exists or misssing
         """
         field_path, _ = self.walk(node.field)
-        exists_q = self.wrap_nested(field_path, es_dsl.Q("exists", field=field_path))
+        exists_q = self.wrap_nested(field_path, opensearchpy.Q("exists", field=field_path))
         if node.op == "missing":
-            return es_dsl.Q("bool", must_not=exists_q)
+            return opensearchpy.Q("bool", must_not=exists_q)
         return exists_q
 
     def binary_query_expression(self, node):
@@ -144,7 +141,7 @@ class EsQueryBuilder(NodeWalker):
                 non_nested_children = mapping_repo.get_non_nested_children(tuple(self.resources), field_path)
                 for field in non_nested_children:
                     inner_hits["inner_hits"]["highlight"]["fields"][field] = {}
-            query = es_dsl.Q("nested", path=field_path, query=query, **inner_hits)
+            query = opensearchpy.Q("nested", path=field_path, query=query, **inner_hits)
 
         path, *last_elem = field_path.rsplit(".", 1)
         if not last_elem:
@@ -155,25 +152,16 @@ class EsQueryBuilder(NodeWalker):
 
     def walk__identifier(self, node):
         field_path: str = node.ast
-        is_length = field_path.endswith(".length")
+        if field_path.endswith(".length"):
+            raise RuntimeError("length queries not implemented in this version")
         if "*" in field_path:
             field_obj = Field(path=[field_path], type="any")
             return field_obj.name, field_obj
         else:
             # Add the current path to field, for example query path(equals|field|val)
             # must yield an es-query in field "path.field"
-            field_obj = mapping_repo.get_field(
-                tuple(self.resources), self.path[-1] + field_path.removesuffix(".length")
-            )
-            # if the field query has ".length" appended, and the field is text, we must query raw
-            if is_length:
-                if field_obj.type == "text":
-                    mapping = field_obj.name + ".raw.length"
-                else:
-                    mapping = field_obj.name + ".length"
-                self.length_mappings.add(mapping)
-            else:
-                mapping = field_obj.name
+            field_obj = mapping_repo.get_field(tuple(self.resources), self.path[-1] + field_path)
+            mapping = field_obj.name
             return mapping, field_obj
 
     def walk_object(self, node):
@@ -194,7 +182,7 @@ class EsQueryBuilder(NodeWalker):
     def binary_query(self, op, field_path, field, arg):
         if op == "equals":
             if field.type != "text":
-                return self.wrap_nested(field_path, es_dsl.Q("match", **{field_path: {"query": arg}}))
+                return self.wrap_nested(field_path, opensearchpy.Q("match", **{field_path: {"query": arg}}))
             return self.match_text(field_path, self.walk(arg), phrase=True)
         elif op == "regexp":
             return self.regexp(field_path, field, arg)
@@ -205,12 +193,12 @@ class EsQueryBuilder(NodeWalker):
         elif op == "endswith":
             return self.regexp(field_path, field, f".*{arg}")
         elif op in ["gt", "gte", "lt", "lte"]:
-            return self.wrap_nested(field_path, es_dsl.Q("range", **{field_path: {op: arg}}))
+            return self.wrap_nested(field_path, opensearchpy.Q("range", **{field_path: {op: arg}}))
 
     def regexp(self, field_path, field, regexp):
         if field.type not in ["text", "keyword"]:
             raise ValueError("Query type only allowed on text and keyword")
-        q = es_dsl.Q(
+        q = opensearchpy.Q(
             "query_string",
             query="/" + regexp.replace("/", "\\/") + "/",
             fields=[field_path],
@@ -220,7 +208,7 @@ class EsQueryBuilder(NodeWalker):
 
     def match_text(self, field_path, query, phrase=False):
         if self.is_multi_field(field_path) or not phrase:
-            query = es_dsl.Q(
+            query = opensearchpy.Q(
                 "multi_match",
                 query=query,
                 fields=self.multi_fields(field_path),
@@ -228,7 +216,7 @@ class EsQueryBuilder(NodeWalker):
                 type="phrase",
             )
         else:
-            query = es_dsl.Q("match_phrase", **{field_path: query})
+            query = opensearchpy.Q("match_phrase", **{field_path: query})
         return self.wrap_nested(field_path, query)
 
 
@@ -255,23 +243,6 @@ class EsFieldNameCollector(NodeWalker):
         return set()
 
 
-def _add_runtime_mappings(s: es_dsl.Search, field_names: set[str]) -> es_dsl.Search:
-    # When a query uses a field of the form "f.length", add a
-    # runtime_mapping so it gets interpreted as "the length of the field f".
-    mappings = {}
-    for field in field_names:
-        if field.endswith(".length"):
-            base_field = field.removesuffix(".length")
-            mappings[field] = {
-                "type": "long",
-                "script": {"source": f"emit(doc.containsKey('{base_field}') ? doc['{base_field}'].length : 0)"},
-            }
-
-    if mappings:
-        s = s.extra(runtime_mappings=mappings)
-    return s
-
-
 def remove_indices_from_path(path: str) -> str:
     return re.sub(r"\[.*?\]", "", path)
 
@@ -295,12 +266,12 @@ def multi_query(queries: list[QueryRequest]):
 
     # Workaround: MultiSearch.add takes linear time in the size of
     # the query
-    class WorkaroundMultiSearch(es_dsl.MultiSearch):
+    class WorkaroundMultiSearch(opensearchpy.MultiSearch):
         def add(self, search):
             self._searches.append(search)
             return self
 
-    ms = WorkaroundMultiSearch(using=es)
+    ms = WorkaroundMultiSearch(using=os_client)
     for query in queries:
         ms = ms.add(_build_search(query, query.resources))
     responses = ms.execute()
@@ -331,9 +302,7 @@ def _build_search(query, resources: list[str]):
         except tatsu_exc.FailedParse as err:
             raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
-    s = es_dsl.Search(using=es, index=resources)
-    if builder:
-        s = _add_runtime_mappings(s, builder.length_mappings)
+    s = opensearchpy.Search(using=os_client, index=resources)
     s = s.extra(track_total_hits=True)  # get accurate hits numbers
     if es_query is not None:
         s = s.query(es_query)
@@ -377,7 +346,8 @@ def _format_result(response, path: str | None = None, highlight: HighlightParam 
         recursively find the innermost inner_hits which contain highlights and list index values
         """
         final_highlights = {}
-        for key, inner_hit_outer in result_tree.meta.inner_hits.items():
+        for key in result_tree.meta.inner_hits:
+            inner_hit_outer = result_tree.meta.inner_hits[key]
             for inner_hit in inner_hit_outer.hits:
                 # just move through to the tree until the innermost inner_hit is found
                 if hasattr(inner_hit.meta, "inner_hits"):
@@ -401,7 +371,8 @@ def _format_result(response, path: str | None = None, highlight: HighlightParam 
 
                     path = get_path("", inner_hit.meta.nested)
 
-                    for key, hit_highlights in getattr(inner_hit.meta, "highlight", {}).items():
+                    for key in getattr(inner_hit.meta, "highlight", ()):
+                        hit_highlights = list(inner_hit.meta.highlight[key])
                         # this finds the final fields needed to complete the path to the matching field
                         extra_fields = key.split(remove_indices_from_path(path))[1]
                         final_highlights[path + extra_fields] = hit_highlights
@@ -468,16 +439,16 @@ def _build_result(query, response):
 
 
 def search_ids(resource_id: str, entry_ids: list[str]):
-    query = es_dsl.Q("terms", _id=entry_ids)
+    query = opensearchpy.Q("terms", _id=entry_ids)
     logger.debug("query", extra={"query": query})
-    s = es_dsl.Search(using=es, index=resource_id).query(query)
+    s = opensearchpy.Search(using=os_client, index=resource_id).query(query)
     logger.debug("s", extra={"es_query s": s.to_dict()})
     response = s.execute()
     return _format_result(response)
 
 
 def statistics(resource_id: str, field: str) -> Iterable:
-    s = es_dsl.Search(using=es, index=resource_id)
+    s = opensearchpy.Search(using=os_client, index=resource_id)
     s = s[:0]
 
     # if field is analyzed, do aggregation on the "raw" multi-field
@@ -503,25 +474,25 @@ def statistics(resource_id: str, field: str) -> Iterable:
     nest_levels = mapping_repo.get_nest_levels(resource_id, field)
     if nest_levels:
         name = "field_values"
-        agg = es_dsl.A(
+        agg = opensearchpy.A(
             "terms",
             field=agg_field,
             size=max_buckets,
             order=[{"parent_doc_count": "desc"}],
             # empty reverse_nested means merge on top-level, same result no matter how many levels of nesting there is
-            aggs={"parent_doc_count": es_dsl.A("reverse_nested")},
+            aggs={"parent_doc_count": opensearchpy.A("reverse_nested")},
         )
         # add innermost nesting level first
         for level in reversed(nest_levels):
-            agg = es_dsl.A("nested", path=level, aggs={name: agg})
+            agg = opensearchpy.A("nested", path=level, aggs={name: agg})
             name = level
         s.aggs.bucket(name, agg)
     else:
-        s.aggs.bucket("field_values", es_dsl.A("terms", field=agg_field, size=max_buckets))
+        s.aggs.bucket("field_values", opensearchpy.A("terms", field=agg_field, size=max_buckets))
 
     try:
         response = s.execute()
-    except elasticsearch.BadRequestError as e:
+    except opensearchpy.BadRequestError as e:
         if e.body["error"]["caused_by"]["type"] == "too_many_buckets_exception":
             raise KarpError("Too many unique values for statistics") from None
         else:

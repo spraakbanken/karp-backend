@@ -8,7 +8,7 @@ from karp.lex.domain.dtos import ResourceDto
 from karp.lex.domain.errors import IntegrityError, ResourceNotFound
 from karp.lex.infrastructure.sql import resource_repository
 from karp.main.errors import KarpError
-from karp.search.infrastructure.es import indices as es_index
+from karp.search.infrastructure.opensearch import indices as es_index
 
 logger = logging.getLogger(__name__)
 

@@ -15,7 +15,7 @@ from karp.globals import new_session  # isort: skip
 from karp import auth, resource_commands  # isort: skip
 
 from karp.lex.domain.value_objects import ResourceConfig
-from karp.search.infrastructure.es import mapping_repo
+from karp.search.infrastructure.opensearch import mapping_repo
 from tests import common_data, utils
 from tests.integration.auth.adapters import create_access_token
 

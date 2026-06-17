@@ -54,7 +54,7 @@ This is the version 7 of Karp backend, [for the legacy version (v5)](https://git
 
 ## Dependencies
 
-We use [MariaDB](https://mariadb.org/) for storage and [Elasticsearch][es-download] for search.
+We use [MariaDB](https://mariadb.org/) for storage and [OpenSearch][opensearch-download] for search.
 
 ## Development
 
@@ -92,16 +92,11 @@ If neither `uv` is available or a virtual environment activated, the user must s
 5. Run `(uv run) karp-cli db up` to initialize database
 6. Run `make serve` or `make serve-w-reload` or other method using the function `karp.api.main:create_app`.
 
-7. To setup Elasticsearch, [download][es-download] Elasticsearch 8.x and run the
-   following commands from the `elasticsearch-8.XXX` directory:
-   ```
-   bin/elasticsearch-plugin install analysis-icu
-   ```
-   Then run `bin/elasticsearch -Expack.security.enabled=false` to start it.
+7. Setup [OpenSearch](#opensearch)
 8. Add environment variables
 
 ```
-export ELASTICSEARCH_HOST=http://localhost:9200
+export OPENSEARCH_HOST=http://localhost:9200
 ```
 
 ## Web server
@@ -114,6 +109,20 @@ only done in plugins).
 
 The reason we want fast reload times is that the workers must be reloaded on every
 `reindex` and `publish` to clear caches.
+
+## OpenSearch
+
+OpenSearch comes in two editions, normal and minimal. Usually minimal is enough, but
+for vector search used in some plugins, normal is need.
+
+[Download][opensearch-download] OpenSearch 3.7.x and run the following command in the `opensearch-3.7.x` directory:
+```
+bin/opensearch-plugin install analysis-icu
+```
+
+Then run `bin/opensearch` to start it. The minimal version should start without issue, but for normal
+all plugins can be removed (except `opensearch-knn` and `analysis-icu`). After having removed
+the plugins, it should start.
 
 ## Create test resources
 
@@ -131,13 +140,12 @@ The reason we want fast reload times is that the workers must be reloaded on eve
 - FastAPI
 - SQLAlchemy
 - Typer
-- Elasticsearch
-- Elasticsearch DSL
+- openSearch-py
 
 ### Databases
 
 - MariaDB
-- Elasticsearch
+- OpenSearch
 
 ### Type checking
 
@@ -190,4 +198,4 @@ Update version in the following files:
 - [`pyproj.toml`](pyproject.toml)
 - [`karp.main.config`](src/karp/main/config.py)
 
-[es-download]: https://www.elastic.co/downloads/elasticsearch
+[opensearch-download]: https://opensearch.org/

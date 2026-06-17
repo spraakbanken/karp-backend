@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from itertools import groupby
 from typing import Any, Iterable
 
-from karp.globals import es
+from karp.globals import os_client
 from karp.lex.infrastructure.sql import resource_repository
 from karp.main.errors import FieldDoesNotExist, IncompatibleResources, SortError
 
@@ -172,7 +172,7 @@ def _update_field_mapping() -> tuple[dict[str, dict[str, Field]], dict[str, dict
     fields: dict[str, dict[str, Field]] = {}
     sortable_fields: dict[str, dict[str, Field]] = {}
     aliases = _get_all_aliases()
-    mapping: dict[str, dict[str, dict[str, dict[str, dict[str, Any]]]]] = es.indices.get_mapping().body
+    mapping: dict[str, dict[str, dict[str, dict[str, dict[str, Any]]]]] = os_client.indices.get_mapping()
     for alias, index in aliases:
         if "mappings" in mapping[index] and "properties" in mapping[index]["mappings"]:
             fields[alias] = _get_fields_from_mapping(mapping[index]["mappings"]["properties"])
@@ -216,7 +216,7 @@ def _get_all_aliases() -> list[tuple[str, str]]:
     """
     :return: a list of tuples (alias_name, index_name)
     """
-    result = es.cat.aliases(h="alias,index")
+    result = os_client.cat.aliases(h="alias,index")
     logger.debug(f"{result}")
     index_names: list[tuple[str, str]] = []
     for index_name in result.split("\n")[:-1]:

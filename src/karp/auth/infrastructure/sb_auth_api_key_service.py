@@ -10,7 +10,7 @@ _sbauth_api_key: Final[str] = env("SBAUTH_API_KEY", None)
 _sbauth_url: Final[str] = env("SBAUTH_URL", None)
 
 
-def authenticate(api_key) -> Mapping[str, Any]:
+def authenticate(api_key) -> User:
     """
     Calls sb auth API to check what permissions the given API key has. The
     API uses the same format for permissions and levels as JWT / Karp red does internally.

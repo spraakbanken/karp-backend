@@ -2,7 +2,7 @@ import re
 
 from sentence_transformers import SentenceTransformer
 
-from karp.globals import es
+from karp.globals import os_client
 
 from .plugin import Plugin
 
@@ -55,15 +55,18 @@ class NearestNeighboursPlugin(Plugin):
                 "path": "so.huvudbetydelser",
                 "query": {
                     "knn": {
-                        "query_vector": bertvector,
-                        "field": "so.huvudbetydelser._bertvector",
-                        "k": 10,
-                        "num_candidates": 500,
-                        "filter": {
-                            "match": {
-                                "ordklass": ordklass,
-                            }
-                        },
+                        "so.huvudbetydelser._bertvector": {
+                            "vector": bertvector,
+                            "k": 10,
+                            # TODO not supported in OpenSearch?
+                            # "num_candidates": 500,
+                            # possibly: "method_parameters": {"ef_search": 500},
+                            "filter": {
+                                "match": {
+                                    "ordklass": ordklass,
+                                }
+                            },
+                        }
                     }
                 },
                 "inner_hits": {
@@ -73,9 +76,9 @@ class NearestNeighboursPlugin(Plugin):
                 },
             }
         }
-        # https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-knn-query#knn-query-filtering
+        # https://docs.opensearch.org/latest/query-dsl/specialized/k-nn/index/
 
-        res = es.search(size=11, query=query, index=resource)
+        res = os_client.search(size=11, body={"query": query}, index=resource)
 
         hits = []
         for item in res["hits"]["hits"]:
@@ -85,11 +88,13 @@ class NearestNeighboursPlugin(Plugin):
                 homonr = str(item["_source"]["homografNr"])
 
             for item2 in item["inner_hits"]["so.huvudbetydelser"]["hits"]["hits"]:
-                # https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrieve-inner-hits
+                # https://docs.opensearch.org/latest/search-plugins/searching-data/inner-hits/
+                # or perhaps https://docs.opensearch.org/latest/vector-search/specialized-operations/nested-search-knn/
+                # TODO ??
                 num = item2["_nested"]["offset"]
                 score = item2["_score"]
-                hbet = item2["fields"]["so.huvudbetydelser"][0]
-                hits.append((homonr, orto, "xnr" + hbet["x_nr"][0], score))
+                hbet = item2["fields"]["so.huvudbetydelser.x_nr"][0]
+                hits.append((homonr, orto, "xnr" + hbet, score))
         return hits[1:]
 
 

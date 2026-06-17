@@ -2,20 +2,21 @@ import logging
 from datetime import datetime
 from typing import Any, Iterable
 
-import elasticsearch
-import elasticsearch.helpers
-from elasticsearch.exceptions import NotFoundError
+import opensearchpy
+import opensearchpy.helpers
+from opensearchpy.exceptions import NotFoundError
 
-from karp.globals import es
+from karp.globals import os_client
 from karp.lex.domain.value_objects import ResourceConfig
 from karp.main.errors import KarpError
 from karp.search.domain.index_entry import IndexEntry
-from karp.search.infrastructure.es import mapping_repo
+from karp.search.infrastructure.opensearch import mapping_repo
 
 logger = logging.getLogger(__name__)
 
 # settings are the same in all indices
 settings = {
+    "index": {"knn": True},
     "number_of_shards": 1,
     "number_of_replicas": 1,
     # turns off refreshing, needs to be combined with explicitly making refreshes when adding/deleting
@@ -82,7 +83,7 @@ def create_index(resource_id: str, config: ResourceConfig, call_create_alias=Tru
     date = datetime.now().strftime("%Y-%m-%d-%H%M%S%f")
     index_name = f"{resource_id}_{date}"
     logger.debug("creating index", extra={"index_name": index_name, "body": body})
-    result = es.indices.create(index=index_name, body=body)
+    result = os_client.indices.create(index=index_name, body=body)
 
     if create_alias:
         # create an alias so we can interact with the index using resource_id
@@ -99,15 +100,15 @@ def create_index(resource_id: str, config: ResourceConfig, call_create_alias=Tru
 
 
 def create_alias(resource_id, index_name):
-    if es.indices.exists_alias(name=resource_id):
-        es.indices.delete_alias(name=resource_id, index="*")
-    es.indices.put_alias(name=resource_id, index=index_name)
+    if os_client.indices.exists_alias(name=resource_id):
+        os_client.indices.delete_alias(name=resource_id, index="*")
+    os_client.indices.put_alias(name=resource_id, index=index_name)
 
 
 def delete_index(resource_id: str):
     try:
-        index_name = es.indices.get_alias(name=resource_id).popitem()[0]
-        es.indices.delete(index=index_name)
+        index_name = os_client.indices.get_alias(name=resource_id).popitem()[0]
+        os_client.indices.delete(index=index_name)
     except NotFoundError:
         pass
 
@@ -123,8 +124,8 @@ def add_entries(resource_id: str, entries: Iterable[IndexEntry]):
     )
 
     try:
-        elasticsearch.helpers.bulk(es, index_to_es, refresh=True)
-    except elasticsearch.helpers.BulkIndexError as e:
+        opensearchpy.helpers.bulk(os_client, index_to_es, refresh=True)
+    except opensearchpy.helpers.BulkIndexError as e:
         message = [
             "Error inserting data into Elasticsearch. The following errors occured (terminated at 400 characters):"
         ]
@@ -142,7 +143,7 @@ def delete_entries(resource_id: str, *, entry_ids: Iterable[str], raise_on_error
         }
         for entry_id in entry_ids
     )
-    _, errors = elasticsearch.helpers.bulk(es, index_to_es, refresh=True, raise_on_error=raise_on_error)
+    _, errors = opensearchpy.helpers.bulk(os_client, index_to_es, refresh=True, raise_on_error=raise_on_error)
     return [error["delete"] for error in errors]
 
 
@@ -156,19 +157,31 @@ def _create_es_mapping(config):
         if parent_field_def.type != "object":
             # TODO this will not work when we have user defined types, s.a. saldoid
             # TODO number can be float/non-float, strings can be keyword or text in need of analyzing etc.
-            if parent_field_def.type == "integer":
-                mapped_type = "long"
-            elif parent_field_def.type == "number":
-                mapped_type = "double"
-            elif parent_field_def.type == "boolean":
-                mapped_type = "boolean"
-            elif parent_field_def.type == "string":
-                mapped_type = "text"
-            elif parent_field_def.type == "dense_vector":
-                mapped_type = "dense_vector"
+            if parent_field_def.type == "dense_vector":
+                result = {
+                    "type": "knn_vector",
+                    "dimension": 768,
+                    "method": {
+                        "engine": "faiss",
+                        "name": "hnsw",
+                        "space_type": "cosinesimil",
+                        "parameters": {
+                            "ef_search": 500,
+                        },
+                    },
+                }
             else:
-                mapped_type = "keyword"
-            result = {"type": mapped_type}
+                if parent_field_def.type == "integer":
+                    mapped_type = "long"
+                elif parent_field_def.type == "number":
+                    mapped_type = "double"
+                elif parent_field_def.type == "boolean":
+                    mapped_type = "boolean"
+                elif parent_field_def.type == "string":
+                    mapped_type = "text"
+                else:
+                    mapped_type = "keyword"
+                result = {"type": mapped_type}
             if parent_field_def.type == "string" and not parent_field_def.skip_raw:
                 result["fields"] = {
                     "raw": {"type": "keyword"},

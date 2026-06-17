@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from karp.lex.domain.dtos import EntryDto
 from karp.search.domain.index_entry import IndexEntry
-from karp.search.infrastructure.es import mapping_repo
+from karp.search.infrastructure.opensearch import mapping_repo
 
 logger = logging.getLogger(__name__)
 

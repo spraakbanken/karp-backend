@@ -6,7 +6,7 @@ from karp.foundation.json import get_path
 from karp.lex.infrastructure.sql import resource_repository
 from karp.plugins import INDEXED, expansion_phases, transform_list
 from karp.search.domain import QueryRequest
-from karp.search.infrastructure.es import search_service
+from karp.search.infrastructure.opensearch import search_service
 
 
 @dataclass
