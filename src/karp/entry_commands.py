@@ -215,6 +215,7 @@ class EntryCommands:
             resource = self._get_resource(resource_id)
             index_entries = self._transform_entries(resource.config, entry_dtos)
             es_index.add_entries(resource.resource_id, index_entries)
+            es_index.refresh_index(resource.resource_id)
         self.added_entries.clear()
 
         for resource_id, entry_ids in self.deleted_entries.items():

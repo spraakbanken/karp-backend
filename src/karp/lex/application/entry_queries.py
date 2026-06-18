@@ -59,6 +59,11 @@ def transform_entry_body(
     return plugins.transform(resource.config, entry_body)
 
 
+def count_all_entries(resource_id: str) -> int:
+    entries = resource_repository.entries_by_resource_id(resource_id)
+    return entries.count_all_entries()
+
+
 def all_entries(resource_id: str, last_modified: int | None = None, **kwargs) -> typing.Iterable[EntryDto]:
     entries = resource_repository.entries_by_resource_id(resource_id)
     return _to_dtos(resource_id, entries.all_entries(last_modified=last_modified), **kwargs)

@@ -105,6 +105,10 @@ def create_alias(resource_id, index_name):
     os_client.indices.put_alias(name=resource_id, index=index_name)
 
 
+def refresh_index(index_name: str):
+    os_client.indices.refresh(index=index_name)
+
+
 def delete_index(resource_id: str):
     try:
         index_name = os_client.indices.get_alias(name=resource_id).popitem()[0]
@@ -114,6 +118,24 @@ def delete_index(resource_id: str):
 
 
 def add_entries(resource_id: str, entries: Iterable[IndexEntry]):
+    """
+    Add entries using OpenSearch bulk edit API.
+
+    Does not refresh, do it manually with refresh_index.
+    """
+    gen = add_entries_gen(resource_id, entries)
+    # exhaust the generator before returning
+    list(gen)
+
+
+def add_entries_gen(resource_id: str, entries: Iterable[IndexEntry]):
+    """
+    Add entries using OpenSearch bulk edit API.
+
+    Returns a generator that must be exhausted to make all edits happen.
+
+    Does not refresh, do it manually with refresh_index.
+    """
     index_to_es = (
         {
             "_index": resource_id,
@@ -124,7 +146,8 @@ def add_entries(resource_id: str, entries: Iterable[IndexEntry]):
     )
 
     try:
-        opensearchpy.helpers.bulk(os_client, index_to_es, refresh=True)
+        for _ in opensearchpy.helpers.streaming_bulk(os_client, index_to_es, refresh=False):
+            yield
     except opensearchpy.helpers.BulkIndexError as e:
         message = [
             "Error inserting data into Elasticsearch. The following errors occured (terminated at 400 characters):"

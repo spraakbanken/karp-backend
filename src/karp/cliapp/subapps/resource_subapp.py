@@ -142,7 +142,13 @@ def reindex(
     """
     from karp import search_commands
 
-    search_commands.reindex_resource(resource_id=resource_id, remove_old_index=remove_old_index)
+    count, gen = search_commands.reindex_resource(resource_id=resource_id, remove_old_index=remove_old_index)
+
+    # a progress bar that renders poorly, but better than nothing
+    with typer.progressbar(length=count, label="Indexing progress", show_eta=False) as progress:
+        for i, _ in enumerate(gen):
+            progress.update(1)
+            progress.label = f"Indexing progress ({i} / {count})"
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
 
