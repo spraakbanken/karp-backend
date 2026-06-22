@@ -71,6 +71,12 @@ def reindex_resource(resource_id, remove_old_index):
     return count, gen()
 
 
+def reindex_entry(resource_id: str, entry_id: str):
+    entry = entry_queries.by_id(resource_id, entry_id, expand_plugins=plugins.INDEXED)
+    tmp = entry_transformer.transform(entry)
+    es_index.add_entries(resource_id, (tmp,))
+
+
 def reindex_all_resources(remove_old_index):
     for resource in resource_queries.get_all_resources():
         reindex_resource(resource.resource_id, remove_old_index)
