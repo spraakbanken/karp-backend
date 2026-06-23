@@ -176,10 +176,17 @@ def list_resources(
     show_current_index: Optional[bool] = typer.Option(
         True, "--show-current-index/--show-all-indices", help="Shows current or all indices associated with resource."
     ),
+    resource_filter: list[str] = typer.Argument(
+        default_factory=list,
+        metavar="RESOURCE_ID",
+        help="Filter by given resource ids. If omitted, show all resources.",
+    ),
 ):
     """
     Lists (latest version of) resources, by default only published ones. Current index or all indices associated with
     the resource are listed, along with index size.
+
+    Filter by resource id, by giving the wanted resource ids as arguments.
     """
     from tabulate import tabulate
 
@@ -232,6 +239,8 @@ def list_resources(
 
     rows = []
     for resource in result:
+        if resource_filter and resource.resource_id not in resource_filter:
+            continue
         row = [resource.resource_id, resource.version]
         if not show_published:
             # only show published column when showing all
