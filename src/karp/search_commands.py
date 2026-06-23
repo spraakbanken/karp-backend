@@ -9,6 +9,11 @@ from karp.search.infrastructure.transformers import entry_transformer
 logger = logging.getLogger(__name__)
 
 
+def set_index(resource_id, index_name):
+    es_index.create_alias(resource_id, index_name)
+    logger.info(f"Set index {index_name} as the current index for {resource_id}")
+
+
 def reindex_resource(resource_id, remove_old_index):
     """
     Create a new index with the latest versions of all non-discarded entries. Check for changes

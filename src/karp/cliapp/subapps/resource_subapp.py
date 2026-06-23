@@ -154,6 +154,21 @@ def reindex(
 
 @subapp.command()
 @cli_error_handler
+def set_index(
+    ctx: typer.Context,
+    resource_id: str = resource_option,
+    index: str = typer.Argument(help="The name of an existing OpenSearch index"),
+):
+    from karp import search_commands
+
+    """
+    Sets an existing OpenSearch index as the current index for the given resource.
+    """
+    search_commands.set_index(resource_id, index)
+
+
+@subapp.command()
+@cli_error_handler
 @cli_timer
 def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = remove_old_index_option):
     """
