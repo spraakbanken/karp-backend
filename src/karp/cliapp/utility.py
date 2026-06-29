@@ -1,15 +1,20 @@
+# pyright: strict
+
 import functools
 import itertools
 import logging
 import time
-from typing import Sequence
+from typing import Callable, ParamSpec, Sequence, TypeVar
 
 import typer
 
+P = ParamSpec("P")
+R = TypeVar("R")
 
-def cli_error_handler(func):
+
+def cli_error_handler(func: Callable[P, R]) -> Callable[P, R]:
     @functools.wraps(func)
-    def func_wrapper(*args, **kwargs):
+    def func_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         from karp.lex.domain.errors import LexDomainError
         from karp.main.errors import KarpError
 
@@ -27,9 +32,9 @@ def cli_error_handler(func):
     return func_wrapper
 
 
-def cli_timer(func):
+def cli_timer(func: Callable[P, R]) -> Callable[P, R]:
     @functools.wraps(func)
-    def func_wrapper(*args, **kwargs):
+    def func_wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
         before_t = time.time()
         result = func(*args, **kwargs)
         typer.echo("Command took: %0.1fs" % (time.time() - before_t))
