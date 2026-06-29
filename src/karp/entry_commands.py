@@ -86,6 +86,7 @@ class EntryCommands:
 
             if chunk_size > 0 and i % chunk_size == 0:
                 self.added_entries[resource_id].extend(created_db_entries)
+                created_db_entries = []
                 self._commit()
 
         self.added_entries[resource_id].extend(created_db_entries)
