@@ -9,19 +9,19 @@ requires-python = ">=3.12"
 
 dependencies = [
     "alembic==1.17.2",
-    "asgi-matomo==0.6.0",
-    "environs==14.5.0",
-    "fastapi==0.123.7",
+    "asgi-matomo==0.6.2",
+    "environs==15.0.1",
+    "fastapi==0.138.1",
     "json-arrays==0.15.0",
     "opensearch-py",
-    "pydantic==2.12.5",
-    "pyjwt[crypto]==2.10.1",
-    "PyMySQL==1.1.0",
-    "PyYAML==6.0.1",
+    "pydantic", # use whatever version fastapi wants
+    "pyjwt[crypto]==2.13.0",
+    "PyMySQL==1.2.0",
+    "PyYAML==6.0.3",
     "sb-json-tools",         # see tool.uv.sources farther down
-    "SQLAlchemy==2.0.44",
+    "SQLAlchemy==2.0.51",
     "TatSu==5.7.4",
-    "typer==0.20.0",
+    "typer==0.26.8",
     "ulid-py==1.1.0",
 ]
 
