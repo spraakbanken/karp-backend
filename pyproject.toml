@@ -10,7 +10,6 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic==1.17.2",
     "asgi-matomo==0.6.2",
-    "environs==15.0.1",
     "fastapi==0.138.1",
     "json-arrays==0.15.0",
     "opensearch-py",
