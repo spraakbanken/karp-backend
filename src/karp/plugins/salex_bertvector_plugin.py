@@ -1,4 +1,9 @@
+import logging
+import os
 import re
+
+# loading the model shows a progress bar unless this is done
+os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
 
 from sentence_transformers import SentenceTransformer
 
@@ -6,6 +11,8 @@ from karp.globals import os_client
 
 from .plugin import Plugin
 
+# remove warnings about being unauthenticated
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 kbmodel = SentenceTransformer("KBLab/sentence-bert-swedish-cased")
 
 
