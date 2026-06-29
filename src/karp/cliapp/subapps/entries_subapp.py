@@ -42,7 +42,6 @@ def add_entries_to_resource(
     - assigns new IDs to each entry
     """
     import json_arrays
-    from tqdm import tqdm
 
     from karp.entry_commands import EntryCommands
     from karp.foundation.value_objects import unique_id
@@ -50,7 +49,7 @@ def add_entries_to_resource(
     entry_commands = EntryCommands()
     user = user or "local admin"
     message = message or "imported through cli"
-    entries = tqdm(json_arrays.load_from_file(data), desc="Adding", unit=" entries")
+    entries = json_arrays.load_from_file(data)
     entries = ((unique_id.make_unique_id(), entry) for entry in entries)
     if chunked:
         entry_commands.add_entries_in_chunks(
@@ -96,14 +95,13 @@ def import_entries_to_resource(
     - will use `user`/`message` from entry metadata, but fall back to user/message given as CLI option
     """
     import json_arrays
-    from tqdm import tqdm
 
     from karp.entry_commands import EntryCommands
 
     entry_commands = EntryCommands()
     user = user or "local admin"
     message = message or "imported through cli"
-    entries = tqdm(json_arrays.load_from_file(data), desc="Importing", unit=" entries")
+    entries = json_arrays.load_from_file(data)
     if chunked:
         entry_commands.import_entries_in_chunks(
             resource_id=resource_id,
@@ -236,7 +234,6 @@ def validate_entries(
     import json_arrays
     import json_arrays.jsonlib
     from sb_json_tools import jt_val
-    from tqdm import tqdm
 
     from karp.lex.application import resource_queries
     from karp.lex.domain.value_objects import ResourceConfig, entry_schema
@@ -300,11 +297,7 @@ def validate_entries(
         error_counter = Counter(error_sink)
         jt_val.processing_validate(
             schema,
-            tqdm(
-                entries,
-                desc="Validating",
-                unit=" entries",
-            ),
+            entries,
             on_ok=correct_sink,
             on_error=error_counter,
         )
