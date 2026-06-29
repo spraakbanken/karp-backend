@@ -3,8 +3,6 @@ import typing
 from dataclasses import dataclass
 from logging.config import dictConfig
 
-import asgi_correlation_id
-
 from karp.globals import create_db_engine, create_es
 
 from .config import env
@@ -48,29 +46,21 @@ def configure_logging() -> None:
         {
             "version": 1,
             "disable_existing_loggers": False,
-            "filters": {
-                "correlation_id": {
-                    "()": asgi_correlation_id.CorrelationIdFilter,
-                    "uuid_length": 32,
-                }
-            },
             "formatters": {
                 "console": {
                     "class": "logging.Formatter",
-                    "format": "%(levelname)s:\t\b%(asctime)s %(name)s:%(lineno)d [%(correlation_id)s] %(message)s",
+                    "format": "%(levelname)s:\t\b%(asctime)s %(name)s:%(lineno)d %(message)s",
                 },
             },
             "handlers": {
                 "console": {
                     "class": "logging.StreamHandler",
-                    "filters": ["correlation_id"],
                     "formatter": "console",
                     "stream": "ext://sys.stdout",
                 },
                 # This handler does not print stacktraces
                 "nostack": {
                     "class": "karp.main.app.NoStackTraceHandler",
-                    "filters": ["correlation_id"],
                     "formatter": "console",
                 },
             },

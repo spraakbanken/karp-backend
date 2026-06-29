@@ -4,8 +4,6 @@ import traceback
 from contextlib import redirect_stdout
 from typing import Any
 
-from asgi_correlation_id import CorrelationIdMiddleware
-from asgi_correlation_id.context import correlation_id
 from asgi_matomo import MatomoMiddleware
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exception_handlers import http_exception_handler
@@ -218,10 +216,6 @@ def create_app() -> FastAPI:
             HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Internal server error",
-                headers={
-                    "X-Request-ID": correlation_id.get() or "",
-                    "Access-Control-Expose-Headers": "X-Request-ID",
-                },
             ),
         )
 
@@ -264,7 +258,6 @@ def create_app() -> FastAPI:
         )
     else:
         logger.warning("Tracking to Matomo is not enabled, please set TRACKING_MATOMO_URL.")
-    app.add_middleware(CorrelationIdMiddleware)
 
     return app
 
