@@ -8,26 +8,26 @@ authors = [{ name = "Språkbanken Text", email = "sb-info@svenska.gu.se" }]
 requires-python = ">=3.12"
 
 dependencies = [
-    "PyMySQL==1.1.0",
-    "TatSu==5.7.4",
     "alembic==1.17.2",
-    "opensearch-py",
+    "asgi-matomo==0.6.0",
     "environs==14.5.0",
     "fastapi==0.123.7",
+    "json-arrays==0.15.0",
+    "opensearch-py",
     "pydantic==2.12.5",
     "pyjwt[crypto]==2.10.1",
-    "sb-json-tools",                # see tool.uv.sources farther down
+    "PyMySQL==1.1.0",
+    "PyYAML==6.0.1",
+    "sb-json-tools",         # see tool.uv.sources farther down
     "SQLAlchemy==2.0.44",
+    "TatSu==5.7.4",
     "typer==0.20.0",
     "ulid-py==1.1.0",
-    "asgi-matomo==0.6.0",
-    "json-arrays==0.15.0",
-    "PyYAML==6.0.1",
-    "sentence_transformers==5.6.0",
 ]
 
 [dependency-groups]
 prod = ["gunicorn>=25.1.0,<26.0.0", "uvloop>=0.22.1"]
+sentence_transformers = ["sentence_transformers==5.6.0"]
 dev = [
     "pytest",
     "cryptography==46.0.3",

@@ -79,6 +79,10 @@ If neither `uv` is available or a virtual environment activated, the user must s
 
   `make dev` (or `make install-dev`)
 
+  It is possible to use a flag `NO_SENTENCE_TRANSFORMERS=1`, to avoid installing the `sentence_transformers` library (with Numpy, CUDA, Torch etc.), for example:
+
+  `NO_SENTENCE_TRANSFORMERS=1 make install-dev`, but since many other Makefile rules depend on install, make sure it remains configured always.
+
 3. Install MariaDB and create a database
 
 4. Setup environment variables (can be placed in a `.env` file in the root):

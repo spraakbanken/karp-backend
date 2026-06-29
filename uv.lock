@@ -760,7 +760,6 @@ dependencies = [
     { name = "pymysql" },
     { name = "pyyaml" },
     { name = "sb-json-tools" },
-    { name = "sentence-transformers" },
     { name = "sqlalchemy" },
     { name = "tatsu" },
     { name = "typer" },
@@ -779,6 +778,9 @@ prod = [
     { name = "gunicorn" },
     { name = "uvloop" },
 ]
+sentence-transformers = [
+    { name = "sentence-transformers" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -793,7 +795,6 @@ requires-dist = [
     { name = "pymysql", specifier = "==1.1.0" },
     { name = "pyyaml", specifier = "==6.0.1" },
     { name = "sb-json-tools", git = "https://github.com/spraakbanken/python-json-tools.git" },
-    { name = "sentence-transformers", specifier = "==5.6.0" },
     { name = "sqlalchemy", specifier = "==2.0.44" },
     { name = "tatsu", specifier = "==5.7.4" },
     { name = "typer", specifier = "==0.20.0" },
@@ -812,6 +813,7 @@ prod = [
     { name = "gunicorn", specifier = ">=25.1.0,<26.0.0" },
     { name = "uvloop", specifier = ">=0.22.1" },
 ]
+sentence-transformers = [{ name = "sentence-transformers", specifier = "==5.6.0" }]
 
 [[package]]
 name = "mako"

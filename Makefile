@@ -47,12 +47,15 @@ else
 	@:
 endif
 
+# Make it possible to exclude the sentence_transformers library by setting NO_SENTENCE_TRANSFORMERS
+SENTENCE_TRANSFORMERS = $(if $(filter 1,$(NO_SENTENCE_TRANSFORMERS)),,--group sentence_transformers)
+
 install: ensure-uv
-	uv sync --no-dev --group prod
+	uv sync --no-dev --group prod $(SENTENCE_TRANSFORMERS)
 
 dev: install-dev
 install-dev: ensure-uv
-	uv sync --group prod
+	uv sync --group prod $(SENTENCE_TRANSFORMERS)
 
 init-db:
 	${UV} alembic upgrade head
