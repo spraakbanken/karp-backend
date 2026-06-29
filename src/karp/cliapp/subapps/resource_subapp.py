@@ -203,8 +203,8 @@ def list_resources(
 
     Filter by resource id, by giving the wanted resource ids as arguments.
     """
-    from tabulate import tabulate
 
+    from karp.cliapp.utility import tabulate
     from karp.globals import os_client
     from karp.lex.infrastructure.sql import resource_repository
 
@@ -261,7 +261,9 @@ def list_resources(
             # only show published column when showing all
             row.append("published" if resource.is_published else "unpublished")
         if show_current_index:
-            row.append(aliases.get(resource.resource_id, "missing"))
+            index = aliases.get(resource.resource_id, "missing")
+            row.append(index)
+            row.append(sizes.get(index, "-"))
             rows.append(row)
         else:
             # adds one row to tabulation for each index
@@ -292,12 +294,14 @@ def show(ctx: typer.Context, resource_id: str = resource_option, version: Option
 
     Useful for checking what the config is and how it has changed.
     """
-    from tabulate import tabulate
 
+    from karp.cliapp.utility import tabulate
     from karp.lex.application import resource_queries
 
     resource = resource_queries.by_resource_id(resource_id, version=version)
+
     typer.echo(tabulate(((key, value) for key, value in resource.dict().items() if key != "config")))
+
     typer.echo()
     typer.echo(resource.config.config_str)
 

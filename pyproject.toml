@@ -20,7 +20,6 @@ dependencies = [
     "python-json-logger==2.0.7",
     "sb-json-tools",                # see tool.uv.sources farther down
     "SQLAlchemy==2.0.44",
-    "tabulate==0.9.0",
     "typer==0.20.0",
     "ulid-py==1.1.0",
     "asgi-matomo==0.6.0",
@@ -35,7 +34,6 @@ prod = ["gunicorn>=25.1.0,<26.0.0", "uvloop>=0.22.1"]
 dev = [
     "pytest",
     "cryptography==46.0.3",
-    "types-tabulate==0.9.0",
     "elasticsearch-test-py==1.2.0",
     "ruff",
     "basedpyright",

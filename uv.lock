@@ -787,7 +787,6 @@ dependencies = [
     { name = "sb-json-tools" },
     { name = "sentence-transformers" },
     { name = "sqlalchemy" },
-    { name = "tabulate" },
     { name = "tatsu" },
     { name = "typer" },
     { name = "ulid-py" },
@@ -800,7 +799,6 @@ dev = [
     { name = "elasticsearch-test-py" },
     { name = "pytest" },
     { name = "ruff" },
-    { name = "types-tabulate" },
 ]
 prod = [
     { name = "gunicorn" },
@@ -825,7 +823,6 @@ requires-dist = [
     { name = "sb-json-tools", git = "https://github.com/spraakbanken/python-json-tools.git" },
     { name = "sentence-transformers", specifier = "==5.6.0" },
     { name = "sqlalchemy", specifier = "==2.0.44" },
-    { name = "tabulate", specifier = "==0.9.0" },
     { name = "tatsu", specifier = "==5.7.4" },
     { name = "typer", specifier = "==0.20.0" },
     { name = "ulid-py", specifier = "==1.1.0" },
@@ -838,7 +835,6 @@ dev = [
     { name = "elasticsearch-test-py", specifier = "==1.2.0" },
     { name = "pytest" },
     { name = "ruff" },
-    { name = "types-tabulate", specifier = "==0.9.0" },
 ]
 prod = [
     { name = "gunicorn", specifier = ">=25.1.0,<26.0.0" },
@@ -1811,15 +1807,6 @@ wheels = [
 ]
 
 [[package]]
-name = "tabulate"
-version = "0.9.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/ec/fe/802052aecb21e3797b8f7902564ab6ea0d60ff8ca23952079064155d1ae1/tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c", size = 81090, upload-time = "2022-10-06T17:21:48.54Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/40/44/4a5f08c96eb108af5cb50b41f76142f0afa346dfa99d5296fe7202a11854/tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f", size = 35252, upload-time = "2022-10-06T17:21:44.262Z" },
-]
-
-[[package]]
 name = "tatsu"
 version = "5.7.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1963,15 +1950,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/8f/28/7c85c8032b91dbe79725b6f17d2fffc595dff06a35c7a30a37bef73a1ab4/typer-0.20.0.tar.gz", hash = "sha256:1aaf6494031793e4876fb0bacfa6a912b551cf43c1e63c800df8b1a866720c37", size = 106492, upload-time = "2025-10-20T17:03:49.445Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/78/64/7713ffe4b5983314e9d436a90d5bd4f63b6054e2aca783a3cfc44cb95bbf/typer-0.20.0-py3-none-any.whl", hash = "sha256:5b463df6793ec1dca6213a3cf4c0f03bc6e322ac5e16e13ddd622a889489784a", size = 47028, upload-time = "2025-10-20T17:03:47.617Z" },
-]
-
-[[package]]
-name = "types-tabulate"
-version = "0.9.0.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/bf/7b/3c760cfc4624c18edb72ef0ff4da7914c6f374328722372a0467a38cd7d1/types-tabulate-0.9.0.0.tar.gz", hash = "sha256:4a79474714cea156bcd2185bb9bddd8fb9d3d5227c8d0a7f21bf21caf5f60e67", size = 2787, upload-time = "2022-10-07T15:26:10.554Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/43/34e2ebc7f395a488db53d310b972cdfa62c4bb9cdc31ef59cce7f3a56213/types_tabulate-0.9.0.0-py3-none-any.whl", hash = "sha256:a1cc2aa52d2a9abfe0acbb361ccd49e3400794086a41626ce8784ed2e1ec0b0d", size = 2847, upload-time = "2022-10-07T15:26:09.194Z" },
 ]
 
 [[package]]
