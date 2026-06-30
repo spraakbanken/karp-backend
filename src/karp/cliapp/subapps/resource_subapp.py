@@ -1,3 +1,4 @@
+import subprocess
 from collections import defaultdict
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
@@ -33,6 +34,14 @@ config_option = typer.Argument(help="A path to a resource config file", show_def
 resource_option = typer.Argument(help="The ID of an existing resource", show_default=False)
 version_option = typer.Argument(None, help="The version to do this operation on")
 remove_old_index_option = typer.Option(False, help="If set, will remove the old index when the new one is completed.")
+
+
+def _reload_backend():
+    p = subprocess.run(["make", "reload"], capture_output=True)
+    if p.returncode != 0:
+        typer.echo("Failed to reload backend.")
+    else:
+        typer.echo("Backend reloaded.")
 
 
 @subapp.command()
@@ -112,6 +121,8 @@ def publish(ctx: typer.Context, resource_id: str = resource_option, version: Opt
     Publish a resource
 
     Makes the resource available from search and edit.
+
+    If a resource is published, the CLI tries to reload a running instance of backend to clear caches.
     """
     from karp import resource_commands
 
@@ -122,6 +133,7 @@ def publish(ctx: typer.Context, resource_id: str = resource_option, version: Opt
         version=version,
     )
     typer.echo(f"Resource '{resource_id}' is published ")
+    _reload_backend()
 
 
 @subapp.command()
@@ -150,6 +162,9 @@ def reindex(
             progress.update(1)
             progress.label = f"Indexing progress ({i} / {count})"
     typer.echo(f"Successfully reindexed all data in {resource_id}")
+
+    # reload backend to make sure that backend sees changes to index
+    _reload_backend()
 
 
 @subapp.command()
