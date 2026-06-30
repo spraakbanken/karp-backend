@@ -180,6 +180,19 @@ class IndexDesc:
     size: str = "-"
 
 
+def get_current_index(resource_id) -> IndexDesc | None:
+    """
+    Return an IndexDesc representing the current index or None if there is no current index.
+    """
+    indices = get_indices_data([resource_id], only_aliased=True)[resource_id]
+    for index in indices:
+        if index.current:
+            break
+    else:
+        return None
+    return index
+
+
 def get_indices_data(resource_ids: list[str], only_aliased=False) -> dict[str, list[IndexDesc]]:
     """
     Returns the indices associated with each given resource id. It checks if an exact alias

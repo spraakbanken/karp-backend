@@ -1,4 +1,5 @@
 import subprocess
+import textwrap
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
@@ -124,6 +125,20 @@ def publish(ctx: typer.Context, resource_id: str = resource_option, version: Opt
     If a resource is published, the CLI tries to reload a running instance of backend to clear caches.
     """
     from karp import resource_commands
+    from karp.search.infrastructure.opensearch.indices import get_current_index
+
+    # first check that index exists
+    index = get_current_index(resource_id)
+    if not index:
+        # if index does not exist, do not publish
+        typer.echo(
+            textwrap.dedent(f"""\
+        Resource does not have a index. Use:
+        - 'karp-cli resource list --show-all-indices {resource_id}' for more info.
+        - 'karp-cli resource reindex {resource_id}' to create an index
+        """)
+        )
+        return -1
 
     resource_commands.publish_resource(
         resource_id=resource_id,
