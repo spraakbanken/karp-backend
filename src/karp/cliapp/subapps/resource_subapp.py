@@ -208,7 +208,7 @@ def list_resources(
     resource_filter: list[str] = typer.Argument(
         default_factory=list,
         metavar="RESOURCE_ID",
-        help="Filter by given resource ids. If omitted, show all resources.",
+        help="Filter by given resource ids. If omitted, show all resources.  Supports glob pattern * for zero or more of any character and ? for any character once.",
     ),
 ):
     """
@@ -239,10 +239,13 @@ def list_resources(
         (resource.resource_id for resource in result), only_aliased=show_current_index
     )
 
+    resource_matcher = _get_resource_id_matcher(resource_filter)
+
     rows = []
     for resource in result:
-        if resource_filter and resource.resource_id not in resource_filter:
+        if not resource_matcher(resource.resource_id):
             continue
+
         row = [resource.resource_id, resource.version]
         if not show_published:
             # only show published column when showing all
@@ -350,3 +353,27 @@ def delete(
             typer.echo("Resource already deleted")
     else:
         typer.echo("Resource not deleted")
+
+
+def _get_resource_id_matcher(resource_filter: list[str]):
+    """
+    Create regexps from the glob filters (resource_filter) and return a function
+    that returns True if any of the filters match. If there are no filters, always
+    return True.
+    """
+    import re
+
+    res = []
+    for elem in resource_filter:
+        filter_re = "^" + elem.replace("*", ".*").replace("?", ".") + "$"
+        res.append(filter_re)
+
+    def resource_matcher(resource_id: str) -> bool:
+        if res:
+            for filter_re in res:
+                if re.match(filter_re, resource_id) is not None:
+                    return True
+            return False
+        return True
+
+    return resource_matcher
