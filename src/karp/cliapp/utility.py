@@ -51,7 +51,12 @@ def tabulate(rows: Sequence[Sequence[object]], headers: Sequence[str] = ()):
     # rows are used twice, do this to make generators work as input
     rows = list(rows)
 
-    cols: list[list[object]] = [[] for _ in range(0, len(rows[0]))]
+    if rows:
+        no_columns = len(rows[0])
+    else:
+        no_columns = len(headers)
+
+    cols: list[list[object]] = [[] for _ in range(0, no_columns)]
     widths: list[int] = []
     start_end_sep: list[str] = []
     for tmp in itertools.chain((headers,), rows):

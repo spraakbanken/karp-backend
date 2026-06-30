@@ -1,4 +1,7 @@
 import logging
+import re
+from collections import defaultdict
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Iterable
 
@@ -168,6 +171,68 @@ def delete_entries(resource_id: str, *, entry_ids: Iterable[str], raise_on_error
     )
     _, errors = opensearchpy.helpers.bulk(os_client, index_to_es, refresh=True, raise_on_error=raise_on_error)
     return [error["delete"] for error in errors]
+
+
+@dataclass
+class IndexDesc:
+    name: str = "missing"
+    current: bool = False
+    size: str = "-"
+
+
+def get_indices_data(resource_ids: list[str], only_aliased=False) -> dict[str, list[IndexDesc]]:
+    """
+    Returns the indices associated with each given resource id. It checks if an exact alias
+    exists and returns only that index if only_aliased is True. Otherwise uses regexp matching
+    to find all the indices of the resource id.
+
+    If index is completely missing, returns resource_id: list[IndexDesc()] which has name="missing",current=False,size="-"
+    """
+
+    def _get_sizes_for_indices():
+        sizes = {}
+        cat_indices = os_client.cat.indices(h="index,store.size", format="json")
+        for row in cat_indices:
+            sizes[row["index"]] = row["store.size"]
+        return sizes
+
+    def _get_alias_to_index():
+        res = {}
+        aliases = os_client.indices.get_alias()
+        for index, alias_body in aliases.items():
+            if alias_body["aliases"]:
+                alias = list(alias_body["aliases"].keys())
+                if len(alias) > 1:
+                    raise RuntimeError(f"Index {index} has multiple aliases: {', '.join(alias)}")
+                res[alias[0]] = index
+        return res
+
+    sizes = _get_sizes_for_indices()
+    aliases = _get_alias_to_index()
+
+    resource_id_to_indices = defaultdict(list)
+    for resource_id in resource_ids:
+        if only_aliased:
+            index = aliases.get(resource_id)
+            if index:
+                index_desc = IndexDesc(name=index, size=str(sizes.get(index)), current=True)
+            else:
+                index_desc = IndexDesc()
+            resource_id_to_indices[resource_id] = [index_desc]
+        else:
+            tmp = defaultdict(list)
+            for index in sizes.keys():
+                derived_alias = re.split(r"_[0-9]{4}-[0-9]{2}", index)[0]
+                tmp[derived_alias].append(index)
+            for index_name in tmp[resource_id]:
+                current = aliases.get(resource_id) == index_name
+                index_desc = IndexDesc(name=index_name, current=current, size=str(sizes.get(index)))
+                resource_id_to_indices[resource_id].append(index_desc)
+
+            if resource_id_to_indices.get(resource_id) is None:
+                resource_id_to_indices[resource_id] = [IndexDesc()]
+
+    return resource_id_to_indices
 
 
 def _create_es_mapping(config):

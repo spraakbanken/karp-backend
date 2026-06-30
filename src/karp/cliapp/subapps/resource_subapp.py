@@ -1,5 +1,4 @@
 import subprocess
-from collections import defaultdict
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
 
@@ -220,8 +219,8 @@ def list_resources(
     """
 
     from karp.cliapp.utility import tabulate
-    from karp.globals import os_client
     from karp.lex.infrastructure.sql import resource_repository
+    from karp.search.infrastructure.opensearch.indices import get_indices_data
 
     warnings = []
     headers = ["resource_id", "version"]
@@ -233,39 +232,12 @@ def list_resources(
         headers.append("published")
         result = resource_repository.get_all_resources()
 
-    def _get_sizes_for_indices():
-        sizes = {}
-        cat_indices = os_client.cat.indices(h="index,store.size", format="json")
-        for row in cat_indices:
-            sizes[row["index"]] = row["store.size"]
-        return sizes
-
-    def _get_alias_to_index():
-        res = {}
-        aliases = os_client.indices.get_alias()
-        for index, alias_body in aliases.items():
-            if alias_body["aliases"]:
-                alias = list(alias_body["aliases"].keys())
-                if len(alias) > 1:
-                    warnings.append(f"Index {index} has multiple aliases: {', '.join(alias)}")
-                res[alias[0]] = index
-        return res
-
     headers.append("index")
     headers.append("size")
-    sizes = _get_sizes_for_indices()
-    resource_id_to_indices = {}
 
-    aliases = _get_alias_to_index()
-
-    if not show_current_index:
-        # only populate resource_id_to_indices if showing all indices
-        import re
-
-        resource_id_to_indices = defaultdict(list)
-        for index in sizes.keys():
-            derived_alias = re.split(r"_[0-9]{4}-[0-9]{2}", index)[0]
-            resource_id_to_indices[derived_alias].append(index)
+    resource_id_to_indices = get_indices_data(
+        (resource.resource_id for resource in result), only_aliased=show_current_index
+    )
 
     rows = []
     for resource in result:
@@ -276,16 +248,20 @@ def list_resources(
             # only show published column when showing all
             row.append("published" if resource.is_published else "unpublished")
         if show_current_index:
-            index = aliases.get(resource.resource_id, "missing")
-            row.append(index)
-            row.append(sizes.get(index, "-"))
+            active_index = resource_id_to_indices.get(resource.resource_id)[0]
+            row.append(active_index.name)
+            row.append(active_index.size)
             rows.append(row)
         else:
             # adds one row to tabulation for each index
             orig_row_len = len(row)
-            for index in resource_id_to_indices.get(resource.resource_id, ("missing",)):
-                row.append(index + (" (current)" if aliases.get(resource.resource_id) == index else ""))
-                row.append(sizes.get(index, "-"))
+            indices = resource_id_to_indices.get(resource.resource_id)
+            for index in indices:
+                if index.current:
+                    row.append(f"{index.name} (current)")
+                else:
+                    row.append(index.name)
+                row.append(index.size)
                 rows.append(row)
 
                 row = [""] * orig_row_len
