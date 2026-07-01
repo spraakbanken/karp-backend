@@ -770,7 +770,7 @@ requires-dist = [
     { name = "pyyaml", specifier = "==6.0.3" },
     { name = "sb-json-tools", git = "https://github.com/spraakbanken/python-json-tools.git" },
     { name = "sqlalchemy", specifier = "==2.0.51" },
-    { name = "tatsu", specifier = "==5.7.4" },
+    { name = "tatsu", specifier = "==5.16.0" },
     { name = "typer", specifier = "==0.26.8" },
     { name = "ulid-py", specifier = "==1.1.0" },
 ]
@@ -1788,11 +1788,11 @@ wheels = [
 
 [[package]]
 name = "tatsu"
-version = "5.7.4"
+version = "5.16.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/09/f6/d53b45ea138e24199486e11deadedf06d0bedc9373911582b57a484f3d59/TatSu-5.7.4.zip", hash = "sha256:ebd8212323328115bc4967db9a40d7f15b627db4663290c64e5ef8fe71dca0ae", size = 205834, upload-time = "2022-07-29T21:21:39.992Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/cf/43/2f84054f1115cc7438721e1f7bb8546b08bf1c1ffcc6bb90b68447f6728a/tatsu-5.16.0.tar.gz", hash = "sha256:c78e47834d2111dcce327711a5ca96fb83a6e61b2ca283d2fba68bc750835966", size = 228017, upload-time = "2026-01-13T21:43:32.139Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/49/73a7124ac13b2272c7a309fcd4e65c412eefae5b4b60109fc17633948d97/TatSu-5.7.4-py2.py3-none-any.whl", hash = "sha256:f00c1a345a6510e25828323b7f205e5ae3993d6d97479921fd0ab33fde5631c4", size = 101488, upload-time = "2022-07-29T21:21:37.545Z" },
+    { url = "https://files.pythonhosted.org/packages/50/cf/c0c01753b429b50228ae273522fc85cf723c3e792f8af13a2aaeea624a8a/tatsu-5.16.0-py3-none-any.whl", hash = "sha256:48efb04a21e3da19d336e58cc022620cf7866790182358ec368c3afaebcddca7", size = 82519, upload-time = "2026-01-13T21:43:30.115Z" },
 ]
 
 [[package]]
