@@ -206,7 +206,7 @@ def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = remove_ol
     from karp import search_commands
 
     search_commands.reindex_all_resources(remove_old_index=remove_old_index)
-    typer.echo("Successfully reindexed all resrouces")
+    typer.echo("Successfully reindexed all resources")
 
 
 @subapp.command("list")
