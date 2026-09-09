@@ -1,3 +1,4 @@
+import json
 import subprocess
 import textwrap
 from pathlib import Path
@@ -215,7 +216,6 @@ def reindex_all(
 
 @subapp.command("list")
 @cli_error_handler
-@cli_timer
 def list_resources(
     ctx: typer.Context,
     show_published: Optional[bool] = typer.Option(
@@ -229,6 +229,7 @@ def list_resources(
         metavar="RESOURCE_ID",
         help="Filter by given resource ids. If omitted, show all resources.  Supports glob pattern * for zero or more of any character and ? for any character once.",
     ),
+    json_output: Optional[bool] = typer.Option(False, help="Prints result as JSON."),
 ):
     """
     Lists (latest version of) resources, by default only published ones. Current index or all indices associated with
@@ -241,7 +242,6 @@ def list_resources(
     from karp.lex.infrastructure.sql import resource_repository
     from karp.search.infrastructure.opensearch.indices import get_indices_data
 
-    warnings = []
     headers = ["resource_id", "version"]
 
     if show_published:
@@ -260,42 +260,63 @@ def list_resources(
 
     resource_matcher = _get_resource_id_matcher(resource_filter)
 
-    rows = []
-    for resource in result:
-        if not resource_matcher(resource.resource_id):
-            continue
+    if not json_output:
+        rows = []
+        for resource in result:
+            if not resource_matcher(resource.resource_id):
+                continue
 
-        row = [resource.resource_id, resource.version]
-        if not show_published:
-            # only show published column when showing all
-            row.append("published" if resource.is_published else "unpublished")
-        if show_current_index:
-            active_index = resource_id_to_indices.get(resource.resource_id)[0]
-            row.append(active_index.name)
-            row.append(active_index.size)
-            rows.append(row)
-        else:
-            # adds one row to tabulation for each index
-            orig_row_len = len(row)
-            indices = resource_id_to_indices.get(resource.resource_id)
-            for index in indices:
-                if index.current:
-                    row.append(f"{index.name} (current)")
-                else:
-                    row.append(index.name)
-                row.append(index.size)
+            row = [resource.resource_id, resource.version]
+            if not show_published:
+                # only show published column when showing all
+                row.append("published" if resource.is_published else "unpublished")
+            if show_current_index:
+                active_index = resource_id_to_indices.get(resource.resource_id)[0]
+                row.append(active_index.name)
+                row.append(active_index.size)
                 rows.append(row)
+            else:
+                # adds one row to tabulation for each index
+                orig_row_len = len(row)
+                indices = resource_id_to_indices.get(resource.resource_id)
+                for index in indices:
+                    if index.current:
+                        row.append(f"{index.name} (current)")
+                    else:
+                        row.append(index.name)
+                    row.append(index.size)
+                    rows.append(row)
 
-                row = [""] * orig_row_len
+                    row = [""] * orig_row_len
 
-    typer.echo(
-        tabulate(
-            rows,
-            headers=headers,
+        typer.echo(
+            tabulate(
+                rows,
+                headers=headers,
+            )
         )
-    )
-    for warning in warnings:
-        typer.echo(f"WARNING: {warning}")
+    else:
+        res = []
+        for resource in result:
+            if not resource_matcher(resource.resource_id):
+                continue
+            obj = {}
+            obj["resource_id"] = resource.resource_id
+            obj["version"] = resource.version
+            if not show_published:
+                # only show published field when showing all
+                obj["published"] = resource.is_published
+            if show_current_index:
+                active_index = resource_id_to_indices.get(resource.resource_id)[0]
+                obj["index"] = {"name": active_index.name, "size": active_index.size}
+            else:
+                obj["indices"] = []
+                indices = resource_id_to_indices.get(resource.resource_id)
+                for index in indices:
+                    obj["indices"].append({"name": index.name, "size": index.size, "current": index.current})
+            res.append(obj)
+        s = json.dumps(res)
+        typer.echo(s)
 
 
 @subapp.command()
