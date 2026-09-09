@@ -82,6 +82,10 @@ def reindex_entry(resource_id: str, entry_id: str):
     es_index.add_entries(resource_id, (tmp,))
 
 
-def reindex_all_resources(remove_old_index):
+def reindex_all_resources(remove_old_index, skip: list[str]):
     for resource in resource_queries.get_all_resources():
-        reindex_resource(resource.resource_id, remove_old_index)
+        if resource.resource_id not in skip:
+            _, gen = reindex_resource(resource.resource_id, remove_old_index)
+            # must exhaust the generator from reindex_resource for anything to happen...
+            for _ in gen:
+                pass

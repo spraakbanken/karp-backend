@@ -199,13 +199,17 @@ def set_index(
 @subapp.command()
 @cli_error_handler
 @cli_timer
-def reindex_all(ctx: typer.Context, remove_old_index: Optional[bool] = remove_old_index_option):
+def reindex_all(
+    ctx: typer.Context,
+    remove_old_index: Optional[bool] = remove_old_index_option,
+    skip: list[str] = typer.Option(default_factory=list, help="A resource ID to skip when reindexing all resources"),
+):
     """
     Reindexes all resources in Karp, see `karp-cli resource reindex --help` for more details
     """
     from karp import search_commands
 
-    search_commands.reindex_all_resources(remove_old_index=remove_old_index)
+    search_commands.reindex_all_resources(remove_old_index, skip)
     typer.echo("Successfully reindexed all resources")
 
 
