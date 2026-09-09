@@ -239,7 +239,7 @@ def get_indices_data(resource_ids: list[str], only_aliased=False) -> dict[str, l
                 tmp[derived_alias].append(index)
             for index_name in tmp[resource_id]:
                 current = aliases.get(resource_id) == index_name
-                index_desc = IndexDesc(name=index_name, current=current, size=str(sizes.get(index)))
+                index_desc = IndexDesc(name=index_name, current=current, size=str(sizes.get(index_name)))
                 resource_id_to_indices[resource_id].append(index_desc)
 
             if resource_id_to_indices.get(resource_id) is None:
