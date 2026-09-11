@@ -48,11 +48,10 @@ def get_text(entry):
 
 
 class NearestNeighboursPlugin(Plugin):
-    def output_config(self, **resource):
+    def output_config(self, **_kwargs):
         config = {
             "collection": True,
             "type": "string",
-            #    "flatten_params": False,
         }
         return config
 
@@ -106,8 +105,8 @@ class NearestNeighboursPlugin(Plugin):
 
 
 class BertVectorPlugin(Plugin):
-    def output_config(self, config):
-        config = {**config, "collection": True, "type": "dense_vector", "flatten_params": False}
+    def output_config(self):
+        config = {"collection": True, "type": "dense_vector", "flatten_params": False}
         return config
 
     def generate(self, ortografi, böjning, betydelse, **kwargs):

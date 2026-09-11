@@ -262,6 +262,7 @@ def transform_config(resource_config: ResourceConfig, expand_plugins=True) -> Re
                 allow_missing_params=config.allow_missing_params or result.allow_missing_params,
                 cache_plugin_expansion=config.cache_plugin_expansion and result.cache_plugin_expansion,
                 searchable=config.searchable and result.searchable,
+                store=config.store and result.store,
             )
             return result
 
