@@ -302,7 +302,7 @@ def _build_search(query, resources: list[str]):
         except tatsu_exc.FailedParse as err:
             raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
-    s = opensearchpy.Search(using=os_client, index=resources)
+    s = opensearchpy.Search(using=os_client, index=mapping_repo.aliases_to_indices(resources))
     s = s.extra(track_total_hits=True)  # get accurate hits numbers
     if es_query is not None:
         s = s.query(es_query)
@@ -441,14 +441,14 @@ def _build_result(query, response):
 def search_ids(resource_id: str, entry_ids: list[str]):
     query = opensearchpy.Q("terms", _id=entry_ids)
     logger.debug("query", extra={"query": query})
-    s = opensearchpy.Search(using=os_client, index=resource_id).query(query)
+    s = opensearchpy.Search(using=os_client, index=mapping_repo.alias_to_index(resource_id)).query(query)
     logger.debug("s", extra={"es_query s": s.to_dict()})
     response = s.execute()
     return _format_result(response)
 
 
 def statistics(resource_id: str, field: str) -> Iterable:
-    s = opensearchpy.Search(using=os_client, index=resource_id)
+    s = opensearchpy.Search(using=os_client, index=mapping_repo.alias_to_index(resource_id))
     s = s[:0]
 
     # if field is analyzed, do aggregation on the "raw" multi-field

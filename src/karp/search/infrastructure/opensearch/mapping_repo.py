@@ -165,6 +165,21 @@ def get_reverse_aliases():
 
 
 @functools.cache
+def _get_all_aliases_as_dict() -> dict[str, str]:
+    aliases = _get_all_aliases()
+    return dict(aliases)
+
+
+def aliases_to_indices(aliases: list[str]) -> list[str]:
+    aliases_to_dict = _get_all_aliases_as_dict()
+    return [aliases_to_dict[alias] for alias in aliases]
+
+
+def alias_to_index(alias: str) -> str:
+    return aliases_to_indices([alias])[0]
+
+
+@functools.cache
 def _update_field_mapping() -> tuple[dict[str, dict[str, Field]], dict[str, dict[str, Field]]]:
     """
     Create a field mapping based on the mappings of elasticsearch.
