@@ -169,7 +169,11 @@ def reindex(
     """
     from karp import search_commands
 
-    count, gen = search_commands.reindex_resource(resource_id=resource_id, remove_old_index=remove_old_index)
+    old_index = search_commands.get_current_index(resource_id)
+
+    new_index, count, gen = search_commands.reindex_resource(resource_id=resource_id)
+
+    typer.echo(f"Creating index {new_index}")
 
     # a progress bar that renders poorly, but better than nothing
     with typer.progressbar(length=count, label="Indexing progress", show_eta=False) as progress:
@@ -180,6 +184,11 @@ def reindex(
 
     # reload backend to make sure that backend sees changes to index
     _reload_backend()
+
+    if remove_old_index:
+        # finally remove the old index
+        search_commands.delete_index(old_index)
+        typer.echo(f"Removing index {old_index}")
 
 
 @subapp.command()

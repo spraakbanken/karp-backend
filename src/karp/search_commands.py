@@ -14,7 +14,20 @@ def set_index(resource_id, index_name):
     logger.info(f"Set index {index_name} as the current index for {resource_id}")
 
 
-def reindex_resource(resource_id, remove_old_index):
+def get_current_index(resource_id: str) -> str | None:
+    indices = es_index.get_indices_data([resource_id], only_aliased=True)
+    maybe_index = indices[resource_id][0]
+    if maybe_index.name == "missing":
+        return None
+    return maybe_index.name
+
+
+def delete_index(index_name: str):
+    if index_name:
+        es_index.delete_index(index_name)
+
+
+def reindex_resource(resource_id):
     """
     Create a new index with the latest versions of all non-discarded entries. Check for changes
     done during reindex and loop until the new index and db are synced. Optionally remove the old index
@@ -65,15 +78,12 @@ def reindex_resource(resource_id, remove_old_index):
         # manually refresh since es_index.add_entries was called with refresh=False
         es_index.refresh_index(index_name)
 
-        if remove_old_index:
-            es_index.delete_index(resource_id)
-
         # now when the data adding is done, point alias to the new index
         es_index.create_alias(resource_id, index_name)
         logger.info("Reindexing done")
 
     count = entry_queries.count_all_entries(resource_id)
-    return count, gen()
+    return index_name, count, gen()
 
 
 def reindex_entry(resource_id: str, entry_id: str):
@@ -85,7 +95,10 @@ def reindex_entry(resource_id: str, entry_id: str):
 def reindex_all_resources(remove_old_index, skip: list[str]):
     for resource in resource_queries.get_all_resources():
         if resource.resource_id not in skip:
-            _, gen = reindex_resource(resource.resource_id, remove_old_index)
+            old_index = get_current_index(resource.resource_id)
+            _, _, gen = reindex_resource(resource.resource_id)
+            if remove_old_index:
+                delete_index(old_index)
             # must exhaust the generator from reindex_resource for anything to happen...
             for _ in gen:
                 pass
