@@ -76,10 +76,17 @@ run:
 PORT ?= 8000
 NUM_WORKERS ?= 1
 
-GUNICORN_BASE = $(UV) gunicorn 'karp.api.main:create_app()' --control-socket run/gunicorn.ctl --worker-class asgi --workers $(NUM_WORKERS) --bind 127.0.0.1:$(PORT) --pid run/gunicorn.pid
+GUNICORN_BASE = $(UV) gunicorn 'karp.api.main:create_app()' \
+	--control-socket run/gunicorn.ctl \
+	--worker-class asgi \
+	--workers $(NUM_WORKERS) \
+	--bind 127.0.0.1:$(PORT) \
+	--pid run/gunicorn.pid
 
 serve: install-dev run
-	$(GUNICORN_BASE) --preload
+	# when using preload, each worker must discard the engine connection pool and create its own
+	# which is done in gunicorn.conf.py
+	$(GUNICORN_BASE) --preload --config src/karp/api/gunicorn.conf.py
 
 serve-w-reload: install-dev run
 	$(GUNICORN_BASE) --reload --graceful-timeout 1
