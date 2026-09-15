@@ -22,7 +22,7 @@ Follow the steps in [getting started](#getting-started).
 Use the CLI to create or modify resources, publish resources and do bulk editing.
 To view the CLI documentation, use:
 
-`karp-cli --help`
+`(uv run) karp-cli --help`
 
 The resource configuration is documented [here](docs/resource-config.md).
 
@@ -30,7 +30,7 @@ There is also a tutorial describing [creation of a resource](docs/add-resource.m
 
 ## Web API
 
-The API documentation for the current version is available [here](https://ws.spraakbanken.gu.se/ws/karp/v7/).
+The API documentation for the current version is available [here](https://ws.spraakbanken.gu.se/docs/karp).
 
 ### Editing
 
@@ -44,7 +44,7 @@ also available through the API.
 
 ### Searching
 
-Searching is done with our [custom query language](https://ws.spraakbanken.gu.se/ws/karp/v7/#section/Query-DSL).
+Searching is done with our [custom query language](https://ws.spraakbanken.gu.se/docs/karp#tag/Searching).
 
 Searching supports sorting and pagination.
 
@@ -54,7 +54,7 @@ This is the version 7 of Karp backend, [for the legacy version (v5)](https://git
 
 ## Dependencies
 
-We use [MariaDB](https://mariadb.org/) for storage and [Elasticsearch][es-download] for search.
+We use [MariaDB](https://mariadb.org/) for storage and [OpenSearch][opensearch-download] for search.
 
 ## Development
 
@@ -75,35 +75,58 @@ If neither `uv` is available or a virtual environment activated, the user must s
 
 1. First clone this repo: `git clone` or `gh repo clone` (if using github-cli).
 
-2. Install dependencies:
+2. Either create and activate a virtual environment or rely on a globally installed uv. Then install dependencies:
 
   `make dev` (or `make install-dev`)
 
+  It is possible to use a flag `NO_SENTENCE_TRANSFORMERS=1`, to avoid installing the `sentence_transformers` library (with Numpy, CUDA, Torch etc.), for example:
+
+  `NO_SENTENCE_TRANSFORMERS=1 make install-dev`, but since many other Makefile rules depend on install, make sure it remains configured always.
+
 3. Install MariaDB and create a database
 
-4. Setup environment variables (can be placed in a `.env` file in the root and then **?** `poetry run` sets those):
+4. Setup environment variables (can be placed in a `.env` file in the root):
    ```
    export DB_DATABASE=<name of database>
    export DB_USER=<database user>
    export DB_PASSWORD=<user's password>
    export DB_HOST=localhost
-   export AUTH_JWT_PUBKEY_PATH=/path/to/pubkey
+   export AUTH_JWT_PUBKEY_PATH=/path/to/pubkey (only neded to support SB AUTH JWT in header)
    ```
-5. Activate the virtual environment by running: `poetry shell`
-6. Run `karp-cli db up` to initialize database
-7. Run `make serve` or `make serve-w-reload` or `(uv run) uvicorn --factory karp.karp_v6_api.main:create_app` to start a development server.
+5. Run `(uv run) karp-cli db up` to initialize database
+6. Run `make serve` or `make serve-w-reload` or other method using the function `karp.api.main:create_app`.
 
-8. To setup Elasticsearch, [download][es-download] Elasticsearch 8.x and run the
-   following commands from the `elasticsearch-8.XXX` directory:
-   ```
-   bin/elasticsearch-plugin install analysis-icu
-   ```
-   Then run `bin/elasticsearch -Expack.security.enabled=false` to start it.
-9. Add environment variables
+7. Setup [OpenSearch](#opensearch)
+8. Add environment variables
 
 ```
-export ELASTICSEARCH_HOST=http://localhost:9200
+export OPENSEARCH_HOST=http://localhost:9200
 ```
+
+## Web server
+
+The default web server, used in Makefile, is Gunicorn. It is started with the flag `--preload`.
+This flag causes the master process to create the app before forking workers. This gives faster
+reload times, but makes it so that the master must be restarted more often, for example on code changes.
+It is especially important when using memory intensive resources, such as a language model (currently
+only done in plugins).
+
+The reason we want fast reload times is that the workers must be reloaded on every
+`reindex` and `publish` to clear caches.
+
+## OpenSearch
+
+OpenSearch comes in two editions, normal and minimal. Usually minimal is enough, but
+for vector search used in some plugins, normal is need.
+
+[Download][opensearch-download] OpenSearch 3.7.x and run the following command in the `opensearch-3.7.x` directory:
+```
+bin/opensearch-plugin install analysis-icu
+```
+
+Then run `bin/opensearch` to start it. The minimal version should start without issue, but for normal
+all plugins can be removed (except `opensearch-knn` and `analysis-icu`). After having removed
+the plugins, it should start.
 
 ## Create test resources
 
@@ -117,24 +140,22 @@ export ELASTICSEARCH_HOST=http://localhost:9200
 
 ### Python
 
-- Python >= 3.10
-- Poetry >= 1.3
+- Python
 - FastAPI
 - SQLAlchemy
 - Typer
-- Elasticsearch
-- Elasticsearch DSL
+- openSearch-py
 
 ### Databases
 
 - MariaDB
-- Elasticsearch
+- OpenSearch
 
 ### Type checking
 
 Run type checking with `make type-check` or just `basedpyright`.
 
-We use [basedpyright](https://docs.basedpyright.com/) which is like [Pyright](https://microsoft.github.io/pyright/), but without a NodeJS dependency.
+We use [basedpyright](https://docs.basedpyright.com/), but [Pyright](https://microsoft.github.io/pyright/) should work.
 
 Currently actual type checking is only done on selected files, but basedpyright provides "syntax and sematic errors" for all files.
 
@@ -169,16 +190,11 @@ Run them by: `make all-tests`
 
 ### Linting and formatting
 
-Linting and formatting is done by [`ruff`](https://beta.ruff.rs/docs/).
+Linting and formatting is done by [`ruff`](https://beta.ruff.rs/docs/). Settings are in `ruff.toml`.
 
-Run linter with `make lint`. Settings are in `ruff.toml`.
+Run linter with `make lint`.
 
-Run formatter with `make fmt`, check if formatting is needed `make check-fmt`.
-
-Usual commands for `ruff` is:
-
-- `ruff --fix <path>` tries to fix linting problems.
-- `ruff --add-noqa <path>` add noqa:s (silence lint) to each line that needs
+Run formatter with `make fmt`.
 
 ### Version handling
 
@@ -186,4 +202,4 @@ Update version in the following files:
 - [`pyproj.toml`](pyproject.toml)
 - [`karp.main.config`](src/karp/main/config.py)
 
-[es-download]: https://www.elastic.co/downloads/elasticsearch
+[opensearch-download]: https://opensearch.org/

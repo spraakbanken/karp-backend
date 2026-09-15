@@ -1,11 +1,18 @@
+import logging
+import os
 import re
+
+# loading the model shows a progress bar unless this is done
+os.environ["HF_HUB_DISABLE_PROGRESS_BARS"] = "1"
 
 from sentence_transformers import SentenceTransformer
 
-from karp.globals import es
+from karp.globals import os_client
 
 from .plugin import Plugin
 
+# remove warnings about being unauthenticated
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 kbmodel = SentenceTransformer("KBLab/sentence-bert-swedish-cased")
 
 
@@ -41,11 +48,10 @@ def get_text(entry):
 
 
 class NearestNeighboursPlugin(Plugin):
-    def output_config(self, **resource):
+    def output_config(self, **_kwargs):
         config = {
             "collection": True,
             "type": "string",
-            #    "flatten_params": False,
         }
         return config
 
@@ -55,15 +61,18 @@ class NearestNeighboursPlugin(Plugin):
                 "path": "so.huvudbetydelser",
                 "query": {
                     "knn": {
-                        "query_vector": bertvector,
-                        "field": "so.huvudbetydelser._bertvector",
-                        "k": 10,
-                        "num_candidates": 500,
-                        "filter": {
-                            "match": {
-                                "ordklass": ordklass,
-                            }
-                        },
+                        "so.huvudbetydelser._bertvector": {
+                            "vector": bertvector,
+                            "k": 10,
+                            # TODO not supported in OpenSearch?
+                            # "num_candidates": 500,
+                            # possibly: "method_parameters": {"ef_search": 500},
+                            "filter": {
+                                "match": {
+                                    "ordklass": ordklass,
+                                }
+                            },
+                        }
                     }
                 },
                 "inner_hits": {
@@ -73,9 +82,9 @@ class NearestNeighboursPlugin(Plugin):
                 },
             }
         }
-        # https://www.elastic.co/docs/reference/query-languages/query-dsl/query-dsl-knn-query#knn-query-filtering
+        # https://docs.opensearch.org/latest/query-dsl/specialized/k-nn/index/
 
-        res = es.search(size=11, query=query, index=resource)
+        res = os_client.search(size=11, body={"query": query}, index=resource)
 
         hits = []
         for item in res["hits"]["hits"]:
@@ -85,17 +94,19 @@ class NearestNeighboursPlugin(Plugin):
                 homonr = str(item["_source"]["homografNr"])
 
             for item2 in item["inner_hits"]["so.huvudbetydelser"]["hits"]["hits"]:
-                # https://www.elastic.co/docs/reference/elasticsearch/rest-apis/retrieve-inner-hits
+                # https://docs.opensearch.org/latest/search-plugins/searching-data/inner-hits/
+                # or perhaps https://docs.opensearch.org/latest/vector-search/specialized-operations/nested-search-knn/
+                # TODO ??
                 num = item2["_nested"]["offset"]
                 score = item2["_score"]
-                hbet = item2["fields"]["so.huvudbetydelser"][0]
-                hits.append((homonr, orto, "xnr" + hbet["x_nr"][0], score))
+                hbet = item2["fields"]["so.huvudbetydelser.x_nr"][0]
+                hits.append((homonr, orto, "xnr" + hbet, score))
         return hits[1:]
 
 
 class BertVectorPlugin(Plugin):
-    def output_config(self, config):
-        config = {**config, "collection": True, "type": "dense_vector", "flatten_params": False}
+    def output_config(self):
+        config = {"collection": True, "type": "dense_vector", "flatten_params": False}
         return config
 
     def generate(self, ortografi, böjning, betydelse, **kwargs):

@@ -18,6 +18,8 @@ help:
 	@echo ""
 	@echo "serve | serve-w-reload"
 	@echo "   start web server"
+	@echo "reload"
+	@echo "   restart web server gracefully"
 	@echo ""
 	@echo "lint"
 	@echo "   lint the code"
@@ -45,12 +47,15 @@ else
 	@:
 endif
 
+# Make it possible to exclude the sentence_transformers library by setting NO_SENTENCE_TRANSFORMERS
+SENTENCE_TRANSFORMERS = $(if $(filter 1,$(NO_SENTENCE_TRANSFORMERS)),,--group sentence_transformers)
+
 install: ensure-uv
-	uv sync --no-dev
+	uv sync --no-dev --group prod $(SENTENCE_TRANSFORMERS)
 
 dev: install-dev
 install-dev: ensure-uv
-	uv sync
+	uv sync --group prod $(SENTENCE_TRANSFORMERS)
 
 init-db:
 	${UV} alembic upgrade head
@@ -63,13 +68,36 @@ src/karp/search/domain/query_dsl/karp_query_parser.py: grammars/query.ebnf
 src/karp/search/domain/query_dsl/karp_query_model.py: grammars/query.ebnf
 	${UV} tatsu --object-model $< > $@
 
-.PHONY: serve
-serve: install-dev
-	${UV} uvicorn --factory karp.api.main:create_app
+run:
+	mkdir run
 
-.PHONY: serve-w-reload
-serve-w-reload: install-dev
-	${UV} uvicorn --reload --factory karp.api.main:create_app
+.PHONY: serve serve-w-reload
+
+PORT ?= 8000
+NUM_WORKERS ?= 1
+
+GUNICORN_BASE = $(UV) gunicorn 'karp.api.main:create_app()' \
+	--control-socket run/gunicorn.ctl \
+	--worker-class asgi \
+	--workers $(NUM_WORKERS) \
+	--bind 127.0.0.1:$(PORT) \
+	--pid run/gunicorn.pid
+
+serve: install-dev run
+	# when using preload, each worker must discard the engine connection pool and create its own
+	# which is done in gunicorn.conf.py
+	$(GUNICORN_BASE) --preload --config src/karp/api/gunicorn.conf.py
+
+serve-w-reload: install-dev run
+	$(GUNICORN_BASE) --reload --graceful-timeout 1
+
+.PHONY: reload
+reload: run/gunicorn.ctl
+	$(UV) gunicornc -s run/gunicorn.ctl -c "reload"
+
+run/gunicorn.ctl:
+	@echo "Cannot find gunicorn control socket, have you run make serve(-w-reload)?"
+	@exit 1
 
 unit_test_dirs := tests/unit
 e2e_test_dirs := tests/e2e

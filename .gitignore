@@ -127,3 +127,6 @@ sketch/
 
 # /docs/karp-backend*/docs/system-overview/
 /tags
+
+# gunicorn process files
+run

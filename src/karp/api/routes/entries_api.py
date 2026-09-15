@@ -9,7 +9,7 @@ from fastapi import (
 )
 from starlette import responses
 
-from karp import auth
+from karp import auth, search_commands
 from karp.api import dependencies as deps
 from karp.api import schemas
 from karp.auth import User
@@ -65,6 +65,33 @@ def check_resource(resource_id: str, user: auth.User, level: auth.PermissionLeve
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions",
         )
+
+
+@router.post(
+    "/reindex/{resource_id}/{entry_id}",
+    response_model=schemas.EntryAddResponse,
+    tags=["Editing"],
+    responses=crud_responses,
+)
+def reindex_entry(
+    resource_id: str,
+    entry_id: UniqueId,
+    user: User = Depends(deps.get_user),
+):
+    check_resource(resource_id, user)
+    try:
+        search_commands.reindex_entry(resource_id, entry_id)
+    except errors.EntryNotFound:
+        return responses.JSONResponse(
+            status_code=404,
+            content={
+                "error": f"Entry '{entry_id}' not found in resource '{resource_id}' (version=latest)",
+                "errorCode": karp_errors.ClientErrorCodes.ENTRY_NOT_FOUND,
+                "resource": resource_id,
+                "entry_id": entry_id.str,
+            },
+        )
+    return schemas.EntryAddResponse(newID=entry_id)
 
 
 @router.get("/{resource_id}/{entry_id}", summary="Get entry", tags=["History"], responses=history_responses)

@@ -125,6 +125,11 @@ class EntryRepository:
         row = query.first()
         return self._history_row_to_entry(row) if row else None
 
+    def count_all_entries(self) -> int:
+        stmt = self._stmt_latest_not_discarded()
+        stmt = sql.select(sa.func.count()).select_from(stmt)
+        return session.execute(stmt).scalar_one()
+
     def all_entries(self, last_modified: int | None = None) -> typing.Iterable[Entry]:
         stmt = self._stmt_latest_not_discarded(last_modified=last_modified)
         query = session.execute(stmt).scalars()

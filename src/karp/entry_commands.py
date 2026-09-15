@@ -14,7 +14,7 @@ from karp.lex.domain.errors import EntryNotFound, ResourceNotFound
 from karp.lex.infrastructure.sql import resource_repository
 from karp.lex.infrastructure.sql.entries import EntryRepository
 from karp.search.domain.index_entry import IndexEntry
-from karp.search.infrastructure.es import indices as es_index
+from karp.search.infrastructure.opensearch import indices as es_index
 from karp.search.infrastructure.transformers import entry_transformer
 
 
@@ -86,6 +86,7 @@ class EntryCommands:
 
             if chunk_size > 0 and i % chunk_size == 0:
                 self.added_entries[resource_id].extend(created_db_entries)
+                created_db_entries = []
                 self._commit()
 
         self.added_entries[resource_id].extend(created_db_entries)
@@ -215,6 +216,7 @@ class EntryCommands:
             resource = self._get_resource(resource_id)
             index_entries = self._transform_entries(resource.config, entry_dtos)
             es_index.add_entries(resource.resource_id, index_entries)
+            es_index.refresh_index(resource.resource_id)
         self.added_entries.clear()
 
         for resource_id, entry_ids in self.deleted_entries.items():
