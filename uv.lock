@@ -49,16 +49,16 @@ wheels = [
 
 [[package]]
 name = "asgi-matomo"
-version = "0.6.2"
+version = "0.7.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asgiref" },
     { name = "httpx" },
     { name = "matomo-core" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/4e/7c4e01589e520bbf08e5aa3395758e38f630b6c121c1139987ff68768c00/asgi_matomo-0.6.2.tar.gz", hash = "sha256:a3aa46ba3dfae92d195826179428d794422c137504d847199012a1f297aaebaf", size = 7450, upload-time = "2026-03-03T13:01:33.724Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/29/1d/41b7e475532626b809529c94a982062fd51017681e932b67e33edf09691d/asgi_matomo-0.7.0.tar.gz", hash = "sha256:648d5eff2ca31113a7f6156c81d3ea086d3cf6672f810bd3152dc48cbc0df27f", size = 7646, upload-time = "2026-09-11T12:33:48.064Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/df/fb0ae3dd9d76f856707ab8f2a53ffb95731a0f93e0e97b41a5e0607587ea/asgi_matomo-0.6.2-py3-none-any.whl", hash = "sha256:84ff688a416a9ce4bc5e832fe628634f5b2d269b9e77e72f971147f297a2d24c", size = 8470, upload-time = "2026-03-03T13:01:32.422Z" },
+    { url = "https://files.pythonhosted.org/packages/18/e4/a4b87002686e126365adea8c5f8e1c22c893fae186fa102b6c664f21bc39/asgi_matomo-0.7.0-py3-none-any.whl", hash = "sha256:d72612bfbf90760ad0bdb1d7221bf6db4cf9b791be0a210d25672a90e1823175", size = 8487, upload-time = "2026-09-11T12:33:46.711Z" },
 ]
 
 [[package]]
@@ -760,7 +760,7 @@ sentence-transformers = [
 [package.metadata]
 requires-dist = [
     { name = "alembic", specifier = "==1.17.2" },
-    { name = "asgi-matomo", specifier = "==0.6.2" },
+    { name = "asgi-matomo", specifier = "==0.7.0" },
     { name = "fastapi", specifier = "==0.138.1" },
     { name = "json-arrays", specifier = "==0.15.0" },
     { name = "opensearch-py" },
