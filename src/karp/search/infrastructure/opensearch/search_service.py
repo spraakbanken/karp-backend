@@ -448,11 +448,12 @@ def search_ids(resource_id: str, entry_ids: list[str]):
 
 
 def statistics(resource_id: str, field: str) -> Iterable:
+
     s = opensearchpy.Search(using=os_client, index=mapping_repo.alias_to_index(resource_id))
     s = s[:0]
 
     # if field is analyzed, do aggregation on the "raw" multi-field
-    field_setting = mapping_repo.get_field((resource_id,), field, allow_missing=True)
+    field_setting = mapping_repo.get_field((resource_id,), field)
     if field_setting and field_setting.analyzed:
         agg_field = field + ".raw"
     else:
@@ -492,7 +493,7 @@ def statistics(resource_id: str, field: str) -> Iterable:
 
     try:
         response = s.execute()
-    except opensearchpy.RequestError as e:
+    except opensearchpy.exceptions.TransportError as e:
         if e.info["error"]["caused_by"]["type"] == "too_many_buckets_exception":
             raise KarpError("Too many unique values for statistics") from None
         else:
