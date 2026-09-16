@@ -492,8 +492,8 @@ def statistics(resource_id: str, field: str) -> Iterable:
 
     try:
         response = s.execute()
-    except opensearchpy.BadRequestError as e:
-        if e.body["error"]["caused_by"]["type"] == "too_many_buckets_exception":
+    except opensearchpy.RequestError as e:
+        if e.info["error"]["caused_by"]["type"] == "too_many_buckets_exception":
             raise KarpError("Too many unique values for statistics") from None
         else:
             raise e
