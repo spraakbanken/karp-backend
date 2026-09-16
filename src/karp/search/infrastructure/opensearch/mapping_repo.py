@@ -133,7 +133,7 @@ def get_non_nested_children(resources: tuple[str, ...], field_path: str) -> Iter
 
 
 @functools.cache
-def get_field(resource_ids: tuple[str, ...], field_name: str, allow_missing: bool = False) -> Field | None:
+def get_field(resource_ids: tuple[str, ...], field_name: str) -> Field | None:
     if field_name == "@id":
         return Field(path=["_id"], type="keyword")
     if field_name[0] == "@":
@@ -145,9 +145,6 @@ def get_field(resource_ids: tuple[str, ...], field_name: str, allow_missing: boo
 
     if fields.count(fields[0]) != len(fields):
         raise IncompatibleResources(field=field_name)
-
-    if allow_missing and (len(fields) == 0 or fields[0] is None):
-        return None
 
     if None in fields:
         # the field does not exist in at least one of the selected resources
