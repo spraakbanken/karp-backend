@@ -494,10 +494,11 @@ def statistics(resource_id: str, field: str) -> Iterable:
     try:
         response = s.execute()
     except opensearchpy.exceptions.TransportError as e:
-        if e.info["error"]["caused_by"]["type"] == "too_many_buckets_exception":
+        error_type = e.info.get("error", {}).get("caused_by", {}).get("type") if isinstance(e.info, dict) else None
+        if error_type == "too_many_buckets_exception":
             raise KarpError("Too many unique values for statistics") from None
-        else:
-            raise e
+        raise
+
     logger.debug("Elasticsearch response", extra={"response": response})
     agg_response = response.aggregations
     if nest_levels:
