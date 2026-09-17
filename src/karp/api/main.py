@@ -1,7 +1,5 @@
-import io
 import logging
 import traceback
-from contextlib import redirect_stdout
 from typing import Any
 
 from asgi_matomo import MatomoMiddleware
@@ -236,22 +234,8 @@ def create_app() -> FastAPI:
         return response
 
     if app_context.settings["tracking.matomo.url"]:
-
-        class MatomoAdapterMiddleware(MatomoMiddleware):
-            """
-            Silence printouts from MatomoMiddleware
-            """
-
-            async def startup(self) -> None:
-                with redirect_stdout(io.StringIO()):
-                    await super().startup()
-
-            async def shutdown(self) -> None:
-                with redirect_stdout(io.StringIO()):
-                    await super().shutdown()
-
         app.add_middleware(
-            MatomoAdapterMiddleware,
+            MatomoMiddleware,
             idsite=app_context.settings["tracking.matomo.idsite"],
             matomo_url=app_context.settings["tracking.matomo.url"],
             access_token=app_context.settings["tracking.matomo.token"],
