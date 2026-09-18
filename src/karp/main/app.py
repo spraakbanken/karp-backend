@@ -24,6 +24,7 @@ def bootstrap_app() -> AppContext:
         "tracking.matomo.idsite": env("TRACKING_MATOMO_IDSITE", None),
         "tracking.matomo.url": env("TRACKING_MATOMO_URL", None),
         "tracking.matomo.token": env("TRACKING_MATOMO_TOKEN", None),
+        "api_version": env("API_VERSION", None),
     }
 
     return AppContext(settings)

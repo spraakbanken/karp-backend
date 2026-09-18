@@ -30,7 +30,11 @@ There is also a tutorial describing [creation of a resource](docs/add-resource.m
 
 ## Web API
 
-The API documentation for the current version is available [here](https://ws.spraakbanken.gu.se/docs/karp).
+The API documentation for the latest version is available [here](https://ws.spraakbanken.gu.se/docs/karp).
+
+Set the environment variable `API_VERSION` to `7` to use version `7` of the API, omit or set to
+anything except `7`to use the latest version of the API which is `8` (still in development). Tests are
+only compatible with the latest API version.
 
 ### Editing
 

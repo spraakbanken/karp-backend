@@ -11,5 +11,6 @@ class Scope(str, enum.Enum):
 
 
 class ResourcePermissionDto(pydantic.BaseModel):
+    # TODO remove when v7 is removed
     resource_id: str
     protected: typing.Optional[Scope]

@@ -160,12 +160,10 @@ def _generate_batch_outer(config: Field, batch: Iterable) -> Iterable[Dict]:
     return result
 
 
-def register_routes(resources: Iterable[ResourceDto]):
+def register_routes(router, resources: Iterable[ResourceDto]):
     """
     Check if any resource has declared a plugin on top-level and register that plugin's routes
     """
-    from karp.api.routes import router
-
     routes_added = False
     for resource in resources:
         for plugin_name, plugin_params in resource.config.plugins.items():
