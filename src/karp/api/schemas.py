@@ -37,6 +37,7 @@ class EntryPreviewResponse(BaseModel):
 
 
 class ResourcePublic(BaseModel):
+    # TODO remove when v7 is removed
     id: unique_id.UniqueIdStr
     resource_id: str
     name: str
@@ -48,6 +49,7 @@ class ResourcePublic(BaseModel):
 
 
 class ResourceProtected(ResourcePublic):
+    # TODO remove when v7 is removed
     last_modified_by: str
 
 

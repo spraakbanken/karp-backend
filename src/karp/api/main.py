@@ -3,14 +3,14 @@ import traceback
 from typing import Any
 
 from asgi_matomo import MatomoMiddleware
-from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi import APIRouter, FastAPI, HTTPException, Request, Response, status
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 
 from karp import main
-from karp.api.routes import router as api_router
+from karp.api.routes import register_routes
 from karp.auth import errors as auth_errors
 from karp.foundation import errors as foundation_errors
 from karp.globals import new_session
@@ -116,7 +116,7 @@ def create_app() -> FastAPI:
         description="""Karp is Språkbanken's tool for editing structural data.\n\nThe
         main goal of Karp is to be great for working with **lexical** data, but will work with 
         other data as well.\n\n[Read more here](https://github.com/spraakbanken/karp-backend/blob/release/docs/index.md)""",
-        redoc_url=None,
+        redoc_url="/docs",
         docs_url=None,
         version=config.VERSION,
         openapi_tags=tags_metadata,
@@ -136,7 +136,9 @@ def create_app() -> FastAPI:
     # add all plugin API routes
     with new_session():
         published_resources = resource_queries.get_published_resources()
-    plugin_routes_added = plugin.register_routes(published_resources)
+    router = APIRouter()
+    app.include_router(router)
+    plugin_routes_added = plugin.register_routes(router, published_resources)
 
     if plugin_routes_added:
         app.openapi_tags.append(
@@ -146,7 +148,9 @@ def create_app() -> FastAPI:
             }
         )
 
-    app.include_router(api_router)
+    app_context.settings["tracking.matomo.url"]
+
+    register_routes(router, api_version=app_context.settings["api_version"])
 
     from karp.main.errors import KarpError
 

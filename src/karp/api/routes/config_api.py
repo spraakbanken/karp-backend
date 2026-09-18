@@ -5,7 +5,6 @@ import pydantic
 from fastapi import (
     APIRouter,
     Depends,
-    Query,
 )
 
 from karp import auth
@@ -100,38 +99,22 @@ class ResourceConfigResponse(BaseModel):
     response_model=typing.List[ResourceConfigResponse],
     response_model_exclude_defaults=True,
     description="""
-    Configuration for resources. Only return resources with `protected_metadata == true` if the user is authenticated and
-    has READ access to resource.
+    Configuration for resources. Returns all resources except those with `protected_metadata == true`.
     
-    By default return only resources with unprotected metadata, use flags `include_protected_metadata` and `include_unprotected_metadata`
-    to include/exclude protected/unprotected metadata.
+    If `protected_metadata == true`", the configuration is only returned when a user is authenticated and has access.
     """,
 )
 def get_config(
     user: auth.User = Depends(deps.get_user_optional),
-    include_protected_metadata: bool = Query(
-        False,
-        title="include protected metadata",
-        description="Include/exclude resources with protected metadata. Only returns data for authenticated users which access.",
-    ),
-    include_open_metadata: bool = Query(
-        True,
-        title="include open metadata",
-        description="Include/exclude resources with open metadata.",
-    ),
 ):
     resources = resource_repository.get_published_resources()
     res = []
     for resource in resources:
-        if (
-            # protected_metadata - check if user has access to the configuration of this resource
-            resource.config.protected_metadata
-            and include_protected_metadata
-            and resource_permissions.has_permission(PermissionLevel.read, user, [resource.resource_id])
-        ) or (
-            # resource does not have protected metadata and is requested
-            not resource.config.protected_metadata and include_open_metadata
+        if resource.config.protected_metadata and not resource_permissions.has_permission(
+            PermissionLevel.read, user, [resource.resource_id]
         ):
-            transformed_config = transform_config(resource.config)
-            res.append(ResourceConfigResponse.from_resource_config(transformed_config))
+            # user does not have access to the configuration of this resource
+            continue
+        transformed_config = transform_config(resource.config)
+        res.append(ResourceConfigResponse.from_resource_config(transformed_config))
     return res
