@@ -240,6 +240,9 @@ def create_app() -> FastAPI:
             matomo_url=app_context.settings["tracking.matomo.url"],
             access_token=app_context.settings["tracking.matomo.token"],
         )
+        from asgi_matomo.background import BackgroundTaskMiddleware
+
+        app.add_middleware(BackgroundTaskMiddleware)
     else:
         logger.warning("Tracking to Matomo is not enabled, please set TRACKING_MATOMO_URL.")
 
