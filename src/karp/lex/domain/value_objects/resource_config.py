@@ -41,6 +41,7 @@ class Field(BaseModel):
     searchable: bool = True  # only for virtual fields at the moment
     skip_raw: Optional[bool] = False  # for strings only
     additional_properties: bool = True
+    label: dict[str, str] | str | None = None
 
     def nested_fields(self, prefix):
         yield ".".join(prefix)

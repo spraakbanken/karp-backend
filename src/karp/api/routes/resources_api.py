@@ -67,6 +67,7 @@ class FieldConfigResponse(BaseModel):
                 collection=field.collection,
                 virtual=field.virtual,
                 searchable=field.searchable,
+                label=field.label,
             )
             if field.type == "object":
                 res[key].fields = FieldConfigResponse.from_field_config(field.fields)
