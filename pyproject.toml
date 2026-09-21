@@ -25,7 +25,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-prod = ["gunicorn>=25.1.0,<26.0.0", "uvloop>=0.22.1"]
+prod = ["gunicorn<27.0.0", "uvloop>=0.22.1"]
 sentence_transformers = ["sentence_transformers==5.6.0"]
 dev = [
     "pytest",
@@ -56,6 +56,8 @@ karp-cli = "karp.cliapp.main:cliapp"
 
 [tool.uv]
 package = true
+exclude-newer = "30 days"
+exclude-newer-package = { asgi-matomo = false }
 
 [tool.uv.sources]
 sb-json-tools = { git = "https://github.com/spraakbanken/python-json-tools.git" }

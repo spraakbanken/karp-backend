@@ -58,7 +58,7 @@ def problem_config() -> dict:
             "internal_comment": {"type": "string"},
         },
         "sort": "constructionID",
-        "protected": {"read": False},
+        "protected": False,
         "id": "constructionID",
     }
 

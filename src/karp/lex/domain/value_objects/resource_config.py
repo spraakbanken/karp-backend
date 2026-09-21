@@ -22,13 +22,42 @@ class BaseModel(pydantic.BaseModel):
         return updated.model_validate(updated.model_dump())
 
 
+class Field(BaseModel):
+    # TODO split this up into one class per type, to allow for better validation
+    type: Optional[str] = None  # required except for virtual fields
+    required: bool = False
+    collection: bool = False
+    # the field will be indexed, but not retreivable
+    store: bool = True  # only for virtual fields
+    virtual: bool = False
+    plugin: Optional[str] = None
+    params: dict[str, Any] = {}
+    field_params: dict[str, str | list[str]] = {}
+    fields: Optional[dict[str, "Field"]] = None
+    hidden: bool = False  # only for virtual fields at the moment
+    flatten_params: bool = False
+    allow_missing_params: bool = False
+    cache_plugin_expansion: bool = True
+    searchable: bool = True  # only for virtual fields at the moment
+    skip_raw: Optional[bool] = False  # for strings only
+    additional_properties: bool = True
+    label: dict[str, str] | str | None = None
+
+    def nested_fields(self, prefix):
+        yield ".".join(prefix)
+        if self.type == "object":
+            for field, config in self.fields.items():
+                yield from config.nested_fields(prefix + [field])
+
+
 class ResourceConfig(BaseModel):
     resource_id: str
     resource_name: Optional[str] = None
-    fields: dict[str, "Field"]
+    fields: dict[str, Field]
     plugins: dict[str, dict[str, str]] = {}
     sort: Optional[str | list[str]] = None  # TODO what does it mean if it's a list?
-    protected: dict[str, bool] = {}
+    protected: bool | dict[str, bool] = False
+    protected_metadata: bool = False
     id: Optional[str] = None
     additional_properties: bool = True
     config_str: str
@@ -102,30 +131,3 @@ class ResourceConfig(BaseModel):
                 result += 1
 
         return result
-
-
-class Field(BaseModel):
-    # TODO split this up into one class per type, to allow for better validation
-    type: Optional[str] = None  # required except for virtual fields
-    required: bool = False
-    collection: bool = False
-    # the field will be indexed, but not retreivable
-    store: bool = True  # only for virtual fields
-    virtual: bool = False
-    plugin: Optional[str] = None
-    params: dict[str, Any] = {}
-    field_params: dict[str, str | list[str]] = {}
-    fields: Optional[dict[str, "Field"]] = None
-    hidden: bool = False  # only for virtual fields at the moment
-    flatten_params: bool = False
-    allow_missing_params: bool = False
-    cache_plugin_expansion: bool = True
-    searchable: bool = True  # only for virtual fields at the moment
-    skip_raw: Optional[bool] = False  # for strings only
-    additional_properties: bool = True
-
-    def nested_fields(self, prefix):
-        yield ".".join(prefix)
-        if self.type == "object":
-            for field, config in self.fields.items():
-                yield from config.nested_fields(prefix + [field])

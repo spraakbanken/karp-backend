@@ -1,33 +1,15 @@
 import typing
 
-from karp.auth.application.resources import ResourcePermissionDto
 from karp.auth.domain.user import User
 from karp.foundation.value_objects.permission_level import PermissionLevel
 from karp.lex.infrastructure.sql import resource_repository
-
-
-def get_resource_permissions() -> typing.List[ResourcePermissionDto]:
-    resource_permissions = []
-    for resource in resource_repository.get_published_resources():
-        protected_conf = resource.config.protected
-        if not protected_conf:
-            protected = None
-        elif protected_conf.get("admin"):
-            protected = "ADMIN"
-        elif protected_conf.get("write"):
-            protected = "WRITE"
-        else:
-            protected = "READ"
-        resource_permissions.append(ResourcePermissionDto(resource_id=resource.resource_id, protected=protected))
-
-    return resource_permissions
 
 
 def _is_resource_protected(resource_id: str, level: PermissionLevel) -> bool:
     if level in [PermissionLevel.write, PermissionLevel.admin]:
         return True
     resource = resource_repository.by_resource_id(resource_id=resource_id)
-    return resource.config.protected.get("read", False)
+    return resource.config.protected
 
 
 def has_permission(
