@@ -28,7 +28,7 @@ class ResourceConfig(BaseModel):
     fields: dict[str, "Field"]
     plugins: dict[str, dict[str, str]] = {}
     sort: Optional[str | list[str]] = None  # TODO what does it mean if it's a list?
-    protected: dict[str, bool] = {}
+    protected: bool | dict[str, bool] = False
     protected_metadata: bool = False
     id: Optional[str] = None
     additional_properties: bool = True

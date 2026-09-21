@@ -28,5 +28,5 @@ fields:
   code: {type: integer, required: true}
   link: {type: string}
 sort: name
-protected: {read: true}
+protected: true
 id: code

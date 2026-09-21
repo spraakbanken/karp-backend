@@ -108,7 +108,7 @@ class ResourceConfigResponse(BaseModel):
             resource_name={"swe": config.resource_name} if config.resource_name else None,
             fields=FieldConfigResponse.from_field_config(config.fields),
             sort=sort,
-            protected=config.protected.get("read", False),
+            protected=config.protected.get("read", False) if isinstance(config.protected, dict) else config.protected,
             protected_metadata=config.protected_metadata,
             id=config.id,
         )
