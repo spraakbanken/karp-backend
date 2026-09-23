@@ -8,6 +8,8 @@ import typer
 from typer.core import TyperGroup
 
 from karp.cliapp.utility import cli_error_handler, cli_timer
+from karp.lex import ResourceConfig
+from karp.lex.domain.entities.resource import Resource
 
 
 class OrderCommands(TyperGroup):
@@ -233,6 +235,10 @@ def list_resources(
     show_current_index: Optional[bool] = typer.Option(
         True, "--show-current-index/--show-all-indices", help="Shows current or all indices associated with resource."
     ),
+    show_validity: Optional[bool] = typer.Option(
+        False,
+        help="Show if the current config is valid or not. If there are invalid configurations published, the backend cannot start.",
+    ),
     resource_filter: list[str] = typer.Argument(
         default_factory=list,
         metavar="RESOURCE_ID",
@@ -253,6 +259,9 @@ def list_resources(
 
     headers = ["resource_id", "version"]
 
+    if show_validity:
+        headers.append("valid")
+
     if show_published:
         result = resource_repository.get_published_resources()
     else:
@@ -269,6 +278,9 @@ def list_resources(
 
     resource_matcher = _get_resource_id_matcher(resource_filter)
 
+    def is_valid(resource: Resource) -> bool:
+        return ResourceConfig.from_str(resource.config_str, check=False) is not None
+
     if not json_output:
         rows = []
         for resource in result:
@@ -276,6 +288,8 @@ def list_resources(
                 continue
 
             row = [resource.resource_id, resource.version]
+            if show_validity:
+                row.append("yes" if is_valid(resource) else "no")
             if not show_published:
                 # only show published column when showing all
                 row.append("published" if resource.is_published else "unpublished")
@@ -312,6 +326,8 @@ def list_resources(
             obj = {}
             obj["resource_id"] = resource.resource_id
             obj["version"] = resource.version
+            if show_validity:
+                obj["valid"] = is_valid(resource)
             if not show_published:
                 # only show published field when showing all
                 obj["published"] = resource.is_published
@@ -339,14 +355,25 @@ def show(ctx: typer.Context, resource_id: str = resource_option, version: Option
     """
 
     from karp.cliapp.utility import tabulate
-    from karp.lex.application import resource_queries
+    from karp.lex.infrastructure.sql import resource_repository
 
-    resource = resource_queries.by_resource_id(resource_id, version=version)
+    resource = resource_repository.by_resource_id(resource_id, version=version)
 
-    typer.echo(tabulate(((key, value) for key, value in resource.dict().items() if key != "config")))
+    typer.echo(
+        tabulate(
+            (key, value)
+            for key, value in [("resource_id", resource.resource_id), ("is_published", resource.is_published)]
+        )
+    )
 
     typer.echo()
-    typer.echo(resource.config.config_str)
+    typer.echo(resource.config_str)
+
+    error = resource.check_validity()
+    if error:
+        typer.echo()
+        typer.echo("The configuration is NOT valid! Errors:")
+        typer.echo(str(error))
 
 
 @subapp.command()

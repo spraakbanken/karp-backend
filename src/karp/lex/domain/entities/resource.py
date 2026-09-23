@@ -1,6 +1,9 @@
 import enum
 import typing
+from functools import cached_property
 from typing import Any, Optional
+
+from pydantic import ValidationError
 
 from karp.foundation import timings
 from karp.foundation.entity import Entity
@@ -21,33 +24,43 @@ class Resource(Entity):
         self,
         *,
         id: unique_id.UniqueId,  # noqa: A002
-        config: ResourceConfig,
+        resource_id: str,
+        name: str,
         message: str,
         table_name: str,
+        config_str: str | None = None,
+        config: ResourceConfig | None = None,
         version: int = 1,
         op: ResourceOp = ResourceOp.ADDED,
         is_published: bool = False,
         **kwargs,
     ):
         super().__init__(id=unique_id.UniqueId.validate(id), version=version, **kwargs)
+        self.resource_id = resource_id
+        self.name = name
         self.is_published = is_published
-        self.config = config
+        if config_str:
+            self.config_str = config_str
+        elif config:
+            self.config_str = config.config_str
+            self.config = config
+        else:
+            raise ValueError("use either config_str or config")
         self._message = message
         self._op = op
         self._entry_schema = None
         self.table_name = table_name
 
-    @property
-    def resource_id(self) -> str:
-        return self.config.resource_id
+    @cached_property
+    def config(self) -> ResourceConfig:
+        return ResourceConfig.from_str(self.config_str)
 
-    @property
-    def name(self):
-        return self.config.resource_name
-
-    @property
-    def config_str(self):
-        return self.config.config_str
+    def check_validity(self) -> ValidationError | None:
+        try:
+            self.config  # noqa B018
+        except ValidationError as e:
+            return e
+        return None
 
     @property
     def message(self):
@@ -85,10 +98,12 @@ class Resource(Entity):
         timestamp: Optional[float] = None,
         message: Optional[str] = None,
     ) -> bool:
-        if self.config == config:
+        # the old configuration might not be valid anymore when migration is done
+        config_model = ResourceConfig.from_str(self.config_str, check=False)
+        if config_model == config:
             return False
         self._update_metadata(timestamp, user, message or "updating", version)
-        self.config = config
+        self.config_str = config.config_str
         return True
 
     def _update_metadata(self, timestamp: Optional[float], user: str, message: str, version: Optional[int]):
@@ -199,6 +214,8 @@ def create_resource(
     table_name = f"{resource_id}_{id}"
     resource = Resource(
         id=id,
+        resource_id=config.resource_id,
+        name=config.resource_name,
         config=config,
         table_name=table_name,
         message=message or "Resource added.",

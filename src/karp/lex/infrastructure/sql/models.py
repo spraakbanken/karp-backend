@@ -18,7 +18,6 @@ from karp.db_infrastructure.types import ULIDType
 from karp.lex.domain import entities
 from karp.lex.domain.entities.entry import EntryOp, EntryStatus
 from karp.lex.domain.entities.resource import ResourceOp
-from karp.lex.domain.value_objects import ResourceConfig
 
 Base = declarative_base()
 
@@ -77,16 +76,12 @@ class ResourceModel(Base):
         )
 
     def to_entity(self) -> entities.Resource:
-        # Only needed to handle resources that were created/updated
-        # before ResourceConfig had resource_id and resource_name fields
-        extra = {"resource_id": self.resource_id}
-        if self.name:
-            extra["resource_name"] = self.name
-
         return entities.Resource(
             id=self.entity_id,
+            resource_id=self.resource_id,
+            name=self.name,
             version=self.version,
-            config=ResourceConfig.from_str(self.config_str, extra=extra),
+            config_str=self.config_str,
             table_name=self.table_name,
             is_published=self.is_published,
             last_modified=self.last_modified,
