@@ -1,0 +1,5 @@
+#!/bin/sh
+
+# when using preload, each worker must discard the engine connection pool and create its own
+# which is done in gunicorn.conf.py
+exec "$(dirname "$0")/gunicorn" --preload --config src/karp/api/gunicorn.conf.py "$@"

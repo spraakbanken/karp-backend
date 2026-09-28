@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+mkdir -p $(dirname "$0")/run
+
+PORT="${PORT:-8000}"
+NUM_WORKERS="${NUM_WORKERS:-1}"
+
+exec uv run gunicorn 'karp.api.main:create_app()' \
+	--control-socket run/gunicorn.ctl \
+	--worker-class asgi \
+	--workers ${NUM_WORKERS} \
+	--bind 127.0.0.1:${PORT} \
+	--pid run/gunicorn.pid \
+    "$@"
