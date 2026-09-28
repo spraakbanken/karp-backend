@@ -1,6 +1,6 @@
 import logging
 import typing
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import sqlalchemy as sa
 from sqlalchemy import Engine, sql
@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 class EntryRepository:
     def __init__(self, resource: Resource):
         self._name = resource.resource_id
-        self._config = resource.config
         self.resource = resource
         self.history_model = models.get_or_create_entry_history_model(resource.table_name)
 
@@ -46,10 +45,6 @@ class EntryRepository:
     @property
     def name(self) -> str:
         return self._name
-
-    @property
-    def config(self) -> Dict:
-        return self._config
 
     @property
     def _engine(self):

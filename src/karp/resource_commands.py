@@ -90,7 +90,6 @@ def delete_resource(resource_id):
     es_index.delete_index(resource_id)
 
     # drop resource table
-    resource = resource_repository.by_resource_id(resource_id)
     resource_repository.remove_resource_table(resource)
 
     # delete all rows from resource table associated with resource_id

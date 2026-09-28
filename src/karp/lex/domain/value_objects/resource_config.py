@@ -63,7 +63,7 @@ class ResourceConfig(BaseModel):
     config_str: str
 
     @classmethod
-    def from_str(cls, config_str, extra=None):
+    def from_str(cls, config_str, check=True):
         # If the config file is in JSON format, it might use tab
         # characters, which are not allowed in YAML 1.1.
         # This can be removed once PyYAML supports YAML 1.2.
@@ -71,9 +71,14 @@ class ResourceConfig(BaseModel):
 
         config_dict = yaml.load(config_str, Loader=yaml.CSafeLoader)
         config_dict["config_str"] = config_str
-        if extra:
-            config_dict.update(extra)
-        return cls.model_validate(config_dict)
+        try:
+            model = cls.model_validate(config_dict)
+        except pydantic.ValidationError:
+            if check:
+                raise
+            else:
+                model = None
+        return model
 
     @classmethod
     def from_path(cls, path) -> "ResourceConfig":

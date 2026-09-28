@@ -68,30 +68,12 @@ src/karp/search/domain/query_dsl/karp_query_parser.py: grammars/query.ebnf
 src/karp/search/domain/query_dsl/karp_query_model.py: grammars/query.ebnf
 	${UV} tatsu --object-model $< > $@
 
-run:
-	mkdir run
-
 .PHONY: serve serve-w-reload
+serve: install-dev
+	bin/serve
 
-PORT ?= 8000
-NUM_WORKERS ?= 1
-# put any extra flags needed for make serve here, (--root-path /karp/vX for example)
-PROD_FLAGS ?=
-
-GUNICORN_BASE = $(UV) gunicorn 'karp.api.main:create_app()' \
-	--control-socket run/gunicorn.ctl \
-	--worker-class asgi \
-	--workers $(NUM_WORKERS) \
-	--bind 127.0.0.1:$(PORT) \
-	--pid run/gunicorn.pid
-
-serve: install-dev run
-	# when using preload, each worker must discard the engine connection pool and create its own
-	# which is done in gunicorn.conf.py
-	$(GUNICORN_BASE) --preload --config src/karp/api/gunicorn.conf.py $(PROD_FLAGS)
-
-serve-w-reload: install-dev run
-	$(GUNICORN_BASE) --reload --graceful-timeout 1
+serve-w-reload: install-dev
+	bin/gunicorn --reload --graceful-timeout 1
 
 .PHONY: reload
 reload: run/gunicorn.ctl
