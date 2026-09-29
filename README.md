@@ -109,14 +109,25 @@ export OPENSEARCH_HOST=http://localhost:9200
 
 ## Web server
 
-The default web server, used in Makefile, is Gunicorn. It is started with the flag `--preload`.
-This flag causes the master process to create the app before forking workers. This gives faster
-reload times, but makes it so that the master must be restarted more often, for example on code changes.
-It is especially important when using memory intensive resources, such as a language model (currently
-only done in plugins).
+The default web server, is Gunicorn. Scripts for starting in different modes are in `bin/`. 
+
+#### `bin/serve`
+
+Production mode started with the flag `--preload`. This flag causes the master process to create the app 
+before forking workers. This gives faster reload times, but makes it so that the master must be restarted 
+more often, for example on code changes. It is especially important when using memory intensive resources,
+such as a language model (currently only done in plugins).
 
 The reason we want fast reload times is that the workers must be reloaded on every
 `reindex` and `publish` to clear caches.
+
+#### `bin/serve-w-reload`
+
+Developement server that will watch for code changes.
+
+#### `bin/reload`
+
+Signals the server process to reload all workers, using `gunicorn.ctl`.
 
 ## OpenSearch
 
