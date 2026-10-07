@@ -55,6 +55,8 @@ class Field:
 
 
 # these fields are searchable using the keys as identifiers, prefixed by "@"
+# in addition to these, @id is also searchable. Since the field _id is
+# created automatically by Opensearch, it is excluded from this dict
 internal_fields = {
     "last_modified_by": Field(path=["_last_modified_by"], type="keyword"),
     "last_modified": Field(path=["_last_modified"], type="date"),
