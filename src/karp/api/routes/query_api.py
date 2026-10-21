@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 
 from karp import auth
 from karp.api import dependencies as deps
+from karp.api.params import query_param
 from karp.auth.application import resource_permission_queries as resource_permissions
 from karp.lex.application import search_queries
 from karp.lex.domain.errors import ResourceNotFound
@@ -60,12 +61,7 @@ def query_stats(
         pattern=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
         description="A comma-separated list of resource identifiers",
     ),
-    q: Optional[str] = Query(
-        None,
-        title="query",
-        description="""The query. If missing, the number of entries in the chosen resource(s) 
-            will be returned. See [Query DSL](#section/Query-DSL)""",
-    ),
+    q: str | None = query_param,
     user: auth.User = Depends(deps.get_user_optional),
 ):
     resource_list = resources.split(",")
@@ -92,11 +88,7 @@ def query(
         pattern=r"^[a-z_0-9\-]+(,[a-z_0-9\-]+)*$",
         description="A comma-separated list of resource identifiers",
     ),
-    q: Optional[str] = Query(
-        None,
-        title="query",
-        description="The query. If missing, all entries in chosen resource(s) will be returned. See [Searching](#section/Searching)",
-    ),
+    q: str | None = query_param,
     from_: int = Query(0, alias="from", description="Specify which entry should be the first returned."),
     size: int = Query(25, description="Number of entries in page."),
     sort: str | None = Query(

@@ -25,3 +25,12 @@ def test_stats_w_auth(fa_data_client, read_token: AccessToken):  # noqa: ANN201
     entries = response.json()
     print(f"{entries=}")
     assert len(entries) == 4
+
+
+def test_stats_w_query(fa_data_client):
+    response = fa_data_client.get("/stats/places/area?q=equals|name|Rutvik")
+    assert response.status_code == status.HTTP_200_OK
+
+    entries = response.json()
+    print(f"{entries=}")
+    assert len(entries) == 1

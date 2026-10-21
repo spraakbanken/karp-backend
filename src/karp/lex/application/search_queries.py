@@ -76,5 +76,5 @@ def search_ids(resource_id: str, entry_ids: List[str], **kwargs):
     return _transform_result(None, result, **kwargs)
 
 
-def statistics(resource_id: str, field: str) -> Iterable:
-    return search_service.statistics(resource_id, field)
+def statistics(resource_id: str, field: str, q: str | None) -> Iterable:
+    return search_service.statistics(resource_id, field, q)

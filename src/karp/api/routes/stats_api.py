@@ -8,9 +8,11 @@ from fastapi import (
     HTTPException,
     status,
 )
+from pydantic.json_schema import SkipJsonSchema
 
 from karp import auth
 from karp.api import dependencies as deps
+from karp.api.params import query_param
 from karp.auth.application import resource_permission_queries as resource_permissions
 from karp.foundation.value_objects import PermissionLevel
 from karp.lex.application import search_queries
@@ -28,14 +30,25 @@ class StatisticsDto(pydantic.BaseModel):
     count: int
 
 
+statistics_description = """Return all possible values for `<field>` in `<resource_id>`.
+
+If the field is of type string, the value is not tokens produced by
+Opensearch analysis, but the actual value in the data.
+
+Will return an error if there are too many possible values. The limit is
+the default settings of `search.max_buckets` in Opensearch which is 65535.
+"""
+
+
 @router.get(
     "/{resource_id}/{field}",
     response_model=typing.List[StatisticsDto],
-    description="Return all possible values for `<field>` in `<resource_id>`",
+    description=statistics_description,
 )
 def get_field_values(
     resource_id: str,
     field: str,
+    q: str | SkipJsonSchema[None] = query_param,
     user: auth.User = Depends(deps.get_user_optional),
 ):
     if not resource_permissions.has_permission(PermissionLevel.read, user, [resource_id]):
@@ -46,4 +59,4 @@ def get_field_values(
     if resource_id not in resource_repository.get_published_resource_ids():
         raise ResourceNotFound(resource_id)
     logger.debug(f"calling statistics ... from {search_queries=}")
-    return search_queries.statistics(resource_id, field)
+    return search_queries.statistics(resource_id, field, q)
