@@ -93,7 +93,23 @@ def reindex_entry(
     return schemas.EntryAddResponse(newID=entry_id)
 
 
-@router.get("/{resource_id}/{entry_id}", summary="Get entry history", tags=["History"], responses=history_responses)
+def _get_history_description(version) -> str:
+    return f"""
+    Show {"the latest" if version else "a specific"} version of an entry. Virtual fields are not populated.
+
+The entry might be discarded (deleted), as indicated by the discarded field.
+In that case, the entry body is the same as it was when it was discarded. Also, the entry body of the
+discarded version is the same as the preceding version.
+    """
+
+
+@router.get(
+    "/{resource_id}/{entry_id}",
+    summary="Get entry history",
+    tags=["History"],
+    responses=history_responses,
+    description=_get_history_description(False),
+)
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
@@ -107,6 +123,7 @@ def get_history_for_entry(
     summary="Get entry history (with version)",
     tags=["History"],
     responses=history_responses,
+    description=_get_history_description(True),
 )
 def get_history_for_entry(
     resource_id: str,
