@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from fastapi import (
     APIRouter,
@@ -94,15 +93,32 @@ def reindex_entry(
     return schemas.EntryAddResponse(newID=entry_id)
 
 
-@router.get("/{resource_id}/{entry_id}", summary="Get entry", tags=["History"], responses=history_responses)
+@router.get("/{resource_id}/{entry_id}", summary="Get entry history", tags=["History"], responses=history_responses)
+def get_history_for_entry(
+    resource_id: str,
+    entry_id: UniqueIdStr,
+    user: auth.User = Depends(deps.get_user_optional),
+) -> EntryDto:
+    return _get_history_for_entry(resource_id, entry_id, user=user)
+
+
 @router.get(
-    "/{resource_id}/{entry_id}/{version}", summary="Get entry history", tags=["History"], responses=history_responses
+    "/{resource_id}/{entry_id}/{version}",
+    summary="Get entry history (with version)",
+    tags=["History"],
+    responses=history_responses,
 )
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
-    version: Optional[int] = None,
+    version: int,
     user: auth.User = Depends(deps.get_user_optional),
+) -> EntryDto:
+    return _get_history_for_entry(resource_id, entry_id, version=version, user=user)
+
+
+def _get_history_for_entry(
+    resource_id: str, entry_id: UniqueIdStr, version: int | None = None, user: auth.User | None = None
 ) -> EntryDto:
     check_resource(resource_id, user)
     logger.debug("getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id})

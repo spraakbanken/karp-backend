@@ -130,7 +130,7 @@ class ResourceConfigResponse(BaseModel):
     description=config_description,
 )
 def get_config(
-    user: auth.User = Depends(deps.get_user_optional),
+    user: auth.User | None = Depends(deps.get_user_optional),
     include_protected_metadata: bool = Query(
         False,
         title="include protected metadata",
