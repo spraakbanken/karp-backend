@@ -2,9 +2,7 @@ import logging
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
-from fastapi.param_functions import Header
 from fastapi.security import APIKeyHeader, APIKeyQuery, HTTPAuthorizationCredentials, HTTPBearer
-from fastapi.security import utils as security_utils
 
 from karp import auth
 from karp.auth.domain.errors import AuthError
@@ -19,17 +17,8 @@ header_api_key_scheme = APIKeyHeader(auto_error=False, name="X-Api-Key")
 logger = logging.getLogger(__name__)
 
 
-def bearer_scheme(authorization=Header(None)):
-    if not authorization:
-        return None
-    scheme, credentials = security_utils.get_authorization_scheme_param(authorization)
-    if not (scheme and credentials):
-        return None
-    return HTTPAuthorizationCredentials(scheme=scheme, credentials=credentials)
-
-
 def get_user_optional(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(bearer_scheme),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(auth_scheme),
     api_key: Optional[str] = Depends(api_key_scheme),
     header_api_key: Optional[str] = Depends(header_api_key_scheme),
 ) -> Optional[auth.User]:

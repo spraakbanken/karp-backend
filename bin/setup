@@ -1,0 +1,4 @@
+#!/bin/sh
+
+run_dir=$(dirname "$0")/../run
+mkdir -p run_dir

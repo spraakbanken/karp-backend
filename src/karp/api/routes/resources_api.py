@@ -61,13 +61,21 @@ class FieldConfigResponse(BaseModel):
                 # in theory a field could be searchable but not stored
                 # but for now, just let API users ignore un-stored fields
                 continue
+
+            if isinstance(field.label, str):
+                label = {"swe": field.label, "eng": field.label}
+            elif field.label is None:
+                label = {"swe": key, "eng": key}
+            else:
+                label = field.label
+
             res[key] = FieldConfigResponse(
                 type=field.type,
                 required=field.required,
                 collection=field.collection,
                 virtual=field.virtual,
                 searchable=field.searchable,
-                label=field.label,
+                label=label,
             )
             if field.type == "object":
                 res[key].fields = FieldConfigResponse.from_field_config(field.fields)
@@ -122,7 +130,7 @@ class ResourceConfigResponse(BaseModel):
     description=config_description,
 )
 def get_config(
-    user: auth.User = Depends(deps.get_user_optional),
+    user: auth.User | None = Depends(deps.get_user_optional),
     include_protected_metadata: bool = Query(
         False,
         title="include protected metadata",

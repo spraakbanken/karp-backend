@@ -273,19 +273,19 @@ def multi_query(queries: list[QueryRequest]):
 
     ms = WorkaroundMultiSearch(using=os_client)
     for query in queries:
-        ms = ms.add(_build_search(query, query.resources))
+        ms = ms.add(_build_search(query))
     responses = ms.execute()
     return [_build_result(query, response) for query, response in zip(queries, responses, strict=False)]
 
 
 def _search_with_query(query: QueryRequest):
     logger.debug("search_with_query called", extra={"query": query})
-    s = _build_search(query, query.resources)
+    s = _build_search(query)
     response = s.execute()
     return _build_result(query, response)
 
 
-def _build_search(query, resources: list[str]):
+def _build_search(query: QueryRequest):
     field_names = set()
     es_query = None
     builder = None
@@ -295,14 +295,14 @@ def _build_search(query, resources: list[str]):
                 model = query.q
             else:
                 model = parser.parse(query.q)
-            builder = EsQueryBuilder(resources, highlight=query.highlight != HighlightParam.false)
+            builder = EsQueryBuilder(query.resources, highlight=query.highlight != HighlightParam.false)
             es_query = builder.walk(model)
             field_name_collector = EsFieldNameCollector()
             field_names = field_name_collector.walk(model)
         except tatsu_exc.FailedParse as err:
             raise QueryParserError(failing_query=str(query.q), error_description=str(err)) from err
 
-    s = opensearchpy.Search(using=os_client, index=mapping_repo.aliases_to_indices(resources))
+    s = opensearchpy.Search(using=os_client, index=mapping_repo.aliases_to_indices(query.resources))
     s = s.extra(track_total_hits=True)  # get accurate hits numbers
     if es_query is not None:
         s = s.query(es_query)
@@ -316,7 +316,7 @@ def _build_search(query, resources: list[str]):
         s = s[query.from_ : 10000]
 
     if query.lexicon_stats:
-        s.aggs.bucket("distribution", "terms", field="_index", size=len(resources))
+        s.aggs.bucket("distribution", "terms", field="_index", size=len(query.resources))
     if query.highlight:
         # only highlight the fields that are used in query
         for field in field_names:
@@ -330,9 +330,9 @@ def _build_search(query, resources: list[str]):
     if query.size != 0:
         # if no hits are returned, no sorting is needed
         if query.sort:
-            s = s.sort(*mapping_repo.translate_sort_fields(tuple(resources), tuple(query.sort)))
+            s = s.sort(*mapping_repo.translate_sort_fields(tuple(query.resources), tuple(query.sort)))
         else:
-            new_s = mapping_repo.get_default_sort(tuple(resources))
+            new_s = mapping_repo.get_default_sort(tuple(query.resources))
             if new_s:
                 s = s.sort(*new_s)
 
@@ -447,10 +447,14 @@ def search_ids(resource_id: str, entry_ids: list[str]):
     return _format_result(response)
 
 
-def statistics(resource_id: str, field: str) -> Iterable:
-
-    s = opensearchpy.Search(using=os_client, index=mapping_repo.alias_to_index(resource_id))
-    s = s[:0]
+def statistics(resource_id: str, field: str, q: str) -> Iterable:
+    """
+    resource_id: the resource to search in
+    field: the field name to to aggregation on
+    q: a search query which will filter the results before doing the agg
+    """
+    query = QueryRequest(resources=(resource_id,), q=q, size=0)
+    s = _build_search(query)
 
     # if field is analyzed, do aggregation on the "raw" multi-field
     field_setting = mapping_repo.get_field((resource_id,), field)

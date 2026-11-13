@@ -10,14 +10,14 @@ requires-python = ">=3.12"
 dependencies = [
     "alembic==1.17.2",
     "asgi-matomo[background]==0.8.0",
-    "fastapi==0.138.1",
+    "fastapi<=0.162.5",
     "json-arrays==0.15.0",
     "opensearch-py",
-    "pydantic", # use whatever version fastapi wants
+    "pydantic",                       # use whatever version fastapi wants
     "pyjwt[crypto]==2.13.0",
     "PyMySQL==1.2.0",
     "PyYAML==6.0.3",
-    "sb-json-tools",         # see tool.uv.sources farther down
+    "sb-json-tools",                  # see tool.uv.sources farther down
     "SQLAlchemy==2.0.51",
     "TatSu==5.16.0",
     "typer==0.26.8",
@@ -57,7 +57,10 @@ karp-cli = "karp.cliapp.main:cliapp"
 [tool.uv]
 package = true
 exclude-newer = "30 days"
-exclude-newer-package = { asgi-matomo = false }
+exclude-newer-package = { asgi-matomo = false, certifi = false }
+override-dependencies = [
+    "certifi==2026.10.23"
+]
 
 [tool.uv.sources]
 sb-json-tools = { git = "https://github.com/spraakbanken/python-json-tools.git" }

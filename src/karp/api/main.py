@@ -111,14 +111,16 @@ logger = logging.getLogger(__name__)
 def create_app() -> FastAPI:
     app_context = main.bootstrap_app()
 
+    api_version = app_context.settings["api_version"]
+
     app = FastAPI(
         title=f"{config.PROJECT_NAME} API",
-        description="""Karp is Språkbanken's tool for editing structural data.\n\nThe
-        main goal of Karp is to be great for working with **lexical** data, but will work with 
+        description="""Karp's editing mode is Språkbanken's tool for editing structural data.\n\nThe
+        main goal of Karp's editing mode is to be great for working with **lexical** data, but will work with
         other data as well.\n\n[Read more here](https://github.com/spraakbanken/karp-backend/blob/release/docs/index.md)""",
         redoc_url="/",
         docs_url=None,
-        version=config.VERSION,
+        version="7.0.0" if api_version == "7" else "v8",
         openapi_tags=tags_metadata,
     )
 
@@ -150,7 +152,7 @@ def create_app() -> FastAPI:
 
     app_context.settings["tracking.matomo.url"]
 
-    register_routes(router, api_version=app_context.settings["api_version"])
+    register_routes(router, api_version=api_version)
 
     from karp.main.errors import KarpError
 

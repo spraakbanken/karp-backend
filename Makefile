@@ -73,15 +73,11 @@ serve: install-dev
 	bin/serve
 
 serve-w-reload: install-dev
-	bin/gunicorn --reload --graceful-timeout 1
+	bin/serve-w-reload
 
 .PHONY: reload
-reload: run/gunicorn.ctl
-	$(UV) gunicornc -s run/gunicorn.ctl -c "reload"
-
-run/gunicorn.ctl:
-	@echo "Cannot find gunicorn control socket, have you run make serve(-w-reload)?"
-	@exit 1
+reload:
+	bin/reload
 
 unit_test_dirs := tests/unit
 e2e_test_dirs := tests/e2e

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -e
+
+exec $(dirname "$0")/gunicorn --reload --graceful-timeout 1

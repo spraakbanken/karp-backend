@@ -1,5 +1,4 @@
 import logging
-from typing import Optional
 
 from fastapi import (
     APIRouter,
@@ -94,15 +93,49 @@ def reindex_entry(
     return schemas.EntryAddResponse(newID=entry_id)
 
 
-@router.get("/{resource_id}/{entry_id}", summary="Get entry", tags=["History"], responses=history_responses)
+def _get_history_description(version) -> str:
+    return f"""
+    Show {"the latest" if version else "a specific"} version of an entry. Virtual fields are not populated.
+
+The entry might be discarded (deleted), as indicated by the discarded field.
+In that case, the entry body is the same as it was when it was discarded. Also, the entry body of the
+discarded version is the same as the preceding version.
+    """
+
+
 @router.get(
-    "/{resource_id}/{entry_id}/{version}", summary="Get entry history", tags=["History"], responses=history_responses
+    "/{resource_id}/{entry_id}",
+    summary="Get entry history",
+    tags=["History"],
+    responses=history_responses,
+    description=_get_history_description(False),
 )
 def get_history_for_entry(
     resource_id: str,
     entry_id: UniqueIdStr,
-    version: Optional[int] = None,
     user: auth.User = Depends(deps.get_user_optional),
+) -> EntryDto:
+    return _get_history_for_entry(resource_id, entry_id, user=user)
+
+
+@router.get(
+    "/{resource_id}/{entry_id}/{version}",
+    summary="Get entry history (with version)",
+    tags=["History"],
+    responses=history_responses,
+    description=_get_history_description(True),
+)
+def get_history_for_entry(
+    resource_id: str,
+    entry_id: UniqueIdStr,
+    version: int,
+    user: auth.User = Depends(deps.get_user_optional),
+) -> EntryDto:
+    return _get_history_for_entry(resource_id, entry_id, version=version, user=user)
+
+
+def _get_history_for_entry(
+    resource_id: str, entry_id: UniqueIdStr, version: int | None = None, user: auth.User | None = None
 ) -> EntryDto:
     check_resource(resource_id, user)
     logger.debug("getting history for entry", extra={"resource_id": resource_id, "entry_id": entry_id})
