@@ -39,6 +39,22 @@ def version_callback(value: bool):
         raise typer.Exit()
 
 
+@app.command("reload", help="Runs the script defined by enviornment variable `RESOURCE_UPDATE_HOOK`.")
+def reload(ctx: typer.Context):
+
+    from karp.main.reload import reload
+
+    res = reload()
+    if res is None:
+        typer.echo("Reload script not found.")
+        raise typer.Exit(code=1)
+    elif res:
+        typer.echo("Reload failed.")
+        raise typer.Exit(code=1)
+    else:
+        typer.echo("Reloaded succesfully.")
+
+
 @app.command("repl")
 def repl(
     ctx: typer.Context,

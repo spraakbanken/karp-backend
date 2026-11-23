@@ -1,5 +1,4 @@
 import json
-import subprocess
 import textwrap
 from pathlib import Path
 from typing import Callable, List, Optional, TypeVar
@@ -10,6 +9,7 @@ from typer.core import TyperGroup
 from karp.cliapp.utility import cli_error_handler, cli_timer
 from karp.lex import ResourceConfig
 from karp.lex.domain.entities.resource import Resource
+from karp.main.reload import call_resource_update_hook
 
 
 class OrderCommands(TyperGroup):
@@ -39,14 +39,6 @@ version_option = typer.Argument(None, help="The version to do this operation on"
 remove_old_index_option = typer.Option(False, help="If set, will remove the old index when the new one is completed.")
 
 
-def _reload_backend():
-    p = subprocess.run(["make", "reload"], capture_output=True)
-    if p.returncode != 0:
-        typer.echo("Failed to reload backend.")
-    else:
-        typer.echo("Backend reloaded.")
-
-
 @subapp.command()
 @cli_error_handler
 @cli_timer
@@ -70,6 +62,7 @@ def create(
         resource_commands.create_resource(config, user="local admin")
         print(f"Created resource '{config.resource_id}'")
 
+        call_resource_update_hook()
     else:
         typer.echo(f"The config file {config_path} was not found.", err=True)
         typer.echo("Could not create the resource.", err=True)
@@ -107,6 +100,8 @@ def update(
             message=message or "config updated",
             user=user or "local admin",
         )
+
+        call_resource_update_hook()
     except Exception as err:  # noqa: BLE001
         typer.echo(f"Error occurred: {err}", err=True)
         raise typer.Exit(400) from err
@@ -150,7 +145,6 @@ def publish(ctx: typer.Context, resource_id: str = resource_option, version: Opt
         version=version,
     )
     typer.echo(f"Resource '{resource_id}' is published ")
-    _reload_backend()
 
 
 @subapp.command()
@@ -184,8 +178,7 @@ def reindex(
             progress.label = f"Indexing progress ({i} / {count})"
     typer.echo(f"Successfully reindexed all data in {resource_id}")
 
-    # reload backend to make sure that backend sees changes to index
-    _reload_backend()
+    call_resource_update_hook()
 
     if remove_old_index:
         # finally remove the old index
