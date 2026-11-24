@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 def load_jwt_key(path: Path) -> str:
-    with open(path) as fp:
+    base_path = Path(env.get("BASE_PATH", "."))
+
+    with open(base_path / path) as fp:
         return fp.read()
 
 

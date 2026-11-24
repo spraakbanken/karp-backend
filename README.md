@@ -89,22 +89,25 @@ If neither `uv` is available or a virtual environment activated, the user must s
 
 3. Install MariaDB and create a database
 
-4. Setup environment variables (can be placed in a `.env` file in the root):
-   ```
-   export DB_DATABASE=<name of database>
-   export DB_USER=<database user>
-   export DB_PASSWORD=<user's password>
-   export DB_HOST=localhost
-   export AUTH_JWT_PUBKEY_PATH=/path/to/pubkey (only neded to support SB AUTH JWT in header)
-   ```
-5. Run `(uv run) karp-cli db up` to initialize database
-6. Run `make serve` or `make serve-w-reload` or other method using the function `karp.api.main:create_app`.
+4. (Optional) Setup enviornment variable `BASE_PATH` - should point to this directory. Only needed when running Karp outside this directory.
 
-7. Setup [OpenSearch](#opensearch)
-8. Add environment variables
+5. Setup environment variables (can be placed in a `.env` file in this directory):
+   ```
+   DB_DATABASE=<name of database>
+   DB_USER=<database user>
+   DB_PASSWORD=<user's password>
+   DB_HOST=localhost
+   AUTH_JWT_PUBKEY_PATH=/path/to/pubkey # only neded to support SB AUTH JWT in header
+   RESOURCE_UPDATE_HOOK=/path/to/script-for-update-events.sh # see description further down
+   ```
+6. Run `(uv run) karp-cli db up` to initialize database
+7. Run `make serve` or `make serve-w-reload` or other method using the function `karp.api.main:create_app`.
+
+8. Setup [OpenSearch](#opensearch)
+9. Add environment variables (or add in `.env`)
 
 ```
-export OPENSEARCH_HOST=http://localhost:9200
+OPENSEARCH_HOST=http://localhost:9200
 ```
 
 ## Web server
@@ -142,6 +145,22 @@ bin/opensearch-plugin install analysis-icu
 Then run `bin/opensearch` to start it. The minimal version should start without issue, but for normal
 all plugins can be removed (except `opensearch-knn` and `analysis-icu`). After having removed
 the plugins, it should start.
+
+## Environment variable `RESOURCE_UPDATE_HOOK`
+
+This variable should be set to an executable. The executable will be invoked every time the operations
+`karp-cli resource reindex`, `karp-cli resource create` or `karp-cli resource update` is called.
+
+The **default** update hook is to call `bin/reload`. If `RESOURCE_UPDATE_HOOK` is replaced by a custom script, do not
+forget to somehow reload the current backend in this script.
+
+`RESOURCE_UPDATE_HOOK` can be used for any tasks that might be neccessary after a create/update/reindex.
+A single backend  has support to reload itself using [`bin/reload`](#binreload), but sometimes
+multiple backends are using the same database, and then they all need to be reloaded after some 
+changes to resources. To achieve this, `RESOURCE_UPDATE_HOOK` can be set to a script that will reload
+all the backends.
+
+The value of `RESOURCE_UPDATE_HOOK` must be a single executable. The command will run in the same directory as the main process (use an absolute path if needed).
 
 ## Create test resources
 

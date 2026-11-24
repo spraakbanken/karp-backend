@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from typing import Callable
 
 from sqlalchemy.engine import URL as DatabaseUrl
@@ -52,9 +53,9 @@ class Env:
 
 
 def load_env() -> Env:
-    config_path = os.environ.get("CONFIG_PATH", ".env")
+    base_path = Path(os.environ.get("BASE_PATH", "."))
     env = Env()
-    env.read_env(config_path)
+    env.read_env(base_path / ".env")
     return env
 
 

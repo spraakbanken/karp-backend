@@ -11,6 +11,7 @@ lint.ignore = [
   "RUF100",
   "RUF005",
   "S310",   # checks if urls are audited before running urlopen
+  "S603",   # complains about checking input to subprocess.run
   "S607",   # check for partial executables with subprocess.run
 ]
 
